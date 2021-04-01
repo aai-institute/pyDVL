@@ -1,0 +1,10 @@
+{
+  "data_raw": "./data/raw",
+  "data_cleaned": "./data/cleaned",
+  "data_processed": "./data/processed",
+  "data_ground_truth": "./data/ground_truth",
+  "visualizations": "./data/visualizations",
+  "artifacts": "./data/artifacts",
+  "temp": "./temp",
+  "data": "./data"
+}

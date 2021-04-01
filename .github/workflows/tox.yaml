@@ -1,0 +1,28 @@
+name: Merge develop, run tests and build docu
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Merge develop into current branch
+        run: |
+          git fetch origin develop:develop --update-head-ok
+          git merge develop
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install Tox and any other packages
+        run: pip install tox
+      - name: Run Tox
+        run: tox

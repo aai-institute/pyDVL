@@ -1,0 +1,138 @@
+image: "python:3.8-buster"
+
+stages:
+  - tox
+  - documentation
+  - build
+  - publish
+  - update-tox-cache
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache: &global_cache
+  paths:
+    - .cache/pip
+    - .venv/
+    - .tox
+    - apt-cache/
+  key: ${CI_COMMIT_REF_SLUG}
+
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+before_script:
+  - mkdir -p apt-cache
+  # pandoc needed for docu, see https://nbsphinx.readthedocs.io/en/0.7.1/installation.html?highlight=pandoc#pandoc
+  - apt-get update -yq && apt-get -o dir::cache::archives="$(pwd)/apt-cache" -yq install pandoc
+  - if [ -e $LOCAL_CONFIG ]; then mv $CONFIG_LOCAL ./config_local.json && echo "retrieved local config"; fi
+  - pip install virtualenv
+  - virtualenv .venv
+  - source .venv/bin/activate
+
+.tox_job: &tox_job
+  stage: tox
+  script:
+    - pip install tox
+    - tox
+  artifacts:
+    paths:
+      - badges
+      - docs/_build
+      - htmlcov
+      - pylint.html
+
+tox_recreate:
+  only:
+    changes:
+      - requirements.txt
+  cache:
+    # push cache if dependencies have changed
+    <<: *global_cache
+    policy: push
+  <<: *tox_job
+
+tox_use_cache:
+  except:
+    changes:
+      - requirements.txt
+  cache:
+    # use cache if dependencies haven't changed
+    <<: *global_cache
+    policy: pull
+  <<: *tox_job
+
+pages:
+  cache: {}
+  stage: documentation
+  script:
+    - mv docs/_build/html/* public/docs
+    - mv pylint.html public/pylint/index.html
+    - mv htmlcov/* public/coverage
+  artifacts:
+    paths:
+      - public
+  only:
+    - develop
+
+package:
+  cache:
+    paths:
+      - .cache/pip
+      - .venv/
+    key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+  stage: build
+  script:
+    - |
+      # Bump version number of develop branch
+      if [ "$CI_COMMIT_BRANCH" = "develop" ]; then
+        # Git config
+        git config user.name "Gitlab CI"
+        git config user.email "gitlab@example.org"
+        chmod 0600 $GITLAB_DEPLOY_KEY
+
+        # HTTPS clone URL -> git+ssh URL for pushing
+        export GIT_REPO_URL_SSH=$(echo -n $CI_REPOSITORY_URL | sed -r 's%https?://.*@([^/]+)/%git@\1:%' -)
+        git remote set-url origin $GIT_REPO_URL_SSH
+        export GIT_SSH_COMMAND='ssh -i $GITLAB_DEPLOY_KEY -o IdentitiesOnly=yes -o StrictHostKeyChecking=no'
+
+        pip install bump2version
+        apt-get update && apt-get -o dir::cache::archives="$(pwd)/apt-cache" -yq install git-lfs
+
+        bump2version build --commit
+        git push -o ci.skip origin HEAD:develop
+      fi
+    - pip install setuptools wheel
+    - python setup.py sdist bdist_wheel
+  artifacts:
+    paths:
+      - dist/*.tar.gz
+      - dist/*.whl
+
+publish_package:
+  cache: {}
+  only:
+    - tags
+    - develop
+  stage: publish
+  needs: [package]
+  script:
+    - pip install twine
+    - export TWINE_REPOSITORY_URL=$PYPI_REPO_URL
+    - export TWINE_USERNAME=$PYPI_REPO_USER
+    - export TWINE_PASSWORD=$PYPI_REPO_PASS
+    - twine upload dist/*
+
+update_tox_cache:
+  needs: []
+  except:
+    changes:
+      - requirements.txt
+  when: manual
+  allow_failure: true
+  cache:
+    <<: *global_cache
+    policy: push
+  stage: update-tox-cache
+  script:
+    - pip install tox
+    - tox -r

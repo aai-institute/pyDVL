@@ -1,0 +1,51 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+  - develop
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.8
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install twine tox==3.14.0 wheel
+    displayName: 'Install dependencies'
+
+  - script: |
+      tox
+      python setup.py sdist bdist_wheel
+    displayName: 'Testing and packaging'
+  
+  - task: CopyFiles@2
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)/docs/_build/html'
+      Contents: '**'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/temp/docs'
+      CleanTargetFolder: true
+      OverWrite: true
+    displayName: 'Prepare documentation'
+
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/temp/docs'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/docs/$(Build.BuildId).zip'
+      replaceExistingArchive: true
+    displayName: 'Zip documentation to an archive'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/docs'
+      ArtifactName: 'docs'
+      publishLocation: 'Container'
+    displayName: 'Publish documentation'
+

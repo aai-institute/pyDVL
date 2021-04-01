@@ -1,0 +1,2 @@
+Place your real and sample data in the proposed directory structure. Access the files from anywhere in your
+code through the corresponding configuration methods
