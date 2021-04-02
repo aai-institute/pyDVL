@@ -1,1 +1,7 @@
 requests~=2.24
+numpy
+pandas
+joblib
+tqdm
+sklearn
+matplotlib

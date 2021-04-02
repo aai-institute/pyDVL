@@ -2,6 +2,6 @@ tox
 pytest
 jupyter
 bump2version
-black
 pre-commit
-accsr
+nbconvert
+matplotlib
