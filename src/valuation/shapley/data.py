@@ -8,18 +8,16 @@ TODO:
  * ...
 """
 
-import queue
-from time import time
-
-import numpy as np
-import pandas as pd
 import multiprocessing as mp
+import numpy as np
+import queue
 
-from typing import Callable, Dict, Generator, List, Tuple
+from time import time
+from unittest.mock import Mock
+from typing import Callable, Dict, List, Tuple
 from collections import OrderedDict
-from joblib import Parallel
 from tqdm.auto import tqdm, trange
-from valuation import _logger, Regressor
+from valuation.utils import Dataset, Regressor
 
 
 class Worker(mp.Process):
@@ -35,12 +33,10 @@ class Worker(mp.Process):
                  converged: mp.Value,
                  model: Regressor,
                  global_score: float,
-                 x_train: pd.DataFrame,
-                 y_train: pd.DataFrame,
-                 x_test: pd.DataFrame,
-                 y_test: pd.DataFrame,
+                 data: Dataset,
                  min_samples: int,
-                 score_tolerance: float):
+                 score_tolerance: float,
+                 progress_bar: bool = False):
         # Mark as daemon, so we are killed when the parent exits (e.g. Ctrl+C)
         super().__init__(daemon=True)
 
@@ -51,14 +47,11 @@ class Worker(mp.Process):
         self.early_stops = []  # TODO: use mp.Value and report
         self.model = model
         self.global_score = global_score
-        self.x_train = x_train
-        self.y_train = y_train
-        self.x_test = x_test
-        self.y_test = y_test
+        self.data = data
         self.min_samples = min_samples
         self.score_tolerance = score_tolerance
-
-        self.num_samples = len(x_train)
+        self.num_samples = len(self.data)
+        self.progress_bar = progress_bar
 
         # https://docs.python.org/3/library/multiprocessing.html
         # #multiprocessing.Queue.cancel_join_thread
@@ -87,9 +80,11 @@ class Worker(mp.Process):
         """ """
         # scores[0] is the value of training on the empty set.
         scores = np.zeros(len(permutation) + 1)
-        pbar = tqdm(total=self.num_samples, position=self.id,
-                    desc=f"{self.name}", leave=False)
-
+        if self.progress_bar:
+            pbar = tqdm(total=self.num_samples, position=self.id,
+                        desc=f"{self.name}", leave=False)
+        else:
+            pbar = Mock()  # HACK, sue me.
         pbar.reset()
         early_stop = None
         for j, index in enumerate(permutation, start=1):
@@ -106,12 +101,12 @@ class Worker(mp.Process):
                     early_stop = j
                 scores[j] = scores[j - 1]
             else:
-                x = self.x_train[self.x_train.index.isin(permutation[:j + 1])]
-                y = self.y_train[self.y_train.index.isin(permutation[:j + 1])]
+                x = self.data.x_train[self.data.x_train.index.isin(permutation[:j + 1])]
+                y = self.data.y_train[self.data.y_train.index.isin(permutation[:j + 1])]
                 try:
                     self.model.fit(x, y.values.ravel())
-                    scores[j] = self.model.score(self.x_test,
-                                                 self.y_test.values.ravel())
+                    scores[j] = self.model.score(self.data.x_test,
+                                                 self.data.y_test.values.ravel())
                 except:
                     scores[j] = np.nan
             pbar.update()
@@ -124,10 +119,7 @@ class Worker(mp.Process):
 
 
 def montecarlo_shapley(model: Regressor,
-                       x_train: pd.DataFrame,
-                       y_train: pd.DataFrame,
-                       x_test: pd.DataFrame,
-                       y_test: pd.DataFrame,
+                       data: Dataset,
                        bootstrap_iterations: int,
                        min_samples: int,
                        score_tolerance: float,
@@ -147,10 +139,7 @@ def montecarlo_shapley(model: Regressor,
     the moving average for all values falls below another threshold.
 
         :param model: sklearn model / pipeline
-        :param x_train:
-        :param y_train:
-        :param x_test:
-        :param y_test:
+        :param data: split dataset
         :param bootstrap_iterations: Repeat global_score computation this many
          times to estimate variance.
         :param min_samples: Use so many of the last samples for a permutation
@@ -173,16 +162,17 @@ def montecarlo_shapley(model: Regressor,
 
     """
     # if values is None:
-    values = {i: [0.0] for i in x_train.index}
+    values = {i: [0.0] for i in data.x_train.index}
     # if converged_history is None:
     converged_history = []
 
-    model.fit(x_train, y_train.values.ravel())
+    model.fit(data.x_train, data.y_train.values.ravel())
     _scores = []
     for _ in trange(bootstrap_iterations, desc="Bootstrapping"):
-        sample = np.random.choice(x_test.index, len(x_test.index), replace=True)
-        _scores.append(model.score(x_test.loc[sample],
-                                   y_test.loc[sample].values.ravel()))
+        sample = np.random.choice(data.x_test.index, len(data.x_test.index),
+                                  replace=True)
+        _scores.append(model.score(data.x_test.loc[sample],
+                                   data.y_test.loc[sample].values.ravel()))
     global_score = float(np.mean(_scores))
     score_tolerance *= np.std(_scores)
     # import matplotlib.pyplot as plt
@@ -190,7 +180,7 @@ def montecarlo_shapley(model: Regressor,
     # plt.savefig("bootstrap.png")
 
     iteration = 0
-    num_samples = len(x_train)
+    num_samples = len(data)
 
     tasks_q = mp.Queue()
     results_q = mp.Queue()
@@ -198,13 +188,12 @@ def montecarlo_shapley(model: Regressor,
 
     workers = [Worker(i + 1,
                       tasks_q, results_q, converged, model, global_score,
-                      x_train, y_train, x_test, y_test,
-                      min_samples, score_tolerance)
+                      data, min_samples, score_tolerance)
                for i in range(num_workers)]
 
     # Fill the queue before starting the workers or they will immediately quit
     for _ in range(2 * num_workers):
-        tasks_q.put(np.random.permutation(x_train.index))
+        tasks_q.put(np.random.permutation(data.x_train.index))
 
     for w in workers:
         w.start()
@@ -230,7 +219,7 @@ def montecarlo_shapley(model: Regressor,
         pbar.last_print_t = time()
         # pbar.update(converged.value)
         pbar.refresh()
-        permutation = np.random.permutation(x_train.index)
+        permutation = np.random.permutation(data.x_train.index)
         tasks_q.put(permutation)
         iteration += 1
 
@@ -264,10 +253,7 @@ def montecarlo_shapley(model: Regressor,
 
 
 def serial_montecarlo_shapley(model: Regressor,
-                              x_train: pd.DataFrame,
-                              y_train: pd.DataFrame,
-                              x_test: pd.DataFrame,
-                              y_test: pd.DataFrame,
+                              data: Dataset,
                               bootstrap_iterations: int,
                               min_samples: int,
                               score_tolerance: float,
@@ -289,10 +275,7 @@ def serial_montecarlo_shapley(model: Regressor,
     the moving average for all values falls below another threshold.
 
         :param model: sklearn model / pipeline
-        :param x_train:
-        :param y_train:
-        :param x_test:
-        :param y_test:
+        :param data: split Dataset
         :param bootstrap_iterations: Repeat global_score computation this many
          times to estimate variance.
         :param min_samples: Use so many of the last samples for a permutation
@@ -312,28 +295,29 @@ def serial_montecarlo_shapley(model: Regressor,
 
     """
     if values is None:
-        values = {i: [0.0] for i in x_train.index}
+        values = {i: [0.0] for i in data.x_train.index}
 
     if converged_history is None:
         converged_history = []
 
-    model.fit(x_train, y_train.values.ravel())
+    model.fit(data.x_train, data.y_train.values.ravel())
     _scores = []
     for _ in trange(bootstrap_iterations, desc="Bootstrapping"):
-        sample = np.random.choice(x_test.index, len(x_test.index), replace=True)
+        sample = np.random.choice(data.x_test.index, len(data.x_test.index),
+                                  replace=True)
         _scores.append(
-                model.score(x_test.loc[sample],
-                            y_test.loc[sample].values.ravel()))
+                model.score(data.x_test.loc[sample],
+                            data.y_test.loc[sample].values.ravel()))
     global_score = np.mean(_scores)
     score_tolerance *= np.std(_scores)
 
     iteration = 0
     converged = 0
-    num_samples = len(x_train)
+    num_samples = len(data)
     pbar = tqdm(total=num_samples, position=0, desc=f"Run {run_id}")
     while iteration < min_steps \
             or (converged < num_samples and iteration < max_iterations):
-        permutation = np.random.permutation(x_train.index)
+        permutation = np.random.permutation(data.x_train.index)
 
         # FIXME: need score for model fitted on empty dataset
         scores = np.zeros(len(permutation) + 1)
@@ -351,10 +335,11 @@ def serial_montecarlo_shapley(model: Regressor,
             if abs(global_score - last_scores) < score_tolerance:
                 scores[j + 1] = scores[j]
             else:
-                x = x_train[x_train.index.isin(permutation[:j + 1])]
-                y = y_train[y_train.index.isin(permutation[:j + 1])]
+                x = data.x_train[data.x_train.index.isin(permutation[:j + 1])]
+                y = data.y_train[data.y_train.index.isin(permutation[:j + 1])]
                 model.fit(x, y.values.ravel())
-                scores[j + 1] = model.score(x_test, y_test.values.ravel())
+                scores[j + 1] = model.score(data.x_test,
+                                            data.y_test.values.ravel())
             # Update mean value: mean_n = mean_{n-1} + (new_val - mean_{n-1})/n
             values[permutation[j]].append(
                     values[permutation[j]][-1]
@@ -379,10 +364,7 @@ def serial_montecarlo_shapley(model: Regressor,
 
 def naive_montecarlo_shapley(model: Regressor,
                              utility: Callable[[np.ndarray, np.ndarray], float],
-                             x_train: pd.DataFrame,
-                             y_train: pd.DataFrame,
-                             x_test: pd.DataFrame,
-                             y_test: pd.DataFrame,
+                             data: Dataset,
                              indices: List[int],
                              max_iterations: int,
                              tolerance: float = None,
@@ -420,11 +402,7 @@ def naive_montecarlo_shapley(model: Regressor,
     =========
         :param model: sklearn model / pipeline
         :param utility: utility function (e.g. any score function to maximise)
-        :param x_train:
-        :param y_train:
-        :param x_test:
-        :param y_test:
-        :param indices: List of indices in the dataset
+        :param data: split Dataset
         :param max_iterations: Set to e.g. len(x_train)/2: at 50% truncation the
             paper reports ~95% rank correlation with shapley values without
             truncation. (FIXME: dubious (by Hoeffding). Check the statement)
@@ -437,7 +415,7 @@ def naive_montecarlo_shapley(model: Regressor,
     if tolerance is not None:
         raise NotImplementedError("Tolerance not implemented")
 
-    values = {i: 0.0 for i in indices}
+    values = {i: 0.0 for i in data.x_train.index}
 
     for i in indices:
         pbar = trange(max_iterations, position=job_id, desc=f"Index {i}")
@@ -446,7 +424,7 @@ def naive_montecarlo_shapley(model: Regressor,
         for _ in pbar:
             mean_score = np.nanmean(scores) if scores else 0.0
             pbar.set_postfix_str(f"mean: {mean_score:.2f}")
-            permutation = np.random.permutation(x_train.index)
+            permutation = np.random.permutation(data.x_train.index)
             # yuk... does not stop after match
             loc = np.where(permutation == i)[0][0]
 
@@ -454,12 +432,12 @@ def naive_montecarlo_shapley(model: Regressor,
             #   are too few rows. We set those as failures.
 
             try:
-                model.fit(x_train.loc[permutation[:loc + 1]],
-                          y_train.loc[permutation[:loc + 1]].values.ravel())
-                score_with = utility(x_test, y_test.values.ravel())
-                model.fit(x_train.loc[permutation[:loc]],
-                          y_train.loc[permutation[:loc]].values.ravel())
-                score_without = utility(x_test, y_test.values.ravel())
+                model.fit(data.x_train.loc[permutation[:loc + 1]],
+                          data.y_train.loc[permutation[:loc + 1]].values.ravel())
+                score_with = utility(data.x_test, data.y_test.values.ravel())
+                model.fit(data.x_train.loc[permutation[:loc]],
+                          data.y_train.loc[permutation[:loc]].values.ravel())
+                score_without = utility(data.x_test, data.y_test.values.ravel())
                 scores.append(score_with - score_without)
             except:
                 scores.append(np.nan)
