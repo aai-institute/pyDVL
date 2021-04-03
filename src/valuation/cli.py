@@ -115,7 +115,7 @@ def run(verbosity,
                    "index in order to compute the moving averages of values")
 @click.option('-n', '--num-runs',
               type=click.IntRange(1, None),
-              default=2,
+              default=10,
               show_default=True,
               help="Number of complete runs to perform for averaging of "
                    "results")

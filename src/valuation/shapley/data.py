@@ -53,25 +53,25 @@ class Worker(mp.Process):
         self.num_samples = len(self.data)
         self.progress_bar = progress_bar
 
-        # https://docs.python.org/3/library/multiprocessing.html
-        # #multiprocessing.Queue.cancel_join_thread
-        # By default if a process is not the creator of the queue then on exit
-        # it will attempt to join the queue’s background thread: without this
-        # call, running processes cannot be joined until all the data they have
-        # put in the queue has been processed. Any Worker posting results after
-        # the main loop in montecarlo_shapley has exited, will block upon join()
-        # FIXME: this doesn't remove the need for timeout in worker.join()
-        self.results.cancel_join_thread()
-
     def run(self):
+        task = self.tasks.get(timeout=1.0)  # Wait a bit during start-up (yikes)
         while True:
-            # FIXME: I expected get() on a close()d queue to raise, but it
-            #  doesn't. Instead we raise EmptyQueue if no tasks are waiting,
-            #  but this could fail if we don't have time in the main process
-            #  before to put new ones in the queue.
-            task = self.tasks.get(timeout=0.1)
+            if task is None:  # Indicates we are done
+                self.tasks.put(None)
+                return
+
             result = self._run(task)
-            self.results.put(result)
+
+            # Check whether the None flag was sent during _run().
+            # This throws away our last results, but avoids a deadlock (can't
+            # join the process if a queue has items)
+            try:
+                task = self.tasks.get_nowait()
+                if task is not None:
+                    self.results.put(result)
+            except queue.Empty:
+                self.tasks.put(None)
+                return
 
     def _run(self, permutation: List[int]) -> Dict[int, float]:
         """ """
@@ -111,7 +111,7 @@ class Worker(mp.Process):
         if early_stop is not None:
             n = len(permutation)
             self.early_stops.append((n - early_stop) / n)
-        # TODO: return self.early_stops
+        # TODO: return self.earlyNones
         return {k: v for k, v in zip(permutation, scores[1:])}
 
 
@@ -222,26 +222,40 @@ def montecarlo_shapley(model: Regressor,
         tasks_q.put(permutation)
         iteration += 1
 
-    tasks_q.close()  # Workers will eventually stop their computation loops
+    # Clear the queue of pending tasks
+    try:
+        while True:
+            tasks_q.get_nowait()
+    except queue.Empty:
+        pass
+    # Any workers still running won't post their results after the None task
+    # has been placed...
+    tasks_q.put(None)
+    # ... But maybe someone put() some result while we were completing the last
+    # iteration of the loop above:
     pbar.set_description_str("Gathering pending results")
-    pbar.total = results_q.qsize()
+    pbar.total = len(workers)
     pbar.reset()
-
-    n = 0
-    while True:
-        try:
-            res = results_q.get(block=False, timeout=0.1)
-        except queue.Empty:
-            break
-        else:
+    try:
+        while True:
+            res = results_q.get(timeout=1.0)
+            n = 0
             for k, v in res.items():
                 values[k].append(v)
             n += 1
             pbar.update(n)
+    except queue.Empty:
+        pass
     pbar.close()
 
-    for w in tqdm(workers, desc="Joining"):
-        w.join(timeout=0.01)
+    # results_q should be empty now
+    assert results_q.empty(), "WTF? Pending results"
+    assert tasks_q.get_nowait() is None, "WTF? "
+    # Finally, wait until everyone is done
+    print("Joining...")
+    for w in workers:
+        w.join()
+        w.close()
 
     return OrderedDict(sorted(values.items(), key=lambda item: item[1])), \
            converged_history
