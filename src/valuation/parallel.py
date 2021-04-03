@@ -11,7 +11,7 @@ from joblib import Parallel, delayed
 from tqdm import trange
 
 
-def run_and_gather(fun: Callable[..., Tuple[dict, List]],
+def run_and_gather(fun: Callable[..., Tuple[OrderedDict, List]],
                    num_runs: int,
                    progress_bar: bool = False) \
         -> Tuple[List[OrderedDict], List]:
@@ -45,12 +45,14 @@ def run_and_gather(fun: Callable[..., Tuple[dict, List]],
     for i in runs:
         ret = _fun(run_id=i)
         # HACK: Merge results from calls to Parallel
-        values = OrderedDict()
+        values = {}
         history = []
         if isinstance(ret, list):
             for vv, hh in ret:
                 values.update(vv)
                 history.append(hh)
+            values = OrderedDict(sorted(values.items(),
+                                        key=lambda item: item[1]))
         # Or don't...
         else:
             values, history = ret
@@ -58,6 +60,7 @@ def run_and_gather(fun: Callable[..., Tuple[dict, List]],
         all_histories.append(history)
 
     return all_values, all_histories
+
 
 def parallel_wrap(fun: Callable[[Iterable], Dict[int, float]],
                   arg: Tuple[str, List],
