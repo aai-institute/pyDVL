@@ -135,7 +135,7 @@ def montecarlo_shapley(model: Regressor,
                        value_tolerance: float,
                        max_permutations: int,
                        num_workers: int,
-                       run: int = 0) \
+                       run_id: int = 0) \
         -> Tuple[Dict[int, float], List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points.
 
@@ -209,7 +209,7 @@ def montecarlo_shapley(model: Regressor,
     for w in workers:
         w.start()
 
-    pbar = tqdm(total=num_samples, position=0, desc=f"Run {run}. Converged")
+    pbar = tqdm(total=num_samples, position=0, desc=f"Run {run_id}. Converged")
     while converged.value < num_samples and iteration < max_permutations:
         res = results_q.get()
 
@@ -275,7 +275,8 @@ def serial_montecarlo_shapley(model: Regressor,
                               value_tolerance: float,
                               max_iterations: int,
                               values: Dict[int, List[float]] = None,
-                              converged_history: List[int] = None) \
+                              converged_history: List[int] = None,
+                              run_id: int = 0) \
         -> Tuple[Dict[int, float], List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points using
     only one CPU.
@@ -329,7 +330,7 @@ def serial_montecarlo_shapley(model: Regressor,
     iteration = 0
     converged = 0
     num_samples = len(x_train)
-    pbar = tqdm(total=num_samples, position=0)
+    pbar = tqdm(total=num_samples, position=0, desc=f"Run {run_id}")
     while iteration < min_steps \
             or (converged < num_samples and iteration < max_iterations):
         permutation = np.random.permutation(x_train.index)
@@ -386,7 +387,7 @@ def naive_montecarlo_shapley(model: Regressor,
                              max_iterations: int,
                              tolerance: float = None,
                              job_id: int = 0) \
-        -> Dict[int, float]:
+        -> Tuple[Dict[int, float], List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points.
 
     This is a direct translation of the formula:
@@ -426,11 +427,12 @@ def naive_montecarlo_shapley(model: Regressor,
         :param indices: List of indices in the dataset
         :param max_iterations: Set to e.g. len(x_train)/2: at 50% truncation the
             paper reports ~95% rank correlation with shapley values without
-            truncation.
+            truncation. (FIXME: dubious (by Hoeffding). Check the statement)
         :param tolerance: NOT IMPLEMENTED stop drawing permutations after delta
             in scores falls below this threshold
         :param job_id: for progress bar positioning
-        :return: Dict of approximated Shapley values for the indices
+        :return: Dict of approximated Shapley values for the indices and dummy
+                 list to conform to the generic interface in valuation.parallel
     """
     if tolerance is not None:
         raise NotImplementedError("Tolerance not implemented")
@@ -462,5 +464,5 @@ def naive_montecarlo_shapley(model: Regressor,
             except:
                 scores.append(np.nan)
         values[i] = mean_score
-    return values
+    return values, []
 
