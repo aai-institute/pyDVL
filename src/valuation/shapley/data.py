@@ -250,7 +250,8 @@ def montecarlo_shapley(model: Regressor,
 
     # results_q should be empty now
     assert results_q.empty(), "WTF? Pending results"
-    assert tasks_q.get_nowait() is None, "WTF? "
+    # HACK: the peeking in workers might empty they queue temporarily
+    assert tasks_q.get(timeout=0.1) is None, f"WTF? {tasks_q.qsize()} tasks left"
     # Finally, wait until everyone is done
     print("Joining...")
     for w in workers:
