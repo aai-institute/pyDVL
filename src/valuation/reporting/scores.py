@@ -66,7 +66,8 @@ def forward_selection(model: Regressor,
     scores = []
     for i in trange(len(indices), position=job_id,
                     desc=f"Forward selection. Job {job_id}"):
-        # FIXME don't do a full index search on each iteration
+        # FIXME: don't do a full index search on each iteration
+        # FIXME: always train on at least a fraction of the indices
         x = x_train[x_train.index.isin(indices[:i + 1])]
         y = y_train[y_train.index.isin(indices[:i + 1])]
         try:
