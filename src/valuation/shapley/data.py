@@ -387,7 +387,7 @@ def naive_montecarlo_shapley(model: Regressor,
                              max_iterations: int,
                              tolerance: float = None,
                              job_id: int = 0) \
-        -> Tuple[Dict[int, float], List[int]]:
+        -> Tuple[OrderedDict[int, float], List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points.
 
     This is a direct translation of the formula:
@@ -464,5 +464,5 @@ def naive_montecarlo_shapley(model: Regressor,
             except:
                 scores.append(np.nan)
         values[i] = mean_score
-    return values, []
+    return OrderedDict(sorted(values.items(), key=lambda item: item[1])), []
 

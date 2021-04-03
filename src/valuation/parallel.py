@@ -43,25 +43,21 @@ def run_and_gather(fun: Callable[..., Tuple[dict, List]],
 
     runs = trange(num_runs, position=0) if progress_bar else range(num_runs)
     for i in runs:
-        vals, hist = _fun(run_id=i)
+        ret = _fun(run_id=i)
         # HACK: Merge results from calls to Parallel
-        values = {}
+        values = OrderedDict()
         history = []
-        if isinstance(vals, list):
-            for _values in vals:
-                values.update(_values)
-            for _hist in hist:
-                history.append(_hist)
+        if isinstance(ret, list):
+            for vv, hh in ret:
+                values.update(vv)
+                history.append(hh)
         # Or don't...
         else:
-            values = vals
-            history = hist
-        values = OrderedDict(sorted(values.items(), key=lambda x: x[1]))
+            values, history = ret
         all_values.append(values)
         all_histories.append(history)
 
     return all_values, all_histories
-
 
 def parallel_wrap(fun: Callable[[Iterable], Dict[int, float]],
                   arg: Tuple[str, List],
