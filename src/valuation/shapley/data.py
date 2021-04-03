@@ -70,7 +70,6 @@ class Worker(mp.Process):
                 if task is not None:
                     self.results.put(result)
             except queue.Empty:
-                self.tasks.put(None)
                 return
 
     def _run(self, permutation: List[int]) -> Dict[int, float]:
@@ -249,11 +248,13 @@ def montecarlo_shapley(model: Regressor,
     pbar.close()
 
     # results_q should be empty now
-    assert results_q.empty(), "WTF? Pending results"
-    # HACK: the peeking in workers might empty they queue temporarily
-    assert tasks_q.get(timeout=0.1) is None, f"WTF? {tasks_q.qsize()} tasks left"
-    # Finally, wait until everyone is done
-    print("Joining...")
+    assert results_q.empty(), \
+        f"WTF? {results_q.qsize()} pending results"
+    # HACK: the peeking in workers might empty the queue temporarily between the
+    #  peeking and the restoring temporarily, so we allow for some timeout.
+    assert tasks_q.get(timeout=0.1) is None, \
+        f"WTF? {tasks_q.qsize()} pending tasks"
+
     for w in workers:
         w.join()
         w.close()
