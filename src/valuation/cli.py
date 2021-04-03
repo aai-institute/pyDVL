@@ -1,3 +1,5 @@
+import pickle
+
 import click
 from functools import partial
 from valuation import _logger
@@ -87,7 +89,7 @@ def run(verbosity,
               help="Number of MonteCarlo samples (factor of training set size)")
 @click.option('-w', '--value-tolerance',
               type=click.FloatRange(1e-12, None),
-              default=1e-2,
+              default=1e-3,
               show_default=True,
               help="Tolerance for the convergence criterion of Shapley values")
 @click.option('-e', '--score-tolerance',
@@ -150,15 +152,17 @@ def shapley(
                   max_permutations=max_permutations,
                   num_workers=num_jobs,
                   worker_progress=True)
-    values, hist = run_and_gather(fun, num_runs=num_runs, progress_bar=False)
+    values, history = run_and_gather(fun, num_runs=num_runs, progress_bar=False)
     scores = compute_fb_scores(values, model, data)
     print("Saving results...")
     filename = f'save_{max_permutations}_iterations_{num_runs}_runs_' \
                f'{score_tolerance}_score_{value_tolerance}_value'
     # if task is not None:
     #     task.upload_artifact(name=filename, artifact_object=results)
-    # with open(f'{filename}.pkl', 'wb') as fd:
-    #     cloudpickle.dump(results, fd)
+    with open(f'{filename}.pkl', 'wb') as fd:
+        pickle.dump({'values': values, 'history': history}, fd)
+    scores.update({'max_iterations': max_permutations,
+                   'score_name': "$R^2$"})
     shapley_results(scores, filename=f'{filename}.png')
 
 

@@ -54,10 +54,10 @@ def shapley_results(results: dict, filename: str = None):
     values = np.array(results['backward_random_scores'])[:, :use_points]
     shaded_mean_std(values, color='r', linestyle='--', label='At random')
 
-    plt.ylabel(f'Score ({results["score_name"]})')
+    plt.ylabel(f'Score ({results.get("score_name")})')
     plt.xlabel('Points removed')
     plt.title(f'Effect of point removal. '
-              f'MonteCarlo with {results["max_iterations"]} iterations '
+              f'MonteCarlo with {results.get("max_iterations")} iterations '
               f'over {num_runs} runs')
     plt.legend()
 
@@ -72,7 +72,7 @@ def shapley_results(results: dict, filename: str = None):
     values = np.array(results['forward_random_scores'])[:, :use_points]
     shaded_mean_std(values, color='r', linestyle='--', label='At random')
 
-    plt.ylabel('Score ($R^2$)')
+    plt.ylabel(f'Score ({results.get("score_name")})')
     plt.xlabel('Points added')
     plt.title(f'Effect of point addition. '
               f'MonteCarlo with {results["max_iterations"]} iterations '
