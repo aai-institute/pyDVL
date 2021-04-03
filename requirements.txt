@@ -5,3 +5,4 @@ joblib
 tqdm
 sklearn
 matplotlib
+click
