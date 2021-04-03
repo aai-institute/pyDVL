@@ -65,14 +65,11 @@ class Worker(mp.Process):
 
     def run(self):
         while True:
-            try:
-                # FIXME: I expected get() on a close()d queue to raise, but it
-                #  doesn't. Instead we exit if no tasks are waiting, but this
-                #  could fail if we don't have time in the main process before
-                #  to put new ones in the queue.
-                task = self.tasks.get(timeout=0.1)
-            except queue.Empty:
-                return
+            # FIXME: I expected get() on a close()d queue to raise, but it
+            #  doesn't. Instead we raise EmptyQueue if no tasks are waiting,
+            #  but this could fail if we don't have time in the main process
+            #  before to put new ones in the queue.
+            task = self.tasks.get(timeout=0.1)
             result = self._run(task)
             self.results.put(result)
 
@@ -127,7 +124,8 @@ def montecarlo_shapley(model: Regressor,
                        value_tolerance: float,
                        max_permutations: int,
                        num_workers: int,
-                       run_id: int = 0) \
+                       run_id: int = 0,
+                       worker_progress: bool = False) \
         -> Tuple[Dict[int, float], List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points.
 
@@ -188,7 +186,8 @@ def montecarlo_shapley(model: Regressor,
 
     workers = [Worker(i + 1,
                       tasks_q, results_q, converged, model, global_score,
-                      data, min_samples, score_tolerance)
+                      data, min_samples, score_tolerance,
+                      progress_bar=worker_progress)
                for i in range(num_workers)]
 
     # Fill the queue before starting the workers or they will immediately quit
@@ -242,7 +241,7 @@ def montecarlo_shapley(model: Regressor,
     pbar.close()
 
     for w in tqdm(workers, desc="Joining"):
-        w.join()
+        w.join(timeout=0.01)
 
     return OrderedDict(sorted(values.items(), key=lambda item: item[1])), \
            converged_history
@@ -394,9 +393,8 @@ def naive_montecarlo_shapley(model: Regressor,
     fun = partial(naive_montecarlo_shapley, model, model.score,
                   x_train, y_train, x_test, y_test,
                   max_iterations=max_iterations, tolerance=None)
-    delayed_fun = list(delayed(fun)(indices=ii, job_id=i)
-                       for i, ii in enumerate(indices))
-    all_values = run_and_gather(delayed_fun, num_jobs, num_runs)
+    wrapped = parallel_wrap(fun, ("indices", indices), num_jobs=160)
+    values, _ = run_and_gather(wrapped, num_jobs, num_runs)
 
     Arguments
     =========
@@ -415,7 +413,7 @@ def naive_montecarlo_shapley(model: Regressor,
     if tolerance is not None:
         raise NotImplementedError("Tolerance not implemented")
 
-    values = {i: 0.0 for i in data.x_train.index}
+    values = {i: 0.0 for i in indices}
 
     for i in indices:
         pbar = trange(max_iterations, position=job_id, desc=f"Index {i}")
