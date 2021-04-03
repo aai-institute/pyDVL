@@ -31,7 +31,10 @@ def maybe_init_task(task_name: str, clearml_config: dict, task_params: dict):
             task.connect(v, name=k)
 
 
-@click.group()
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.option('-v', '--verbosity',
               count=True,
               default=0,
