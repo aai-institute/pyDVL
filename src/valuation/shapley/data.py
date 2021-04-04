@@ -19,7 +19,7 @@ from collections import OrderedDict
 from tqdm.auto import tqdm, trange
 
 from valuation.reporting.scores import sort_values_history
-from valuation.utils import Dataset, Regressor, vanishing_derivatives
+from valuation.utils import Dataset, SupervisedModel, vanishing_derivatives
 
 
 class Worker(mp.Process):
@@ -33,7 +33,7 @@ class Worker(mp.Process):
                  tasks: mp.Queue,
                  results: mp.Queue,
                  converged: mp.Value,
-                 model: Regressor,
+                 model: SupervisedModel,
                  global_score: float,
                  data: Dataset,
                  min_samples: int,
@@ -100,10 +100,8 @@ class Worker(mp.Process):
                     early_stop = j
                 scores[j] = scores[j - 1]
             else:
-                x = self.data.x_train[
-                        self.data.x_train.index.isin(permutation[:j + 1])]
-                y = self.data.y_train[
-                        self.data.y_train.index.isin(permutation[:j + 1])]
+                x = self.data.x_train[self.data.index.isin(permutation[:j + 1])]
+                y = self.data.y_train[self.data.index.isin(permutation[:j + 1])]
                 try:
                     self.model.fit(x, y.values.ravel())
                     scores[j] = self.model.score(self.data.x_test,
@@ -112,11 +110,11 @@ class Worker(mp.Process):
                     scores[j] = np.nan
             pbar.update()
         pbar.close()
-        # FIXME: sending permutation back is wasteful
+        # FIXME: sending the permutation back is wasteful
         return permutation, scores, early_stop
 
 
-def montecarlo_shapley(model: Regressor,
+def montecarlo_shapley(model: SupervisedModel,
                        data: Dataset,
                        bootstrap_iterations: int,
                        min_samples: int,
@@ -161,7 +159,7 @@ def montecarlo_shapley(model: Regressor,
 
     """
     # if values is None:
-    values = {i: [0.0] for i in data.x_train.index}
+    values = {i: [0.0] for i in data.index}
     # if converged_history is None:
     converged_history = []
 
@@ -192,7 +190,7 @@ def montecarlo_shapley(model: Regressor,
 
     # Fill the queue before starting the workers or they will immediately quit
     for _ in range(2 * num_workers):
-        tasks_q.put(np.random.permutation(data.x_train.index))
+        tasks_q.put(np.random.permutation(data.index))
 
     for w in workers:
         w.start()
@@ -207,7 +205,7 @@ def montecarlo_shapley(model: Regressor,
     pbar = tqdm(total=num_samples, position=0, desc=f"Run {run_id}. Converged")
     while converged.value < num_samples and iteration <= max_permutations:
         get_process_result(iteration)
-        tasks_q.put(np.random.permutation(data.x_train.index))
+        tasks_q.put(np.random.permutation(data.index))
         if iteration > min_values:
             converged.value = \
                 vanishing_derivatives(np.array(list(values.values())),
@@ -266,7 +264,7 @@ def montecarlo_shapley(model: Regressor,
 # TODO: Legacy implementations. Remove after thoroughly testing the one above.
 
 
-def serial_montecarlo_shapley(model: Regressor,
+def serial_montecarlo_shapley(model: SupervisedModel,
                               data: Dataset,
                               bootstrap_iterations: int,
                               min_samples: int,
@@ -305,11 +303,13 @@ def serial_montecarlo_shapley(model: Regressor,
          derivative of the means of the last min_steps values are within
          value_tolerance close to 0
         :param max_iterations: never run more than these many iterations
+        :param values: Use these as starting point (retake computation)
+        :param converged_history: Append to this history
         :return: Dict of approximated Shapley values for the indices
 
     """
     if values is None:
-        values = {i: [0.0] for i in data.x_train.index}
+        values = {i: [0.0] for i in data.index}
 
     if converged_history is None:
         converged_history = []
@@ -331,7 +331,7 @@ def serial_montecarlo_shapley(model: Regressor,
     pbar = tqdm(total=num_samples, position=0, desc=f"Run {run_id}")
     while iteration < min_steps \
             or (converged < num_samples and iteration < max_iterations):
-        permutation = np.random.permutation(data.x_train.index)
+        permutation = np.random.permutation(data.index)
 
         # FIXME: need score for model fitted on empty dataset
         scores = np.zeros(len(permutation) + 1)
@@ -349,24 +349,26 @@ def serial_montecarlo_shapley(model: Regressor,
             if abs(global_score - last_scores) < score_tolerance:
                 scores[j + 1] = scores[j]
             else:
-                x = data.x_train[data.x_train.index.isin(permutation[:j + 1])]
-                y = data.y_train[data.y_train.index.isin(permutation[:j + 1])]
+                x = data.x_train[data.index.isin(permutation[:j + 1])]
+                y = data.y_train[data.index.isin(permutation[:j + 1])]
                 model.fit(x, y.values.ravel())
                 scores[j + 1] = model.score(data.x_test,
                                             data.y_test.values.ravel())
             # Update mean value: mean_n = mean_{n-1} + (new_val - mean_{n-1})/n
             # FIXME: is this correct?
-            raise NotImplemented("FIXME: check updating of values")
             values[permutation[j]].append(
                     values[permutation[j]][-1]
                     + (scores[j + 1] - values[permutation[j]][-1]) / (j + 1))
 
         # Check empirical convergence of means (1st derivative ~= 0)
-        last_values = np.array(list(values.values()))[:, - (min_steps + 1):]
-        d = np.diff(last_values, axis=1)
-        converged = np.isclose(d, 0.0, atol=value_tolerance).sum()
+        # last_values = np.array(list(values.values()))[:, - (min_steps + 1):]
+        # d = np.diff(last_values, axis=1)
+        # converged = np.isclose(d, 0.0, atol=value_tolerance).sum()
+        converged = \
+            vanishing_derivatives(np.array(list(values.values())),
+                                  min_values=min_steps,
+                                  value_tolerance=value_tolerance)
         converged_history.append(converged)
-
         iteration += 1
         pbar.refresh()
 
@@ -375,7 +377,7 @@ def serial_montecarlo_shapley(model: Regressor,
     return sort_values_history(values), converged_history
 
 
-def naive_montecarlo_shapley(model: Regressor,
+def naive_montecarlo_shapley(model: SupervisedModel,
                              utility: Callable[[np.ndarray, np.ndarray], float],
                              data: Dataset,
                              indices: List[int],
@@ -436,7 +438,7 @@ def naive_montecarlo_shapley(model: Regressor,
         for _ in pbar:
             mean_score = np.nanmean(scores) if scores else 0.0
             pbar.set_postfix_str(f"mean: {mean_score:.2f}")
-            permutation = np.random.permutation(data.x_train.index)
+            permutation = np.random.permutation(data.index)
             # yuk... does not stop after match
             loc = np.where(permutation == i)[0][0]
 

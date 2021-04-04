@@ -16,6 +16,14 @@ class Dataset:
         self.y_test = pd.DataFrame(y_test, columns=['target'])
         self._description = data.DESCR
 
+        assert (self.x_train.index == self.y_train.index).all(), "huh?"
+
+    @property
+    def index(self):
+        """ Shorthand for Dataset.x_train.index """
+        # Ok, it might be confusing to have index == x_train.index...
+        return self.x_train.index
+
     # hacky 🙈
     def __str__(self):
         return self._description
