@@ -17,7 +17,7 @@ from unittest.mock import Mock
 from typing import Callable, Dict, List, Tuple
 from collections import OrderedDict
 from tqdm.auto import tqdm, trange
-from valuation.utils import Dataset, Regressor
+from valuation.utils import Dataset, Regressor, vanishing_derivatives
 
 
 class Worker(mp.Process):
@@ -203,20 +203,19 @@ def montecarlo_shapley(model: Regressor,
         for k, v in res.items():
             values[k].append(v)
 
-        # Check empirical convergence of means (1st derivative ~= 0)
-        last_values = np.array(list(values.values()))[:, - (min_values + 1):]
-        d = np.diff(last_values, axis=1)
-        converged.value = iteration >= min_values \
-                          and np.isclose(d, 0.0, atol=value_tolerance).sum()
-        converged_history.append(converged.value)
+        if iteration >= min_values:
+            converged.value = vanishing_derivatives(np.array(list(values.values())),
+                                                    min_values=min_values,
+                                                    value_tolerance=value_tolerance)
+            converged_history.append(converged.value)
 
-        # converged.value can decrease. reset() clears times, but if just update
-        # the bar collapses. This is some hackery to fix that:
+        # converged.value can decrease. reset() clears times, but if just call
+        # update(), the bar collapses. This is some hackery to fix that:
         pbar.n = converged.value
         pbar.last_print_n = converged.value
         pbar.last_print_t = time()
-        # pbar.update(converged.value)
         pbar.refresh()
+
         permutation = np.random.permutation(data.x_train.index)
         tasks_q.put(permutation)
         iteration += 1
