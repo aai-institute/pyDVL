@@ -16,6 +16,11 @@ def sort_values_history(values: dict) -> OrderedDict:
     return OrderedDict(sorted(values.items(), key=lambda x: x[1][-1]))
 
 
+def sort_values(values: dict) -> OrderedDict:
+    """ Sorts a dict of sample_id: value_float by value. """
+    return OrderedDict(sorted(values.items(), key=lambda x: x[1]))
+
+
 def backward_elimination(model: Regressor,
                          data: Dataset,
                          indices: List[int],
@@ -96,7 +101,7 @@ def compute_fb_scores(values: List[OrderedDict],
                     indices=np.random.permutation(
                             list(values[i % num_runs].keys())),
                     job_id=i)
-                    for i, _ in enumerate(values, start=2 * num_runs)))
+             for i, _ in enumerate(values, start=2 * num_runs)))
 
     ffun = partial(forward_selection, model, data)
     forward_scores_delayed = chain(
@@ -108,7 +113,7 @@ def compute_fb_scores(values: List[OrderedDict],
                     indices=np.random.permutation(
                             list(values[i % num_runs].keys())),
                     job_id=i)
-                    for i, _ in enumerate(values, start=5 * num_runs)))
+             for i, _ in enumerate(values, start=5 * num_runs)))
 
     all_scores = Parallel(n_jobs=6 * num_runs)(
             chain(backward_scores_delayed, forward_scores_delayed))
