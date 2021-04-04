@@ -17,6 +17,8 @@ from unittest.mock import Mock
 from typing import Callable, Dict, List, Tuple
 from collections import OrderedDict
 from tqdm.auto import tqdm, trange
+
+from valuation.reporting.scores import sort_values_history
 from valuation.utils import Dataset, Regressor, vanishing_derivatives
 
 
@@ -44,7 +46,6 @@ class Worker(mp.Process):
         self.tasks = tasks
         self.results = results
         self.converged = converged
-        self.early_stops = []  # TODO: use mp.Value and report
         self.model = model
         self.global_score = global_score
         self.data = data
@@ -72,10 +73,12 @@ class Worker(mp.Process):
             except queue.Empty:
                 return
 
-    def _run(self, permutation: List[int]) -> Dict[int, float]:
+    def _run(self, permutation: np.ndarray) \
+            -> Tuple[np.ndarray, np.ndarray, int]:
         """ """
         # scores[0] is the value of training on the empty set.
-        scores = np.zeros(len(permutation) + 1)
+        n = len(permutation)
+        scores = np.zeros(n + 1)
         if self.progress_bar:
             pbar = tqdm(total=self.num_samples, position=self.id,
                         desc=f"{self.name}", leave=False)
@@ -97,8 +100,10 @@ class Worker(mp.Process):
                     early_stop = j
                 scores[j] = scores[j - 1]
             else:
-                x = self.data.x_train[self.data.x_train.index.isin(permutation[:j + 1])]
-                y = self.data.y_train[self.data.y_train.index.isin(permutation[:j + 1])]
+                x = self.data.x_train[
+                        self.data.x_train.index.isin(permutation[:j + 1])]
+                y = self.data.y_train[
+                        self.data.y_train.index.isin(permutation[:j + 1])]
                 try:
                     self.model.fit(x, y.values.ravel())
                     scores[j] = self.model.score(self.data.x_test,
@@ -107,11 +112,8 @@ class Worker(mp.Process):
                     scores[j] = np.nan
             pbar.update()
         pbar.close()
-        if early_stop is not None:
-            n = len(permutation)
-            self.early_stops.append((n - early_stop) / n)
-        # TODO: return self.earlyNones
-        return {k: v for k, v in zip(permutation, scores[1:])}
+        # FIXME: sending permutation back is wasteful
+        return permutation, scores, early_stop
 
 
 def montecarlo_shapley(model: Regressor,
@@ -125,7 +127,7 @@ def montecarlo_shapley(model: Regressor,
                        num_workers: int,
                        run_id: int = 0,
                        worker_progress: bool = False) \
-        -> Tuple[Dict[int, float], List[int]]:
+        -> Tuple[OrderedDict, List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points.
 
     Instead of naively implementing the expectation, we sequentially add points
@@ -176,7 +178,6 @@ def montecarlo_shapley(model: Regressor,
     # plt.hist(_scores, bins=40)
     # plt.savefig("bootstrap.png")
 
-    iteration = 0
     num_samples = len(data)
 
     tasks_q = mp.Queue()
@@ -196,28 +197,30 @@ def montecarlo_shapley(model: Regressor,
     for w in workers:
         w.start()
 
+    iteration = 1
+
+    def get_process_result(it: int, timeout: float=None):
+        permutation, scores, early_stop = results_q.get(timeout=timeout)
+        for j, s, p in zip(permutation, scores[1:], scores[:-1]):
+            values[j].append((it - 1) / it * values[j][-1] + (s - p) / it)
+
     pbar = tqdm(total=num_samples, position=0, desc=f"Run {run_id}. Converged")
-    while converged.value < num_samples and iteration < max_permutations:
-        res = results_q.get()
-
-        for k, v in res.items():
-            values[k].append(v)
-
-        if iteration >= min_values:
-            converged.value = vanishing_derivatives(np.array(list(values.values())),
-                                                    min_values=min_values,
-                                                    value_tolerance=value_tolerance)
+    while converged.value < num_samples and iteration <= max_permutations:
+        get_process_result(iteration)
+        tasks_q.put(np.random.permutation(data.x_train.index))
+        if iteration > min_values:
+            converged.value = \
+                vanishing_derivatives(np.array(list(values.values())),
+                                      min_values=min_values,
+                                      value_tolerance=value_tolerance)
             converged_history.append(converged.value)
 
         # converged.value can decrease. reset() clears times, but if just call
         # update(), the bar collapses. This is some hackery to fix that:
         pbar.n = converged.value
-        pbar.last_print_n = converged.value
-        pbar.last_print_t = time()
+        pbar.last_print_n, pbar.last_print_t = converged.value, time()
         pbar.refresh()
 
-        permutation = np.random.permutation(data.x_train.index)
-        tasks_q.put(permutation)
         iteration += 1
 
     # Clear the queue of pending tasks
@@ -235,13 +238,11 @@ def montecarlo_shapley(model: Regressor,
     pbar.total = len(workers)
     pbar.reset()
     try:
+        tmp = iteration
         while True:
-            res = results_q.get(timeout=1.0)
-            n = 0
-            for k, v in res.items():
-                values[k].append(v)
-            n += 1
-            pbar.update(n)
+            get_process_result(iteration, timeout=1.0)
+            iteration += 1
+            pbar.update(iteration - tmp)
     except queue.Empty:
         pass
     pbar.close()
@@ -258,8 +259,7 @@ def montecarlo_shapley(model: Regressor,
         w.join()
         w.close()
 
-    return OrderedDict(sorted(values.items(), key=lambda item: item[1])), \
-           converged_history
+    return sort_values_history(values), converged_history
 
 
 ################################################################################
@@ -277,7 +277,7 @@ def serial_montecarlo_shapley(model: Regressor,
                               values: Dict[int, List[float]] = None,
                               converged_history: List[int] = None,
                               run_id: int = 0) \
-        -> Tuple[Dict[int, float], List[int]]:
+        -> Tuple[OrderedDict, List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points using
     only one CPU.
 
@@ -355,6 +355,8 @@ def serial_montecarlo_shapley(model: Regressor,
                 scores[j + 1] = model.score(data.x_test,
                                             data.y_test.values.ravel())
             # Update mean value: mean_n = mean_{n-1} + (new_val - mean_{n-1})/n
+            # FIXME: is this correct?
+            raise NotImplemented("FIXME: check updating of values")
             values[permutation[j]].append(
                     values[permutation[j]][-1]
                     + (scores[j + 1] - values[permutation[j]][-1]) / (j + 1))
@@ -369,11 +371,8 @@ def serial_montecarlo_shapley(model: Regressor,
         pbar.refresh()
 
     pbar.close()
-    # return OrderedDict(sorted({k: v[-1] for k, v in values.items()}.items(
-    # ), key=lambda x: x[1]))
 
-    return OrderedDict(sorted(values.items(), key=lambda item: item[1][-1])), \
-           converged_history
+    return sort_values_history(values), converged_history
 
 
 def naive_montecarlo_shapley(model: Regressor,
@@ -455,5 +454,5 @@ def naive_montecarlo_shapley(model: Regressor,
             except:
                 scores.append(np.nan)
         values[i] = mean_score
-    return OrderedDict(sorted(values.items(), key=lambda item: item[1])), []
+    return sort_values_history(values), []
 

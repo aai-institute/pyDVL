@@ -1,14 +1,19 @@
-import pandas as pd
 import numpy as np
+
+from collections import OrderedDict
 from functools import partial
 from itertools import chain
 from joblib import Parallel, delayed
-
 from typing import List
 from tqdm import tqdm, trange
 
 from valuation.utils import Dataset
 from valuation.utils.types import Regressor
+
+
+def sort_values_history(values: dict) -> OrderedDict:
+    """ Sorts a dict of sample_id: [values] by the last item in each list. """
+    return OrderedDict(sorted(values.items(), key=lambda x: x[1][-1]))
 
 
 def backward_elimination(model: Regressor,
@@ -68,11 +73,14 @@ def forward_selection(model: Regressor,
     return scores
 
 
-def compute_fb_scores(values, model: Regressor, data: Dataset) -> dict:
+def compute_fb_scores(values: List[OrderedDict],
+                      model: Regressor,
+                      data: Dataset) -> dict:
     """ Compute scores during forward selection and backward elimination of
      points, in parallel.
 
-     :param values: dict of Shapley values
+     :param values: OrderedDict of Shapley values, with keys sorted by
+                    increasing value of the last item of the lists
      :param model: sklearn model implementing fit()
      :param data: split Dataset
     """

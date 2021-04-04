@@ -56,6 +56,8 @@ def run_and_gather(fun: Callable[..., Tuple[OrderedDict, List]],
         # Or don't...
         else:
             values, history = ret
+        # TODO: checkpoint
+
         all_values.append(values)
         all_histories.append(history)
 
