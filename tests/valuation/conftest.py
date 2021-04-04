@@ -1,11 +1,8 @@
 import pytest
+from valuation.utils import Dataset
 
 
-@pytest.fixture()
-def fixture_1():
-    return 1
-
-
-@pytest.fixture()
-def fixture_2():
-    return 2
+@pytest.fixture(scope="module")
+def dataset():
+    from sklearn import datasets
+    return Dataset(datasets.load_boston())
