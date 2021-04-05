@@ -171,8 +171,8 @@ def parallel_montecarlo_shapley(model: SupervisedModel,
     for _ in trange(bootstrap_iterations, desc="Bootstrapping"):
         sample = np.random.choice(data.x_test.index, len(data.x_test.index),
                                   replace=True)
-        _scores.append(model.score(data.x_test.loc[sample],
-                                   data.y_test.loc[sample].values.ravel()))
+        _scores.append(model.score(data.x_test.iloc[sample],
+                                   data.y_test.iloc[sample].values.ravel()))
     global_score = float(np.mean(_scores))
     score_tolerance *= np.std(_scores)
     # import matplotlib.pyplot as plt
@@ -322,8 +322,8 @@ def serial_montecarlo_shapley(model: SupervisedModel,
         sample = np.random.choice(data.x_test.index, len(data.x_test.index),
                                   replace=True)
         _scores.append(
-                model.score(data.x_test.loc[sample],
-                            data.y_test.loc[sample].values.ravel()))
+                model.score(data.x_test.iloc[sample],
+                            data.y_test.iloc[sample].values.ravel()))
     global_score = np.mean(_scores)
     score_tolerance *= np.std(_scores)
 
@@ -351,8 +351,8 @@ def serial_montecarlo_shapley(model: SupervisedModel,
             if abs(global_score - last_scores) < score_tolerance:
                 scores[j + 1] = scores[j]
             else:
-                x = data.x_train[permutation[:j + 1]]
-                y = data.y_train[permutation[:j + 1]]
+                x = data.x_train.iloc[permutation[:j + 1]]
+                y = data.y_train.iloc[permutation[:j + 1]]
                 model.fit(x, y.values.ravel())
                 scores[j + 1] = model.score(data.x_test,
                                             data.y_test.values.ravel())
@@ -448,11 +448,11 @@ def naive_montecarlo_shapley(model: SupervisedModel,
             #   are too few rows. We set those as failures.
 
             try:
-                model.fit(data.x_train.loc[permutation[:loc + 1]],
-                          data.y_train.loc[permutation[:loc + 1]].values.ravel())
+                model.fit(data.x_train.iloc[permutation[:loc + 1]],
+                          data.y_train.iloc[permutation[:loc + 1]].values.ravel())
                 score_with = utility(data.x_test, data.y_test.values.ravel())
-                model.fit(data.x_train.loc[permutation[:loc]],
-                          data.y_train.loc[permutation[:loc]].values.ravel())
+                model.fit(data.x_train.iloc[permutation[:loc]],
+                          data.y_train.iloc[permutation[:loc]].values.ravel())
                 score_without = utility(data.x_test, data.y_test.values.ravel())
                 scores.append(score_with - score_without)
             except:
