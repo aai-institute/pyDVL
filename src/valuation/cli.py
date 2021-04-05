@@ -155,7 +155,7 @@ def shapley(
                   max_permutations=max_permutations,
                   num_workers=num_jobs,
                   worker_progress=True)
-    values, history = run_and_gather(fun, num_runs=num_runs, progress_bar=False)
+    values, history = run_and_gather(fun, num_runs=num_runs, progress=False)
     scores = compute_fb_scores(values, model, data)
     print("Saving results...")
     filename = f'save_{max_permutations}_iterations_{num_runs}_runs_' \

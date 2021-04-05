@@ -13,7 +13,7 @@ from tqdm import trange
 
 def run_and_gather(fun: Callable[..., Tuple[OrderedDict, List]],
                    num_runs: int,
-                   progress_bar: bool = False) \
+                   progress: bool = False) \
         -> Tuple[List[OrderedDict], List]:
     """ Runs fun num_runs times and gathers results in a sorted OrderedDict for
     each run, then returns them in a list.
@@ -25,7 +25,7 @@ def run_and_gather(fun: Callable[..., Tuple[OrderedDict, List]],
                 basically `Parallel(delayed(...)(...))(...)`, or exactly one
                 integer argument, the run_id, for display purposes.
     :param num_runs: number of times to repeat the whole procedure.
-    :param progress_bar: True to display a progress bar at the top of the
+    :param progress: True to display a progress bar at the top of the
                          terminal.
     :return: tuple of 2 lists of length num_runs each, one containing per-run
              results sorted by increasing value, the other historic information
@@ -41,7 +41,7 @@ def run_and_gather(fun: Callable[..., Tuple[OrderedDict, List]],
     all_values = []
     all_histories = []
 
-    runs = trange(num_runs, position=0) if progress_bar else range(num_runs)
+    runs = trange(num_runs, position=0) if progress else range(num_runs)
     for i in runs:
         ret = _fun(run_id=i)
         # HACK: Merge results from calls to Parallel
@@ -77,7 +77,7 @@ def parallel_wrap(fun: Callable[[Iterable], Dict[int, float]],
                 `arg[0]`. The argument's value should be a list, given in
                 `arg[1]`. Each job will receive a chunk of the complete list.
     :param arg: ("fun_arg_name", [values to split across jobs])
-    :param num_jobs: number of parallel jobs to run
+    :param num_jobs: number of parallel jobs to run. Does not accept -1
     :param job_id_arg: argument name to pass the job id for display purposes
                        (e.g. progress bar position). The value passed will be
                        job_id + 1 (to allow for a global bar at position=0). Set
