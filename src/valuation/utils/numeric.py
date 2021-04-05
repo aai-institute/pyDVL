@@ -58,3 +58,12 @@ def utility(model: SupervisedModel,
             return np.nan
         else:
             raise e
+
+
+def lower_bound_hoeffding(delta: float, eps: float, r: float) -> int:
+    """ Minimum number of samples required for MonteCarlo Shapley to obtain
+    an (eps,delta) approximation.
+    That is, with probability 1-delta, the estimate will be epsilon close to
+     the true quantity, if at least so many monte carlo samples are taken.
+    """
+    return int(np.ceil(np.log(2 / delta) * r ** 2 / (2 * eps ** 2)))
