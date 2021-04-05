@@ -5,9 +5,9 @@ from valuation.utils import vanishing_derivatives
 from valuation.utils.numeric import powerset
 
 
-def test_dataset_len(dataset):
-    assert len(dataset) == len(dataset.x_train) == 404
-    assert len(dataset.x_train) + len(dataset.x_test) == 506
+def test_dataset_len(boston_dataset):
+    assert len(boston_dataset) == len(boston_dataset.x_train) == 404
+    assert len(boston_dataset.x_train) + len(boston_dataset.x_test) == 506
 
 
 def test_vanishing_derivatives():
