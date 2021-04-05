@@ -1,9 +1,8 @@
 import numpy as np
 
-from collections import Iterable
 from functools import lru_cache
 from itertools import chain, combinations
-from typing import Iterator, Tuple
+from typing import Iterator, Iterable
 from valuation.utils.dataset import Dataset
 from valuation.utils.types import SupervisedModel
 
@@ -35,7 +34,7 @@ def powerset(it: Iterable) -> Iterator:
 @lru_cache
 def utility(model: SupervisedModel,
             data: Dataset,
-            indices: Tuple[int],
+            indices: Iterable[int],
             catch_errors: bool = True) -> float:
     """ Fits the model on a subset of the training data and scores it on the
     test data.
