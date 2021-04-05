@@ -3,7 +3,7 @@ import pickle
 import click
 from functools import partial
 from valuation import _logger
-from valuation.shapley.data import montecarlo_shapley
+from valuation.shapley.montecarlo import parallel_montecarlo_shapley
 from valuation.reporting.scores import compute_fb_scores
 from valuation.reporting.plots import shapley_results
 from valuation.utils import Dataset, run_and_gather
@@ -144,7 +144,7 @@ def shapley(
     max_permutations = int(permutations_ratio * len(data))
 
     model = GradientBoostingRegressor()
-    fun = partial(montecarlo_shapley,
+    fun = partial(parallel_montecarlo_shapley,
                   model=model,
                   data=data,
                   bootstrap_iterations=bootstrap_iterations,

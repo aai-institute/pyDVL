@@ -24,6 +24,11 @@ class Dataset:
         # Ok, it might be confusing to have index == x_train.index...
         return self.x_train.index
 
+    @property
+    def dim(self):
+        """ Returns the number of dimensions of a sample. """
+        return self.x_train.shape[1]
+
     # hacky 🙈
     def __str__(self):
         return self._description

@@ -66,10 +66,9 @@ def forward_selection(model: Regressor,
     scores = []
     for i in trange(len(indices), position=job_id,
                     desc=f"Forward selection. Job {job_id}"):
-        # FIXME: don't do a full index search on each iteration
         # FIXME: always train on at least a fraction of the indices
-        x = data.x_train[data.x_train.index.isin(indices[:i + 1])]
-        y = data.y_train[data.y_train.index.isin(indices[:i + 1])]
+        x = data.x_train.iloc[indices[:i + 1]]
+        y = data.y_train.iloc[indices[:i + 1]]
         try:
             model.fit(x, y.values.ravel())
             scores.append(model.score(data.x_test, data.y_test.values.ravel()))

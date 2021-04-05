@@ -22,7 +22,10 @@ from valuation.reporting.scores import sort_values_history
 from valuation.utils import Dataset, SupervisedModel, vanishing_derivatives
 
 
-class Worker(mp.Process):
+__all__ = ['parallel_montecarlo_shapley', 'serial_montecarlo_shapley']
+
+
+class ShapleyWorker(mp.Process):
     """ A simple consumer worker using two queues.
 
      TODO: use shared memory to avoid copying data
@@ -100,8 +103,8 @@ class Worker(mp.Process):
                     early_stop = j
                 scores[j] = scores[j - 1]
             else:
-                x = self.data.x_train[self.data.index.isin(permutation[:j + 1])]
-                y = self.data.y_train[self.data.index.isin(permutation[:j + 1])]
+                x = self.data.x_train.iloc[permutation[:j + 1]]
+                y = self.data.y_train.iloc[permutation[:j + 1]]
                 try:
                     self.model.fit(x, y.values.ravel())
                     scores[j] = self.model.score(self.data.x_test,
@@ -114,17 +117,17 @@ class Worker(mp.Process):
         return permutation, scores, early_stop
 
 
-def montecarlo_shapley(model: SupervisedModel,
-                       data: Dataset,
-                       bootstrap_iterations: int,
-                       min_samples: int,
-                       score_tolerance: float,
-                       min_values: int,
-                       value_tolerance: float,
-                       max_permutations: int,
-                       num_workers: int,
-                       run_id: int = 0,
-                       worker_progress: bool = False) \
+def parallel_montecarlo_shapley(model: SupervisedModel,
+                                data: Dataset,
+                                bootstrap_iterations: int,
+                                min_samples: int,
+                                score_tolerance: float,
+                                min_values: int,
+                                value_tolerance: float,
+                                max_permutations: int,
+                                num_workers: int,
+                                run_id: int = 0,
+                                worker_progress: bool = False) \
         -> Tuple[OrderedDict, List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points.
 
@@ -182,10 +185,10 @@ def montecarlo_shapley(model: SupervisedModel,
     results_q = mp.Queue()
     converged = mp.Value('i', 0)
 
-    workers = [Worker(i + 1,
-                      tasks_q, results_q, converged, model, global_score,
-                      data, min_samples, score_tolerance,
-                      progress_bar=worker_progress)
+    workers = [ShapleyWorker(i + 1,
+                             tasks_q, results_q, converged, model, global_score,
+                             data, min_samples, score_tolerance,
+                             progress_bar=worker_progress)
                for i in range(num_workers)]
 
     # Fill the queue before starting the workers or they will immediately quit
@@ -273,8 +276,7 @@ def serial_montecarlo_shapley(model: SupervisedModel,
                               value_tolerance: float,
                               max_iterations: int,
                               values: Dict[int, List[float]] = None,
-                              converged_history: List[int] = None,
-                              run_id: int = 0) \
+                              converged_history: List[int] = None) \
         -> Tuple[OrderedDict, List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points using
     only one CPU.
@@ -328,7 +330,7 @@ def serial_montecarlo_shapley(model: SupervisedModel,
     iteration = 0
     converged = 0
     num_samples = len(data)
-    pbar = tqdm(total=num_samples, position=0, desc=f"Run {run_id}")
+    pbar = tqdm(total=num_samples, position=1, desc=f"MCShapley")
     while iteration < min_steps \
             or (converged < num_samples and iteration < max_iterations):
         permutation = np.random.permutation(data.index)
@@ -349,8 +351,8 @@ def serial_montecarlo_shapley(model: SupervisedModel,
             if abs(global_score - last_scores) < score_tolerance:
                 scores[j + 1] = scores[j]
             else:
-                x = data.x_train[data.index.isin(permutation[:j + 1])]
-                y = data.y_train[data.index.isin(permutation[:j + 1])]
+                x = data.x_train[permutation[:j + 1]]
+                y = data.y_train[permutation[:j + 1]]
                 model.fit(x, y.values.ravel())
                 scores[j + 1] = model.score(data.x_test,
                                             data.y_test.values.ravel())
