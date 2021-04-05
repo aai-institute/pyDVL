@@ -19,7 +19,8 @@ from collections import OrderedDict
 from tqdm.auto import tqdm, trange
 
 from valuation.reporting.scores import sort_values_history
-from valuation.utils import Dataset, SupervisedModel, vanishing_derivatives
+from valuation.utils import Dataset, SupervisedModel,\
+    vanishing_derivatives, utility
 
 
 __all__ = ['parallel_montecarlo_shapley', 'serial_montecarlo_shapley']
@@ -103,14 +104,7 @@ class ShapleyWorker(mp.Process):
                     early_stop = j
                 scores[j] = scores[j - 1]
             else:
-                x = self.data.x_train.iloc[permutation[:j + 1]]
-                y = self.data.y_train.iloc[permutation[:j + 1]]
-                try:
-                    self.model.fit(x, y.values.ravel())
-                    scores[j] = self.model.score(self.data.x_test,
-                                                 self.data.y_test.values.ravel())
-                except:
-                    scores[j] = np.nan
+                scores[j] = utility(self.model, self.data, permutation[:j+1])
             pbar.update()
         pbar.close()
         # FIXME: sending the permutation back is wasteful
@@ -351,13 +345,8 @@ def serial_montecarlo_shapley(model: SupervisedModel,
             if abs(global_score - last_scores) < score_tolerance:
                 scores[j + 1] = scores[j]
             else:
-                x = data.x_train.iloc[permutation[:j + 1]]
-                y = data.y_train.iloc[permutation[:j + 1]]
-                model.fit(x, y.values.ravel())
-                scores[j + 1] = model.score(data.x_test,
-                                            data.y_test.values.ravel())
+                scores[j + 1] = utility(model, data, permutation[:j+1])
             # Update mean value: mean_n = mean_{n-1} + (new_val - mean_{n-1})/n
-            # FIXME: is this correct?
             values[permutation[j]].append(
                     values[permutation[j]][-1]
                     + (scores[j + 1] - values[permutation[j]][-1]) / (j + 1))
@@ -380,7 +369,6 @@ def serial_montecarlo_shapley(model: SupervisedModel,
 
 
 def naive_montecarlo_shapley(model: SupervisedModel,
-                             utility: Callable[[np.ndarray, np.ndarray], float],
                              data: Dataset,
                              indices: List[int],
                              max_iterations: int,
@@ -417,7 +405,6 @@ def naive_montecarlo_shapley(model: SupervisedModel,
     Arguments
     =========
         :param model: sklearn model / pipeline
-        :param utility: utility function (e.g. any score function to maximise)
         :param data: split Dataset
         :param max_iterations: Set to e.g. len(x_train)/2: at 50% truncation the
             paper reports ~95% rank correlation with shapley values without
@@ -433,30 +420,20 @@ def naive_montecarlo_shapley(model: SupervisedModel,
 
     values = {i: 0.0 for i in indices}
 
+    # FIXME: exchange the loops to avoid searching with where
     for i in indices:
         pbar = trange(max_iterations, position=job_id, desc=f"Index {i}")
         mean_score = 0.0
         scores = []
         for _ in pbar:
+            # FIXME: compute mean incrementally mean_n+1=mean_n+1+(val-mean_n)/n
             mean_score = np.nanmean(scores) if scores else 0.0
             pbar.set_postfix_str(f"mean: {mean_score:.2f}")
             permutation = np.random.permutation(data.index)
             # yuk... does not stop after match
             loc = np.where(permutation == i)[0][0]
-
-            # HACK: some steps in a preprocessing pipeline might fail when there
-            #   are too few rows. We set those as failures.
-
-            try:
-                model.fit(data.x_train.iloc[permutation[:loc + 1]],
-                          data.y_train.iloc[permutation[:loc + 1]].values.ravel())
-                score_with = utility(data.x_test, data.y_test.values.ravel())
-                model.fit(data.x_train.iloc[permutation[:loc]],
-                          data.y_train.iloc[permutation[:loc]].values.ravel())
-                score_without = utility(data.x_test, data.y_test.values.ravel())
-                scores.append(score_with - score_without)
-            except:
-                scores.append(np.nan)
+            scores.append(utility(model, data, permutation[:loc + 1])
+                          - utility(model, data, permutation[:loc]))
         values[i] = mean_score
     return sort_values_history(values), []
 
