@@ -10,4 +10,6 @@ def test_exact_naive_shapley(linear_dataset):
     values_c = exact_combinatorial_shapley(reg, linear_dataset, progress=False)
 
     assert np.alltrue(values_p.keys() == values_c.keys())
-    assert np.allclose(values_p.values(), values_c.values())
+    assert np.allclose(np.array(list(values_p.values())),
+                       np.array(list(values_c.values())),
+                       atol=1e-6)
