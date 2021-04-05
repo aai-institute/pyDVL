@@ -3,8 +3,17 @@ from typing import Iterable, List
 from valuation.utils import Dataset
 
 
-def plot_iris(data: Dataset, indices: List[int] = None, colors: Iterable = None,
+def plot_iris(data: Dataset,
+              indices: List[int] = None,
+              colors: Iterable = None,
               plot_test: bool = False):
+    """Scatter plots for the iris dataset.
+
+    :param data: split Dataset.
+    :param indices: subset of data.x_train.index
+    :param colors: use with indices to set the color (e.g. to values)
+    :param plot_test: plots the points from the test set too.
+    """
     if indices is not None:
         xt = data.x_train.iloc[indices]
         yt = data.y_train.iloc[indices]
