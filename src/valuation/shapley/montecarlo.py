@@ -14,11 +14,11 @@ import queue
 
 from time import time
 from unittest.mock import Mock
-from typing import Callable, Dict, List, Tuple
+from typing import Dict, List, Tuple
 from collections import OrderedDict
 from tqdm.auto import tqdm, trange
 
-from valuation.reporting.scores import sort_values_history
+from valuation.reporting.scores import sort_values, sort_values_history
 from valuation.utils import Dataset, SupervisedModel,\
     vanishing_derivatives, utility
 
@@ -373,7 +373,8 @@ def naive_montecarlo_shapley(model: SupervisedModel,
                              indices: List[int],
                              max_iterations: int,
                              tolerance: float = None,
-                             job_id: int = 0) \
+                             job_id: int = 0,
+                             progress: bool = False) \
         -> Tuple[OrderedDict, List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points.
 
@@ -389,29 +390,25 @@ def naive_montecarlo_shapley(model: SupervisedModel,
 
     Usage example
     =============
-    n = len(x_train)
-    chunk_size = 1 + int(n / num_jobs)
-    indices = [[x_train.index[j] for j in range(i, min(i + chunk_size, n))]
-               for i in range(0, n, chunk_size)]
-    # NOTE: max_iterations should be a fraction of the number of permutations
-    max_iterations = int(iterations_ratio * n)  # x% of training set size
 
-    fun = partial(naive_montecarlo_shapley, model, model.score,
-                  x_train, y_train, x_test, y_test,
+    indices = list(range(len(data)))
+    fun = partial(naive_montecarlo_shapley, model, data
                   max_iterations=max_iterations, tolerance=None)
     wrapped = parallel_wrap(fun, ("indices", indices), num_jobs=160)
-    values, _ = run_and_gather(wrapped, num_jobs, num_runs)
+    vals, hist = run_and_gather(wrapped, num_runs=10, progress_bar=True)
 
     Arguments
     =========
         :param model: sklearn model / pipeline
         :param data: split Dataset
-        :param max_iterations: Set to e.g. len(x_train)/2: at 50% truncation the
-            paper reports ~95% rank correlation with shapley values without
-            truncation. (FIXME: dubious (by Hoeffding). Check the statement)
+        :param indices: subset of data.index to work on (useful for parallel
+            computation with `parallel_wrap`)
+        :param max_iterations: run these many. Compute (eps,delta) lower bound
+            with `lower_bound_hoeffding`
         :param tolerance: NOT IMPLEMENTED stop drawing permutations after delta
             in scores falls below this threshold
         :param job_id: for progress bar positioning
+        :param progress: whether to display a progress bar
         :return: Dict of approximated Shapley values for the indices and dummy
                  list to conform to the generic interface in valuation.parallel
     """
@@ -421,19 +418,25 @@ def naive_montecarlo_shapley(model: SupervisedModel,
     values = {i: 0.0 for i in indices}
 
     # FIXME: exchange the loops to avoid searching with where
-    for i in indices:
-        pbar = trange(max_iterations, position=job_id, desc=f"Index {i}")
+    if progress:
+        pbar = tqdm(indices, position=job_id, total=len(indices))
+    else:
+        pbar = indices
+    for i in pbar:
+        if progress:
+            pbar.set_description(f"Index {i}")
         mean_score = 0.0
         scores = []
-        for _ in pbar:
+        for _ in range(max_iterations):
             # FIXME: compute mean incrementally mean_n+1=mean_n+1+(val-mean_n)/n
             mean_score = np.nanmean(scores) if scores else 0.0
-            pbar.set_postfix_str(f"mean: {mean_score:.2f}")
+            if progress:
+                pbar.set_postfix_str(f"mean: {mean_score:.2f}")
             permutation = np.random.permutation(data.index)
             # yuk... does not stop after match
             loc = np.where(permutation == i)[0][0]
-            scores.append(utility(model, data, permutation[:loc + 1])
-                          - utility(model, data, permutation[:loc]))
+            scores.append(utility(model, data, tuple(permutation[:loc + 1]))
+                          - utility(model, data, tuple(permutation[:loc])))
         values[i] = mean_score
-    return sort_values_history(values), []
+    return sort_values(values), []
 
