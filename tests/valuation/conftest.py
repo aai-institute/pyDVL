@@ -22,5 +22,4 @@ def linear_dataset():
     db.data, db.target = x.reshape(-1, 1), y.reshape(-1, 1)
     db.DESCR = f"y~{a}*x + {b}"
     db.feature_names = ["x"]
-    db.target_names = ["y"]
     return Dataset(data=db, train_size=0.66)
