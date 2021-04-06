@@ -2,9 +2,12 @@ import numpy as np
 
 from functools import lru_cache
 from itertools import chain, combinations
-from typing import Iterator, Iterable
+from random import getrandbits
+from typing import Generator, Iterator, Iterable, List, TypeVar
 from valuation.utils.dataset import Dataset
 from valuation.utils.types import SupervisedModel
+
+T = TypeVar('T')
 
 
 def vanishing_derivatives(values: np.ndarray,
@@ -18,8 +21,12 @@ def vanishing_derivatives(values: np.ndarray,
     return np.sum(zeros >= min_values / 2)
 
 
-def powerset(it: Iterable) -> Iterator:
-    """ Returns an iterator for the power set of
+def powerset(it: Iterable[T]) -> Iterator[Iterable[T]]:
+    """ Returns an iterator for the power set of the argument.
+
+    Subsets are generated in sequence by growing size. See `random_powerset()`
+    for random sampling.
+
     >>> powerset([1,2])
     () (1,) (2,) (1,2)
     """
@@ -67,3 +74,38 @@ def lower_bound_hoeffding(delta: float, eps: float, r: float) -> int:
      the true quantity, if at least so many monte carlo samples are taken.
     """
     return int(np.ceil(np.log(2 / delta) * r ** 2 / (2 * eps ** 2)))
+
+
+def random_subset_indices(n: int) -> List[int]:
+    """ Uniformly samples a subset of indices in the range [0,n).
+    :param n: number of indices.
+    """
+    if n <= 0:
+        return []
+    r = getrandbits(n)
+    indices = []
+    for b in range(n):
+        if r & 1:
+            indices.append(b)
+        r = r >> 1
+    return indices
+
+
+def random_powerset(indices: np.ndarray,
+                    max_subsets: int = None) \
+        -> Generator[np.ndarray, None, None]:
+    """ Uniformly samples a subset from the power set of the argument, without
+    pre-generating all subsets and in no order.
+
+    See `powerset()` if you wish to deterministically generate all subsets.
+    :param indices:
+    :param max_subsets: if set, stop the generator after this many steps.
+    """
+    n = len(indices)
+    total = 1
+    while True:
+        subset = random_subset_indices(n)
+        yield indices[subset]
+        total += 1
+        if total > max_subsets:
+            return
