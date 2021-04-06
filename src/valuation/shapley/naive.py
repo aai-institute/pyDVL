@@ -68,3 +68,28 @@ def exact_combinatorial_shapley(model: SupervisedModel,
     values /= n
 
     return sort_values({i: v for i, v in enumerate(values)})
+
+
+def montecarlo_combinatorial_shapley(model: SupervisedModel,
+                                     data: Dataset,
+                                     indices: Iterable[int],
+                                     progress: bool = True) \
+        -> Tuple[OrderedDict, None]:
+    """ Computes an approximate Shapley value using the combinatorial
+    definition and MonteCarlo samples
+     """
+
+    n = len(data)
+    max_subsets = 2**n  # temporary, FIXME
+    values = np.zeros(n)
+    u = partial(utility, model, data)
+    for i in indices:
+        # Randomly sample subsets of index - {j}
+        subset = np.setxor1d(indices, [i], assume_unique=True)
+        power_set = enumerate(random_powerset(subset, max_subsets=max_subsets),
+                              start=1)
+        for j, s in maybe_progress(power_set, progress, desc=f"Index {i}",
+                                   total=max_subsets, position=0):
+            values[i] += ((u(tuple({i}.union(s))) - u(tuple(s))) - values[i]) / j
+
+    return sort_values({i: v for i, v in enumerate(values)}), None
