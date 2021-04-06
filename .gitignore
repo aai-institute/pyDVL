@@ -134,3 +134,6 @@ dmypy.json
 
 # reports
 pylint.html
+
+# Saved data
+runs/
