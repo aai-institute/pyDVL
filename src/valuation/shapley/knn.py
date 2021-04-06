@@ -1,8 +1,7 @@
 from collections import OrderedDict
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
-from tqdm.auto import tqdm
 from valuation.reporting.scores import sort_values
-from valuation.utils import Dataset
+from valuation.utils import Dataset, maybe_progress
 
 
 def exact_knn_shapley(data: Dataset,
@@ -37,8 +36,7 @@ def exact_knn_shapley(data: Dataset,
     n = len(data)
     yt = data.y_train
     iterator = enumerate(zip(data.y_test.values, indices), start=1)
-    iterator = tqdm(iterator, total=len(data.y_test)) if progress else iterator
-    for j, (y, ii) in iterator:
+    for j, (y, ii) in maybe_progress(iterator, progress):
         value_at_x = int(yt.iloc[ii[-1]] == y) / n
         values[ii[-1]] += (value_at_x - values[ii[-1]]) / j
         for i in range(n-2, n_neighbors, -1):  # farthest to closest
