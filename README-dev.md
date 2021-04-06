@@ -5,7 +5,7 @@ for building, testing, documentation and configuration management.
 
 ## Local Development
 
-Automated builds, tests, generation of docu and publishing are handled by cicd
+Automated builds, tests, generation of docu and publishing are handled by CI/CD
 pipelines. You will find an initial version of the pipeline in this repo. Below
 are further details on testing and documentation.
 
@@ -49,9 +49,9 @@ sudo apt-get update -yq && apt-get install -yq pandoc
 ### Testing and packaging
 
 The library is built with tox which will build and install the package, run the
-test suite and build documentation. Running tox will also generate coverage and
-pylint reports in html and badges. You can configure pytest, coverage and pylint
-by adjusting [pytest.ini](pytest.ini), [.coveragerc](.coveragerc) and
+test suite and build the documentation. Running tox will also generate coverage
+and pylint reports in html and badges. You can configure pytest, coverage and
+pylint by adjusting [pytest.ini](pytest.ini), [.coveragerc](.coveragerc) and
 [.pylintrc](.pylintrc) respectively.
 
 Concerning notebooks: all notebooks in the [notebooks](notebooks) directory will
@@ -59,8 +59,8 @@ be executed during test run, the results will be added to the docu in the
 _Guides and Tutorials_ section. Thus, notebooks can be conveniently used as
 integration tests and docu at the same time.
 
-You can run thew build by installing tox into your virtual environment 
-(e.g. with `pip install tox`) and executing `tox`. 
+You can run the build by installing tox into your virtual environment (e.g. with
+`pip install tox`) and executing `tox`.
 
 To create a package locally, run
 ```shell script
@@ -116,7 +116,8 @@ automatically committing from the develop pipeline during version bumping
 
 #### Automatic release process
 
-In order to create an automatic release, a few prerequisites need to be satisfied:
+In order to create an automatic release, a few prerequisites need to be
+satisfied:
 
 - The project's virtualenv needs to be active
 - The repository needs to be on the `develop` branch
@@ -136,50 +137,57 @@ To find out how to use the script, pass the `-h` or `--help` flags:
 ./build_scripts/release-version.sh --help
 ```
 
-If running in interactive mode (without `-y|--yes`), the script will output a summary of pending
-changes and ask for confirmation before executing the actions.
+If running in interactive mode (without `-y|--yes`), the script will output a
+summary of pending changes and ask for confirmation before executing the
+actions.
 
 #### Manual release process
-If the automatic release process doesn't cover your use case, you can also create a new release
-manually by following these steps:
+If the automatic release process doesn't cover your use case, you can also
+create a new release manually by following these steps:
 
-1. (repeat as needed) implement features on feature branches merged into `develop`. 
-Each merge into develop will advance the `.devNNN` version suffix and publish the pre-release version into the package 
-registry. These versions can be installed using `pip install --pre`.
-2. When ready to release: From the develop branch create the release branch and perform release activities 
-(update changelog, news, ...). For your own convenience, define an env variable for the release version
+1. (Eepeat as needed) implement features on feature branches merged into
+  `develop`. Each merge into develop will advance the `.devNNN` version suffix
+   and publish the pre-release version into the package registry. These versions
+   can be installed using `pip install --pre`.
+2. When ready to release: From the develop branch create the release branch and
+   perform release activities (update changelog, news, ...). For your own
+   convenience, define an env variable for the release version
     ```shell script
     export RELEASE_VERSION="vX.Y.Z"
     git checkout develop
     git branch release/${RELEASE_VERSION} && git checkout release/${RELEASE_VERSION}
-    ``` 
-3. Run `bumpversion --commit release` if the release is only a patch release, otherwise the full version can be specified 
-using `bumpversion --commit --new-version X.Y.Z release` 
-(the `release` part is ignored but required by bumpversion :rolling_eyes:).
+    ```
+3. Run `bumpversion --commit release` if the release is only a patch release,
+   otherwise the full version can be specified using 
+   `bumpversion --commit --new-version X.Y.Z release`
+   (the `release` part is ignored but required by bumpversion :rolling_eyes:).
 4. Merge the release branch into `master`, tag the merge commit, and push back to the repo. 
-The CI pipeline publishes the package based on the tagged commit.
-
+   The CI pipeline publishes the package based on the tagged commit.
     ```shell script
     git checkout master
     git merge --no-ff release/${RELEASE_VERSION}
     git tag -a ${RELEASE_VERSION} -m"Release ${RELEASE_VERSION}"
     git push --follow-tags origin master
     ```
-5. Switch back to the release branch `release/vX.Y.Z` and pre-bump the version: `bumpversion --commit patch`. 
-This ensures that `develop` pre-releases are always strictly more recent than the last published release version 
-from `master`.
+5. Switch back to the release branch `release/vX.Y.Z` and pre-bump the version:
+   `bumpversion --commit patch`. This ensures that `develop` pre-releases are
+   always strictly more recent than the last published release version from 
+   `master`.
 6. Merge the release branch into `develop`:
     ```shell script
     git checkout develop
     git merge --no-ff release/${RELEASE_VERSION}
     git push origin develop
     ```
-6. Delete the release branch if necessary: `git branch -d release/${RELEASE_VERSION}`
+6. Delete the release branch if necessary: 
+   `git branch -d release/${RELEASE_VERSION}`
 7. Pour yourself a cup of coffee, you earned it! :coffee: :sparkles:
 
 ## Useful information
 
-Mark all autogenerated directories as excluded in your IDE. In particular docs/_build and .tox should be marked 
-as excluded in order to get a significant speedup in searches and refactorings.
+Mark all autogenerated directories as excluded in your IDE. In particular
+docs/_build and .tox should be marked as excluded in order to get a significant
+speedup in searches and refactorings.
 
-If using remote execution, don't forget to exclude data paths from deployment (unless you really want to sync them)
+If using remote execution, don't forget to exclude data paths from deployment
+(unless you really want to sync them)
