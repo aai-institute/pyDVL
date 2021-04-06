@@ -4,11 +4,16 @@ historical information of the algorithm. This module provides utility functions
 to run these in parallel and multiple times, then gather the results for later
 processing / reporting.
 """
+import os
 
 from collections import OrderedDict
 from typing import Callable, Dict, Iterable, List, Tuple
 from joblib import Parallel, delayed
 from tqdm import trange
+
+
+def available_cpus():
+    return len(os.sched_getaffinity(0))
 
 
 def run_and_gather(fun: Callable[..., Tuple[OrderedDict, List]],
@@ -67,8 +72,8 @@ def run_and_gather(fun: Callable[..., Tuple[OrderedDict, List]],
 def parallel_wrap(fun: Callable[[Iterable], Dict[int, float]],
                   arg: Tuple[str, List],
                   num_jobs: int,
-                  job_id_arg: str = "job_id") -> Callable:
-    """ Wraps an embarrasingly parallelizable fun to run in num_jobs parallel
+                  job_id_arg: str = None) -> Callable:
+    """ Wraps an embarrassingly parallelizable fun to run in num_jobs parallel
     jobs, splitting arg into the same number of chunks, one for each job.
 
     Use later with run_and_gather() to collect results of multiple runs.
