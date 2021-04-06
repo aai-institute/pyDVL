@@ -32,8 +32,9 @@ def test_naive_montecarlo_shapley(linear_dataset):
     indices = list(range(len(linear_dataset)))
     fun = partial(naive_montecarlo_shapley, model, linear_dataset,
                   max_iterations=max_iterations, progress=False)
-    wrapped = parallel_wrap(fun, ("indices", indices), num_jobs=num_cpus)
-    values_m, _ = run_and_gather(wrapped, num_runs=1, progress=True)
+    wrapped = parallel_wrap(fun, ("indices", linear_dataset.ilocs),
+                            num_jobs=num_cpus)
+    values_m, _ = run_and_gather(wrapped, num_runs=1, progress=False)
     values_m = values_m[0]
     values_c = exact_combinatorial_shapley(model, linear_dataset,
                                            progress=False)

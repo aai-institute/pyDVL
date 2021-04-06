@@ -156,14 +156,14 @@ def parallel_montecarlo_shapley(model: SupervisedModel,
 
     """
     # if values is None:
-    values = {i: [0.0] for i in data.index}
+    values = {i: [0.0] for i in data.ilocs}
     # if converged_history is None:
     converged_history = []
 
     model.fit(data.x_train, data.y_train.values.ravel())
     _scores = []
     for _ in trange(bootstrap_iterations, desc="Bootstrapping"):
-        sample = np.random.choice(data.x_test.index, len(data.x_test.index),
+        sample = np.random.choice(data.x_test.ilocs, len(data.x_test.ilocs),
                                   replace=True)
         _scores.append(model.score(data.x_test.iloc[sample],
                                    data.y_test.iloc[sample].values.ravel()))
@@ -187,7 +187,7 @@ def parallel_montecarlo_shapley(model: SupervisedModel,
 
     # Fill the queue before starting the workers or they will immediately quit
     for _ in range(2 * num_workers):
-        tasks_q.put(np.random.permutation(data.index))
+        tasks_q.put(np.random.permutation(data.ilocs))
 
     for w in workers:
         w.start()
@@ -202,7 +202,7 @@ def parallel_montecarlo_shapley(model: SupervisedModel,
     pbar = tqdm(total=num_samples, position=0, desc=f"Run {run_id}. Converged")
     while converged.value < num_samples and iteration <= max_permutations:
         get_process_result(iteration)
-        tasks_q.put(np.random.permutation(data.index))
+        tasks_q.put(np.random.permutation(data.ilocs))
         if iteration > min_values:
             converged.value = \
                 vanishing_derivatives(np.array(list(values.values())),
@@ -305,7 +305,7 @@ def serial_montecarlo_shapley(model: SupervisedModel,
 
     """
     if values is None:
-        values = {i: [0.0] for i in data.index}
+        values = {i: [0.0] for i in data.ilocs}
 
     if converged_history is None:
         converged_history = []
@@ -313,7 +313,7 @@ def serial_montecarlo_shapley(model: SupervisedModel,
     model.fit(data.x_train, data.y_train.values.ravel())
     _scores = []
     for _ in trange(bootstrap_iterations, desc="Bootstrapping"):
-        sample = np.random.choice(data.x_test.index, len(data.x_test.index),
+        sample = np.random.choice(data.x_test.ilocs, len(data.x_test.ilocs),
                                   replace=True)
         _scores.append(
                 model.score(data.x_test.iloc[sample],
@@ -327,7 +327,7 @@ def serial_montecarlo_shapley(model: SupervisedModel,
     pbar = tqdm(total=num_samples, position=1, desc=f"MCShapley")
     while iteration < min_steps \
             or (converged < num_samples and iteration < max_iterations):
-        permutation = np.random.permutation(data.index)
+        permutation = np.random.permutation(data.ilocs)
 
         # FIXME: need score for model fitted on empty dataset
         scores = np.zeros(len(permutation) + 1)
@@ -432,7 +432,7 @@ def naive_montecarlo_shapley(model: SupervisedModel,
             mean_score = np.nanmean(scores) if scores else 0.0
             if progress:
                 pbar.set_postfix_str(f"mean: {mean_score:.2f}")
-            permutation = np.random.permutation(data.index)
+            permutation = np.random.permutation(data.ilocs)
             # yuk... does not stop after match
             loc = np.where(permutation == i)[0][0]
             scores.append(utility(model, data, tuple(permutation[:loc + 1]))

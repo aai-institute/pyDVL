@@ -39,8 +39,8 @@ def backward_elimination(model: Regressor,
     x, y = data.x_train, data.y_train
     for i in tqdm(indices[:-1], position=job_id,
                   desc=f"Backward elimination. Job {job_id}"):
-        x = x[x.index != i]
-        y = y[y.index != i]
+        x = x.iloc[x.ilocs != i]
+        y = y.iloc[y.ilocs != i]
         try:
             model.fit(x, y.values.ravel())
             scores.append(model.score(data.x_test, data.y_test.values.ravel()))

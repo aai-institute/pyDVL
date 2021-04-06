@@ -5,7 +5,8 @@ from sklearn.model_selection import train_test_split
 
 class Dataset:
     """ Meh... """
-    def __init__(self, data: Bunch,
+    def __init__(self,
+                 data: Bunch,
                  train_size: float = 0.8,
                  random_state: int = None):
         x_train, x_test, y_train, y_test = \
@@ -21,14 +22,17 @@ class Dataset:
         self.x_test = pd.DataFrame(x_test, columns=data.feature_names)
         self.y_test = pd.DataFrame(y_test, columns=["target"])
         self._description = data.DESCR
+        self._locs = list(range(len(self.x_train)))
 
         assert (self.x_train.index == self.y_train.index).all(), "huh?"
 
     @property
-    def index(self):
-        """ Shorthand for Dataset.x_train.index """
-        # Ok, it might be confusing to have index == x_train.index...
-        return self.x_train.index
+    def ilocs(self):
+        """ Contiguous integer index of positions in data.x_train.
+        This is intended to be used with DataFrame.iloc[], as opposed to the
+        values of data.x_train.index (labels) which are used with loc[]
+        """
+        return self._locs
 
     @property
     def dim(self):

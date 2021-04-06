@@ -33,7 +33,7 @@ def exact_knn_shapley(data: Dataset,
     # for d in distances:
     #     assert (sorted(d) == d).all()
 
-    values = {i: 0.0 for i in data.index}
+    values = {i: 0.0 for i in data.ilocs}
     n = len(data)
     yt = data.y_train
     iterator = enumerate(zip(data.y_test.values, indices), start=1)
