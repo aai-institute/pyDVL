@@ -1,30 +1,29 @@
 import numpy as np
-import numpy.typing as npt
+import nptyping as npt
 
 from functools import lru_cache
 from itertools import chain, combinations
 from random import getrandbits
-from typing import Generator, Iterator, Iterable, List, TypeVar
+from typing import Generator, Iterator, Iterable, List, TypeVar, Any
 from valuation.utils.dataset import Dataset
 from valuation.utils.types import SupervisedModel
 
-T = TypeVar('T', bound=npt.NBitBase)
-U = TypeVar('U')
+T = TypeVar('T')
 
 
-def vanishing_derivatives(values: npt.ArrayLike[T],
+def vanishing_derivatives(values: npt.NDArray[(Any, Any), float],
                           min_values: int,
-                          value_tolerance: float) -> np.floating[T]:
-    """ Checks empirical convergence of the derivatives of rows to zero
-    and returns the number of rows that have converged.
+                          value_tolerance: float) -> int:
+    """ Returns the number of rows whose empirical derivatives have converged
+        to zero.
     """
     last_values = values[:, -min_values - 1:]
     d = np.diff(last_values, axis=1)
     zeros = np.isclose(d, 0.0, atol=value_tolerance).sum(axis=1)
-    return np.sum(zeros >= min_values / 2)
+    return int(np.sum(zeros >= min_values / 2))
 
 
-def powerset(it: Iterable[U]) -> Iterator[Iterable[U]]:
+def powerset(it: Iterable[T]) -> Iterator[Iterable[T]]:
     """ Returns an iterator for the power set of the argument.
 
     Subsets are generated in sequence by growing size. See `random_powerset()`
@@ -94,7 +93,7 @@ def random_subset_indices(n: int) -> List[int]:
     return indices
 
 
-def random_powerset(indices: npt.ArrayLike[int],
+def random_powerset(indices: npt.NDArray[(Any,), np.int],
                     max_subsets: int = None) \
         -> Generator[np.ndarray, None, None]:
     """ Uniformly samples a subset from the power set of the argument, without
