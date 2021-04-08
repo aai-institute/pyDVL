@@ -3,9 +3,10 @@ Simple implementation of DataShapley [1].
 
 TODO:
  * don't copy data to all workers foolishly
- * compute shapley values for groups of samples
  * use ray / whatever to distribute jobs to multiple machines
- * ...
+ * provide a single interface "montecarlo_shapley" for all methods with the
+   parallelization backend as an argument ("multiprocessing", "ray", "serial")
+ * shapley values for groups of samples
 """
 import numpy as np
 
@@ -21,7 +22,7 @@ from valuation.utils import Dataset, SupervisedModel,\
     vanishing_derivatives, utility
 
 
-__all__ = ['parallel_montecarlo_shapley',
+__all__ = ['truncated_montecarlo_shapley',
            'serial_montecarlo_shapley',
            'naive_montecarlo_shapley']
 
@@ -96,17 +97,17 @@ class ShapleyWorker(InterruptibleWorker):
         return permutation, scores, early_stop
 
 
-def parallel_montecarlo_shapley(model: SupervisedModel,
-                                data: Dataset,
-                                bootstrap_iterations: int,
-                                min_samples: int,
-                                score_tolerance: float,
-                                min_values: int,
-                                value_tolerance: float,
-                                max_permutations: int,
-                                num_workers: int,
-                                run_id: int = 0,
-                                worker_progress: bool = False) \
+def truncated_montecarlo_shapley(model: SupervisedModel,
+                                 data: Dataset,
+                                 bootstrap_iterations: int,
+                                 min_samples: int,
+                                 score_tolerance: float,
+                                 min_values: int,
+                                 value_tolerance: float,
+                                 max_permutations: int,
+                                 num_workers: int,
+                                 run_id: int = 0,
+                                 worker_progress: bool = False) \
         -> Tuple[OrderedDict, List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points.
 
