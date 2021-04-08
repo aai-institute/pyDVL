@@ -1,5 +1,8 @@
 import numpy as np
 import pytest
+
+from sklearn.linear_model import LinearRegression
+from valuation.shapley import combinatorial_exact_shapley
 from valuation.utils import Dataset
 
 
@@ -21,3 +24,11 @@ def linear_dataset():
     db.DESCR = f"y~{a}*x + {b}"
     db.feature_names = ["x"]
     return Dataset(data=db, train_size=0.66)
+
+
+@pytest.fixture(scope="module")
+def exact_shapley(linear_dataset):
+    model = LinearRegression()
+    values_c = combinatorial_exact_shapley(model, linear_dataset,
+                                           progress=False)
+    return model, linear_dataset, np.array(list(values_c.values()))
