@@ -14,17 +14,19 @@ from collections import OrderedDict
 from functools import partial
 from time import time
 from tqdm.auto import tqdm, trange
-from typing import Dict, List, Tuple
+from typing import Dict, Iterable, List, Tuple
 from unittest.mock import Mock
+
+from valuation.utils.numeric import random_powerset
 from valuation.utils.parallel import Coordinator, InterruptibleWorker
 from valuation.reporting.scores import sort_values, sort_values_history
-from valuation.utils import Dataset, SupervisedModel,\
-    vanishing_derivatives, utility
+from valuation.utils import Dataset, SupervisedModel, \
+    maybe_progress, vanishing_derivatives, utility
 
 
 __all__ = ['truncated_montecarlo_shapley',
            'serial_montecarlo_shapley',
-           'naive_montecarlo_shapley']
+           'permutation_montecarlo_shapley']
 
 
 class ShapleyWorker(InterruptibleWorker):
@@ -208,10 +210,6 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
     return sort_values_history(values), converged_history
 
 
-################################################################################
-# TODO: Legacy implementations. Remove after thoroughly testing the one above.
-
-
 def serial_montecarlo_shapley(model: SupervisedModel,
                               data: Dataset,
                               bootstrap_iterations: int,
@@ -319,13 +317,13 @@ def serial_montecarlo_shapley(model: SupervisedModel,
     return sort_values_history(values), converged_history
 
 
-def naive_montecarlo_shapley(model: SupervisedModel,
-                             data: Dataset,
-                             indices: List[int],
-                             max_iterations: int,
-                             tolerance: float = None,
-                             job_id: int = 0,
-                             progress: bool = False) \
+def permutation_montecarlo_shapley(model: SupervisedModel,
+                                   data: Dataset,
+                                   indices: List[int],
+                                   max_iterations: int,
+                                   tolerance: float = None,
+                                   job_id: int = 0,
+                                   progress: bool = False) \
         -> Tuple[OrderedDict, List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points.
 
@@ -392,3 +390,27 @@ def naive_montecarlo_shapley(model: SupervisedModel,
         values[i] = mean_score
     return sort_values(values), []
 
+
+def combinatorial_montecarlo_shapley(model: SupervisedModel,
+                                     data: Dataset,
+                                     indices: Iterable[int],
+                                     progress: bool = True) \
+        -> Tuple[OrderedDict, None]:
+    """ Computes an approximate Shapley value using the combinatorial
+    definition and MonteCarlo samples
+     """
+
+    n = len(data)
+    max_subsets = 2**n  # temporary, FIXME
+    values = np.zeros(n)
+    u = partial(utility, model, data)
+    for i in indices:
+        # Randomly sample subsets of index - {j}
+        subset = np.setxor1d(indices, [i], assume_unique=True)
+        power_set = enumerate(random_powerset(subset, max_subsets=max_subsets),
+                              start=1)
+        for j, s in maybe_progress(power_set, progress, desc=f"Index {i}",
+                                   total=max_subsets, position=0):
+            values[i] += ((u(tuple({i}.union(s))) - u(tuple(s))) - values[i]) / j
+
+    return sort_values({i: v for i, v in enumerate(values)}), None

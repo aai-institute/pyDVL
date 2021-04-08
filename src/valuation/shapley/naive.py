@@ -3,14 +3,12 @@ import numpy as np
 from collections import OrderedDict
 from functools import partial
 from itertools import permutations
-from typing import Iterable, Tuple
 from valuation.reporting.scores import sort_values
 from valuation.utils import Dataset, SupervisedModel, maybe_progress, utility,\
     powerset
-from valuation.utils.numeric import random_powerset
 
 
-def exact_permutation_shapley(model: SupervisedModel,
+def permutation_exact_shapley(model: SupervisedModel,
                               data: Dataset,
                               progress: bool = True) -> OrderedDict:
     """ Computes the exact Shapley value using permutations.
@@ -41,7 +39,7 @@ def exact_permutation_shapley(model: SupervisedModel,
     return sort_values({i: v for i, v in enumerate(values)})
 
 
-def exact_combinatorial_shapley(model: SupervisedModel,
+def combinatorial_exact_shapley(model: SupervisedModel,
                                 data: Dataset,
                                 progress: bool = True) -> OrderedDict:
     """ Computes the exact Shapley value using the combinatorial definition. """
@@ -64,28 +62,3 @@ def exact_combinatorial_shapley(model: SupervisedModel,
     values /= n
 
     return sort_values({i: v for i, v in enumerate(values)})
-
-
-def montecarlo_combinatorial_shapley(model: SupervisedModel,
-                                     data: Dataset,
-                                     indices: Iterable[int],
-                                     progress: bool = True) \
-        -> Tuple[OrderedDict, None]:
-    """ Computes an approximate Shapley value using the combinatorial
-    definition and MonteCarlo samples
-     """
-
-    n = len(data)
-    max_subsets = 2**n  # temporary, FIXME
-    values = np.zeros(n)
-    u = partial(utility, model, data)
-    for i in indices:
-        # Randomly sample subsets of index - {j}
-        subset = np.setxor1d(indices, [i], assume_unique=True)
-        power_set = enumerate(random_powerset(subset, max_subsets=max_subsets),
-                              start=1)
-        for j, s in maybe_progress(power_set, progress, desc=f"Index {i}",
-                                   total=max_subsets, position=0):
-            values[i] += ((u(tuple({i}.union(s))) - u(tuple(s))) - values[i]) / j
-
-    return sort_values({i: v for i, v in enumerate(values)}), None

@@ -1,4 +1,6 @@
+import numpy as np
 import pandas as pd
+
 from sklearn.utils import Bunch
 from sklearn.model_selection import train_test_split
 
@@ -24,7 +26,7 @@ class Dataset:
         self._description = data.DESCR
         self._locs = list(range(len(self.x_train)))
 
-        assert (self.x_train.index == self.y_train.index).all(), "huh?"
+        assert np.all(self.x_train.index == self.y_train.index), "huh?"
 
     @property
     def ilocs(self):
@@ -45,3 +47,28 @@ class Dataset:
 
     def __len__(self):
         return len(self.x_train)
+
+    @classmethod
+    def from_sklearn_bunch(cls,
+                           data: Bunch,
+                           train_size: float = 0.8,
+                           random_state: int = None) -> 'Dataset':
+        x_train, x_test, y_train, y_test = \
+            train_test_split(data.data, data.target,
+                             train_size=train_size, random_state=random_state)
+        try:
+            target_names = data.target_names
+        except AttributeError:
+            pass
+
+        x_train = pd.DataFrame(x_train, columns=data.feature_names)
+        y_train = pd.DataFrame(y_train, columns=["target"])
+        x_test = pd.DataFrame(x_test, columns=data.feature_names)
+        y_test = pd.DataFrame(y_test, columns=["target"])
+
+        return Dataset(x_train, y_train, x_test, y_test, target_names,
+                       data.DESCR)
+
+    @classmethod
+    def from_pandas_dataframe(cls, df: pd.DataFrame) -> 'Dataset':
+        pass
