@@ -157,8 +157,7 @@ class InterruptibleWorker(mp.Process):
             except queue.Empty:
                 return
 
-    @property
-    def abort(self):
+    def aborted(self):
         return self._abort.value is True
 
     def _run(self, task: Any) -> Any:

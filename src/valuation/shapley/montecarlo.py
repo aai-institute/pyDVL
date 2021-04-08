@@ -74,7 +74,7 @@ class ShapleyWorker(InterruptibleWorker):
         pbar.reset()
         early_stop = None
         for j, index in enumerate(permutation, start=1):
-            if self.abort():
+            if self.aborted():
                 break
 
             mean_last_score = scores[max(j - self.min_samples, 0):j].mean()
@@ -149,10 +149,10 @@ def parallel_montecarlo_shapley(model: SupervisedModel,
     model.fit(data.x_train, data.y_train.values.ravel())
     _scores = []
     for _ in trange(bootstrap_iterations, desc="Bootstrapping"):
-        sample = np.random.choice(data.x_test.ilocs, len(data.x_test.ilocs),
+        sample = np.random.choice(data.x_test.index, len(data.x_test.index),
                                   replace=True)
-        _scores.append(model.score(data.x_test.iloc[sample],
-                                   data.y_test.iloc[sample].values.ravel()))
+        _scores.append(model.score(data.x_test.loc[sample],
+                                   data.y_test.loc[sample].values.ravel()))
     global_score = float(np.mean(_scores))
     score_tolerance *= np.std(_scores)
     # import matplotlib.pyplot as plt
@@ -164,9 +164,9 @@ def parallel_montecarlo_shapley(model: SupervisedModel,
     iteration = 1
 
     def process_result(result: Tuple):
+        nonlocal iteration
         permutation, scores, early_stop = result
         for j, s, p in zip(permutation, scores[1:], scores[:-1]):
-            # FIXME: is this ok? AND: is iteration taken as ref or copy?
             values[j].append((iteration - 1) / iteration * values[j][-1]
                              + (s - p) / iteration)
         iteration += 1
