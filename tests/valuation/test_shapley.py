@@ -60,7 +60,7 @@ def test_montecarlo_combinatorial_shapley(linear_dataset):
     values_c = combinatorial_exact_shapley(model, linear_dataset,
                                            progress=False)
 
-    assert np.alltrue(values_m.keys() == values_c.keys())
+    assert np.all(values_m.keys() == values_c.keys())
     assert np.allclose(np.array(list(values_m.values())),
                        np.array(list(values_c.values())),
                        atol=1e-1)
