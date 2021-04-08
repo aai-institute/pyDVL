@@ -29,6 +29,24 @@ __all__ = ['truncated_montecarlo_shapley',
            'permutation_montecarlo_shapley']
 
 
+def bootstrap_test_score(model: SupervisedModel,
+                         data: Dataset,
+                         bootstrap_iterations) \
+        -> Tuple[float, float]:
+    """ That. """
+    model.fit(data.x_train, data.y_train.values.ravel())
+    _scores = []
+    for _ in trange(bootstrap_iterations, desc="Bootstrapping"):
+        sample = np.random.choice(data.x_test.index, len(data.x_test.index),
+                                  replace=True)
+        _scores.append(model.score(data.x_test.loc[sample],
+                                   data.y_test.loc[sample].values.ravel()))
+    # import matplotlib.pyplot as plt
+    # plt.hist(_scores, bins=40)
+    # plt.savefig("bootstrap.png")
+    return np.mean(_scores), np.std(_scores)
+
+
 class ShapleyWorker(InterruptibleWorker):
 
     def __init__(self,
@@ -66,9 +84,9 @@ class ShapleyWorker(InterruptibleWorker):
     def _run(self, permutation: np.ndarray) \
             -> Tuple[np.ndarray, np.ndarray, int]:
         """ """
-        # scores[0] is the value of training on the empty set.
         n = len(permutation)
         u = partial(utility, self.model, self.data)
+        # scores[0] is the value of training on the empty set.
         scores = np.zeros(n + 1)
         if self.progress:
             pbar = tqdm(total=self.num_samples, position=self.id,
@@ -148,18 +166,9 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
     # if converged_history is None:
     converged_history = []
 
-    model.fit(data.x_train, data.y_train.values.ravel())
-    _scores = []
-    for _ in trange(bootstrap_iterations, desc="Bootstrapping"):
-        sample = np.random.choice(data.x_test.index, len(data.x_test.index),
-                                  replace=True)
-        _scores.append(model.score(data.x_test.loc[sample],
-                                   data.y_test.loc[sample].values.ravel()))
-    global_score = float(np.mean(_scores))
-    score_tolerance *= np.std(_scores)
-    # import matplotlib.pyplot as plt
-    # plt.hist(_scores, bins=40)
-    # plt.savefig("bootstrap.png")
+    m, s = bootstrap_test_score(model, data, bootstrap_iterations)
+    global_score = m
+    score_tolerance *= s
 
     num_samples = len(data)
     converged = 0
@@ -259,16 +268,9 @@ def serial_montecarlo_shapley(model: SupervisedModel,
     if converged_history is None:
         converged_history = []
 
-    model.fit(data.x_train, data.y_train.values.ravel())
-    _scores = []
-    for _ in trange(bootstrap_iterations, desc="Bootstrapping"):
-        sample = np.random.choice(data.x_test.ilocs, len(data.x_test.ilocs),
-                                  replace=True)
-        _scores.append(
-                model.score(data.x_test.iloc[sample],
-                            data.y_test.iloc[sample].values.ravel()))
-    global_score = np.mean(_scores)
-    score_tolerance *= np.std(_scores)
+    m, s = bootstrap_test_score(model, data, bootstrap_iterations)
+    global_score = m
+    score_tolerance *= s
 
     iteration = 0
     converged = 0
