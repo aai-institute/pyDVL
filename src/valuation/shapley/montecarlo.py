@@ -7,13 +7,13 @@ TODO:
  * use ray / whatever to distribute jobs to multiple machines
  * ...
 """
-
 import numpy as np
 
-from time import time
-from typing import Dict, List, Tuple
 from collections import OrderedDict
+from functools import partial
+from time import time
 from tqdm.auto import tqdm, trange
+from typing import Dict, List, Tuple
 from unittest.mock import Mock
 from valuation.utils.parallel import Coordinator, InterruptibleWorker
 from valuation.reporting.scores import sort_values, sort_values_history
@@ -65,6 +65,7 @@ class ShapleyWorker(InterruptibleWorker):
         """ """
         # scores[0] is the value of training on the empty set.
         n = len(permutation)
+        u = partial(utility, self.model, self.data)
         scores = np.zeros(n + 1)
         if self.progress:
             pbar = tqdm(total=self.num_samples, position=self.id,
@@ -86,11 +87,9 @@ class ShapleyWorker(InterruptibleWorker):
                     early_stop = j
                 scores[j] = scores[j - 1]
             else:
-                scores[j] = utility(self.model, self.data,
-                                    permutation[:j + 1])
-            pbar.set_postfix_str(
-                    f"last {self.min_samples} scores: "
-                    f"{mean_last_score:.2e}")
+                scores[j] = u(tuple(permutation[:j + 1]))
+            pbar.set_postfix_str(f"last {self.min_samples} scores: "
+                                 f"{mean_last_score:.2e}")
             pbar.update()
         pbar.close()
         # FIXME: sending the permutation back is wasteful
@@ -367,6 +366,7 @@ def naive_montecarlo_shapley(model: SupervisedModel,
         raise NotImplementedError("Tolerance not implemented")
 
     values = {i: 0.0 for i in indices}
+    u = partial(utility, model, data)
 
     # FIXME: exchange the loops to avoid searching with where
     if progress:
@@ -386,8 +386,8 @@ def naive_montecarlo_shapley(model: SupervisedModel,
             permutation = np.random.permutation(data.ilocs)
             # yuk... does not stop after match
             loc = np.where(permutation == i)[0][0]
-            scores.append(utility(model, data, tuple(permutation[:loc + 1]))
-                          - utility(model, data, tuple(permutation[:loc])))
+            scores.append(u(tuple(permutation[:loc + 1]))
+                          - u(tuple(permutation[:loc])))
         values[i] = mean_score
     return sort_values(values), []
 

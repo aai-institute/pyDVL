@@ -1,15 +1,11 @@
-from typing import Iterable, Tuple
-
 import numpy as np
+
 from collections import OrderedDict
 from functools import partial
 from itertools import permutations
-
-from sklearn.linear_model import LinearRegression
-
+from typing import Iterable, Tuple
 from valuation.reporting.scores import sort_values
-from valuation.utils import Dataset, SupervisedModel, maybe_progress, \
-    parallel_wrap, run_and_gather, utility, \
+from valuation.utils import Dataset, SupervisedModel, maybe_progress, utility,\
     powerset
 from valuation.utils.numeric import random_powerset
 
