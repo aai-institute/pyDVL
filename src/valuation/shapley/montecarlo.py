@@ -8,74 +8,57 @@ TODO:
  * ...
 """
 
-import multiprocessing as mp
 import numpy as np
-import queue
 
 from time import time
-from unittest.mock import Mock
 from typing import Dict, List, Tuple
 from collections import OrderedDict
 from tqdm.auto import tqdm, trange
-
+from unittest.mock import Mock
+from valuation.utils.parallel import Coordinator, InterruptibleWorker
 from valuation.reporting.scores import sort_values, sort_values_history
 from valuation.utils import Dataset, SupervisedModel,\
     vanishing_derivatives, utility
 
 
-__all__ = ['parallel_montecarlo_shapley', 'serial_montecarlo_shapley']
+__all__ = ['parallel_montecarlo_shapley',
+           'serial_montecarlo_shapley',
+           'naive_montecarlo_shapley']
 
 
-class ShapleyWorker(mp.Process):
-    """ A simple consumer worker using two queues.
-
-     TODO: use shared memory to avoid copying data
-     """
+class ShapleyWorker(InterruptibleWorker):
 
     def __init__(self,
-                 worker_id: int,
-                 tasks: mp.Queue,
-                 results: mp.Queue,
-                 converged: mp.Value,
                  model: SupervisedModel,
-                 global_score: float,
                  data: Dataset,
-                 min_samples: int,
+                 global_score: float,
                  score_tolerance: float,
-                 progress_bar: bool = False):
-        # Mark as daemon, so we are killed when the parent exits (e.g. Ctrl+C)
-        super().__init__(daemon=True)
+                 min_samples: int,
+                 progress: bool,
+                 **kwargs,
+                 ):
+        """
+        :param model: sklearn model / pipeline
+        :param data: split dataset
+        :param global_score:
+        :param score_tolerance: For every permutation, computation stops
+         after the mean increase in performance is within score_tolerance*stddev
+         of the bootstrapped score over the **test** set (i.e. we bootstrap to
+         compute variance of scores, then use that to stop)
+        :param min_samples: Use so many of the last samples for a permutation
+         in order to compute the moving average of scores.
+        :param progress: set to True to display progress bars
 
-        self.id = worker_id
-        self.tasks = tasks
-        self.results = results
-        self.converged = converged
+        """
+        super().__init__(**kwargs)
+
         self.model = model
         self.global_score = global_score
         self.data = data
         self.min_samples = min_samples
         self.score_tolerance = score_tolerance
         self.num_samples = len(self.data)
-        self.progress_bar = progress_bar
-
-    def run(self):
-        task = self.tasks.get(timeout=1.0)  # Wait a bit during start-up (yikes)
-        while True:
-            if task is None:  # Indicates we are done
-                self.tasks.put(None)
-                return
-
-            result = self._run(task)
-
-            # Check whether the None flag was sent during _run().
-            # This throws away our last results, but avoids a deadlock (can't
-            # join the process if a queue has items)
-            try:
-                task = self.tasks.get_nowait()
-                if task is not None:
-                    self.results.put(result)
-            except queue.Empty:
-                return
+        self.progress = progress
 
     def _run(self, permutation: np.ndarray) \
             -> Tuple[np.ndarray, np.ndarray, int]:
@@ -83,7 +66,7 @@ class ShapleyWorker(mp.Process):
         # scores[0] is the value of training on the empty set.
         n = len(permutation)
         scores = np.zeros(n + 1)
-        if self.progress_bar:
+        if self.progress:
             pbar = tqdm(total=self.num_samples, position=self.id,
                         desc=f"{self.name}", leave=False)
         else:
@@ -91,20 +74,23 @@ class ShapleyWorker(mp.Process):
         pbar.reset()
         early_stop = None
         for j, index in enumerate(permutation, start=1):
-            if self.converged.value >= self.num_samples:
+            if self.abort():
                 break
 
             mean_last_score = scores[max(j - self.min_samples, 0):j].mean()
-            pbar.set_postfix_str(
-                    f"last {self.min_samples} scores: {mean_last_score:.2e}")
 
             # Stop if last min_samples have an average mean below threshold:
-            if abs(self.global_score - mean_last_score) < self.score_tolerance:
+            if abs(self.global_score - mean_last_score) < \
+                    self.score_tolerance:
                 if early_stop is None:
                     early_stop = j
                 scores[j] = scores[j - 1]
             else:
-                scores[j] = utility(self.model, self.data, permutation[:j+1])
+                scores[j] = utility(self.model, self.data,
+                                    permutation[:j + 1])
+            pbar.set_postfix_str(
+                    f"last {self.min_samples} scores: "
+                    f"{mean_last_score:.2e}")
             pbar.update()
         pbar.close()
         # FIXME: sending the permutation back is wasteful
@@ -174,85 +160,50 @@ def parallel_montecarlo_shapley(model: SupervisedModel,
     # plt.savefig("bootstrap.png")
 
     num_samples = len(data)
+    converged = 0
+    iteration = 1
 
-    tasks_q = mp.Queue()
-    results_q = mp.Queue()
-    converged = mp.Value('i', 0)
+    def process_result(result: Tuple):
+        permutation, scores, early_stop = result
+        for j, s, p in zip(permutation, scores[1:], scores[:-1]):
+            # FIXME: is this ok? AND: is iteration taken as ref or copy?
+            values[j].append((iteration - 1) / iteration * values[j][-1]
+                             + (s - p) / iteration)
+        iteration += 1
 
-    workers = [ShapleyWorker(i + 1,
-                             tasks_q, results_q, converged, model, global_score,
-                             data, min_samples, score_tolerance,
-                             progress_bar=worker_progress)
-               for i in range(num_workers)]
+    boss = Coordinator(processer=process_result)
+    boss.instantiate(num_workers, ShapleyWorker,
+                     model=model,
+                     data=data,
+                     global_score=global_score,
+                     score_tolerance=score_tolerance,
+                     min_samples=min_samples,
+                     progress=worker_progress)
 
     # Fill the queue before starting the workers or they will immediately quit
     for _ in range(2 * num_workers):
-        tasks_q.put(np.random.permutation(data.ilocs))
+        boss.put(np.random.permutation(data.ilocs))
 
-    for w in workers:
-        w.start()
-
-    iteration = 1
-
-    def get_process_result(it: int, timeout: float=None):
-        permutation, scores, early_stop = results_q.get(timeout=timeout)
-        for j, s, p in zip(permutation, scores[1:], scores[:-1]):
-            values[j].append((it - 1) / it * values[j][-1] + (s - p) / it)
+    boss.start_shift()
 
     pbar = tqdm(total=num_samples, position=0, desc=f"Run {run_id}. Converged")
-    while converged.value < num_samples and iteration <= max_permutations:
-        get_process_result(iteration)
-        tasks_q.put(np.random.permutation(data.ilocs))
+    while converged < num_samples and iteration <= max_permutations:
+        boss.get_and_process()
+        boss.put(np.random.permutation(data.ilocs))
         if iteration > min_values:
-            converged.value = \
-                vanishing_derivatives(np.array(list(values.values())),
-                                      min_values=min_values,
-                                      value_tolerance=value_tolerance)
-            converged_history.append(converged.value)
+            converged = vanishing_derivatives(np.array(list(values.values())),
+                                              min_values=min_values,
+                                              value_tolerance=value_tolerance)
+            converged_history.append(converged)
 
-        # converged.value can decrease. reset() clears times, but if just call
+        # converged can decrease. reset() clears times, but if just call
         # update(), the bar collapses. This is some hackery to fix that:
-        pbar.n = converged.value
-        pbar.last_print_n, pbar.last_print_t = converged.value, time()
+        pbar.n = converged
+        pbar.last_print_n, pbar.last_print_t = converged, time()
         pbar.refresh()
 
-        iteration += 1
-
-    # Clear the queue of pending tasks
-    try:
-        while True:
-            tasks_q.get_nowait()
-    except queue.Empty:
-        pass
-    # Any workers still running won't post their results after the None task
-    # has been placed...
-    tasks_q.put(None)
-    # ... But maybe someone put() some result while we were completing the last
-    # iteration of the loop above:
-    pbar.set_description_str("Gathering pending results")
-    pbar.total = len(workers)
-    pbar.reset()
-    try:
-        tmp = iteration
-        while True:
-            get_process_result(iteration, timeout=1.0)
-            iteration += 1
-            pbar.update(iteration - tmp)
-    except queue.Empty:
-        pass
+    boss.end_shift(pbar)
     pbar.close()
-
-    # results_q should be empty now
-    assert results_q.empty(), \
-        f"WTF? {results_q.qsize()} pending results"
-    # HACK: the peeking in workers might empty the queue temporarily between the
-    #  peeking and the restoring temporarily, so we allow for some timeout.
-    assert tasks_q.get(timeout=0.1) is None, \
-        f"WTF? {tasks_q.qsize()} pending tasks"
-
-    for w in workers:
-        w.join()
-        w.close()
 
     return sort_values_history(values), converged_history
 
