@@ -31,12 +31,14 @@ __all__ = ['truncated_montecarlo_shapley',
 
 def bootstrap_test_score(model: SupervisedModel,
                          data: Dataset,
-                         bootstrap_iterations) \
+                         bootstrap_iterations,
+                         progress: bool = False) \
         -> Tuple[float, float]:
     """ That. """
     model.fit(data.x_train, data.y_train.values.ravel())
     _scores = []
-    for _ in trange(bootstrap_iterations, desc="Bootstrapping"):
+    for _ in maybe_progress(range(bootstrap_iterations), progress,
+                            desc="Bootstrapping"):
         sample = np.random.choice(data.x_test.index, len(data.x_test.index),
                                   replace=True)
         _scores.append(model.score(data.x_test.loc[sample],
@@ -88,11 +90,9 @@ class ShapleyWorker(InterruptibleWorker):
         u = partial(utility, self.model, self.data)
         # scores[0] is the value of training on the empty set.
         scores = np.zeros(n + 1)
-        if self.progress:
-            pbar = tqdm(total=self.num_samples, position=self.id,
-                        desc=f"{self.name}", leave=False)
-        else:
-            pbar = Mock()  # HACK, sue me.
+        pbar = maybe_progress(range(self.num_samples), self.progress,
+                              total=self.num_samples, position=self.id,
+                              desc=f"{self.name}", leave=False)
         pbar.reset()
         early_stop = None
         for j, index in enumerate(permutation, start=1):
@@ -127,7 +127,7 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
                                  max_permutations: int,
                                  num_workers: int,
                                  run_id: int = 0,
-                                 worker_progress: bool = False) \
+                                 progress: bool = False) \
         -> Tuple[OrderedDict, List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points.
 
@@ -188,7 +188,7 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
                      global_score=global_score,
                      score_tolerance=score_tolerance,
                      min_samples=min_samples,
-                     progress=worker_progress)
+                     progress=progress)
 
     # Fill the queue before starting the workers or they will immediately quit
     for _ in range(2 * num_workers):
@@ -196,7 +196,8 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
 
     boss.start_shift()
 
-    pbar = tqdm(total=num_samples, position=0, desc=f"Run {run_id}. Converged")
+    pbar = maybe_progress(range(num_samples), progress, total=num_samples,
+                          position=0, desc=f"Run {run_id}. Converged")
     while converged < num_samples and iteration <= max_permutations:
         boss.get_and_process()
         boss.put(np.random.permutation(data.ilocs))
@@ -226,7 +227,8 @@ def serial_montecarlo_shapley(model: SupervisedModel,
                               value_tolerance: float,
                               max_iterations: int,
                               values: Dict[int, List[float]] = None,
-                              converged_history: List[int] = None) \
+                              converged_history: List[int] = None,
+                              progress: bool = False) \
         -> Tuple[OrderedDict, List[int]]:
     """ MonteCarlo approximation to the Shapley value of data points using
     only one CPU.
@@ -273,7 +275,8 @@ def serial_montecarlo_shapley(model: SupervisedModel,
     iteration = 0
     converged = 0
     num_samples = len(data)
-    pbar = tqdm(total=num_samples, position=1, desc=f"MCShapley")
+    pbar = maybe_progress(range(num_samples), progress, total=num_samples,
+                          position=1, desc=f"MCShapley")
     while iteration < min_steps \
             or (converged < num_samples and iteration < max_iterations):
         permutation = np.random.permutation(data.ilocs)
@@ -352,8 +355,8 @@ def permutation_montecarlo_shapley(model: SupervisedModel,
         :param data: split Dataset
         :param indices: subset of data.index to work on (useful for parallel
             computation with `parallel_wrap`)
-        :param max_permutations: run these many. To compute an (eps,delta) lower
-            bound use `lower_bound_hoeffding()`
+        :param max_permutations: run these many for each index. To compute an
+           (eps,delta) lower bound use `lower_bound_hoeffding()`
         :param tolerance: NOT IMPLEMENTED stop drawing permutations after delta
             in scores falls below this threshold
         :param job_id: for progress bar positioning
@@ -368,33 +371,29 @@ def permutation_montecarlo_shapley(model: SupervisedModel,
     u = partial(utility, model, data)
 
     # FIXME: exchange the loops to avoid searching with where
-    if progress:
-        pbar = tqdm(indices, position=job_id, total=len(indices))
-    else:
-        pbar = indices
+    pbar = maybe_progress(indices, progress, position=job_id, total=len(indices))
+
     for i in pbar:
-        if progress:
-            pbar.set_description(f"Index {i}")
-        mean_score = 0.0
-        scores = []
-        for _ in range(max_permutations):
-            # FIXME: compute mean incrementally mean_n+1=mean_n+1+(val-mean_n)/n
-            mean_score = np.nanmean(scores) if scores else 0.0
+        pbar.set_description(f"Index {i}")
+        mean = 0.0
+        for n in range(1, max_permutations+1):
             if progress:
-                pbar.set_postfix_str(f"mean: {mean_score:.2f}")
+                pbar.set_postfix_str(f"mean: {mean:.2f}")
             permutation = np.random.permutation(data.ilocs)
             # yuk... does not stop after match
             loc = np.where(permutation == i)[0][0]
-            scores.append(u(tuple(permutation[:loc + 1]))
-                          - u(tuple(permutation[:loc])))
-        values[i] = mean_score
+            score = u(tuple(permutation[:loc + 1])) \
+                    - u(tuple(permutation[:loc]))
+            mean += (score - mean) / n
+        values[i] = mean
     return sort_values(values), []
 
 
 def combinatorial_montecarlo_shapley(model: SupervisedModel,
                                      data: Dataset,
                                      indices: Iterable[int],
-                                     progress: bool = True) \
+                                     job_id: int = 0,
+                                     progress: bool = False) \
         -> Tuple[OrderedDict, None]:
     """ Computes an approximate Shapley value using the combinatorial
     definition and MonteCarlo samples
@@ -410,7 +409,7 @@ def combinatorial_montecarlo_shapley(model: SupervisedModel,
         power_set = enumerate(random_powerset(subset, max_subsets=max_subsets),
                               start=1)
         for j, s in maybe_progress(power_set, progress, desc=f"Index {i}",
-                                   total=max_subsets, position=0):
+                                   total=max_subsets, position=job_id):
             values[i] += (u(tuple({i}.union(s))) - u(tuple(s)) - values[i]) / j
 
     return sort_values({i: v for i, v in enumerate(values)}), None
