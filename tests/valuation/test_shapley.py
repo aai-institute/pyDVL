@@ -32,10 +32,10 @@ def test_permutation_montecarlo_shapley(exact_shapley):
     num_cpus = min(available_cpus(), len(data))
     num_runs = 1  # TODO: average over multiple runs?
     eps = 0.02
+    score_range = 1  # FIXME: bogus (R^2 is unbounded below)
 
     # FIXME: this is non-deterministic
-    # FIXME: the range is bogus (R^2 is unbounded below)
-    min_permutations = lower_bound_hoeffding(delta=0.01, eps=eps, r=1)
+    min_permutations = lower_bound_hoeffding(delta=0.01, eps=eps, r=score_range)
     print(f"test_naive_montecarlo_shapley running for {min_permutations} "
           f"iterations")
     fun = partial(permutation_montecarlo_shapley, model, data,
@@ -62,10 +62,10 @@ def test_truncated_montecarlo_shapley(exact_shapley):
     num_cpus = min(available_cpus(), len(data))
     num_runs = 1  # TODO: average over multiple runs?
     eps = 0.02
+    score_range = 1  # FIXME: bogus (R^2 is unbounded below)
 
     # FIXME: this is non-deterministic
-    # FIXME: the range is bogus (R^2 is unbounded below)
-    min_permutations = lower_bound_hoeffding(delta=0.01, eps=eps, r=1)
+    min_permutations = lower_bound_hoeffding(delta=0.01, eps=eps, r=score_range)
     print(f"test_truncated_montecarlo_shapley running for {num_runs} runs "
           f" of max. {min_permutations} iterations each")
 
