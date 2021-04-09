@@ -320,7 +320,7 @@ def serial_montecarlo_shapley(model: SupervisedModel,
 def permutation_montecarlo_shapley(model: SupervisedModel,
                                    data: Dataset,
                                    indices: List[int],
-                                   max_iterations: int,
+                                   max_permutations: int,
                                    tolerance: float = None,
                                    job_id: int = 0,
                                    progress: bool = False) \
@@ -352,8 +352,8 @@ def permutation_montecarlo_shapley(model: SupervisedModel,
         :param data: split Dataset
         :param indices: subset of data.index to work on (useful for parallel
             computation with `parallel_wrap`)
-        :param max_iterations: run these many. Compute (eps,delta) lower bound
-            with `lower_bound_hoeffding`
+        :param max_permutations: run these many. To compute an (eps,delta) lower
+            bound use `lower_bound_hoeffding()`
         :param tolerance: NOT IMPLEMENTED stop drawing permutations after delta
             in scores falls below this threshold
         :param job_id: for progress bar positioning
@@ -377,7 +377,7 @@ def permutation_montecarlo_shapley(model: SupervisedModel,
             pbar.set_description(f"Index {i}")
         mean_score = 0.0
         scores = []
-        for _ in range(max_iterations):
+        for _ in range(max_permutations):
             # FIXME: compute mean incrementally mean_n+1=mean_n+1+(val-mean_n)/n
             mean_score = np.nanmean(scores) if scores else 0.0
             if progress:

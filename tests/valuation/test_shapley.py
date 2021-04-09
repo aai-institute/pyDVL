@@ -24,7 +24,7 @@ def test_combinatorial_exact_shapley():
 def test_permutation_exact_shapley(exact_shapley):
     model, data, exact_values = exact_shapley
     values_p = permutation_exact_shapley(model, data, progress=False)
-    compare(values_p, exact_values)
+    compare(values_p, exact_values, eps=0.01)
 
 
 def test_permutation_montecarlo_shapley(exact_shapley):
