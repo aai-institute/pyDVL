@@ -31,4 +31,4 @@ def exact_shapley(linear_dataset):
     model = LinearRegression()
     values_c = combinatorial_exact_shapley(model, linear_dataset,
                                            progress=False)
-    return model, linear_dataset, np.array(list(values_c.values()))
+    return model, linear_dataset, values_c

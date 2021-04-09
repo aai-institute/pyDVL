@@ -156,8 +156,7 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
          value_tolerance close to 0
         :param max_permutations: never run more than this many iterations (in
          total, across all workers: if num_workers = 100 and max_iterations =
-         100
-         then each worker will run at most one job)
+         100, then each worker will run at most one job)
         :return: Dict of approximated Shapley values for the indices
 
     """
@@ -166,9 +165,9 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
     # if converged_history is None:
     converged_history = []
 
-    m, s = bootstrap_test_score(model, data, bootstrap_iterations)
-    global_score = m
-    score_tolerance *= s
+    mean, std = bootstrap_test_score(model, data, bootstrap_iterations)
+    global_score = mean
+    score_tolerance *= std
 
     num_samples = len(data)
     converged = 0
@@ -215,7 +214,6 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
 
     boss.end_shift(pbar)
     pbar.close()
-
     return sort_values_history(values), converged_history
 
 
@@ -413,6 +411,6 @@ def combinatorial_montecarlo_shapley(model: SupervisedModel,
                               start=1)
         for j, s in maybe_progress(power_set, progress, desc=f"Index {i}",
                                    total=max_subsets, position=0):
-            values[i] += ((u(tuple({i}.union(s))) - u(tuple(s))) - values[i]) / j
+            values[i] += (u(tuple({i}.union(s))) - u(tuple(s)) - values[i]) / j
 
     return sort_values({i: v for i, v in enumerate(values)}), None
