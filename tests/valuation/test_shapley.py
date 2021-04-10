@@ -13,7 +13,31 @@ from valuation.utils.parallel import parallel_wrap, run_and_gather, \
 def compare(values_a: OrderedDict, values_b: OrderedDict, eps: float):
     assert np.all(values_a.keys() == values_b.keys())
     assert np.allclose(np.array(list(values_a.values())),
-                       np.array(list(values_a.values())), atol=eps)
+                       np.array(list(values_b.values())), atol=eps)
+
+
+# pedantic...
+@pytest.mark.parametrize(
+    "passes, values_a, values_b, eps",
+    [(False,
+      OrderedDict([(k, k) for k in range(10)]),
+      OrderedDict([(k, k+0.01) for k in range(10)]),
+      0.001),
+     (True,
+      OrderedDict([(k, k) for k in range(10)]),
+      OrderedDict([(k, k + 0.01) for k in range(10)]),
+      0.01),
+     (True,
+      OrderedDict([(k, k) for k in range(10)]),
+      OrderedDict([(k, k) for k in range(10)]),
+      0)
+     ])
+def test_compare(passes, values_a, values_b, eps):
+    if passes:
+        compare(values_a, values_b, eps)
+    else:
+        with pytest.raises(AssertionError):
+            compare(values_a, values_b, eps)
 
 
 def test_combinatorial_exact_shapley():
