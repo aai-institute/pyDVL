@@ -9,11 +9,10 @@ def naive_loo(model: SupervisedModel,
               data: Dataset,
               progress: bool = True) -> OrderedDict[int, float]:
     """ Computes the LOO score for each training point in the dataset."""
-    u = partial(utility, model, data)
-    u_total = u(tuple(data.ilocs))
+    u = lambda x: utility(model, data, frozenset(x))
     values = {i: 0.0 for i in data.ilocs}
     for i in maybe_progress(data.ilocs, progress):
         subset = np.setxor1d(data.ilocs, [i], assume_unique=True)
-        values[i] = u_total - u(tuple(subset))
+        values[i] = u(data.ilocs) - u(subset)
 
     return sort_values(values)

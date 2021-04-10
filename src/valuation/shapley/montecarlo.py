@@ -87,7 +87,7 @@ class ShapleyWorker(InterruptibleWorker):
             -> Tuple[np.ndarray, np.ndarray, int]:
         """ """
         n = len(permutation)
-        u = partial(utility, self.model, self.data)
+        u = lambda x: utility(self.model, self.data, frozenset(x))
         # scores[0] is the value of training on the empty set.
         scores = np.zeros(n + 1)
         pbar = maybe_progress(range(self.num_samples), self.progress,
@@ -108,7 +108,7 @@ class ShapleyWorker(InterruptibleWorker):
                     early_stop = j
                 scores[j] = scores[j - 1]
             else:
-                scores[j] = u(tuple(permutation[:j + 1]))
+                scores[j] = u(permutation[:j + 1])
             pbar.set_postfix_str(f"last {self.min_samples} scores: "
                                  f"{mean_last_score:.2e}")
             pbar.update()
@@ -402,7 +402,7 @@ def combinatorial_montecarlo_shapley(model: SupervisedModel,
     n = len(data)
     max_subsets = 2**n  # temporary, FIXME
     values = np.zeros(n)
-    u = partial(utility, model, data)
+    u = lambda x: utility(model, data, frozenset(x))
     for i in indices:
         # Randomly sample subsets of index - {j}
         subset = np.setxor1d(indices, [i], assume_unique=True)
@@ -410,6 +410,6 @@ def combinatorial_montecarlo_shapley(model: SupervisedModel,
                               start=1)
         for j, s in maybe_progress(power_set, progress, desc=f"Index {i}",
                                    total=max_subsets, position=job_id):
-            values[i] += (u(tuple({i}.union(s))) - u(tuple(s)) - values[i]) / j
+            values[i] += (u({i}.union(s)) - u(s) - values[i]) / j
 
     return sort_values({i: v for i, v in enumerate(values)}), None
