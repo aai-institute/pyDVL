@@ -213,7 +213,7 @@ class Coordinator:
             while True:
                 self.get_and_process(timeout=1.0)
                 if pbar:
-                    pbar.update(pbar.n + 1)
+                    pbar.update()
         except queue.Empty:
             pass
 
