@@ -51,13 +51,13 @@ def combinatorial_exact_shapley(model: SupervisedModel,
             f"Large dataset! Computation requires 2^{n} calls to model.fit()")
 
     values = np.zeros(n)
-    u = partial(utility, model, data)
+    u = lambda x: utility(model, data, frozenset(x))
     for i in data.ilocs:
         subset = np.setxor1d(data.ilocs, [i], assume_unique=True)
         for s in maybe_progress(powerset(subset), progress,
                                 desc=f"Index {i}", total=2 ** (n - 1),
                                 position=0):
-            values[i] += (u(tuple({i}.union(s))) - u(tuple(s))) \
+            values[i] += (u({i}.union(s)) - u(s)) \
                          / np.math.comb(n-1, len(s))
     values /= n
 
