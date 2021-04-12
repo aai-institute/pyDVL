@@ -1,7 +1,7 @@
 import collections
 
-from tqdm.auto import tqdm
-from typing import Iterator
+from tqdm.auto import tqdm, trange
+from typing import Iterator, Literal, Union, overload
 
 
 class MockProgress(collections.Iterator):
@@ -39,11 +39,29 @@ class MockProgress(collections.Iterator):
         pass
 
 
-def maybe_progress(it: Iterator, display: bool, **tqdm_kwargs):
+@overload
+def maybe_progress(it: Union[int, Iterator], display: Literal[True],
+                   **tqdm_kwargs) -> tqdm:
+    pass
+
+
+@overload
+def maybe_progress(it: Union[int, Iterator], display: Literal[False],
+                   **tqdm_kwargs) -> Iterator:
+    pass
+
+
+def maybe_progress(it: Union[int, Iterator], display: bool, **tqdm_kwargs)\
+        -> Union[tqdm, Iterator]:
     """ Returns either a tqdm progress bar or a mock object which wraps the
     iterator as well, but ignores any accesses to methods or properties.
     :param it: the iterator to wrap
     :param display: set to True to return a tqdm bar
     :param **tqdm_kwargs: will be forwarded to tqdm
     """
-    return tqdm(it, **tqdm_kwargs) if display else MockProgress(it)
+    if isinstance(it, int):
+        it = range(it)
+        _tqdm = trange
+    else:
+        _tqdm = tqdm
+    return _tqdm(it, **tqdm_kwargs) if display else MockProgress(it)
