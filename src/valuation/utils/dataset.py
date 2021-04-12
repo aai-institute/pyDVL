@@ -53,6 +53,7 @@ class Dataset:
                            data: Bunch,
                            train_size: float = 0.8,
                            random_state: int = None) -> 'Dataset':
+        raise NotImplementedError("In progress (need to change the constructor)")
         x_train, x_test, y_train, y_test = \
             train_test_split(data.data, data.target,
                              train_size=train_size, random_state=random_state)
