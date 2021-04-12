@@ -141,7 +141,7 @@ def shapley(
     from sklearn.ensemble import GradientBoostingRegressor
     data = Dataset(datasets.load_boston())
     # NOTE: should max_iterations be a fraction of the number of permutations?
-    max_permutations = int(permutations_ratio * len(data))
+    max_iterations = int(permutations_ratio * len(data))
 
     model = GradientBoostingRegressor()
     fun = partial(truncated_montecarlo_shapley,
@@ -152,19 +152,19 @@ def shapley(
                   score_tolerance=score_tolerance,
                   min_values=min_values,
                   value_tolerance=value_tolerance,
-                  max_permutations=max_permutations,
+                  max_iterations=max_iterations,
                   num_workers=num_jobs,
                   worker_progress=True)
     values, history = run_and_gather(fun, num_runs=num_runs, progress=False)
     scores = compute_fb_scores(model, data, values)
     print("Saving results...")
-    filename = f'save_{max_permutations}_iterations_{num_runs}_runs_' \
+    filename = f'save_{max_iterations}_iterations_{num_runs}_runs_' \
                f'{score_tolerance}_score_{value_tolerance}_value'
     # if task is not None:
     #     task.upload_artifact(name=filename, artifact_object=results)
     with open(f'{filename}.pkl', 'wb') as fd:
         pickle.dump({'values': values, 'history': history}, fd)
-    scores.update({'max_iterations': max_permutations,
+    scores.update({'max_iterations': max_iterations,
                    'score_name': "$R^2$"})
     shapley_results(scores, filename=f'{filename}.png')
 

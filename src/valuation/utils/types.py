@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Callable, Protocol, TypeVar, Union
 from numpy import ndarray
 
 
@@ -12,3 +12,10 @@ class SupervisedModel(Protocol):
 
     def score(self, x: ndarray, y: ndarray) -> float:
         pass
+
+
+# ScorerNames = Literal[very long list here]
+# instead... ScorerNames = str
+
+Scorer = TypeVar('Scorer',
+                 str, Callable[[SupervisedModel, ndarray, ndarray], float])

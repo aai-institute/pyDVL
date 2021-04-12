@@ -1,6 +1,5 @@
 requests~=2.24
 numpy
-nptyping
 pandas
 joblib
 tqdm

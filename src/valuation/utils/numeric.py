@@ -1,25 +1,24 @@
 import numpy as np
-import nptyping as npt
 
 from functools import lru_cache
 from itertools import chain, combinations
 from random import getrandbits
-from typing import Generator, Iterator, Iterable, List, TypeVar, Any
+from typing import Generator, Iterator, Iterable, List, TypeVar
+from sklearn.metrics import check_scoring
+
 from valuation.utils.dataset import Dataset
-from valuation.utils.types import SupervisedModel
+from valuation.utils.types import Scorer, SupervisedModel
 
 T = TypeVar('T')
 
 
-def vanishing_derivatives(values: npt.NDArray[(Any, Any), float],
-                          min_values: int,
-                          value_tolerance: float) -> int:
+def vanishing_derivatives(x: np.ndarray, min_values: int, eps: float) -> int:
     """ Returns the number of rows whose empirical derivatives have converged
-        to zero.
+        to zero, up to a tolerance of eps.
     """
-    last_values = values[:, -min_values - 1:]
+    last_values = x[:, -min_values - 1:]
     d = np.diff(last_values, axis=1)
-    zeros = np.isclose(d, 0.0, atol=value_tolerance).sum(axis=1)
+    zeros = np.isclose(d, 0.0, atol=eps).sum(axis=1)
     return int(np.sum(zeros >= min_values / 2))
 
 
@@ -44,24 +43,32 @@ def powerset(it: Iterable[T]) -> Iterator[Iterable[T]]:
 def utility(model: SupervisedModel,
             data: Dataset,
             indices: Iterable[int],
-            catch_errors: bool = True) -> float:
+            catch_errors: bool = True,
+            scoring: Scorer = None)\
+        -> float:
     """ Fits the model on a subset of the training data and scores it on the
-    test data.
+    test data. Results are memoized to avoid duplicate computation.
+
     :param model: Any supervised model
     :param data: a split Dataset
-    :param indices: a subset of indices from data.x_train.index
+    :param indices: a subset of indices from data.x_train.index. The type must
+      be hashable for the caching to work, e.g. wrap the argument with
+      `frozenset()` (rather than `tuple()` since order should not matter)
     :param catch_errors: set to True to return np.nan if fit() fails. This hack
         helps when a step in a pipeline fails if there are too few data points
+    :param scoring: Same as in sklearn's `cross_validate()`: a string, a scorer
+        callable or None for the default `model.score()`.
     :return: 0 if no indices are passed, otherwise the value of model.score on
         the test data.
     """
     if not indices:
         return 0.0
+    scorer = check_scoring(model, scoring)
     x = data.x_train.iloc[list(indices)]
     y = data.y_train.iloc[list(indices)]
     try:
-        model.fit(x.values.reshape(-1, 1), y.values.reshape(-1, 1))
-        return model.score(data.x_test, data.y_test)
+        model.fit(x.values, y.values)
+        return scorer(model, data.x_test, data.y_test)
     except Exception as e:
         if catch_errors:
             return np.nan
@@ -93,8 +100,7 @@ def random_subset_indices(n: int) -> List[int]:
     return indices
 
 
-def random_powerset(indices: npt.NDArray[(Any,), np.int],
-                    max_subsets: int = None) \
+def random_powerset(indices: np.ndarray, max_subsets: int = None) \
         -> Generator[np.ndarray, None, None]:
     """ Uniformly samples a subset from the power set of the argument, without
     pre-generating all subsets and in no order.
