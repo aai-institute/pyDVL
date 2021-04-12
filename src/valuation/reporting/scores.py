@@ -7,8 +7,7 @@ from joblib import Parallel, delayed
 from typing import List
 from tqdm import tqdm, trange
 
-from valuation.utils import Dataset
-from valuation.utils.types import Regressor
+from valuation.utils import Dataset, SupervisedModel
 
 
 def sort_values_history(values: dict) -> OrderedDict:
@@ -21,7 +20,7 @@ def sort_values(values: dict) -> OrderedDict:
     return OrderedDict(sorted(values.items(), key=lambda x: x[1]))
 
 
-def backward_elimination(model: Regressor,
+def backward_elimination(model: SupervisedModel,
                          data: Dataset,
                          indices: List[int],
                          job_id: int = 0) -> List[float]:
@@ -49,7 +48,7 @@ def backward_elimination(model: Regressor,
     return scores
 
 
-def forward_selection(model: Regressor,
+def forward_selection(model: SupervisedModel,
                       data: Dataset,
                       indices: List[int],
                       job_id: int = 0) -> List[float]:
@@ -77,9 +76,9 @@ def forward_selection(model: Regressor,
     return scores
 
 
-def compute_fb_scores(values: List[OrderedDict],
-                      model: Regressor,
-                      data: Dataset) -> dict:
+def compute_fb_scores(model: SupervisedModel,
+                      data: Dataset,
+                      values: List[OrderedDict]) -> dict:
     """ Compute scores during forward selection and backward elimination of
      points, in parallel.
 

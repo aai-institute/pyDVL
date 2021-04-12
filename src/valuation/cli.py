@@ -156,7 +156,7 @@ def shapley(
                   num_workers=num_jobs,
                   worker_progress=True)
     values, history = run_and_gather(fun, num_runs=num_runs, progress=False)
-    scores = compute_fb_scores(values, model, data)
+    scores = compute_fb_scores(model, data, values)
     print("Saving results...")
     filename = f'save_{max_permutations}_iterations_{num_runs}_runs_' \
                f'{score_tolerance}_score_{value_tolerance}_value'
