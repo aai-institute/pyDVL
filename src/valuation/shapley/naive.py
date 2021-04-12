@@ -11,16 +11,7 @@ from valuation.utils import Dataset, SupervisedModel, maybe_progress, utility,\
 def permutation_exact_shapley(model: SupervisedModel,
                               data: Dataset,
                               progress: bool = True) -> OrderedDict:
-    """ Computes the exact Shapley value using permutations.
-
-     FIXME: it is stated in multiple places that this is equivalent to the
-      combinatorial approach, but this is O(n!) while the other is O(2^n). Why
-      do montecarlo using permutations instead of the powerset? Ghorbani and
-      Zou 2019 sequentially add points from the permutation in order to do
-      early stopping when the marginal contributions are below a threshold.
-      Also, Maleki 2014 do their analysis for the permutation formulation. Do
-      the bounds hold for both?
-     """
+    """ Computes the exact Shapley value using permutations. """
 
     n = len(data)
     # Arbitrary choice: 8! = 11.2 hours if 1 sec per fit() + score()
