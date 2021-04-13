@@ -18,10 +18,19 @@ def test_vanishing_derivatives():
 
 
 def test_powerset():
-    assert set(powerset((1, 2))) == {(), (1,), (1, 2), (2,)}
-    assert set(powerset([])) == {()}
     with pytest.raises(TypeError):
         set(powerset(1))
+
+    assert set(powerset([])) == {()}
+    assert set(powerset((1, 2))) == {(), (1,), (1, 2), (2,)}
+
+    # Check correct number of sets of each size
+    n = 10
+    sizes = np.zeros(n+1)
+    for s in powerset(range(n)):
+        sizes[len(s)] += 1
+
+    assert all([np.math.comb(n, j) for j in range(n+1)] == sizes)
 
 
 @pytest.mark.timeout(3)
@@ -35,27 +44,40 @@ def test_random_subset_indices(n):
     if n == 0:
         assert indices == []
     elif n == 1:
-        assert np.alltrue([s in [0] for s in indices])
+        assert np.all([s in [0] for s in indices])
     else:
         frequencies, _ = np.histogram(indices, range(n+1), density=True)
         # FIXME: 10% relative error sucks, be more precise
         assert np.allclose(frequencies, np.mean(frequencies), rtol=1e-1)
 
 
+@pytest.mark.timeout(5)
 @pytest.mark.parametrize("n", [0, 8])
 def test_random_powerset(n):
+    with pytest.raises(TypeError):
+        set(random_powerset(1, max_subsets=1))
+
     indices = np.arange(n)
-    m = 2 ** (len(indices) + 2)  # Just to be safe...
-    sets = []
+    # TODO: compute eps,delta bound for sample complexity
+    m = 2 ** int(len(indices)*2)
+    sets = set()
+    sizes = np.zeros(n + 1)
     for s in random_powerset(indices, max_subsets=m):
-        sets.append(tuple(s))
-    missing = []
-    for s in powerset(indices):
-        s = tuple(s)
+        sets.add(tuple(s))
+        sizes[len(s)] += 1
+
+    missing = set()
+    for s in map(tuple, powerset(indices)):
         try:
             sets.remove(s)
-        except ValueError:
-            missing.append(s)
+        except KeyError:
+            missing.add(s)
 
+    # FIXME: non deterministic
     # FIXME: test convergence in expectation to 0 as m->\ifty
-    assert len(missing) <= np.ceil(0.05*2**n)
+    assert len(missing) <= np.ceil(0.01*2**n)
+
+    # Check distribution of set sizes
+    sizes /= sum(sizes)
+    exact_sizes = np.array([np.math.comb(n, j) for j in range(n+1)]) / 2**n
+    assert np.allclose(sizes, exact_sizes, rtol=0.1)
