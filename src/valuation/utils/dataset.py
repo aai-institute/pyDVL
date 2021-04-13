@@ -6,7 +6,8 @@ from sklearn.model_selection import train_test_split
 
 
 class Dataset:
-    """ Meh... """
+    """ Meh... Just a bunch of properties and shortcuts.
+     I should probably ditch / redesign this. """
     def __init__(self,
                  data: Bunch,
                  train_size: float = 0.8,
