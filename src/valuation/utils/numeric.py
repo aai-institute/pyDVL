@@ -115,3 +115,72 @@ def random_powerset(indices: np.ndarray, max_subsets: int = None) \
         subset = random_subset_indices(n)
         yield indices[subset]
         total += 1
+
+
+def symmetric_mean_absolute_percentage_error(
+        y_true: ArrayLike,
+        y_pred: ArrayLike,
+        sample_weight: ArrayLike = None,
+        multioutput: Union[ArrayLike, Literal['raw_values', 'uniform_average']]
+                        = 'uniform_average') -> Union[float, np.ndarray]:
+    """ Symmetric mean absolute percentage error regression loss.
+
+    Computes:
+
+    $$1/n \sum_{i=1}^{n} \frac{|y_i - \hat{y}_i|}{|y_i| + |\hat{y}_i|} $$
+
+
+    Parameters
+    ----------
+    y_true : shape (n_samples,) or (n_samples, n_outputs)
+        Ground truth (correct) target values.
+    y_pred : shape (n_samples,) or (n_samples, n_outputs)
+        Estimated target values.
+    sample_weight :shape (n_samples,), default=None
+        Sample weights.
+    multioutput :
+        Defines aggregating of multiple output values.
+        Array-like value defines weights used to average errors.
+        If input is list then the shape must be (n_outputs,).
+        'raw_values' :
+            Returns a full set of errors in case of multioutput input.
+        'uniform_average' :
+            Errors of all outputs are averaged with uniform weight.
+    Returns
+    -------
+        Scalar(s) in [0,1]. The best return value is 0.0, the worst 1.0
+        If multioutput is 'raw_values', then sMAPE is returned for each output
+        separately.
+        If multioutput is 'uniform_average' or an ndarray of weights, then the
+        weighted average of all output errors is returned.
+    Examples
+    --------
+    >>> y_true = [3, -0.5, 2, 7]
+    >>> y_pred = [2.5, 0.0, 2, 8]
+    >>> symmetric_mean_absolute_percentage_error(y_true, y_pred)
+    0.289393...
+    >>> y_true = [[0.5, 1], [-1, 1], [7, -6]]
+    >>> y_pred = [[0, 2], [-1, 2], [8, -5]]
+    >>> symmetric_mean_absolute_percentage_error(y_true, y_pred)
+    0.304040...
+    >>> symmetric_mean_absolute_percentage_error(y_true, y_pred, multioutput=[0.3, 0.7])
+    0.283434...
+    """
+    y_type, y_true, y_pred, multioutput = _check_reg_targets(y_true, y_pred,
+                                                             multioutput)
+    check_consistent_length(y_true, y_pred, sample_weight)
+
+    smape = np.abs(y_true - y_pred) / (np.abs(y_true) + np.abs(y_pred))
+    output_errors = np.average(smape, weights=sample_weight, axis=0)
+    if isinstance(multioutput, str):
+        if multioutput == 'raw_values':
+            return output_errors
+        elif multioutput == 'uniform_average':
+            # pass None as weights to np.average: uniform mean
+            multioutput = None
+
+    return np.average(output_errors, weights=multioutput)
+
+
+smape_scorer = make_scorer(symmetric_mean_absolute_percentage_error,
+                           greater_is_better=False)
