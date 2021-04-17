@@ -51,7 +51,4 @@ def maybe_progress(it: Union[int, Iterable, range, enumerate],
     """
     if isinstance(it, int):
         it = range(it)
-        _tqdm = trange
-    else:
-        _tqdm = tqdm
-    return _tqdm(it, **tqdm_kwargs) if display else MockProgress(it)
+    return tqdm(it, **tqdm_kwargs) if display else MockProgress(it)
