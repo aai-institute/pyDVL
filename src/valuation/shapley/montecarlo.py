@@ -24,7 +24,8 @@ from valuation.utils.types import Scorer
 
 __all__ = ['truncated_montecarlo_shapley',
            'serial_truncated_montecarlo_shapley',
-           'permutation_montecarlo_shapley']
+           'permutation_montecarlo_shapley',
+           'combinatorial_montecarlo_shapley']
 
 
 def bootstrap_test_score(model: SupervisedModel,
