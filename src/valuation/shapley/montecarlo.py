@@ -77,7 +77,7 @@ class ShapleyWorker(InterruptibleWorker):
         super().__init__(**kwargs)
 
         self.model = model
-        self.scorer = check_scoring(model, scoring)
+        self.scoring = scoring
         self.global_score = global_score
         self.data = data
         self.min_scores = min_scores
@@ -91,7 +91,8 @@ class ShapleyWorker(InterruptibleWorker):
     def _run(self, permutation: np.ndarray) -> Tuple[np.ndarray, Optional[int]]:
         """ """
         n = len(permutation)
-        u = lambda x: utility(self.model, self.data, frozenset(x))
+        u = lambda x: utility(self.model, self.data, frozenset(x),
+                              scoring=self.scoring)
         scores = np.zeros(n)
 
         self.pbar.reset()
