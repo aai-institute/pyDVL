@@ -4,13 +4,14 @@ historical information of the algorithm. This module provides utility functions
 to run these in parallel and multiple times, then gather the results for later
 processing / reporting.
 """
+import joblib
 import multiprocessing as mp
 import os
 import queue
 
 from collections import OrderedDict
 from joblib import Parallel, delayed
-from tqdm import tqdm, trange
+from tqdm import tqdm
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 
@@ -22,25 +23,11 @@ def available_cpus():
 
 
 def run_and_gather(fun: Callable[..., Tuple[OrderedDict, List]],
+                   num_jobs: int,
                    num_runs: int,
-                   progress: bool = False) \
-        -> Tuple[List[OrderedDict], List]:
-    """ Runs fun num_runs times and gathers results in a sorted OrderedDict for
-    each run, then returns them in a list.
-
-    All results in one run are merged and sorted by value in ascending order.
-
-    :param fun: A callable accepting either no arguments, e.g. a procedure
-                wrapped with `valuation.parallel.parallel_wrap()`, which is
-                basically `Parallel(delayed(...)(...))(...)`, or exactly one
-                integer argument, the run_id, for display purposes.
-    :param num_runs: number of times to repeat the whole procedure.
-    :param progress: True to display a progress bar at the top of the
-                         terminal.
-    :return: tuple of 2 lists of length num_runs each, one containing per-run
-             results sorted by increasing value, the other historic information
-             ("converged") FIXME.
-    """
+                   backend: str = 'loky') \
+        -> List[Tuple[OrderedDict, List]]:
+    """ Runs fun num_runs times and returns the results. """
 
     import inspect
     if 'run_id' not in inspect.signature(fun).parameters.keys():
@@ -48,30 +35,8 @@ def run_and_gather(fun: Callable[..., Tuple[OrderedDict, List]],
     else:
         _fun = fun
 
-    all_values = []
-    all_histories = []
-
-    runs = trange(num_runs, position=0) if progress else range(num_runs)
-    for i in runs:
-        ret = _fun(run_id=i)
-        # HACK: Merge results from calls to Parallel
-        values = {}
-        history = []
-        if isinstance(ret, list):
-            for vv, hh in ret:
-                values.update(vv)
-                history.append(hh)
-            values = OrderedDict(sorted(values.items(),
-                                        key=lambda item: item[1]))
-        # Or don't...
-        else:
-            values, history = ret
-        # TODO: checkpoint
-
-        all_values.append(values)
-        all_histories.append(history)
-
-    return all_values, all_histories
+    with joblib.parallel_backend(backend, n_jobs=num_jobs):
+        return Parallel()(delayed(_fun)(run_id=i) for i in range(num_runs))
 
 
 def parallel_wrap(fun: Callable[[Iterable], Dict[int, float]],
@@ -96,14 +61,14 @@ def parallel_wrap(fun: Callable[[Iterable], Dict[int, float]],
     # Chunkify the list of values
     n = len(arg[1])
     chunk_size = 1 + int(n / num_jobs)
-    values = [list(arg[1][i:min(i + chunk_size, n)])
-              for i in arg[1][0:n:chunk_size]]
+    arg_values = [list(arg[1][i:min(i + chunk_size, n)])
+                  for i in arg[1][0:n:chunk_size]]
 
     if job_id_arg is not None:
         jobs = [delayed(fun)(**{arg[0]: vv, job_id_arg: i + 1})
-                for i, vv in enumerate(values)]
+                for i, vv in enumerate(arg_values)]
     else:
-        jobs = [delayed(fun)(**{arg[0]: vv}) for i, vv in enumerate(values)]
+        jobs = [delayed(fun)(**{arg[0]: vv}) for i, vv in enumerate(arg_values)]
 
     return lambda: Parallel(n_jobs=num_jobs)(jobs)
 
@@ -142,7 +107,7 @@ class InterruptibleWorker(mp.Process):
         self._abort = abort
 
     def run(self):
-        task = self.tasks.get(timeout=1.0)  # Wait a bit during start-up (yikes)
+        task = self.tasks.get(timeout=2.0)  # Wait a bit during start-up (yikes)
         while True:
             if task is None:  # Indicates we are done
                 self.tasks.put(None)
@@ -150,6 +115,8 @@ class InterruptibleWorker(mp.Process):
 
             result = self._run(task)
 
+            # FIXME: I already have the abort flag. Do I need a stop task as
+            #  well?
             # Check whether the None flag was sent during _run().
             # This throws away our last results, but avoids a deadlock (can't
             # join the process if a queue has items)
@@ -157,6 +124,8 @@ class InterruptibleWorker(mp.Process):
                 task = self.tasks.get_nowait()
                 if task is not None:
                     self.results.put(result)
+                else:
+                    self.tasks.put(None)
             except queue.Empty:
                 return
 
@@ -169,12 +138,12 @@ class InterruptibleWorker(mp.Process):
 
 class Coordinator:
     """ Meh... """
-    def __init__(self, processer: Callable[[Any], None]):
+    def __init__(self, processor: Callable[[Any], None]):
         self.tasks_q = mp.Queue()
         self.results_q = mp.Queue()
         self.abort_flag = mp.Value('b', False)
         self.workers = []
-        self.process_result = processer
+        self.process_result = processor
 
     def instantiate(self, n: int, cls: Type[InterruptibleWorker], **kwargs):
         if not self.workers:
@@ -220,19 +189,18 @@ class Coordinator:
         except queue.Empty:
             pass
 
-    def start_shift(self):
+    def start(self):
         for w in self.workers:
             w.start()
 
-    def end_shift(self, pbar: Optional[tqdm] = None):
+    def end(self, pbar: Optional[tqdm] = None):
         self.clear_tasks()
         # Any workers still running won't post their results after the
         # None task has been placed...
         self.tasks_q.put(None)
         self.abort_flag.value = True
 
-        # ... But maybe someone put() some result while we were completing
-        # the last iteration of the loop above:
+        # ... But maybe someone put() some result while we were doing the above
         self.clear_results(pbar)
 
         # results_q should be empty now

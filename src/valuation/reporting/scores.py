@@ -10,6 +10,11 @@ from tqdm import tqdm, trange
 from valuation.utils import Dataset, SupervisedModel
 
 
+def sort_values_array(values: np.ndarray) -> OrderedDict:
+    vals = np.mean(values, axis=1)
+    return OrderedDict(sorted(enumerate(vals), key=lambda x: x[1]))
+
+
 def sort_values_history(values: dict) -> OrderedDict:
     """ Sorts a dict of sample_id: [values] by the last item in each list. """
     return OrderedDict(sorted(values.items(), key=lambda x: x[1][-1]))
@@ -38,11 +43,11 @@ def backward_elimination(model: SupervisedModel,
     x, y = data.x_train, data.y_train
     for i in tqdm(indices[:-1], position=job_id,
                   desc=f"Backward elimination. Job {job_id}"):
-        x = x.iloc[x.ilocs != i]
-        y = y.iloc[y.ilocs != i]
+        x = x[data.indices != i]
+        y = y[data.indices != i]
         try:
-            model.fit(x, y.values.ravel())
-            scores.append(model.score(data.x_test, data.y_test.values.ravel()))
+            model.fit(x, y)
+            scores.append(model.score(data.x_test, data.y_test))
         except:
             scores.append(np.nan)
     return scores
@@ -66,11 +71,11 @@ def forward_selection(model: SupervisedModel,
     for i in trange(len(indices), position=job_id,
                     desc=f"Forward selection. Job {job_id}"):
         # FIXME: always train on at least a fraction of the indices
-        x = data.x_train.iloc[indices[:i + 1]]
-        y = data.y_train.iloc[indices[:i + 1]]
+        x = data.x_train[indices[:i + 1]]
+        y = data.y_train[indices[:i + 1]]
         try:
-            model.fit(x, y.values.ravel())
-            scores.append(model.score(data.x_test, data.y_test.values.ravel()))
+            model.fit(x, y)
+            scores.append(model.score(data.x_test, data.y_test))
         except:
             scores.append(np.nan)
     return scores

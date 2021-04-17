@@ -133,13 +133,13 @@ def shapley(
             value_tolerance: float,
             min_values: int,
             score_tolerance: float,
-            min_samples: int,
+            min_scores: int,
             num_runs: int):
     # config = yaml.safe_load(config_file)
 
     from sklearn import datasets
     from sklearn.ensemble import GradientBoostingRegressor
-    data = Dataset(datasets.load_boston())
+    data = Dataset.from_sklearn(datasets.load_boston())
     # NOTE: should max_iterations be a fraction of the number of permutations?
     max_iterations = int(permutations_ratio * len(data))
 
@@ -148,7 +148,7 @@ def shapley(
                   model=model,
                   data=data,
                   bootstrap_iterations=bootstrap_iterations,
-                  min_samples=min_samples,
+                  min_scores=min_scores,
                   score_tolerance=score_tolerance,
                   min_values=min_values,
                   value_tolerance=value_tolerance,

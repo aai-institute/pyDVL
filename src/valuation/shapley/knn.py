@@ -32,20 +32,20 @@ def exact_knn_shapley(data: Dataset,
     # for d in distances:
     #     assert (sorted(d) == d).all()
 
-    values = {i: 0.0 for i in data.ilocs}
+    values = {i: 0.0 for i in data.indices}
     n = len(data)
     yt = data.y_train
-    iterator = enumerate(zip(data.y_test.values, indices), start=1)
+    iterator = enumerate(zip(data.y_test, indices), start=1)
     for j, (y, ii) in maybe_progress(iterator, progress):
-        value_at_x = int(yt.iloc[ii[-1]] == y) / n
+        value_at_x = int(yt[ii[-1]] == y) / n
         values[ii[-1]] += (value_at_x - values[ii[-1]]) / j
         for i in range(n-2, n_neighbors, -1):  # farthest to closest
             value_at_x = values[ii[i+1]] \
-                + (int(yt.iloc[ii[i]] == y) - int(yt.iloc[ii[i+1]] == y)) / i
+                + (int(yt[ii[i]] == y) - int(yt[ii[i+1]] == y)) / i
             values[ii[i]] += (value_at_x - values[ii[i]])/j
         for i in range(n_neighbors, -1, -1):  # farthest to closest
             value_at_x = values[ii[i+1]] \
-                + (int(yt.iloc[ii[i]] == y) - int(yt.iloc[ii[i + 1]] == y)) / n_neighbors
+                + (int(yt[ii[i]] == y) - int(yt[ii[i + 1]] == y)) / n_neighbors
             values[ii[i]] += (value_at_x - values[ii[i]]) / j
 
     return sort_values(values)
@@ -53,7 +53,7 @@ def exact_knn_shapley(data: Dataset,
 
 if __name__ == '__main__':
     from sklearn import datasets
-    data = Dataset(datasets.load_iris())
+    data = Dataset.from_sklearn(datasets.load_iris())
     from sklearn.neighbors import KNeighborsClassifier
 
     knn = KNeighborsClassifier(n_neighbors=5)

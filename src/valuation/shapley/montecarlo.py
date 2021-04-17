@@ -11,64 +11,65 @@ TODO:
 import numpy as np
 
 from collections import OrderedDict
-from functools import partial
+from sklearn.metrics import check_scoring
 from time import time
-from tqdm.auto import tqdm, trange
-from typing import Dict, Iterable, List, Tuple
-from unittest.mock import Mock
-
+from typing import List, Optional, Tuple
+from valuation.reporting.scores import sort_values, sort_values_array
 from valuation.utils.numeric import random_powerset
 from valuation.utils.parallel import Coordinator, InterruptibleWorker
-from valuation.reporting.scores import sort_values, sort_values_history
-from valuation.utils import Dataset, SupervisedModel, \
-    maybe_progress, vanishing_derivatives, utility
-
+from valuation.utils.progress import maybe_progress
+from valuation.utils import Dataset, SupervisedModel, vanishing_derivatives, \
+    utility
+from valuation.utils.types import Scorer
 
 __all__ = ['truncated_montecarlo_shapley',
-           'serial_montecarlo_shapley',
+           'serial_truncated_montecarlo_shapley',
            'permutation_montecarlo_shapley']
 
 
 def bootstrap_test_score(model: SupervisedModel,
                          data: Dataset,
-                         bootstrap_iterations,
+                         scoring: Optional[Scorer],
+                         bootstrap_iterations: int,
                          progress: bool = False) \
         -> Tuple[float, float]:
-    """ That. """
-    model.fit(data.x_train, data.y_train.values.ravel())
+    """ That. Here for lack of a better place. """
+    scorer = check_scoring(model, scoring)
     _scores = []
+    model.fit(data.x_train, data.y_train)
+    n_test = len(data.x_test)
     for _ in maybe_progress(range(bootstrap_iterations), progress,
                             desc="Bootstrapping"):
-        sample = np.random.choice(data.x_test.index, len(data.x_test.index),
-                                  replace=True)
-        _scores.append(model.score(data.x_test.loc[sample],
-                                   data.y_test.loc[sample].values.ravel()))
-    # import matplotlib.pyplot as plt
-    # plt.hist(_scores, bins=40)
-    # plt.savefig("bootstrap.png")
+        sample = np.random.randint(low=0, high=n_test, size=n_test)
+        score = scorer(model, data.x_test[sample], data.y_test[sample])
+        _scores.append(score)
+
     return np.mean(_scores), np.std(_scores)
 
 
 class ShapleyWorker(InterruptibleWorker):
+    """ A worker. It should work. """
 
     def __init__(self,
                  model: SupervisedModel,
                  data: Dataset,
+                 scoring: Optional[Scorer],
                  global_score: float,
                  score_tolerance: float,
-                 min_samples: int,
+                 min_scores: int,
                  progress: bool,
                  **kwargs,
                  ):
         """
         :param model: sklearn model / pipeline
         :param data: split dataset
+        :param scoring:
         :param global_score:
         :param score_tolerance: For every permutation, computation stops
          after the mean increase in performance is within score_tolerance*stddev
          of the bootstrapped score over the **test** set (i.e. we bootstrap to
          compute variance of scores, then use that to stop)
-        :param min_samples: Use so many of the last samples for a permutation
+        :param min_scores: Use so many of the last samples for a permutation
          in order to compute the moving average of scores.
         :param progress: set to True to display progress bars
 
@@ -76,55 +77,54 @@ class ShapleyWorker(InterruptibleWorker):
         super().__init__(**kwargs)
 
         self.model = model
+        self.scorer = check_scoring(model, scoring)
         self.global_score = global_score
         self.data = data
-        self.min_samples = min_samples
+        self.min_scores = min_scores
         self.score_tolerance = score_tolerance
         self.num_samples = len(self.data)
         self.progress = progress
+        self.pbar = maybe_progress(range(len(data)), self.progress,
+                                   total=(len(data)), position=self.id,
+                                   desc=f"{self.name}")
 
-    def _run(self, permutation: np.ndarray) \
-            -> Tuple[np.ndarray, np.ndarray, int]:
+    def _run(self, permutation: np.ndarray) -> Tuple[np.ndarray, Optional[int]]:
         """ """
         n = len(permutation)
         u = lambda x: utility(self.model, self.data, frozenset(x))
-        # scores[0] is the value of training on the empty set.
-        scores = np.zeros(n + 1)
-        pbar = maybe_progress(range(self.num_samples), self.progress,
-                              total=self.num_samples, position=self.id,
-                              desc=f"{self.name}", leave=False)
-        pbar.reset()
+        scores = np.zeros(n)
+
+        self.pbar.reset()
         early_stop = None
-        for j, index in enumerate(permutation, start=1):
+        prev_score = 0.0
+        for j, index in enumerate(permutation):
             if self.aborted():
                 break
 
-            mean_last_score = scores[max(j - self.min_samples, 0):j].mean()
-
-            # Stop if last min_samples have an average mean below threshold:
-            if abs(self.global_score - mean_last_score) < \
-                    self.score_tolerance:
-                if early_stop is None:
-                    early_stop = j
-                scores[j] = scores[j - 1]
-            else:
-                scores[j] = u(permutation[:j + 1])
-            pbar.set_postfix_str(f"last {self.min_samples} scores: "
+            # Stop if last min_scores have an average mean below threshold:
+            mean_last_score = scores[max(j - self.min_scores, 0):j].mean()
+            if abs(self.global_score - mean_last_score) < self.score_tolerance:
+                early_stop = j
+                break
+            score = u(permutation[:j + 1])
+            scores[index] = score - prev_score
+            prev_score = score
+            self.pbar.set_postfix_str(f"last {self.min_scores} scores: "
                                  f"{mean_last_score:.2e}")
-            pbar.update()
-        pbar.close()
-        # FIXME: sending the permutation back is wasteful
-        return permutation, scores, early_stop
+            self.pbar.update()
+        # self.pbar.close()
+        return scores, early_stop
 
 
 def truncated_montecarlo_shapley(model: SupervisedModel,
                                  data: Dataset,
+                                 scoring: Optional[Scorer],
                                  bootstrap_iterations: int,
-                                 min_samples: int,
+                                 min_scores: int,
                                  score_tolerance: float,
                                  min_values: int,
                                  value_tolerance: float,
-                                 max_permutations: int,
+                                 max_iterations: int,
                                  num_workers: int,
                                  run_id: int = 0,
                                  progress: bool = False) \
@@ -140,10 +140,11 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
 
         :param model: sklearn model / pipeline
         :param data: split dataset
+        :param scoring: Scorer callable or string as in sklearn
         :param bootstrap_iterations: Repeat global_score computation this many
          times to estimate variance.
-        :param min_samples: Use so many of the last samples for a permutation
-         in order to compute the moving average of scores.
+        :param min_scores: Use so many of the last scores in order to compute 
+         the moving average.
         :param score_tolerance: For every permutation, computation stops
          after the mean increase in performance is within score_tolerance*stddev
          of the bootstrapped score over the **test** set (i.e. we bootstrap to
@@ -153,85 +154,80 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
          in order to compute the moving averages of values.
         :param value_tolerance: Stop sampling permutations after the first
          derivative of the means of the last min_steps values are within
-         value_tolerance close to 0
-        :param max_permutations: never run more than this many iterations (in
+         eps close to 0
+        :param max_iterations: never run more than this many iterations (in
          total, across all workers: if num_workers = 100 and max_iterations =
          100, then each worker will run at most one job)
+        :param num_workers: number of workers processing permutations. Set e.g.
+        to available_cpus()/t if each worker runs on t threads.
+        :param run_id: for display purposes (location of progress bar)
+        :param progress: set to True to use tqdm progress bars.
         :return: Dict of approximated Shapley values for the indices
 
     """
-    # if values is None:
-    values = {i: [0.0] for i in data.ilocs}
-    # if converged_history is None:
+    n = len(data)
+    values = np.zeros(n).reshape((-1, 1))
     converged_history = []
 
-    mean, std = bootstrap_test_score(model, data, bootstrap_iterations)
+    mean, std = bootstrap_test_score(model, data, scoring, bootstrap_iterations)
     global_score = mean
     score_tolerance *= std
 
-    num_samples = len(data)
-    converged = 0
-    iteration = 1
-
     def process_result(result: Tuple):
-        nonlocal iteration
-        permutation, scores, early_stop = result
-        for j, s, p in zip(permutation, scores[1:], scores[:-1]):
-            values[j].append((iteration - 1) / iteration * values[j][-1]
-                             + (s - p) / iteration)
-        iteration += 1
+        nonlocal values
+        scores, _ = result
+        values = np.concatenate([values, scores.reshape((-1, 1))], axis=1)
 
-    boss = Coordinator(processer=process_result)
-    boss.instantiate(num_workers, ShapleyWorker,
-                     model=model,
-                     data=data,
-                     global_score=global_score,
-                     score_tolerance=score_tolerance,
-                     min_samples=min_samples,
-                     progress=progress)
+    worker_params = {'model': model,
+                     'data': data,
+                     'scoring': scoring,
+                     'global_score': global_score,
+                     'score_tolerance': score_tolerance,
+                     'min_scores': min_scores, 'progress': progress}
+    boss = Coordinator(processor=process_result)
+    boss.instantiate(num_workers, ShapleyWorker, **worker_params)
 
     # Fill the queue before starting the workers or they will immediately quit
     for _ in range(2 * num_workers):
-        boss.put(np.random.permutation(data.ilocs))
+        boss.put(np.random.permutation(data.indices))
 
-    boss.start_shift()
+    boss.start()
 
-    pbar = maybe_progress(range(num_samples), progress, total=num_samples,
+    pbar = maybe_progress(range(n), progress, total=n,
                           position=0, desc=f"Run {run_id}. Converged")
-    while converged < num_samples and iteration <= max_permutations:
+    converged = iteration = 0
+    while converged < n and iteration <= max_iterations:
         boss.get_and_process()
-        boss.put(np.random.permutation(data.ilocs))
-        if iteration > min_values:
-            converged = vanishing_derivatives(np.array(list(values.values())),
-                                              min_values=min_values,
-                                              value_tolerance=value_tolerance)
-            converged_history.append(converged)
+        boss.put(np.random.permutation(data.indices))
+        iteration += 1
 
+        converged = vanishing_derivatives(values, min_values=min_values,
+                                          eps=value_tolerance)
+        converged_history.append(converged)
         # converged can decrease. reset() clears times, but if just call
         # update(), the bar collapses. This is some hackery to fix that:
         pbar.n = converged
         pbar.last_print_n, pbar.last_print_t = converged, time()
         pbar.refresh()
 
-    boss.end_shift(pbar)
+    boss.end(pbar)
     pbar.close()
-    return sort_values_history(values), converged_history
+    return sort_values_array(values), converged_history
 
 
-def serial_montecarlo_shapley(model: SupervisedModel,
-                              data: Dataset,
-                              bootstrap_iterations: int,
-                              min_samples: int,
-                              score_tolerance: float,
-                              min_steps: int,
-                              value_tolerance: float,
-                              max_iterations: int,
-                              values: Dict[int, List[float]] = None,
-                              converged_history: List[int] = None,
-                              progress: bool = False) \
+# @checkpoint(["converged_history", "values"])
+def serial_truncated_montecarlo_shapley(model: SupervisedModel,
+                                        data: Dataset,
+                                        bootstrap_iterations: int,
+                                        score_tolerance: float,
+                                        min_steps: int,
+                                        value_tolerance: float,
+                                        max_iterations: int,
+                                        scoring: Scorer = None,
+                                        progress: bool = False) \
         -> Tuple[OrderedDict, List[int]]:
-    """ MonteCarlo approximation to the Shapley value of data points using
-    only one CPU.
+    """ Truncated MonteCarlo method to compute Shapley values of data points
+     using only one CPU.
 
     Instead of naively implementing the expectation, we sequentially add points
     to a dataset from a permutation. We compute scores and stop when model
@@ -244,172 +240,128 @@ def serial_montecarlo_shapley(model: SupervisedModel,
         :param data: split Dataset
         :param bootstrap_iterations: Repeat global_score computation this many
          times to estimate variance.
-        :param min_samples: Use so many of the last samples for a permutation
-         in order to compute the moving average of scores.
         :param score_tolerance: For every permutation, computation stops
          after the mean increase in performance is within score_tolerance*stddev
          of the bootstrapped score over the **test** set (i.e. we bootstrap to
          compute variance of scores, then use that to stop)
-        :param min_steps: complete at least these many value computations for
-         every index and use so many of the last values for each sample index
+        :param min_steps: use so many of the last values for each sample index
          in order to compute the moving averages of values.
         :param value_tolerance: Stop sampling permutations after the first
          derivative of the means of the last min_steps values are within
-         value_tolerance close to 0
+         eps close to 0
         :param max_iterations: never run more than these many iterations
-        :param values: Use these as starting point (retake computation)
-        :param converged_history: Append to this history
+        :param progress: whether to display progress bars
+        # :param values: Use these as starting point (retake computation)
+        # :param converged_history: Append to this history
         :return: Dict of approximated Shapley values for the indices
 
     """
-    if values is None:
-        values = {i: [0.0] for i in data.ilocs}
+    n = len(data)
+    all_marginals = np.zeros(n).reshape((-1, 1))
+    u = lambda x: utility(model, data, frozenset(x), scoring=scoring)
 
-    if converged_history is None:
-        converged_history = []
+    converged_history = []
 
-    m, s = bootstrap_test_score(model, data, bootstrap_iterations)
-    global_score = m
-    score_tolerance *= s
+    m, s = bootstrap_test_score(model, data, scoring, bootstrap_iterations)
+    global_score, eps = m, score_tolerance * s
 
-    iteration = 0
-    converged = 0
-    num_samples = len(data)
-    pbar = maybe_progress(range(num_samples), progress, total=num_samples,
-                          position=1, desc=f"MCShapley")
-    while iteration < min_steps \
-            or (converged < num_samples and iteration < max_iterations):
-        permutation = np.random.permutation(data.ilocs)
+    iteration = 1
+    pbar = maybe_progress(range(max_iterations), progress,
+                          position=0, desc="Iterations")
+    pbar2 = maybe_progress(range(n), progress,
+                           position=1, desc="Converged")
+    while iteration < max_iterations:
+        permutation = np.random.permutation(data.indices)
+        marginals = np.zeros(n)
+        prev_score = 0.0
+        last_scores = -np.inf*np.ones(min_steps)
+        pbar2.reset(total=n)
+        for i, j in enumerate(permutation):
+            if np.isclose(np.nanmean(last_scores), global_score, atol=eps):
+                continue
+            # Careful: for some models there might be nans, e.g. for i=0 or i=1!
+            score = u(permutation[:i+1])
+            last_scores[i % min_steps] = score  # order doesn't matter
+            marginals[j] = score - prev_score
+            prev_score = score
 
-        # FIXME: need score for model fitted on empty dataset
-        scores = np.zeros(len(permutation) + 1)
-        pbar.reset()
-        for j, index in enumerate(permutation):
-            pbar.set_description_str(
-                    f"Iteration {iteration}, converged {converged}: ")
+        all_marginals = \
+            np.concatenate([all_marginals, marginals.reshape((-1, 1))], axis=1)
 
-            # Stop if last min_samples have an average mean below threshold:
-            last_scores = scores[
-                          max(j - min_samples, 0):j].mean() if j > 0 else 0.0
-            pbar.set_postfix_str(
-                    f"last {min_samples} scores: {last_scores:.2e}")
-            pbar.update()
-            if abs(global_score - last_scores) < score_tolerance:
-                scores[j + 1] = scores[j]
-            else:
-                scores[j + 1] = utility(model, data, permutation[:j+1])
-            # Update mean value: mean_n = mean_{n-1} + (new_val - mean_{n-1})/n
-            values[permutation[j]].append(
-                    values[permutation[j]][-1]
-                    + (scores[j + 1] - values[permutation[j]][-1]) / (j + 1))
-
-        # Check empirical convergence of means (1st derivative ~= 0)
-        # last_values = np.array(list(values.values()))[:, - (min_steps + 1):]
-        # d = np.diff(last_values, axis=1)
-        # converged = np.isclose(d, 0.0, atol=value_tolerance).sum()
         converged = \
-            vanishing_derivatives(np.array(list(values.values())),
-                                  min_values=min_steps,
-                                  value_tolerance=value_tolerance)
+            vanishing_derivatives(all_marginals, min_values=min_steps,
+                                  eps=value_tolerance)
         converged_history.append(converged)
+        pbar2.update(converged)
+        if converged >= n:
+            break
         iteration += 1
-        pbar.refresh()
+        pbar.update()
 
     pbar.close()
-
-    return sort_values_history(values), converged_history
+    values = np.nanmean(all_marginals, axis=1)
+    values = {i: v for i, v in enumerate(values)}
+    return sort_values(values), converged_history
 
 
 def permutation_montecarlo_shapley(model: SupervisedModel,
                                    data: Dataset,
-                                   indices: List[int],
-                                   max_permutations: int,
-                                   tolerance: float = None,
+                                   max_iterations: int,
+                                   scoring: Scorer = None,
                                    job_id: int = 0,
                                    progress: bool = False) \
         -> Tuple[OrderedDict, List[int]]:
-    """ MonteCarlo approximation to the Shapley value of data points.
-
-    This is a direct translation of the formula:
-
-        Φ_i = E_π[ V(S^i_π ∪ {i}) - V(S^i_π) ],
-
-    where π~Π is a draw from all possible n-permutations and S^i_π is the set
-    of all indices before i in permutation π.
-
-    As such it cannot take advantage of diminishing returns as an early stopping
-    mechanism, hence the prefix "naive".
-
-    Usage example
-    =============
-
-    indices = list(range(len(data)))
-    fun = partial(naive_montecarlo_shapley, model, data
-                  max_iterations=max_iterations, tolerance=None)
-    wrapped = parallel_wrap(fun, ("indices", indices), num_jobs=160)
-    vals, hist = run_and_gather(wrapped, num_runs=10, progress_bar=True)
-
-    Arguments
-    =========
-        :param model: sklearn model / pipeline
-        :param data: split Dataset
-        :param indices: subset of data.index to work on (useful for parallel
-            computation with `parallel_wrap`)
-        :param max_permutations: run these many for each index. To compute an
-           (eps,delta) lower bound use `lower_bound_hoeffding()`
-        :param tolerance: NOT IMPLEMENTED stop drawing permutations after delta
-            in scores falls below this threshold
-        :param job_id: for progress bar positioning
-        :param progress: whether to display a progress bar
-        :return: Dict of approximated Shapley values for the indices and dummy
-                 list to conform to the generic interface in valuation.parallel
     """
-    if tolerance is not None:
-        raise NotImplementedError("Tolerance not implemented")
-
-    values = {i: 0.0 for i in indices}
-    u = partial(utility, model, data)
-
-    # FIXME: exchange the loops to avoid searching with where
-    pbar = maybe_progress(indices, progress, position=job_id, total=len(indices))
-
-    for i in pbar:
-        pbar.set_description(f"Index {i}")
-        mean = 0.0
-        for n in range(1, max_permutations+1):
-            if progress:
-                pbar.set_postfix_str(f"mean: {mean:.2f}")
-            permutation = np.random.permutation(data.ilocs)
-            # yuk... does not stop after match
-            loc = np.where(permutation == i)[0][0]
-            score = u(tuple(permutation[:loc + 1])) \
-                    - u(tuple(permutation[:loc]))
-            mean += (score - mean) / n
-        values[i] = mean
-    return sort_values(values), []
+    FIXME: the sum of values tends to cancel out, even though the ranking is ok
+    """
+    n = len(data)
+    values = np.zeros(n).reshape((-1, 1))
+    u = lambda x: utility(model, data, frozenset(x), scoring=scoring)
+    prev_score = 0.0
+    pbar = maybe_progress(max_iterations, progress, position=job_id)
+    for _ in pbar:
+        permutation = np.random.permutation(data.indices)
+        marginals = np.zeros((n, 1))
+        for i, idx in enumerate(permutation):
+            score = u(permutation[:i + 1])
+            marginals[idx] = score - prev_score
+            prev_score = score
+        values = np.concatenate([values, marginals], axis=1)
+    # Careful: for some models there might be nans, e.g. for i=0 or i=1!
+    values = np.nanmean(values, axis=1)
+    return sort_values({i: v for i, v in enumerate(values)}), []
 
 
 def combinatorial_montecarlo_shapley(model: SupervisedModel,
                                      data: Dataset,
-                                     indices: Iterable[int],
+                                     max_iterations: int,
+                                     scoring: Scorer = None,
+                                     indices: List[int] = None,
                                      job_id: int = 0,
                                      progress: bool = False) \
         -> Tuple[OrderedDict, None]:
     """ Computes an approximate Shapley value using the combinatorial
-    definition and MonteCarlo samples
-     """
+    definition and MonteCarlo samples.
 
+    FIXME: this seems to have very high variance! It might help to implement
+     importance sampling with more weight for smaller set sizes, where value
+      contributions are likely to be higher.
+    """
     n = len(data)
-    max_subsets = 2**n  # temporary, FIXME
-    values = np.zeros(n)
-    u = lambda x: utility(model, data, frozenset(x))
-    for i in indices:
-        # Randomly sample subsets of index - {j}
-        subset = np.setxor1d(indices, [i], assume_unique=True)
-        power_set = enumerate(random_powerset(subset, max_subsets=max_subsets),
-                              start=1)
-        for j, s in maybe_progress(power_set, progress, desc=f"Index {i}",
-                                   total=max_subsets, position=job_id):
-            values[i] += (u({i}.union(s)) - u(s) - values[i]) / j
-
-    return sort_values({i: v for i, v in enumerate(values)}), None
+    if not indices:
+        indices = data.indices
+    values = np.zeros(len(indices))
+    u = lambda x: utility(model, data, frozenset(x), scoring=scoring)
+    for i, idx in enumerate(indices):
+        # Randomly sample subsets of full dataset without idx
+        subset = np.setxor1d(data.indices, [idx], assume_unique=True)
+        power_set = \
+            enumerate(random_powerset(subset, max_subsets=max_iterations))
+        ut = 0.0
+        for j, s in maybe_progress(power_set, progress, desc=f"Index {idx}",
+                                   total=max_iterations, position=job_id):
+            ut += (u({i}.union(s)) - u(s)) / np.math.comb(n - 1, len(s))
+        # Normalization accounts for uniform dist. on powerset and montecarlo
+        values[i] = 2**(n-1) * ut / max_iterations
+    values /= n  # careful to use the right factor!
+    return sort_values({i: v for i, v in zip(indices, values)}), None
