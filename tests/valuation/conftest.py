@@ -21,7 +21,7 @@ def linear_dataset():
     x = np.arange(-1, 1, .15)
     y = np.random.normal(loc=a * x + b, scale=1)
     db = Bunch()
-    db.data, db.target = x.reshape(-1, 1), y.reshape(-1, 1)
+    db.data, db.target = x.reshape(-1, 1), y
     db.DESCR = f"y~N({a}*x + {b}, 1)"
     db.feature_names = ["x"]
     db.target_names = ["y"]
