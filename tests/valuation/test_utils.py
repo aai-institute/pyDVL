@@ -3,7 +3,7 @@ import pytest
 
 from valuation.utils import vanishing_derivatives
 from valuation.utils.numeric import powerset, random_powerset, \
-    random_subset_indices
+    random_subset_indices, spearman
 
 
 def test_dataset_len(boston_dataset):
@@ -81,3 +81,26 @@ def test_random_powerset(n):
     sizes /= sum(sizes)
     exact_sizes = np.array([np.math.comb(n, j) for j in range(n+1)]) / 2**n
     assert np.allclose(sizes, exact_sizes, rtol=0.1)
+
+
+@pytest.mark.parametrize(
+    "x, y, expected",
+    [([], [], ValueError),
+     ([1], [1], TypeError),
+     ([1, 2, 3], [1, 2, 3], 1.0),
+     ([1, 2, 3], [3, 2, 1], -1.0),
+     (np.arange(1, 4), np.arange(4, 7), ValueError),
+     # FIXME: non deterministic test
+     (np.random.permutation(np.arange(100)),
+      np.random.permutation(np.arange(100)), (0.0, 0.1))])
+def test_spearman(x, y, expected):
+    if isinstance(expected, float):
+        x = np.array(x, dtype=int)
+        y = np.array(y, dtype=int)
+        assert spearman(x, y) == expected
+    elif isinstance(expected, tuple):
+        value, atol = expected
+        assert np.isclose(spearman(x, y), value, atol=atol)
+    else:
+        with pytest.raises(expected):
+            spearman(x, y)

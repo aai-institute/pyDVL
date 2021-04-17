@@ -76,13 +76,13 @@ def utility(model: SupervisedModel,
             raise e
 
 
-def lower_bound_hoeffding(delta: float, eps: float, r: float) -> int:
+def lower_bound_hoeffding(delta: float, eps: float, score_range: float) -> int:
     """ Minimum number of samples required for MonteCarlo Shapley to obtain
     an (eps,delta) approximation.
     That is, with probability 1-delta, the estimate will be epsilon close to
      the true quantity, if at least so many monte carlo samples are taken.
     """
-    return int(np.ceil(np.log(2 / delta) * r ** 2 / (2 * eps ** 2)))
+    return int(np.ceil(np.log(2 / delta) * score_range ** 2 / (2 * eps ** 2)))
 
 
 def random_subset_indices(n: int) -> List[int]:
@@ -117,70 +117,24 @@ def random_powerset(indices: np.ndarray, max_subsets: int = None) \
         total += 1
 
 
-def symmetric_mean_absolute_percentage_error(
-        y_true: ArrayLike,
-        y_pred: ArrayLike,
-        sample_weight: ArrayLike = None,
-        multioutput: Union[ArrayLike, Literal['raw_values', 'uniform_average']]
-                        = 'uniform_average') -> Union[float, np.ndarray]:
-    """ Symmetric mean absolute percentage error regression loss.
-
-    Computes:
-
-    $$1/n \sum_{i=1}^{n} \frac{|y_i - \hat{y}_i|}{|y_i| + |\hat{y}_i|} $$
-
-
-    Parameters
-    ----------
-    y_true : shape (n_samples,) or (n_samples, n_outputs)
-        Ground truth (correct) target values.
-    y_pred : shape (n_samples,) or (n_samples, n_outputs)
-        Estimated target values.
-    sample_weight :shape (n_samples,), default=None
-        Sample weights.
-    multioutput :
-        Defines aggregating of multiple output values.
-        Array-like value defines weights used to average errors.
-        If input is list then the shape must be (n_outputs,).
-        'raw_values' :
-            Returns a full set of errors in case of multioutput input.
-        'uniform_average' :
-            Errors of all outputs are averaged with uniform weight.
-    Returns
-    -------
-        Scalar(s) in [0,1]. The best return value is 0.0, the worst 1.0
-        If multioutput is 'raw_values', then sMAPE is returned for each output
-        separately.
-        If multioutput is 'uniform_average' or an ndarray of weights, then the
-        weighted average of all output errors is returned.
-    Examples
-    --------
-    >>> y_true = [3, -0.5, 2, 7]
-    >>> y_pred = [2.5, 0.0, 2, 8]
-    >>> symmetric_mean_absolute_percentage_error(y_true, y_pred)
-    0.289393...
-    >>> y_true = [[0.5, 1], [-1, 1], [7, -6]]
-    >>> y_pred = [[0, 2], [-1, 2], [8, -5]]
-    >>> symmetric_mean_absolute_percentage_error(y_true, y_pred)
-    0.304040...
-    >>> symmetric_mean_absolute_percentage_error(y_true, y_pred, multioutput=[0.3, 0.7])
-    0.283434...
+def spearman(x: np.ndarray, y: np.ndarray) -> float:
+    """ Spearman correlation for integer, distinct ranks.
+    :return: A float in [-1,1]: -1 for reversed ranks, 1 for perfect match, 0
+        for independent ranks
     """
-    y_type, y_true, y_pred, multioutput = _check_reg_targets(y_true, y_pred,
-                                                             multioutput)
-    check_consistent_length(y_true, y_pred, sample_weight)
+    lx = len(x)
+    ly = len(y)
+    if lx == 0 or ly == 0 or lx != ly:
+        raise ValueError("Ranks must be non empty and same length")
+    if len(np.unique(x)) != lx or len(np.unique(y)) != ly:
+        raise ValueError("Ranks must be unique")
+    for a in x, y:
+        if min(a) < 0 or min(a) > 1 or max(a) - min(a) > len(a):
+            raise ValueError("Ranks must be in range [0,n-1] or [1,n]")
+    try:
+        if x.dtype != int or y.dtype != int:
+            raise ValueError("Ranks must be integers")
+    except AttributeError:
+        raise TypeError("Input must be numpy.ndarray")
 
-    smape = np.abs(y_true - y_pred) / (np.abs(y_true) + np.abs(y_pred))
-    output_errors = np.average(smape, weights=sample_weight, axis=0)
-    if isinstance(multioutput, str):
-        if multioutput == 'raw_values':
-            return output_errors
-        elif multioutput == 'uniform_average':
-            # pass None as weights to np.average: uniform mean
-            multioutput = None
-
-    return np.average(output_errors, weights=multioutput)
-
-
-smape_scorer = make_scorer(symmetric_mean_absolute_percentage_error,
-                           greater_is_better=False)
+    return 1 - 6*np.sum((x - y)**2)/(lx**3 - lx)
