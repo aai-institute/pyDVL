@@ -184,7 +184,8 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
                      'scoring': scoring,
                      'global_score': global_score,
                      'score_tolerance': score_tolerance,
-                     'min_scores': min_scores, 'progress': progress}
+                     'min_scores': min_scores,
+                     'progress': progress}
     boss = Coordinator(processor=process_result)
     boss.instantiate(num_workers, ShapleyWorker, **worker_params)
 
@@ -194,8 +195,8 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
 
     boss.start()
 
-    pbar = maybe_progress(range(n), progress, total=n,
-                          position=0, desc=f"Run {run_id}. Converged")
+    pbar = maybe_progress(n, progress, position=0,
+                          desc=f"Run {run_id}. Converged")
     converged = iteration = 0
     while converged < n and iteration <= max_iterations:
         boss.get_and_process()
