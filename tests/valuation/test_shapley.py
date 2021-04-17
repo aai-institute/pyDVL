@@ -122,8 +122,8 @@ def test_montecarlo_shapley(fun, scoring, score_range, delta, eps, exact_shapley
 
     print(f"test_montecarlo_shapley running for {max_iterations} iterations")
 
-    _fun = partial(fun, model=model, data=data, max_iterations=max_iterations,
-                   scoring=scoring, progress=False)
+    _fun = partial(fun, model=model, data=data, scoring=scoring,
+                   max_iterations=max_iterations, progress=False)
     results = run_and_gather(_fun, num_jobs=num_cpus, num_runs=num_runs)
 
     delta_errors = TolerateErrors(int(delta*len(results)), AssertionError)
@@ -132,7 +132,7 @@ def test_montecarlo_shapley(fun, scoring, score_range, delta, eps, exact_shapley
             # FIXME: test for total value never passes! (completely off)
             # Trivial bound on total error using triangle inequality
             # check_total_value(model, data, values, rtol=len(data)*eps)
-            check_rank_correlation(values, exact_values, threshold=0.8)
+            check_rank_correlation(values, exact_values, threshold=0.9)
 
 
 # FIXME: this is not deterministic
@@ -155,7 +155,7 @@ def test_truncated_montecarlo_shapley(scoring, score_range, exact_shapley):
 
     fun = partial(truncated_montecarlo_shapley, model=model, data=data,
                   scoring=scoring, bootstrap_iterations=10, min_scores=5,
-                  score_tolerance=1e-1, min_values=10, value_tolerance=eps,
+                  score_tolerance=0.1, min_values=10, value_tolerance=eps,
                   max_iterations=min_permutations, num_workers=num_cpus,
                   progress=False)
     results = []

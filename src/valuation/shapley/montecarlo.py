@@ -85,9 +85,8 @@ class ShapleyWorker(InterruptibleWorker):
         self.score_tolerance = score_tolerance
         self.num_samples = len(self.data)
         self.progress = progress
-        self.pbar = maybe_progress(range(len(data)), self.progress,
-                                   total=(len(data)), position=self.id,
-                                   desc=f"{self.name}")
+        self.pbar = maybe_progress(len(data), self.progress, position=self.id,
+                                   desc=f"Worker {self.id:02d}")
 
     def _run(self, permutation: np.ndarray) -> Tuple[np.ndarray, Optional[int]]:
         """ """
@@ -99,20 +98,21 @@ class ShapleyWorker(InterruptibleWorker):
         self.pbar.reset()
         early_stop = None
         prev_score = 0.0
-        for j, index in enumerate(permutation):
+        last_scores = -np.inf * np.ones(self.min_scores)
+        for i, idx in enumerate(permutation):
             if self.aborted():
                 break
-
             # Stop if last min_scores have an average mean below threshold:
-            mean_last_score = scores[max(j - self.min_scores, 0):j].mean()
-            if abs(self.global_score - mean_last_score) < self.score_tolerance:
-                early_stop = j
+            mean_score = np.nanmean(last_scores)
+            if np.isclose(mean_score, self.global_score, atol=self.score_tolerance):
+                early_stop = i
                 break
-            score = u(permutation[:j + 1])
-            scores[index] = score - prev_score
+            score = u(permutation[:i + 1])
+            last_scores[i % self.min_scores] = score  # order doesn't matter
+            scores[idx] = score - prev_score
             prev_score = score
             self.pbar.set_postfix_str(f"last {self.min_scores} scores: "
-                                 f"{mean_last_score:.2e}")
+                                 f"{mean_score:.2e}")
             self.pbar.update()
         # self.pbar.close()
         return scores, early_stop
@@ -221,12 +221,12 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
 # @checkpoint(["converged_history", "values"])
 def serial_truncated_montecarlo_shapley(model: SupervisedModel,
                                         data: Dataset,
+                                        scoring: Optional[Scorer],
                                         bootstrap_iterations: int,
                                         score_tolerance: float,
                                         min_steps: int,
                                         value_tolerance: float,
                                         max_iterations: int,
-                                        scoring: Scorer = None,
                                         progress: bool = False) \
         -> Tuple[OrderedDict, List[int]]:
     """ Truncated MonteCarlo method to compute Shapley values of data points
@@ -309,8 +309,8 @@ def serial_truncated_montecarlo_shapley(model: SupervisedModel,
 
 def permutation_montecarlo_shapley(model: SupervisedModel,
                                    data: Dataset,
+                                   scoring: Optional[Scorer],
                                    max_iterations: int,
-                                   scoring: Scorer = None,
                                    job_id: int = 0,
                                    progress: bool = False) \
         -> Tuple[OrderedDict, List[int]]:
@@ -337,8 +337,8 @@ def permutation_montecarlo_shapley(model: SupervisedModel,
 
 def combinatorial_montecarlo_shapley(model: SupervisedModel,
                                      data: Dataset,
+                                     scoring: Optional[Scorer],
                                      max_iterations: int,
-                                     scoring: Scorer = None,
                                      indices: List[int] = None,
                                      job_id: int = 0,
                                      progress: bool = False) \
