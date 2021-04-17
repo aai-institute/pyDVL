@@ -5,8 +5,8 @@ import pytest
 
 from nbconvert.preprocessors import ExecutePreprocessor
 
-NOTEBOOKS_DIR = "../notebooks"
-DOCS_DIR = "../docs"
+NOTEBOOKS_DIR = "notebooks"
+DOCS_DIR = "docs"
 resources = {"metadata": {"path": NOTEBOOKS_DIR}}
 
 log = logging.getLogger(__name__)
