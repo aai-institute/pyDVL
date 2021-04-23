@@ -44,16 +44,14 @@ def check_exact(values: OrderedDict, exact_values: OrderedDict, eps: float):
 def check_rank_correlation(values: OrderedDict, exact_values: OrderedDict,
                            n: int = None, threshold: float = 0.9):
     # FIXME: estimate proper threshold for spearman
-    if n is None:
+    if n is not None:
+        raise NotImplementedError
+    else:
         n = len(values)
-    rank_values = np.empty(n, dtype=int)
-    rank_exact = np.empty(n, dtype=int)
-    keys = list(values.keys())[:n]
-    exact_keys = list(exact_values.keys())[:n]
-    for i, (key, exact_key) in enumerate(zip(keys, exact_keys)):
-        rank_values[key] = i
-        rank_exact[exact_key] = i
-    assert spearman(rank_values, rank_exact) > threshold
+    ranks = np.array(list(values.keys())[:n])
+    ranks_exact = np.array(list(exact_values.keys())[:n])
+
+    assert spearman(ranks, ranks_exact) >= threshold
 
 
 # pedantic...
