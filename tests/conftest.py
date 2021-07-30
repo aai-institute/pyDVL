@@ -37,9 +37,9 @@ def scoring():
 @pytest.fixture()
 def exact_shapley(linear_dataset, scoring):
     model = LinearRegression()
-    values_c = combinatorial_exact_shapley(
-            model, linear_dataset, scoring=scoring, progress=False)
-    return model, linear_dataset, values_c, scoring
+    u = Utility(model, linear_dataset, scoring)
+    values_c = combinatorial_exact_shapley(u, progress=False)
+    return u, values_c
 
 
 class TolerateErrors:
