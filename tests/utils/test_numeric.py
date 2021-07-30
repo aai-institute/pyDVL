@@ -5,11 +5,6 @@ from valuation.utils.numeric import powerset, random_powerset, \
     spearman, vanishing_derivatives
 
 
-def test_dataset_len(boston_dataset):
-    assert len(boston_dataset) == len(boston_dataset.x_train) == 404
-    assert len(boston_dataset.x_train) + len(boston_dataset.x_test) == 506
-
-
 def test_vanishing_derivatives():
     # 1/x for x>1e3
     vv = 1 / np.arange(1000, 1100, step=1).reshape(10, -1)
