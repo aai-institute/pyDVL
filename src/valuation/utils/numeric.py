@@ -5,6 +5,7 @@ from itertools import chain, combinations
 from typing import Generator, Iterator, Iterable, List, TypeVar
 from sklearn.metrics import check_scoring
 from valuation.utils.dataset import Dataset
+from valuation.utils.parallel import MapReduceJob, map_reduce
 from valuation.utils.types import Scorer, SupervisedModel
 from valuation import _logger
 
@@ -86,53 +87,44 @@ def lower_bound_hoeffding(delta: float, eps: float, score_range: float) -> int:
     return int(np.ceil(np.log(2 / delta) * score_range ** 2 / (2 * eps ** 2)))
 
 
-def random_subset_indices(n: int, k: int = None) -> List[int]:
-    """ Uniformly samples a subset of indices in the range [0,n).
-
-    :param n: number of indices.
-    :param k: size of the subset. None for all sizes (empty included)
-    """
-    if k is not None:
-        raise NotImplementedError
-    if n <= 0:
-        return []
-
-    # FIXME: the normalization is wrong
-    # if k is None:
-    #     k = np.random.choice(np.arange(n+1),
-    #                          p=[np.math.comb(n, j)/2**n for j in range(n+1)])
-    # return np.random.randint(n, size=k).tolist()
-    from random import getrandbits
-    r = getrandbits(n)
-    indices = []
-    for b in range(n):
-        if r & 1:
-            indices.append(b)
-        r = r >> 1
-    return indices
-
-
-def random_powerset(s: np.ndarray, max_subsets: int = None, k: int = None) \
+def random_powerset(s: np.ndarray, max_subsets: int = None,
+                    num_jobs: int = None) \
         -> Generator[np.ndarray, None, None]:
     """ Uniformly samples a subset from the power set of the argument, without
     pre-generating all subsets and in no order.
 
+    This function accepts arbitrarily large values for n. However, values
+    in the tens of thousands can take very long to compute, hence the ability
+    to run in parallel with num_jobs.
+
     See `powerset()` if you wish to deterministically generate all subsets.
-    :param s:
+
+    :param s: set to sample from
     :param max_subsets: if set, stop the generator after this many steps.
-    :param k: sample only subsets of size k. `None` for all subsets.
+    :param num_jobs: duh.
     """
     if not isinstance(s, np.ndarray):
         raise TypeError
 
-    if k is not None:
-        raise NotImplementedError
     n = len(s)
     total = 1
     if max_subsets is None:
         max_subsets = np.inf
+
+    @lru_cache
+    def subset_probabilities(n):
+        # FIXME: is the normalization ok?
+        def sub(sizes) -> List[int]:
+            # FIXME: is the normalization ok?
+            return [np.math.comb(j) / 2 ** n for j in sizes]
+
+        job = MapReduceJob.from_fun(sub)
+        ret = map_reduce(job, list(range(n + 1)), num_jobs=num_jobs)
+        return ret[0]
+
     while total <= max_subsets:
-        subset = random_subset_indices(n, k)
+        k = np.random.choice(np.arange(n + 1), p=subset_probabilities(n))
+        subset = np.random.randint(n, size=k)
         yield s[subset]
         total += 1
 
