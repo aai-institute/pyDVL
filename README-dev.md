@@ -145,7 +145,7 @@ actions.
 If the automatic release process doesn't cover your use case, you can also
 create a new release manually by following these steps:
 
-1. (Eepeat as needed) implement features on feature branches merged into
+1. (Repeat as needed) implement features on feature branches merged into
   `develop`. Each merge into develop will advance the `.devNNN` version suffix
    and publish the pre-release version into the package registry. These versions
    can be installed using `pip install --pre`.
