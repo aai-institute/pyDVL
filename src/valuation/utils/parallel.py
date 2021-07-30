@@ -1,18 +1,93 @@
 """
-All value functions return a dictionary of {index: value} and some status /
-historical information of the algorithm. This module provides utility functions
-to run these in parallel and multiple times, then gather the results for later
-processing / reporting.
+OUTDATED, FIXME: All value functions return a dictionary of {index: value} and
+some status / historical information of the algorithm. This module provides
+utility functions to run these in parallel and multiple times, then gather the
+results for later processing / reporting.
 """
-import joblib
 import multiprocessing as mp
 import os
 import queue
+import numpy as np
 
-from collections import OrderedDict
 from joblib import Parallel, delayed
 from tqdm import tqdm
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
+from typing import Any, Callable, Iterable, List, Optional,Type, TypeVar, Union
+
+T = TypeVar("T")
+Identity = lambda x: x
+
+
+class MapReduceJob:
+    """ There are probably 77 libraries to do just this """
+    _job_id: int
+    _run_id: int
+
+    def __call__(self, data: Iterable[T], job_id: int, run_id: int):
+        raise NotImplementedError()
+
+    def reduce(self, chunks: Iterable[T]) -> T:
+        return chunks
+
+    @property
+    def job_id(self):
+        return self._job_id
+
+    @property
+    def run_id(self):
+        return self._run_id
+
+    @staticmethod
+    def from_fun(fun: Callable, reducer: Callable = Identity,
+                 job_id_arg: str = None, run_id_arg: str = None) \
+            -> 'MapReduceJob':
+        """
+        :param fun:
+        :param reducer:
+        :param job_id_arg: argument name to pass the job id for display
+            purposes (e.g. progress bar position). The value passed will be
+           job_id + 1 (to allow for a global bar at position=0). Set to None if
+           not supported by the function.
+        :param run_id_arg:
+        :return:
+        """
+
+        class NewJob(MapReduceJob):
+            def __call__(self, data, *args, **kwargs):
+                args = dict()
+                if run_id_arg is not None:
+                    kwargs[run_id_arg] = kwargs['run_id']
+                del kwargs['run_id']
+                if job_id_arg is not None:
+                    kwargs[job_id_arg] = kwargs['job_id']
+                del kwargs['job_id']
+
+                return fun(data, *args, **kwargs)
+
+            def reduce(self, chunks: Iterable[T]) -> T:
+                return reducer(chunks)
+
+        return NewJob()
+
+
+def make_nested_backend(backend: str = 'loky'):
+    """ Creates a joblib backend allowing nested Parallel() calls (which by
+    default would use SequentialBackend)
+
+    See https://github.com/joblib/joblib/issues/947
+    """
+
+    from importlib import import_module
+    m = import_module("joblib._parallel_backends")
+    base_name = backend.capitalize() + 'Backend'
+    base_cls = getattr(m, base_name)
+
+    def get_nested_backend(self):
+        backend = type(self)()
+        backend.nested_level = 0
+        return backend, None
+
+    return type("Nested" + base_name, (base_cls,),
+                dict(get_nested_backend=get_nested_backend))
 
 
 def available_cpus():
@@ -22,55 +97,74 @@ def available_cpus():
     return len(os.sched_getaffinity(0))
 
 
-def run_and_gather(fun: Callable[..., Tuple[OrderedDict, List]],
-                   num_jobs: int,
-                   num_runs: int,
-                   backend: str = 'loky') \
-        -> List[Tuple[OrderedDict, List]]:
-    """ Runs fun num_runs times and returns the results. """
-
-    import inspect
-    if 'run_id' not in inspect.signature(fun).parameters.keys():
-        _fun = lambda run_id: fun()
-    else:
-        _fun = fun
-
-    with joblib.parallel_backend(backend, n_jobs=num_jobs):
-        return Parallel()(delayed(_fun)(run_id=i) for i in range(num_runs))
-
-
-def parallel_wrap(fun: Callable[[Iterable], Dict[int, float]],
-                  arg: Tuple[str, List],
-                  num_jobs: int,
-                  job_id_arg: str = None) -> Callable:
+def map_reduce(fun: MapReduceJob,
+               data: Union[List, np.ndarray],
+               num_jobs: int,
+               num_runs: int = 1,
+               backend: str = 'loky') -> List[T]:
     """ Wraps an embarrassingly parallelizable fun to run in num_jobs parallel
     jobs, splitting arg into the same number of chunks, one for each job.
 
-    Use later with run_and_gather() to collect results of multiple runs.
+    If repeats the process num_runs times, allocating jobs across runs. E.g.
+    if num_jobs = 90 and num_runs=10, each whole execution of fun on the whole
+    data uses 9 jobs. If num_jobs=24 and num_runs=1
 
-    :param fun: A function taking one named argument, with name given in
-                `arg[0]`. The argument's value should be a list, given in
-                `arg[1]`. Each job will receive a chunk of the complete list.
-    :param arg: ("fun_arg_name", [values to split across jobs])
+     Results are aggregated per run, not across runs.
+
+    :param fun:
+    :param data: values to split across jobs
     :param num_jobs: number of parallel jobs to run. Does not accept -1
-    :param job_id_arg: argument name to pass the job id for display purposes
-                       (e.g. progress bar position). The value passed will be
-                       job_id + 1 (to allow for a global bar at position=0). Set
-                       to None if not supported by the function.
+    :param num_runs: number of times to run fun on the whole data.
+
+     :param backend: 'loky', 'threading', 'multiprocessing', etc.
     """
-    # Chunkify the list of values
-    n = len(arg[1])
-    chunk_size = 1 + int(n / num_jobs)
-    arg_values = [list(arg[1][i:min(i + chunk_size, n)])
-                  for i in arg[1][0:n:chunk_size]]
 
-    if job_id_arg is not None:
-        jobs = [delayed(fun)(**{arg[0]: vv, job_id_arg: i + 1})
-                for i, vv in enumerate(arg_values)]
-    else:
-        jobs = [delayed(fun)(**{arg[0]: vv}) for i, vv in enumerate(arg_values)]
+    def chunkify(njobs: int, run_id: int) -> List:
+        # Splits a list of values into chunks for each job
+        n = len(data)
+        chunk_size = 1 + int(n / njobs)
+        arg_values = [data[i:min(i + chunk_size, n)]
+                      for i in data[0:n:chunk_size]]
+        for j, vv in enumerate(arg_values):
+            yield delayed(fun)(vv, **{'job_id': j + 1, 'run_id': run_id + 1})
 
-    return lambda: Parallel(n_jobs=num_jobs)(jobs)
+    num_jobs_sub = max(1, int(num_jobs / num_runs))
+    r = num_jobs % num_runs
+    runs = []
+    for run in range(num_runs - r):
+        if num_jobs_sub > 1:
+            runs.append(lambda: Parallel(n_jobs=num_jobs_sub)
+                                        (chunkify(num_jobs_sub, run)))
+        else:
+            runs.append(lambda: [fun(data, job_id=1, run_id=run)])
+
+    # Repeat for the remainder of num_jobs/num_runs with one more chunk per
+    # job in order to use all cores up to num_jobs
+    if num_jobs > num_runs:
+        num_jobs_sub += 1
+    for i in range(num_runs - r, num_runs):
+        runs.append(lambda: Parallel(n_jobs=num_jobs_sub)
+                                    (chunkify(num_jobs_sub, i)))
+
+    backend = make_nested_backend(backend)()
+    ret = Parallel(n_jobs=num_runs, backend=backend) \
+        (delayed(r)() for r in runs)
+
+    try:
+        from numbers import Number
+        for i, r in enumerate(ret):
+            ret[i] = fun.reduce(r)
+            # elif isinstance(r[0], dict):
+            #     ret[i] = reduce(lambda x, y: dict(x, **y), r)
+            # # Tuple[OrderedDict, List] as used by Shapley remains unchanged
+    except IndexError:
+        if len(data) > 0:
+            raise Exception("Parallel returned no results")
+        return ret
+    except TypeError:
+        raise Exception("Failed aggregating results")
+
+    return ret
 
 
 class InterruptibleWorker(mp.Process):
