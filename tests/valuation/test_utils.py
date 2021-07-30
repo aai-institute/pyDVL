@@ -3,7 +3,7 @@ import pytest
 
 from valuation.utils import vanishing_derivatives
 from valuation.utils.numeric import powerset, random_powerset, \
-    random_subset_indices, spearman
+    spearman
 
 
 def test_dataset_len(boston_dataset):
@@ -31,24 +31,6 @@ def test_powerset():
         sizes[len(s)] += 1
 
     assert all([np.math.comb(n, j) for j in range(n+1)] == sizes)
-
-
-@pytest.mark.timeout(3)
-@pytest.mark.parametrize("n", [0, 1, 14])
-def test_random_subset_indices(n):
-    # TODO: compute lower bound for number of samples.
-    m = 2**n
-    indices = []
-    for c in range(m):
-        indices.extend(random_subset_indices(n))
-    if n == 0:
-        assert indices == []
-    elif n == 1:
-        assert np.all([s in [0] for s in indices])
-    else:
-        frequencies, _ = np.histogram(indices, range(n+1), density=True)
-        # FIXME: 10% relative error sucks, be more precise
-        assert np.allclose(frequencies, np.mean(frequencies), rtol=1e-1)
 
 
 @pytest.mark.timeout(5)
