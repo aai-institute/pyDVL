@@ -4,17 +4,24 @@ some status / historical information of the algorithm. This module provides
 utility functions to run these in parallel and multiple times, then gather the
 results for later processing / reporting.
 """
-import multiprocessing as mp
 import os
 import queue
 import numpy as np
+import multiprocessing as mp
 
-from joblib import Parallel, delayed
 from tqdm import tqdm
+from joblib import Parallel, delayed
 from typing import Any, Callable, Iterable, List, Optional,Type, TypeVar, Union
 
 T = TypeVar("T")
 Identity = lambda x: x
+
+
+def available_cpus():
+    from platform import system
+    if system() == 'Windows':
+        return os.cpu_count()
+    return len(os.sched_getaffinity(0))
 
 
 class MapReduceJob:
@@ -88,13 +95,6 @@ def make_nested_backend(backend: str = 'loky'):
 
     return type("Nested" + base_name, (base_cls,),
                 dict(get_nested_backend=get_nested_backend))
-
-
-def available_cpus():
-    from platform import system
-    if system() == 'Windows':
-        return os.cpu_count()
-    return len(os.sched_getaffinity(0))
 
 
 def map_reduce(fun: MapReduceJob,
