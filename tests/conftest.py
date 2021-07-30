@@ -4,9 +4,8 @@ import pytest
 from sklearn.linear_model import LinearRegression
 from typing import OrderedDict, Type
 from valuation.shapley import combinatorial_exact_shapley
-from valuation.utils import Dataset, SupervisedModel
-from valuation.utils.numeric import spearman, utility
-from valuation.utils.types import Scorer
+from valuation.utils import Dataset,  Utility
+from valuation.utils.numeric import spearman
 
 
 @pytest.fixture(scope="module")
@@ -61,14 +60,12 @@ class TolerateErrors:
         return True
 
 
-def check_total_value(model: SupervisedModel,
-                      data: Dataset,
+def check_total_value(u: Utility,
                       values: OrderedDict,
-                      scoring: Scorer = None,
                       rtol: float = 0.01):
     """ Checks absolute distance between total and added values.
      Shapley value is supposed to fulfill the total value axiom."""
-    total_utility = utility(model, data, frozenset(data.indices), scoring)
+    total_utility = u(u.data.indices)
     values = np.array(list(values.values()))
     # We use relative tolerances here because we don't have the range of the
     # scorer.

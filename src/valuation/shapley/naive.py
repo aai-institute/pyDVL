@@ -3,18 +3,13 @@ import numpy as np
 from collections import OrderedDict
 from itertools import permutations
 from valuation.reporting.scores import sort_values
-from valuation.utils import Dataset, SupervisedModel, maybe_progress, utility,\
-    powerset
-from valuation.utils.types import Scorer
+from valuation.utils import Utility, maybe_progress, powerset
 
 
-def permutation_exact_shapley(model: SupervisedModel,
-                              data: Dataset,
-                              scoring: Scorer = None,
-                              progress: bool = True) -> OrderedDict:
+def permutation_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
     """ Computes the exact Shapley value using permutations. """
 
-    n = len(data)
+    n = len(u.data)
     # Note that lru_cache in utility saves most of the refitting because we
     # use frozenset for the input. It has a default size of 1024
     if n > 10:
@@ -22,8 +17,7 @@ def permutation_exact_shapley(model: SupervisedModel,
             f"Large dataset! Computation requires {n}! calls to utility()")
 
     values = np.zeros(n)
-    u = lambda x: utility(model, data, frozenset(x), scoring=scoring)
-    for p in maybe_progress(permutations(data.indices), progress,
+    for p in maybe_progress(permutations(u.data.indices), progress,
                             desc="Permutation", total=np.math.factorial(n)):
         for i, idx in enumerate(p):
             values[idx] += u(p[:i+1]) - u(p[:i])
@@ -32,22 +26,18 @@ def permutation_exact_shapley(model: SupervisedModel,
     return sort_values({i: v for i, v in enumerate(values)})
 
 
-def combinatorial_exact_shapley(model: SupervisedModel,
-                                data: Dataset,
-                                scoring: Scorer = None,
-                                progress: bool = True) -> OrderedDict:
+def combinatorial_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
     """ Computes the exact Shapley value using the combinatorial definition. """
 
-    n = len(data)
-    # Arbitrary choice ~= 1.14 hours if 1 sec per fit() + score()
-    if n > 12:
-        raise ValueError(
+    n = len(u.data)
+    from valuation import _logger
+    if n > 20:  # Arbitrary choice, will depend on time required, caching, etc.
+        _logger.warning(
             f"Large dataset! Computation requires 2^{n} calls to model.fit()")
 
     values = np.zeros(n)
-    u = lambda x: utility(model, data, frozenset(x), scoring=scoring)
-    for i in data.indices:
-        subset = np.setxor1d(data.indices, [i], assume_unique=True)
+    for i in u.data.indices:
+        subset = np.setxor1d(u.data.indices, [i], assume_unique=True)
         for s in maybe_progress(powerset(subset), progress,
                                 desc=f"Index {i}", total=2 ** (n - 1),
                                 position=0):

@@ -3,11 +3,7 @@ import numpy as np
 from functools import lru_cache
 from itertools import chain, combinations
 from typing import Generator, Iterator, Iterable, List, TypeVar
-from sklearn.metrics import check_scoring
-from valuation.utils.dataset import Dataset
 from valuation.utils.parallel import MapReduceJob, map_reduce
-from valuation.utils.types import Scorer, SupervisedModel
-from valuation import _logger
 
 T = TypeVar('T')
 
@@ -33,49 +29,6 @@ def powerset(it: Iterable[T]) -> Iterator[Iterable[T]]:
     """
     s = list(it)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
-
-
-# FIXME: make usage of the cache optional for cases where it is not necessary
-# TODO: benchmark this, make maxsize configurable?
-@lru_cache(maxsize=4096)
-def utility(model: SupervisedModel,
-            data: Dataset,
-            indices: Iterable[int],
-            scoring: Scorer,
-            catch_errors: bool = True) \
-        -> float:
-    """ Fits the model on a subset of the training data and scores it on the
-    test data. Results are memoized to avoid duplicate computation. This is
-    useful in particular when computing utilities of permutations of indices.
-
-    :param model: Any supervised model
-    :param data: a split Dataset
-    :param indices: a subset of indices from data.x_train.index. The type must
-      be hashable for the caching to work, e.g. wrap the argument with
-      `frozenset` (rather than `tuple` since order should not matter)
-    :param catch_errors: set to True to return np.nan if fit() fails. This hack
-        helps when a step in a pipeline fails if there are too few data points
-    :param scoring: Same as in sklearn's `cross_validate()`: a string, a scorer
-        callable or None for the default `model.score()`. Greater values must
-        be better. If they are not, a negated version can be used (see
-        `make_scorer`)
-    :return: 0 if no indices are passed, otherwise the value the scorer on the
-        test data.
-    """
-    if not indices:
-        return 0.0
-    scorer = check_scoring(model, scoring)
-    x = data.x_train[list(indices)]
-    y = data.y_train[list(indices)]
-    try:
-        model.fit(x, y)
-        return scorer(model, data.x_test, data.y_test)
-    except Exception as e:
-        if catch_errors:
-            _logger.warning(str(e))
-            return np.nan
-        else:
-            raise e
 
 
 def lower_bound_hoeffding(delta: float, eps: float, score_range: float) -> int:

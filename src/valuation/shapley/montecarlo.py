@@ -11,16 +11,13 @@ TODO:
 import numpy as np
 
 from collections import OrderedDict
-from sklearn.metrics import check_scoring
 from time import time
 from typing import List, Optional, Tuple
 from valuation.reporting.scores import sort_values, sort_values_array
 from valuation.utils.numeric import random_powerset
 from valuation.utils.parallel import Coordinator, InterruptibleWorker
 from valuation.utils.progress import maybe_progress
-from valuation.utils import Dataset, SupervisedModel, vanishing_derivatives, \
-    utility
-from valuation.utils.types import Scorer
+from valuation.utils import Utility, vanishing_derivatives, bootstrap_test_score
 
 __all__ = ['truncated_montecarlo_shapley',
            'serial_truncated_montecarlo_shapley',
@@ -28,33 +25,11 @@ __all__ = ['truncated_montecarlo_shapley',
            'combinatorial_montecarlo_shapley']
 
 
-def bootstrap_test_score(model: SupervisedModel,
-                         data: Dataset,
-                         scoring: Optional[Scorer],
-                         bootstrap_iterations: int,
-                         progress: bool = False) \
-        -> Tuple[float, float]:
-    """ That. Here for lack of a better place. """
-    scorer = check_scoring(model, scoring)
-    _scores = []
-    model.fit(data.x_train, data.y_train)
-    n_test = len(data.x_test)
-    for _ in maybe_progress(range(bootstrap_iterations), progress,
-                            desc="Bootstrapping"):
-        sample = np.random.randint(low=0, high=n_test, size=n_test)
-        score = scorer(model, data.x_test[sample], data.y_test[sample])
-        _scores.append(score)
-
-    return np.mean(_scores), np.std(_scores)
-
-
 class ShapleyWorker(InterruptibleWorker):
     """ A worker. It should work. """
 
     def __init__(self,
-                 model: SupervisedModel,
-                 data: Dataset,
-                 scoring: Optional[Scorer],
+                 u: Utility,
                  global_score: float,
                  score_tolerance: float,
                  min_scores: int,
@@ -62,9 +37,7 @@ class ShapleyWorker(InterruptibleWorker):
                  **kwargs,
                  ):
         """
-        :param model: sklearn model / pipeline
-        :param data: split dataset
-        :param scoring:
+        :param u: Utility object with model, data, and scoring function
         :param global_score:
         :param score_tolerance: For every permutation, computation stops
          after the mean increase in performance is within score_tolerance*stddev
@@ -77,22 +50,18 @@ class ShapleyWorker(InterruptibleWorker):
         """
         super().__init__(**kwargs)
 
-        self.model = model
-        self.scoring = scoring
+        self.u = u
         self.global_score = global_score
-        self.data = data
         self.min_scores = min_scores
         self.score_tolerance = score_tolerance
-        self.num_samples = len(self.data)
+        self.num_samples = len(self.u.data)
         self.progress = progress
-        self.pbar = maybe_progress(len(data), self.progress, position=self.id,
-                                   desc=f"Worker {self.id:02d}")
+        self.pbar = maybe_progress(self.num_samples, self.progress,
+                                   position=self.id, desc=f"Worker {self.id:02d}")
 
     def _run(self, permutation: np.ndarray) -> Tuple[np.ndarray, Optional[int]]:
         """ """
         n = len(permutation)
-        u = lambda x: utility(self.model, self.data, frozenset(x),
-                              scoring=self.scoring)
         scores = np.zeros(n)
 
         self.pbar.reset()
@@ -107,20 +76,18 @@ class ShapleyWorker(InterruptibleWorker):
             if np.isclose(mean_score, self.global_score, atol=self.score_tolerance):
                 early_stop = i
                 break
-            score = u(permutation[:i + 1])
+            score = self.u(permutation[:i + 1])
             last_scores[i % self.min_scores] = score  # order doesn't matter
             scores[idx] = score - prev_score
             prev_score = score
             self.pbar.set_postfix_str(f"last {self.min_scores} scores: "
-                                 f"{mean_score:.2e}")
+                                      f"{mean_score:.2e}")
             self.pbar.update()
         # self.pbar.close()
         return scores, early_stop
 
 
-def truncated_montecarlo_shapley(model: SupervisedModel,
-                                 data: Dataset,
-                                 scoring: Optional[Scorer],
+def truncated_montecarlo_shapley(u: Utility,
                                  bootstrap_iterations: int,
                                  min_scores: int,
                                  score_tolerance: float,
@@ -140,9 +107,7 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
     We keep sampling permutations and updating all values until the change in
     the moving average for all values falls below another threshold.
 
-        :param model: sklearn model / pipeline
-        :param data: split dataset
-        :param scoring: Scorer callable or string as in sklearn
+        :param u: Utility object with model, data, and scoring function
         :param bootstrap_iterations: Repeat global_score computation this many
          times to estimate variance.
         :param min_scores: Use so many of the last scores in order to compute 
@@ -167,11 +132,11 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
         :return: Dict of approximated Shapley values for the indices
 
     """
-    n = len(data)
+    n = len(u.data)
     values = np.zeros(n).reshape((-1, 1))
     converged_history = []
 
-    mean, std = bootstrap_test_score(model, data, scoring, bootstrap_iterations)
+    mean, std = bootstrap_test_score(u, bootstrap_iterations)
     global_score = mean
     score_tolerance *= std
 
@@ -180,9 +145,7 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
         scores, _ = result
         values = np.concatenate([values, scores.reshape((-1, 1))], axis=1)
 
-    worker_params = {'model': model,
-                     'data': data,
-                     'scoring': scoring,
+    worker_params = {'u': u,
                      'global_score': global_score,
                      'score_tolerance': score_tolerance,
                      'min_scores': min_scores,
@@ -192,7 +155,7 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
 
     # Fill the queue before starting the workers or they will immediately quit
     for _ in range(2 * num_workers):
-        boss.put(np.random.permutation(data.indices))
+        boss.put(np.random.permutation(u.data.indices))
 
     boss.start()
 
@@ -201,7 +164,7 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
     converged = iteration = 0
     while converged < n and iteration <= max_iterations:
         boss.get_and_process()
-        boss.put(np.random.permutation(data.indices))
+        boss.put(np.random.permutation(u.data.indices))
         iteration += 1
 
         converged = vanishing_derivatives(values, min_values=min_values,
@@ -219,9 +182,7 @@ def truncated_montecarlo_shapley(model: SupervisedModel,
 
 
 # @checkpoint(["converged_history", "values"])
-def serial_truncated_montecarlo_shapley(model: SupervisedModel,
-                                        data: Dataset,
-                                        scoring: Optional[Scorer],
+def serial_truncated_montecarlo_shapley(u: Utility,
                                         bootstrap_iterations: int,
                                         score_tolerance: float,
                                         min_steps: int,
@@ -239,8 +200,7 @@ def serial_truncated_montecarlo_shapley(model: SupervisedModel,
     We keep sampling permutations and updating all values until the change in
     the moving average for all values falls below another threshold.
 
-        :param model: sklearn model / pipeline
-        :param data: split Dataset
+        :param u: Utility object with model, data, and scoring function
         :param bootstrap_iterations: Repeat global_score computation this many
          times to estimate variance.
         :param score_tolerance: For every permutation, computation stops
@@ -259,13 +219,12 @@ def serial_truncated_montecarlo_shapley(model: SupervisedModel,
         :return: Dict of approximated Shapley values for the indices
 
     """
-    n = len(data)
+    n = len(u.data)
     all_marginals = np.zeros(n).reshape((-1, 1))
-    u = lambda x: utility(model, data, frozenset(x), scoring=scoring)
 
     converged_history = []
 
-    m, s = bootstrap_test_score(model, data, scoring, bootstrap_iterations)
+    m, s = bootstrap_test_score(u, bootstrap_iterations)
     global_score, eps = m, score_tolerance * s
 
     iteration = 1
@@ -274,7 +233,7 @@ def serial_truncated_montecarlo_shapley(model: SupervisedModel,
     pbar2 = maybe_progress(range(n), progress,
                            position=1, desc="Converged")
     while iteration < max_iterations:
-        permutation = np.random.permutation(data.indices)
+        permutation = np.random.permutation(u.data.indices)
         marginals = np.zeros(n)
         prev_score = 0.0
         last_scores = -np.inf*np.ones(min_steps)
@@ -307,9 +266,7 @@ def serial_truncated_montecarlo_shapley(model: SupervisedModel,
     return sort_values(values), converged_history
 
 
-def permutation_montecarlo_shapley(model: SupervisedModel,
-                                   data: Dataset,
-                                   scoring: Optional[Scorer],
+def permutation_montecarlo_shapley(u: Utility,
                                    max_iterations: int,
                                    job_id: int = 0,
                                    progress: bool = False) \
@@ -317,13 +274,12 @@ def permutation_montecarlo_shapley(model: SupervisedModel,
     """
     FIXME: the sum of values tends to cancel out, even though the ranking is ok
     """
-    n = len(data)
+    n = len(u.data)
     values = np.zeros(n).reshape((-1, 1))
-    u = lambda x: utility(model, data, frozenset(x), scoring=scoring)
     prev_score = 0.0
     pbar = maybe_progress(max_iterations, progress, position=job_id)
     for _ in pbar:
-        permutation = np.random.permutation(data.indices)
+        permutation = np.random.permutation(u.data.indices)
         marginals = np.zeros((n, 1))
         for i, idx in enumerate(permutation):
             score = u(permutation[:i + 1])
@@ -335,9 +291,7 @@ def permutation_montecarlo_shapley(model: SupervisedModel,
     return sort_values({i: v for i, v in enumerate(values)}), []
 
 
-def combinatorial_montecarlo_shapley(model: SupervisedModel,
-                                     data: Dataset,
-                                     scoring: Optional[Scorer],
+def combinatorial_montecarlo_shapley(u: Utility,
                                      max_iterations: int,
                                      indices: List[int] = None,
                                      job_id: int = 0,
@@ -350,14 +304,13 @@ def combinatorial_montecarlo_shapley(model: SupervisedModel,
      importance sampling with more weight for smaller set sizes, where value
       contributions are likely to be higher.
     """
-    n = len(data)
+    n = len(u.data)
     if not indices:
-        indices = data.indices
+        indices = u.data.indices
     values = np.zeros(len(indices))
-    u = lambda x: utility(model, data, frozenset(x), scoring=scoring)
     for i, idx in enumerate(indices):
         # Randomly sample subsets of full dataset without idx
-        subset = np.setxor1d(data.indices, [idx], assume_unique=True)
+        subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
         power_set = \
             enumerate(random_powerset(subset, max_subsets=max_iterations))
         ut = 0.0
