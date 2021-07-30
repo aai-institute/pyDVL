@@ -1,9 +1,8 @@
 import numpy as np
 import pytest
 
-from valuation.utils import vanishing_derivatives
 from valuation.utils.numeric import powerset, random_powerset, \
-    spearman
+    spearman, vanishing_derivatives
 
 
 def test_dataset_len(boston_dataset):

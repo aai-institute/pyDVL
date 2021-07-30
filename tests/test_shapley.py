@@ -2,56 +2,15 @@ import numpy as np
 import pytest
 
 from collections import OrderedDict
-from conftest import TolerateErrors
+from tests.conftest import TolerateErrors, check_exact, check_rank_correlation, \
+    check_total_value
 from functools import partial
 from valuation.shapley import combinatorial_montecarlo_shapley, \
     permutation_montecarlo_shapley, truncated_montecarlo_shapley,\
     permutation_exact_shapley
-from valuation.utils import Dataset, SupervisedModel
-from valuation.utils.numeric import lower_bound_hoeffding, spearman, utility
-from valuation.utils.parallel import run_and_gather, available_cpus
-from valuation.utils.types import Scorer
-
-
-def check_total_value(model: SupervisedModel,
-                      data: Dataset,
-                      values: OrderedDict,
-                      scoring: Scorer = None,
-                      rtol: float = 0.01):
-    """ Checks absolute distance between total and added values.
-     Shapley value is supposed to fulfill the total value axiom."""
-    total_utility = utility(model, data, frozenset(data.indices), scoring)
-    values = np.array(list(values.values()))
-    # We use relative tolerances here because we don't have the range of the
-    # scorer.
-    assert np.isclose(values.sum(), total_utility, rtol=rtol)
-
-
-def check_exact(values: OrderedDict, exact_values: OrderedDict, eps: float):
-    """ Compares ranks and values. """
-
-    k = list(values.keys())
-    ek = list(exact_values.keys())
-
-    assert np.all(k == ek)
-
-    v = np.array(list(values.values()))
-    ev = np.array(list(exact_values.values()))
-
-    assert np.allclose(v, ev, atol=eps)
-
-
-def check_rank_correlation(values: OrderedDict, exact_values: OrderedDict,
-                           n: int = None, threshold: float = 0.9):
-    # FIXME: estimate proper threshold for spearman
-    if n is not None:
-        raise NotImplementedError
-    else:
-        n = len(values)
-    ranks = np.array(list(values.keys())[:n])
-    ranks_exact = np.array(list(exact_values.keys())[:n])
-
-    assert spearman(ranks, ranks_exact) >= threshold
+from valuation.utils import Dataset
+from valuation.utils.numeric import lower_bound_hoeffding
+from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
 
 
 # pedantic...
@@ -120,9 +79,10 @@ def test_montecarlo_shapley(fun, scoring, score_range, delta, eps, exact_shapley
 
     print(f"test_montecarlo_shapley running for {max_iterations} iterations")
 
-    _fun = partial(fun, model=model, data=data, scoring=scoring,
+    _fun = partial(fun, model=model, scoring=scoring,
                    max_iterations=max_iterations, progress=False)
-    results = run_and_gather(_fun, num_jobs=num_cpus, num_runs=num_runs)
+    job = MapReduceJob.from_fun(_fun)
+    results = map_reduce(job, data, num_jobs=num_cpus, num_runs=num_runs)
 
     delta_errors = TolerateErrors(int(delta*len(results)), AssertionError)
     for values, _ in results:
