@@ -1,11 +1,13 @@
-from valuation.utils.dataset import Dataset
-from valuation.utils.numeric import vanishing_derivatives, powerset
-from valuation.utils.parallel import map_reduce
-from valuation.utils.progress import maybe_progress
-from valuation.utils.types import SupervisedModel, Scorer
-from valuation.utils.utility import Utility, bootstrap_test_score
+from valuation.utils.caching import *
+from valuation.utils.dataset import *
+from valuation.utils.numeric import *
+from valuation.utils.parallel import *
+from valuation.utils.progress import *
+from valuation.utils.types import *
+from valuation.utils.utility import *
 
-__all__ = ['SupervisedModel', 'Dataset', 'Scorer',
-           'map_reduce', 'vanishing_derivatives',
+__all__ = ['memcached', 'SupervisedModel', 'Dataset', 'Scorer',
+           'map_reduce', 'MapReduceJob', 'available_cpus',
+           'vanishing_derivatives',
            'Utility', 'bootstrap_test_score',
            'powerset', 'maybe_progress']

@@ -1,10 +1,12 @@
 import numpy as np
 
 from typing import Iterable, Tuple
-from functools import lru_cache
 from sklearn.metrics import check_scoring
-from valuation import _logger
-from valuation.utils import Dataset, SupervisedModel, Scorer, maybe_progress
+from valuation.utils.logging import _logger
+from valuation.utils import Dataset, SupervisedModel, Scorer, maybe_progress,\
+    memcached
+
+__all__ = ['Utility', 'bootstrap_test_score']
 
 
 class Utility:
@@ -34,7 +36,7 @@ class Utility:
         self.catch_errors = catch_errors
 
         if cache_size is not None and cache_size > 0:
-            self._utility_wrapper = lru_cache(maxsize=cache_size)(self._utility)
+            self._utility_wrapper = memcached()(self._utility)
         else:
             self._utility_wrapper = self._utility
 
