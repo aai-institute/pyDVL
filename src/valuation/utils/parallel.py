@@ -128,23 +128,25 @@ def map_reduce(fun: MapReduceJob,
         for j, vv in enumerate(arg_values):
             yield delayed(fun)(vv, **{'job_id': j + 1, 'run_id': run_id + 1})
 
-    num_jobs_sub = max(1, int(num_jobs / num_runs))
-    r = num_jobs % num_runs
+    num_jobs_sub = max(1, num_jobs // num_runs)
+    remainder = num_jobs % num_runs if num_jobs > num_runs else 0
     runs = []
-    for run in range(num_runs - r):
+    for run in range(num_runs - remainder):
         if num_jobs_sub > 1:
-            runs.append(lambda: Parallel(n_jobs=num_jobs_sub)
-                                        (chunkify(num_jobs_sub, run)))
+            runs.append(lambda run_id=run:
+                            Parallel(n_jobs=num_jobs_sub)
+                                    (chunkify(num_jobs_sub, run_id)))
         else:
-            runs.append(lambda: [fun(data, job_id=1, run_id=run)])
+            runs.append(lambda run_id=run: [fun(data, job_id=1, run_id=run_id)])
 
     # Repeat for the remainder of num_jobs/num_runs with one more chunk per
     # job in order to use all cores up to num_jobs
-    if num_jobs > num_runs:
+    if remainder > 0:
         num_jobs_sub += 1
-    for i in range(num_runs - r, num_runs):
-        runs.append(lambda: Parallel(n_jobs=num_jobs_sub)
-                                    (chunkify(num_jobs_sub, i)))
+        for run in range(num_runs - remainder, num_runs):
+            runs.append(lambda run_id=run:
+                        Parallel(n_jobs=num_jobs_sub)
+                                (chunkify(num_jobs_sub, run_id)))
 
     backend = make_nested_backend(backend)()
     ret = Parallel(n_jobs=num_runs, backend=backend) \
