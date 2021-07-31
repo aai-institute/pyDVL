@@ -10,6 +10,8 @@ list_fun = MapReduceJob.from_fun(lambda x: x,
                                  lambda r: reduce(operator.add, r, []))
 range_fun = MapReduceJob.from_fun(lambda x: list(x),
                                   lambda r: reduce(operator.add, list(r), []))
+# dict_fun = MapReduceJob.from_fun(lambda x: x,
+#                                  lambda r: reduce(lambda x, y: dict(x, **y), r, {}))
 
 run_parallel_test_data = []
 # 'multiprocessing' not supported because pickle cannot serialize lambdas
@@ -46,3 +48,7 @@ def test_run_parallel(fun, indices, num_jobs, num_runs, backend, expected):
             else:
                 assert (ret == exp).all()
 
+
+def test_chunkify():
+    # TODO: test generation of job and run ids
+    pass

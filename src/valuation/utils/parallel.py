@@ -67,12 +67,20 @@ class MapReduceJob:
         class NewJob(MapReduceJob):
             def __call__(self, data, *args, **kwargs):
                 args = dict()
-                if run_id_arg is not None:
+
+                if run_id_arg is None and \
+                        'run_id' not in inspect.signature(fun).parameters.keys():
+                    del kwargs['run_id']
+                elif run_id_arg is not None:
                     kwargs[run_id_arg] = kwargs['run_id']
-                del kwargs['run_id']
-                if job_id_arg is not None:
+                    del kwargs['run_id']
+
+                if job_id_arg is None and \
+                        'job_id' not in inspect.signature(fun).parameters.keys():
+                    del kwargs['job_id']
+                elif job_id_arg is not None:
                     kwargs[job_id_arg] = kwargs['job_id']
-                del kwargs['job_id']
+                    del kwargs['job_id']
 
                 return fun(data, *args, **kwargs)
 
