@@ -2,11 +2,11 @@ import pickle
 
 import click
 from functools import partial
-from valuation import _logger
+from valuation.utils.logging import _logger
 from valuation.shapley.montecarlo import truncated_montecarlo_shapley
 from valuation.reporting.scores import compute_fb_scores
 from valuation.reporting.plots import shapley_results
-from valuation.utils import Dataset, run_and_gather
+from valuation.utils import Dataset
 
 
 def maybe_init_task(task_name: str, clearml_config: dict, task_params: dict):
