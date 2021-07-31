@@ -132,6 +132,8 @@ def map_reduce(fun: MapReduceJob,
 
      :param backend: 'loky', 'threading', 'multiprocessing', etc.
     """
+    if num_jobs == num_runs == 1:
+        return [fun(data, job_id=1, run_id=1)]
 
     def chunkify(njobs: int, run_id: int) -> List:
         # Splits a list of values into chunks for each job
