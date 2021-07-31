@@ -2,7 +2,7 @@ import pickle
 
 import click
 from functools import partial
-from valuation.utils.logging import _logger
+from valuation.utils.logging import logger
 from valuation.shapley.montecarlo import truncated_montecarlo_shapley
 from valuation.reporting.scores import compute_fb_scores
 from valuation.reporting.plots import shapley_results
@@ -54,7 +54,7 @@ def run(verbosity,
         task = True
     from logging import ERROR, WARNING, INFO, DEBUG
     levels = {0: ERROR, 1: WARNING, 2: INFO, 3: DEBUG}
-    _logger.setLevel(levels[verbosity])
+    logger.setLevel(levels[verbosity])
 
 
 @run.command(help='Compute DataShapley values')

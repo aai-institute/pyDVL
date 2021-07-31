@@ -3,7 +3,7 @@ import numpy as np
 from time import sleep
 from typing import Iterable
 from valuation.utils import memcached, map_reduce, MapReduceJob
-from valuation.utils.logging import start_logging_server, _logger
+from valuation.utils.logging import start_logging_server, logger
 
 
 def test_memcached_single_job(memcached_client):
@@ -25,16 +25,16 @@ def test_memcached_single_job(memcached_client):
 
 def test_memcached_parallel_jobs(memcached_client):
 
-    server = start_logging_server()
+    start_logging_server()
 
     # Note that we typically do NOT want to ignore run_id
     @memcached(server=memcached_client.server,
                threshold=0,  # Always cache results
                ignore_args=['job_id', 'run_id'])
     def foo(indices: Iterable[int], job_id: int, run_id: int) -> float:
-        _logger.info(f"run_id: {run_id}, waiting...")
-        sleep(0.5 * run_id)
-        _logger.info(f"run_id: {run_id}, running")
+        logger.info(f"run_id: {run_id}, waiting...")
+        sleep(1 * run_id)
+        logger.info(f"run_id: {run_id}, running")
         return float(np.sum(indices))
 
     # log_server = start_logging_server()
@@ -50,4 +50,4 @@ def test_memcached_parallel_jobs(memcached_client):
 
     assert result[0] == n*(n-1)/2  # Sanity check
     assert hits_after - hits_before >= nruns - 1  # meh...
-    _logger.info(f'before: {hits_before}, after: {hits_after}')
+    logger.info(f'before: {hits_before}, after: {hits_after}')

@@ -2,7 +2,6 @@
 Distributed caching of functions, using memcached.
 TODO: wrap this to allow for different backends
 """
-import logging
 from functools import wraps
 from time import time
 from typing import Callable, Iterable
@@ -11,6 +10,8 @@ from pymemcache import serde
 from pyhash import spooky_64
 from pickle import Pickler
 from io import BytesIO
+
+from valuation.utils.logging import logger
 
 PICKLE_VERSION = 5  # python >= 3.8
 
@@ -64,7 +65,7 @@ def memcached(server: str = 'localhost:11211',
             #  can't be pickled
             hasher = spooky_64(seed=0)
             key = str(hasher(signature + arg_signature)).encode('ASCII')
-            logging.info(f"wrapped: {list(kwargs.items())}, key = {key}")
+            logger.info(f"wrapped: {list(kwargs.items())}, key = {key}")
             result = cache.get(key)
             start = time()
             if result is None:

@@ -2,7 +2,7 @@ import numpy as np
 
 from typing import Iterable, Tuple
 from sklearn.metrics import check_scoring
-from valuation.utils.logging import _logger
+from valuation.utils.logging import logger
 from valuation.utils import Dataset, SupervisedModel, Scorer, maybe_progress,\
     memcached
 
@@ -66,7 +66,7 @@ class Utility:
             return scorer(self.model, self.data.x_test, self.data.y_test)
         except Exception as e:
             if self.catch_errors:
-                _logger.warning(str(e))
+                logger.warning(str(e))
                 return np.nan
             else:
                 raise e

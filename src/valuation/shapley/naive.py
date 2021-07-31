@@ -30,9 +30,9 @@ def combinatorial_exact_shapley(u: Utility, progress: bool = True) -> OrderedDic
     """ Computes the exact Shapley value using the combinatorial definition. """
 
     n = len(u.data)
-    from valuation.utils.logging import _logger
+    from valuation.utils.logging import logger
     if n > 20:  # Arbitrary choice, will depend on time required, caching, etc.
-        _logger.warning(
+        logger.warning(
             f"Large dataset! Computation requires 2^{n} calls to model.fit()")
 
     values = np.zeros(n)

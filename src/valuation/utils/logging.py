@@ -4,6 +4,8 @@ import logging.handlers
 import socketserver
 import struct
 
+from multiprocessing import Process
+
 
 class LogRecordStreamHandler(socketserver.StreamRequestHandler):
     """Handler for a streaming logging request.
@@ -74,11 +76,11 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
 
 
 def start_logging_server(host: str = 'localhost',
-                         port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT):
+                         port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT)\
+        -> Process:
     logging.basicConfig(
         format='%(relativeCreated)5d %(name)-15s %(levelname)-8s %(message)s')
     tcpserver = LogRecordSocketReceiver(host, port)
-    from multiprocessing import Process
     p = Process(target=tcpserver.serve_until_stopped, daemon=True)
     p.start()
     return p
@@ -86,19 +88,19 @@ def start_logging_server(host: str = 'localhost',
 
 def set_logger(host: str = 'localhost',
                port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT,
-               logger=None):
-    global _logger
-    if logger is not None:
-        _logger = logger
+               _logger = None):
+    global logger
+    if _logger is not None:
+        logger = _logger
     else:
         import logging.handlers
-        _logger = logging.getLogger('root')
-        _logger.setLevel(logging.DEBUG)
+        logger = logging.getLogger('root')
+        logger.setLevel(logging.DEBUG)
         # socket handler sends the raw event, pickled
         socketHandler = logging.handlers.SocketHandler(host, port)
-        _logger.addHandler(socketHandler)
+        logger.addHandler(socketHandler)
 
 
-_logger = None
+logger = None
 
 set_logger()
