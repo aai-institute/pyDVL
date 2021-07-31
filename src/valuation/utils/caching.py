@@ -46,6 +46,14 @@ def memcached(server: str = 'localhost:11211',
     if ignore_args is None:
         ignore_args = []
 
+    try:
+        test = Client(server=server, connect_timeout=1.0, timeout=0.1)
+        test.set('dummy_key', 0)
+        test.delete('dummy_key', 0)
+    except Exception as e:
+        logger.error(f'@memcached: Time out connecting to {server}')
+        raise e
+
     def wrapper(fun: Callable):
         cache = Client(server=server, connect_timeout=1.0, timeout=0.1,
                        serde=serde.PickleSerde(pickle_version=PICKLE_VERSION))
