@@ -4,6 +4,7 @@ some status / historical information of the algorithm. This module provides
 utility functions to run these in parallel and multiple times, then gather the
 results for later processing / reporting.
 """
+import inspect
 import os
 import queue
 import numpy as np
@@ -13,7 +14,8 @@ from tqdm import tqdm
 from joblib import Parallel, delayed
 from typing import Any, Callable, Iterable, List, Optional,Type, TypeVar, Union
 
-T = TypeVar("T")
+T = TypeVar('T')
+R = TypeVar('R')
 Identity = lambda x: x
 
 
@@ -35,26 +37,30 @@ class MapReduceJob:
     def reduce(self, chunks: Iterable[T]) -> T:
         return chunks
 
-    @property
-    def job_id(self):
-        return self._job_id
-
-    @property
-    def run_id(self):
-        return self._run_id
-
     @staticmethod
-    def from_fun(fun: Callable, reducer: Callable = Identity,
+    # FIXME: Can't make the type for fun more specific,
+    #  see https://github.com/python/mypy/issues/5876
+    def from_fun(fun: Callable[..., R],
+                 reducer: Callable[[Iterable[R]], R] = Identity,
                  job_id_arg: str = None, run_id_arg: str = None) \
             -> 'MapReduceJob':
         """
         :param fun:
-        :param reducer:
+        :param reducer: Not actually a reduce() operation but the reduction
+            itself. E.g. to join lists of results:
+
+             reducer = lambda x: functools.reduce(operator.add, x, [])
+
+            Or to average returned values:
+
+             reducer = np.mean
+
         :param job_id_arg: argument name to pass the job id for display
             purposes (e.g. progress bar position). The value passed will be
-           job_id + 1 (to allow for a global bar at position=0). Set to None if
-           not supported by the function.
-        :param run_id_arg:
+            job_id + 1 (to allow for a global bar at position=0). Set to None if
+            not supported by the function.
+        :param run_id_arg: argument name to pass the run id, for display and
+            caching purposes. A run id will be passed to fun, and used to
         :return:
         """
 
@@ -101,7 +107,7 @@ def map_reduce(fun: MapReduceJob,
                data: Union[List, np.ndarray],
                num_jobs: int,
                num_runs: int = 1,
-               backend: str = 'loky') -> List[T]:
+               backend: str = 'loky') -> List:
     """ Wraps an embarrassingly parallelizable fun to run in num_jobs parallel
     jobs, splitting arg into the same number of chunks, one for each job.
 
@@ -122,11 +128,11 @@ def map_reduce(fun: MapReduceJob,
     def chunkify(njobs: int, run_id: int) -> List:
         # Splits a list of values into chunks for each job
         n = len(data)
-        chunk_size = 1 + int(n / njobs)
+        chunk_size = 1 + n // njobs
         arg_values = [data[i:min(i + chunk_size, n)]
                       for i in data[0:n:chunk_size]]
-        for j, vv in enumerate(arg_values):
-            yield delayed(fun)(vv, **{'job_id': j + 1, 'run_id': run_id + 1})
+        for j, vv in enumerate(arg_values, start=1):
+            yield delayed(fun)(vv, **{'job_id': j, 'run_id': run_id + 1})
 
     num_jobs_sub = max(1, num_jobs // num_runs)
     remainder = num_jobs % num_runs if num_jobs > num_runs else 0
@@ -152,19 +158,8 @@ def map_reduce(fun: MapReduceJob,
     ret = Parallel(n_jobs=num_runs, backend=backend) \
         (delayed(r)() for r in runs)
 
-    try:
-        from numbers import Number
-        for i, r in enumerate(ret):
-            ret[i] = fun.reduce(r)
-            # elif isinstance(r[0], dict):
-            #     ret[i] = reduce(lambda x, y: dict(x, **y), r)
-            # # Tuple[OrderedDict, List] as used by Shapley remains unchanged
-    except IndexError:
-        if len(data) > 0:
-            raise Exception("Parallel returned no results")
-        return ret
-    except TypeError:
-        raise Exception("Failed aggregating results")
+    for i, r in enumerate(ret):
+        ret[i] = fun.reduce(r)
 
     return ret
 
