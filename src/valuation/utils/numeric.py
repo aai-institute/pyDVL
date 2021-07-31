@@ -69,7 +69,7 @@ def random_powerset(s: np.ndarray, max_subsets: int = None,
     def subset_probabilities(n: int) -> List[float]:
         def sub(sizes: List[int]) -> List[float]:
             # FIXME: is the normalization ok?
-            return [np.math.comb(j) / 2 ** n for j in sizes]
+            return [np.math.comb(n, j) / 2 ** n for j in sizes]
 
         job = MapReduceJob.from_fun(sub)
         ret = map_reduce(job, list(range(n + 1)), num_jobs=num_jobs)
