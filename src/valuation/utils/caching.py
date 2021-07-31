@@ -29,7 +29,7 @@ def _serialize(x):
 
 
 def memcached(config: dict = None,
-              threshold: float = 0,
+              threshold: float = 0.3,
               ignore_args: Iterable[str] = None):
     """ Decorate a callable with this in order to have transparent caching.
 
@@ -37,14 +37,15 @@ def memcached(config: dict = None,
     `ignore_args` are used to generate the key for the remote cache.
 
     :param config: kwargs for pymemcache.client.Client(). Will be merged on top
-    of:
+        of:
 
         default_config = dict(server='localhost:11211',
-                              connect_timeout=1.0, timeout=0.1,
+                              connect_timeout=1.0,
+                               timeout=0.1,
                               # IMPORTANT! Disable small packet consolidation:
                               no_delay=True,
                               serde=serde.PickleSerde(
-                              pickle_version=PICKLE_VERSION))
+                                            pickle_version=PICKLE_VERSION))
 
     :param threshold: computations taking below this value (in seconds) are not
         cached
@@ -90,7 +91,6 @@ def memcached(config: dict = None,
             #  pickled
             hasher = spooky_64(seed=0)
             key = str(hasher(signature + arg_signature)).encode('ASCII')
-            logger.info(f"wrapped: {list(kwargs.items())}, key = {key}")
             result = cache.get(key)
             start = time()
             if result is None:
