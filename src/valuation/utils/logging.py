@@ -1,3 +1,7 @@
+"""
+WARNING:
+    This is mostly just a quick hack for testing and debugging
+"""
 import pickle
 import logging
 import logging.handlers
@@ -88,11 +92,11 @@ def start_logging_server(host: str = 'localhost',
 
 def set_logger(host: str = 'localhost',
                port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT,
-               _logger = None):
+               _logger=None):
     global logger
     if _logger is not None:
         logger = _logger
-    else:
+    elif logger is None:
         import logging.handlers
         logger = logging.getLogger('root')
         logger.setLevel(logging.DEBUG)

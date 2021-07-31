@@ -4,7 +4,7 @@ from collections import OrderedDict
 from functools import partial
 from itertools import chain
 from joblib import Parallel, delayed
-from typing import List
+from typing import List, Mapping, Sequence
 from tqdm import tqdm, trange
 
 from valuation.utils import Dataset, SupervisedModel
@@ -15,12 +15,12 @@ def sort_values_array(values: np.ndarray) -> OrderedDict:
     return OrderedDict(sorted(enumerate(vals), key=lambda x: x[1]))
 
 
-def sort_values_history(values: dict) -> OrderedDict:
+def sort_values_history(values: Mapping[int, Sequence[float]]) -> OrderedDict:
     """ Sorts a dict of sample_id: [values] by the last item in each list. """
     return OrderedDict(sorted(values.items(), key=lambda x: x[1][-1]))
 
 
-def sort_values(values: dict) -> OrderedDict:
+def sort_values(values: Mapping[int, float]) -> OrderedDict:
     """ Sorts a dict of sample_id: value_float by value. """
     return OrderedDict(sorted(values.items(), key=lambda x: x[1]))
 

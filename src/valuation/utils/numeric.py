@@ -2,7 +2,8 @@ import numpy as np
 
 from functools import lru_cache
 from itertools import chain, combinations
-from typing import Generator, Iterator, Iterable, List, TypeVar
+from typing import Collection, Generator, Iterator, Iterable, List, TypeVar
+from valuation.utils import memcached
 from valuation.utils.parallel import MapReduceJob, map_reduce
 
 T = TypeVar('T')
@@ -18,7 +19,7 @@ def vanishing_derivatives(x: np.ndarray, min_values: int, eps: float) -> int:
     return int(np.sum(zeros >= min_values / 2))
 
 
-def powerset(it: Iterable[T]) -> Iterator[Iterable[T]]:
+def powerset(it: Iterable[T]) -> Iterator[Collection[T]]:
     """ Returns an iterator for the power set of the argument.
 
     Subsets are generated in sequence by growing size. See `random_powerset()`
@@ -64,10 +65,9 @@ def random_powerset(s: np.ndarray, max_subsets: int = None,
     if max_subsets is None:
         max_subsets = np.inf
 
-    @lru_cache
-    def subset_probabilities(n):
-        # FIXME: is the normalization ok?
-        def sub(sizes) -> List[int]:
+    @memcached(threshold=0.5)
+    def subset_probabilities(n: int) -> List[float]:
+        def sub(sizes: List[int]) -> List[float]:
             # FIXME: is the normalization ok?
             return [np.math.comb(j) / 2 ** n for j in sizes]
 

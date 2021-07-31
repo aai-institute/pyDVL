@@ -10,8 +10,8 @@ def permutation_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
     """ Computes the exact Shapley value using permutations. """
 
     n = len(u.data)
-    # Note that lru_cache in utility saves most of the refitting because we
-    # use frozenset for the input. It has a default size of 1024
+    # Note that the cache in utility saves most of the refitting because we
+    # use frozenset for the input.
     if n > 10:
         raise ValueError(
             f"Large dataset! Computation requires {n}! calls to utility()")

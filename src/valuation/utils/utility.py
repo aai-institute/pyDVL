@@ -16,7 +16,7 @@ class Utility:
     scoring: Scorer
 
     def __init__(self, model: SupervisedModel, data: Dataset, scoring: Scorer,
-                 catch_errors: bool = True, enable_cache: bool = False):
+                 catch_errors: bool = True, enable_cache: bool = True):
         """
         :param model: Any supervised model
         :param data: a split Dataset
