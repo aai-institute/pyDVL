@@ -12,12 +12,18 @@ from valuation.utils.numeric import spearman
 def memcached_client():
     from pymemcache.client import Client
     # TODO: read config, start new server for tests
-    c = Client('localhost:11211', connect_timeout=1.0, timeout=0.1)
-
-    # FIXME: Careful! this will invalidate the cache. I should start a dedicated
-    #  server
-    c.flush_all()
-    return c
+    memcache_config = dict(server='localhost:11211',
+                           connect_timeout=1.0, timeout=0.1)
+    try:
+        c = Client(**memcache_config)
+        # FIXME: Careful! this will invalidate the cache. I should start a
+        #  dedicated server
+        c.flush_all()
+        return c
+    except Exception as e:
+        print(f'Could not connect to memcached server '
+              f'{memcache_config["server"]}: {e}')
+        raise e
 
 
 @pytest.fixture(scope="module")
@@ -39,6 +45,29 @@ def linear_dataset():
     db.feature_names = ["x"]
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.66)
+
+
+def polynomial(coefficients, x):
+    powers = np.arange(len(coefficients))
+    return np.power(x, np.tile(powers, (len(x), 1)).T).T @ coefficients
+
+
+@pytest.fixture(scope="module")
+def polynomial_dataset(coefficients: np.ndarray):
+    """ Coefficients must be for monomials of increasing degree """
+    from sklearn.utils import Bunch
+
+    x = np.arange(-1, 1, .1)
+    locs = polynomial(coefficients, x)
+    y = np.random.normal(loc=locs, scale=0.1)
+    db = Bunch()
+    db.data, db.target = x.reshape(-1, 1), y
+    poly = [f"{c} x^{i}" for i, c in enumerate(coefficients)]
+    poly = " + ".join(poly)
+    db.DESCR = f"$y \sim N({poly}, 1)$"
+    db.feature_names = ["x"]
+    db.target_names = ["y"]
+    return Dataset.from_sklearn(data=db, train_size=0.5)
 
 
 @pytest.fixture()
