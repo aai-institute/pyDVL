@@ -81,7 +81,7 @@ def memcached(server: str = 'localhost:11211',
                 end = time()
                 # TODO: make the threshold adaptive
                 if end - start >= threshold:
-                    cache.set(key, result)  # , noreply=True)
+                    cache.set(key, result, noreply=True)
             return result
         return wrapped
 
