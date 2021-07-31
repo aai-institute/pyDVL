@@ -28,7 +28,7 @@ def _serialize(x):
     return pickled_output.getvalue()
 
 
-def memcached(server: str = 'localhost:11211',
+def memcached(config: dict = None,
               threshold: float = 0,
               ignore_args: Iterable[str] = None):
     """ Decorate a callable with this in order to have transparent caching.
@@ -36,7 +36,16 @@ def memcached(server: str = 'localhost:11211',
     The function's code, constants and all arguments (except for those in \
     `ignore_args` are used to generate the key for the remote cache.
 
-    :param server: server and port or unix socket
+    :param config: kwargs for pymemcache.client.Client(). Will be merged on top
+    of:
+
+        default_config = dict(server='localhost:11211',
+                              connect_timeout=1.0, timeout=0.1,
+                              # IMPORTANT! Disable small packet consolidation:
+                              no_delay=True,
+                              serde=serde.PickleSerde(
+                              pickle_version=PICKLE_VERSION))
+
     :param threshold: computations taking below this value (in seconds) are not
         cached
     :param ignore_args: Do not take these keyword arguments into account when
@@ -46,17 +55,25 @@ def memcached(server: str = 'localhost:11211',
     if ignore_args is None:
         ignore_args = []
 
+    # TODO: pick from some config file or something
+    default_config = dict(server='localhost:11211',
+                          connect_timeout=1.0, timeout=0.1,
+                          # IMPORTANT! Disable small packet consolidation:
+                          no_delay=True,
+                          serde=serde.PickleSerde(pickle_version=PICKLE_VERSION))
+    if config is not None:
+        default_config.update(config)
     try:
-        test = Client(server=server, connect_timeout=1.0, timeout=0.1)
+        test = Client(**default_config)
         test.set('dummy_key', 0)
         test.delete('dummy_key', 0)
     except Exception as e:
-        logger.error(f'@memcached: Time out connecting to {server}')
+        logger.error(f'@memcached: Timeout connecting '
+                     f'to {default_config["server"]}')
         raise e
 
     def wrapper(fun: Callable):
-        cache = Client(server=server, connect_timeout=1.0, timeout=0.1,
-                       serde=serde.PickleSerde(pickle_version=PICKLE_VERSION))
+        cache = Client(**default_config)
         # noinspection PyUnresolvedReferences
         signature: bytes = _serialize((fun.__code__.co_code,
                                        fun.__code__.co_consts))
@@ -69,8 +86,8 @@ def memcached(server: str = 'localhost:11211',
             # FIXME: do I really need to hash this?
             # FIXME: ensure that the hashing algorithm is portable
             # FIXME: determine right bit size
-            # FIXME: I need to create the spooky_64 object here because it
-            #  can't be pickled
+            # NB: I need to create the spooky_64 object here because it can't be
+            #  pickled
             hasher = spooky_64(seed=0)
             key = str(hasher(signature + arg_signature)).encode('ASCII')
             logger.info(f"wrapped: {list(kwargs.items())}, key = {key}")

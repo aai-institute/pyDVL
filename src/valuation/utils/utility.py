@@ -16,7 +16,7 @@ class Utility:
     scoring: Scorer
 
     def __init__(self, model: SupervisedModel, data: Dataset, scoring: Scorer,
-                 catch_errors: bool = True, cache_size: int = 4096):
+                 catch_errors: bool = True, enable_cache: bool = False):
         """
         :param model: Any supervised model
         :param data: a split Dataset
@@ -27,15 +27,15 @@ class Utility:
         :param catch_errors: set to True to return np.nan if fit() fails. This
             hack helps when a step in a pipeline fails if there are too few data
             points
-        :param cache_size: Number of invocations to memoize. Set to None or 0
-            to disable.
+        :param enable_cache: whether to use memcached for memoization.
+            TODO: enable configuration.
         """
         self.model = model
         self.data = data
         self.scoring = scoring
         self.catch_errors = catch_errors
 
-        if cache_size is not None and cache_size > 0:
+        if enable_cache:
             self._utility_wrapper = memcached()(self._utility)
         else:
             self._utility_wrapper = self._utility

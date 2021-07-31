@@ -11,15 +11,15 @@ from valuation.utils.numeric import spearman
 @pytest.fixture(scope="function")
 def memcached_client():
     from pymemcache.client import Client
-    # TODO: read config, start new server for tests
+    # TODO: read config from some place, start new server for tests
     memcache_config = dict(server='localhost:11211',
-                           connect_timeout=1.0, timeout=0.1)
+                           connect_timeout=1.0, timeout=0.1, no_delay=True)
     try:
         c = Client(**memcache_config)
         # FIXME: Careful! this will invalidate the cache. I should start a
         #  dedicated server
         c.flush_all()
-        return c
+        return c, memcache_config
     except Exception as e:
         print(f'Could not connect to memcached server '
               f'{memcache_config["server"]}: {e}')
