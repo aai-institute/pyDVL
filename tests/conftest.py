@@ -4,8 +4,20 @@ import pytest
 from sklearn.linear_model import LinearRegression
 from typing import OrderedDict, Type
 from valuation.shapley import combinatorial_exact_shapley
-from valuation.utils import Dataset,  Utility
+from valuation.utils import Dataset, Utility
 from valuation.utils.numeric import spearman
+
+
+@pytest.fixture(scope="function")
+def memcached_client():
+    from pymemcache.client import Client
+    # TODO: read config, start new server for tests
+    c = Client('localhost:11211', connect_timeout=1.0, timeout=0.1)
+
+    # FIXME: Careful! this will invalidate the cache. I should start a dedicated
+    #  server
+    c.flush_all()
+    return c
 
 
 @pytest.fixture(scope="module")

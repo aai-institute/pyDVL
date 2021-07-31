@@ -6,3 +6,6 @@ tqdm
 sklearn
 matplotlib
 click
+wheel
+pyhash
+pymemcache
