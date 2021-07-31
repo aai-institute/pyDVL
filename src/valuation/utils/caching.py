@@ -8,7 +8,7 @@ from typing import Callable, Iterable
 from pymemcache.client import Client
 from pymemcache import serde
 from pyhash import spooky_64
-from pickle import Pickler
+from cloudpickle import Pickler
 from io import BytesIO
 
 from valuation.utils.logging import logger
@@ -17,11 +17,6 @@ PICKLE_VERSION = 5  # python >= 3.8
 
 
 def _serialize(x):
-    # I could use pymemcache's serializer, but it expects a key,val pair,
-    # although the key is actually never used. Relying on this seems brittle and
-    # I might be better off using pickle
-    # serializer = serde.PickleSerde(pickle_version=PICKLE_VERSION)
-    # return serializer.serialize(None, (args, list(kwargs.items())))
     pickled_output = BytesIO()
     pickler = Pickler(pickled_output, PICKLE_VERSION)
     pickler.dump(x)
