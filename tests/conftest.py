@@ -5,6 +5,7 @@ from sklearn.linear_model import LinearRegression
 from typing import OrderedDict, Type
 from valuation.shapley import combinatorial_exact_shapley
 from valuation.utils import Dataset, Utility
+from valuation.utils.logging import start_logging_server
 from valuation.utils.numeric import spearman
 
 
@@ -37,7 +38,7 @@ def linear_dataset():
     from sklearn.utils import Bunch
     a = 2
     b = 0
-    x = np.arange(-1, 1, .15)
+    x = np.arange(-1, 1, .25)
     y = np.random.normal(loc=a * x + b, scale=0.1)
     db = Bunch()
     db.data, db.target = x.reshape(-1, 1), y
@@ -138,3 +139,6 @@ def check_rank_correlation(values: OrderedDict, exact_values: OrderedDict,
     ranks_exact = np.array(list(exact_values.keys())[:n])
 
     assert spearman(ranks, ranks_exact) >= threshold
+
+
+start_logging_server()
