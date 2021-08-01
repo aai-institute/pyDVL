@@ -1,8 +1,12 @@
+from functools import reduce
+
 import numpy as np
 import pytest
 
-from valuation.utils.numeric import powerset, random_powerset, \
-    spearman, vanishing_derivatives
+from typing import List
+from valuation.utils import MapReduceJob, available_cpus, map_reduce
+from valuation.utils.numeric import PowerSetDistribution, powerset, \
+    random_powerset, spearman, vanishing_derivatives
 
 
 def test_vanishing_derivatives():
@@ -31,32 +35,66 @@ def test_powerset():
 @pytest.mark.parametrize("n", [0, 8])
 def test_random_powerset(n):
     with pytest.raises(TypeError):
+        # noinspection PyTypeChecker
         set(random_powerset(1, max_subsets=1))
 
+    delta = 0.2
+    reps = 5
+    job = MapReduceJob.from_fun(_random_powerset)
+    results = map_reduce(job, [n], num_jobs=1, num_runs=reps)
+
+    from tests.conftest import TolerateErrors
+    delta_errors = TolerateErrors(int(delta * reps))
+    for r in results:
+        with delta_errors:
+            assert np.all(r)
+
+
+def _random_powerset(data: List[int]):
+    n = data[0]  # yuk... map_reduce always sends lists
     indices = np.arange(n)
-    # TODO: compute eps,delta bound for sample complexity
-    m = 2 ** int(len(indices)*2)
+    eps = 0.01
+    # TODO: compute (ε,δ) bound for sample complexity
+    m = 2**(int(n*1.5))
     sets = set()
     sizes = np.zeros(n + 1)
-    for s in random_powerset(indices, max_subsets=m):
-        sets.add(tuple(s))
-        sizes[len(s)] += 1
+    ncpus = available_cpus() if n > 0 else 1
+
+    def sampler(indices: np.ndarray) -> List[frozenset]:
+        ss: List[frozenset] = []
+        for s in random_powerset(indices,
+                                 dist=PowerSetDistribution.WEIGHTED,
+                                 max_subsets=1 + m // ncpus):
+            ss.append(frozenset(s))
+        return ss
+
+    def reducer(results: List[List[frozenset]]) -> List[frozenset]:
+        return reduce(lambda x, y: x.append(y) or x, results[0], [])
+
+    job = MapReduceJob.from_fun(sampler, reducer)
+    runs = map_reduce(job, indices, num_jobs=ncpus, num_runs=ncpus)
+    for result in runs:
+        for s in result:
+            sets.add(s)
+            sizes[len(s)] += 1
 
     missing = set()
-    for s in map(tuple, powerset(indices)):
+    for s in map(frozenset, powerset(indices)):
         try:
             sets.remove(s)
         except KeyError:
             missing.add(s)
+    if len(missing)/2**n > eps:
+        return False
 
-    # FIXME: non deterministic
-    # FIXME: test convergence in expectation to 0 as m->\ifty
-    assert len(missing) <= np.ceil(0.01*2**n)
-
-    # Check distribution of set sizes
+    # Check expected set sizes:
+    # E[|S|] ≈ Empirical[|S|], or P(|S| = k) ≈ Freq(|S| = k)
     sizes /= sum(sizes)
     exact_sizes = np.array([np.math.comb(n, j) for j in range(n+1)]) / 2**n
-    assert np.allclose(sizes, exact_sizes, rtol=0.1)
+    if not np.allclose(sizes, exact_sizes, atol=eps):
+        return False
+
+    return True
 
 
 @pytest.mark.parametrize(

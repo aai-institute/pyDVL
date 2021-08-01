@@ -1,8 +1,11 @@
+import operator
 import numpy as np
 
-from functools import lru_cache
+
+from enum import Enum
+from functools import reduce
 from itertools import chain, combinations
-from typing import Collection, Generator, Iterator, Iterable, List, TypeVar
+from typing import Collection, Generator, Iterator, List, Sequence, TypeVar
 from valuation.utils import memcached
 from valuation.utils.parallel import MapReduceJob, map_reduce
 
@@ -19,7 +22,7 @@ def vanishing_derivatives(x: np.ndarray, min_values: int, eps: float) -> int:
     return int(np.sum(zeros >= min_values / 2))
 
 
-def powerset(it: Iterable[T]) -> Iterator[Collection[T]]:
+def powerset(it: Sequence[T]) -> Iterator[Collection[T]]:
     """ Returns an iterator for the power set of the argument.
 
     Subsets are generated in sequence by growing size. See `random_powerset()`
@@ -41,8 +44,15 @@ def lower_bound_hoeffding(delta: float, eps: float, score_range: float) -> int:
     return int(np.ceil(np.log(2 / delta) * score_range ** 2 / (2 * eps ** 2)))
 
 
-def random_powerset(s: np.ndarray, max_subsets: int = None,
-                    num_jobs: int = None) \
+class PowerSetDistribution(Enum):
+    UNIFORM = 'uniform'
+    WEIGHTED = 'weighted'
+
+
+def random_powerset(s: np.ndarray,
+                    max_subsets: int = None,
+                    dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
+                    num_jobs: int = 1) \
         -> Generator[np.ndarray, None, None]:
     """ Uniformly samples a subset from the power set of the argument, without
     pre-generating all subsets and in no order.
@@ -55,7 +65,10 @@ def random_powerset(s: np.ndarray, max_subsets: int = None,
 
     :param s: set to sample from
     :param max_subsets: if set, stop the generator after this many steps.
-    :param num_jobs: duh.
+    :param dist: whether to sample from the "true" distribution, i.e. weighted
+        by the number of sets of size k, or "uniformly", taking e.g. the empty
+        set to be as likely as any other
+    :param num_jobs: Duh. Must be >= 1
     """
     if not isinstance(s, np.ndarray):
         raise TypeError
@@ -71,14 +84,18 @@ def random_powerset(s: np.ndarray, max_subsets: int = None,
             # FIXME: is the normalization ok?
             return [np.math.comb(n, j) / 2 ** n for j in sizes]
 
-        job = MapReduceJob.from_fun(sub)
+        job = MapReduceJob.from_fun(sub,
+                                    lambda r: reduce(operator.add, r, []))
         ret = map_reduce(job, list(range(n + 1)), num_jobs=num_jobs)
         return ret[0]
 
     while total <= max_subsets:
-        k = np.random.choice(np.arange(n + 1), p=subset_probabilities(n))
-        subset = np.random.randint(n, size=k)
-        yield s[subset]
+        if dist == PowerSetDistribution.WEIGHTED:
+            k = np.random.choice(np.arange(n + 1), p=subset_probabilities(n))
+        else:
+            k = np.random.choice(np.arange(n + 1))
+        subset = np.random.choice(s, replace=False, size=k)
+        yield subset
         total += 1
 
 
