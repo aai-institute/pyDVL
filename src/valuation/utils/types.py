@@ -47,16 +47,21 @@ def unpackable(cls: type) -> type:
 
     def __iter__(self):
         for k in self.keys():
-            return getattr(self, k)
+            yield getattr(self, k)
 
     def update(self, values: dict):
         for k,v in values.items():
             setattr(self, k, v)
+
+    def items(self):
+        for k in self.keys():
+            yield k, getattr(self, k)
 
     setattr(cls, 'keys', keys)
     setattr(cls, '__getitem__', __getitem__)
     setattr(cls, '__len__', __len__)
     setattr(cls, '__iter__', __iter__)
     setattr(cls, 'update', update)
+    setattr(cls, 'items', items)
 
     return cls

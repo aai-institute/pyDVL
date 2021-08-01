@@ -7,10 +7,11 @@ from dataclasses import dataclass, make_dataclass
 from time import time
 from typing import Callable, Iterable
 from pymemcache.client import Client
-from pymemcache import serde
+from pymemcache.serde import PickleSerde
 from pyhash import spooky_64
 from cloudpickle import Pickler
 from io import BytesIO
+
 
 from valuation.utils.types import unpackable
 from valuation.utils.logging import logger
@@ -25,7 +26,7 @@ class ClientConfig:
     connect_timeout: float = 1.0
     timeout: float = 1.0
     no_delay: bool = True
-    serde = serde.PickleSerde(pickle_version=PICKLE_VERSION)
+    serde: PickleSerde = PickleSerde(pickle_version=PICKLE_VERSION)
 
 
 @unpackable
@@ -78,7 +79,8 @@ def memcached(client_config: ClientConfig = None,
         config.update(client_config)
     try:
         test = Client(**config)
-        test.set('dummy_key', 0)
+        test.set('dummy_key', 7)
+        assert test.get('dummy_key') == 7
         test.delete('dummy_key', 0)
     except Exception as e:
         logger.error(f'@memcached: Timeout connecting '
