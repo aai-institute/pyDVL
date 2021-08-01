@@ -1,18 +1,18 @@
 """
-OUTDATED, FIXME: All value functions return a dictionary of {index: value} and
-some status / historical information of the algorithm. This module provides
-utility functions to run these in parallel and multiple times, then gather the
-results for later processing / reporting.
+OUTDATED COMMENT, FIXME: All value functions return a dictionary of
+{index: value} and some status / historical information of the algorithm.
+This module provides utility functions to run these in parallel and multiple
+times, then gather the results for later processing / reporting.
 """
 import inspect
 import os
 import queue
-import numpy as np
 import multiprocessing as mp
 
 from tqdm import tqdm
 from joblib import Parallel, delayed
-from typing import Any, Callable, Iterable, List, Optional,Type, TypeVar, Union
+from typing import Any, Callable, Collection, Generic, List, Optional, Type, \
+    TypeVar
 
 T = TypeVar('T')
 R = TypeVar('R')
@@ -26,22 +26,22 @@ def available_cpus():
     return len(os.sched_getaffinity(0))
 
 
-class MapReduceJob:
+class MapReduceJob(Generic[T]):
     """ There are probably 77 libraries to do just this """
     _job_id: int
     _run_id: int
 
-    def __call__(self, data: Iterable[T], job_id: int, run_id: int):
+    def __call__(self, data: Collection[T], job_id: int, run_id: int):
         raise NotImplementedError()
 
-    def reduce(self, chunks: Iterable[T]) -> T:
+    def reduce(self, chunks: List[R]) -> R:
         return chunks
 
     @staticmethod
     # FIXME: Can't make the type for fun more specific,
     #  see https://github.com/python/mypy/issues/5876
     def from_fun(fun: Callable[..., R],
-                 reducer: Callable[[Iterable[R]], R] = Identity,
+                 reducer: Callable[[List[R]], R] = Identity,
                  job_id_arg: str = None, run_id_arg: str = None) \
             -> 'MapReduceJob':
         """
@@ -84,7 +84,7 @@ class MapReduceJob:
 
                 return fun(data, *args, **kwargs)
 
-            def reduce(self, chunks: Iterable[T]) -> T:
+            def reduce(self, chunks: List[T]) -> T:
                 return reducer(chunks)
 
         return NewJob()
@@ -111,21 +111,32 @@ def make_nested_backend(backend: str = 'loky'):
                 dict(get_nested_backend=get_nested_backend))
 
 
-def map_reduce(fun: MapReduceJob,
-               data: Union[List, np.ndarray],
+def chunkify(fun, data, njobs: int, run_id: int) -> List:
+    # Splits a list of values into chunks for each job
+    n = len(data)
+    chunk_size = 1 + n // njobs
+    arg_values = [data[i:min(i + chunk_size, n)]
+                  for i in data[0:n:chunk_size]]
+    for j, vv in enumerate(arg_values, start=1):
+        yield delayed(fun)(vv, job_id=j, run_id=run_id + 1)
+
+
+def map_reduce(fun: MapReduceJob[T],
+               data: Collection[T],
                num_jobs: int,
                num_runs: int = 1,
                backend: str = 'loky') -> List:
-    """ Wraps an embarrassingly parallelizable fun to run in num_jobs parallel
+    """ Takes an embarrassingly parallel fun and runs ot in num_jobs parallel
     jobs, splitting arg into the same number of chunks, one for each job.
 
-    If repeats the process num_runs times, allocating jobs across runs. E.g.
-    if num_jobs = 90 and num_runs=10, each whole execution of fun on the whole
-    data uses 9 jobs. If num_jobs=24 and num_runs=1
+    It repeats the process num_runs times, allocating jobs across runs. E.g.
+    if num_jobs = 90 and num_runs=10, each whole execution of fun uses 9 jobs,
+    with the data split evenly among them. If num_jobs=2 and num_runs=10, two
+    cores are used, five times in succession, and each job receives all data.
 
-     Results are aggregated per run, not across runs.
+    Results are aggregated per run using fun.reduce(), but not across runs.
 
-    :param fun:
+    :param fun: Create with `MapReduceJob.from_fun(fun, reducer, ...)`
     :param data: values to split across jobs
     :param num_jobs: number of parallel jobs to run. Does not accept -1
     :param num_runs: number of times to run fun on the whole data.
@@ -133,40 +144,39 @@ def map_reduce(fun: MapReduceJob,
      :param backend: 'loky', 'threading', 'multiprocessing', etc.
     """
     if num_jobs == num_runs == 1:
-        return [fun(data, job_id=1, run_id=1)]
+        job_result = fun(data, job_id=1, run_id=1)
+        return [fun.reduce([job_result])]
 
-    def chunkify(njobs: int, run_id: int) -> List:
-        # Splits a list of values into chunks for each job
-        n = len(data)
-        chunk_size = 1 + n // njobs
-        arg_values = [data[i:min(i + chunk_size, n)]
-                      for i in data[0:n:chunk_size]]
-        for j, vv in enumerate(arg_values, start=1):
-            yield delayed(fun)(vv, **{'job_id': j, 'run_id': run_id + 1})
+    if num_jobs <= num_runs:
+        ret = Parallel(n_jobs=num_jobs)(delayed(fun)(data, job_id=1, run_id=r+1)
+                                         for r in range(num_runs))
+        # HACK for consistency with fun.reduce()'s expected input format
+        ret = [[r] for r in ret]
+    else:
+        num_jobs_sub = num_jobs // num_runs
+        remainder = num_jobs % num_runs
+        runs = []
+        for run in range(num_runs - remainder):
+            if num_jobs_sub > 1:
+                job = lambda run_id=run: \
+                        Parallel(n_jobs=num_jobs_sub) \
+                                (chunkify(fun, data, num_jobs_sub, run_id))
+            else:
+                job = lambda run_id=run: [fun(data, job_id=1, run_id=run_id)]
+            runs.append(job)
 
-    num_jobs_sub = max(1, num_jobs // num_runs)
-    remainder = num_jobs % num_runs if num_jobs > num_runs else 0
-    runs = []
-    for run in range(num_runs - remainder):
-        if num_jobs_sub > 1:
-            runs.append(lambda run_id=run:
-                            Parallel(n_jobs=num_jobs_sub)
-                                    (chunkify(num_jobs_sub, run_id)))
-        else:
-            runs.append(lambda run_id=run: [fun(data, job_id=1, run_id=run_id)])
+        # Repeat for the remainder of num_jobs/num_runs with one more chunk per
+        # job in order to use all cores up to num_jobs
+        if remainder > 0:
+            num_jobs_sub += 1
+            for run in range(num_runs - remainder, num_runs):
+                runs.append(lambda run_id=run:
+                                Parallel(n_jobs=num_jobs_sub)
+                                    (chunkify(fun, data, num_jobs_sub, run_id)))
 
-    # Repeat for the remainder of num_jobs/num_runs with one more chunk per
-    # job in order to use all cores up to num_jobs
-    if remainder > 0:
-        num_jobs_sub += 1
-        for run in range(num_runs - remainder, num_runs):
-            runs.append(lambda run_id=run:
-                        Parallel(n_jobs=num_jobs_sub)
-                                (chunkify(num_jobs_sub, run_id)))
-
-    backend = make_nested_backend(backend)()
-    ret = Parallel(n_jobs=num_runs, backend=backend) \
-        (delayed(r)() for r in runs)
+        backend = make_nested_backend(backend)()
+        ret = Parallel(n_jobs=num_runs, backend=backend) \
+            (delayed(r)() for r in runs)
 
     for i, r in enumerate(ret):
         ret[i] = fun.reduce(r)

@@ -85,7 +85,12 @@ def exact_shapley(linear_dataset, scoring):
 
 
 class TolerateErrors:
-    def __init__(self, max_errors: int, exception_cls: Type[BaseException]):
+    """ A context manager to swallow errors up to a certain threshold.
+    Use to test (ε,δ) approximations.
+    """
+    def __init__(self,
+                 max_errors: int,
+                 exception_cls: Type[BaseException] = AssertionError):
         self.max_errors = max_errors
         self.Exception = exception_cls
         self.error_count = 0
@@ -141,4 +146,4 @@ def check_rank_correlation(values: OrderedDict, exact_values: OrderedDict,
     assert spearman(ranks, ranks_exact) >= threshold
 
 
-start_logging_server()
+# start_logging_server()

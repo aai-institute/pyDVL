@@ -2,11 +2,9 @@ import numpy as np
 
 from typing import Iterable
 from valuation.utils import memcached, map_reduce, MapReduceJob
-from valuation.utils.logging import start_logging_server, logger
 
 
 def test_memcached_single_job(memcached_client):
-    start_logging_server()
     client, config = memcached_client
 
     # TODO: maybe this should be a fixture too...
@@ -24,7 +22,6 @@ def test_memcached_single_job(memcached_client):
 
 
 def test_memcached_parallel_jobs(memcached_client):
-    start_logging_server()
     client, config = memcached_client
 
     @memcached(config=config,
@@ -32,7 +29,8 @@ def test_memcached_parallel_jobs(memcached_client):
                # Note that we typically do NOT want to ignore run_id
                ignore_args=['job_id', 'run_id'])
     def foo(indices: Iterable[int], job_id: int, run_id: int) -> float:
-        logger.info(f"run_id: {run_id}, running...")
+        # from valuation.utils.logging import logger
+        # logger.info(f"run_id: {run_id}, running...")
         return float(np.sum(indices))
 
     n = 1234
