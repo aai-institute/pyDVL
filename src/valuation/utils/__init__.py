@@ -8,6 +8,6 @@ from valuation.utils.utility import *
 
 __all__ = ['memcached', 'SupervisedModel', 'Dataset', 'Scorer',
            'map_reduce', 'MapReduceJob', 'available_cpus',
-           'vanishing_derivatives',
+           'vanishing_derivatives', 'unpackable',
            'Utility', 'bootstrap_test_score',
            'powerset', 'maybe_progress']

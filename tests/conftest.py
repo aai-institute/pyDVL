@@ -5,7 +5,6 @@ from sklearn.linear_model import LinearRegression
 from typing import OrderedDict, Type
 from valuation.shapley import combinatorial_exact_shapley
 from valuation.utils import Dataset, Utility
-from valuation.utils.logging import start_logging_server
 from valuation.utils.numeric import spearman
 
 
@@ -13,17 +12,18 @@ from valuation.utils.numeric import spearman
 def memcached_client():
     from pymemcache.client import Client
     # TODO: read config from some place, start new server for tests
-    memcache_config = dict(server='localhost:11211',
-                           connect_timeout=1.0, timeout=0.1, no_delay=True)
+    from valuation.utils import ClientConfig
+    client_config = ClientConfig(server='localhost:11211',
+                                 connect_timeout=1.0, timeout=0.1, no_delay=True)
     try:
-        c = Client(**memcache_config)
+        c = Client(**client_config)
         # FIXME: Careful! this will invalidate the cache. I should start a
         #  dedicated server
         c.flush_all()
-        return c, memcache_config
+        return c, client_config
     except Exception as e:
         print(f'Could not connect to memcached server '
-              f'{memcache_config["server"]}: {e}')
+              f'{client_config["server"]}: {e}')
         raise e
 
 

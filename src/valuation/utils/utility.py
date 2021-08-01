@@ -3,8 +3,8 @@ import numpy as np
 from typing import Iterable, Tuple
 from sklearn.metrics import check_scoring
 from valuation.utils.logging import logger
-from valuation.utils import Dataset, SupervisedModel, Scorer, maybe_progress,\
-    memcached
+from valuation.utils import Dataset, MemcachedConfig, SupervisedModel, Scorer, \
+    maybe_progress, memcached
 
 __all__ = ['Utility', 'bootstrap_test_score']
 
@@ -16,7 +16,8 @@ class Utility:
     scoring: Scorer
 
     def __init__(self, model: SupervisedModel, data: Dataset, scoring: Scorer,
-                 catch_errors: bool = True, enable_cache: bool = True):
+                 catch_errors: bool = True, enable_cache: bool = True,
+                 cache_options: MemcachedConfig = None):
         """
         :param model: Any supervised model
         :param data: a split Dataset
@@ -36,7 +37,10 @@ class Utility:
         self.catch_errors = catch_errors
 
         if enable_cache:
-            self._utility_wrapper = memcached()(self._utility)
+            if cache_options is None:
+                cache_options = dict()
+
+            self._utility_wrapper = memcached(**cache_options)(self._utility)
         else:
             self._utility_wrapper = self._utility
 

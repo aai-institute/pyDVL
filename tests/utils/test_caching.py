@@ -8,7 +8,7 @@ def test_memcached_single_job(memcached_client):
     client, config = memcached_client
 
     # TODO: maybe this should be a fixture too...
-    @memcached(config=config, threshold=0)  # Always cache results
+    @memcached(client_config=config, threshold=0)  # Always cache results
     def foo(indices: Iterable[int]) -> float:
         return float(np.sum(indices))
 
@@ -24,7 +24,7 @@ def test_memcached_single_job(memcached_client):
 def test_memcached_parallel_jobs(memcached_client):
     client, config = memcached_client
 
-    @memcached(config=config,
+    @memcached(client_config=config,
                threshold=0,  # Always cache results
                # Note that we typically do NOT want to ignore run_id
                ignore_args=['job_id', 'run_id'])
