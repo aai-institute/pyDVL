@@ -28,7 +28,7 @@ from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
       OrderedDict([(k, k) for k in range(10)]),
       0)
      ])
-def test_compare(passes, values_a, values_b, eps):
+def test_check_exact(passes, values_a, values_b, eps):
     if passes:
         check_exact(values_a, values_b, eps)
     else:
@@ -36,12 +36,18 @@ def test_compare(passes, values_a, values_b, eps):
             check_exact(values_a, values_b, eps)
 
 
+def test_exact_shapley(exact_shapley):
+    u, values = exact_shapley
+    assert np.allclose(list(values.values()),
+                       u(u.data.indices)/len(u.data), atol=1e-16)
+
+
 @pytest.mark.parametrize(
     "scoring, rtol",
     [('r2', 0.01),
      ('neg_mean_squared_error', 0.01),
      ('neg_median_absolute_error', 0.01)])
-def test_combinatorial_exact_shapley(exact_shapley, rtol):
+def test_combinatorial_exact_shapley(rtol, exact_shapley):
     u, values = exact_shapley
     check_total_value(u, values, rtol=rtol)
     # TODO: compute "manually" for fixed values and check
@@ -52,7 +58,7 @@ def test_combinatorial_exact_shapley(exact_shapley, rtol):
     [('r2', 0.01, 0.01),
      ('neg_mean_squared_error', 0.01, 0.01),
      ('neg_median_absolute_error', 0.01, 0.01)])
-def test_permutation_exact_shapley(scoring, rtol, eps, exact_shapley):
+def test_permutation_exact_shapley(rtol, eps, exact_shapley):
     u, exact_values = exact_shapley
     values_p = permutation_exact_shapley(u, progress=False)
     check_total_value(u, values_p, rtol=rtol)

@@ -78,15 +78,30 @@ def scoring():
 
 @pytest.fixture()
 def exact_shapley(linear_dataset, scoring):
-    model = LinearRegression()
-    u = Utility(model, linear_dataset, scoring)
+    from valuation.utils import SupervisedModel
+    from numpy import ndarray
+
+    class DummyModel(SupervisedModel):
+        def __init__(self):
+            self.magic_number = 0
+
+        def fit(self, x: ndarray, y: ndarray):
+            self.magic_number = len(x)
+
+        def predict(self, x: ndarray) -> ndarray:
+            return x
+
+        def score(self, x: ndarray, y: ndarray) -> float:
+            return 1 - 1/(1 + self.magic_number)
+
+    u = Utility(DummyModel(), linear_dataset, None, enable_cache=False)
     values_c = combinatorial_exact_shapley(u, progress=False)
     return u, values_c
 
 
 class TolerateErrors:
     """ A context manager to swallow errors up to a certain threshold.
-    Use to test (ε,δ) approximations.
+    Use to test (ε,δ)-approximations.
     """
     def __init__(self,
                  max_errors: int,
@@ -113,7 +128,7 @@ def check_total_value(u: Utility,
     """ Checks absolute distance between total and added values.
      Shapley value is supposed to fulfill the total value axiom."""
     total_utility = u(u.data.indices)
-    values = np.array(list(values.values()))
+    values = np.fromiter(values.values(), dtype=float, count=len(u.data))
     # We use relative tolerances here because we don't have the range of the
     # scorer.
     assert np.isclose(values.sum(), total_utility, rtol=rtol)
