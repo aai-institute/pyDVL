@@ -123,7 +123,7 @@ def chunkify(fun, data, njobs: int, run_id: int) -> List:
 
 def map_reduce(fun: MapReduceJob[T],
                data: Collection[T],
-               num_jobs: int,
+               num_jobs: int = 1,
                num_runs: int = 1,
                backend: str = 'loky') -> List:
     """ Takes an embarrassingly parallel fun and runs ot in num_jobs parallel

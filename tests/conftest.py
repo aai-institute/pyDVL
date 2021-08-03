@@ -13,7 +13,7 @@ def memcached_client():
     from pymemcache.client import Client
     # TODO: read config from some place, start new server for tests
     from valuation.utils import ClientConfig
-    client_config = ClientConfig(server='localhost:11211',
+    client_config = ClientConfig(server=('localhost', 11211),
                                  connect_timeout=1.0, timeout=0.1, no_delay=True)
     try:
         c = Client(**client_config)
@@ -149,7 +149,18 @@ def check_exact(values: OrderedDict, exact_values: OrderedDict, eps: float):
 
 
 def check_rank_correlation(values: OrderedDict, exact_values: OrderedDict,
-                           n: int = None, threshold: float = 0.9):
+                           k: int = None, threshold: float = 0.9):
+    """ Checks that the indices of `values` and `exact_values` follow the same
+    order (by value), with some slack, using Spearman's correlation.
+
+    Runs an assertion for testing.
+
+    :param values: The values and indices to test
+    :param exact_values: The ground truth
+    :param k: Consider only these many, starting from the top.
+    :param threshold: minimal value for spearman correlation for the test to
+        succeed
+    """
     # FIXME: estimate proper threshold for spearman
     if n is not None:
         raise NotImplementedError

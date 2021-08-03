@@ -36,10 +36,11 @@ def powerset(it: Sequence[T]) -> Iterator[Collection[T]]:
 
 
 def lower_bound_hoeffding(delta: float, eps: float, score_range: float) -> int:
-    """ Minimum number of samples required for MonteCarlo Shapley to obtain
-    an (eps,delta) approximation.
-    That is, with probability 1-delta, the estimate will be epsilon close to
-     the true quantity, if at least so many monte carlo samples are taken.
+    """ Minimum number of samples n required for MonteCarlo Shapley to obtain
+    an (ε,δ)-approximation.
+
+    That is: with probability 1-δ, the estimate will be ε-close to the true
+    quantity, if at least n samples are taken.
     """
     return int(np.ceil(np.log(2 / delta) * score_range ** 2 / (2 * eps ** 2)))
 

@@ -41,7 +41,7 @@ def test_random_powerset(n):
     delta = 0.2
     reps = 5
     job = MapReduceJob.from_fun(_random_powerset)
-    results = map_reduce(job, [n], num_jobs=1, num_runs=reps)
+    results = map_reduce(job, [n], num_runs=reps)
 
     from tests.conftest import TolerateErrors
     delta_errors = TolerateErrors(int(delta * reps))
@@ -58,13 +58,13 @@ def _random_powerset(data: List[int]):
     m = 2**(int(n*1.5))
     sets = set()
     sizes = np.zeros(n + 1)
-    ncpus = available_cpus() if n > 0 else 1
+    num_cpus = available_cpus() if n > 0 else 1
 
     def sampler(indices: np.ndarray) -> List[frozenset]:
         ss: List[frozenset] = []
         for s in random_powerset(indices,
                                  dist=PowerSetDistribution.WEIGHTED,
-                                 max_subsets=1 + m // ncpus):
+                                 max_subsets=1 + m // num_cpus):
             ss.append(frozenset(s))
         return ss
 
@@ -72,7 +72,7 @@ def _random_powerset(data: List[int]):
         return reduce(lambda x, y: x.append(y) or x, results[0], [])
 
     job = MapReduceJob.from_fun(sampler, reducer)
-    runs = map_reduce(job, indices, num_jobs=ncpus, num_runs=ncpus)
+    runs = map_reduce(job, indices, num_jobs=num_cpus, num_runs=num_cpus)
     for result in runs:
         for s in result:
             sets.add(s)

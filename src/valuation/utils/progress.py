@@ -1,10 +1,10 @@
-import collections
+import collections.abc
 
-from tqdm.auto import tqdm, trange
+from tqdm.auto import tqdm
 from typing import Iterable, Iterator, Union
 
 
-class MockProgress(collections.Iterator):
+class MockProgress(collections.abc.Iterator):
     """ A Naive mock class to use with maybe_progress and tqdm.
 
      Mocked methods don't support return values.

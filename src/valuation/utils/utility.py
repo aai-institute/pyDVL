@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import Iterable, Tuple
+from typing import Iterable, Optional, Tuple
 from sklearn.metrics import check_scoring
 from valuation.utils.logging import logger
 from valuation.utils import Dataset, MemcachedConfig, SupervisedModel, Scorer, \
@@ -15,7 +15,8 @@ class Utility:
     data: Dataset
     scoring: Scorer
 
-    def __init__(self, model: SupervisedModel, data: Dataset, scoring: Scorer,
+    def __init__(self, model: SupervisedModel, data: Dataset,
+                 scoring: Optional[Scorer],
                  catch_errors: bool = True, enable_cache: bool = True,
                  cache_options: MemcachedConfig = None):
         """
@@ -29,7 +30,6 @@ class Utility:
             hack helps when a step in a pipeline fails if there are too few data
             points
         :param enable_cache: whether to use memcached for memoization.
-            TODO: enable configuration.
         """
         self.model = model
         self.data = data
@@ -43,6 +43,10 @@ class Utility:
             self._utility_wrapper = memcached(**cache_options)(self._utility)
         else:
             self._utility_wrapper = self._utility
+
+        # FIXME: can't modify docstring of methods. Instead, I could use a
+        #  factory which creates the class on the fly with the right doc.
+        # self.__call__.__doc__ = self._utility_wrapper.__doc__
 
     def __call__(self, indices: Iterable[int]) -> float:
         return self._utility_wrapper(frozenset(indices))
