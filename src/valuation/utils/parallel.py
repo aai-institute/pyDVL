@@ -104,7 +104,9 @@ def make_nested_backend(backend: str = 'loky'):
 
     def get_nested_backend(self):
         backend = type(self)()
-        backend.nested_level = 0
+        # TODO: check whether this is truly increased in each level of nested
+        #  calls to Parallel
+        backend.nested_level = -640  # 640 ought to be enough for anybody :D
         return backend, None
 
     return type("Nested" + base_name, (base_cls,),
