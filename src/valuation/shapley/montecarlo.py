@@ -10,12 +10,14 @@ TODO:
 """
 import numpy as np
 
-from collections import OrderedDict
 from time import time
+from joblib import Parallel, delayed
+from collections import OrderedDict
 from typing import List, Optional, Tuple
 from valuation.reporting.scores import sort_values, sort_values_array
-from valuation.utils.numeric import random_powerset
-from valuation.utils.parallel import Coordinator, InterruptibleWorker
+from valuation.utils.numeric import PowerSetDistribution, random_powerset
+from valuation.utils.parallel import Coordinator, InterruptibleWorker, \
+    MapReduceJob, make_nested_backend, map_reduce
 from valuation.utils.progress import maybe_progress
 from valuation.utils import Utility, vanishing_derivatives, bootstrap_test_score
 
@@ -268,33 +270,40 @@ def serial_truncated_montecarlo_shapley(u: Utility,
 
 def permutation_montecarlo_shapley(u: Utility,
                                    max_iterations: int,
-                                   job_id: int = 0,
+                                   num_jobs: int = 1,
                                    progress: bool = False) \
-        -> Tuple[OrderedDict, List[int]]:
+        -> Tuple[OrderedDict, None]:
     """
     FIXME: the sum of values tends to cancel out, even though the ranking is ok
     """
     n = len(u.data)
-    values = np.zeros(n).reshape((-1, 1))
-    prev_score = 0.0
-    pbar = maybe_progress(max_iterations, progress, position=job_id)
-    for _ in pbar:
-        permutation = np.random.permutation(u.data.indices)
-        marginals = np.zeros((n, 1))
-        for i, idx in enumerate(permutation):
-            score = u(permutation[:i + 1])
-            marginals[idx] = score - prev_score
-            prev_score = score
-        values = np.concatenate([values, marginals], axis=1)
-    # Careful: for some models there might be nans, e.g. for i=0 or i=1!
-    values = np.nanmean(values, axis=1)
-    return sort_values({i: v for i, v in enumerate(values)}), []
+
+    def fun(job_id: int):
+        n = len(u.data)
+        values = np.zeros(n).reshape((-1, 1))
+        pbar = maybe_progress(max_iterations, progress, position=job_id)
+        for _ in pbar:
+            prev_score = 0.0
+            permutation = np.random.permutation(u.data.indices)
+            marginals = np.zeros((n, 1))
+            for i, idx in enumerate(permutation):
+                score = u(permutation[:i + 1])
+                marginals[idx] = score - prev_score
+                prev_score = score
+            values = np.concatenate([values, marginals], axis=1)
+        # Careful: for some models there might be nans, e.g. for i=0 or i=1!
+        return np.nansum(values, axis=1)
+
+    backend = make_nested_backend('loky')()
+    results = Parallel(n_jobs=num_jobs, backend=backend) \
+        (delayed(fun)(job_id=j+1) for j in range(num_jobs))
+    acc = np.row_stack(results).sum(axis=1) / (max_iterations*num_jobs)
+    return sort_values({i: v for i, v in enumerate(acc)}), None
 
 
 def combinatorial_montecarlo_shapley(u: Utility,
                                      max_iterations: int,
-                                     indices: List[int] = None,
-                                     job_id: int = 0,
+                                     num_jobs: int = 1,
                                      progress: bool = False) \
         -> Tuple[OrderedDict, None]:
     """ Computes an approximate Shapley value using the combinatorial
@@ -305,19 +314,25 @@ def combinatorial_montecarlo_shapley(u: Utility,
       contributions are likely to be higher.
     """
     n = len(u.data)
-    if not indices:
-        indices = u.data.indices
-    values = np.zeros(len(indices))
-    for i, idx in enumerate(indices):
-        # Randomly sample subsets of full dataset without idx
-        subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
-        power_set = \
-            enumerate(random_powerset(subset, max_subsets=max_iterations))
-        ut = 0.0
-        for j, s in maybe_progress(power_set, progress, desc=f"Index {idx}",
-                                   total=max_iterations, position=job_id):
-            ut += (u({i}.union(s)) - u(s)) / np.math.comb(n - 1, len(s))
-        # Normalization accounts for uniform dist. on powerset and montecarlo
-        values[i] = 2**(n-1) * ut / max_iterations
-    values /= n  # careful to use the right factor!
-    return sort_values({i: v for i, v in zip(indices, values)}), None
+
+    def fun(indices: np.ndarray, job_id: int) -> np.ndarray:
+        values = np.zeros(len(indices))
+        for i, idx in enumerate(indices):
+            # Randomly sample subsets of full dataset without idx
+            subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
+            power_set = random_powerset(subset,
+                                        dist=PowerSetDistribution.UNIFORM,
+                                        max_subsets=max_iterations)
+            # Normalization accounts for a uniform dist. on powerset (i.e. not
+            # weighted by set size) and the montecarlo sampling
+            for s in maybe_progress(power_set, progress, desc=f"Index {idx}",
+                                    total=max_iterations, position=job_id):
+                values[i] += (u({idx}.union(s)) - u(s)) \
+                             / np.math.comb(n-1, len(s))
+
+        return 2**(n-2) * values / (n * max_iterations)
+
+    job = MapReduceJob.from_fun(fun, np.concatenate)
+    results = map_reduce(job, u.data.indices, num_jobs=num_jobs)[0]
+
+    return sort_values({i: v for i, v in enumerate(results)}), None
