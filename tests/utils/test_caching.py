@@ -34,10 +34,10 @@ def test_memcached_parallel_jobs(memcached_client):
         return float(np.sum(indices))
 
     n = 1234
-    nruns = 10
+    num_runs = 10
     hits_before = client.stats()[b'get_hits']
     job = MapReduceJob.from_fun(foo, np.sum)
-    result = map_reduce(job, data=np.arange(n), num_jobs=4, num_runs=nruns)
+    result = map_reduce(job, data=np.arange(n), num_jobs=4, num_runs=num_runs)
     hits_after = client.stats()[b'get_hits']
 
     assert result[0] == n*(n-1)/2  # Sanity check
