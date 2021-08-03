@@ -9,6 +9,7 @@ import socketserver
 import struct
 
 from multiprocessing import Process
+from typing import Optional
 
 
 class LogRecordStreamHandler(socketserver.StreamRequestHandler):
@@ -82,12 +83,17 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
 def start_logging_server(host: str = 'localhost',
                          port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT)\
         -> Process:
+    global server
+
+    if server is not None:
+        return server
+
     logging.basicConfig(
         format='%(relativeCreated)5d %(name)-15s %(levelname)-8s %(message)s')
     tcpserver = LogRecordSocketReceiver(host, port)
-    p = Process(target=tcpserver.serve_until_stopped, daemon=True)
-    p.start()
-    return p
+    server = Process(target=tcpserver.serve_until_stopped, daemon=True)
+    server.start()
+    return server
 
 
 def set_logger(host: str = 'localhost',
@@ -105,6 +111,7 @@ def set_logger(host: str = 'localhost',
         logger.addHandler(socketHandler)
 
 
+server: Optional[Process] = None
 logger = None
 
 set_logger()
