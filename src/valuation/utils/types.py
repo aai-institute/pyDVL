@@ -24,8 +24,8 @@ Scorer = TypeVar('Scorer',
 
 
 def unpackable(cls: type) -> type:
-    """ A decorator that adds a method to a class so that all of its attributes
-    can be unpacked with **val as arguments to a function. E.g.
+    """ A class decorator that allows unpacking of all attributes of an object
+     with the double asterisk operator. E.g.
 
         @unpackable
         @dataclass
@@ -49,8 +49,9 @@ def unpackable(cls: type) -> type:
         for k in self.keys():
             yield getattr(self, k)
 
+    # HACK: I needed this somewhere else
     def update(self, values: dict):
-        for k,v in values.items():
+        for k, v in values.items():
             setattr(self, k, v)
 
     def items(self):
