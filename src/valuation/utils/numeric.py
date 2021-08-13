@@ -12,13 +12,13 @@ from valuation.utils.parallel import MapReduceJob, map_reduce
 T = TypeVar('T')
 
 
-def vanishing_derivatives(x: np.ndarray, min_values: int, eps: float) -> int:
+def vanishing_derivatives(x: np.ndarray, min_values: int, atol: float) -> int:
     """ Returns the number of rows whose empirical derivatives have converged
-        to zero, up to a tolerance of eps.
+        to zero, up to an absolute tolerance of atol.
     """
     last_values = x[:, -min_values - 1:]
     d = np.diff(last_values, axis=1)
-    zeros = np.isclose(d, 0.0, atol=eps).sum(axis=1)
+    zeros = np.isclose(d, 0.0, atol=atol).sum(axis=1)
     return int(np.sum(zeros >= min_values / 2))
 
 

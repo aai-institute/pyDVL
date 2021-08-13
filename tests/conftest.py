@@ -1,9 +1,10 @@
+from collections import OrderedDict
+
 import numpy as np
 import pytest
 
 from sklearn.linear_model import LinearRegression
-from typing import OrderedDict, Type
-from valuation.shapley import combinatorial_exact_shapley
+from typing import Type
 from valuation.utils import Dataset, Utility
 from valuation.utils.numeric import spearman
 
@@ -27,18 +28,18 @@ def memcached_client():
         raise e
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def boston_dataset():
     from sklearn import datasets
     return Dataset.from_sklearn(datasets.load_boston())
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def linear_dataset():
     from sklearn.utils import Bunch
     a = 2
     b = 0
-    x = np.arange(-1, 1, .25)
+    x = np.arange(-1, 1, .15)
     y = np.random.normal(loc=a * x + b, scale=0.1)
     db = Bunch()
     db.data, db.target = x.reshape(-1, 1), y
@@ -53,7 +54,7 @@ def polynomial(coefficients, x):
     return np.power(x, np.tile(powers, (len(x), 1)).T).T @ coefficients
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def polynomial_dataset(coefficients: np.ndarray):
     """ Coefficients must be for monomials of increasing degree """
     from sklearn.utils import Bunch
@@ -65,10 +66,10 @@ def polynomial_dataset(coefficients: np.ndarray):
     db.data, db.target = x.reshape(-1, 1), y
     poly = [f"{c} x^{i}" for i, c in enumerate(coefficients)]
     poly = " + ".join(poly)
-    db.DESCR = f"$y \sim N({poly}, 1)$"
+    db.DESCR = f"$y \\sim N({poly}, 1)$"
     db.feature_names = ["x"]
     db.target_names = ["y"]
-    return Dataset.from_sklearn(data=db, train_size=0.5)
+    return Dataset.from_sklearn(data=db, train_size=0.5), coefficients
 
 
 @pytest.fixture()
@@ -76,27 +77,49 @@ def scoring():
     return 'r2'
 
 
-@pytest.fixture()
-def exact_shapley(linear_dataset, scoring):
+@pytest.fixture(scope='session')
+def dummy_utility(data_size: int = 2000):
     from valuation.utils import SupervisedModel
     from numpy import ndarray
 
+    # Indices match values
+    x = np.arange(0, data_size, 1).reshape(-1, 1)
+    nil = np.zeros_like(x)
+    data = Dataset(x, nil, nil, nil, feature_names=["x"], target_names=["y"],
+                   description=["dummy"])
+
     class DummyModel(SupervisedModel):
-        def __init__(self):
-            self.magic_number = 0
+        """ Under this model each data point receives a score of index / max,
+        assuming that the values of training samples match their indices. """
+
+        def __init__(self, data: Dataset):
+            self.m = max(data.x_train)
+            self.utility = 0
 
         def fit(self, x: ndarray, y: ndarray):
-            self.magic_number = len(x)
+            self.utility = np.sum(x) / self.m
 
         def predict(self, x: ndarray) -> ndarray:
             return x
 
         def score(self, x: ndarray, y: ndarray) -> float:
-            return 1 - 1/(1 + self.magic_number)
+            return self.utility
 
-    u = Utility(DummyModel(), linear_dataset, None, enable_cache=False)
-    values_c = combinatorial_exact_shapley(u, progress=False)
-    return u, values_c
+    return Utility(DummyModel(data), data, scoring=None, enable_cache=False)
+
+
+@pytest.fixture(scope='session')
+def linear_utility(linear_dataset):
+    return Utility(LinearRegression(), data=linear_dataset, scoring=scoring)
+
+
+@pytest.fixture(scope='session')
+def exact_shapley(dummy_utility):
+    """ Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n """
+    u = dummy_utility
+    exact_values = OrderedDict({i: i / float(max(u.data.x_train))
+                                for i in u.data.indices})
+    return dummy_utility, exact_values
 
 
 class TolerateErrors:
@@ -122,19 +145,17 @@ class TolerateErrors:
         return True
 
 
-def check_total_value(u: Utility,
-                      values: OrderedDict,
-                      rtol: float = 0.01):
+def check_total_value(u: Utility, values: OrderedDict, atol: float = 1e-6):
     """ Checks absolute distance between total and added values.
      Shapley value is supposed to fulfill the total value axiom."""
     total_utility = u(u.data.indices)
     values = np.fromiter(values.values(), dtype=float, count=len(u.data))
-    # We use relative tolerances here because we don't have the range of the
-    # scorer.
-    assert np.isclose(values.sum(), total_utility, rtol=rtol)
+    # We could want relative tolerances here if we didn't have the range of
+    # the scorer.
+    assert np.isclose(values.sum(), total_utility, atol=atol)
 
 
-def check_exact(values: OrderedDict, exact_values: OrderedDict, eps: float):
+def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e-6):
     """ Compares ranks and values. """
 
     k = list(values.keys())
@@ -145,7 +166,7 @@ def check_exact(values: OrderedDict, exact_values: OrderedDict, eps: float):
     v = np.array(list(values.values()))
     ev = np.array(list(exact_values.values()))
 
-    assert np.allclose(v, ev, atol=eps)
+    assert np.allclose(v, ev, atol=atol)
 
 
 def check_rank_correlation(values: OrderedDict, exact_values: OrderedDict,
@@ -162,12 +183,12 @@ def check_rank_correlation(values: OrderedDict, exact_values: OrderedDict,
         succeed
     """
     # FIXME: estimate proper threshold for spearman
-    if n is not None:
+    if k is not None:
         raise NotImplementedError
     else:
-        n = len(values)
-    ranks = np.array(list(values.keys())[:n])
-    ranks_exact = np.array(list(exact_values.keys())[:n])
+        k = len(values)
+    ranks = np.array(list(values.keys())[:k])
+    ranks_exact = np.array(list(exact_values.keys())[:k])
 
     assert spearman(ranks, ranks_exact) >= threshold
 
