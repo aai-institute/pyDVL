@@ -220,11 +220,11 @@ class InterruptibleWorker(mp.Process):
         self._abort = abort
 
     def run(self):
-        task = self.tasks.get(timeout=2.0)  # Wait a bit during start-up (yikes)
+        task = self.tasks.get(timeout=1.0)  # Wait a bit during start-up (yikes)
         while True:
             if task is None:  # Indicates we are done
                 self.tasks.put(None)
-                return
+                break
 
             result = self._run(task)
 
@@ -234,13 +234,14 @@ class InterruptibleWorker(mp.Process):
             # This throws away our last results, but avoids a deadlock (can't
             # join the process if a queue has items)
             try:
-                task = self.tasks.get_nowait()
+                task = self.tasks.get(timeout=0.1)
                 if task is not None:
                     self.results.put(result)
-                else:
-                    self.tasks.put(None)
             except queue.Empty:
-                return
+                break
+
+        del self.tasks
+        del self.results
 
     def aborted(self):
         return self._abort.value is True
