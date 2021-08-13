@@ -71,7 +71,7 @@ class Utility:
         y = self.data.y_train[list(indices)]
         try:
             self.model.fit(x, y)
-            return scorer(self.model, self.data.x_test, self.data.y_test)
+            return float(scorer(self.model, self.data.x_test, self.data.y_test))
         except Exception as e:
             if self.catch_errors:
                 logger.warning(str(e))
