@@ -77,13 +77,12 @@ def scoring():
     return 'r2'
 
 
-@pytest.fixture(scope='session')
-def dummy_utility(data_size: int = 2000):
+def dummy_utility(num_samples: int = 10):
     from valuation.utils import SupervisedModel
     from numpy import ndarray
 
     # Indices match values
-    x = np.arange(0, data_size, 1).reshape(-1, 1)
+    x = np.arange(0, num_samples, 1).reshape(-1, 1)
     nil = np.zeros_like(x)
     data = Dataset(x, nil, nil, nil, feature_names=["x"], target_names=["y"],
                    description=["dummy"])
@@ -113,13 +112,13 @@ def linear_utility(linear_dataset):
     return Utility(LinearRegression(), data=linear_dataset, scoring=scoring)
 
 
-@pytest.fixture(scope='session')
-def exact_shapley(dummy_utility):
+@pytest.fixture(scope='function')
+def exact_shapley(num_samples):
     """ Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n """
-    u = dummy_utility
+    u = dummy_utility(num_samples)
     exact_values = OrderedDict({i: i / float(max(u.data.x_train))
                                 for i in u.data.indices})
-    return dummy_utility, exact_values
+    return u, exact_values
 
 
 class TolerateErrors:

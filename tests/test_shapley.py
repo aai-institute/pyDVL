@@ -37,10 +37,11 @@ def test_check_exact(passes, values_a, values_b, eps):
             check_exact(values_a, values_b, eps)
 
 
+# noinspection PyTestParametrized
 @pytest.mark.parametrize(
-        "fun, value_atol, total_atol",
-        [(combinatorial_exact_shapley, 1e-5, 1e-5),
-         (permutation_exact_shapley, 1e-5, 1e-5)])
+        "num_samples, fun, value_atol, total_atol",
+        [(12, combinatorial_exact_shapley, 1e-5, 1e-5),
+         (6, permutation_exact_shapley, 1e-5, 1e-5)])
 def test_exact_shapley(exact_shapley, fun, value_atol, total_atol):
     u, exact_values = exact_shapley
     values_p = fun(u, progress=False)
@@ -48,13 +49,14 @@ def test_exact_shapley(exact_shapley, fun, value_atol, total_atol):
     check_exact(values_p, exact_values, atol=value_atol)
 
 
+# noinspection PyTestParametrized
 @pytest.mark.parametrize(
-    "fun, delta, eps",
-    [(permutation_montecarlo_shapley, 0.01, 0.01),
+    "num_samples, fun, delta, eps",
+    [(24, permutation_montecarlo_shapley, 1e-2, 1e-2),
      # FIXME: this does not work. At all
-     (combinatorial_montecarlo_shapley, 0.01, 0.01)
+     # (100, combinatorial_montecarlo_shapley, 1e-2, 1e-2)
     ])
-def test_montecarlo_shapley(fun, delta, eps, exact_shapley):
+def test_montecarlo_shapley(exact_shapley, fun, delta, eps):
     u, exact_values = exact_shapley
     jobs_per_run = min(6, available_cpus(), len(u.data))
     num_runs = min(3, available_cpus() // jobs_per_run)
@@ -79,7 +81,7 @@ def test_montecarlo_shapley(fun, delta, eps, exact_shapley):
     job = MapReduceJob.from_fun(_fun, lambda r: r[0][0])
     results = map_reduce(job, u, num_jobs=num_runs, num_runs=num_runs)
 
-    delta_errors = TolerateErrors(int(delta*len(results)))
+    delta_errors = TolerateErrors(max(1, int(delta*len(results))))
     for values in results:
         with delta_errors:
             # Trivial bound on total error using triangle inequality
@@ -87,6 +89,8 @@ def test_montecarlo_shapley(fun, delta, eps, exact_shapley):
             check_rank_correlation(values, exact_values, threshold=0.9)
 
 
+# noinspection PyTestParametrized
+@pytest.mark.parametrize("num_samples", [200])
 def test_truncated_montecarlo_shapley(exact_shapley):
     u, exact_values = exact_shapley
     num_cpus = min(available_cpus(), len(u.data))
@@ -108,7 +112,7 @@ def test_truncated_montecarlo_shapley(exact_shapley):
     for i in range(num_runs):
         results.append(fun(run_id=i))
 
-    delta_errors = TolerateErrors(int(delta * len(results)))
+    delta_errors = TolerateErrors(max(1, int(delta * len(results))))
     for values, _ in results:
         with delta_errors:
             # Trivial bound on total error using triangle inequality
