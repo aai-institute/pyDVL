@@ -10,3 +10,8 @@ workflow in the [developer's readme](README-dev.md).
 * fix all 'em broken things.
 * pytest plugin for algorithms with epsilon,delta guarantees:
   run n times, expect roughly n*delta failures at most.
+
+## Influence functions
+
+As a basis this repository uses the following [reference implementation](https://github.com/nimarb/pytorch_influence_functions)
+as code basis.
