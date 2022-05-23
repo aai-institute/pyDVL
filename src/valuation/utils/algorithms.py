@@ -46,6 +46,7 @@ def conjugate_gradient(
         x += alpha * p
         r -= alpha * matrix_vector_product
 
+        # calculate next conjugate gradient
         new_r_dot_r = np.dot(r, r)
         beta = new_r_dot_r / r_dot_r
         p = beta * p + r
@@ -53,7 +54,6 @@ def conjugate_gradient(
         if r_dot_r <= damping:
             break
 
-        # calculate next conjugate gradient
         iteration += 1
 
     return x
