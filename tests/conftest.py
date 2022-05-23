@@ -6,6 +6,7 @@ import pytest
 from sklearn.linear_model import LinearRegression
 from typing import Type
 from valuation.utils import Dataset, Utility
+import logging
 from valuation.utils.numeric import spearman
 
 
@@ -33,22 +34,6 @@ def boston_dataset():
     from sklearn import datasets
     return Dataset.from_sklearn(datasets.load_boston())
 
-
-@pytest.fixture(scope="session")
-def linear_dataset():
-    from sklearn.utils import Bunch
-    a = 2
-    b = 0
-    x = np.arange(-1, 1, .15)
-    y = np.random.normal(loc=a * x + b, scale=0.1)
-    db = Bunch()
-    db.data, db.target = x.reshape(-1, 1), y
-    db.DESCR = f"y~N({a}*x + {b}, 1)"
-    db.feature_names = ["x"]
-    db.target_names = ["y"]
-    return Dataset.from_sklearn(data=db, train_size=0.66)
-
-
 def polynomial(coefficients, x):
     powers = np.arange(len(coefficients))
     return np.power(x, np.tile(powers, (len(x), 1)).T).T @ coefficients
@@ -72,10 +57,21 @@ def polynomial_dataset(coefficients: np.ndarray):
     return Dataset.from_sklearn(data=db, train_size=0.5), coefficients
 
 
-@pytest.fixture()
-def scoring():
-    return 'r2'
+@pytest.fixture(scope="function")
+def linear_dataset(a, b):
+    from sklearn.utils import Bunch
+    x = np.arange(-1, 1, .25)
+    y = np.random.normal(loc=a * x + b, scale=0.1)
+    db = Bunch()
+    db.data, db.target = x.reshape(-1, 1), y
+    db.DESCR = f"y~N({a}*x + {b}, 1)"
+    db.feature_names = ["x"]
+    db.target_names = ["y"]
+    return Dataset.from_sklearn(data=db, train_size=0.8)
 
+@pytest.fixture(scope='session')
+def linear_utility(linear_dataset):
+    return Utility(LinearRegression(), data=linear_dataset, scoring='r2')
 
 def dummy_utility(num_samples: int = 10):
     from valuation.utils import SupervisedModel
@@ -107,13 +103,8 @@ def dummy_utility(num_samples: int = 10):
     return Utility(DummyModel(data), data, scoring=None, enable_cache=False)
 
 
-@pytest.fixture(scope='session')
-def linear_utility(linear_dataset):
-    return Utility(LinearRegression(), data=linear_dataset, scoring=scoring)
-
-
 @pytest.fixture(scope='function')
-def exact_shapley(num_samples):
+def analytic_shapley(num_samples):
     """ Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n """
     u = dummy_utility(num_samples)
     exact_values = OrderedDict({i: i / float(max(u.data.x_train))
@@ -191,5 +182,3 @@ def check_rank_correlation(values: OrderedDict, exact_values: OrderedDict,
 
     assert spearman(ranks, ranks_exact) >= threshold
 
-
-# start_logging_server()

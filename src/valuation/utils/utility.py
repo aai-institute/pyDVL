@@ -17,7 +17,8 @@ class Utility:
 
     def __init__(self, model: SupervisedModel, data: Dataset,
                  scoring: Optional[Scorer],
-                 catch_errors: bool = True, enable_cache: bool = True,
+                 default_score: float = 0,
+                 catch_errors: bool = True, enable_cache: bool = False,
                  cache_options: MemcachedConfig = None):
         """
         :param model: Any supervised model
@@ -26,6 +27,8 @@ class Utility:
             a scorer callable or None for the default `model.score()`. Greater
             values must be better. If they are not, a negated version can be
             used (see `make_scorer`)
+        :param default_score: score in the case of models that have not been fit, 
+            e.g. when no train data is passed.
         :param catch_errors: set to True to return np.nan if fit() fails. This
             hack helps when a step in a pipeline fails if there are too few data
             points
@@ -34,6 +37,7 @@ class Utility:
         self.model = model
         self.data = data
         self.scoring = scoring
+        self.default_score = default_score
         self.catch_errors = catch_errors
 
         if enable_cache:
@@ -65,7 +69,7 @@ class Utility:
         on the test data.
         """
         if not indices:
-            return 0.0
+            return self.default_score
         scorer = check_scoring(self.model, self.scoring)
         x = self.data.x_train[list(indices)]
         y = self.data.y_train[list(indices)]

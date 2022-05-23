@@ -20,10 +20,7 @@ Identity = lambda x: x
 
 
 def available_cpus():
-    from platform import system
-    if system() == 'Windows':
-        return os.cpu_count()
-    return len(os.sched_getaffinity(0))
+    return os.cpu_count()
 
 
 class MapReduceJob(Generic[T]):
