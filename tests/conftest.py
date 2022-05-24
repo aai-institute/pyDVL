@@ -8,6 +8,9 @@ from typing import Type
 from valuation.utils import Dataset, Utility
 import logging
 from valuation.utils.numeric import spearman
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import LinearRegression
 
 
 @pytest.fixture(scope="function")
@@ -44,9 +47,9 @@ def polynomial_dataset(coefficients: np.ndarray):
     """ Coefficients must be for monomials of increasing degree """
     from sklearn.utils import Bunch
 
-    x = np.arange(-1, 1, .1)
+    x = np.arange(-1, 1, .2)
     locs = polynomial(coefficients, x)
-    y = np.random.normal(loc=locs, scale=0.1)
+    y = np.random.normal(loc=locs, scale=0.3)
     db = Bunch()
     db.data, db.target = x.reshape(-1, 1), y
     poly = [f"{c} x^{i}" for i, c in enumerate(coefficients)]
@@ -56,6 +59,9 @@ def polynomial_dataset(coefficients: np.ndarray):
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.5), coefficients
 
+@pytest.fixture(scope="function")
+def polynomial_pipeline(coefficients):
+    return make_pipeline(PolynomialFeatures(len(coefficients)-1), LinearRegression())
 
 @pytest.fixture(scope="function")
 def linear_dataset(a, b):

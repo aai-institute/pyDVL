@@ -289,7 +289,7 @@ def permutation_montecarlo_shapley(u: Utility,
                 prev_score = score
             values = np.concatenate([values, marginals], axis=1)
         # Careful: for some models there might be nans, e.g. for i=0 or i=1!
-        return np.nansum(values, axis=1)
+        return np.sum(values, axis=1)
 
     backend = make_nested_backend('loky')()
     results = Parallel(n_jobs=num_jobs, backend=backend) \

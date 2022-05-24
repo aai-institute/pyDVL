@@ -18,7 +18,7 @@ class Utility:
     def __init__(self, model: SupervisedModel, data: Dataset,
                  scoring: Optional[Scorer],
                  default_score: float = 0,
-                 catch_errors: bool = True, enable_cache: bool = False,
+                 catch_errors: bool = True, enable_cache: bool = True,
                  cache_options: MemcachedConfig = None):
         """
         :param model: Any supervised model
