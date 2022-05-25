@@ -10,7 +10,7 @@ from typing import Callable, Iterable
 from pymemcache import MemcacheUnexpectedCloseError
 from pymemcache.client import Client, RetryingClient
 from pymemcache.serde import PickleSerde
-from pyhash import spooky_64
+from hashlib import blake2b
 from cloudpickle import Pickler
 from io import BytesIO
 
@@ -129,8 +129,8 @@ def memcached(client_config: ClientConfig = None,
                 # FIXME: determine right bit size
                 # NB: I need to create the spooky_64 object here because it can't be
                 #  pickled
-                hasher = spooky_64(seed=0)
-                key = str(hasher(signature + arg_signature)).encode('ASCII')
+                hasher = blake2b
+                key = str(hasher(signature + arg_signature)).replace(" ", "").encode('ASCII')
                 result = None
                 try:
                     result = self.client.get(key)

@@ -157,12 +157,19 @@ def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e
     k = list(values.keys())
     ek = list(exact_values.keys())
 
-    assert np.all(k == ek)
+    assert np.all(k == ek), "Ranks do not match"
 
     v = np.array(list(values.values()))
     ev = np.array(list(exact_values.values()))
 
     assert np.allclose(v, ev, atol=atol)
+
+def check_values(values: OrderedDict, exact_values: OrderedDict, perc_atol: float = 1):
+    for key in values:
+        if exact_values[key] == 0:
+            assert abs(values[key])*100 < perc_atol
+        else:
+            assert abs(values[key] - exact_values[key])/exact_values[key]*100 < perc_atol
 
 
 def check_rank_correlation(values: OrderedDict, exact_values: OrderedDict,
