@@ -1,8 +1,6 @@
-from typing import Callable, Protocol, TypeVar, NewType
-
-import torch
+from typing import Callable, Protocol, TypeVar
 from numpy import ndarray
-import numpy as np
+from torch import tensor
 
 __all__ = ['SupervisedModel', 'Scorer', 'unpackable']
 
@@ -28,13 +26,13 @@ Scorer = TypeVar('Scorer',
 
 class TorchObjective(Protocol):
 
-    def __call__(self, x: torch.tensor, y: torch.tensor, **kwargs) -> torch.tensor:
+    def __call__(self, x: tensor, y: tensor, **kwargs) -> tensor:
         pass
 
 
 class BatchInfluenceFunction(Protocol):
 
-    def __call__(self, v: np.ndarray) -> np.ndarray:
+    def __call__(self, v: ndarray) -> ndarray:
         pass
 
 
