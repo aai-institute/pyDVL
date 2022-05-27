@@ -3,7 +3,7 @@ import pytest
 import torch.nn.functional as F
 from sklearn.model_selection import train_test_split
 
-from valuation.influence_functions.main import influence_functions
+from valuation.influence_functions.batched_influence_functions import calculate_batched_influence_functions
 from valuation.models.linear_regression_torch_model import LRTorchModel
 from valuation.models.pytorch_model import PyTorchSupervisedModel
 from valuation.models.twice_differentiable import TwiceDifferentiable
@@ -38,7 +38,7 @@ def test_influences(
     model = PyTorchSupervisedModel(LRTorchModel(n_in_features, 1), objective)
     model.fit(dataset.x_train, dataset.y_train)
     utility = Utility(model, dataset, objective)
-    batch_influence_functions = influence_functions(utility, progress=True)
+    batch_influence_functions = calculate_batched_influence_functions(utility, progress=True)
 
     twd: TwiceDifferentiable = model
     test_grads = twd.grad(dataset.x_test, dataset.x_test)
