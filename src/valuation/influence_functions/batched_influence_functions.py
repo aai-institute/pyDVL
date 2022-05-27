@@ -16,7 +16,7 @@ def calculate_batched_influence_functions(utility: Utility, progress: bool = Fal
     :param utility: Utility object with model, data, and scoring function. The model has to inherit from the
     TwiceDifferentiable interface.
     :param progress: whether to display progress bars
-    :returns: A function which takes a vector of size [M, K] and outputs a matrix of [M, N]. M is the number of test
+    :returns: A function which takes a vector of size [N, K] and outputs a matrix of [N, M]. M is the number of test
     samples, N is the number of train samples and K is the number of features in the input space.
     """
     model = utility.model
