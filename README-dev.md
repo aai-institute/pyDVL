@@ -5,6 +5,17 @@ for building, testing, documentation and configuration management.
 
 ## Local Development
 
+This project uses the [black](https://github.com/psf/black) source code formatter
+and [pre-commit](https://pre-commit.com/) to invoke it as a Git prme-commit hook.
+
+When first cloning the repository, run the following command (after
+setting up your virtualenv with dev dependencies installed, see below) to set up
+the local Git hook:
+
+```shell script
+pre-commit install
+```
+
 Automated builds, tests, generation of docu and publishing are handled by CI/CD
 pipelines. You will find an initial version of the pipeline in this repo. Below
 are further details on testing and documentation.

@@ -1,4 +1,5 @@
 tox
+black
 pytest
 jupyter
 bump2version

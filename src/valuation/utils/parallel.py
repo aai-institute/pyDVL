@@ -5,29 +5,30 @@ This module provides utility functions to run these in parallel and multiple
 times, then gather the results for later processing / reporting.
 """
 import inspect
+import multiprocessing as mp
 import os
 import queue
-import multiprocessing as mp
+from typing import Any, Callable, Collection, Generic, List, Optional, Type, TypeVar
 
-from tqdm import tqdm
 from joblib import Parallel, delayed
-from typing import Any, Callable, Collection, Generic, List, Optional, Type, \
-    TypeVar
+from tqdm import tqdm
 
-T = TypeVar('T')
-R = TypeVar('R')
+T = TypeVar("T")
+R = TypeVar("R")
 Identity = lambda x: x
 
 
 def available_cpus():
     from platform import system
-    if system() == 'Windows':
+
+    if system() == "Windows":
         return os.cpu_count()
     return len(os.sched_getaffinity(0))
 
 
 class MapReduceJob(Generic[T]):
-    """ There are probably 77 libraries to do just this """
+    """There are probably 77 libraries to do just this"""
+
     _job_id: int
     _run_id: int
 
@@ -40,10 +41,12 @@ class MapReduceJob(Generic[T]):
     @staticmethod
     # FIXME: Can't make the type for fun more specific,
     #  see https://github.com/python/mypy/issues/5876
-    def from_fun(fun: Callable[..., R],
-                 reducer: Callable[[List[R]], R] = Identity,
-                 job_id_arg: str = None, run_id_arg: str = None) \
-            -> 'MapReduceJob':
+    def from_fun(
+        fun: Callable[..., R],
+        reducer: Callable[[List[R]], R] = Identity,
+        job_id_arg: str = None,
+        run_id_arg: str = None,
+    ) -> "MapReduceJob":
         """
         :param fun:
         :param reducer: Not actually a reduce() operation but the reduction
@@ -68,19 +71,23 @@ class MapReduceJob(Generic[T]):
             def __call__(self, data, *args, **kwargs):
                 args = dict()
 
-                if run_id_arg is None and \
-                        'run_id' not in inspect.signature(fun).parameters.keys():
-                    del kwargs['run_id']
+                if (
+                    run_id_arg is None
+                    and "run_id" not in inspect.signature(fun).parameters.keys()
+                ):
+                    del kwargs["run_id"]
                 elif run_id_arg is not None:
-                    kwargs[run_id_arg] = kwargs['run_id']
-                    del kwargs['run_id']
+                    kwargs[run_id_arg] = kwargs["run_id"]
+                    del kwargs["run_id"]
 
-                if job_id_arg is None and \
-                        'job_id' not in inspect.signature(fun).parameters.keys():
-                    del kwargs['job_id']
+                if (
+                    job_id_arg is None
+                    and "job_id" not in inspect.signature(fun).parameters.keys()
+                ):
+                    del kwargs["job_id"]
                 elif job_id_arg is not None:
-                    kwargs[job_id_arg] = kwargs['job_id']
-                    del kwargs['job_id']
+                    kwargs[job_id_arg] = kwargs["job_id"]
+                    del kwargs["job_id"]
 
                 return fun(data, *args, **kwargs)
 
@@ -90,16 +97,17 @@ class MapReduceJob(Generic[T]):
         return NewJob()
 
 
-def make_nested_backend(backend: str = 'loky'):
-    """ Creates a joblib backend allowing nested Parallel() calls (which by
+def make_nested_backend(backend: str = "loky"):
+    """Creates a joblib backend allowing nested Parallel() calls (which by
     default would use SequentialBackend)
 
     See https://github.com/joblib/joblib/issues/947
     """
 
     from importlib import import_module
+
     m = import_module("joblib._parallel_backends")
-    base_name = backend.capitalize() + 'Backend'
+    base_name = backend.capitalize() + "Backend"
     base_cls = getattr(m, base_name)
 
     def get_nested_backend(self):
@@ -109,26 +117,28 @@ def make_nested_backend(backend: str = 'loky'):
         backend.nested_level = -640  # 640 ought to be enough for anybody :D
         return backend, None
 
-    return type("Nested" + base_name, (base_cls,),
-                dict(get_nested_backend=get_nested_backend))
+    return type(
+        "Nested" + base_name, (base_cls,), dict(get_nested_backend=get_nested_backend)
+    )
 
 
 def chunkify(fun, data, njobs: int, run_id: int) -> List:
     # Splits a list of values into chunks for each job
     n = len(data)
     chunk_size = 1 + n // njobs
-    arg_values = [data[i:min(i + chunk_size, n)]
-                  for i in data[0:n:chunk_size]]
+    arg_values = [data[i : min(i + chunk_size, n)] for i in data[0:n:chunk_size]]
     for j, vv in enumerate(arg_values, start=1):
         yield delayed(fun)(vv, job_id=j, run_id=run_id + 1)
 
 
-def map_reduce(fun: MapReduceJob[T],
-               data: Collection[T],
-               num_jobs: int = 1,
-               num_runs: int = 1,
-               backend: str = 'loky') -> List:
-    """ Takes an embarrassingly parallel fun and runs ot in num_jobs parallel
+def map_reduce(
+    fun: MapReduceJob[T],
+    data: Collection[T],
+    num_jobs: int = 1,
+    num_runs: int = 1,
+    backend: str = "loky",
+) -> List:
+    """Takes an embarrassingly parallel fun and runs ot in num_jobs parallel
     jobs, splitting arg into the same number of chunks, one for each job.
 
     It repeats the process num_runs times, allocating jobs across runs. E.g.
@@ -150,8 +160,9 @@ def map_reduce(fun: MapReduceJob[T],
         return [fun.reduce([job_result])]
 
     if num_jobs <= num_runs:
-        ret = Parallel(n_jobs=num_jobs)(delayed(fun)(data, job_id=1, run_id=r+1)
-                                         for r in range(num_runs))
+        ret = Parallel(n_jobs=num_jobs)(
+            delayed(fun)(data, job_id=1, run_id=r + 1) for r in range(num_runs)
+        )
         # HACK for consistency with fun.reduce()'s expected input format
         ret = [[r] for r in ret]
     else:
@@ -160,9 +171,9 @@ def map_reduce(fun: MapReduceJob[T],
         runs = []
         for run in range(num_runs - remainder):
             if num_jobs_sub > 1:
-                job = lambda run_id=run: \
-                        Parallel(n_jobs=num_jobs_sub) \
-                                (chunkify(fun, data, num_jobs_sub, run_id))
+                job = lambda run_id=run: Parallel(n_jobs=num_jobs_sub)(
+                    chunkify(fun, data, num_jobs_sub, run_id)
+                )
             else:
                 job = lambda run_id=run: [fun(data, job_id=1, run_id=run_id)]
             runs.append(job)
@@ -172,13 +183,14 @@ def map_reduce(fun: MapReduceJob[T],
         if remainder > 0:
             num_jobs_sub += 1
             for run in range(num_runs - remainder, num_runs):
-                runs.append(lambda run_id=run:
-                                Parallel(n_jobs=num_jobs_sub)
-                                    (chunkify(fun, data, num_jobs_sub, run_id)))
+                runs.append(
+                    lambda run_id=run: Parallel(n_jobs=num_jobs_sub)(
+                        chunkify(fun, data, num_jobs_sub, run_id)
+                    )
+                )
 
         backend = make_nested_backend(backend)()
-        ret = Parallel(n_jobs=num_runs, backend=backend) \
-            (delayed(r)() for r in runs)
+        ret = Parallel(n_jobs=num_runs, backend=backend)(delayed(r)() for r in runs)
 
     for i, r in enumerate(ret):
         ret[i] = fun.reduce(r)
@@ -187,7 +199,7 @@ def map_reduce(fun: MapReduceJob[T],
 
 
 class InterruptibleWorker(mp.Process):
-    """ A simple consumer worker using two queues.
+    """A simple consumer worker using two queues.
 
     To use, subclass and implement `_run(self, task) -> result`. See e.g.
     `ShapleyWorker`, then instantiate using `Coordinator` and the methods
@@ -195,13 +207,11 @@ class InterruptibleWorker(mp.Process):
 
      TODO: use shared memory to avoid copying data
      FIXME: I don't need both the abort flag and the None task
-     """
+    """
 
-    def __init__(self,
-                 worker_id: int,
-                 tasks: mp.Queue,
-                 results: mp.Queue,
-                 abort: mp.Value):
+    def __init__(
+        self, worker_id: int, tasks: mp.Queue, results: mp.Queue, abort: mp.Value
+    ):
         """
         :param worker_id: mostly for display purposes
         :param tasks: queue of incoming tasks for the Worker. A task of `None`
@@ -251,22 +261,27 @@ class InterruptibleWorker(mp.Process):
 
 
 class Coordinator:
-    """ Meh... """
+    """Meh..."""
+
     def __init__(self, processor: Callable[[Any], None]):
         self.tasks_q = mp.Queue()
         self.results_q = mp.Queue()
-        self.abort_flag = mp.Value('b', False)
+        self.abort_flag = mp.Value("b", False)
         self.workers = []
         self.process_result = processor
 
     def instantiate(self, n: int, cls: Type[InterruptibleWorker], **kwargs):
         if not self.workers:
-            self.workers = [cls(worker_id=i+1,
-                                tasks=self.tasks_q,
-                                results=self.results_q,
-                                abort=self.abort_flag,
-                                **kwargs)
-                            for i in range(n)]
+            self.workers = [
+                cls(
+                    worker_id=i + 1,
+                    tasks=self.tasks_q,
+                    results=self.results_q,
+                    abort=self.abort_flag,
+                    **kwargs,
+                )
+                for i in range(n)
+            ]
         else:
             raise ValueError("Workers already instantiated")
 
@@ -318,13 +333,13 @@ class Coordinator:
         self.clear_results(pbar)
 
         # results_q should be empty now
-        assert self.results_q.empty(), \
-            f"WTF? {self.results_q.qsize()} pending results"
+        assert self.results_q.empty(), f"WTF? {self.results_q.qsize()} pending results"
         # HACK: the peeking in workers' run() might empty the queue temporarily
         #  between the peeking and the restoring temporarily, so we allow for
         #  some timeout.
-        assert self.tasks_q.get(timeout=0.1) is None, \
-            f"WTF? {self.tasks_q.qsize()} pending tasks"
+        assert (
+            self.tasks_q.get(timeout=0.1) is None
+        ), f"WTF? {self.tasks_q.qsize()} pending tasks"
 
         for w in self.workers:
             w.join()
