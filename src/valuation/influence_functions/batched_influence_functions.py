@@ -6,7 +6,9 @@ from valuation.utils.algorithms import conjugate_gradient
 from valuation.utils.types import BatchInfluenceFunction
 
 
-def calculate_batched_influence_functions(utility: Utility, progress: bool = False) -> BatchInfluenceFunction:
+def calculate_batched_influence_functions(
+    utility: Utility, progress: bool = False
+) -> BatchInfluenceFunction:
     """
     Calculates the influence functions I(v), which can be used to obtain the influences for data samples v. It does
     so by calculating the gradient of the loss for each data sample with respect to the parameters. Subsequently it
@@ -23,10 +25,12 @@ def calculate_batched_influence_functions(utility: Utility, progress: bool = Fal
     data = utility.data
 
     if not issubclass(model.__class__, TwiceDifferentiable):
-        raise AttributeError("Model is not twice differentiable, please implement interface.")
+        raise AttributeError(
+            "Model is not twice differentiable, please implement interface."
+        )
 
     twd: TwiceDifferentiable = model
     grad = twd.grad(data.x_test, data.y_test, progress=progress)
     hvp = lambda v: twd.hvp(data.x_test, data.y_test, v, progress=progress)
     influence_factors = conjugate_gradient(hvp, grad)[0]
-    return lambda v: (-1 * contract('ia,ja->ij', v, influence_factors))
+    return lambda v: (-1 * contract("ia,ja->ij", v, influence_factors))

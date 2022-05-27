@@ -4,7 +4,6 @@ import numpy as np
 
 
 class TwiceDifferentiable:
-
     @abstractmethod
     def grad(self, x: np.ndarray, y: np.ndarray, progress: bool = False) -> np.ndarray:
         """
@@ -13,7 +12,9 @@ class TwiceDifferentiable:
         pass
 
     @abstractmethod
-    def hvp(self, x: np.ndarray, y: np.ndarray, v: np.ndarray, progress: bool = False) -> np.ndarray:
+    def hvp(
+        self, x: np.ndarray, y: np.ndarray, v: np.ndarray, progress: bool = False
+    ) -> np.ndarray:
         """
         Calculate the hessian vector product over the loss with all input parameters x and y with the vector v.
         """

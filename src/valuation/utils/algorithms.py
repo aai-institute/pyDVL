@@ -1,5 +1,6 @@
 from types import LambdaType
 from typing import Callable, Union
+
 import numpy as np
 from opt_einsum import contract
 from scipy.sparse.linalg._isolve.iterative import _get_atol
@@ -68,8 +69,13 @@ def conjugate_gradient(
         )
 
         if tol is not None:
-            residual = np.linalg.norm(A_fn(x)[not_yet_converged_indices] - b[not_yet_converged_indices], axis=1)
-            converged[not_yet_converged_indices] = residual <= atol[not_yet_converged_indices]
+            residual = np.linalg.norm(
+                A_fn(x)[not_yet_converged_indices] - b[not_yet_converged_indices],
+                axis=1,
+            )
+            converged[not_yet_converged_indices] = (
+                residual <= atol[not_yet_converged_indices]
+            )
 
         if np.all(converged):
             break

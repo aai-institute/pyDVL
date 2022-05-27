@@ -4,7 +4,6 @@ import torch.nn as nn
 
 
 class LRTorchModel(nn.Module):
-
     def __init__(self, n_input: int, n_output: int):
         super().__init__()
         self.n_input = n_input

@@ -18,18 +18,26 @@ def flatten_gradient(grad):
 
 
 class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
-
     def grad(self, x: np.ndarray, y: np.ndarray, progress: bool = False) -> np.ndarray:
 
         x = tt(x)
         y = tt(y)
 
         grads = [
-            flatten_gradient(autograd.grad(self.objective(self.model(x[i]), y[i]), self.model.parameters())).detach().numpy() for i in maybe_progress(range(len(x)), progress)
+            flatten_gradient(
+                autograd.grad(
+                    self.objective(self.model(x[i]), y[i]), self.model.parameters()
+                )
+            )
+            .detach()
+            .numpy()
+            for i in maybe_progress(range(len(x)), progress)
         ]
         return np.stack(grads, axis=0)
 
-    def hvp(self, x: np.ndarray, y: np.ndarray, v: np.ndarray, progress: bool = False) -> np.ndarray:
+    def hvp(
+        self, x: np.ndarray, y: np.ndarray, v: np.ndarray, progress: bool = False
+    ) -> np.ndarray:
 
         x, y, v = tt(x), tt(y), tt(v)
         loss = self.objective(self.model(x), y)
@@ -38,8 +46,9 @@ class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
         z = (grad_f * Variable(v)).sum(dim=1)
         all_flattened_grads = [
             flatten_gradient(
-                autograd.grad(z[i], self.model.parameters(), retain_graph=True)) for i
-            in maybe_progress(range(len(x)), progress)
+                autograd.grad(z[i], self.model.parameters(), retain_graph=True)
+            )
+            for i in maybe_progress(range(len(x)), progress)
         ]
         hvp = torch.stack([grad.contiguous().view(-1) for grad in all_flattened_grads])
         return hvp.detach().numpy()
@@ -49,7 +58,7 @@ class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
         model: nn.Module,
         objective: TorchObjective = None,
         num_epochs: int = 1,
-        batch_size: int = 64
+        batch_size: int = 64,
     ):
         self.model = model
         self.objective = objective
@@ -64,7 +73,6 @@ class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
         optimizer = Adam(self.model.parameters())
 
         class InternalDataset(Dataset):
-
             def __len__(self):
                 return len(x)
 
@@ -79,7 +87,7 @@ class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
                 batch_x, batch_y = train_batch
                 pred_y = self.model(batch_x)
                 loss = self.objective(pred_y, batch_y)
-                print('train loss: ', loss.item())
+                print("train loss: ", loss.item())
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
