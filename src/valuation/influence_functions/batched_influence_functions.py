@@ -26,7 +26,7 @@ def calculate_batched_influence_functions(utility: Utility, progress: bool = Fal
         raise AttributeError("Model is not twice differentiable, please implement interface.")
 
     twd: TwiceDifferentiable = model
-    grad = twd.grad(data.x_train, data.y_train, progress=progress)
-    hvp = lambda v: twd.hvp(data.x_train, data.y_train, v, progress=progress)
+    grad = twd.grad(data.x_test, data.y_test, progress=progress)
+    hvp = lambda v: twd.hvp(data.x_test, data.y_test, v, progress=progress)
     influence_factors = conjugate_gradient(hvp, grad)[0]
-    return lambda v: contract('ia,ja->ij', v, influence_factors)
+    return lambda v: (-1 * contract('ia,ja->ij', v, influence_factors))

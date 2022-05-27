@@ -28,7 +28,7 @@ def create_random_dataset(
 def test_influences(
     x: np.ndarray,
     y: np.ndarray,
-    train_size: int = 0.2
+    train_size: int = 0.8
 ):
     n_in_features = x.shape[1]
     x_train, x_test, y_train, y_test = train_test_split(x, y, random_state=0, train_size=train_size)
@@ -41,6 +41,6 @@ def test_influences(
     batch_influence_functions = calculate_batched_influence_functions(utility, progress=True)
 
     twd: TwiceDifferentiable = model
-    test_grads = twd.grad(dataset.x_test, dataset.x_test)
-    influences = batch_influence_functions(test_grads)
+    train_grads = twd.grad(dataset.x_train, dataset.y_train)
+    influences = batch_influence_functions(train_grads)
     assert np.all(np.logical_not(np.isnan(influences)))
