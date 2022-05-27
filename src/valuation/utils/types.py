@@ -1,4 +1,5 @@
 from typing import Callable, Protocol, TypeVar
+
 from numpy import ndarray
 from torch import tensor
 
