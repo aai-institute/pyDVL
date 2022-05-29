@@ -119,7 +119,7 @@ def test_montecarlo_shapley(exact_shapley, fun, delta, eps):
 
 
 # noinspection PyTestParametrized
-@pytest.mark.flaky(reruns=3)
+@pytest.mark.skip("This test is flaky.")
 @pytest.mark.parametrize("num_samples", [200])
 def test_truncated_montecarlo_shapley(exact_shapley):
     u, exact_values = exact_shapley
