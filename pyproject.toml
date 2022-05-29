@@ -1,7 +1,7 @@
 [build-system]
 # Must be kept in sync with `requirements.txt`
 requires = [
-    "setuptools >= 46.0.0",
+    "setuptools >= 46.0.0, < 58.0.0",
     "setuptools_scm >= 2.0.0, <3"
 ]
 build-backend = "setuptools.build_meta"
