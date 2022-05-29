@@ -3,7 +3,7 @@ Distributed caching of functions, using memcached.
 TODO: wrap this to allow for different backends
 """
 import socket
-from dataclasses import dataclass, make_dataclass
+from dataclasses import dataclass, field, make_dataclass
 from functools import wraps
 from io import BytesIO
 from time import time
@@ -34,7 +34,7 @@ class ClientConfig:
 @unpackable
 @dataclass
 class MemcachedConfig:
-    client = ClientConfig()
+    client_config: ClientConfig = field(default_factory=ClientConfig)
     threshold: float = 0.3
     ignore_args: Iterable[str] = None
 
