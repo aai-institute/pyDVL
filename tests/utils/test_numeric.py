@@ -2,6 +2,7 @@ from functools import reduce
 
 import numpy as np
 import pytest
+import logging
 
 from typing import List
 from valuation.utils import MapReduceJob, available_cpus, map_reduce
@@ -30,25 +31,21 @@ def test_powerset():
 
     assert all([np.math.comb(n, j) for j in range(n+1)] == sizes)
 
-
-@pytest.mark.timeout(5)
-@pytest.mark.parametrize("n", [0, 8])
+@pytest.mark.parametrize("n", [0, 3, 5])
 def test_random_powerset(n):
-    with pytest.raises(TypeError):
-        # noinspection PyTypeChecker
-        set(random_powerset(1, max_subsets=1))
+    s = np.arange(1, n+1)
+    num_cpus = available_cpus()
+    result = random_powerset(s, max_subsets=5e+3, num_jobs=num_cpus)
+    result_exact = set(powerset(s))
+    count_powerset = {key: 0 for key in result_exact}
+    logging.info(f"This is result_exact: {result_exact}")
 
-    delta = 0.2
-    reps = 5
-    job = MapReduceJob.from_fun(_random_powerset)
-    results = map_reduce(job, [n], num_runs=reps)
-
-    from tests.conftest import TolerateErrors
-    delta_errors = TolerateErrors(int(delta * reps))
-    for r in results:
-        with delta_errors:
-            assert np.all(r)
-
+    for res_pow in result:
+        res_pow = tuple(np.sort(res_pow))
+        count_powerset[tuple(res_pow)] += 1
+    value_counts = list(count_powerset.values())
+    logging.info(f"This is value_counts: {value_counts}")
+    assert 10 * np.std(value_counts) < np.mean(value_counts)
 
 def _random_powerset(data: List[int]):
     n = data[0]  # yuk... map_reduce always sends lists

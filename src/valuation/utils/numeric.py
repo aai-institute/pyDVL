@@ -90,6 +90,8 @@ def random_powerset(s: np.ndarray,
         ret = map_reduce(job, list(range(n + 1)), num_jobs=num_jobs)
         return ret[0]
 
+    import logging
+    logging.info(f"This is subset_prob: {subset_probabilities(n)}")
     while total <= max_subsets:
         if dist == PowerSetDistribution.WEIGHTED:
             k = np.random.choice(np.arange(n + 1), p=subset_probabilities(n))

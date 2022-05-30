@@ -330,7 +330,8 @@ def combinatorial_montecarlo_shapley(u: Utility,
                 values[i] += (u({idx}.union(s)) - u(s)) \
                              / np.math.comb(n-1, len(s))
 
-        correction = 1 if dist == PowerSetDistribution.WEIGHTED else 2**(n-1)/n
+        # correction = 1 if dist == PowerSetDistribution.WEIGHTED else 2**(n-1)/n
+        correction = 1
         return correction * values / max_iterations
 
     job = MapReduceJob.from_fun(fun, np.concatenate)

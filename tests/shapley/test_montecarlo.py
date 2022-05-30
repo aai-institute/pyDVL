@@ -18,7 +18,7 @@ from valuation.shapley import combinatorial_exact_shapley
     "num_samples, fun, perc_atol, max_iterations",
     [
     # (12, permutation_montecarlo_shapley, 10, 1),
-     (6, combinatorial_montecarlo_shapley, 10, 1e+4),
+     (7, combinatorial_montecarlo_shapley, 10, 1e+3),
     ])
 def test_analytic_montecarlo_shapley(analytic_shapley, fun, perc_atol, max_iterations):
     u, exact_values = analytic_shapley
