@@ -1,15 +1,22 @@
 """ FIXME: more to do... """
 
+import pytest
 from sklearn.linear_model import LinearRegression
 
 from valuation.utils import MemcachedConfig, Utility, powerset
 
 
 # noinspection PyUnresolvedReferences
+@pytest.mark.parametrize(
+    "a, b, num_points",
+    [
+        (2, 0, 8),
+    ],
+)
 def test_cache(linear_dataset, memcache_client_config):
     u = Utility(
         model=LinearRegression(),
-        data=linear_dataset(3, 2, 10),
+        data=linear_dataset,
         scoring="r2",
         enable_cache=True,
         cache_options=MemcachedConfig(
