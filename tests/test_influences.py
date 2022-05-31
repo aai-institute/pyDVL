@@ -3,10 +3,9 @@ import pytest
 import torch.nn.functional as F
 from sklearn.model_selection import train_test_split
 
-from valuation.influence_functions.batched_influence_functions import calculate_batched_influence_functions
+from valuation.influence_functions.influence_functions import influences
 from valuation.models.linear_regression_torch_model import LRTorchModel
 from valuation.models.pytorch_model import PyTorchSupervisedModel
-from valuation.models.twice_differentiable import TwiceDifferentiable
 from valuation.utils import Utility, Dataset
 
 
@@ -23,11 +22,12 @@ def create_random_dataset(
 
 
 @pytest.mark.parametrize(
-    "x,y", [create_random_dataset(i, n_samples=1000) for i in range(1, 5)]
+    "x,y,n_jobs", [create_random_dataset(i, n_samples=1000) + (j, ) for i in range(1, 5) for j in [1, 2]]
 )
 def test_influences(
     x: np.ndarray,
     y: np.ndarray,
+    n_jobs: int,
     train_size: int = 0.8
 ):
     n_in_features = x.shape[1]
@@ -38,9 +38,7 @@ def test_influences(
     model = PyTorchSupervisedModel(LRTorchModel(n_in_features, 1), objective)
     model.fit(dataset.x_train, dataset.y_train)
     utility = Utility(model, dataset, objective)
-    batch_influence_functions = calculate_batched_influence_functions(utility, progress=True)
+    influence_values = influences(utility, progress=True, n_jobs=n_jobs)
 
-    twd: TwiceDifferentiable = model
-    train_grads = twd.grad(dataset.x_train, dataset.y_train)
-    influences = batch_influence_functions(train_grads)
-    assert np.all(np.logical_not(np.isnan(influences)))
+    assert np.all(np.logical_not(np.isnan(influence_values)))
+    assert influence_values.shape == (len(x_test), len(x_train))

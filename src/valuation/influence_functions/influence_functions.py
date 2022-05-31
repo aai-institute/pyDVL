@@ -1,0 +1,81 @@
+import functools
+import multiprocessing
+
+from opt_einsum import contract
+import numpy as np
+
+from valuation.models.pytorch_model import TwiceDifferentiable
+from valuation.utils import Utility, maybe_progress, MapReduceJob, map_reduce
+from valuation.utils.algorithms import conjugate_gradient
+
+
+def influences(
+    u: Utility, progress: bool = False, n_jobs: int = -1
+) -> np.ndarray:
+    """
+    Calculates the influences of the training points j on the test points i, with matrix I_(ij). It does so by
+    calculating the influence factors for all test points, with respect to the training points. Subsequently,
+    all influences get calculated over the train set.
+
+    :param u: Utility object with model, data, and scoring function. The model has to inherit from the
+    TwiceDifferentiable interface.
+    :param progress: whether to display progress bars.
+    :param n_jobs: The number of jobs to use for processing
+    :returns: A np.ndarray of size (N, M) where N is the number of training pointsand M is the number of test points.
+    """
+    model = u.model
+    data = u.data
+
+    # check if model support influence factors
+    if not issubclass(model.__class__, TwiceDifferentiable):
+        raise AttributeError(
+            "Model is not twice differentiable, please implement interface."
+        )
+
+    # verify cpu correctness
+    cpu_count = multiprocessing.cpu_count()
+    if n_jobs == -1:
+        n_jobs = cpu_count
+    elif n_jobs == 0 or n_jobs < -1 or n_jobs > cpu_count:
+        raise AttributeError(
+            "Either set n_jobs to -1 (for all cores) or to a positive number smaller than the real cpu count.")
+
+    # ------------------------------------------------------------------------------------------------------------------
+
+    twd: TwiceDifferentiable = model
+    hvp = lambda v: twd.hvp(data.x_train, data.y_train, v, progress=progress)
+
+    def _calculate_influence_factors(indices: np.ndarray, job_id: int) -> np.ndarray:
+        """
+        Calculates the influence factors, e.g. the inverse Hessian vector products if the test cores with respect
+        to the Hessian induced by all training points.
+
+        :param indices: A np.ndarray containing all indices of the test data which shall be evaluated in this run.
+        :param job_id: A id which describes the current job id.
+        :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension and test sample.
+        """
+        c_x_test, c_y_test = u.data.x_test[indices], u.data.y_test[indices]
+        test_grads = twd.grad(c_x_test, c_y_test, progress=progress)
+        return conjugate_gradient(hvp, test_grads)[0]
+
+    influence_factors_job = MapReduceJob.from_fun(_calculate_influence_factors, np.concatenate)
+    influence_factors = map_reduce(influence_factors_job, np.arange(len(u.data.x_test)), num_jobs=n_jobs)[0]
+
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def _calculate_influences(indices: np.ndarray, job_id: int) -> np.ndarray:
+        """
+        Calculates the influences from the influence factors and the scores of the training points.
+
+        :param indices: A np.ndarray containing all indices of the training data which shall be evaluated in this run.
+        :param job_id: A id which describes the current job id.
+        :returns: A np.ndarray of size (N, K) containing the influences for each test sample and train sample.
+        """
+        c_x_train, c_y_train = u.data.x_train[indices], u.data.y_train[indices]
+        train_grads = twd.grad(c_x_train, c_y_train)
+        return contract('ta,va->tv', influence_factors, train_grads)
+
+    influences_job = MapReduceJob.from_fun(_calculate_influences, functools.partial(np.concatenate, axis=1))
+    return map_reduce(influences_job, np.arange(len(u.data.x_train)), num_jobs=n_jobs)[0]
+
+

@@ -74,8 +74,3 @@ def unpackable(cls: type) -> type:
 class TorchObjective(Protocol):
     def __call__(self, x: tensor, y: tensor, **kwargs) -> tensor:
         pass
-
-
-class BatchInfluenceFunction(Protocol):
-    def __call__(self, v: ndarray) -> ndarray:
-        pass
