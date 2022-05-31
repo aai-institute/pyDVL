@@ -16,7 +16,7 @@ from valuation.shapley import (
     permutation_montecarlo_shapley,
     truncated_montecarlo_shapley,
 )
-from valuation.utils import Utility
+from valuation.utils import MemcachedConfig, Utility
 from valuation.utils.numeric import lower_bound_hoeffding
 from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
 
@@ -107,7 +107,7 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps):
     ],
 )
 def test_linear_montecarlo_shapley(
-    linear_dataset, fun, score_type, perc_atol, max_iterations
+    linear_dataset, fun, score_type, perc_atol, max_iterations, memcache_client_config
 ):
     num_jobs = min(8, available_cpus())
 
@@ -115,7 +115,10 @@ def test_linear_montecarlo_shapley(
 
     start_logging_server()
     linear_utility = Utility(
-        LinearRegression(), data=linear_dataset, scoring=score_type
+        LinearRegression(),
+        data=linear_dataset,
+        scoring=score_type,
+        cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
 
     values, _ = fun(
@@ -134,13 +137,21 @@ def test_linear_montecarlo_shapley(
     ],
 )
 def test_linear_montecarlo_with_outlier(
-    linear_dataset, fun, score_type, max_iterations, total_atol=1e-2
+    linear_dataset,
+    fun,
+    score_type,
+    max_iterations,
+    memcache_client_config,
+    total_atol=1e-2,
 ):
     outlier_idx = np.random.randint(len(linear_dataset.y_train))
     num_jobs = min(8, available_cpus())
     linear_dataset.y_train[outlier_idx] *= 10
     linear_utility = Utility(
-        LinearRegression(), data=linear_dataset, scoring=score_type
+        LinearRegression(),
+        data=linear_dataset,
+        scoring=score_type,
+        cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     shapley_values, _ = fun(
         linear_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs

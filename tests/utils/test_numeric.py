@@ -47,7 +47,7 @@ def test_random_powerset(n, max_subsets, memcache_client_config):
         s,
         max_subsets=max_subsets,
         num_jobs=num_cpus,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
+        client_config=memcache_client_config,
     )
     result_exact = set(powerset(s))
     count_powerset = {key: 0 for key in result_exact}
