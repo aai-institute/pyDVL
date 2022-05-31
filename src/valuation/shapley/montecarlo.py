@@ -318,8 +318,6 @@ def combinatorial_montecarlo_shapley(
 ) -> Tuple[OrderedDict, None]:
     """Computes an approximate Shapley value using the combinatorial
     definition and MonteCarlo samples.
-    Important: convergence is much slower than permutation based sampling, so
-    permutation_montecarlo_shapley should be preferred.
     """
     n = len(u.data)
 
@@ -334,7 +332,6 @@ def combinatorial_montecarlo_shapley(
                 subset,
                 dist=dist,
                 max_subsets=max_iterations,
-                client_config=u.cache_options.client_config,
             )
             # Normalization accounts for a uniform dist. on powerset (i.e. not
             # weighted by set size) and the montecarlo sampling

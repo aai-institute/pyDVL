@@ -9,7 +9,7 @@ from valuation.utils import MemcachedConfig, Utility, powerset
 def test_cache(linear_dataset, memcache_client_config):
     u = Utility(
         model=LinearRegression(),
-        data=linear_dataset,
+        data=linear_dataset(3, 2, 10),
         scoring="r2",
         enable_cache=True,
         cache_options=MemcachedConfig(
