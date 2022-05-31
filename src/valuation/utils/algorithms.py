@@ -54,6 +54,9 @@ def conjugate_gradient(
 
     while iteration < max_iters:
 
+        if np.any(np.isnan(p)):
+            print("Jagger")
+
         # remaining fields
         iteration += 1
         not_yet_converged_indices = np.argwhere(np.logical_not(converged))[:, 0]
