@@ -53,7 +53,7 @@ def test_linear(linear_dataset, score_type, perc_atol=1, total_atol=1e-5):
         (2, 0, 8, "r2"),
         (2, 1, 8, "r2"),
         (2, 1, 6, "neg_median_absolute_error"),
-        (2, 1, 8, "explained_variance"),
+        (2, 1, 6, "explained_variance"),
     ],
 )
 def test_linear_with_outlier(linear_dataset, score_type, total_atol=1e-5):
@@ -95,7 +95,7 @@ def test_polynomial(
     [
         (np.random.randint(-3, 3, size=3), "r2"),
         (np.random.randint(-3, 3, size=5), "neg_median_absolute_error"),
-        (np.random.randint(-3, 3, size=7), "explained_variance"),
+        (np.random.randint(-3, 3, size=5), "explained_variance"),
     ],
 )
 def test_polynomial_with_outlier(

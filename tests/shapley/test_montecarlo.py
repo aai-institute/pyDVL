@@ -40,8 +40,6 @@ def test_analytic_montecarlo_shapley(analytic_shapley, fun, perc_atol, max_itera
 
     values, _ = fun(u, max_iterations=max_iterations, progress=False, num_jobs=num_jobs)
 
-    logging.info(f"Values: {values}")
-    logging.info(f"Exact values: {exact_values}")
     check_values(values, exact_values, perc_atol=perc_atol)
 
 
@@ -125,8 +123,6 @@ def test_linear_montecarlo_shapley(
         linear_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
     )
     exact_values = combinatorial_exact_shapley(linear_utility, progress=False)
-    logging.info(f"Values: {values}")
-    logging.info(f"Exact values: {exact_values}")
     check_values(values, exact_values, perc_atol=perc_atol)
 
 
@@ -150,7 +146,6 @@ def test_linear_montecarlo_with_outlier(
     shapley_values, _ = fun(
         linear_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
     )
-    logging.info(f"shapley values: {shapley_values}")
     check_total_value(linear_utility, shapley_values, atol=total_atol)
 
     assert int(list(shapley_values.keys())[0]) == outlier_idx
