@@ -9,13 +9,11 @@ from valuation.utils import Utility, maybe_progress, MapReduceJob, map_reduce
 from valuation.utils.algorithms import conjugate_gradient
 
 
-def influences(
-    u: Utility, progress: bool = False, n_jobs: int = -1
-) -> np.ndarray:
+def influences(u: Utility, progress: bool = False, n_jobs: int = -1) -> np.ndarray:
     """
-    Calculates the influences of the training points j on the test points i, with matrix I_(ij). It does so by
+    Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
     calculating the influence factors for all test points, with respect to the training points. Subsequently,
-    all influences get calculated over the train set.
+    all influence get calculated over the train set.
 
     :param u: Utility object with model, data, and scoring function. The model has to inherit from the
     TwiceDifferentiable interface.
@@ -38,7 +36,8 @@ def influences(
         n_jobs = cpu_count
     elif n_jobs == 0 or n_jobs < -1 or n_jobs > cpu_count:
         raise AttributeError(
-            "Either set n_jobs to -1 (for all cores) or to a positive number smaller than the real cpu count.")
+            "Either set n_jobs to -1 (for all cores) or to a positive number smaller than the real cpu count."
+        )
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -58,24 +57,30 @@ def influences(
         test_grads = twd.grad(c_x_test, c_y_test, progress=progress)
         return conjugate_gradient(hvp, test_grads)[0]
 
-    influence_factors_job = MapReduceJob.from_fun(_calculate_influence_factors, np.concatenate)
-    influence_factors = map_reduce(influence_factors_job, np.arange(len(u.data.x_test)), num_jobs=n_jobs)[0]
+    influence_factors_job = MapReduceJob.from_fun(
+        _calculate_influence_factors, np.concatenate
+    )
+    influence_factors = map_reduce(
+        influence_factors_job, np.arange(len(u.data.x_test)), num_jobs=n_jobs
+    )[0]
 
     # ------------------------------------------------------------------------------------------------------------------
 
     def _calculate_influences(indices: np.ndarray, job_id: int) -> np.ndarray:
         """
-        Calculates the influences from the influence factors and the scores of the training points.
+        Calculates the influence from the influence factors and the scores of the training points.
 
         :param indices: A np.ndarray containing all indices of the training data which shall be evaluated in this run.
         :param job_id: A id which describes the current job id.
-        :returns: A np.ndarray of size (N, K) containing the influences for each test sample and train sample.
+        :returns: A np.ndarray of size (N, K) containing the influence for each test sample and train sample.
         """
         c_x_train, c_y_train = u.data.x_train[indices], u.data.y_train[indices]
         train_grads = twd.grad(c_x_train, c_y_train)
-        return contract('ta,va->tv', influence_factors, train_grads)
+        return contract("ta,va->tv", influence_factors, train_grads)
 
-    influences_job = MapReduceJob.from_fun(_calculate_influences, functools.partial(np.concatenate, axis=1))
-    return map_reduce(influences_job, np.arange(len(u.data.x_train)), num_jobs=n_jobs)[0]
-
-
+    influences_job = MapReduceJob.from_fun(
+        _calculate_influences, functools.partial(np.concatenate, axis=1)
+    )
+    return map_reduce(influences_job, np.arange(len(u.data.x_train)), num_jobs=n_jobs)[
+        0
+    ]

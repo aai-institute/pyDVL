@@ -3,16 +3,14 @@ import pytest
 import torch.nn.functional as F
 from sklearn.model_selection import train_test_split
 
-from valuation.influence_functions.influence_functions import influences
+from valuation.influence.naive import influences
 from valuation.models.linear_regression_torch_model import LRTorchModel
 from valuation.models.pytorch_model import PyTorchSupervisedModel
 from valuation.utils import Utility, Dataset
 
 
 def create_random_dataset(
-    n_in_features: int = 3,
-    n_out_features: int = 1,
-    n_samples: int = 1000
+    n_in_features: int = 3, n_out_features: int = 1, n_samples: int = 1000
 ):
     x = np.random.normal(0, 0.1, size=[n_samples, n_in_features])
     A = np.random.uniform(-1, 1.0, size=[n_out_features, n_in_features])
@@ -22,16 +20,18 @@ def create_random_dataset(
 
 
 @pytest.mark.parametrize(
-    "x,y,n_jobs", [create_random_dataset(i, n_samples=1000) + (j, ) for i in range(1, 5) for j in [1, 2]]
+    "x,y,n_jobs",
+    [
+        create_random_dataset(i, n_samples=1000) + (j,)
+        for i in range(1, 5)
+        for j in [1, 2]
+    ],
 )
-def test_influences(
-    x: np.ndarray,
-    y: np.ndarray,
-    n_jobs: int,
-    train_size: int = 0.8
-):
+def test_influences(x: np.ndarray, y: np.ndarray, n_jobs: int, train_size: int = 0.8):
     n_in_features = x.shape[1]
-    x_train, x_test, y_train, y_test = train_test_split(x, y, random_state=0, train_size=train_size)
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y, random_state=0, train_size=train_size
+    )
     dataset = Dataset(x_train, y_train, x_test, y_test)
 
     objective = F.mse_loss

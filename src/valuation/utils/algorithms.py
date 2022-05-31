@@ -35,6 +35,9 @@ def conjugate_gradient(
     if b.ndim == 1:
         b = b.reshape([1, -1])
 
+    if x0.ndim == 1:
+        x0 = x0.reshape([1, -1])
+
     if max_iters is None:
         max_iters = 10 * b.shape[-1]
 
