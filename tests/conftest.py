@@ -1,41 +1,71 @@
 from collections import OrderedDict
+from typing import Type
 
 import numpy as np
 import pytest
-
 from sklearn.linear_model import LinearRegression
-from typing import Type
-from valuation.utils import Dataset, Utility
-import logging
-from valuation.utils.numeric import spearman
-from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
-from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
+
+from valuation.utils import Dataset, Utility
+from valuation.utils.numeric import spearman
+
+
+def is_memcache_responsive(hostname, port):
+    from pymemcache.client import Client
+
+    try:
+        client = Client(server=(hostname, port))
+        client.flush_all()
+        return True
+    except ConnectionRefusedError:
+        return False
+
+
+@pytest.fixture(scope="session")
+def memcached_service(docker_ip, docker_services):
+    """Ensure that memcached service is up and responsive."""
+    # `port_for` takes a container port and returns the corresponding host port
+    port = docker_services.port_for("memcached", 11211)
+    hostname, port = docker_ip, port
+    docker_services.wait_until_responsive(
+        timeout=30.0, pause=0.5, check=lambda: is_memcache_responsive(hostname, port)
+    )
+    return hostname, port
+
+
+@pytest.fixture(scope="session")
+def memcache_client_config(memcached_service):
+    from valuation.utils import ClientConfig
+
+    client_config = ClientConfig(
+        server=memcached_service, connect_timeout=1.0, timeout=0.1, no_delay=True
+    )
+    return client_config
 
 
 @pytest.fixture(scope="function")
-def memcached_client():
+def memcached_client(memcache_client_config):
     from pymemcache.client import Client
-    # TODO: read config from some place, start new server for tests
-    from valuation.utils import ClientConfig
-    client_config = ClientConfig(server=('localhost', 11211),
-                                 connect_timeout=1.0, timeout=0.1, no_delay=True)
+
     try:
-        c = Client(**client_config)
-        # FIXME: Careful! this will invalidate the cache. I should start a
-        #  dedicated server
+        c = Client(**memcache_client_config)
         c.flush_all()
-        return c, client_config
+        return c, memcache_client_config
     except Exception as e:
-        print(f'Could not connect to memcached server '
-              f'{client_config["server"]}: {e}')
+        print(
+            f"Could not connect to memcached server "
+            f'{memcache_client_config["server"]}: {e}'
+        )
         raise e
 
 
 @pytest.fixture(scope="session")
 def boston_dataset():
     from sklearn import datasets
+
     return Dataset.from_sklearn(datasets.load_boston())
+
 
 def polynomial(coefficients, x):
     powers = np.arange(len(coefficients))
@@ -44,10 +74,10 @@ def polynomial(coefficients, x):
 
 @pytest.fixture(scope="function")
 def polynomial_dataset(coefficients: np.ndarray):
-    """ Coefficients must be for monomials of increasing degree """
+    """Coefficients must be for monomials of increasing degree"""
     from sklearn.utils import Bunch
 
-    x = np.arange(-1, 1, .2)
+    x = np.arange(-1, 1, 0.2)
     locs = polynomial(coefficients, x)
     y = np.random.normal(loc=locs, scale=0.3)
     db = Bunch()
@@ -59,14 +89,18 @@ def polynomial_dataset(coefficients: np.ndarray):
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.5), coefficients
 
-@pytest.fixture(scope="function")
-def polynomial_pipeline(coefficients):
-    return make_pipeline(PolynomialFeatures(len(coefficients)-1), LinearRegression())
 
 @pytest.fixture(scope="function")
-def linear_dataset(a, b):
+def polynomial_pipeline(coefficients):
+    return make_pipeline(PolynomialFeatures(len(coefficients) - 1), LinearRegression())
+
+
+@pytest.fixture(scope="function")
+def linear_dataset(a, b, num_points):
     from sklearn.utils import Bunch
-    x = np.arange(-1, 1, .25)
+
+    step = 2 / num_points
+    x = np.arange(-1, 1, step)
     y = np.random.normal(loc=a * x + b, scale=0.1)
     db = Bunch()
     db.data, db.target = x.reshape(-1, 1), y
@@ -75,23 +109,27 @@ def linear_dataset(a, b):
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.8)
 
-@pytest.fixture(scope='session')
+
+@pytest.fixture(scope="session")
 def linear_utility(linear_dataset):
-    return Utility(LinearRegression(), data=linear_dataset, scoring='r2')
+    return Utility(LinearRegression(), data=linear_dataset, scoring="r2")
+
 
 def dummy_utility(num_samples: int = 10):
-    from valuation.utils import SupervisedModel
     from numpy import ndarray
+
+    from valuation.utils import SupervisedModel
 
     # Indices match values
     x = np.arange(0, num_samples, 1).reshape(-1, 1)
     nil = np.zeros_like(x)
-    data = Dataset(x, nil, nil, nil, feature_names=["x"], target_names=["y"],
-                   description=["dummy"])
+    data = Dataset(
+        x, nil, nil, nil, feature_names=["x"], target_names=["y"], description=["dummy"]
+    )
 
     class DummyModel(SupervisedModel):
-        """ Under this model each data point receives a score of index / max,
-        assuming that the values of training samples match their indices. """
+        """Under this model each data point receives a score of index / max,
+        assuming that the values of training samples match their indices."""
 
         def __init__(self, data: Dataset):
             self.m = max(data.x_train)
@@ -109,22 +147,24 @@ def dummy_utility(num_samples: int = 10):
     return Utility(DummyModel(data), data, scoring=None, enable_cache=False)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def analytic_shapley(num_samples):
-    """ Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n """
+    """Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
     u = dummy_utility(num_samples)
-    exact_values = OrderedDict({i: i / float(max(u.data.x_train))
-                                for i in u.data.indices})
+    exact_values = OrderedDict(
+        {i: i / float(max(u.data.x_train)) for i in u.data.indices}
+    )
     return u, exact_values
 
 
 class TolerateErrors:
-    """ A context manager to swallow errors up to a certain threshold.
+    """A context manager to swallow errors up to a certain threshold.
     Use to test (ε,δ)-approximations.
     """
-    def __init__(self,
-                 max_errors: int,
-                 exception_cls: Type[BaseException] = AssertionError):
+
+    def __init__(
+        self, max_errors: int, exception_cls: Type[BaseException] = AssertionError
+    ):
         self.max_errors = max_errors
         self.Exception = exception_cls
         self.error_count = 0
@@ -137,13 +177,14 @@ class TolerateErrors:
             self.error_count += 1
         if self.error_count > self.max_errors:
             raise self.Exception(
-                f"Maximum number of {self.max_errors} error(s) reached")
+                f"Maximum number of {self.max_errors} error(s) reached"
+            )
         return True
 
 
 def check_total_value(u: Utility, values: OrderedDict, atol: float = 1e-6):
-    """ Checks absolute distance between total and added values.
-     Shapley value is supposed to fulfill the total value axiom."""
+    """Checks absolute distance between total and added values.
+    Shapley value is supposed to fulfill the total value axiom."""
     total_utility = u(u.data.indices)
     values = np.fromiter(values.values(), dtype=float, count=len(u.data))
     # We could want relative tolerances here if we didn't have the range of
@@ -152,7 +193,7 @@ def check_total_value(u: Utility, values: OrderedDict, atol: float = 1e-6):
 
 
 def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e-6):
-    """ Compares ranks and values. """
+    """Compares ranks and values."""
 
     k = list(values.keys())
     ek = list(exact_values.keys())
@@ -164,17 +205,27 @@ def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e
 
     assert np.allclose(v, ev, atol=atol)
 
+
 def check_values(values: OrderedDict, exact_values: OrderedDict, perc_atol: float = 1):
+    """Compares value changes in percentage,
+    without assuming keys in ordered dicts have the same order"""
     for key in values:
         if exact_values[key] == 0:
-            assert abs(values[key])*100 < perc_atol
+            assert abs(values[key]) * 100 < perc_atol
         else:
-            assert abs(values[key] - exact_values[key])/exact_values[key]*100 < perc_atol
+            assert (
+                abs(values[key] - exact_values[key]) / exact_values[key] * 100
+                < perc_atol
+            )
 
 
-def check_rank_correlation(values: OrderedDict, exact_values: OrderedDict,
-                           k: int = None, threshold: float = 0.9):
-    """ Checks that the indices of `values` and `exact_values` follow the same
+def check_rank_correlation(
+    values: OrderedDict,
+    exact_values: OrderedDict,
+    k: int = None,
+    threshold: float = 0.9,
+):
+    """Checks that the indices of `values` and `exact_values` follow the same
     order (by value), with some slack, using Spearman's correlation.
 
     Runs an assertion for testing.
@@ -194,4 +245,3 @@ def check_rank_correlation(values: OrderedDict, exact_values: OrderedDict,
     ranks_exact = np.array(list(exact_values.keys())[:k])
 
     assert spearman(ranks, ranks_exact) >= threshold
-
