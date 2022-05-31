@@ -48,7 +48,7 @@ class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
             flatten_gradient(
                 autograd.grad(z[i], self.model.parameters(), retain_graph=True)
             )
-            for i in maybe_progress(range(len(x)), progress)
+            for i in maybe_progress(range(len(z)), progress)
         ]
         hvp = torch.stack([grad.contiguous().view(-1) for grad in all_flattened_grads])
         return hvp.detach().numpy()
