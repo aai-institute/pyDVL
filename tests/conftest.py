@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
-from valuation.utils import Dataset, MemcachedConfig, Utility
+from valuation.utils import Dataset, Utility
 from valuation.utils.numeric import spearman
 
 
@@ -153,16 +153,6 @@ def linear_dataset(a, b, num_points):
     db.feature_names = ["x"]
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.8)
-
-
-@pytest.fixture(scope="session")
-def linear_utility(linear_dataset):
-    return Utility(
-        LinearRegression(),
-        data=linear_dataset,
-        scoring="r2",
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
-    )
 
 
 def dummy_utility(num_samples: int = 10):

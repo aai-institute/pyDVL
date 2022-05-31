@@ -4,7 +4,7 @@ from sklearn.linear_model import LinearRegression
 
 from tests.conftest import check_total_value, check_values
 from valuation.shapley import combinatorial_exact_shapley, permutation_exact_shapley
-from valuation.utils import Utility
+from valuation.utils import MemcachedConfig, Utility
 
 
 # noinspection PyTestParametrized
@@ -34,9 +34,14 @@ def test_analytic_exact_shapley(analytic_shapley, fun, perc_atol, total_atol):
         (2, 1, 8, "explained_variance"),
     ],
 )
-def test_linear(linear_dataset, score_type, perc_atol=1, total_atol=1e-5):
+def test_linear(
+    linear_dataset, memcache_client_config, score_type, perc_atol=1, total_atol=1e-5
+):
     linear_utility = Utility(
-        LinearRegression(), data=linear_dataset, scoring=score_type
+        LinearRegression(),
+        data=linear_dataset,
+        scoring=score_type,
+        cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     values_combinatorial = combinatorial_exact_shapley(linear_utility, progress=False)
     check_total_value(linear_utility, values_combinatorial, atol=total_atol)
@@ -56,11 +61,16 @@ def test_linear(linear_dataset, score_type, perc_atol=1, total_atol=1e-5):
         (2, 1, 6, "explained_variance"),
     ],
 )
-def test_linear_with_outlier(linear_dataset, score_type, total_atol=1e-5):
+def test_linear_with_outlier(
+    linear_dataset, memcache_client_config, score_type, total_atol=1e-5
+):
     outlier_idx = np.random.randint(len(linear_dataset.y_train))
     linear_dataset.y_train[outlier_idx] *= 10
     linear_utility = Utility(
-        LinearRegression(), data=linear_dataset, scoring=score_type
+        LinearRegression(),
+        data=linear_dataset,
+        scoring=score_type,
+        cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     shapley_values = permutation_exact_shapley(linear_utility, progress=False)
     check_total_value(linear_utility, shapley_values, atol=total_atol)
@@ -77,10 +87,20 @@ def test_linear_with_outlier(linear_dataset, score_type, total_atol=1e-5):
     ],
 )
 def test_polynomial(
-    polynomial_dataset, polynomial_pipeline, score_type, perc_atol=1, total_atol=1e-5
+    polynomial_dataset,
+    polynomial_pipeline,
+    memcache_client_config,
+    score_type,
+    perc_atol=1,
+    total_atol=1e-5,
 ):
     dataset, _ = polynomial_dataset
-    poly_utility = Utility(polynomial_pipeline, dataset, scoring=score_type)
+    poly_utility = Utility(
+        polynomial_pipeline,
+        dataset,
+        scoring=score_type,
+        cache_options=MemcachedConfig(client_config=memcache_client_config),
+    )
     values_combinatorial = combinatorial_exact_shapley(poly_utility, progress=False)
     check_total_value(poly_utility, values_combinatorial, atol=total_atol)
 
@@ -99,12 +119,21 @@ def test_polynomial(
     ],
 )
 def test_polynomial_with_outlier(
-    polynomial_dataset, polynomial_pipeline, score_type, total_atol=1e-5
+    polynomial_dataset,
+    polynomial_pipeline,
+    memcache_client_config,
+    score_type,
+    total_atol=1e-5,
 ):
     dataset, _ = polynomial_dataset
     outlier_idx = np.random.randint(len(dataset.y_train))
     dataset.y_train[outlier_idx] *= 10
-    poly_utility = Utility(polynomial_pipeline, dataset, scoring=score_type)
+    poly_utility = Utility(
+        polynomial_pipeline,
+        dataset,
+        scoring=score_type,
+        cache_options=MemcachedConfig(client_config=memcache_client_config),
+    )
     shapley_values = permutation_exact_shapley(poly_utility, progress=False)
     check_total_value(poly_utility, shapley_values, atol=total_atol)
 

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from valuation.utils import MapReduceJob, available_cpus, map_reduce
+from valuation.utils import MemcachedConfig, available_cpus
 from valuation.utils.numeric import (
     powerset,
     random_powerset,
@@ -33,7 +33,7 @@ def test_powerset():
 
 
 @pytest.mark.parametrize("n, max_subsets", [(0, 10), (1, 1e3), (4, 1e4)])
-def test_random_powerset(n, max_subsets):
+def test_random_powerset(n, max_subsets, memcache_client_config):
     """
     Tests that random powerset samples the same items as the powerset method, and with
     the same frequency.
@@ -43,7 +43,12 @@ def test_random_powerset(n, max_subsets):
     """
     s = np.arange(1, n + 1)
     num_cpus = available_cpus()
-    result = random_powerset(s, max_subsets=max_subsets, num_jobs=num_cpus)
+    result = random_powerset(
+        s,
+        max_subsets=max_subsets,
+        num_jobs=num_cpus,
+        cache_options=MemcachedConfig(client_config=memcache_client_config),
+    )
     result_exact = set(powerset(s))
     count_powerset = {key: 0 for key in result_exact}
 
