@@ -330,7 +330,12 @@ def combinatorial_montecarlo_shapley(
         for i, idx in enumerate(indices):
             # Randomly sample subsets of full dataset without idx
             subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
-            power_set = random_powerset(subset, dist=dist, max_subsets=max_iterations)
+            power_set = random_powerset(
+                subset,
+                dist=dist,
+                max_subsets=max_iterations,
+                client_config=u.cache_options.client_config,
+            )
             # Normalization accounts for a uniform dist. on powerset (i.e. not
             # weighted by set size) and the montecarlo sampling
             for s in maybe_progress(
