@@ -52,8 +52,6 @@ class Utility:
         self.scoring = scoring
         self.default_score = default_score
         self.catch_errors = catch_errors
-        self.enable_cache = enable_cache
-        self.cache_options = cache_options
 
         if enable_cache:
             if cache_options is None:
