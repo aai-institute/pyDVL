@@ -70,7 +70,7 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps):
         num_jobs=jobs_per_run,
     )
     job = MapReduceJob.from_fun(_fun, lambda r: r[0][0])
-    results = map_reduce(job, u.data.indices, num_jobs=num_runs, num_runs=num_runs)
+    results = map_reduce(job, u, num_jobs=num_runs, num_runs=num_runs)
 
     delta_errors = TolerateErrors(max(1, int(delta * len(results))))
     for values in results:
