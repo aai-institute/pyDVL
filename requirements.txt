@@ -7,6 +7,5 @@ sklearn
 matplotlib
 click
 wheel
-pyhash
 pymemcache
 cloudpickle

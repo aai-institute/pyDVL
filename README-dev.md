@@ -65,13 +65,32 @@ and pylint reports in html and badges. You can configure pytest, coverage and
 pylint by adjusting [pytest.ini](pytest.ini), [.coveragerc](.coveragerc) and
 [.pylintrc](.pylintrc) respectively.
 
-Concerning notebooks: all notebooks in the [notebooks](notebooks) directory will
-be executed during test run, the results will be added to the docu in the
-_Guides and Tutorials_ section. Thus, notebooks can be conveniently used as
-integration tests and docu at the same time.
+Concerning notebooks: all notebooks in the [notebooks](notebooks) directory should
+be executed during test run, the results will be added to the documentation in the
+_Guides and Tutorials_ section. Thus, notebooks can be conveniently used as integration tests and documentation at the same time.
+
+Unfortunately that is not currently the case as they need to be fixed and updated.
+
+#### Testing
 
 You can run the build by installing tox into your virtual environment (e.g. with
 `pip install tox`) and executing `tox`.
+
+You can pass optional command line arguments to pytest, for example to run only certain tests using patterns (-k) or marker (-m).
+
+`tox -e py38 -- <optional arguments>`
+
+One important argument that you can use is `--do-not-start-memcache`. This prevents
+the test fixture from starting a new memcache server for testing and instead expects
+an already running local server listening on port 11211 ( memcache's default port ).
+
+To test notebooks, you should use:
+
+```shell
+tox -e notebooks
+```
+
+#### Packaging
 
 To create a package locally, run
 ```shell script
