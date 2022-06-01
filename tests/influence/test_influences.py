@@ -24,15 +24,15 @@ def create_random_dataset(
 
 
 all_data = []
-all_data += [
-    create_random_dataset(i, n_samples=1000)
-    + (
-        LRTorchModel,
-        j,
-    )
-    for i in range(1, 5)
-    for j in [1, 2]
-]
+# all_data += [
+#     create_random_dataset(i, n_samples=1000)
+#     + (
+#         LRTorchModel,
+#         j,
+#     )
+#     for i in range(1, 5)
+#     for j in [1, 2]
+# ]
 all_data += [
     create_random_dataset(i, n_samples=1000)
     + (

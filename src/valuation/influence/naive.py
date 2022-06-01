@@ -5,7 +5,7 @@ import numpy as np
 from opt_einsum import contract
 
 from valuation.models.pytorch_model import TwiceDifferentiable
-from valuation.utils import Utility, MapReduceJob, map_reduce
+from valuation.utils import Utility, MapReduceJob, map_reduce, available_cpus
 from valuation.utils.algorithms import conjugate_gradient
 
 
@@ -31,7 +31,7 @@ def influences(u: Utility, progress: bool = False, n_jobs: int = -1) -> np.ndarr
         )
 
     # verify cpu correctness
-    cpu_count = multiprocessing.cpu_count()
+    cpu_count = available_cpus()
     if n_jobs == -1:
         n_jobs = cpu_count
     elif n_jobs == 0 or n_jobs < -1 or n_jobs > cpu_count:
