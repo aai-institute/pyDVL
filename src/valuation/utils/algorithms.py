@@ -3,7 +3,6 @@ from typing import Callable, Union
 
 import numpy as np
 from opt_einsum import contract
-from scipy.sparse.linalg._isolve.iterative import _get_atol
 
 
 def conjugate_gradient(
