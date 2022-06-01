@@ -33,13 +33,16 @@ def test_powerset():
 
 
 @pytest.mark.parametrize("n, max_subsets", [(0, 10), (1, 1e3), (4, 1e4)])
-def test_random_powerset(n, max_subsets, memcache_client_config):
+def test_random_powerset(n, max_subsets, memcache_client_config, count_amplifier=5):
     """
-    Tests that random powerset samples the same items as the powerset method, and with
-    the same frequency.
-    This is done sampling a sufficiently high number of times (max_subsets) and checking that all
-    the powersets are sampled with the same frequency (max minus min number of samples must be
-    much smaller than average sampling number.
+    Tests that random_powerset samples the same items as the powerset method and
+    with constant frequency.
+    Sampling a number max_subsets of sets, we need to check that their relative frequency
+    is the same, up to sampling errors. To do so, we count the occurrence of each set, and
+    assert that the difference in count between the max and the min is much smaller than
+    the mean value count. More precisely, we assert that
+    (maximum_count - minimum_count) * count_amplifier < mean_count
+    where count_amplifier must be bigger than 1.
     """
     s = np.arange(1, n + 1)
     num_cpus = available_cpus()
@@ -57,7 +60,9 @@ def test_random_powerset(n, max_subsets, memcache_client_config):
         res_pow = tuple(np.sort(res_pow))
         count_powerset[tuple(res_pow)] += 1
     value_counts = list(count_powerset.values())
-    assert 5 * (np.max(value_counts) - np.min(value_counts)) < np.mean(value_counts)
+    assert count_amplifier * (np.max(value_counts) - np.min(value_counts)) < np.mean(
+        value_counts
+    )
 
 
 @pytest.mark.parametrize(

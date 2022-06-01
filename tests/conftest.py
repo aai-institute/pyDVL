@@ -8,7 +8,12 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
 from valuation.utils import Dataset, Utility
+from valuation.utils.logging import start_logging_server
 from valuation.utils.numeric import spearman
+
+
+def pytest_sessionstart():
+    start_logging_server()
 
 
 def is_memcache_responsive(hostname, port):
@@ -248,7 +253,15 @@ def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e
 
 def check_values(values: OrderedDict, exact_values: OrderedDict, perc_atol: float = 1):
     """Compares value changes in percentage,
-    without assuming keys in ordered dicts have the same order"""
+    without assuming keys in ordered dicts have the same order.
+
+    Args:
+        values:
+        exact_values:
+        perc_atol: percent absolute tolerance of elements in values with respect to
+            elements in exact values. E.g. if perc_atol = 10, we must have
+            (values - exact_values)/exact_values * 100 < 10
+    """
     for key in values:
         if exact_values[key] == 0:
             assert abs(values[key]) * 100 < perc_atol

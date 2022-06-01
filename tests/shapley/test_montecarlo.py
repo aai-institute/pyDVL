@@ -33,10 +33,6 @@ def test_analytic_montecarlo_shapley(analytic_shapley, fun, perc_atol, max_itera
     u, exact_values = analytic_shapley
     num_jobs = min(8, available_cpus())
 
-    from valuation.utils.logging import start_logging_server
-
-    start_logging_server()
-
     values, _ = fun(u, max_iterations=max_iterations, progress=False, num_jobs=num_jobs)
 
     check_values(values, exact_values, perc_atol=perc_atol)
@@ -59,10 +55,6 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps):
     jobs_per_run = min(6, available_cpus(), len(u.data))
     num_runs = min(3, available_cpus() // jobs_per_run)
 
-    from valuation.utils.logging import start_logging_server
-
-    start_logging_server()
-
     max_iterations = None
     max_iterations = lower_bound_hoeffding(delta=delta, eps=eps, score_range=1)
 
@@ -78,7 +70,7 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps):
         num_jobs=jobs_per_run,
     )
     job = MapReduceJob.from_fun(_fun, lambda r: r[0][0])
-    results = map_reduce(job, u, num_jobs=num_runs, num_runs=num_runs)
+    results = map_reduce(job, u.data.indices, num_jobs=num_runs, num_runs=num_runs)
 
     delta_errors = TolerateErrors(max(1, int(delta * len(results))))
     for values in results:
@@ -110,10 +102,6 @@ def test_linear_montecarlo_shapley(
     linear_dataset, fun, score_type, perc_atol, max_iterations, memcache_client_config
 ):
     num_jobs = min(8, available_cpus())
-
-    from valuation.utils.logging import start_logging_server
-
-    start_logging_server()
     linear_utility = Utility(
         LinearRegression(),
         data=linear_dataset,
