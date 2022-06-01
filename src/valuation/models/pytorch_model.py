@@ -1,3 +1,5 @@
+from functools import partial
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -10,7 +12,7 @@ from valuation.models.twice_differentiable import TwiceDifferentiable
 from valuation.utils import SupervisedModel, maybe_progress
 from valuation.utils.types import TorchObjective
 
-tt = torch.tensor
+tt = partial(torch.tensor, dtype=torch.float32)
 
 
 def flatten_gradient(grad):
@@ -70,7 +72,7 @@ class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
         x = tt(x)
         y = tt(y)
 
-        optimizer = Adam(self.model.parameters())
+        optimizer = Adam(self.model.parameters(), weight_decay=0.01)
 
         class InternalDataset(Dataset):
             def __len__(self):
@@ -93,8 +95,8 @@ class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
                 optimizer.zero_grad()
 
     def predict(self, x: np.ndarray) -> np.ndarray:
-        return self.model(tt(x)).detach().to_numpy()
+        return self.model(tt(x)).detach().numpy()
 
     def score(self, x: np.ndarray, y: np.ndarray) -> float:
         x, y = tt(x), tt(y)
-        return self.objective(self.model(x), y).detach().to_numpy()
+        return self.objective(self.model(x), y).detach().numpy()

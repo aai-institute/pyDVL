@@ -35,9 +35,6 @@ def conjugate_gradient(
     if b.ndim == 1:
         b = b.reshape([1, -1])
 
-    if x0.ndim == 1:
-        x0 = x0.reshape([1, -1])
-
     if max_iters is None:
         max_iters = 10 * b.shape[-1]
 
@@ -45,6 +42,9 @@ def conjugate_gradient(
     x = np.zeros_like(b) if x0 is None else x0
     r = np.copy(b)
     p = np.copy(b)
+
+    if x.ndim == 1:
+        x = x.reshape([1, -1])
 
     iteration = 0
     r_dot_r = contract("ia,ia->i", r, r)
