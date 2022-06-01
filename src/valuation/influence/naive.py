@@ -1,11 +1,11 @@
 import functools
 import multiprocessing
 
-from opt_einsum import contract
 import numpy as np
+from opt_einsum import contract
 
 from valuation.models.pytorch_model import TwiceDifferentiable
-from valuation.utils import Utility, maybe_progress, MapReduceJob, map_reduce
+from valuation.utils import Utility, MapReduceJob, map_reduce
 from valuation.utils.algorithms import conjugate_gradient
 
 
