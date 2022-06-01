@@ -3,14 +3,14 @@ Distributed caching of functions, using memcached.
 TODO: wrap this to allow for different backends
 """
 import socket
-from dataclasses import dataclass, make_dataclass
+from dataclasses import dataclass, field, make_dataclass
 from functools import wraps
+from hashlib import blake2b
 from io import BytesIO
 from time import time
 from typing import Callable, Iterable
 
 from cloudpickle import Pickler
-from pyhash import spooky_64
 from pymemcache import MemcacheUnexpectedCloseError
 from pymemcache.client import Client, RetryingClient
 from pymemcache.serde import PickleSerde
@@ -34,7 +34,7 @@ class ClientConfig:
 @unpackable
 @dataclass
 class MemcachedConfig:
-    client = ClientConfig()
+    client_config: ClientConfig = field(default_factory=ClientConfig)
     threshold: float = 0.3
     ignore_args: Iterable[str] = None
 
@@ -135,10 +135,9 @@ def memcached(
                 # FIXME: do I really need to hash this?
                 # FIXME: ensure that the hashing algorithm is portable
                 # FIXME: determine right bit size
-                # NB: I need to create the spooky_64 object here because it can't be
+                # NB: I need to create the hasher object here because it can't be
                 #  pickled
-                hasher = spooky_64(seed=0)
-                key = str(hasher(signature + arg_signature)).encode("ASCII")
+                key = blake2b(signature + arg_signature).hexdigest().encode("ASCII")
                 result = None
                 try:
                     result = self.client.get(key)

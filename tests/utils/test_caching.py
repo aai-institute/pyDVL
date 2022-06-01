@@ -1,7 +1,8 @@
+from typing import Iterable
+
 import numpy as np
 
-from typing import Iterable
-from valuation.utils import memcached, map_reduce, MapReduceJob
+from valuation.utils import MapReduceJob, map_reduce, memcached
 
 
 def test_memcached_single_job(memcached_client):
@@ -14,9 +15,9 @@ def test_memcached_single_job(memcached_client):
 
     n = 1000
     foo(np.arange(n))
-    hits_before = client.stats()[b'get_hits']
+    hits_before = client.stats()[b"get_hits"]
     foo(np.arange(n))
-    hits_after = client.stats()[b'get_hits']
+    hits_after = client.stats()[b"get_hits"]
 
     assert hits_after > hits_before
 
@@ -24,10 +25,12 @@ def test_memcached_single_job(memcached_client):
 def test_memcached_parallel_jobs(memcached_client):
     client, config = memcached_client
 
-    @memcached(client_config=config,
-               threshold=0,  # Always cache results
-               # Note that we typically do NOT want to ignore run_id
-               ignore_args=['job_id', 'run_id'])
+    @memcached(
+        client_config=config,
+        threshold=0,  # Always cache results
+        # Note that we typically do NOT want to ignore run_id
+        ignore_args=["job_id", "run_id"],
+    )
     def foo(indices: Iterable[int], job_id: int, run_id: int) -> float:
         # from valuation.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
@@ -35,13 +38,13 @@ def test_memcached_parallel_jobs(memcached_client):
 
     n = 1234
     num_runs = 10
-    hits_before = client.stats()[b'get_hits']
+    hits_before = client.stats()[b"get_hits"]
     job = MapReduceJob.from_fun(foo, np.sum)
     result = map_reduce(job, data=np.arange(n), num_jobs=4, num_runs=num_runs)
-    hits_after = client.stats()[b'get_hits']
+    hits_after = client.stats()[b"get_hits"]
 
-    assert result[0] == n*(n-1)/2  # Sanity check
+    assert result[0] == n * (n - 1) / 2  # Sanity check
     # FIXME! This is non-deterministic: if packets are delayed for longer than
-    #  the timeout configured then we won't have nruns hits. So we add this
+    #  the timeout configured then we won't have num_runs hits. So we add this
     #  good old hard-coded magic number here.
-    assert hits_after - hits_before >= nruns - 2
+    assert hits_after - hits_before >= num_runs - 2

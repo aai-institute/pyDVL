@@ -10,7 +10,8 @@ setup(
     version="0.1.0-dev1",
     description="The python Data Valuation Library",
     install_requires=[
-        line for line in open("requirements.txt").readlines()
+        line
+        for line in open("requirements.txt").readlines()
         if not line.startswith("--")
     ],
     setup_requires=["wheel"],

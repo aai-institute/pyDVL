@@ -2,11 +2,12 @@ import operator
 from enum import Enum
 from functools import reduce
 from itertools import chain, combinations
-from typing import Collection, Generator, Iterator, List, Sequence, TypeVar
+from typing import Collection, Generator, Iterator, List, Optional, Sequence, TypeVar
 
 import numpy as np
 
 from valuation.utils import memcached
+from valuation.utils.caching import ClientConfig
 from valuation.utils.parallel import MapReduceJob, map_reduce
 
 T = TypeVar("T")
@@ -55,6 +56,8 @@ def random_powerset(
     max_subsets: int = None,
     dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
     num_jobs: int = 1,
+    *,
+    client_config: Optional[ClientConfig] = None
 ) -> Generator[np.ndarray, None, None]:
     """Uniformly samples a subset from the power set of the argument, without
     pre-generating all subsets and in no order.
@@ -71,6 +74,7 @@ def random_powerset(
         by the number of sets of size k, or "uniformly", taking e.g. the empty
         set to be as likely as any other
     :param num_jobs: Duh. Must be >= 1
+    :param client_config: Memcached client configuration
     """
     if not isinstance(s, np.ndarray):
         raise TypeError
@@ -80,7 +84,7 @@ def random_powerset(
     if max_subsets is None:
         max_subsets = np.inf
 
-    @memcached(threshold=0.5)
+    @memcached(client_config=client_config, threshold=0.5)
     def subset_probabilities(n: int) -> List[float]:
         def sub(sizes: List[int]) -> List[float]:
             # FIXME: is the normalization ok?
