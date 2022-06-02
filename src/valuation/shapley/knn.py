@@ -10,9 +10,10 @@ def exact_knn_shapley(
     data: Dataset, model: KNeighborsClassifier, progress: bool = True
 ) -> OrderedDict:
     """Computes exact Shapley values for a KNN classifier or regressor.py
+
     :param data: split Dataset
     :param model: model to extract parameters from. The object will not be
-       modified nor used other than to call get_params()
+        modified nor used other than to call get_params()
     :param progress: whether to display a progress bar
     """
     defaults = {

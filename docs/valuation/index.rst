@@ -1,6 +1,5 @@
-Modules
-=======
-
+valuation
+=========
 .. automodule:: valuation
    :members:
    :undoc-members:

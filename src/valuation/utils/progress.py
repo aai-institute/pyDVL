@@ -55,9 +55,10 @@ def maybe_progress(
 ) -> Union[tqdm, Iterable, range, enumerate]:
     """Returns either a tqdm progress bar or a mock object which wraps the
     iterator as well, but ignores any accesses to methods or properties.
+
     :param it: the iterator to wrap
     :param display: set to True to return a tqdm bar
-    :param **tqdm_kwargs: will be forwarded to tqdm
+    :param tqdm_kwargs: will be forwarded to tqdm
     """
     if isinstance(it, int):
         it = range(it)
