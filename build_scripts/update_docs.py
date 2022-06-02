@@ -1,86 +1,143 @@
 #!/usr/bin/env python3
+"""
+This script walks through the python source files and creates documentation in .rst format which can
+then be compiled with Sphinx. It is suitable for a standard repository layout src/<library_name> as well as for
+a repo containing multiple packages src/<package_1>, ...,  src/<package_n>.
+"""
+
+
 import logging
 import os
+import shutil
 
 log = logging.getLogger(os.path.basename(__file__))
 
 
-def module_template(module_path: str):
-    title = os.path.basename(module_path).replace("_", r"\_")
-    title = title[:-3]  # removing trailing .py
-    module_path = module_path[:-3]
+def module_template(module_qualname: str):
+    module_name = module_qualname.split(".")[-1]
+    title = module_name.replace("_", r"\_")
     template = f"""{title}
 {"="*len(title)}
-
-.. automodule:: {module_path.replace(os.path.sep, ".")}
+.. automodule:: {module_qualname}
    :members:
    :undoc-members:
 """
     return template
 
 
-def package_template(package_path: str):
-    package_name = os.path.basename(package_path)
+def package_template(package_qualname: str):
+    package_name = package_qualname.split(".")[-1]
     title = package_name.replace("_", r"\_")
     template = f"""{title}
 {"="*len(title)}
-
-.. automodule:: {package_path.replace(os.path.sep, ".")}
+.. automodule:: {package_qualname}
    :members:
    :undoc-members:
-
 .. toctree::
    :glob:
-
    {package_name}/*
 """
     return template
 
 
+def index_template(package_name):
+    title = package_name.replace("_", r"\_")
+    template = f"""{title}
+{"="*len(title)}
+.. automodule:: {package_name}
+   :members:
+   :undoc-members:
+.. toctree::
+   :glob:
+   *
+"""
+    return template
+
+
 def write_to_file(content: str, path: str):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
         f.write(content)
     os.chmod(path, 0o666)
 
 
-def make_docu(basedir=os.path.join("src", "valuation"), overwrite=False):
+def make_rst(src_root="src", docs_root="docs", clean=False, overwrite=False):
     """
     Creates/updates documentation in form of rst files for modules and packages.
-    Does not delete any existing rst files. Thus, rst files for packages or modules that have been removed or renamed
-    should be deleted by hand.
-
+    Does not delete any existing rst files if clean and overwrite are False.
     This method should be executed from the project's top-level directory
-
-    :param basedir: path to library basedir, typically "src/<library_name>"
+    :param src_root: path to project's src directory that contains all packages, usually src. Most projects will
+        only need one top-level package, then your layout typically should be src/<library_name>.
+    :param docs_root: path to the project's docs directory containing the conf.py and the top level index.rst
+    :param clean: whether to completely clean the docs target directories beforehand, removing any existing files
     :param overwrite: whether to overwrite existing rst files. This should be used with caution as it will delete
         all manual changes to documentation files
     :return:
     """
-    library_basedir = basedir.split(os.path.sep, 1)[1]  # splitting off the "src" part
-    for file in os.listdir(basedir):
-        if file.startswith("_"):
+    docs_root = os.path.abspath(docs_root)
+    src_root = os.path.abspath(src_root)
+
+    for top_level_package_name in os.listdir(src_root):
+        top_level_package_dir = os.path.join(src_root, top_level_package_name)
+        # skipping things in src that are not packages, like .egg files
+        if (
+            not os.path.isdir(top_level_package_dir)
+            or "." in top_level_package_name
+            or top_level_package_name.startswith("_")
+        ):
             continue
 
-        library_file_path = os.path.join(library_basedir, file)
-        full_path = os.path.join(basedir, file)
-        file_name, ext = os.path.splitext(file)
-        docs_file_path = os.path.join("docs", library_basedir, f"{file_name}.rst")
-        if os.path.exists(docs_file_path) and not overwrite:
-            log.debug(f"{docs_file_path} already exists, skipping it")
-            if os.path.isdir(full_path):
-                make_docu(basedir=full_path, overwrite=overwrite)
-            continue
-        os.makedirs(os.path.dirname(docs_file_path), exist_ok=True)
+        log.info(f"Generating docu for top-level package {top_level_package_name}")
+        top_level_package_docs_dir = os.path.join(docs_root, top_level_package_name)
+        if clean and os.path.isdir(top_level_package_docs_dir):
+            log.info(f"Deleting {top_level_package_docs_dir} since clean=True")
+            shutil.rmtree(top_level_package_docs_dir)
 
-        if ext == ".py":
-            log.info(f"writing module docu to {docs_file_path}")
-            write_to_file(module_template(library_file_path), docs_file_path)
-        elif os.path.isdir(full_path):
-            log.info(f"writing package docu to {docs_file_path}")
-            write_to_file(package_template(library_file_path), docs_file_path)
-            make_docu(basedir=full_path, overwrite=overwrite)
+        index_rst_path = os.path.join(docs_root, top_level_package_name, "index.rst")
+        log.info(f"Creating {index_rst_path}")
+        write_to_file(index_template(top_level_package_name), index_rst_path)
+
+        for root, dirnames, filenames in os.walk(top_level_package_dir):
+            if os.path.basename(root).startswith("_"):
+                log.debug(f"Skipping docu generation in {root}")
+                continue
+
+            base_package_relpath = os.path.relpath(root, start=top_level_package_dir)
+            base_package_qualname = os.path.relpath(root, start=src_root).replace(
+                os.path.sep, "."
+            )
+
+            for dirname in dirnames:
+                if not dirname.startswith("_"):
+                    package_qualname = f"{base_package_qualname}.{dirname}"
+                    package_rst_path = os.path.abspath(
+                        os.path.join(
+                            top_level_package_docs_dir,
+                            base_package_relpath,
+                            f"{dirname}.rst",
+                        )
+                    )
+                    log.info(f"Writing package documentation to {package_rst_path}")
+                    write_to_file(package_template(package_qualname), package_rst_path)
+
+            for filename in filenames:
+                base_name, ext = os.path.splitext(filename)
+                if ext == ".py" and not filename.startswith("_"):
+                    module_qualname = f"{base_package_qualname}.{filename[:-3]}"
+                    module_rst_path = os.path.abspath(
+                        os.path.join(
+                            top_level_package_docs_dir,
+                            base_package_relpath,
+                            f"{base_name}.rst",
+                        )
+                    )
+                    if os.path.exists(module_rst_path) and not overwrite:
+                        log.debug(f"{module_rst_path} already exists, skipping it")
+
+                    log.info(f"Writing module documentation to {module_rst_path}")
+                    write_to_file(module_template(module_qualname), module_rst_path)
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    make_docu()
+    make_rst(clean=True)
