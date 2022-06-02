@@ -1,3 +1,6 @@
+import itertools
+from typing import Tuple
+
 import numpy as np
 import pytest
 from opt_einsum import contract
@@ -16,80 +19,65 @@ class AlgorithmTestSettings:
 
 np.random.seed(AlgorithmTestSettings.NP_RANDOM_SEED)
 
-conjugate_gradient_examples = list()
-ids = list()
 
-# non-singular tests
-conjugate_gradient_examples += [
-    (
-        (lambda A: A @ A.T)(np.random.random([k, k])),
-        np.random.normal(size=[AlgorithmTestSettings.CG_BATCH_SIZE, k]),
-        fn,
-    )
-    for k in range(2, AlgorithmTestSettings.CG_MAX_DIM)
-    for fn in [True, False]
-]
-ids += [
-    f"Testcase with dimension {tup[0].shape[0]}." for tup in conjugate_gradient_examples
-]
-
-# singular tests
-conjugate_gradient_examples += [
-    (
-        np.asarray(
-            [
-                [3, 8, 1],
-                [-4, 1, 1],
-                [-4, 1, 1],
-            ],
-            dtype=float,
-        ),
-        np.asarray([[1, 2, 3]], dtype=float),
-        False,
-    )
-]
-ids += ["Singular testcase."]
-
-
-@pytest.mark.parametrize("A,b,wrap_in_function", conjugate_gradient_examples, ids=ids)
-def test_conjugate_gradients_all(A: np.ndarray, b: np.ndarray, wrap_in_function: bool):
+@pytest.mark.parametrize(
+    "problem_dimension,batch_size",
+    list(itertools.product(list(range(2, 10)), [16, 32])),
+    indirect=True,
+)
+def test_conjugate_gradients_mvp(linear_equation_system: Tuple[np.ndarray, np.ndarray]):
+    A, b = linear_equation_system
     x0 = np.zeros_like(b)
-    xn, n = conjugate_gradient((lambda x: x @ A.T) if wrap_in_function else A, b, x0=x0)
-    assert np.all(np.logical_not(np.isnan(xn)))
-
-    inv_A = np.linalg.pinv(A)
-    xt = b @ inv_A.T
-    norm_A = lambda v: np.sqrt(contract("ia,ab,ib->i", v, A, v))
-    error = norm_A(xt - xn)
-    error_upper_bound = conjugate_gradient_error_bound(A, xt, x0, n)
-    failed = error > (1 + AlgorithmTestSettings.R_TOL) * error_upper_bound
-    num_failed_percentage = np.sum(failed) / len(failed)
-    assert num_failed_percentage < AlgorithmTestSettings.FAILED_TOL
+    xn, n = conjugate_gradient(A, b, x0=x0)
+    check_solution(A, b, n, x0, xn)
 
 
-@pytest.mark.parametrize("A,b,wrap_in_function", conjugate_gradient_examples, ids=ids)
-def test_preconditioned_conjugate_gradients_all(
-    A: np.ndarray, b: np.ndarray, wrap_in_function: bool
+@pytest.mark.parametrize(
+    "problem_dimension,batch_size",
+    list(itertools.product(list(range(2, 10)), [16, 32])),
+    indirect=True,
+)
+def test_conjugate_gradients_fn(linear_equation_system: Tuple[np.ndarray, np.ndarray]):
+    A, b = linear_equation_system
+    new_A = np.copy(A)
+    A = lambda v: v @ new_A.T
+    x0 = np.zeros_like(b)
+    xn, n = conjugate_gradient(A, b, x0=x0)
+    check_solution(new_A, b, n, x0, xn)
+
+
+@pytest.mark.parametrize(
+    "problem_dimension,batch_size",
+    list(itertools.product(list(range(2, 10)), [16, 32])),
+    indirect=True,
+)
+def test_conjugate_gradients_mvp_preconditioned(
+    linear_equation_system: Tuple[np.ndarray, np.ndarray]
 ):
+    A, b = linear_equation_system
     M = np.diag(1 / np.diag(A))
     x0 = np.zeros_like(b)
-    xn, n = conjugate_gradient(
-        (lambda x: x @ A.T) if wrap_in_function else A, b, M=M, x0=x0
-    )
-    assert np.all(np.logical_not(np.isnan(xn)))
+    xn, n = conjugate_gradient(A, b, M=M, x0=x0)
+    check_solution(A, b, n, x0, xn)
 
+
+def check_solution(A, b, n, x0, xn):
+    """
+    This method used standard inversion techniques to verify the solution of the problem.
+    """
+    assert np.all(np.logical_not(np.isnan(xn)))
     inv_A = np.linalg.pinv(A)
     xt = b @ inv_A.T
     norm_A = lambda v: np.sqrt(contract("ia,ab,ib->i", v, A, v))
     error = norm_A(xt - xn)
-    error_upper_bound = conjugate_gradient_error_bound(A, xt, x0, n)
+    error_upper_bound = conjugate_gradient_error_bound_first(A, n, x0, xt)
     failed = error > (1 + AlgorithmTestSettings.R_TOL) * error_upper_bound
     num_failed_percentage = np.sum(failed) / len(failed)
     assert num_failed_percentage < AlgorithmTestSettings.FAILED_TOL
 
 
-def conjugate_gradient_error_bound(
-    A: np.ndarray, xt: np.ndarray, x0: np.ndarray, n: int
+def conjugate_gradient_error_bound_first(
+    A: np.ndarray, n: int, x0: np.ndarray, xt: np.ndarray
 ):
     """
     https://math.stackexchange.com/questions/382958/error-for-conjugate-gradient-method

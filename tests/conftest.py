@@ -131,6 +131,24 @@ def polynomial(coefficients, x):
     return np.power(x, np.tile(powers, (len(x), 1)).T).T @ coefficients
 
 
+@pytest.fixture
+def problem_dimension(request):
+    return request.param
+
+
+@pytest.fixture
+def batch_size(request):
+    return request.param
+
+
+@pytest.fixture(scope="function")
+def linear_equation_system(problem_dimension: int, batch_size: int):
+    H = np.random.random([problem_dimension, problem_dimension])
+    A = H @ H.T
+    b = np.random.normal(size=[batch_size, problem_dimension])
+    return A, b
+
+
 @pytest.fixture(scope="function")
 def polynomial_dataset(coefficients: np.ndarray):
     """Coefficients must be for monomials of increasing degree"""
