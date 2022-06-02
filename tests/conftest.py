@@ -66,22 +66,30 @@ def docker_services(
 
 
 @pytest.fixture(scope="session")
-def memcached_service(docker_ip, docker_services, do_not_start_memcache):
+def memcached_service():
     """Ensure that memcached service is up and responsive.
     If do_not_start_memcache is True then we just return the default values: 'localhost', 11211
     """
-    if do_not_start_memcache:
-        return "localhost", 11211
-    else:
-        # `port_for` takes a container port and returns the corresponding host port
-        port = docker_services.port_for("memcached", 11211)
-        hostname, port = docker_ip, port
-        docker_services.wait_until_responsive(
-            timeout=30.0,
-            pause=0.5,
-            check=lambda: is_memcache_responsive(hostname, port),
-        )
-        return hostname, port
+    return "localhost", 11211
+
+
+# @pytest.fixture(scope="session")
+# def memcached_service(docker_ip, docker_services, do_not_start_memcache):
+#     """Ensure that memcached service is up and responsive.
+#     If do_not_start_memcache is True then we just return the default values: 'localhost', 11211
+#     """
+#     if do_not_start_memcache:
+#         return "localhost", 11211
+#     else:
+#         # `port_for` takes a container port and returns the corresponding host port
+#         port = docker_services.port_for("memcached", 11211)
+#         hostname, port = docker_ip, port
+#         docker_services.wait_until_responsive(
+#             timeout=30.0,
+#             pause=0.5,
+#             check=lambda: is_memcache_responsive(hostname, port),
+#         )
+#         return hostname, port
 
 
 @pytest.fixture(scope="session")
@@ -89,7 +97,7 @@ def memcache_client_config(memcached_service):
     from valuation.utils import ClientConfig
 
     client_config = ClientConfig(
-        server=memcached_service, connect_timeout=1.0, timeout=0.1, no_delay=True
+        server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
     )
     return client_config
 
@@ -110,11 +118,15 @@ def memcached_client(memcache_client_config):
         raise e
 
 
-@pytest.fixture(scope="session")
-def boston_dataset():
+@pytest.fixture(scope="function")
+def boston_dataset(n_points, n_features):
     from sklearn import datasets
 
-    return Dataset.from_sklearn(datasets.load_boston())
+    dataset = datasets.load_boston()
+    dataset.data = dataset.data[:n_points, :n_features]
+    dataset.feature_names = dataset.feature_names[:n_features]
+    dataset.target = dataset.target[:n_points]
+    return Dataset.from_sklearn(dataset)
 
 
 def polynomial(coefficients, x):

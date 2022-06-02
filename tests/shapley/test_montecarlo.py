@@ -1,7 +1,10 @@
+import logging
 from functools import partial
 
 import numpy as np
 import pytest
+import xgboost as xgb
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 
 from tests.conftest import (
@@ -147,6 +150,32 @@ def test_linear_montecarlo_with_outlier(
     check_total_value(linear_utility, shapley_values, atol=total_atol)
 
     assert int(list(shapley_values.keys())[0]) == outlier_idx
+
+
+@pytest.mark.parametrize(
+    "n_points, n_features, regressor, score_type, max_iterations",
+    [
+        (6, 3, RandomForestRegressor(n_estimators=2), "r2", 1000),
+        (6, 3, xgb.XGBRegressor(n_estimators=2), "r2", 1000),
+    ],
+)
+def test_random_forest_xgb(
+    boston_dataset, regressor, score_type, max_iterations, perc_atol=50
+):
+    num_jobs = min(8, available_cpus())
+    rf_utility = Utility(
+        regressor,
+        data=boston_dataset,
+        scoring=score_type,
+        enable_cache=False,
+    )
+    permutation_values, _ = permutation_montecarlo_shapley(
+        rf_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
+    )
+    combinatorial_values, _ = combinatorial_montecarlo_shapley(
+        rf_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
+    )
+    check_values(permutation_values, combinatorial_values, perc_atol=perc_atol)
 
 
 # noinspection PyTestParametrized
