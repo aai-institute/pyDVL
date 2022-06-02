@@ -41,9 +41,9 @@ def influences(
     cpu_count = available_cpus()
     if n_jobs == -1:
         n_jobs = cpu_count
-    elif n_jobs == 0 or n_jobs < -1 or n_jobs > cpu_count:
+    elif n_jobs <= 0:
         raise AttributeError(
-            "Either set n_jobs to -1 (for all cores) or to a positive number smaller than the real cpu count."
+            "The number of jobs has to b bigger than zero or -1 for all available cores."
         )
 
     # ------------------------------------------------------------------------------------------------------------------
