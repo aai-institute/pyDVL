@@ -5,6 +5,8 @@ import numpy as np
 import scipy
 from opt_einsum import contract
 
+from valuation.utils import logger
+
 
 def conjugate_gradient(
     A: Union[np.ndarray, Callable[[np.ndarray], np.ndarray]],
@@ -110,5 +112,12 @@ def conjugate_gradient(
             beta.reshape([-1, 1]) * p[not_yet_converged_indices] + new_u
         )
         u[not_yet_converged_indices] = new_u
+
+    if not np.all(converged):
+        percentage_converged = int(converged.sum() / len(converged)) * 100
+        logger.warning(
+            f"Conjugate gradient couldn't solve the equation system for {percentage_converged}% of"
+            f" {len(converged)} random chosen vectors"
+        )
 
     return x, iteration
