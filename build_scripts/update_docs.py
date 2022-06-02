@@ -33,8 +33,10 @@ def package_template(package_qualname: str):
 .. automodule:: {package_qualname}
    :members:
    :undoc-members:
+
 .. toctree::
    :glob:
+
    {package_name}/*
 """
     return template
@@ -47,8 +49,10 @@ def index_template(package_name):
 .. automodule:: {package_name}
    :members:
    :undoc-members:
+
 .. toctree::
    :glob:
+
    *
 """
     return template
