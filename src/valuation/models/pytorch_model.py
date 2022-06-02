@@ -74,6 +74,7 @@ class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
         return hvp.detach().numpy()
 
     def fit(self, x: np.ndarray, y: np.ndarray):
+        from valuation.utils.logging import logger
 
         x = tt(x)
         y = tt(y)
@@ -98,7 +99,8 @@ class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
                 batch_x, batch_y = train_batch
                 pred_y = self.model(batch_x)
                 loss = self.objective(pred_y, batch_y)
-                print("train loss: ", loss.item())
+
+                logger.debug(f"Training loss: {loss.item()}")
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
