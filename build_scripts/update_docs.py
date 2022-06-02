@@ -25,7 +25,7 @@ def module_template(module_qualname: str):
     return template
 
 
-def package_template(package_qualname: str):
+def package_template(package_qualname: str, *, add_toctree: bool = True):
     package_name = package_qualname.split(".")[-1]
     title = package_name.replace("_", r"\_")
     template = f"""{title}
@@ -33,7 +33,9 @@ def package_template(package_qualname: str):
 .. automodule:: {package_qualname}
    :members:
    :undoc-members:
-
+"""
+    if add_toctree:
+        template += f"""
 .. toctree::
    :glob:
 
@@ -121,8 +123,18 @@ def make_rst(src_root="src", docs_root="docs", clean=False, overwrite=False):
                             f"{dirname}.rst",
                         )
                     )
+                    package_path = os.path.join(root, dirname)
+                    add_toctree = True
+                    package_dir_content = list(
+                        filter(lambda x: x != "__pycache__", os.listdir(package_path))
+                    )
+                    if package_dir_content == ["__init__.py"]:
+                        add_toctree = False
                     log.info(f"Writing package documentation to {package_rst_path}")
-                    write_to_file(package_template(package_qualname), package_rst_path)
+                    write_to_file(
+                        package_template(package_qualname, add_toctree=add_toctree),
+                        package_rst_path,
+                    )
 
             for filename in filenames:
                 base_name, ext = os.path.splitext(filename)
