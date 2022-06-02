@@ -34,11 +34,15 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.doctest",
     "sphinx.ext.linkcode",
+    "sphinx.ext.todo",
     "sphinx_rtd_theme",
     "nbsphinx",
     # see https://github.com/spatialaudio/nbsphinx/issues/24 for an explanation why this extension is necessary
     "IPython.sphinxext.ipython_console_highlighting",
 ]
+
+# Display todos by setting to True
+todo_include_todos = True
 
 
 # adding links to source files (this works for gitlab and github like hosts and might need to be adjusted for others)
