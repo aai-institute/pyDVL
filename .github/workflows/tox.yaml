@@ -26,8 +26,8 @@ jobs:
         run: pip install tox
       - name: Run Tox
         run: tox
-      - name: Run Notebooks
-        run: tox -e notebooks
+      - name: Test Notebooks
+        run: tox -e test-notebooks
         continue-on-error: true
       - name: Build Docs
         run: tox -e docs
