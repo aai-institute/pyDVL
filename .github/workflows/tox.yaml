@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Merge develop into current branch
@@ -19,9 +19,10 @@ jobs:
           git fetch origin develop:develop --update-head-ok
           git merge develop
       - name: Setup Python 3.8
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v3
         with:
           python-version: 3.8
+          cache: 'pip'
       - name: Install Tox and any other packages
         run: pip install tox
       - name: Run Tox
