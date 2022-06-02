@@ -1,9 +1,10 @@
 from abc import abstractmethod
+from typing import Protocol
 
 import numpy as np
 
 
-class TwiceDifferentiable:
+class TwiceDifferentiable(Protocol):
     @abstractmethod
     def grad(self, x: np.ndarray, y: np.ndarray, progress: bool = False) -> np.ndarray:
         """

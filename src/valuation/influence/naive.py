@@ -3,6 +3,7 @@ from typing import Union
 
 import numpy as np
 from opt_einsum import contract
+from typing_protocol_intersection import ProtocolIntersection
 
 from valuation.models.pytorch_model import TwiceDifferentiable
 from valuation.utils import (
@@ -16,7 +17,7 @@ from valuation.utils.algorithms import conjugate_gradient
 
 
 def influences(
-    model: Union[SupervisedModel, TwiceDifferentiable],
+    model: ProtocolIntersection[SupervisedModel, TwiceDifferentiable],
     data: Dataset,
     progress: bool = False,
     n_jobs: int = -1,
@@ -32,12 +33,6 @@ def influences(
     :param n_jobs: The number of jobs to use for processing
     :returns: A np.ndarray of size (N, M) where N is the number of training pointsand M is the number of test points.
     """
-
-    # check if model support influence factors
-    if not issubclass(model.__class__, TwiceDifferentiable):
-        raise AttributeError(
-            "Model is not twice differentiable, please implement interface."
-        )
 
     # verify cpu correctness
     cpu_count = available_cpus()
