@@ -21,7 +21,7 @@ def flatten_gradient(grad):
     return torch.cat([el.view(-1) for el in grad])
 
 
-class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
+class PyTorchSupervisedModel:
     def __init__(
         self,
         model: nn.Module,
@@ -81,7 +81,7 @@ class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
 
         optimizer_factory = {"adam": Adam, "adamw": AdamW}
         optimizer = optimizer_factory[self.optimizer](
-            self.model.parameters(), **optimizer_factory
+            self.model.parameters(), **self.optimizer_kwargs
         )
 
         class InternalDataset(Dataset):

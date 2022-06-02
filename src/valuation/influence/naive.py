@@ -65,7 +65,7 @@ def influences(
         _calculate_influence_factors, np.concatenate
     )
     influence_factors = map_reduce(
-        influence_factors_job, np.arange(len(u.data.x_test)), num_jobs=n_jobs
+        influence_factors_job, np.arange(len(data.x_test)), num_jobs=n_jobs
     )[0]
 
     # ------------------------------------------------------------------------------------------------------------------
