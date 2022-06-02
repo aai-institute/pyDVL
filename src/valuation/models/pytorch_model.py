@@ -1,11 +1,13 @@
+from dataclasses import field
 from functools import partial
+from typing import Dict
 
 import numpy as np
 import torch
 import torch.nn as nn
 from torch import autograd
 from torch.autograd import Variable
-from torch.optim import Adam
+from torch.optim import Adam, AdamW
 from torch.utils.data import DataLoader, Dataset
 
 from valuation.models.twice_differentiable import TwiceDifferentiable
@@ -20,6 +22,22 @@ def flatten_gradient(grad):
 
 
 class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
+    def __init__(
+        self,
+        model: nn.Module,
+        objective: TorchObjective = None,
+        optimizer: str = "adamw",
+        optimizer_kwargs: Dict = None,
+        num_epochs: int = 1,
+        batch_size: int = 64,
+    ):
+        self.model = model
+        self.objective = objective
+        self.optimizer = optimizer
+        self.optimizer_kwargs = {} if optimizer_kwargs is None else optimizer_kwargs
+        self.num_epochs = num_epochs
+        self.batch_size = batch_size
+
     def grad(self, x: np.ndarray, y: np.ndarray, progress: bool = False) -> np.ndarray:
 
         x = tt(x)
@@ -55,24 +73,15 @@ class PyTorchSupervisedModel(SupervisedModel, TwiceDifferentiable):
         hvp = torch.stack([grad.contiguous().view(-1) for grad in all_flattened_grads])
         return hvp.detach().numpy()
 
-    def __init__(
-        self,
-        model: nn.Module,
-        objective: TorchObjective = None,
-        num_epochs: int = 1,
-        batch_size: int = 64,
-    ):
-        self.model = model
-        self.objective = objective
-        self.num_epochs = num_epochs
-        self.batch_size = batch_size
-
     def fit(self, x: np.ndarray, y: np.ndarray):
 
         x = tt(x)
         y = tt(y)
 
-        optimizer = Adam(self.model.parameters(), weight_decay=0.01)
+        optimizer_factory = {"adam": Adam, "adamw": AdamW}
+        optimizer = optimizer_factory[self.optimizer](
+            self.model.parameters(), **optimizer_factory
+        )
 
         class InternalDataset(Dataset):
             def __len__(self):
