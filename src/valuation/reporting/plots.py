@@ -8,8 +8,7 @@ import scipy as sp
 def shaded_mean_std(data: np.ndarray, color: str, num_std: float = 1.0, **kwargs):
     """The usual mean +- x std deviations plot to aggregate runs.
 
-    :param data: axis 0 is to be aggregated on (i.e. runs) and axis 1 is the
-    data for each run
+    :param data: axis 0 is to be aggregated on (i.e. runs) and axis 1 is the data for each run
     :param color: for matplotlib
     :param num_std: number of standard deviations to shade around the mean
     :param kwargs: these are forwarded to the plt.plot() call for the mean
@@ -27,17 +26,22 @@ def shaded_mean_std(data: np.ndarray, color: str, num_std: float = 1.0, **kwargs
 def shapley_results(results: dict, filename: str = None):
     """
     :param results: dict
-        results = {'all_values': num_runs x num_points
-                   'backward_scores': num_runs x num_points,
-                   'backward_scores_reversed': num_runs x num_points,
-                   'backward_random_scores': num_runs x num_points,
-                   'forward_scores': num_runs x num_points,
-                   'forward_scores_reversed': num_runs x num_points,
-                   'forward_random_scores': num_runs x num_points,
-                   'max_iterations': int,
-                   'score_name: str,
-                   'num_points': int}
     :param filename: For plt.savefig(). Set to None to disable saving.
+
+    Here's an example results dictionary::
+
+        results = {
+            "all_values": num_runs x num_points
+            "backward_scores": num_runs x num_points,
+            "backward_scores_reversed": num_runs x num_points,
+            "backward_random_scores": num_runs x num_points,
+            "forward_scores": num_runs x num_points,
+            "forward_scores_reversed": num_runs x num_points,
+            "forward_random_scores": num_runs x num_points,
+            "max_iterations": int,
+            "score_name" str,
+            "num_points": int
+        }
     """
     plt.figure(figsize=(16, 5))
     num_runs = len(results["all_values"])
