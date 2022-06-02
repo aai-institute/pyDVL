@@ -1,5 +1,5 @@
 import functools
-import multiprocessing
+from typing import Union
 
 import numpy as np
 from opt_einsum import contract
@@ -9,7 +9,6 @@ from valuation.utils import (
     Dataset,
     MapReduceJob,
     SupervisedModel,
-    Utility,
     available_cpus,
     map_reduce,
 )
@@ -17,7 +16,10 @@ from valuation.utils.algorithms import conjugate_gradient
 
 
 def influences(
-    model: SupervisedModel, data: Dataset, progress: bool = False, n_jobs: int = -1
+    model: Union[SupervisedModel, TwiceDifferentiable],
+    data: Dataset,
+    progress: bool = False,
+    n_jobs: int = -1,
 ) -> np.ndarray:
     """
     Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
