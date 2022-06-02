@@ -12,3 +12,4 @@ repos:
     rev: 0.5.0
     hooks:
       - id: nbstripout
+        args: ["--strip-empty-cells", "--extra-keys", "metadata.pycharm cell.metadata.pycharm"]
