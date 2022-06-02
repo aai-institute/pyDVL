@@ -18,12 +18,13 @@ def conjugate_gradient(
     Implementation of a batched conjugate gradient algorithm. It uses vector matrix products for efficient calculation. See
     https://en.wikipedia.org/wiki/Conjugate_gradient_method for more details of the algorithm. See also
     https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351 and
+    https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf.
 
-
-    :param A: A function f : R[n] -> R[n] representing a matrix vector product from dimension K to K or a matrix
-    of shape [K, K]
+    :param A: A function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix
+    of shape [K, K]. The underlying matrix has to be symmetric and positive definite.
     :param b: A np.ndarray of shape [K] representing the targeted result of the matrix multiplication Ax.
-    :param M: A function f : R[n] -> R[n] which approximates inv(A) or a matrix of shape [K, K].
+    :param M: A function f : R[k] -> R[k] which approximates inv(A) or a matrix of shape [K, K]. The underlying matrix
+    has to be symmetric and positive definite.
     :param max_iterations: The maximum number of iterations to use in conjugate gradient.
     :param tol: Damping for vector products controls when the iteration is stopped.
     :return: A np.ndarray of shape [K] representing the solution of Ax=b.
