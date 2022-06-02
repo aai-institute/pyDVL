@@ -5,24 +5,31 @@ import numpy as np
 from opt_einsum import contract
 
 from valuation.models.pytorch_model import TwiceDifferentiable
-from valuation.utils import Utility, MapReduceJob, map_reduce, available_cpus
+from valuation.utils import (
+    Dataset,
+    MapReduceJob,
+    SupervisedModel,
+    Utility,
+    available_cpus,
+    map_reduce,
+)
 from valuation.utils.algorithms import conjugate_gradient
 
 
-def influences(u: Utility, progress: bool = False, n_jobs: int = -1) -> np.ndarray:
+def influences(
+    model: SupervisedModel, data: Dataset, progress: bool = False, n_jobs: int = -1
+) -> np.ndarray:
     """
     Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
     calculating the influence factors for all test points, with respect to the training points. Subsequently,
     all influence get calculated over the train set.
 
-    :param u: Utility object with model, data, and scoring function. The model has to inherit from the
-    TwiceDifferentiable interface.
+    :param model: A model which has to implement the TwiceDifferentiable interface in addition to SupervisedModel.
+    :param data: A dataset, which hold training and test datasets.
     :param progress: whether to display progress bars.
     :param n_jobs: The number of jobs to use for processing
     :returns: A np.ndarray of size (N, M) where N is the number of training pointsand M is the number of test points.
     """
-    model = u.model
-    data = u.data
 
     # check if model support influence factors
     if not issubclass(model.__class__, TwiceDifferentiable):
@@ -53,7 +60,7 @@ def influences(u: Utility, progress: bool = False, n_jobs: int = -1) -> np.ndarr
         :param job_id: A id which describes the current job id.
         :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension and test sample.
         """
-        c_x_test, c_y_test = u.data.x_test[indices], u.data.y_test[indices]
+        c_x_test, c_y_test = data.x_test[indices], data.y_test[indices]
         test_grads = twd.grad(c_x_test, c_y_test, progress=progress)
         return conjugate_gradient(hvp, test_grads)[0]
 
@@ -74,13 +81,11 @@ def influences(u: Utility, progress: bool = False, n_jobs: int = -1) -> np.ndarr
         :param job_id: A id which describes the current job id.
         :returns: A np.ndarray of size (N, K) containing the influence for each test sample and train sample.
         """
-        c_x_train, c_y_train = u.data.x_train[indices], u.data.y_train[indices]
+        c_x_train, c_y_train = data.x_train[indices], data.y_train[indices]
         train_grads = twd.grad(c_x_train, c_y_train)
         return contract("ta,va->tv", influence_factors, train_grads)
 
     influences_job = MapReduceJob.from_fun(
         _calculate_influences, functools.partial(np.concatenate, axis=1)
     )
-    return map_reduce(influences_job, np.arange(len(u.data.x_train)), num_jobs=n_jobs)[
-        0
-    ]
+    return map_reduce(influences_job, np.arange(len(data.x_train)), num_jobs=n_jobs)[0]
