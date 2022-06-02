@@ -1,0 +1,10 @@
+shapley
+=======
+.. automodule:: valuation.shapley
+   :members:
+   :undoc-members:
+
+.. toctree::
+   :glob:
+
+   shapley/*

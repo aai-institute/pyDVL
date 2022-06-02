@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>montecarlo &mdash; pyDVL 0.1.0.dev1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="naive" href="naive.html" />
+    <link rel="prev" title="knn" href="knn.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> pyDVL
+          </a>
+              <div class="version">
+                0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Guides and Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../knn_shapley.html">KNN Shapley</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">valuation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../cli.html">cli</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dist_shapley.html">dist_shapley</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../loo.html">loo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reporting.html">reporting</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../shapley.html">shapley</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="knn.html">knn</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">montecarlo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="naive.html">naive</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../utils.html">utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyDVL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">valuation</a> &raquo;</li>
+          <li><a href="../shapley.html">shapley</a> &raquo;</li>
+      <li>montecarlo</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/valuation/shapley/montecarlo.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="module-valuation.shapley.montecarlo">
+<span id="montecarlo"></span><h1>montecarlo<a class="headerlink" href="#module-valuation.shapley.montecarlo" title="Permalink to this heading"></a></h1>
+<p>Simple implementation of DataShapley [1].</p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<ul class="simple">
+<li><p>don’t copy data to all workers foolishly</p></li>
+<li><p>use ray / whatever to distribute jobs to multiple machines</p></li>
+<li><p>provide a single interface “montecarlo_shapley” for all methods with the
+parallelization backend as an argument (“multiprocessing”, “ray”, “serial”)</p></li>
+<li><p>shapley values for groups of samples</p></li>
+</ul>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.shapley.montecarlo.truncated_montecarlo_shapley">
+<span class="sig-name descname"><span class="pre">truncated_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/utility.html#valuation.utils.utility.Utility" title="valuation.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_tolerance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_tolerance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">OrderedDict</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/shapley/montecarlo.py#L105"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.shapley.montecarlo.truncated_montecarlo_shapley" title="Permalink to this definition"></a></dt>
+<dd><p>MonteCarlo approximation to the Shapley value of data points.</p>
+<p>Instead of naively implementing the expectation, we sequentially add points
+to a dataset from a permutation. We compute scores and stop when model
+performance doesn’t increase beyond a threshold.</p>
+<p>We keep sampling permutations and updating all values until the change in
+the moving average for all values falls below another threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
+<li><p><strong>bootstrap_iterations</strong> – Repeat the computation of <cite>global_score</cite>
+this many times to estimate its variance.</p></li>
+<li><p><strong>min_scores</strong> – Use so many of the last scores in order to compute
+the moving average.</p></li>
+<li><p><strong>score_tolerance</strong> – For every permutation, computation stops
+after the mean increase in performance is within score_tolerance*stddev
+of the bootstrapped score over the <strong>test</strong> set (i.e. we bootstrap to
+compute variance of scores, then use that to stop)</p></li>
+<li><p><strong>min_values</strong> – complete at least these many value computations for
+every index and use so many of the last values for each sample index
+in order to compute the moving averages of values.</p></li>
+<li><p><strong>value_tolerance</strong> – Stop sampling permutations after the first
+derivative of the means of the last min_steps values are within
+eps close to 0</p></li>
+<li><p><strong>max_iterations</strong> – never run more than this many iterations (in
+total, across all workers: if num_workers = 100 and max_iterations =
+100, then each worker will run at most one job)</p></li>
+<li><p><strong>num_workers</strong> – number of workers processing permutations. Set e.g.
+to available_cpus()/t if each worker runs on t threads.</p></li>
+<li><p><strong>run_id</strong> – for display purposes (location of progress bar)</p></li>
+<li><p><strong>progress</strong> – set to True to use tqdm progress bars.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dict of approximated Shapley values for the indices</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.shapley.montecarlo.serial_truncated_montecarlo_shapley">
+<span class="sig-name descname"><span class="pre">serial_truncated_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/utility.html#valuation.utils.utility.Utility" title="valuation.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_tolerance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_tolerance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">OrderedDict</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/shapley/montecarlo.py#L202"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.shapley.montecarlo.serial_truncated_montecarlo_shapley" title="Permalink to this definition"></a></dt>
+<dd><p>Truncated MonteCarlo method to compute Shapley values of data points
+using only one CPU.</p>
+<p>Instead of naively implementing the expectation, we sequentially add points
+to a dataset from a permutation. We compute scores and stop when model
+performance doesn’t increase beyond a threshold.</p>
+<p>We keep sampling permutations and updating all values until the change in
+the moving average for all values falls below another threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
+<li><p><strong>bootstrap_iterations</strong> – Repeat global_score computation this many
+times to estimate variance.</p></li>
+<li><p><strong>score_tolerance</strong> – For every permutation, computation stops
+after the mean increase in performance is within score_tolerance*stddev
+of the bootstrapped score over the <strong>test</strong> set (i.e. we bootstrap to
+compute variance of scores, then use that to stop)</p></li>
+<li><p><strong>min_steps</strong> – use so many of the last values for each sample index
+in order to compute the moving averages of values.</p></li>
+<li><p><strong>value_tolerance</strong> – Stop sampling permutations after the first
+derivative of the means of the last min_steps values are within
+eps close to 0</p></li>
+<li><p><strong>max_iterations</strong> – never run more than these many iterations</p></li>
+<li><p><strong>progress</strong> – whether to display progress bars</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dict of approximated Shapley values for the indices</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.shapley.montecarlo.permutation_montecarlo_shapley">
+<span class="sig-name descname"><span class="pre">permutation_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/utility.html#valuation.utils.utility.Utility" title="valuation.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">OrderedDict</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/shapley/montecarlo.py#L285"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.shapley.montecarlo.permutation_montecarlo_shapley" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt><strong>FIXME</strong>:</dt><dd><p>the sum of values tends to cancel out, even though the ranking is ok</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.shapley.montecarlo.combinatorial_montecarlo_shapley">
+<span class="sig-name descname"><span class="pre">combinatorial_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/utility.html#valuation.utils.utility.Utility" title="valuation.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">OrderedDict</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/shapley/montecarlo.py#L318"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.shapley.montecarlo.combinatorial_montecarlo_shapley" title="Permalink to this definition"></a></dt>
+<dd><p>Computes an approximate Shapley value using the combinatorial
+definition and MonteCarlo samples.</p>
+<dl class="simple">
+<dt><strong>FIXME</strong>:</dt><dd><p>this seems to have very high variance! It might help to implement
+importance sampling with more weight for smaller set sizes, where value
+contributions are likely to be higher.</p>
+</dd>
+<dt><strong>UPDATE</strong>:</dt><dd><p>Seems dubious, since the uniform sampling strategy does not help</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="knn.html" class="btn btn-neutral float-left" title="knn" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="naive.html" class="btn btn-neutral float-right" title="naive" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

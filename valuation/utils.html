@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>utils &mdash; pyDVL 0.1.0.dev1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="caching" href="utils/caching.html" />
+    <link rel="prev" title="naive" href="shapley/naive.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> pyDVL
+          </a>
+              <div class="version">
+                0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Guides and Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../knn_shapley.html">KNN Shapley</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">valuation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cli.html">cli</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dist_shapley.html">dist_shapley</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loo.html">loo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reporting.html">reporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley.html">shapley</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="utils/caching.html">caching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/dataset.html">dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/logging.html">logging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/numeric.html">numeric</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/parallel.html">parallel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/progress.html">progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/types.html">types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/utility.html">utility</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyDVL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">valuation</a> &raquo;</li>
+      <li>utils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/valuation/utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="module-valuation.utils">
+<span id="utils"></span><h1>utils<a class="headerlink" href="#module-valuation.utils" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.utils.memcached">
+<span class="sig-name descname"><span class="pre">memcached</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="utils/caching.html#valuation.utils.caching.ClientConfig" title="valuation.utils.caching.ClientConfig"><span class="pre">ClientConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.memcached" title="Permalink to this definition"></a></dt>
+<dd><p>Decorate a callable with this in order to have transparent caching.</p>
+<p>The function’s code, constants and all arguments (except for those in
+<cite>ignore_args</cite> are used to generate the key for the remote cache.</p>
+<dl class="simple">
+<dt><strong>FIXME?</strong>:</dt><dd><p>Due to the need to pickle memcached functions, this returns a class
+instead of a function. This has the drawback of a messy docstring.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client_config</strong> – config for pymemcache.client.Client().
+Will be merged on top of the default configuration.</p></li>
+<li><p><strong>threshold</strong> – computations taking below this value (in seconds) are not
+cached</p></li>
+<li><p><strong>ignore_args</strong> – Do not take these keyword arguments into account when
+hashing the wrapped function for usage as key in memcached</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A wrapped function</p>
+</dd>
+</dl>
+<p>The default configuration is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">default_config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">server</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="mi">11211</span><span class="p">),</span>
+    <span class="n">connect_timeout</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="c1"># IMPORTANT! Disable small packet consolidation:</span>
+    <span class="n">no_delay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">serde</span><span class="o">=</span><span class="n">serde</span><span class="o">.</span><span class="n">PickleSerde</span><span class="p">(</span><span class="n">pickle_version</span><span class="o">=</span><span class="n">PICKLE_VERSION</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="valuation.utils.SupervisedModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SupervisedModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.SupervisedModel" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
+<p>Pedantic: only here for the type hints.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="valuation.utils.SupervisedModel.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#valuation.utils.SupervisedModel.fit" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="valuation.utils.SupervisedModel.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#valuation.utils.SupervisedModel.predict" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="valuation.utils.SupervisedModel.score">
+<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#valuation.utils.SupervisedModel.score" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="valuation.utils.Dataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.Dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Meh… Just a bunch of properties and shortcuts.
+I should probably ditch / redesign this.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="valuation.utils.Dataset.feature">
+<span class="sig-name descname"><span class="pre">feature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">IndexExpression</span></span></span><a class="headerlink" href="#valuation.utils.Dataset.feature" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="valuation.utils.Dataset.target">
+<span class="sig-name descname"><span class="pre">target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">IndexExpression</span></span></span><a class="headerlink" href="#valuation.utils.Dataset.target" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="valuation.utils.Dataset.indices">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">indices</span></span><a class="headerlink" href="#valuation.utils.Dataset.indices" title="Permalink to this definition"></a></dt>
+<dd><p>Index of positions in data.x_train. Contiguous integers from 0 to
+len(Dataset).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="valuation.utils.Dataset.dim">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dim</span></span><a class="headerlink" href="#valuation.utils.Dataset.dim" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the number of dimensions of a sample.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="valuation.utils.Dataset.from_sklearn">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_sklearn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Bunch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="utils/dataset.html#valuation.utils.dataset.Dataset" title="valuation.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></span><a class="headerlink" href="#valuation.utils.Dataset.from_sklearn" title="Permalink to this definition"></a></dt>
+<dd><p>Constructs a Dataset object from an sklearn bunch as returned
+by the load_* functions in <cite>sklearn.datasets</cite></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valuation.utils.Dataset.pd">
+<span class="sig-name descname"><span class="pre">pd</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;module</span> <span class="pre">'pandas'</span> <span class="pre">from</span> <span class="pre">'/home/runner/work/valuation/valuation/.tox/docs/lib/python3.8/site-packages/pandas/__init__.py'&gt;</span></em><a class="headerlink" href="#valuation.utils.Dataset.pd" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="valuation.utils.Dataset.from_pandas">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_pandas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="utils/dataset.html#valuation.utils.dataset.Dataset" title="valuation.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></span><a class="headerlink" href="#valuation.utils.Dataset.from_pandas" title="Permalink to this definition"></a></dt>
+<dd><p>That.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.utils.map_reduce">
+<span class="sig-name descname"><span class="pre">map_reduce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fun</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/parallel.html#valuation.utils.parallel.MapReduceJob" title="valuation.utils.parallel.MapReduceJob"><span class="pre">MapReduceJob</span></a><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Collection</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_runs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'loky'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.map_reduce" title="Permalink to this definition"></a></dt>
+<dd><p>Takes an embarrassingly parallel fun and runs ot in num_jobs parallel
+jobs, splitting arg into the same number of chunks, one for each job.</p>
+<p>It repeats the process num_runs times, allocating jobs across runs. E.g.
+if num_jobs = 90 and num_runs=10, each whole execution of fun uses 9 jobs,
+with the data split evenly among them. If num_jobs=2 and num_runs=10, two
+cores are used, five times in succession, and each job receives all data.</p>
+<p>Results are aggregated per run using fun.reduce(), but not across runs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fun</strong> – Create with <cite>MapReduceJob.from_fun(fun, reducer, …)</cite></p></li>
+<li><p><strong>data</strong> – values to split across jobs</p></li>
+<li><p><strong>num_jobs</strong> – number of parallel jobs to run. Does not accept -1</p></li>
+<li><p><strong>num_runs</strong> – <p>number of times to run fun on the whole data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param backend</dt>
+<dd class="field-odd"><p>’loky’, ‘threading’, ‘multiprocessing’, etc.</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="valuation.utils.MapReduceJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MapReduceJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.MapReduceJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T</span></code>]</p>
+<p>There are probably 77 libraries to do just this</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="valuation.utils.MapReduceJob.reduce">
+<span class="sig-name descname"><span class="pre">reduce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">R</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">R</span></span></span><a class="headerlink" href="#valuation.utils.MapReduceJob.reduce" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="valuation.utils.MapReduceJob.from_fun">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_fun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fun:</span> <span class="pre">~typing.Callable[[...],</span> <span class="pre">~valuation.utils.parallel.R],</span> <span class="pre">reducer:</span> <span class="pre">~typing.Callable[[~typing.List[~valuation.utils.parallel.R]],</span> <span class="pre">~valuation.utils.parallel.R]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">job_id_arg:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">run_id_arg:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="utils/parallel.html#valuation.utils.parallel.MapReduceJob" title="valuation.utils.parallel.MapReduceJob"><span class="pre">MapReduceJob</span></a></span></span><a class="headerlink" href="#valuation.utils.MapReduceJob.from_fun" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fun</strong> – </p></li>
+<li><p><strong>reducer</strong> – <p>Not actually a reduce() operation but the reduction
+itself. E.g. to join lists of results:</p>
+<blockquote>
+<div><p>reducer = lambda x: functools.reduce(operator.add, x, [])</p>
+</div></blockquote>
+<p>Or to average returned values:</p>
+<blockquote>
+<div><p>reducer = np.mean</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>job_id_arg</strong> – argument name to pass the job id for display
+purposes (e.g. progress bar position). The value passed will be
+job_id + 1 (to allow for a global bar at position=0). Set to None if
+not supported by the function.</p></li>
+<li><p><strong>run_id_arg</strong> – argument name to pass the run id, for display and
+caching purposes. A run id will be passed to fun, and used to</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.utils.available_cpus">
+<span class="sig-name descname"><span class="pre">available_cpus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.available_cpus" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.utils.vanishing_derivatives">
+<span class="sig-name descname"><span class="pre">vanishing_derivatives</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.vanishing_derivatives" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the number of rows whose empirical derivatives have converged
+to zero, up to an absolute tolerance of atol.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.utils.unpackable">
+<span class="sig-name descname"><span class="pre">unpackable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">type</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.unpackable" title="Permalink to this definition"></a></dt>
+<dd><p>A class decorator that allows unpacking of all attributes of an object
+with the double asterisk operator. E.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@unpackable</span>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Schtuff</span><span class="p">:</span>
+    <span class="n">a</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">b</span><span class="p">:</span> <span class="nb">str</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">Schtuff</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="s1">&#39;meh&#39;</span><span class="p">)</span>
+<span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="o">**</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="valuation.utils.Utility">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Utility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/types.html#valuation.utils.types.SupervisedModel" title="valuation.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/dataset.html#valuation.utils.dataset.Dataset" title="valuation.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scoring</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Scorer</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catch_errors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="utils/caching.html#valuation.utils.caching.MemcachedConfig" title="valuation.utils.caching.MemcachedConfig"><span class="pre">MemcachedConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.Utility" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A convenience wrapper with configurable memoization</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valuation.utils.Utility.model">
+<span class="sig-name descname"><span class="pre">model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="utils/types.html#valuation.utils.types.SupervisedModel" title="valuation.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></em><a class="headerlink" href="#valuation.utils.Utility.model" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valuation.utils.Utility.data">
+<span class="sig-name descname"><span class="pre">data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="utils/dataset.html#valuation.utils.dataset.Dataset" title="valuation.utils.dataset.Dataset"><span class="pre">Dataset</span></a></em><a class="headerlink" href="#valuation.utils.Utility.data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valuation.utils.Utility.scoring">
+<span class="sig-name descname"><span class="pre">scoring</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Scorer</span></em><a class="headerlink" href="#valuation.utils.Utility.scoring" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.utils.bootstrap_test_score">
+<span class="sig-name descname"><span class="pre">bootstrap_test_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/utility.html#valuation.utils.utility.Utility" title="valuation.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.bootstrap_test_score" title="Permalink to this definition"></a></dt>
+<dd><p>That. Here for lack of a better place.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.utils.powerset">
+<span class="sig-name descname"><span class="pre">powerset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">it</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">Collection</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.powerset" title="Permalink to this definition"></a></dt>
+<dd><p>Returns an iterator for the power set of the argument.</p>
+<p>Subsets are generated in sequence by growing size. See <cite>random_powerset()</cite>
+for random sampling.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.utils.numeric</span> <span class="kn">import</span> <span class="n">powerset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">powerset</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]))</span>
+<span class="go">[(), (1,), (2,), (1, 2)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.utils.maybe_progress">
+<span class="sig-name descname"><span class="pre">maybe_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">it</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">range</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">enumerate</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">tqdm_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">tqdm_asyncio</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">range</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">enumerate</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.maybe_progress" title="Permalink to this definition"></a></dt>
+<dd><p>Returns either a tqdm progress bar or a mock object which wraps the
+iterator as well, but ignores any accesses to methods or properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>it</strong> – the iterator to wrap</p></li>
+<li><p><strong>display</strong> – set to True to return a tqdm bar</p></li>
+<li><p><strong>tqdm_kwargs</strong> – will be forwarded to tqdm</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="utils/caching.html">caching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils/dataset.html">dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils/logging.html">logging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils/numeric.html">numeric</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils/parallel.html">parallel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils/progress.html">progress</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils/types.html">types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils/utility.html">utility</a></li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="shapley/naive.html" class="btn btn-neutral float-left" title="naive" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="utils/caching.html" class="btn btn-neutral float-right" title="caching" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,5 @@
+dist\_shapley
+=============
+.. automodule:: valuation.dist_shapley
+   :members:
+   :undoc-members:
