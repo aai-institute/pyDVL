@@ -67,6 +67,27 @@ def test_conjugate_gradients_all(A: np.ndarray, b: np.ndarray, wrap_in_function:
     assert num_failed_percentage < AlgorithmTestSettings.FAILED_TOL
 
 
+@pytest.mark.parametrize("A,b,wrap_in_function", conjugate_gradient_examples, ids=ids)
+def test_preconditioned_conjugate_gradients_all(
+    A: np.ndarray, b: np.ndarray, wrap_in_function: bool
+):
+    M = np.diag(1 / np.diag(A))
+    x0 = np.zeros_like(b)
+    xn, n = conjugate_gradient(
+        (lambda x: x @ A.T) if wrap_in_function else A, b, M=M, x0=x0
+    )
+    assert np.all(np.logical_not(np.isnan(xn)))
+
+    inv_A = np.linalg.pinv(A)
+    xt = b @ inv_A.T
+    norm_A = lambda v: np.sqrt(contract("ia,ab,ib->i", v, A, v))
+    error = norm_A(xt - xn)
+    error_upper_bound = conjugate_gradient_error_bound(A, xt, x0, n)
+    failed = error > (1 + AlgorithmTestSettings.R_TOL) * error_upper_bound
+    num_failed_percentage = np.sum(failed) / len(failed)
+    assert num_failed_percentage < AlgorithmTestSettings.FAILED_TOL
+
+
 def conjugate_gradient_error_bound(
     A: np.ndarray, xt: np.ndarray, x0: np.ndarray, n: int
 ):
