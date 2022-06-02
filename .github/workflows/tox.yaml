@@ -30,5 +30,7 @@ jobs:
       - name: Test Notebooks
         run: tox -e test-notebooks
         continue-on-error: true
+      - name: Install Pandoc
+        run: sudo apt-get install --no-install-recommends --yes pandoc
       - name: Build Docs
         run: tox -e docs
