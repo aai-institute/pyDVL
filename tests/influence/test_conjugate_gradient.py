@@ -9,7 +9,7 @@ from valuation.utils.algorithms import conjugate_gradient
 
 
 class AlgorithmTestSettings:
-    R_TOL = 1.0
+    L2_TOL = 0.01
     FAILED_TOL = 0.1
     CG_DAMPING = 1e-10
     CG_BATCH_SIZE = 100
@@ -21,8 +21,8 @@ np.random.seed(AlgorithmTestSettings.NP_RANDOM_SEED)
 
 
 @pytest.mark.parametrize(
-    "problem_dimension,batch_size",
-    list(itertools.product(list(range(2, 10)), [16, 32])),
+    "problem_dimension,batch_size,condition_number,seed",
+    list(itertools.product(list(range(2, 10)), [16, 32], [10, 20], [0])),
     indirect=True,
 )
 def test_conjugate_gradients_mvp(linear_equation_system: Tuple[np.ndarray, np.ndarray]):
@@ -33,8 +33,8 @@ def test_conjugate_gradients_mvp(linear_equation_system: Tuple[np.ndarray, np.nd
 
 
 @pytest.mark.parametrize(
-    "problem_dimension,batch_size",
-    list(itertools.product(list(range(2, 10)), [16, 32])),
+    "problem_dimension,batch_size,condition_number,seed",
+    list(itertools.product(list(range(2, 10)), [16, 32], [10, 20], [0])),
     indirect=True,
 )
 def test_conjugate_gradients_fn(linear_equation_system: Tuple[np.ndarray, np.ndarray]):
@@ -47,8 +47,8 @@ def test_conjugate_gradients_fn(linear_equation_system: Tuple[np.ndarray, np.nda
 
 
 @pytest.mark.parametrize(
-    "problem_dimension,batch_size",
-    list(itertools.product(list(range(2, 10)), [16, 32])),
+    "problem_dimension,batch_size,condition_number,seed",
+    list(itertools.product(list(range(2, 10)), [16, 32], [10, 20], [0])),
     indirect=True,
 )
 def test_conjugate_gradients_mvp_preconditioned(
@@ -70,8 +70,7 @@ def check_solution(A, b, n, x0, xn):
     xt = b @ inv_A.T
     norm_A = lambda v: np.sqrt(contract("ia,ab,ib->i", v, A, v))
     error = norm_A(xt - xn)
-    error_upper_bound = conjugate_gradient_error_bound_first(A, n, x0, xt)
-    failed = error > (1 + AlgorithmTestSettings.R_TOL) * error_upper_bound
+    failed = error > AlgorithmTestSettings.L2_TOL
     num_failed_percentage = np.sum(failed) / len(failed)
     assert num_failed_percentage < AlgorithmTestSettings.FAILED_TOL
 

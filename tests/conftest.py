@@ -1,3 +1,4 @@
+import random as rand
 from collections import OrderedDict
 from typing import Type
 
@@ -132,19 +133,42 @@ def polynomial(coefficients, x):
 
 
 @pytest.fixture
-def problem_dimension(request):
+def problem_dimension(request) -> int:
     return request.param
 
 
 @pytest.fixture
-def batch_size(request):
+def batch_size(request) -> int:
     return request.param
 
 
+@pytest.fixture
+def condition_number(request) -> float:
+    return request.param
+
+
+@pytest.fixture
+def seed(request):
+    return request.param
+
+
+@pytest.fixture
+def random(seed):
+    rand.seed(seed)
+    np.random.seed(seed)
+
+
 @pytest.fixture(scope="function")
-def linear_equation_system(problem_dimension: int, batch_size: int):
+def linear_equation_system(
+    problem_dimension: int, batch_size: int, condition_number: float, random
+):
     H = np.random.random([problem_dimension, problem_dimension])
     A = H @ H.T
+    u, s, v = np.linalg.svd(A)
+    s = s[0] * (
+        1 - ((condition_number - 1) / condition_number) * (s[0] - s) / (s[0] - s[-1])
+    )
+    A = u @ np.diag(s) @ v
     b = np.random.normal(size=[batch_size, problem_dimension])
     return A, b
 

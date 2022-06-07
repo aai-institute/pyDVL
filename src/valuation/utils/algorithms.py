@@ -50,7 +50,7 @@ def conjugate_gradient(
         b = b.reshape([1, -1])
 
     if max_iterations is None:
-        max_iterations = k
+        max_iterations = 10 * k
 
     # start with residual
     x = np.zeros_like(b) if x0 is None else x0
