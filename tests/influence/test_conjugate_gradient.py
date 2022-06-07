@@ -63,7 +63,7 @@ def test_conjugate_gradients_mvp_preconditioned(
 
 def check_solution(A, b, n, x0, xn):
     """
-    This method used standard inversion techniques to verify the solution of the problem.
+    Uses standard inversion techniques to verify the solution of the problem.
     """
     assert np.all(np.logical_not(np.isnan(xn)))
     inv_A = np.linalg.pinv(A)
