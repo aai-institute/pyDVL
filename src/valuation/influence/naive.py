@@ -5,7 +5,6 @@ import numpy as np
 from opt_einsum import contract
 from typing_protocol_intersection import ProtocolIntersection
 
-from valuation.models.pytorch_model import TwiceDifferentiable
 from valuation.utils import (
     Dataset,
     MapReduceJob,
@@ -14,6 +13,7 @@ from valuation.utils import (
     map_reduce,
 )
 from valuation.utils.algorithms import conjugate_gradient
+from valuation.utils.types import TwiceDifferentiable
 
 
 def influences(

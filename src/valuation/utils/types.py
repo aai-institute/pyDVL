@@ -71,6 +71,22 @@ def unpackable(cls: type) -> type:
     return cls
 
 
+class TwiceDifferentiable(Protocol):
+    def grad(self, x: ndarray, y: ndarray, progress: bool = False) -> ndarray:
+        """
+        Calculate the gradient with respect to the parameters of the module with input parameters x[i] and y[i].
+        """
+        pass
+
+    def hvp(
+        self, x: ndarray, y: ndarray, v: ndarray, progress: bool = False
+    ) -> ndarray:
+        """
+        Calculate the hessian vector product over the loss with all input parameters x and y with the vector v.
+        """
+        pass
+
+
 class TorchObjective(Protocol):
     def __call__(self, x: tensor, y: tensor, **kwargs) -> tensor:
         pass
