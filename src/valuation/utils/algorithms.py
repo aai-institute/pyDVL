@@ -2,7 +2,6 @@ from types import LambdaType
 from typing import Callable, Union
 
 import numpy as np
-import scipy
 from opt_einsum import contract
 
 from valuation.utils import logger
@@ -13,7 +12,7 @@ def conjugate_gradient(
     b: np.ndarray,
     x0: np.ndarray = None,
     M: Union[np.ndarray, Callable[[np.ndarray], np.ndarray]] = None,
-    r_tol: float = 1e-5,
+    rtol: float = 1e-5,
     max_iterations: int = None,
 ):
     """
@@ -28,7 +27,7 @@ def conjugate_gradient(
     :param M: A function f : R[k] -> R[k] which approximates inv(A) or a matrix of shape [K, K]. The underlying matrix
     has to be symmetric and positive definite.
     :param max_iterations: The maximum number of iterations to use in conjugate gradient.
-    :param r_tol: Relative tolerance of the residual with respect to the 2-norm of b.
+    :param rtol: Relative tolerance of the residual with respect to the 2-norm of b.
     :return: A np.ndarray of shape [K] representing the solution of Ax=b.
     """
 
@@ -68,7 +67,7 @@ def conjugate_gradient(
     iteration = 0
     batch_dim = b.shape[0]
     converged = np.zeros(batch_dim, dtype=bool)
-    atol = np.linalg.norm(b, axis=1) * r_tol
+    atol = np.linalg.norm(b, axis=1) * rtol
 
     while iteration < max_iterations:
 
@@ -95,7 +94,7 @@ def conjugate_gradient(
         new_u = new_u[not_yet_converged_indices]
         new_r_dot_u = contract("ia,ia->i", r[not_yet_converged_indices], new_u)
 
-        if r_tol is not None:
+        if rtol is not None:
             residual = np.linalg.norm(
                 A(x)[not_yet_converged_indices] - b[not_yet_converged_indices],
                 axis=1,
