@@ -50,7 +50,7 @@ class PyTorchSupervisedModel:
         grads = [
             flatten_gradient(
                 autograd.grad(
-                    self.objective(self.model(x[i]), y[i]), self.model.parameters()
+                    self.objective(self.model(x[i])[0], y[i]), self.model.parameters()
                 )
             )
             .detach()
@@ -64,7 +64,7 @@ class PyTorchSupervisedModel:
     ) -> np.ndarray:
 
         x, y, v = tt(x), tt(y), tt(v)
-        loss = self.objective(self.model(x), y)
+        loss = self.objective(self.model(x)[:, 0], y)
         grad_f = torch.autograd.grad(loss, self.model.parameters(), create_graph=True)
         grad_f = flatten_gradient(grad_f)
         z = (grad_f * Variable(v)).sum(dim=1)

@@ -1,9 +1,9 @@
 from typing import List
-from torch.nn import ReLU
 
 import numpy as np
 import torch
 import torch.nn as nn
+from torch.nn import ReLU
 
 
 class NNTorchModel(nn.Module):
@@ -21,6 +21,11 @@ class NNTorchModel(nn.Module):
             linear_layer = nn.Linear(
                 in_features, out_features, bias=num_layer < len(all_dimensions) - 2
             )
+            torch.nn.init.xavier_uniform(linear_layer.weight)
+
+            if num_layer < len(all_dimensions) - 2:
+                linear_layer.bias.data.fill_(0.01)
+
             layers.append(linear_layer)
             if num_layer == len(all_dimensions) - 2:
                 layers.append(ReLU())

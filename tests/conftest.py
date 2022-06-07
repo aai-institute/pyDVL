@@ -4,6 +4,7 @@ from typing import Type
 
 import numpy as np
 import pytest
+import torch
 from sklearn.linear_model import LinearRegression
 
 from valuation.utils import Dataset, Utility
@@ -154,8 +155,15 @@ def seed(request):
 
 @pytest.fixture
 def random():
-    rand.seed(0)
-    np.random.seed(0)
+    example_seed = 0
+    rand.seed(example_seed)
+    np.random.seed(example_seed)
+
+
+@pytest.fixture
+def torch_random():
+    example_seed = 42
+    torch.random.manual_seed(example_seed)
 
 
 @pytest.fixture(scope="function")
