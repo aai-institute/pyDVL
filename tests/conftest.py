@@ -111,8 +111,8 @@ def boston_dataset():
     return Dataset.from_sklearn(datasets.load_boston())
 
 
-@pytest.fixture(scope="session")
-def linear_dataset():
+@pytest.fixture(scope="function")
+def linear_dataset(random):
     from sklearn.utils import Bunch
 
     a = 2

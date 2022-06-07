@@ -1,4 +1,5 @@
 import itertools
+from functools import partial
 
 import numpy as np
 import pytest
@@ -12,14 +13,15 @@ from valuation.utils import Dataset
 
 
 @pytest.mark.parametrize(
-    "torch_model_factory,n_jobs",
+    "torch_model_factory,n_jobs,seed",
     list(
         itertools.product(
             [
-                lambda *args: NNTorchModel(*args, n_neurons_per_Layer=[8, 8]),
+                partial(NNTorchModel, n_neurons_per_Layer=[8, 8]),
                 LRTorchModel,
             ],
             [1, 2],
+            [0],
         )
     ),
 )
