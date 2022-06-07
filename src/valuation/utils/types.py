@@ -3,7 +3,13 @@ from typing import Callable, Protocol, TypeVar
 from numpy import ndarray
 from torch import tensor
 
-__all__ = ["SupervisedModel", "Scorer", "unpackable"]
+__all__ = [
+    "SupervisedModel",
+    "Scorer",
+    "unpackable",
+    "TwiceDifferentiable",
+    "TorchObjective",
+]
 
 
 class SupervisedModel(Protocol):
