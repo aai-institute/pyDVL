@@ -1,4 +1,4 @@
-from dataclasses import field
+from enum import Enum
 from functools import partial
 from typing import Dict
 
@@ -10,8 +10,7 @@ from torch.autograd import Variable
 from torch.optim import Adam, AdamW
 from torch.utils.data import DataLoader, Dataset
 
-from valuation.models.twice_differentiable import TwiceDifferentiable
-from valuation.utils import SupervisedModel, maybe_progress
+from valuation.utils import maybe_progress
 from valuation.utils.types import TorchObjective
 
 tt = partial(torch.tensor, dtype=torch.float32)
@@ -21,12 +20,17 @@ def flatten_gradient(grad):
     return torch.cat([el.view(-1) for el in grad])
 
 
+class PyTorchOptimizer(Enum):
+    ADAM = 1
+    ADAM_W = 2
+
+
 class PyTorchSupervisedModel:
     def __init__(
         self,
         model: nn.Module,
         objective: TorchObjective = None,
-        optimizer: str = "adamw",
+        optimizer: PyTorchOptimizer = PyTorchOptimizer.ADAM_W,
         optimizer_kwargs: Dict = None,
         num_epochs: int = 1,
         batch_size: int = 64,
@@ -79,7 +83,10 @@ class PyTorchSupervisedModel:
         x = tt(x)
         y = tt(y)
 
-        optimizer_factory = {"adam": Adam, "adamw": AdamW}
+        optimizer_factory = {
+            PyTorchOptimizer.ADAM: Adam,
+            PyTorchOptimizer.ADAM_W: AdamW,
+        }
         optimizer = optimizer_factory[self.optimizer](
             self.model.parameters(), **self.optimizer_kwargs
         )
