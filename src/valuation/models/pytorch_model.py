@@ -13,7 +13,9 @@ from torch.utils.data import DataLoader, Dataset
 from valuation.utils import maybe_progress
 from valuation.utils.types import TorchObjective
 
-tt = partial(torch.tensor, dtype=torch.float32)
+
+def tt(v):
+    return torch.tensor(v, dtype=torch.float32)
 
 
 def flatten_gradient(grad):
