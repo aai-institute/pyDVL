@@ -13,7 +13,7 @@ from valuation.utils import Dataset
 
 
 @pytest.mark.parametrize(
-    "torch_model_factory,n_jobs,seed",
+    "torch_model_factory,n_jobs",
     list(
         itertools.product(
             [
@@ -21,7 +21,6 @@ from valuation.utils import Dataset
                 LRTorchModel,
             ],
             [1, 2],
-            [0],
         )
     ),
 )

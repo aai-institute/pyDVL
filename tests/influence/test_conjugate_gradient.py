@@ -21,8 +21,8 @@ np.random.seed(AlgorithmTestSettings.NP_RANDOM_SEED)
 
 
 @pytest.mark.parametrize(
-    "problem_dimension,batch_size,condition_number,seed",
-    list(itertools.product(list(range(2, 10)), [16, 32], [10, 20], [0])),
+    "problem_dimension,batch_size,condition_number",
+    list(itertools.product(list(range(2, 10)), [16, 32], [10, 20])),
     indirect=True,
 )
 def test_conjugate_gradients_mvp(linear_equation_system: Tuple[np.ndarray, np.ndarray]):
@@ -33,8 +33,8 @@ def test_conjugate_gradients_mvp(linear_equation_system: Tuple[np.ndarray, np.nd
 
 
 @pytest.mark.parametrize(
-    "problem_dimension,batch_size,condition_number,seed",
-    list(itertools.product(list(range(2, 10)), [16, 32], [10, 20], [0])),
+    "problem_dimension,batch_size,condition_number",
+    list(itertools.product(list(range(2, 10)), [16, 32], [10, 20])),
     indirect=True,
 )
 def test_conjugate_gradients_fn(linear_equation_system: Tuple[np.ndarray, np.ndarray]):
@@ -47,8 +47,8 @@ def test_conjugate_gradients_fn(linear_equation_system: Tuple[np.ndarray, np.nda
 
 
 @pytest.mark.parametrize(
-    "problem_dimension,batch_size,condition_number,seed",
-    list(itertools.product(list(range(2, 10)), [16, 32], [10, 20], [0])),
+    "problem_dimension,batch_size,condition_number",
+    list(itertools.product(list(range(2, 10)), [16, 32], [10, 20])),
     indirect=True,
 )
 def test_conjugate_gradients_mvp_preconditioned(

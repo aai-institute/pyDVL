@@ -153,9 +153,9 @@ def seed(request):
 
 
 @pytest.fixture
-def random(seed):
-    rand.seed(seed)
-    np.random.seed(seed)
+def random():
+    rand.seed(0)
+    np.random.seed(0)
 
 
 @pytest.fixture(scope="function")
