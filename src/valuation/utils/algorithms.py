@@ -115,7 +115,7 @@ def conjugate_gradient(
     if not np.all(converged):
         percentage_converged = int(converged.sum() / len(converged)) * 100
         logger.warning(
-            f"Conjugate gradient couldn't solve the equation system for {percentage_converged}% of"
+            f"Conjugate gradient could solve the equation system for {percentage_converged}% of"
             f" {len(converged)} random chosen vectors"
         )
 
