@@ -11,3 +11,4 @@ pymemcache
 cloudpickle
 typing-protocol-intersection
 torch
+opt_einsum
