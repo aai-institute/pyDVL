@@ -80,6 +80,21 @@ def test_conjugate_gradients_mvp_preconditioned(
     check_solution(A, b, n, x0, xn)
 
 
+@pytest.mark.parametrize(
+    "problem_dimension,batch_size,condition_number",
+    test_cases,
+    ids=test_case_ids,
+    indirect=True,
+)
+def test_conjugate_gradients_singular_matrix(
+    singular_linear_equation_system: Tuple[np.ndarray, np.ndarray]
+):
+    A, b = singular_linear_equation_system
+    x0 = np.zeros_like(b)
+    xn, n = conjugate_gradient(A, b, x0=x0)
+    check_solution(A, b, n, x0, xn)
+
+
 def check_solution(A, b, n, x0, xn):
     """
     Uses standard inversion techniques to verify the solution of the problem. It checks:
@@ -89,7 +104,7 @@ def check_solution(A, b, n, x0, xn):
     - Only a certain percentage of the batch is allowed to be false.
     """
     assert np.all(np.logical_not(np.isnan(xn)))
-    inv_A = np.linalg.inv(A)
+    inv_A = np.linalg.pinv(A)
     xt = b @ inv_A.T
     bound = conjugate_gradient_error_bound(A, n, x0, xt)
     norm_A = lambda v: np.sqrt(np.einsum("ia,ab,ib->i", v, A, v))

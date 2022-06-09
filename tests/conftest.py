@@ -175,6 +175,23 @@ def linear_equation_system(
 
 
 @pytest.fixture(scope="function")
+def singular_linear_equation_system(
+    problem_dimension: int, batch_size: int, condition_number: float, random
+):
+    A = random_matrix_with_condition_number(
+        problem_dimension, condition_number, positive_definite=True
+    )
+    i, j = tuple(np.random.choice(problem_dimension, replace=False, size=2))
+    if j < i:
+        i, j = j, i
+
+    v = (A[i] + A[j]) / 2
+    A[i], A[j] = v, v
+    b = np.random.random([batch_size, problem_dimension])
+    return A, b
+
+
+@pytest.fixture(scope="function")
 def polynomial_dataset(coefficients: np.ndarray):
     """Coefficients must be for monomials of increasing degree"""
     from sklearn.utils import Bunch
