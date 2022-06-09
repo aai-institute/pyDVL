@@ -160,8 +160,7 @@ def random():
 
 @pytest.fixture
 def torch_random():
-    example_seed = 42
-    torch.random.manual_seed(example_seed)
+    pass
 
 
 @pytest.fixture(scope="function")

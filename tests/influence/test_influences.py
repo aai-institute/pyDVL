@@ -1,7 +1,6 @@
-import itertools
+from collections import OrderedDict
 from functools import partial
 
-import numpy as np
 import pytest
 import torch.nn.functional as F
 import torch.random
@@ -12,22 +11,23 @@ from valuation.models.neural_network_torch_model import NNTorchModel
 from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
 from valuation.utils import Dataset
 
+test_cases = OrderedDict()
+test_cases["nn_test_single_thread"] = (
+    partial(NNTorchModel, n_neurons_per_Layer=[8, 8]),
+    1,
+)
+test_cases["nn_test_multi_thread"] = (
+    partial(NNTorchModel, n_neurons_per_Layer=[8, 8]),
+    2,
+)
+test_cases["lr_test_single_thread"] = (LRTorchModel, 1)
+test_cases["lr_test_multi_thread"] = (LRTorchModel, 2)
+
 
 @pytest.mark.parametrize(
-    "torch_model_factory,n_jobs",
-    list(
-        itertools.product(
-            [
-                partial(NNTorchModel, n_neurons_per_Layer=[8, 8]),
-                LRTorchModel,
-            ],
-            [1, 2],
-        )
-    ),
+    "torch_model_factory,n_jobs", test_cases.values(), ids=test_cases.keys()
 )
-def test_influences(
-    linear_dataset: Dataset, torch_model_factory, n_jobs: int, torch_random
-):
+def test_influences(linear_dataset: Dataset, torch_model_factory, n_jobs: int):
     n_in_features = linear_dataset.x_test.shape[1]
     print(torch.random.seed())
     model = PyTorchSupervisedModel(
