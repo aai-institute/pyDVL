@@ -2,15 +2,53 @@ import operator
 from enum import Enum
 from functools import reduce
 from itertools import chain, combinations
-from typing import Collection, Generator, Iterator, List, Optional, Sequence, TypeVar
+from typing import (
+    Callable,
+    Collection,
+    Generator,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    TypeVar,
+)
 
 import numpy as np
 
-from valuation.utils import memcached
+from valuation.utils import logger, memcached
 from valuation.utils.caching import ClientConfig
 from valuation.utils.parallel import MapReduceJob, map_reduce
 
 T = TypeVar("T")
+
+
+def mcmc_is_linear_function(
+    A: Callable[[np.ndarray], np.ndarray], v: np.ndarray, verify_samples: int = 1000
+):
+    """Assumes nothing. Stochastically checks for property sum_i a_i * f(v_i) == f(sum_i a_i v_i)."""
+
+    dim = v.shape[1]
+    weights = np.random.uniform(size=[verify_samples, 1, dim])
+    sample_vectors = [np.random.uniform(size=[verify_samples, dim]) for _ in range(dim)]
+    lin_sample_vectors = [A(v) for v in sample_vectors]
+    x = (weights * np.stack(sample_vectors, axis=-1)).sum(-1)
+    A_x = A(x)
+    sum_A_v = (weights * np.stack(lin_sample_vectors, axis=-1)).sum(-1)
+    diff_value = np.max(np.abs(sum_A_v - A_x), axis=1)
+    return np.max(diff_value) <= 1e-10
+
+
+def mcmc_is_linear_function_positive_definite(
+    A: Callable[[np.ndarray], np.ndarray], v: np.ndarray, verify_samples: int = 1000
+):
+    """Assumes linear function. Stochastically checks for property v.T @ f(v) >= 0"""
+
+    dim = v.shape[1]
+    add_v = np.random.uniform(size=[verify_samples, dim])
+    v = np.concatenate((v, add_v), axis=0)
+    product = np.einsum("ia,ia->i", v, A(v))
+    is_positive_definite = np.sum(product <= 1e-7) == 0
+    return is_positive_definite
 
 
 def vanishing_derivatives(x: np.ndarray, min_values: int, atol: float) -> int:

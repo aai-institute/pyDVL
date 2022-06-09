@@ -82,8 +82,7 @@ def test_conjugate_gradients_mvp_preconditioned(
 
 @pytest.mark.parametrize(
     "problem_dimension,batch_size,condition_number",
-    test_cases,
-    ids=test_case_ids,
+    [(5, 1, 10)],
     indirect=True,
 )
 def test_conjugate_gradients_singular_matrix(
@@ -105,6 +104,7 @@ def check_solution(A, b, n, x0, xn):
     """
     assert np.all(np.logical_not(np.isnan(xn)))
     inv_A = np.linalg.pinv(A)
+
     xt = b @ inv_A.T
     bound = conjugate_gradient_error_bound(A, n, x0, xt)
     norm_A = lambda v: np.sqrt(np.einsum("ia,ab,ib->i", v, A, v))

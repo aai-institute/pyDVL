@@ -3,7 +3,11 @@ from typing import Callable, Union
 
 import numpy as np
 
-from valuation.utils import logger
+from valuation.utils import (
+    logger,
+    mcmc_is_linear_function,
+    mcmc_is_linear_function_positive_definite,
+)
 
 
 def conjugate_gradient(
@@ -13,6 +17,7 @@ def conjugate_gradient(
     M: Union[np.ndarray, Callable[[np.ndarray], np.ndarray]] = None,
     rtol: float = 1e-5,
     max_iterations: int = None,
+    verify_assumptions: bool = True,
 ):
     """
     Implementation of a batched conjugate gradient algorithm. It uses vector matrix products for efficient calculation. See
@@ -20,13 +25,15 @@ def conjugate_gradient(
     https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351 and
     https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf.
 
-    :param A: A function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix
+    :param A: A linear function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix.
+    It hasto be positive-definite v.T @ f(v) >= 0.
     of shape [K, K]. The underlying matrix has to be symmetric and positive definite.
     :param b: A np.ndarray of shape [K] representing the targeted result of the matrix multiplication Ax.
     :param M: A function f : R[k] -> R[k] which approximates inv(A) or a matrix of shape [K, K]. The underlying matrix
     has to be symmetric and positive definite.
     :param max_iterations: The maximum number of iterations to use in conjugate gradient.
     :param rtol: Relative tolerance of the residual with respect to the 2-norm of b.
+    :param verify_assumptions: True, iff the matrix should be checked for positive-definiteness by a stochastic rule.
     :return: A np.ndarray of shape [K] representing the solution of Ax=b.
     """
 
@@ -43,6 +50,13 @@ def conjugate_gradient(
     k = A(b).shape[0]
     if A(b).size == 0:
         return b
+
+    if verify_assumptions:
+        if not mcmc_is_linear_function(A, b):
+            logger.warning("The function seems to not be linear.")
+
+        if not mcmc_is_linear_function_positive_definite(A, b):
+            logger.warning("The linear function seems to not be positive definite.")
 
     if b.ndim == 1:
         b = b.reshape([1, -1])
@@ -120,8 +134,8 @@ def conjugate_gradient(
     if not np.all(converged):
         percentage_converged = int(converged.sum() / len(converged)) * 100
         logger.warning(
-            f"Conjugate gradient could solve the equation system for {percentage_converged}% of"
-            f" {len(converged)} random chosen vectors"
+            f"Conjugate gradient could solve the equation system for {percentage_converged}% of {len(converged)} random"
+            f" chosen vectors. Please check condition number and eigenvalues of"
         )
 
     return x, iteration
