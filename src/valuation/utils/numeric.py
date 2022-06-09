@@ -125,3 +125,26 @@ def spearman(x: np.ndarray, y: np.ndarray) -> float:
         raise TypeError("Input must be numpy.ndarray")
 
     return 1 - 6 * np.sum((x - y) ** 2) / (lx**3 - lx)
+
+
+def random_matrix_with_condition_number(
+    n: int, condition_number: float, positive_definite: bool = False
+) -> np.ndarray:
+    """
+    https://gist.github.com/bstellato/23322fe5d87bb71da922fbc41d658079#file-random_mat_condition_number-py
+    https://math.stackexchange.com/questions/1351616/condition-number-of-ata
+    """
+
+    if positive_definite:
+        condition_number = np.sqrt(condition_number)
+
+    log_condition_number = np.log(condition_number)
+    exp_vec = np.linspace(
+        -log_condition_number / 4.0, log_condition_number * (n + 1) / (4 * (n - 1)), n
+    )
+    s = np.exp(exp_vec)
+    S = np.diag(s)
+    U, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
+    V, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
+    P = U.dot(S).dot(V.T)
+    return P if not positive_definite else P @ P.T  # cond(P @ P.T) = cond(P) ** 2

@@ -8,7 +8,7 @@ import torch
 from sklearn.linear_model import LinearRegression
 
 from valuation.utils import Dataset, Utility
-from valuation.utils.numeric import spearman
+from valuation.utils.numeric import random_matrix_with_condition_number, spearman
 
 
 def is_memcache_responsive(hostname, port):
@@ -155,9 +155,7 @@ def seed(request):
 
 @pytest.fixture
 def random():
-    example_seed = 0
-    rand.seed(example_seed)
-    np.random.seed(example_seed)
+    pass
 
 
 @pytest.fixture
@@ -170,14 +168,10 @@ def torch_random():
 def linear_equation_system(
     problem_dimension: int, batch_size: int, condition_number: float, random
 ):
-    H = np.random.random([problem_dimension, problem_dimension])
-    A = H @ H.T
-    u, s, v = np.linalg.svd(A)
-    s = s[0] * (
-        1 - ((condition_number - 1) / condition_number) * (s[0] - s) / (s[0] - s[-1])
+    A = random_matrix_with_condition_number(
+        problem_dimension, condition_number, positive_definite=True
     )
-    A = u @ np.diag(s) @ v
-    b = np.random.normal(size=[batch_size, problem_dimension])
+    b = np.random.random([batch_size, problem_dimension])
     return A, b
 
 

@@ -52,7 +52,13 @@ def conjugate_gradient(
         max_iterations = 10 * k
 
     # start with residual
-    x = np.zeros_like(b) if x0 is None else x0
+    if x0 is not None:
+        x = np.copy(x0)
+    elif M is not None:
+        x = M(b)
+    else:
+        x = np.copy(b)
+
     r = b - A(x)
     u = np.copy(r)
 
@@ -120,3 +126,23 @@ def conjugate_gradient(
         )
 
     return x, iteration
+
+
+def conjugate_gradient_error_bound(
+    A: np.ndarray, n: int, x0: np.ndarray, xt: np.ndarray
+) -> float:
+    """
+    https://math.stackexchange.com/questions/382958/error-for-conjugate-gradient-method
+    """
+    eigvals = np.linalg.eigvals(A)
+    eigvals = np.sort(eigvals)
+    eig_val_max = np.max(eigvals)
+    eig_val_min = np.min(eigvals)
+    kappa = np.abs(eig_val_max / eig_val_min)
+    norm_A = lambda v: np.sqrt(contract("ia,ab,ib->i", v, A, v))
+    error_init = norm_A(xt - x0)
+
+    sqrt_kappa = np.sqrt(kappa)
+    div = (sqrt_kappa + 1) / (sqrt_kappa - 1)
+    div_n = div**n
+    return (2 * error_init) / (div_n + 1 / div_n)

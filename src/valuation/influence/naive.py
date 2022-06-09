@@ -12,7 +12,7 @@ from valuation.utils import (
     available_cpus,
     map_reduce,
 )
-from valuation.utils.algorithms import conjugate_gradient
+from valuation.utils.cg import conjugate_gradient
 from valuation.utils.types import TwiceDifferentiable
 
 

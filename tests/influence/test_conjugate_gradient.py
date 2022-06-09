@@ -1,28 +1,41 @@
 import itertools
-from typing import Tuple
+from typing import List, Tuple
 
 import numpy as np
 import pytest
 from opt_einsum import contract
 
-from valuation.utils.algorithms import conjugate_gradient
+from valuation.utils.cg import conjugate_gradient, conjugate_gradient_error_bound
 
 
 class AlgorithmTestSettings:
     L2_TOL = 0.01
     FAILED_TOL = 0.1
     CG_DAMPING = 1e-10
-    CG_BATCH_SIZE = 100
-    CG_MAX_DIM = 20
-    NP_RANDOM_SEED = 42
+
+    CG_TEST_CONDITION_NUMBERS: List[int] = [10]
+    CG_TEST_BATCH_SIZES: List[int] = [16, 32]
+    CG_TEST_DIMENSIONS: List[int] = list(np.arange(2, 100, 5))
 
 
-np.random.seed(AlgorithmTestSettings.NP_RANDOM_SEED)
+test_cases = list(
+    itertools.product(
+        AlgorithmTestSettings.CG_TEST_DIMENSIONS,
+        AlgorithmTestSettings.CG_TEST_BATCH_SIZES,
+        AlgorithmTestSettings.CG_TEST_CONDITION_NUMBERS,
+    )
+)
+lmb_test_case_to_str = lambda packed_i_test_case: (
+    lambda i, test_case: f"Problem #{i} of dimension {test_case[0]} with batch size {test_case[1]} and condition number"
+    f" {test_case[2]}"
+)(*packed_i_test_case)
+test_case_ids = list(map(lmb_test_case_to_str, zip(range(len(test_cases)), test_cases)))
 
 
 @pytest.mark.parametrize(
     "problem_dimension,batch_size,condition_number",
-    list(itertools.product(list(range(2, 10)), [16, 32], [10, 20])),
+    test_cases,
+    ids=test_case_ids,
     indirect=True,
 )
 def test_conjugate_gradients_mvp(linear_equation_system: Tuple[np.ndarray, np.ndarray]):
@@ -34,7 +47,8 @@ def test_conjugate_gradients_mvp(linear_equation_system: Tuple[np.ndarray, np.nd
 
 @pytest.mark.parametrize(
     "problem_dimension,batch_size,condition_number",
-    list(itertools.product(list(range(2, 10)), [16, 32], [10, 20])),
+    test_cases,
+    ids=test_case_ids,
     indirect=True,
 )
 def test_conjugate_gradients_fn(linear_equation_system: Tuple[np.ndarray, np.ndarray]):
@@ -48,7 +62,8 @@ def test_conjugate_gradients_fn(linear_equation_system: Tuple[np.ndarray, np.nda
 
 @pytest.mark.parametrize(
     "problem_dimension,batch_size,condition_number",
-    list(itertools.product(list(range(2, 10)), [16, 32], [10, 20])),
+    test_cases,
+    ids=test_case_ids,
     indirect=True,
 )
 def test_conjugate_gradients_mvp_preconditioned(
@@ -66,25 +81,11 @@ def check_solution(A, b, n, x0, xn):
     Uses standard inversion techniques to verify the solution of the problem.
     """
     assert np.all(np.logical_not(np.isnan(xn)))
-    inv_A = np.linalg.pinv(A)
+    inv_A = np.linalg.inv(A)
     xt = b @ inv_A.T
+    bound = conjugate_gradient_error_bound(A, n, x0, xt)
     norm_A = lambda v: np.sqrt(contract("ia,ab,ib->i", v, A, v))
     error = norm_A(xt - xn)
     failed = error > AlgorithmTestSettings.L2_TOL
     num_failed_percentage = np.sum(failed) / len(failed)
     assert num_failed_percentage < AlgorithmTestSettings.FAILED_TOL
-
-
-def conjugate_gradient_error_bound_first(
-    A: np.ndarray, n: int, x0: np.ndarray, xt: np.ndarray
-):
-    """
-    https://math.stackexchange.com/questions/382958/error-for-conjugate-gradient-method
-    """
-    norm_A = lambda v: np.sqrt(contract("ia,ab,ib->i", v, A, v))
-    error_init = norm_A(xt - x0)
-    kappa = np.linalg.cond(A)
-    sqrt_kappa = np.sqrt(kappa)
-    div = (sqrt_kappa + 1) / (sqrt_kappa - 1)
-    div_n = div**n
-    return (2 * error_init) / (div_n + 1 / div_n)
