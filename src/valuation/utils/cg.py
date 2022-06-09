@@ -8,6 +8,7 @@ from valuation.utils import (
     mcmc_is_linear_function,
     mcmc_is_linear_function_positive_definite,
 )
+from valuation.utils.logging import raise_or_log
 
 
 def conjugate_gradient(
@@ -17,7 +18,8 @@ def conjugate_gradient(
     M: Union[np.ndarray, Callable[[np.ndarray], np.ndarray]] = None,
     rtol: float = 1e-5,
     max_iterations: int = None,
-    verify_assumptions: bool = True,
+    verify_assumptions: bool = False,
+    raise_exception: bool = False,
 ):
     """
     Implementation of a batched conjugate gradient algorithm. It uses vector matrix products for efficient calculation. See
@@ -34,6 +36,7 @@ def conjugate_gradient(
     :param max_iterations: The maximum number of iterations to use in conjugate gradient.
     :param rtol: Relative tolerance of the residual with respect to the 2-norm of b.
     :param verify_assumptions: True, iff the matrix should be checked for positive-definiteness by a stochastic rule.
+    :param raise_exception: True, iff an assumption should be raised, instead of a warning only.
     :return: A np.ndarray of shape [K] representing the solution of Ax=b.
     """
 
@@ -53,10 +56,14 @@ def conjugate_gradient(
 
     if verify_assumptions:
         if not mcmc_is_linear_function(A, b):
-            logger.warning("The function seems to not be linear.")
+            raise_or_log(
+                "The function seems to not be linear.", raise_exception=raise_exception
+            )
 
         if not mcmc_is_linear_function_positive_definite(A, b):
-            logger.warning("The linear function seems to not be positive definite.")
+            raise_or_log(
+                "The function seems to not be linear.", raise_exception=raise_exception
+            )
 
     if b.ndim == 1:
         b = b.reshape([1, -1])
@@ -133,9 +140,10 @@ def conjugate_gradient(
 
     if not np.all(converged):
         percentage_converged = int(converged.sum() / len(converged)) * 100
-        logger.warning(
+        raise_or_log(
             f"Conjugate gradient could solve the equation system for {percentage_converged}% of {len(converged)} random"
-            f" chosen vectors. Please check condition number and eigenvalues of"
+            f" chosen vectors. Please check condition number and eigenvalues of",
+            raise_exception=raise_exception,
         )
 
     return x, iteration

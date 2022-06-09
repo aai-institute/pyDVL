@@ -82,7 +82,7 @@ def test_conjugate_gradients_mvp_preconditioned(
 
 @pytest.mark.parametrize(
     "problem_dimension,batch_size,condition_number",
-    [(5, 1, 10)],
+    test_cases,
     indirect=True,
 )
 def test_conjugate_gradients_singular_matrix(
@@ -90,8 +90,14 @@ def test_conjugate_gradients_singular_matrix(
 ):
     A, b = singular_linear_equation_system
     x0 = np.zeros_like(b)
-    xn, n = conjugate_gradient(A, b, x0=x0)
-    check_solution(A, b, n, x0, xn)
+    try:
+        xn, n = conjugate_gradient(
+            A, b, x0=x0, verify_assumptions=True, raise_exception=True
+        )
+        pytest.fail("Should throw an excepction.")
+
+    except:
+        pass
 
 
 def check_solution(A, b, n, x0, xn):
