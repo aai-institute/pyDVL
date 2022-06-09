@@ -2,7 +2,6 @@ from types import LambdaType
 from typing import Callable, Union
 
 import numpy as np
-from opt_einsum import contract
 
 from valuation.utils import logger
 
@@ -81,8 +80,8 @@ def conjugate_gradient(
         iteration += 1
         not_yet_converged_indices = np.argwhere(np.logical_not(converged))[:, 0]
         mvp = A(p)[not_yet_converged_indices]
-        p_dot_mvp = contract("ia,ia->i", p[not_yet_converged_indices], mvp)
-        r_dot_u = contract(
+        p_dot_mvp = np.einsum("ia,ia->i", p[not_yet_converged_indices], mvp)
+        r_dot_u = np.einsum(
             "ia,ia->i", r[not_yet_converged_indices], u[not_yet_converged_indices]
         )
         alpha = r_dot_u / p_dot_mvp
@@ -98,7 +97,7 @@ def conjugate_gradient(
             new_u = M(new_u)
 
         new_u = new_u[not_yet_converged_indices]
-        new_r_dot_u = contract("ia,ia->i", r[not_yet_converged_indices], new_u)
+        new_r_dot_u = np.einsum("ia,ia->i", r[not_yet_converged_indices], new_u)
 
         if rtol is not None:
             residual = np.linalg.norm(
@@ -139,7 +138,7 @@ def conjugate_gradient_error_bound(
     eig_val_max = np.max(eigvals)
     eig_val_min = np.min(eigvals)
     kappa = np.abs(eig_val_max / eig_val_min)
-    norm_A = lambda v: np.sqrt(contract("ia,ab,ib->i", v, A, v))
+    norm_A = lambda v: np.sqrt(np.einsum("ia,ab,ib->i", v, A, v))
     error_init = norm_A(xt - x0)
 
     sqrt_kappa = np.sqrt(kappa)

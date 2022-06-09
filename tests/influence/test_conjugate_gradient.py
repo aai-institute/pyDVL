@@ -3,15 +3,16 @@ from typing import List, Tuple
 
 import numpy as np
 import pytest
-from opt_einsum import contract
 
 from valuation.utils.cg import conjugate_gradient, conjugate_gradient_error_bound
 
 
 class AlgorithmTestSettings:
-    L2_TOL = 0.01
-    FAILED_TOL = 0.1
-    CG_DAMPING = 1e-10
+    A_NORM_TOL: float = 1e-4
+    ACCEPTABLE_FAILED_PERC_A_NORM: float = 1e-2
+    ACCEPTABLE_FAILED_PERC_BOUND: float = 1e-2
+    BOUND_TOL: float = 1e-4
+    CG_DAMPING: float = 1e-10
 
     CG_TEST_CONDITION_NUMBERS: List[int] = [10]
     CG_TEST_BATCH_SIZES: List[int] = [16, 32]
@@ -25,10 +26,13 @@ test_cases = list(
         AlgorithmTestSettings.CG_TEST_CONDITION_NUMBERS,
     )
 )
-lmb_test_case_to_str = lambda packed_i_test_case: (
-    lambda i, test_case: f"Problem #{i} of dimension {test_case[0]} with batch size {test_case[1]} and condition number"
-    f" {test_case[2]}"
-)(*packed_i_test_case)
+
+
+def lmb_test_case_to_str(packed_i_test_case):
+    i, test_case = packed_i_test_case
+    return f"Problem #{i} of dimension {test_case[0]} with batch size {test_case[1]} and condition number"
+
+
 test_case_ids = list(map(lmb_test_case_to_str, zip(range(len(test_cases)), test_cases)))
 
 
@@ -78,14 +82,28 @@ def test_conjugate_gradients_mvp_preconditioned(
 
 def check_solution(A, b, n, x0, xn):
     """
-    Uses standard inversion techniques to verify the solution of the problem.
+    Uses standard inversion techniques to verify the solution of the problem. It checks:
+
+    - That the solution is not nan at all positions.
+    - The solution fulfills an error bound, which depends on A and the number of iterations.
+    - Only a certain percentage of the batch is allowed to be false.
     """
     assert np.all(np.logical_not(np.isnan(xn)))
     inv_A = np.linalg.inv(A)
     xt = b @ inv_A.T
     bound = conjugate_gradient_error_bound(A, n, x0, xt)
-    norm_A = lambda v: np.sqrt(contract("ia,ab,ib->i", v, A, v))
+    norm_A = lambda v: np.sqrt(np.einsum("ia,ab,ib->i", v, A, v))
+    assert np.all(np.logical_not(np.isnan(xn)))
+
     error = norm_A(xt - xn)
-    failed = error > AlgorithmTestSettings.L2_TOL
-    num_failed_percentage = np.sum(failed) / len(failed)
-    assert num_failed_percentage < AlgorithmTestSettings.FAILED_TOL
+    failed = error > bound + AlgorithmTestSettings.BOUND_TOL
+    realized_failed_percentage = np.sum(failed) / len(failed)
+    assert (
+        realized_failed_percentage < AlgorithmTestSettings.ACCEPTABLE_FAILED_PERC_BOUND
+    )
+
+    failed = error > AlgorithmTestSettings.A_NORM_TOL
+    realized_failed_percentage = np.sum(failed) / len(failed)
+    assert (
+        realized_failed_percentage < AlgorithmTestSettings.ACCEPTABLE_FAILED_PERC_A_NORM
+    )
