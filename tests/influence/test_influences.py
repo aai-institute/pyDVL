@@ -4,23 +4,13 @@ from functools import partial
 import numpy as np
 import pytest
 import torch.nn.functional as F
-import torch.random
 
 from valuation.influence.naive import influences
 from valuation.models.linear_regression_torch_model import LRTorchModel
-from valuation.models.neural_network_torch_model import NNTorchModel
 from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
 from valuation.utils import Dataset
 
 test_cases = OrderedDict()
-test_cases["nn_test_single_thread"] = (
-    partial(NNTorchModel, n_neurons_per_Layer=[8, 8]),
-    1,
-)
-test_cases["nn_test_multi_thread"] = (
-    partial(NNTorchModel, n_neurons_per_Layer=[8, 8]),
-    2,
-)
 test_cases["lr_test_single_thread"] = (LRTorchModel, 1)
 test_cases["lr_test_multi_thread"] = (LRTorchModel, 2)
 
