@@ -66,7 +66,7 @@ class PyTorchSupervisedModel:
     ) -> np.ndarray:
 
         x, y, v = tt(x), tt(y), tt(v)
-        loss = self.objective(self.model(x)[:, 0], y)
+        loss = self.objective(self.model(x), y)
         grad_f = torch.autograd.grad(loss, self.model.parameters(), create_graph=True)
         grad_f = flatten_gradient(grad_f)
         z = (grad_f * Variable(v)).sum(dim=1)
@@ -109,7 +109,7 @@ class PyTorchSupervisedModel:
                 pred_y = self.model(batch_x)
                 loss = self.objective(pred_y, batch_y)
 
-                logger.debug(f"Training loss: {loss.item()}")
+                print(f"Training loss: {loss.item()}")
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
