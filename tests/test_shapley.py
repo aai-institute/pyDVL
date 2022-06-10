@@ -5,12 +5,10 @@ import numpy as np
 import pytest
 
 from tests.conftest import (
-    TolerateErrors,
     check_exact,
     check_rank_correlation,
     check_total_value,
     polynomial,
-    polynomial_dataset,
 )
 from valuation.shapley import (
     combinatorial_exact_shapley,
@@ -79,7 +77,7 @@ def test_exact_shapley(exact_shapley, fun, value_atol, total_atol):
         # (100, combinatorial_montecarlo_shapley, 1e-2, 1e-2)
     ],
 )
-def test_montecarlo_shapley(exact_shapley, fun, delta, eps):
+def test_montecarlo_shapley(exact_shapley, fun, delta, eps, tolerate):
     u, exact_values = exact_shapley
     jobs_per_run = min(6, available_cpus(), len(u.data))
     num_runs = min(3, available_cpus() // jobs_per_run)
@@ -110,9 +108,9 @@ def test_montecarlo_shapley(exact_shapley, fun, delta, eps):
     job = MapReduceJob.from_fun(_fun, lambda r: r[0][0])
     results = map_reduce(job, u, num_jobs=num_runs, num_runs=num_runs)
 
-    delta_errors = TolerateErrors(max(1, int(delta * len(results))))
+    max_failures = max(1, int(delta * len(results)))
     for values in results:
-        with delta_errors:
+        with tolerate(max_failures=max_failures):
             # Trivial bound on total error using triangle inequality
             check_total_value(u, values, atol=len(u.data) * eps)
             check_rank_correlation(values, exact_values, threshold=0.9)
@@ -121,7 +119,7 @@ def test_montecarlo_shapley(exact_shapley, fun, delta, eps):
 # noinspection PyTestParametrized
 @pytest.mark.skip("This test is flaky.")
 @pytest.mark.parametrize("num_samples", [200])
-def test_truncated_montecarlo_shapley(exact_shapley):
+def test_truncated_montecarlo_shapley(exact_shapley, tolerate):
     u, exact_values = exact_shapley
     num_cpus = min(available_cpus(), len(u.data))
     num_runs = 10
@@ -151,9 +149,9 @@ def test_truncated_montecarlo_shapley(exact_shapley):
     for i in range(num_runs):
         results.append(fun(run_id=i))
 
-    delta_errors = TolerateErrors(max(1, int(delta * len(results))))
+    max_failures = max(1, int(delta * len(results)))
     for values, _ in results:
-        with delta_errors:
+        with tolerate(max_failures=max_failures):
             # Trivial bound on total error using triangle inequality
             check_total_value(u, values, atol=len(u.data) * eps)
             check_rank_correlation(values, exact_values, threshold=0.8)
