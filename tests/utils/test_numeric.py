@@ -61,7 +61,7 @@ def test_random_powerset(n, memcache_client_config, tolerate):
 
     max_failures = int(delta * reps)
     for r in results:
-        with tolerate:
+        with tolerate(max_failures=max_failures):
             assert np.all(r), results
 
 
