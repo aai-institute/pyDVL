@@ -1,12 +1,14 @@
+import random as rand
 from collections import OrderedDict
 from typing import Type
 
 import numpy as np
 import pytest
+import torch
 from sklearn.linear_model import LinearRegression
 
 from valuation.utils import Dataset, Utility
-from valuation.utils.numeric import spearman
+from valuation.utils.numeric import random_matrix_with_condition_number, spearman
 
 
 def is_memcache_responsive(hostname, port):
@@ -110,8 +112,8 @@ def boston_dataset():
     return Dataset.from_sklearn(datasets.load_boston())
 
 
-@pytest.fixture(scope="session")
-def linear_dataset():
+@pytest.fixture(scope="function")
+def linear_dataset(random):
     from sklearn.utils import Bunch
 
     a = 2
@@ -129,6 +131,64 @@ def linear_dataset():
 def polynomial(coefficients, x):
     powers = np.arange(len(coefficients))
     return np.power(x, np.tile(powers, (len(x), 1)).T).T @ coefficients
+
+
+@pytest.fixture
+def problem_dimension(request) -> int:
+    return request.param
+
+
+@pytest.fixture
+def batch_size(request) -> int:
+    return request.param
+
+
+@pytest.fixture
+def condition_number(request) -> float:
+    return request.param
+
+
+@pytest.fixture
+def seed(request):
+    return request.param
+
+
+@pytest.fixture
+def random():
+    pass
+
+
+@pytest.fixture
+def torch_random():
+    pass
+
+
+@pytest.fixture(scope="function")
+def linear_equation_system(
+    problem_dimension: int, batch_size: int, condition_number: float, random
+):
+    A = random_matrix_with_condition_number(
+        problem_dimension, condition_number, positive_definite=True
+    )
+    b = np.random.random([batch_size, problem_dimension])
+    return A, b
+
+
+@pytest.fixture(scope="function")
+def singular_linear_equation_system(
+    problem_dimension: int, batch_size: int, condition_number: float, random
+):
+    A = random_matrix_with_condition_number(
+        problem_dimension, condition_number, positive_definite=True
+    )
+    i, j = tuple(np.random.choice(problem_dimension, replace=False, size=2))
+    if j < i:
+        i, j = j, i
+
+    v = (A[i] + A[j]) / 2
+    A[i], A[j] = v, v
+    b = np.random.random([batch_size, problem_dimension])
+    return A, b
 
 
 @pytest.fixture(scope="function")

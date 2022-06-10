@@ -118,3 +118,10 @@ server: Optional[Process] = None
 logger = None
 
 set_logger()
+
+
+def raise_or_log(message, raise_exception: bool):
+    if raise_exception:
+        raise Exception(message)
+    else:
+        logger.warning(message)
