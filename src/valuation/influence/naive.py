@@ -2,7 +2,6 @@ import functools
 from typing import Union
 
 import numpy as np
-from opt_einsum import contract
 from typing_protocol_intersection import ProtocolIntersection
 
 from valuation.utils import (
@@ -80,7 +79,7 @@ def influences(
         """
         c_x_train, c_y_train = data.x_train[indices], data.y_train[indices]
         train_grads = twd.grad(c_x_train, c_y_train)
-        return contract("ta,va->tv", influence_factors, train_grads)
+        return np.einsum("ta,va->tv", influence_factors, train_grads)
 
     influences_job = MapReduceJob.from_fun(
         _calculate_influences, functools.partial(np.concatenate, axis=1)

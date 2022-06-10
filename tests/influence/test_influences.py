@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from functools import partial
 
+import numpy as np
 import pytest
 import torch.nn.functional as F
 import torch.random
@@ -29,7 +30,6 @@ test_cases["lr_test_multi_thread"] = (LRTorchModel, 2)
 )
 def test_influences(linear_dataset: Dataset, torch_model_factory, n_jobs: int):
     n_in_features = linear_dataset.x_test.shape[1]
-    print(torch.random.seed())
     model = PyTorchSupervisedModel(
         model=torch_model_factory(n_in_features, 1),
         objective=F.mse_loss,
@@ -41,7 +41,7 @@ def test_influences(linear_dataset: Dataset, torch_model_factory, n_jobs: int):
     model.fit(linear_dataset.x_train, linear_dataset.y_train)
     influence_values = influences(model, linear_dataset, progress=True, n_jobs=n_jobs)
 
-    # assert np.all(np.logical_not(np.isnan(influence_values)))
+    assert np.all(np.logical_not(np.isnan(influence_values)))
     assert influence_values.shape == (
         len(linear_dataset.x_test),
         len(linear_dataset.x_train),
