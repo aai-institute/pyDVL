@@ -390,10 +390,11 @@ class TolerateErrorFixture:
             self.name = node.name
         self.session: TolerateErrorsSession = node.config._tolerate_session
         marker = node.get_closest_marker("tolerate")
-        max_failures = marker.kwargs.get("max_failures")
-        exceptions_to_ignore = marker.kwargs.get("exceptions_to_ignore")
-        self.session.set_max_failures(self.name, max_failures)
-        self.session.set_exceptions_to_ignore(self.name, exceptions_to_ignore)
+        if marker:
+            max_failures = marker.kwargs.get("max_failures")
+            exceptions_to_ignore = marker.kwargs.get("exceptions_to_ignore")
+            self.session.set_max_failures(self.name, max_failures)
+            self.session.set_exceptions_to_ignore(self.name, exceptions_to_ignore)
 
     def __call__(
         self,

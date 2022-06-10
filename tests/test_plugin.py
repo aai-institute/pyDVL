@@ -7,13 +7,12 @@ def test_marker_with_parametrize(i):
     assert False
 
 
-@pytest.fixture(
-    scope="function", params=pytest.param(range(2), marks=pytest.mark.xfail)
-)
+@pytest.fixture(scope="function", params=range(2))
 def data(request):
     yield
 
 
+@pytest.mark.xfail
 @pytest.mark.tolerate(max_failures=1)
 def test_marker_with_data_fixture(data):
     assert False
