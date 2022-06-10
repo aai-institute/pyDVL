@@ -22,3 +22,14 @@ log_level = "INFO"
 
 [tool.coverage.run]
 source = "src/valuation"
+
+[tool.pylint.messages_control]
+disable = [
+    "I0011", # reasoning
+]
+
+[tool.pylint.master]
+load-plugins = ["pylint_json2html"]
+
+[tool.pylint.reports]
+output-format = "jsonextended"
