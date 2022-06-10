@@ -33,3 +33,22 @@ def test_fixture(tolerate):
     for _ in range(1):
         with tolerate(max_failures=1):
             assert False
+
+
+@pytest.mark.xfail
+def test_fixture_call_no_arguments(tolerate):
+    for _ in range(1):
+        with tolerate():
+            assert False
+
+
+@pytest.mark.xfail()
+@pytest.mark.tolerate()
+def test_failure():
+    pass
+
+
+@pytest.mark.tolerate(max_failures=0, exceptions_to_ignore=TypeError)
+@pytest.mark.parametrize("i", range(5))
+def test_marker_ignore_exception(i):
+    raise TypeError

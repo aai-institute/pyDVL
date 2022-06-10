@@ -1,6 +1,6 @@
 import functools
 from collections import OrderedDict, defaultdict
-from typing import TYPE_CHECKING, Optional, Sequence, Type, Union
+from typing import TYPE_CHECKING, Optional, Sequence, Type
 
 if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
@@ -13,7 +13,7 @@ from sklearn.linear_model import LinearRegression
 from valuation.utils import Dataset, Utility
 from valuation.utils.numeric import spearman
 
-EXCEPTIONS_TYPE = Optional[Union[Type[BaseException], Sequence[Type[BaseException]]]]
+EXCEPTIONS_TYPE = Optional[Sequence[Type[BaseException]]]
 
 
 def is_memcache_responsive(hostname, port):
@@ -317,20 +317,19 @@ class TolerateErrorsSession:
     def increment_num_skipped(self, key: str) -> None:
         self._tests[key].skipped += 1
 
-    def set_exceptions_to_catch(self, key: str, value: EXCEPTIONS_TYPE) -> None:
-        self._tests[key].exceptions_to_catch = value
-
-    def get_exceptions_to_catch(self, key: str) -> EXCEPTIONS_TYPE:
-        return self._tests[key].exceptions_to_catch
-
     def set_exceptions_to_ignore(self, key: str, value: EXCEPTIONS_TYPE) -> None:
-        self._tests[key].exceptions_to_ignore = value
+        if value is None:
+            self._tests[key].exceptions_to_ignore = tuple()
+        elif isinstance(value, Sequence):
+            self._tests[key].exceptions_to_ignore = value
+        else:
+            self._tests[key].exceptions_to_ignore = (value,)
 
     def get_exceptions_to_ignore(self, key: str) -> EXCEPTIONS_TYPE:
         return self._tests[key].exceptions_to_ignore
 
     def has_exceeded_max_failures(self, key: str) -> bool:
-        return self._tests[key]["failed"] > self._tests[key]["max_failures"]
+        return self._tests[key].failed > self._tests[key].max_failures
 
     def display(self, terminalreporter: "TerminalReporter"):
         if not self.quiet:
@@ -377,8 +376,7 @@ class TolerateErrorsTestItem:
         self.failed = 0
         self.passed = 0
         self.skipped = 0
-        self.exceptions_to_catch = EXCEPTIONS_TYPE
-        self.exceptions_to_ignore = EXCEPTIONS_TYPE
+        self.exceptions_to_ignore = tuple()
 
     def __getitem__(self, item: str):
         return getattr(self, item)
@@ -391,16 +389,19 @@ class TolerateErrorFixture:
         else:
             self.name = node.name
         self.session: TolerateErrorsSession = node.config._tolerate_session
+        marker = node.get_closest_marker("tolerate")
+        max_failures = marker.kwargs.get("max_failures")
+        exceptions_to_ignore = marker.kwargs.get("exceptions_to_ignore")
+        self.session.set_max_failures(self.name, max_failures)
+        self.session.set_exceptions_to_ignore(self.name, exceptions_to_ignore)
 
     def __call__(
         self,
         max_failures: int,
         *,
-        exceptions_to_catch: Optional[Sequence[Type[BaseException]]] = None,
-        exceptions_to_ignore: Optional[Sequence[Type[BaseException]]] = None,
+        exceptions_to_ignore: EXCEPTIONS_TYPE = None,
     ):
         self.session.set_max_failures(self.name, max_failures)
-        self.session.set_exceptions_to_catch(self.name, exceptions_to_catch)
         self.session.set_exceptions_to_ignore(self.name, exceptions_to_ignore)
         return self
 
@@ -411,11 +412,13 @@ class TolerateErrorFixture:
                 f"Maximum number of allowed failures, {self.session.get_max_failures(self.name)}, was already reached"
             )
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
         if exc_type is None:
             self.session.increment_num_passed(self.name)
         else:
-            self.session.increment_num_failures(self.name)
+            exceptions_to_ignore = self.session.get_exceptions_to_ignore(self.name)
+            if not any(exc_type is x for x in exceptions_to_ignore):
+                self.session.increment_num_failures(self.name)
         if self.session.has_exceeded_max_failures(self.name):
             pytest.fail(
                 f"Maximum number of allowed failures, {self.session.get_max_failures(self.name)}, reached"
@@ -466,9 +469,6 @@ def pytest_runtest_call(item: pytest.Function):
         item.funcargs.get("tolerate"), TolerateErrorFixture
     )
     if marker:
-        name = item.originalname
-        max_failures = marker.kwargs["max_failures"]
-        item.config._tolerate_session.set_max_failures(name, max_failures)
         if not has_fixture:
             wrap_pytest_function(item)
     yield
