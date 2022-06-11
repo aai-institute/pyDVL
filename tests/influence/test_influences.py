@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import torch.nn.functional as F
 
-from valuation.influence.naive import influences
+from valuation.influence.naive import InfluenceTypes, influences
 from valuation.models.linear_regression_torch_model import LRTorchModel
 from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
 from valuation.utils import Dataset
@@ -17,7 +17,7 @@ test_cases["lr_test_multi_thread"] = (LRTorchModel, 2)
 @pytest.mark.parametrize(
     "torch_model_factory,n_jobs", test_cases.values(), ids=test_cases.keys()
 )
-def test_influences(linear_dataset: Dataset, torch_model_factory, n_jobs: int):
+def test_influences_up(linear_dataset: Dataset, torch_model_factory, n_jobs: int):
     n_in_features = linear_dataset.x_test.shape[1]
     model = PyTorchSupervisedModel(
         model=torch_model_factory(n_in_features, 1),
@@ -34,6 +34,36 @@ def test_influences(linear_dataset: Dataset, torch_model_factory, n_jobs: int):
     assert influence_values.shape == (
         len(linear_dataset.x_test),
         len(linear_dataset.x_train),
+    )
+
+
+@pytest.mark.parametrize(
+    "torch_model_factory,n_jobs", test_cases.values(), ids=test_cases.keys()
+)
+def test_influences_pert(linear_dataset: Dataset, torch_model_factory, n_jobs: int):
+    n_in_features = linear_dataset.x_test.shape[1]
+    model = PyTorchSupervisedModel(
+        model=torch_model_factory(n_in_features, 1),
+        objective=F.mse_loss,
+        num_epochs=10,
+        batch_size=16,
+        optimizer=PyTorchOptimizer.ADAM,
+        optimizer_kwargs={"lr": 0.05},
+    )
+    model.fit(linear_dataset.x_train, linear_dataset.y_train)
+    influence_values = influences(
+        model,
+        linear_dataset,
+        progress=True,
+        n_jobs=n_jobs,
+        influence_type=InfluenceTypes.Perturbation,
+    )
+
+    assert np.all(np.logical_not(np.isnan(influence_values)))
+    assert influence_values.shape == (
+        len(linear_dataset.x_test),
+        len(linear_dataset.x_train),
+        n_in_features,
     )
 
 

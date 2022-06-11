@@ -1,4 +1,5 @@
 import functools
+from enum import Enum
 from typing import Union
 
 import numpy as np
@@ -15,11 +16,17 @@ from valuation.utils.cg import conjugate_gradient
 from valuation.utils.types import TwiceDifferentiable
 
 
+class InfluenceTypes(Enum):
+    Up = 1
+    Perturbation = 2
+
+
 def influences(
     model: ProtocolIntersection[SupervisedModel, TwiceDifferentiable],
     data: Dataset,
     progress: bool = False,
     n_jobs: int = -1,
+    influence_type: InfluenceTypes = InfluenceTypes.Up,
 ) -> np.ndarray:
     """
     Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
@@ -45,7 +52,7 @@ def influences(
     # ------------------------------------------------------------------------------------------------------------------
 
     twd: TwiceDifferentiable = model
-    hvp = lambda v: twd.hvp(data.x_train, data.y_train, v, progress=progress)
+    hvp = lambda v: twd.mvp(data.x_train, data.y_train, v, progress=progress)
 
     def _calculate_influence_factors(indices: np.ndarray, job_id: int) -> np.ndarray:
         """
@@ -69,7 +76,7 @@ def influences(
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _calculate_influences(indices: np.ndarray, job_id: int) -> np.ndarray:
+    def _calculate_influences_up(indices: np.ndarray, job_id: int) -> np.ndarray:
         """
         Calculates the influence from the influence factors and the scores of the training points.
 
@@ -80,6 +87,32 @@ def influences(
         c_x_train, c_y_train = data.x_train[indices], data.y_train[indices]
         train_grads = twd.grad(c_x_train, c_y_train)
         return np.einsum("ta,va->tv", influence_factors, train_grads)
+
+    def _calculate_influences_pert(indices: np.ndarray, job_id: int) -> np.ndarray:
+        """
+        Calculates the influence from the influence factors and the scores of the training points.
+
+        :param indices: A np.ndarray containing all indices of the training data which shall be evaluated in this run.
+        :param job_id: A id which describes the current job id.
+        :returns: A np.ndarray of size (N, K) containing the influence for each test sample and train sample.
+        """
+        all_pert_influences = []
+        for i in indices:
+            perturbation_influences = twd.mvp(
+                data.x_train[i],
+                data.y_train[i],
+                influence_factors,
+                progress=progress,
+                second_x=True,
+            )
+            all_pert_influences.append(perturbation_influences)
+
+        return np.stack(all_pert_influences, axis=1)
+
+    if influence_type == InfluenceTypes.Up:
+        _calculate_influences = _calculate_influences_up
+    elif influence_type == InfluenceTypes.Perturbation:
+        _calculate_influences = _calculate_influences_pert
 
     influences_job = MapReduceJob.from_fun(
         _calculate_influences, functools.partial(np.concatenate, axis=1)

@@ -52,7 +52,7 @@ class PyTorchSupervisedModel:
         grads = [
             flatten_gradient(
                 autograd.grad(
-                    self.objective(self.model(x[i])[0], y[i]), self.model.parameters()
+                    self.objective(self.model(x[i]), y[i]), self.model.parameters()
                 )
             )
             .detach()
@@ -61,18 +61,28 @@ class PyTorchSupervisedModel:
         ]
         return np.stack(grads, axis=0)
 
-    def hvp(
-        self, x: np.ndarray, y: np.ndarray, v: np.ndarray, progress: bool = False
+    def mvp(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        v: np.ndarray,
+        progress: bool = False,
+        second_x: bool = False,
     ) -> np.ndarray:
 
         x, y, v = tt(x), tt(y), tt(v)
+        x = nn.Parameter(x, requires_grad=True)
         loss = self.objective(self.model(x), y)
         grad_f = torch.autograd.grad(loss, self.model.parameters(), create_graph=True)
         grad_f = flatten_gradient(grad_f)
         z = (grad_f * Variable(v)).sum(dim=1)
         all_flattened_grads = [
             flatten_gradient(
-                autograd.grad(z[i], self.model.parameters(), retain_graph=True)
+                autograd.grad(
+                    z[i],
+                    self.model.parameters() if not second_x else [x],
+                    retain_graph=True,
+                )
             )
             for i in maybe_progress(range(len(z)), progress)
         ]

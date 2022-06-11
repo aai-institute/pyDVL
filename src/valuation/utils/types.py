@@ -84,8 +84,20 @@ class TwiceDifferentiable(Protocol):
         """
         pass
 
-    def hvp(
-        self, x: ndarray, y: ndarray, v: ndarray, progress: bool = False
+    def grad_grad(self, x: ndarray, y: ndarray, progress: bool = False) -> ndarray:
+        """
+        Calculate the gradient with respect to the parameters of the module with input parameters x[i] and y[i]. And
+        subsequently calculate the gradient of that expression worth x.
+        """
+        pass
+
+    def mvp(
+        self,
+        x: ndarray,
+        y: ndarray,
+        v: ndarray,
+        progress: bool = False,
+        second_x: bool = False,
     ) -> ndarray:
         """
         Calculate the hessian vector product over the loss with all input parameters x and y with the vector v.
