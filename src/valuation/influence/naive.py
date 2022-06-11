@@ -65,7 +65,7 @@ def influences(
         """
         c_x_test, c_y_test = data.x_test[indices], data.y_test[indices]
         test_grads = twd.grad(c_x_test, c_y_test, progress=progress)
-        return conjugate_gradient(hvp, test_grads)[0]
+        return -conjugate_gradient(hvp, test_grads)[0]
 
     influence_factors_job = MapReduceJob.from_fun(
         _calculate_influence_factors, np.concatenate
