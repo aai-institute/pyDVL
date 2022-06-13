@@ -47,7 +47,7 @@ def test_powerset():
         ),
     ],
 )
-def test_random_powerset(n, memcache_client_config):
+def test_random_powerset(n, memcache_client_config, tolerate):
     with pytest.raises(TypeError):
         # noinspection PyTypeChecker
         set(random_powerset(1, max_subsets=1))
@@ -59,11 +59,9 @@ def test_random_powerset(n, memcache_client_config):
     )
     results = map_reduce(job, [n], num_runs=reps)
 
-    from tests.conftest import TolerateErrors
-
-    delta_errors = TolerateErrors(int(delta * reps))
+    max_failures = int(delta * reps)
     for r in results:
-        with delta_errors:
+        with tolerate(max_failures=max_failures):
             assert np.all(r), results
 
 
