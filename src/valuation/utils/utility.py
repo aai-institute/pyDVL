@@ -27,7 +27,7 @@ class Utility:
         self,
         model: SupervisedModel,
         data: Dataset,
-        scoring: Optional[Scorer],
+        scoring: Optional[Scorer] = None,
         catch_errors: bool = True,
         enable_cache: bool = True,
         cache_options: MemcachedConfig = None,
