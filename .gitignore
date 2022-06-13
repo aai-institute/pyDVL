@@ -141,3 +141,6 @@ runs/
 # Generated Documentation from Code
 docs/valuation/*
 !docs/valuation/index.rst
+
+# Test Benchmarks
+.benchmarks
