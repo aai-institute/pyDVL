@@ -32,7 +32,7 @@ def test_exact_shapley_performance(exact_shapley, method, benchmark):
     check_exact(values, exact_values)
 
 
-@pytest.mark.parametrize("max_iterations", [50])
+@pytest.mark.parametrize("max_iterations", [100])
 @pytest.mark.parametrize(
     "method",
     [
@@ -53,12 +53,22 @@ def test_montecarlo_shapley_performance(
     check_exact(values, exact_values)
 
 
-@pytest.mark.skip
-@pytest.mark.parametrize("max_iterations", [10, 20])
-def test_truncated_montecarlo_shapley_performance(
-    exact_shapley, max_iterations, benchmark
-):
-    u, _ = exact_shapley
-    benchmark(
-        truncated_montecarlo_shapley, u, max_iterations=max_iterations, progress=False
+@pytest.mark.xfail
+def test_truncated_montecarlo_shapley_performance(exact_shapley, benchmark):
+    u, exact_values = exact_shapley
+    result = benchmark(
+        truncated_montecarlo_shapley,
+        u,
+        bootstrap_iterations=100,
+        min_scores=10,
+        score_tolerance=1e-6,
+        min_values=10,
+        value_tolerance=1e-6,
+        max_iterations=100,
+        num_workers=2,
+        progress=False,
     )
+    values = result[0]
+    # TODO: properly test these two checks because they fail for the truncated method
+    check_total_value(u, values)
+    check_exact(values, exact_values)
