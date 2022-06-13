@@ -283,7 +283,7 @@ def serial_truncated_montecarlo_shapley(
 
 
 def permutation_montecarlo_shapley(
-    u: Utility, max_iterations: int, num_jobs: int = 1, progress: bool = False
+    u: Utility, max_iterations: int, num_jobs: int = 1, progress: bool = False, **kwargs
 ) -> Tuple[OrderedDict, None]:
     """
     **FIXME**:
@@ -316,7 +316,11 @@ def permutation_montecarlo_shapley(
 
 # FIXME: This is completely broken. Normalization is in a weird way. (??!?)
 def combinatorial_montecarlo_shapley(
-    u: Utility, max_iterations: int, num_jobs: int = 1, progress: bool = False
+    u: Utility,
+    max_iterations: int,
+    num_jobs: int = 1,
+    progress: bool = False,
+    **kwargs,
 ) -> Tuple[OrderedDict, None]:
     """Computes an approximate Shapley value using the combinatorial
     definition and MonteCarlo samples.
@@ -339,7 +343,9 @@ def combinatorial_montecarlo_shapley(
         for i, idx in enumerate(indices):
             # Randomly sample subsets of full dataset without idx
             subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
-            power_set = random_powerset(subset, dist=dist, max_subsets=max_iterations)
+            power_set = random_powerset(
+                subset, dist=dist, max_subsets=max_iterations, **kwargs
+            )
             # Normalization accounts for a uniform dist. on powerset (i.e. not
             # weighted by set size) and the montecarlo sampling
             for s in maybe_progress(
