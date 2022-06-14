@@ -137,3 +137,7 @@ pylint.html
 
 # Saved data
 runs/
+
+# Generated Documentation from Code
+docs/valuation/*
+!docs/valuation/index.rst

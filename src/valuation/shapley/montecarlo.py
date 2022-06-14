@@ -123,30 +123,29 @@ def truncated_montecarlo_shapley(
     We keep sampling permutations and updating all values until the change in
     the moving average for all values falls below another threshold.
 
-        :param u: Utility object with model, data, and scoring function
-        :param bootstrap_iterations: Repeat the computation of `global_score`
-         this many times to estimate its variance.
-        :param min_scores: Use so many of the last scores in order to compute
-         the moving average.
-        :param score_tolerance: For every permutation, computation stops
-         after the mean increase in performance is within score_tolerance*stddev
-         of the bootstrapped score over the **test** set (i.e. we bootstrap to
-         compute variance of scores, then use that to stop)
-        :param min_values: complete at least these many value computations for
-         every index and use so many of the last values for each sample index
-         in order to compute the moving averages of values.
-        :param value_tolerance: Stop sampling permutations after the first
-         derivative of the means of the last min_steps values are within
-         eps close to 0
-        :param max_iterations: never run more than this many iterations (in
-         total, across all workers: if num_workers = 100 and max_iterations =
-         100, then each worker will run at most one job)
-        :param num_workers: number of workers processing permutations. Set e.g.
+    :param u: Utility object with model, data, and scoring function
+    :param bootstrap_iterations: Repeat the computation of `global_score`
+        this many times to estimate its variance.
+    :param min_scores: Use so many of the last scores in order to compute
+        the moving average.
+    :param score_tolerance: For every permutation, computation stops
+        after the mean increase in performance is within score_tolerance*stddev
+        of the bootstrapped score over the **test** set (i.e. we bootstrap to
+        compute variance of scores, then use that to stop)
+    :param min_values: complete at least these many value computations for
+        every index and use so many of the last values for each sample index
+        in order to compute the moving averages of values.
+    :param value_tolerance: Stop sampling permutations after the first
+        derivative of the means of the last min_steps values are within
+        eps close to 0
+    :param max_iterations: never run more than this many iterations (in
+        total, across all workers: if num_workers = 100 and max_iterations =
+        100, then each worker will run at most one job)
+    :param num_workers: number of workers processing permutations. Set e.g.
         to available_cpus()/t if each worker runs on t threads.
-        :param run_id: for display purposes (location of progress bar)
-        :param progress: set to True to use tqdm progress bars.
-        :return: Dict of approximated Shapley values for the indices
-
+    :param run_id: for display purposes (location of progress bar)
+    :param progress: set to True to use tqdm progress bars.
+    :return: Dict of approximated Shapley values for the indices
     """
     n = len(u.data)
     values = np.zeros(n).reshape((-1, 1))
@@ -210,7 +209,7 @@ def serial_truncated_montecarlo_shapley(
     progress: bool = False,
 ) -> Tuple[OrderedDict, List[int]]:
     """Truncated MonteCarlo method to compute Shapley values of data points
-     using only one CPU.
+    using only one CPU.
 
     Instead of naively implementing the expectation, we sequentially add points
     to a dataset from a permutation. We compute scores and stop when model
@@ -219,24 +218,21 @@ def serial_truncated_montecarlo_shapley(
     We keep sampling permutations and updating all values until the change in
     the moving average for all values falls below another threshold.
 
-        :param u: Utility object with model, data, and scoring function
-        :param bootstrap_iterations: Repeat global_score computation this many
-         times to estimate variance.
-        :param score_tolerance: For every permutation, computation stops
-         after the mean increase in performance is within score_tolerance*stddev
-         of the bootstrapped score over the **test** set (i.e. we bootstrap to
-         compute variance of scores, then use that to stop)
-        :param min_steps: use so many of the last values for each sample index
-         in order to compute the moving averages of values.
-        :param value_tolerance: Stop sampling permutations after the first
-         derivative of the means of the last min_steps values are within
-         eps close to 0
-        :param max_iterations: never run more than these many iterations
-        :param progress: whether to display progress bars
-        # :param values: Use these as starting point (retake computation)
-        # :param converged_history: Append to this history
-        :return: Dict of approximated Shapley values for the indices
-
+    :param u: Utility object with model, data, and scoring function
+    :param bootstrap_iterations: Repeat global_score computation this many
+        times to estimate variance.
+    :param score_tolerance: For every permutation, computation stops
+        after the mean increase in performance is within score_tolerance*stddev
+        of the bootstrapped score over the **test** set (i.e. we bootstrap to
+        compute variance of scores, then use that to stop)
+    :param min_steps: use so many of the last values for each sample index
+        in order to compute the moving averages of values.
+    :param value_tolerance: Stop sampling permutations after the first
+        derivative of the means of the last min_steps values are within
+        eps close to 0
+    :param max_iterations: never run more than these many iterations
+    :param progress: whether to display progress bars
+    :return: Dict of approximated Shapley values for the indices
     """
     n = len(u.data)
     all_marginals = np.zeros(n).reshape((-1, 1))

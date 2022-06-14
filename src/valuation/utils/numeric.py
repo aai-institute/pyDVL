@@ -29,8 +29,9 @@ def powerset(it: Sequence[T]) -> Iterator[Collection[T]]:
     Subsets are generated in sequence by growing size. See `random_powerset()`
     for random sampling.
 
-    >>> powerset([1,2])
-    () (1,) (2,) (1,2)
+    >>> from valuation.utils.numeric import powerset
+    >>> list(powerset([1,2]))
+    [(), (1,), (2,), (1, 2)]
     """
     s = list(it)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
@@ -38,7 +39,7 @@ def powerset(it: Sequence[T]) -> Iterator[Collection[T]]:
 
 def lower_bound_hoeffding(delta: float, eps: float, score_range: float) -> int:
     """Lower bound on the number of samples required for MonteCarlo Shapley to
-     obtain an (ε,δ)-approximation.
+    obtain an (ε,δ)-approximation.
 
     That is: with probability 1-δ, the estimate will be ε-close to the true
     quantity, if at least n samples are taken.
@@ -112,6 +113,7 @@ def random_powerset(
 
 def spearman(x: np.ndarray, y: np.ndarray) -> float:
     """Spearman correlation for integer, distinct ranks.
+
     :return: A float in [-1,1]: -1 for reversed ranks, 1 for perfect match, 0
         for independent ranks
     """

@@ -4,12 +4,7 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from tests.conftest import (
-    TolerateErrors,
-    check_rank_correlation,
-    check_total_value,
-    check_values,
-)
+from tests.conftest import check_rank_correlation, check_total_value, check_values
 from valuation.shapley import (
     combinatorial_exact_shapley,
     combinatorial_montecarlo_shapley,
@@ -45,7 +40,7 @@ def test_analytic_montecarlo_shapley(analytic_shapley, fun, perc_atol, max_itera
         (12, combinatorial_montecarlo_shapley, 1e-2, 1e-2),
     ],
 )
-def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps):
+def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate):
     """FIXME: This test passes but there are several unclear points.
     For example, map_reduce is called with num_jobs=num_runs. Is this correct?
     If I put num_jobs=jobs_per_run, map_reduce encounters errors since a utility
@@ -72,9 +67,9 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps):
     job = MapReduceJob.from_fun(_fun, lambda r: r[0][0])
     results = map_reduce(job, u, num_jobs=num_runs, num_runs=num_runs)
 
-    delta_errors = TolerateErrors(max(1, int(delta * len(results))))
+    max_failures = max(1, int(delta * len(results)))
     for values in results:
-        with delta_errors:
+        with tolerate(max_failures=max_failures):
             # Trivial bound on total error using triangle inequality
             check_total_value(u, values, atol=len(u.data) * eps)
             check_rank_correlation(values, exact_values, threshold=0.9)
@@ -152,7 +147,7 @@ def test_linear_montecarlo_with_outlier(
 # noinspection PyTestParametrized
 @pytest.mark.skip("Truncation not yet fully implemented")
 @pytest.mark.parametrize("num_samples", [200])
-def test_truncated_montecarlo_shapley(analytic_shapley):
+def test_truncated_montecarlo_shapley(analytic_shapley, tolerate):
     u, exact_values = analytic_shapley
     num_cpus = min(available_cpus(), len(u.data))
     num_runs = 10
@@ -182,9 +177,9 @@ def test_truncated_montecarlo_shapley(analytic_shapley):
     for i in range(num_runs):
         results.append(fun(run_id=i))
 
-    delta_errors = TolerateErrors(max(1, int(delta * len(results))))
+    max_failures = max(1, int(delta * len(results)))
     for values, _ in results:
-        with delta_errors:
+        with tolerate(max_failures=max_failures):
             # Trivial bound on total error using triangle inequality
             check_total_value(u, values, atol=len(u.data) * eps)
             check_rank_correlation(values, exact_values, threshold=0.8)

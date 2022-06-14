@@ -203,10 +203,10 @@ class InterruptibleWorker(mp.Process):
 
     To use, subclass and implement `_run(self, task) -> result`. See e.g.
     `ShapleyWorker`, then instantiate using `Coordinator` and the methods
-     therein.
+    therein.
 
-     TODO: use shared memory to avoid copying data
-     FIXME: I don't need both the abort flag and the None task
+    TODO: use shared memory to avoid copying data
+    FIXME: I don't need both the abort flag and the None task
     """
 
     def __init__(
@@ -215,11 +215,11 @@ class InterruptibleWorker(mp.Process):
         """
         :param worker_id: mostly for display purposes
         :param tasks: queue of incoming tasks for the Worker. A task of `None`
-                      signals that there is no more processing to do and the
-                      worker should exit after finishing its current task.
+            signals that there is no more processing to do and the
+            worker should exit after finishing its current task.
         :param results: queue of outgoing results.
         :param abort: shared flag to signal that the worker must stop in the
-                      next iteration of the inner loop
+            next iteration of the inner loop
         """
         # Mark as daemon, so we are killed when the parent exits (e.g. Ctrl+C)
         super().__init__(daemon=True)
