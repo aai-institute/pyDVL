@@ -267,7 +267,9 @@ def check_values(
             (values - exact_values)/exact_values < 0.1
     """
     for key in values:
-        assert abs(values[key] - exact_values[key]) < exact_values[key] * rtol + atol
+        assert (
+            abs(values[key] - exact_values[key]) < abs(exact_values[key]) * rtol + atol
+        )
 
 
 def check_rank_correlation(
