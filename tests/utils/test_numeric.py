@@ -33,7 +33,7 @@ def test_powerset():
 
 
 @pytest.mark.parametrize("n, max_subsets", [(0, 10), (1, 1e3), (4, 1e4)])
-def test_random_powerset(n, max_subsets, memcache_client_config, count_amplifier=5):
+def test_random_powerset(n, max_subsets, memcache_client_config, count_amplifier=3):
     """
     Tests that random_powerset samples the same items as the powerset method and
     with constant frequency.
