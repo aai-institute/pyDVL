@@ -21,7 +21,7 @@ from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
     "num_samples, fun, perc_atol, max_iterations",
     [
         (12, permutation_montecarlo_shapley, 10, 1),
-        (6, combinatorial_montecarlo_shapley, 10, 1e3),
+        (6, combinatorial_montecarlo_shapley, 15, 1e3),
     ],
 )
 def test_analytic_montecarlo_shapley(analytic_shapley, fun, perc_atol, max_iterations):

@@ -65,7 +65,7 @@ def test_linear_with_outlier(
     linear_dataset, memcache_client_config, score_type, total_atol=1e-5
 ):
     outlier_idx = np.random.randint(len(linear_dataset.y_train))
-    linear_dataset.y_train[outlier_idx] *= 10
+    linear_dataset.y_train[outlier_idx] *= 100
     linear_utility = Utility(
         LinearRegression(),
         data=linear_dataset,
