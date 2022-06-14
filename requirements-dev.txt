@@ -6,4 +6,3 @@ bump2version
 pre-commit
 nbconvert
 pytest-timeout
-xgboost
