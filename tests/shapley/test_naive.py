@@ -28,10 +28,10 @@ def test_analytic_exact_shapley(analytic_shapley, fun, rtol, total_atol):
 @pytest.mark.parametrize(
     "a, b, num_points, score_type",
     [
-        (2, 0, 8, "r2"),
-        (2, 1, 6, "r2"),
-        (2, 1, 6, "neg_median_absolute_error"),
-        (2, 1, 8, "explained_variance"),
+        (2, 0, 20, "r2"),
+        (2, 1, 20, "r2"),
+        (2, 1, 20, "neg_median_absolute_error"),
+        (2, 1, 20, "explained_variance"),
     ],
 )
 def test_linear(
@@ -55,10 +55,10 @@ def test_linear(
 @pytest.mark.parametrize(
     "a, b, num_points, score_type",
     [
-        (2, 0, 8, "r2"),
-        (2, 1, 8, "r2"),
-        (2, 1, 6, "neg_median_absolute_error"),
-        (2, 1, 6, "explained_variance"),
+        (2, 0, 20, "r2"),
+        (2, 1, 20, "r2"),
+        (2, 1, 20, "neg_median_absolute_error"),
+        (2, 1, 20, "explained_variance"),
     ],
 )
 def test_linear_with_outlier(
@@ -114,8 +114,8 @@ def test_polynomial(
     "coefficients, score_type",
     [
         (np.random.randint(-3, 3, size=3), "r2"),
-        (np.random.randint(-3, 3, size=5), "neg_median_absolute_error"),
-        (np.random.randint(-3, 3, size=5), "explained_variance"),
+        (np.random.randint(-3, 3, size=3), "neg_median_absolute_error"),
+        (np.random.randint(-3, 3, size=3), "explained_variance"),
     ],
 )
 def test_polynomial_with_outlier(
@@ -127,7 +127,7 @@ def test_polynomial_with_outlier(
 ):
     dataset, _ = polynomial_dataset
     outlier_idx = np.random.randint(len(dataset.y_train))
-    dataset.y_train[outlier_idx] *= 10
+    dataset.y_train[outlier_idx] *= 100
     poly_utility = Utility(
         polynomial_pipeline,
         dataset,

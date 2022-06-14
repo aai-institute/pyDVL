@@ -24,7 +24,7 @@ from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
     "num_samples, fun, rtol, max_iterations",
     [
         (12, permutation_montecarlo_shapley, 0.1, 1),
-        (6, combinatorial_montecarlo_shapley, 0.15, 1e3),
+        (8, combinatorial_montecarlo_shapley, 0.15, 1e3),
     ],
 )
 def test_analytic_montecarlo_shapley(analytic_shapley, fun, rtol, max_iterations):
@@ -81,25 +81,25 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
 @pytest.mark.parametrize(
     "a, b, num_points, fun, score_type, rtol, max_iterations",
     [
-        (2, 0, 6, permutation_montecarlo_shapley, "explained_variance", 0.3, 500),
+        (2, 0, 10, permutation_montecarlo_shapley, "explained_variance", 0.5, 1000),
         (
             2,
             2,
-            4,
+            10,
             permutation_montecarlo_shapley,
             "neg_median_absolute_error",
             0.5,
-            500,
+            1000,
         ),
-        (2, 0, 4, combinatorial_montecarlo_shapley, "explained_variance", 0.3, 500),
+        (2, 0, 10, combinatorial_montecarlo_shapley, "explained_variance", 1, 2000),
         (
             2,
             2,
-            4,
+            10,
             combinatorial_montecarlo_shapley,
             "neg_median_absolute_error",
-            0.5,
-            500,
+            1,
+            2000,
         ),
     ],
 )
@@ -124,9 +124,9 @@ def test_linear_montecarlo_shapley(
 @pytest.mark.parametrize(
     "a, b, num_points, fun, score_type, max_iterations",
     [
-        (2, 1, 6, permutation_montecarlo_shapley, "r2", 1000),
-        (2, 0, 12, permutation_montecarlo_shapley, "explained_variance", 1000),
-        (2, 2, 4, permutation_montecarlo_shapley, "neg_median_absolute_error", 1000),
+        (2, 2, 20, permutation_montecarlo_shapley, "r2", 1000),
+        (2, 3, 20, permutation_montecarlo_shapley, "explained_variance", 1000),
+        (2, 3, 20, permutation_montecarlo_shapley, "neg_median_absolute_error", 1000),
     ],
 )
 def test_linear_montecarlo_with_outlier(
@@ -139,7 +139,7 @@ def test_linear_montecarlo_with_outlier(
 ):
     outlier_idx = np.random.randint(len(linear_dataset.y_train))
     num_jobs = min(8, available_cpus())
-    linear_dataset.y_train[outlier_idx] *= 10
+    linear_dataset.y_train[outlier_idx] *= 100
     linear_utility = Utility(
         LinearRegression(),
         data=linear_dataset,
@@ -157,13 +157,10 @@ def test_linear_montecarlo_with_outlier(
 @pytest.mark.parametrize(
     "n_points, n_features, regressor, score_type, max_iterations",
     [
-        (6, 3, RandomForestRegressor(n_estimators=2), "r2", 1000),
-        (6, 3, xgb.XGBRegressor(n_estimators=2), "r2", 1000),
+        (10, 3, RandomForestRegressor(n_estimators=2), "r2", 2000),
     ],
 )
-def test_random_forest_xgb(
-    boston_dataset, regressor, score_type, max_iterations, rtol=0.5
-):
+def test_random_forest(boston_dataset, regressor, score_type, max_iterations, rtol=1):
     num_jobs = min(8, available_cpus())
     rf_utility = Utility(
         regressor,

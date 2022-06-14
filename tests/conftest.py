@@ -138,7 +138,7 @@ def boston_dataset(n_points, n_features):
     dataset.data = dataset.data[:n_points, :n_features]
     dataset.feature_names = dataset.feature_names[:n_features]
     dataset.target = dataset.target[:n_points]
-    return Dataset.from_sklearn(dataset)
+    return Dataset.from_sklearn(dataset, train_size=0.5)
 
 
 def polynomial(coefficients, x):
@@ -151,7 +151,7 @@ def polynomial_dataset(coefficients: np.ndarray):
     """Coefficients must be for monomials of increasing degree"""
     from sklearn.utils import Bunch
 
-    x = np.arange(-1, 1, 0.2)
+    x = np.arange(-1, 1, 0.05)
     locs = polynomial(coefficients, x)
     y = np.random.normal(loc=locs, scale=0.3)
     db = Bunch()
@@ -161,7 +161,7 @@ def polynomial_dataset(coefficients: np.ndarray):
     db.DESCR = f"$y \\sim N({poly}, 1)$"
     db.feature_names = ["x"]
     db.target_names = ["y"]
-    return Dataset.from_sklearn(data=db, train_size=0.5), coefficients
+    return Dataset.from_sklearn(data=db, train_size=0.15), coefficients
 
 
 @pytest.fixture(scope="function")
@@ -181,7 +181,7 @@ def linear_dataset(a, b, num_points):
     db.DESCR = f"y~N({a}*x + {b}, 1)"
     db.feature_names = ["x"]
     db.target_names = ["y"]
-    return Dataset.from_sklearn(data=db, train_size=0.8)
+    return Dataset.from_sklearn(data=db, train_size=0.3)
 
 
 def dummy_utility(num_samples: int = 10):
