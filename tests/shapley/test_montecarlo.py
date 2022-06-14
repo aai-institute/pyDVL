@@ -81,7 +81,6 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
 @pytest.mark.parametrize(
     "a, b, num_points, fun, score_type, perc_atol, max_iterations",
     [
-        (2, 1, 6, permutation_montecarlo_shapley, "r2", 30, 500),
         (2, 0, 6, permutation_montecarlo_shapley, "explained_variance", 30, 500),
         (2, 2, 4, permutation_montecarlo_shapley, "neg_median_absolute_error", 50, 500),
         (2, 0, 4, combinatorial_montecarlo_shapley, "explained_variance", 30, 500),
