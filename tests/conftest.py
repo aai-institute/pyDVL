@@ -221,6 +221,17 @@ def exact_shapley(num_samples):
     return u, exact_values
 
 
+@pytest.fixture(scope="function")
+def exact_loo(num_samples):
+    """Scores are i/(n-1) so v(i) = U(D) - U(D/{i})] = n/2 - (n/2 - i/(n-1)) = i/(n-1),
+    where n-1 is the max in this case"""
+    u = dummy_utility(num_samples)
+    exact_values = OrderedDict(
+        {i: i / float(max(u.data.x_train)) for i in u.data.indices}
+    )
+    return u, exact_values
+
+
 def check_total_value(u: Utility, values: OrderedDict, atol: float = 1e-6):
     """Checks absolute distance between total and added values.
     Shapley value is supposed to fulfill the total value axiom."""
