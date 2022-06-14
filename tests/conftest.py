@@ -250,25 +250,24 @@ def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e
     assert np.allclose(v, ev, atol=atol)
 
 
-def check_values(values: OrderedDict, exact_values: OrderedDict, perc_atol: float = 1):
-    """Compares value changes in percentage,
+def check_values(
+    values: OrderedDict,
+    exact_values: OrderedDict,
+    rtol: float = 0.1,
+    atol: float = 1e-5,
+):
+    """Compares value changes,
     without assuming keys in ordered dicts have the same order.
 
     Args:
         values:
         exact_values:
-        perc_atol: percent absolute tolerance of elements in values with respect to
-            elements in exact values. E.g. if perc_atol = 10, we must have
-            (values - exact_values)/exact_values * 100 < 10
+        rtol: relative tolerance of elements in values with respect to
+            elements in exact values. E.g. if rtol = 0.1, we must have
+            (values - exact_values)/exact_values < 0.1
     """
     for key in values:
-        if exact_values[key] == 0:
-            assert abs(values[key]) * 100 < perc_atol
-        else:
-            assert (
-                abs(values[key] - exact_values[key]) / exact_values[key] * 100
-                < perc_atol
-            )
+        assert abs(values[key] - exact_values[key]) < exact_values[key] * rtol + atol
 
 
 def check_rank_correlation(

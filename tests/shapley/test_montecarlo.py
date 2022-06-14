@@ -21,19 +21,19 @@ from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
 
 # noinspection PyTestParametrized
 @pytest.mark.parametrize(
-    "num_samples, fun, perc_atol, max_iterations",
+    "num_samples, fun, rtol, max_iterations",
     [
-        (12, permutation_montecarlo_shapley, 10, 1),
-        (6, combinatorial_montecarlo_shapley, 15, 1e3),
+        (12, permutation_montecarlo_shapley, 0.1, 1),
+        (6, combinatorial_montecarlo_shapley, 0.15, 1e3),
     ],
 )
-def test_analytic_montecarlo_shapley(analytic_shapley, fun, perc_atol, max_iterations):
+def test_analytic_montecarlo_shapley(analytic_shapley, fun, rtol, max_iterations):
     u, exact_values = analytic_shapley
     num_jobs = min(8, available_cpus())
 
     values, _ = fun(u, max_iterations=max_iterations, progress=False, num_jobs=num_jobs)
 
-    check_values(values, exact_values, perc_atol=perc_atol)
+    check_values(values, exact_values, rtol=rtol)
 
 
 @pytest.mark.parametrize(
@@ -79,24 +79,32 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points, fun, score_type, perc_atol, max_iterations",
+    "a, b, num_points, fun, score_type, rtol, max_iterations",
     [
-        (2, 0, 6, permutation_montecarlo_shapley, "explained_variance", 30, 500),
-        (2, 2, 4, permutation_montecarlo_shapley, "neg_median_absolute_error", 50, 500),
-        (2, 0, 4, combinatorial_montecarlo_shapley, "explained_variance", 30, 500),
+        (2, 0, 6, permutation_montecarlo_shapley, "explained_variance", 0.3, 500),
+        (
+            2,
+            2,
+            4,
+            permutation_montecarlo_shapley,
+            "neg_median_absolute_error",
+            0.5,
+            500,
+        ),
+        (2, 0, 4, combinatorial_montecarlo_shapley, "explained_variance", 0.3, 500),
         (
             2,
             2,
             4,
             combinatorial_montecarlo_shapley,
             "neg_median_absolute_error",
-            50,
+            0.5,
             500,
         ),
     ],
 )
 def test_linear_montecarlo_shapley(
-    linear_dataset, fun, score_type, perc_atol, max_iterations, memcache_client_config
+    linear_dataset, fun, score_type, rtol, max_iterations, memcache_client_config
 ):
     num_jobs = min(8, available_cpus())
     linear_utility = Utility(
@@ -110,7 +118,7 @@ def test_linear_montecarlo_shapley(
         linear_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
     )
     exact_values = combinatorial_exact_shapley(linear_utility, progress=False)
-    check_values(values, exact_values, perc_atol=perc_atol)
+    check_values(values, exact_values, rtol=rtol)
 
 
 @pytest.mark.parametrize(
@@ -154,7 +162,7 @@ def test_linear_montecarlo_with_outlier(
     ],
 )
 def test_random_forest_xgb(
-    boston_dataset, regressor, score_type, max_iterations, perc_atol=50
+    boston_dataset, regressor, score_type, max_iterations, rtol=0.5
 ):
     num_jobs = min(8, available_cpus())
     rf_utility = Utility(
@@ -169,7 +177,7 @@ def test_random_forest_xgb(
     combinatorial_values, _ = combinatorial_montecarlo_shapley(
         rf_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
     )
-    check_values(permutation_values, combinatorial_values, perc_atol=perc_atol)
+    check_values(permutation_values, combinatorial_values, rtol=rtol)
 
 
 # noinspection PyTestParametrized
