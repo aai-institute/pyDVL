@@ -218,3 +218,22 @@ def linear_regression_analytical_hessian(
     inner_hessians = (2 / n) * np.einsum("ia,ib->iab", x, x)
     inner_hessian = np.mean(inner_hessians, axis=0)
     return np.kron(np.eye(n), inner_hessian)
+
+
+def linear_regression_analytical_derivative_x_theta(
+    A: np.ndarray, x: np.ndarray, y: np.ndarray
+) -> np.ndarray:
+    """
+    Calculates the analytical second derivative of L with respect to vect(A) and x afterwards. The loss function is the
+    mean squared error, precisely L(x, y) = np.mean((A @ x - y) ** 2).
+    """
+    n, m = tuple(A.shape)
+
+    outer_product_matrix = np.einsum("ab,kc->kabc", A, x)
+    corrected_outer_product_matrix = outer_product_matrix * (
+        np.ones([n, n]) + np.eye(n)
+    )
+    swapped_corrected_outer_product_matrix = np.swapaxes(
+        corrected_outer_product_matrix, 0, 1
+    )
+    return 2 * np.concatenate(tuple(swapped_corrected_outer_product_matrix), axis=1)

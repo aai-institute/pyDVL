@@ -11,6 +11,7 @@ from valuation.models.linear_regression_torch_model import LRTorchModel
 from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
 from valuation.utils import (
     Dataset,
+    linear_regression_analytical_derivative_x_theta,
     linear_regression_analytical_grads,
     linear_regression_analytical_hessian,
 )
@@ -158,10 +159,82 @@ def test_upweighting_influences_lr_analytical(
     dataset.y_train = train_y
     dataset.x_test = test_x
     dataset.y_test = test_y
-    influence_values = influences(model, dataset, progress=True, n_jobs=1)
+    influence_values = influences(
+        model, dataset, progress=True, n_jobs=1, influence_type=InfluenceTypes.Up
+    )
     influences_max_abs_diff = np.max(
         np.abs(influence_values - influence_values_analytical)
     )
     assert (
         influences_max_abs_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_INFLUENCE
-    ), "Influence values were wrong."
+    ), "Upweighting influence values were wrong."
+
+
+@pytest.mark.parametrize(
+    "train_set_size,test_set_size,problem_dimension,condition_number",
+    test_cases,
+    ids=test_case_ids,
+)
+def test_perturbation_influences_lr_analytical(
+    train_set_size: int,
+    test_set_size: int,
+    problem_dimension: int,
+    condition_number: float,
+    quadratic_matrix: np.ndarray,
+):
+
+    # some settings
+    A = quadratic_matrix
+    d, _ = tuple(A.shape)
+
+    # generate datasets
+    data_model = lambda x: np.random.normal(
+        x @ A.T, InfluenceTestSettings.DATA_OUTPUT_NOISE
+    )
+    train_x = np.random.uniform(size=[train_set_size, d])
+    train_y = data_model(train_x)
+    test_x = np.random.uniform(size=[test_set_size, d])
+    test_y = data_model(test_x)
+
+    model = PyTorchSupervisedModel(
+        model=LRTorchModel(d, d, A),
+        objective=F.mse_loss,
+        num_epochs=1000,
+        batch_size=32,
+        optimizer=PyTorchOptimizer.ADAM_W,
+        optimizer_kwargs={"lr": 0.02},
+    )
+
+    # check grads
+    test_grads_analytical = linear_regression_analytical_grads(A, test_x, test_y)
+    train_second_deriv_analytical = linear_regression_analytical_derivative_x_theta(
+        A, train_x, train_y
+    )
+
+    hessian_analytical = linear_regression_analytical_hessian(A, train_x, train_y)
+    s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
+    influence_values_analytical = -np.einsum(
+        "ia,jab->ijb", s_test_analytical, train_second_deriv_analytical
+    )
+
+    class Object(object):
+        pass
+
+    dataset = Object()
+    dataset.x_train = train_x
+    dataset.y_train = train_y
+    dataset.x_test = test_x
+    dataset.y_test = test_y
+    influence_values = influences(
+        model,
+        dataset,
+        progress=True,
+        n_jobs=1,
+        influence_type=InfluenceTypes.Perturbation,
+    )
+    influences_max_abs_diff = np.max(
+        np.abs(influence_values - influence_values_analytical)
+    )
+    assert (
+        influences_max_abs_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_INFLUENCE
+    ), "Perturbation influence values were wrong."
