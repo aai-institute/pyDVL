@@ -196,25 +196,13 @@ eps close to 0</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="valuation.shapley.permutation_montecarlo_shapley">
 <span class="sig-name descname"><span class="pre">permutation_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/utility.html#valuation.utils.utility.Utility" title="valuation.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">OrderedDict</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/shapley/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.shapley.permutation_montecarlo_shapley" title="Permalink to this definition"></a></dt>
-<dd><dl class="simple">
-<dt><strong>FIXME</strong>:</dt><dd><p>the sum of values tends to cancel out, even though the ranking is ok</p>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="valuation.shapley.combinatorial_montecarlo_shapley">
 <span class="sig-name descname"><span class="pre">combinatorial_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/utility.html#valuation.utils.utility.Utility" title="valuation.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">OrderedDict</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/shapley/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.shapley.combinatorial_montecarlo_shapley" title="Permalink to this definition"></a></dt>
 <dd><p>Computes an approximate Shapley value using the combinatorial
 definition and MonteCarlo samples.</p>
-<dl class="simple">
-<dt><strong>FIXME</strong>:</dt><dd><p>this seems to have very high variance! It might help to implement
-importance sampling with more weight for smaller set sizes, where value
-contributions are likely to be higher.</p>
-</dd>
-<dt><strong>UPDATE</strong>:</dt><dd><p>Seems dubious, since the uniform sampling strategy does not help</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py function">
