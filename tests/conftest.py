@@ -9,11 +9,18 @@ if TYPE_CHECKING:
 import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import PolynomialFeatures
 
 from valuation.utils import Dataset, Utility
+from valuation.utils.logging import start_logging_server
 from valuation.utils.numeric import random_matrix_with_condition_number, spearman
 
 EXCEPTIONS_TYPE = Optional[Sequence[Type[BaseException]]]
+
+
+def pytest_sessionstart():
+    start_logging_server()
 
 
 def is_memcache_responsive(hostname, port):
@@ -102,7 +109,7 @@ def memcache_client_config(memcached_service):
     from valuation.utils import ClientConfig
 
     client_config = ClientConfig(
-        server=memcached_service, connect_timeout=1.0, timeout=0.1, no_delay=True
+        server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
     )
     return client_config
 
@@ -123,11 +130,31 @@ def memcached_client(memcache_client_config):
         raise e
 
 
-@pytest.fixture(scope="session")
-def boston_dataset():
+@pytest.fixture(scope="function")
+def boston_dataset(n_points, n_features):
     from sklearn import datasets
 
-    return Dataset.from_sklearn(datasets.load_boston())
+    dataset = datasets.load_boston()
+    dataset.data = dataset.data[:n_points, :n_features]
+    dataset.feature_names = dataset.feature_names[:n_features]
+    dataset.target = dataset.target[:n_points]
+    return Dataset.from_sklearn(dataset, train_size=0.5)
+
+
+@pytest.fixture(scope="function")
+def linear_dataset():
+    from sklearn.utils import Bunch
+
+    a = 2
+    b = 0
+    x = np.arange(-1, 1, 0.15)
+    y = np.random.normal(loc=a * x + b, scale=0.1)
+    db = Bunch()
+    db.data, db.target = x.reshape(-1, 1), y
+    db.DESCR = f"y~N({a}*x + {b}, 1)"
+    db.feature_names = ["x"]
+    db.target_names = ["y"]
+    return Dataset.from_sklearn(data=db, train_size=0.66)
 
 
 @pytest.fixture(scope="function")
@@ -205,9 +232,9 @@ def polynomial_dataset(coefficients: np.ndarray):
     """Coefficients must be for monomials of increasing degree"""
     from sklearn.utils import Bunch
 
-    x = np.arange(-1, 1, 0.1)
+    x = np.arange(-1, 1, 0.05)
     locs = polynomial(coefficients, x)
-    y = np.random.normal(loc=locs, scale=0.1)
+    y = np.random.normal(loc=locs, scale=0.3)
     db = Bunch()
     db.data, db.target = x.reshape(-1, 1), y
     poly = [f"{c} x^{i}" for i, c in enumerate(coefficients)]
@@ -215,12 +242,27 @@ def polynomial_dataset(coefficients: np.ndarray):
     db.DESCR = f"$y \\sim N({poly}, 1)$"
     db.feature_names = ["x"]
     db.target_names = ["y"]
-    return Dataset.from_sklearn(data=db, train_size=0.5), coefficients
+    return Dataset.from_sklearn(data=db, train_size=0.15), coefficients
 
 
-@pytest.fixture()
-def scoring():
-    return "r2"
+@pytest.fixture(scope="function")
+def polynomial_pipeline(coefficients):
+    return make_pipeline(PolynomialFeatures(len(coefficients) - 1), LinearRegression())
+
+
+@pytest.fixture(scope="function")
+def linear_dataset(a, b, num_points):
+    from sklearn.utils import Bunch
+
+    step = 2 / num_points
+    x = np.arange(-1, 1, step)
+    y = np.random.normal(loc=a * x + b, scale=0.1)
+    db = Bunch()
+    db.data, db.target = x.reshape(-1, 1), y
+    db.DESCR = f"y~N({a}*x + {b}, 1)"
+    db.feature_names = ["x"]
+    db.target_names = ["y"]
+    return Dataset.from_sklearn(data=db, train_size=0.3)
 
 
 def dummy_utility(num_samples: int = 10):
@@ -255,13 +297,8 @@ def dummy_utility(num_samples: int = 10):
     return Utility(DummyModel(data), data, scoring=None, enable_cache=False)
 
 
-@pytest.fixture(scope="session")
-def linear_utility(linear_dataset):
-    return Utility(LinearRegression(), data=linear_dataset, scoring=scoring)
-
-
 @pytest.fixture(scope="function")
-def exact_shapley(num_samples):
+def analytic_shapley(num_samples):
     """Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
     u = dummy_utility(num_samples)
     exact_values = OrderedDict(
@@ -311,12 +348,34 @@ def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e
     k = list(values.keys())
     ek = list(exact_values.keys())
 
-    assert np.all(k == ek)
+    assert np.all(k == ek), "Ranks do not match"
 
     v = np.array(list(values.values()))
     ev = np.array(list(exact_values.values()))
 
     assert np.allclose(v, ev, atol=atol)
+
+
+def check_values(
+    values: OrderedDict,
+    exact_values: OrderedDict,
+    rtol: float = 0.1,
+    atol: float = 1e-5,
+):
+    """Compares value changes,
+    without assuming keys in ordered dicts have the same order.
+
+    Args:
+        values:
+        exact_values:
+        rtol: relative tolerance of elements in values with respect to
+            elements in exact values. E.g. if rtol = 0.1, we must have
+            (values - exact_values)/exact_values < 0.1
+    """
+    for key in values:
+        assert (
+            abs(values[key] - exact_values[key]) < abs(exact_values[key]) * rtol + atol
+        )
 
 
 def check_rank_correlation(

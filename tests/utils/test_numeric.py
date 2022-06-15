@@ -1,13 +1,8 @@
-from functools import partial, reduce
-from typing import List, Optional
-
 import numpy as np
 import pytest
 
-from valuation.utils import MapReduceJob, available_cpus, map_reduce
-from valuation.utils.caching import ClientConfig
+from valuation.utils import MemcachedConfig, available_cpus
 from valuation.utils.numeric import (
-    PowerSetDistribution,
     powerset,
     random_powerset,
     spearman,
@@ -37,84 +32,37 @@ def test_powerset():
     assert all([np.math.comb(n, j) for j in range(n + 1)] == sizes)
 
 
-@pytest.mark.timeout(15)
-@pytest.mark.parametrize(
-    "n",
-    [
-        0,
-        pytest.param(
-            8, marks=pytest.mark.skip("This test case is flaky. Needs investigating")
-        ),
-    ],
-)
-def test_random_powerset(n, memcache_client_config, tolerate):
-    with pytest.raises(TypeError):
-        # noinspection PyTypeChecker
-        set(random_powerset(1, max_subsets=1))
-
-    delta = 0.2
-    reps = 5
-    job = MapReduceJob.from_fun(
-        partial(_random_powerset, memcached_client_config=memcache_client_config)
+@pytest.mark.parametrize("n, max_subsets", [(0, 10), (1, 1e3), (4, 1e4)])
+def test_random_powerset(n, max_subsets, memcache_client_config, count_amplifier=3):
+    """
+    Tests that random_powerset samples the same items as the powerset method and
+    with constant frequency.
+    Sampling a number max_subsets of sets, we need to check that their relative frequency
+    is the same, up to sampling errors. To do so, we count the occurrence of each set, and
+    assert that the difference in count between the max and the min is much smaller than
+    the mean value count. More precisely, we assert that
+    (maximum_count - minimum_count) * count_amplifier < mean_count
+    where count_amplifier must be bigger than 1.
+    """
+    s = np.arange(1, n + 1)
+    num_cpus = available_cpus()
+    result = random_powerset(
+        s,
+        max_subsets=max_subsets,
+        num_jobs=num_cpus,
+        enable_cache=True,
+        client_config=memcache_client_config,
     )
-    results = map_reduce(job, [n], num_runs=reps)
+    result_exact = set(powerset(s))
+    count_powerset = {key: 0 for key in result_exact}
 
-    max_failures = int(delta * reps)
-    for r in results:
-        with tolerate(max_failures=max_failures):
-            assert np.all(r), results
-
-
-def _random_powerset(
-    data: List[int], *, memcached_client_config: Optional[ClientConfig] = None
-):
-    n = data[0]  # yuk... map_reduce always sends lists
-    indices = np.arange(n)
-    eps = 0.01
-    # TODO: compute (ε,δ) bound for sample complexity
-    m = 2 ** (int(n * 1.5))
-    sets = set()
-    sizes = np.zeros(n + 1)
-    num_cpus = available_cpus() if n > 0 else 1
-
-    def sampler(indices: np.ndarray) -> List[frozenset]:
-        ss: List[frozenset] = []
-        for s in random_powerset(
-            indices,
-            dist=PowerSetDistribution.WEIGHTED,
-            max_subsets=1 + m // num_cpus,
-            client_config=memcached_client_config,
-        ):
-            ss.append(frozenset(s))
-        return ss
-
-    def reducer(results: List[List[frozenset]]) -> List[frozenset]:
-        return reduce(lambda x, y: x.append(y) or x, results[0], [])
-
-    job = MapReduceJob.from_fun(sampler, reducer)
-    runs = map_reduce(job, indices, num_jobs=num_cpus, num_runs=num_cpus)
-    for result in runs:
-        for s in result:
-            sets.add(s)
-            sizes[len(s)] += 1
-
-    missing = set()
-    for s in map(frozenset, powerset(indices)):
-        try:
-            sets.remove(s)
-        except KeyError:
-            missing.add(s)
-    if len(missing) / 2**n > eps:
-        return False
-
-    # Check expected set sizes:
-    # E[|S|] ≈ Empirical[|S|], or P(|S| = k) ≈ Freq(|S| = k)
-    sizes /= sum(sizes)
-    exact_sizes = np.array([np.math.comb(n, j) for j in range(n + 1)]) / 2**n
-    if not np.allclose(sizes, exact_sizes, atol=eps):
-        return False
-
-    return True
+    for res_pow in result:
+        res_pow = tuple(np.sort(res_pow))
+        count_powerset[tuple(res_pow)] += 1
+    value_counts = list(count_powerset.values())
+    assert count_amplifier * (np.max(value_counts) - np.min(value_counts)) < np.mean(
+        value_counts
+    )
 
 
 @pytest.mark.parametrize(
