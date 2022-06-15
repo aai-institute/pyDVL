@@ -74,15 +74,14 @@ def test_perturbation_influences_valid_output(
 
 
 class InfluenceTestSettings:
-    DATA_OUTPUT_NOISE: float = 5e-2
+    DATA_OUTPUT_NOISE: float = 0.01
     ACCEPTABLE_ABS_TOL_GRAD: float = 1e-5
     ACCEPTABLE_ABS_TOL_INFLUENCE: float = 1e-5
-    ACCEPTABLE_ABS_TOL_MODEL: float = 0.02
 
-    INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [10]
-    INFLUENCE_TEST_SET_SIZE: List[int] = [10, 100, 200]
+    INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [5]
+    INFLUENCE_TEST_SET_SIZE: List[int] = [10, 20]
     INFLUENCE_TRAINING_SET_SIZE: List[int] = [500, 1000]
-    INFLUENCE_DIMENSIONS: List[int] = list(np.arange(2, 100, 5))
+    INFLUENCE_DIMENSIONS: List[int] = [10, 30, 70, 100]
 
 
 test_cases = list(
@@ -130,42 +129,30 @@ def test_upweighting_influences_lr_analytical(
     test_y = data_model(test_x)
 
     model = PyTorchSupervisedModel(
-        model=LRTorchModel(d, d),
+        model=LRTorchModel(d, d, A),
         objective=F.mse_loss,
         num_epochs=1000,
         batch_size=32,
         optimizer=PyTorchOptimizer.ADAM_W,
-        optimizer_kwargs={"lr": 0.01},
+        optimizer_kwargs={"lr": 0.05},
     )
-    model.fit(train_x, train_y)
-    learned_A = model.model.A.detach().numpy()
-    max_A_diff = np.max(np.abs(learned_A - A))
-    assert (
-        max_A_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_MODEL
-    ), "Model did not converged to target solution."
 
     # check grads
-    test_grads_analytical = linear_regression_analytical_grads(
-        learned_A, test_x, test_y
-    )
+    test_grads_analytical = linear_regression_analytical_grads(A, test_x, test_y)
     test_grads_autograd = model.grad(test_x, test_y)
     test_grads_max_diff = np.max(np.abs(test_grads_analytical - test_grads_autograd))
     assert (
         test_grads_max_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_GRAD
     ), "Test set produces wrong gradients."
 
-    train_grads_analytical = linear_regression_analytical_grads(
-        learned_A, train_x, train_y
-    )
+    train_grads_analytical = linear_regression_analytical_grads(A, train_x, train_y)
     train_grads_autograd = model.grad(train_x, train_y)
     train_grads_max_diff = np.max(np.abs(train_grads_analytical - train_grads_autograd))
     assert (
         train_grads_max_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_GRAD
     ), "Train set produces wrong gradients."
 
-    hessian_analytical = linear_regression_analytical_hessian(
-        learned_A, train_x, train_y
-    )
+    hessian_analytical = linear_regression_analytical_hessian(A, train_x, train_y)
     s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
     influence_values_analytical = -np.einsum(
         "ia,ja->ij", s_test_analytical, train_grads_analytical
