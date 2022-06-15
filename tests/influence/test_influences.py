@@ -1,4 +1,6 @@
+import itertools
 from collections import OrderedDict
+from typing import List, Tuple
 
 import numpy as np
 import pytest
@@ -67,15 +69,64 @@ def test_influences_pert(linear_dataset: Dataset, torch_model_factory, n_jobs: i
     )
 
 
-def test_influences_lr_analytical():
+class InfluenceTestSettings:
+    DATA_OUTPUT_NOISE: float = 5e-2
+    ACCEPTABLE_ABS_TOL_GRAD: float = 1e-5
+    ACCEPTABLE_ABS_TOL_INFLUENCE: float = 1e-5
+    ACCEPTABLE_ABS_TOL_MODEL: float = 0.02
 
-    L = np.asarray([[1, 2, 3], [1, 2, 0], [0, 1, 1]])
-    A = L @ L.T
-    o_d, i_d = tuple(A.shape)
-    train_x = np.random.uniform(size=[1000, i_d])
-    train_y = train_x @ A.T
+    INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [10]
+    INFLUENCE_TEST_SET_SIZE: List[int] = [10, 100, 200]
+    INFLUENCE_TRAINING_SET_SIZE: List[int] = [500, 1000]
+    INFLUENCE_DIMENSIONS: List[int] = list(np.arange(2, 100, 5))
+
+
+test_cases = list(
+    itertools.product(
+        InfluenceTestSettings.INFLUENCE_TRAINING_SET_SIZE,
+        InfluenceTestSettings.INFLUENCE_TEST_SET_SIZE,
+        InfluenceTestSettings.INFLUENCE_DIMENSIONS,
+        InfluenceTestSettings.INFLUENCE_TEST_CONDITION_NUMBERS,
+    )
+)
+
+
+def lmb_test_case_to_str(packed_i_test_case):
+    i, test_case = packed_i_test_case
+    return f"Problem #{i} of dimension {test_case[2]} with train size {test_case[0]}, test size {test_case[1]} and condition number {test_case[3]}"
+
+
+test_case_ids = list(map(lmb_test_case_to_str, zip(range(len(test_cases)), test_cases)))
+
+
+@pytest.mark.parametrize(
+    "train_set_size,test_set_size,problem_dimension,condition_number",
+    test_cases,
+    ids=test_case_ids,
+)
+def test_upweighting_influences_lr_analytical(
+    train_set_size: int,
+    test_set_size: int,
+    problem_dimension: int,
+    condition_number: float,
+    quadratic_matrix: np.ndarray,
+):
+
+    # some settings
+    A = quadratic_matrix
+    d, _ = tuple(A.shape)
+
+    # generate datasets
+    data_model = lambda x: np.random.normal(
+        x @ A.T, InfluenceTestSettings.DATA_OUTPUT_NOISE
+    )
+    train_x = np.random.uniform(size=[train_set_size, d])
+    train_y = data_model(train_x)
+    test_x = np.random.uniform(size=[test_set_size, d])
+    test_y = data_model(test_x)
+
     model = PyTorchSupervisedModel(
-        model=LRTorchModel(i_d, o_d),
+        model=LRTorchModel(d, d),
         objective=F.mse_loss,
         num_epochs=1000,
         batch_size=32,
@@ -85,14 +136,36 @@ def test_influences_lr_analytical():
     model.fit(train_x, train_y)
     learned_A = model.model.A.detach().numpy()
     max_A_diff = np.max(np.abs(learned_A - A))
-    assert max_A_diff < 1e-2
+    assert (
+        max_A_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_MODEL
+    ), "Model did not converged to target solution."
 
-    H = A.T @ A
-    inv_H = np.linalg.pinv(H)
-    s_test = train_x @ inv_H.T
-    test_x = np.asarray([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-    test_y = test_x @ A.T
-    real_influences = -np.einsum("ci,di->cd", test_x, s_test)
+    # check grads
+    test_grads_analytical = linear_regression_analytical_grads(
+        learned_A, test_x, test_y
+    )
+    test_grads_autograd = model.grad(test_x, test_y)
+    test_grads_max_diff = np.max(np.abs(test_grads_analytical - test_grads_autograd))
+    assert (
+        test_grads_max_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_GRAD
+    ), "Test set produces wrong gradients."
+
+    train_grads_analytical = linear_regression_analytical_grads(
+        learned_A, train_x, train_y
+    )
+    train_grads_autograd = model.grad(train_x, train_y)
+    train_grads_max_diff = np.max(np.abs(train_grads_analytical - train_grads_autograd))
+    assert (
+        train_grads_max_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_GRAD
+    ), "Train set produces wrong gradients."
+
+    hessian_analytical = linear_regression_analytical_hessian(
+        learned_A, train_x, train_y
+    )
+    s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
+    influence_values_analytical = -np.einsum(
+        "ia,ja->ij", s_test_analytical, train_grads_analytical
+    )
 
     class Object(object):
         pass
@@ -103,5 +176,37 @@ def test_influences_lr_analytical():
     dataset.x_test = test_x
     dataset.y_test = test_y
     influence_values = influences(model, dataset, progress=True, n_jobs=1)
-    max_val = np.max(np.abs(influence_values - real_influences))
-    assert max_val < 1e-2
+    influences_max_abs_diff = np.max(
+        np.abs(influence_values - influence_values_analytical)
+    )
+    assert influences_max_abs_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_INFLUENCE
+
+
+def linear_regression_analytical_grads(
+    A: np.ndarray, x: np.ndarray, y: np.ndarray
+) -> np.ndarray:
+    """
+    Calculates the analytical derivative of L with respect to A. The loss function is the mean squared error, precisely
+    L(x, y) = np.mean((A @ x - y) ** 2).
+    """
+    n = A.shape[0]
+    residuals = x @ A.T - y
+    grads = []
+
+    for i in range(len(x)):
+        grad = np.kron(residuals[i], x[i])
+        grads.append(grad)
+
+    test_grads = np.stack(grads, axis=0)
+    return (2 / n) * test_grads
+
+
+def linear_regression_analytical_hessian(
+    A: np.ndarray, x: np.ndarray, y: np.ndarray
+) -> np.ndarray:
+    n, m = tuple(A.shape)
+    num_params = n * m
+    inner_hessians = (2 / n) * np.einsum("ia,ib->iab", x, x)
+    inner_hessian = np.mean(inner_hessians, axis=0)
+    complete_hessian = np.zeros([num_params, num_params])
+    return np.kron(np.eye(n), inner_hessian)

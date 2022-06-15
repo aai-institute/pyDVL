@@ -113,7 +113,7 @@ def boston_dataset():
 
 
 @pytest.fixture(scope="function")
-def linear_dataset(random):
+def linear_dataset():
     from sklearn.utils import Bunch
 
     a = 2
@@ -153,34 +153,25 @@ def seed(request):
     return request.param
 
 
-@pytest.fixture
-def random():
-    pass
-
-
-@pytest.fixture
-def torch_random():
-    pass
-
-
 @pytest.fixture(scope="function")
-def linear_equation_system(
-    problem_dimension: int, batch_size: int, condition_number: float, random
-):
-    A = random_matrix_with_condition_number(
-        problem_dimension, condition_number, positive_definite=True
-    )
+def linear_equation_system(quadratic_matrix: np.ndarray, batch_size: int):
+    A = quadratic_matrix
+    problem_dimension = A.shape[0]
     b = np.random.random([batch_size, problem_dimension])
     return A, b
 
 
 @pytest.fixture(scope="function")
-def singular_linear_equation_system(
-    problem_dimension: int, batch_size: int, condition_number: float, random
-):
-    A = random_matrix_with_condition_number(
+def quadratic_matrix(problem_dimension: int, condition_number: float):
+    return random_matrix_with_condition_number(
         problem_dimension, condition_number, positive_definite=True
     )
+
+
+@pytest.fixture(scope="function")
+def singular_linear_equation_system(quadratic_matrix: np.ndarray, batch_size: int):
+    A = quadratic_matrix
+    problem_dimension = A.shape[0]
     i, j = tuple(np.random.choice(problem_dimension, replace=False, size=2))
     if j < i:
         i, j = j, i
