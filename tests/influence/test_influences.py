@@ -9,7 +9,11 @@ import torch.nn.functional as F
 from valuation.influence.naive import InfluenceTypes, influences
 from valuation.models.linear_regression_torch_model import LRTorchModel
 from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
-from valuation.utils import Dataset
+from valuation.utils import (
+    Dataset,
+    linear_regression_analytical_grads,
+    linear_regression_analytical_hessian,
+)
 
 test_cases = OrderedDict()
 test_cases["lr_test_single_thread"] = (LRTorchModel, 1)
@@ -75,7 +79,6 @@ def test_perturbation_influences_valid_output(
 
 class InfluenceTestSettings:
     DATA_OUTPUT_NOISE: float = 0.01
-    ACCEPTABLE_ABS_TOL_GRAD: float = 1e-5
     ACCEPTABLE_ABS_TOL_INFLUENCE: float = 1e-5
 
     INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [5]
@@ -139,18 +142,7 @@ def test_upweighting_influences_lr_analytical(
 
     # check grads
     test_grads_analytical = linear_regression_analytical_grads(A, test_x, test_y)
-    test_grads_autograd = model.grad(test_x, test_y)
-    test_grads_max_diff = np.max(np.abs(test_grads_analytical - test_grads_autograd))
-    assert (
-        test_grads_max_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_GRAD
-    ), "Test set produces wrong gradients."
-
     train_grads_analytical = linear_regression_analytical_grads(A, train_x, train_y)
-    train_grads_autograd = model.grad(train_x, train_y)
-    train_grads_max_diff = np.max(np.abs(train_grads_analytical - train_grads_autograd))
-    assert (
-        train_grads_max_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_GRAD
-    ), "Train set produces wrong gradients."
 
     hessian_analytical = linear_regression_analytical_hessian(A, train_x, train_y)
     s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
@@ -170,36 +162,6 @@ def test_upweighting_influences_lr_analytical(
     influences_max_abs_diff = np.max(
         np.abs(influence_values - influence_values_analytical)
     )
-    assert influences_max_abs_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_INFLUENCE
-
-
-def linear_regression_analytical_grads(
-    A: np.ndarray, x: np.ndarray, y: np.ndarray
-) -> np.ndarray:
-    """
-    Calculates the analytical derivative of L with respect to vect(A). The loss function is the mean squared error,
-    precisely L(x, y) = np.mean((A @ x - y) ** 2).
-    """
-    n = A.shape[0]
-    residuals = x @ A.T - y
-    grads = []
-
-    for i in range(len(x)):
-        grad = np.kron(residuals[i], x[i])
-        grads.append(grad)
-
-    test_grads = np.stack(grads, axis=0)
-    return (2 / n) * test_grads
-
-
-def linear_regression_analytical_hessian(
-    A: np.ndarray, x: np.ndarray, y: np.ndarray
-) -> np.ndarray:
-    """
-    Calculates the analytical hessian of L with respect to vect(A). The loss function is the mean squared error,
-    precisely L(x, y) = np.mean((A @ x - y) ** 2).
-    """
-    n, m = tuple(A.shape)
-    inner_hessians = (2 / n) * np.einsum("ia,ib->iab", x, x)
-    inner_hessian = np.mean(inner_hessians, axis=0)
-    return np.kron(np.eye(n), inner_hessian)
+    assert (
+        influences_max_abs_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_INFLUENCE
+    ), "Influence values were wrong."

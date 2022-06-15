@@ -186,3 +186,35 @@ def random_matrix_with_condition_number(
     V, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
     P = U.dot(S).dot(V.T)
     return P if not positive_definite else P @ P.T  # cond(P @ P.T) = cond(P) ** 2
+
+
+def linear_regression_analytical_grads(
+    A: np.ndarray, x: np.ndarray, y: np.ndarray
+) -> np.ndarray:
+    """
+    Calculates the analytical derivative of L with respect to vect(A). The loss function is the mean squared error,
+    precisely L(x, y) = np.mean((A @ x - y) ** 2).
+    """
+    n = A.shape[0]
+    residuals = x @ A.T - y
+    grads = []
+
+    for i in range(len(x)):
+        grad = np.kron(residuals[i], x[i])
+        grads.append(grad)
+
+    test_grads = np.stack(grads, axis=0)
+    return (2 / n) * test_grads
+
+
+def linear_regression_analytical_hessian(
+    A: np.ndarray, x: np.ndarray, y: np.ndarray
+) -> np.ndarray:
+    """
+    Calculates the analytical hessian of L with respect to vect(A). The loss function is the mean squared error,
+    precisely L(x, y) = np.mean((A @ x - y) ** 2).
+    """
+    n, m = tuple(A.shape)
+    inner_hessians = (2 / n) * np.einsum("ia,ib->iab", x, x)
+    inner_hessian = np.mean(inner_hessians, axis=0)
+    return np.kron(np.eye(n), inner_hessian)
