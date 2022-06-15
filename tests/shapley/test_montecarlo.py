@@ -90,11 +90,11 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
             2,
             12,
             permutation_montecarlo_shapley,
-            "neg_median_absolute_error",
+            "r2",
             0.2,
             1000,
         ),
-        (2, 0, 15, combinatorial_montecarlo_shapley, "explained_variance", 0.5, 2000),
+        (2, 0, 12, combinatorial_montecarlo_shapley, "explained_variance", 0.5, 2000),
         (
             2,
             2,
