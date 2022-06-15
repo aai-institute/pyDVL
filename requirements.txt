@@ -10,4 +10,3 @@ wheel
 pymemcache
 cloudpickle
 typing-protocol-intersection
-torch
