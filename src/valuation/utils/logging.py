@@ -18,7 +18,7 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
     configured locally.
 
     From the Logging Cookbook:
-        https://docs.python.org/3.8/howto/logging-cookbook.html
+    https://docs.python.org/3.8/howto/logging-cookbook.html
     """
 
     def handle(self):
@@ -55,10 +55,9 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
 
 
 class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
-    """
-    Simple TCP socket-based logging receiver suitable for testing.
+    """Simple TCP socket-based logging receiver suitable for testing.
     Almost verbatim from the Logging Cookbook:
-        https://docs.python.org/3.8/howto/logging-cookbook.html
+    https://docs.python.org/3.8/howto/logging-cookbook.html
     """
 
     allow_reuse_address = True

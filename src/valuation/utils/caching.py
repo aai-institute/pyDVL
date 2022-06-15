@@ -51,30 +51,35 @@ def memcached(
     threshold: float = 0.3,
     ignore_args: Iterable[str] = None,
 ):
-    """ Decorate a callable with this in order to have transparent caching.
+    """Decorate a callable with this in order to have transparent caching.
 
-    The function's code, constants and all arguments (except for those in \
+    The function's code, constants and all arguments (except for those in
     `ignore_args` are used to generate the key for the remote cache.
 
-    FIXME? Due to the need to pickle memcached functions, this returns a class
-     instead of a function. This has the drawback of a messy docstring.
+    **FIXME?**:
+        Due to the need to pickle memcached functions, this returns a class
+        instead of a function. This has the drawback of a messy docstring.
 
-    :param client_config: config for pymemcache.client.Client(). Will be merged
-        on top of:
+    :param client_config: config for pymemcache.client.Client().
+        Will be merged on top of the default configuration.
 
-        default_config = dict(server=('localhost', 11211),
-                              connect_timeout=1.0,
-                               timeout=0.1,
-                              # IMPORTANT! Disable small packet consolidation:
-                              no_delay=True,
-                              serde=serde.PickleSerde(
-                                            pickle_version=PICKLE_VERSION))
 
     :param threshold: computations taking below this value (in seconds) are not
         cached
     :param ignore_args: Do not take these keyword arguments into account when
         hashing the wrapped function for usage as key in memcached
     :return: A wrapped function
+
+    The default configuration is::
+
+        default_config = dict(
+            server=('localhost', 11211),
+            connect_timeout=1.0,
+            timeout=0.1,
+            # IMPORTANT! Disable small packet consolidation:
+            no_delay=True,
+            serde=serde.PickleSerde(pickle_version=PICKLE_VERSION)
+        )
     """
     if ignore_args is None:
         ignore_args = []

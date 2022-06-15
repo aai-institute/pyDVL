@@ -33,7 +33,7 @@ Scorer = TypeVar("Scorer", str, Callable[[SupervisedModel, ndarray, ndarray], fl
 
 def unpackable(cls: type) -> type:
     """A class decorator that allows unpacking of all attributes of an object
-    with the double asterisk operator. E.g.
+    with the double asterisk operator. E.g.::
 
        @unpackable
        @dataclass
