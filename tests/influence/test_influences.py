@@ -213,7 +213,6 @@ def linear_regression_analytical_hessian(
     precisely L(x, y) = np.mean((A @ x - y) ** 2).
     """
     n, m = tuple(A.shape)
-    num_params = n * m
     inner_hessians = (2 / n) * np.einsum("ia,ib->iab", x, x)
     inner_hessian = np.mean(inner_hessians, axis=0)
     return np.kron(np.eye(n), inner_hessian)
