@@ -19,7 +19,9 @@ test_cases["lr_test_multi_thread"] = (LRTorchModel, 2)
 @pytest.mark.parametrize(
     "torch_model_factory,n_jobs", test_cases.values(), ids=test_cases.keys()
 )
-def test_influences_up(linear_dataset: Dataset, torch_model_factory, n_jobs: int):
+def test_upweighting_influences_valid_output(
+    linear_dataset: Dataset, torch_model_factory, n_jobs: int
+):
     n_in_features = linear_dataset.x_test.shape[1]
     model = PyTorchSupervisedModel(
         model=torch_model_factory(n_in_features, 1),
@@ -42,7 +44,9 @@ def test_influences_up(linear_dataset: Dataset, torch_model_factory, n_jobs: int
 @pytest.mark.parametrize(
     "torch_model_factory,n_jobs", test_cases.values(), ids=test_cases.keys()
 )
-def test_influences_pert(linear_dataset: Dataset, torch_model_factory, n_jobs: int):
+def test_perturbation_influences_valid_output(
+    linear_dataset: Dataset, torch_model_factory, n_jobs: int
+):
     n_in_features = linear_dataset.x_test.shape[1]
     model = PyTorchSupervisedModel(
         model=torch_model_factory(n_in_features, 1),
@@ -186,8 +190,8 @@ def linear_regression_analytical_grads(
     A: np.ndarray, x: np.ndarray, y: np.ndarray
 ) -> np.ndarray:
     """
-    Calculates the analytical derivative of L with respect to A. The loss function is the mean squared error, precisely
-    L(x, y) = np.mean((A @ x - y) ** 2).
+    Calculates the analytical derivative of L with respect to vect(A). The loss function is the mean squared error,
+    precisely L(x, y) = np.mean((A @ x - y) ** 2).
     """
     n = A.shape[0]
     residuals = x @ A.T - y
@@ -204,9 +208,12 @@ def linear_regression_analytical_grads(
 def linear_regression_analytical_hessian(
     A: np.ndarray, x: np.ndarray, y: np.ndarray
 ) -> np.ndarray:
+    """
+    Calculates the analytical hessian of L with respect to vect(A). The loss function is the mean squared error,
+    precisely L(x, y) = np.mean((A @ x - y) ** 2).
+    """
     n, m = tuple(A.shape)
     num_params = n * m
     inner_hessians = (2 / n) * np.einsum("ia,ib->iab", x, x)
     inner_hessian = np.mean(inner_hessians, axis=0)
-    complete_hessian = np.zeros([num_params, num_params])
     return np.kron(np.eye(n), inner_hessian)
