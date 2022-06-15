@@ -88,7 +88,7 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
         (
             2,
             2,
-            15,
+            12,
             permutation_montecarlo_shapley,
             "neg_median_absolute_error",
             0.2,
