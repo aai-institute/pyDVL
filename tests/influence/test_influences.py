@@ -134,7 +134,7 @@ def test_upweighting_influences_lr_analytical(
         num_epochs=1000,
         batch_size=32,
         optimizer=PyTorchOptimizer.ADAM_W,
-        optimizer_kwargs={"lr": 0.05},
+        optimizer_kwargs={"lr": 0.02},
     )
 
     # check grads
