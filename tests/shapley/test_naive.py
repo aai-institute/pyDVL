@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from pymemcache.client import Client
 from sklearn.linear_model import LinearRegression
 
 from tests.conftest import check_total_value, check_values
@@ -43,6 +44,8 @@ def test_linear(
         scoring=score_type,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
+    Client(**memcache_client_config).flush_all()
+
     values_combinatorial = combinatorial_exact_shapley(linear_utility, progress=False)
     check_total_value(linear_utility, values_combinatorial, atol=total_atol)
 
@@ -72,6 +75,8 @@ def test_linear_with_outlier(
         scoring=score_type,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
+    Client(**memcache_client_config).flush_all()
+
     shapley_values = permutation_exact_shapley(linear_utility, progress=False)
     check_total_value(linear_utility, shapley_values, atol=total_atol)
 
@@ -101,6 +106,8 @@ def test_polynomial(
         scoring=score_type,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
+    Client(**memcache_client_config).flush_all()
+
     values_combinatorial = combinatorial_exact_shapley(poly_utility, progress=False)
     check_total_value(poly_utility, values_combinatorial, atol=total_atol)
 
@@ -134,6 +141,8 @@ def test_polynomial_with_outlier(
         scoring=score_type,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
+    Client(**memcache_client_config).flush_all()
+
     shapley_values = permutation_exact_shapley(poly_utility, progress=False)
     check_total_value(poly_utility, shapley_values, atol=total_atol)
 

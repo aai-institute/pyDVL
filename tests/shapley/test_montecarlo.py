@@ -5,6 +5,7 @@ from time import time
 
 import numpy as np
 import pytest
+from pymemcache.client import Client
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
@@ -28,7 +29,7 @@ log = logging.getLogger(os.path.basename(__file__))
     "num_samples, fun, rtol, max_iterations",
     [
         (12, permutation_montecarlo_shapley, 0.1, 1),
-        (8, combinatorial_montecarlo_shapley, 0.15, 1e3),
+        (8, combinatorial_montecarlo_shapley, 0.15, 3e3),
     ],
 )
 def test_analytic_montecarlo_shapley(analytic_shapley, fun, rtol, max_iterations):
@@ -95,14 +96,14 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
             0.2,
             1000,
         ),
-        (2, 0, 12, combinatorial_montecarlo_shapley, "explained_variance", 1, 2000),
+        (2, 0, 12, combinatorial_montecarlo_shapley, "explained_variance", 0.5, 2000),
         (
             2,
             2,
             12,
             combinatorial_montecarlo_shapley,
             "neg_median_absolute_error",
-            0.5,
+            2,
             2000,
         ),
     ],
@@ -117,6 +118,7 @@ def test_linear_montecarlo_shapley(
         scoring=score_type,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
+    Client(**memcache_client_config).flush_all()
 
     values, _ = fun(
         linear_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
@@ -132,7 +134,7 @@ def test_linear_montecarlo_shapley(
 @pytest.mark.parametrize(
     "a, b, num_points, fun, score_type, max_iterations",
     [
-        (2, 5, 20, permutation_montecarlo_shapley, "r2", 1000),
+        (2, 3, 20, permutation_montecarlo_shapley, "r2", 1000),
         (2, 3, 20, permutation_montecarlo_shapley, "explained_variance", 1000),
         (2, 3, 20, permutation_montecarlo_shapley, "neg_median_absolute_error", 1000),
     ],
@@ -147,16 +149,18 @@ def test_linear_montecarlo_with_outlier(
 ):
     outlier_idx = np.random.randint(len(linear_dataset.y_train))
     num_jobs = min(8, available_cpus())
-    linear_dataset.y_train[outlier_idx] *= 100
+    linear_dataset.y_train[outlier_idx] -= 100
     linear_utility = Utility(
         LinearRegression(),
         data=linear_dataset,
         scoring=score_type,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
+    Client(**memcache_client_config).flush_all()
     shapley_values, _ = fun(
         linear_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
     )
+    log.info(f"These are the shapley values: {shapley_values}")
     check_total_value(linear_utility, shapley_values, atol=total_atol)
 
     assert int(list(shapley_values.keys())[0]) == outlier_idx
@@ -189,6 +193,8 @@ def test_random_forest(
             cache_threshold=0,
         ),
     )
+    Client(**memcache_client_config).flush_all()
+
     _, _ = permutation_montecarlo_shapley(
         rf_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
     )

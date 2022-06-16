@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from pymemcache.client import Client
 
 from valuation.utils import MemcachedConfig, available_cpus
 from valuation.utils.numeric import (
@@ -32,7 +33,7 @@ def test_powerset():
     assert all([np.math.comb(n, j) for j in range(n + 1)] == sizes)
 
 
-@pytest.mark.parametrize("n, max_subsets", [(0, 10), (1, 1e3), (4, 1e4)])
+@pytest.mark.parametrize("n, max_subsets", [(0, 10), (1, 1e3)])
 def test_random_powerset(n, max_subsets, memcache_client_config, count_amplifier=3):
     """
     Tests that random_powerset samples the same items as the powerset method and
@@ -53,6 +54,8 @@ def test_random_powerset(n, max_subsets, memcache_client_config, count_amplifier
         enable_cache=True,
         client_config=memcache_client_config,
     )
+    Client(**memcache_client_config).flush_all()
+
     result_exact = set(powerset(s))
     count_powerset = {key: 0 for key in result_exact}
 
