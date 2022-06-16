@@ -105,9 +105,9 @@ def test_memcached_repeated_training(memcached_client):
 @pytest.mark.parametrize(
     "n, atol",
     [
-        (7, 1),
         (10, 3),
         (20, 3),
+        (30, 3),
     ],
 )
 def test_memcached_parallel_repeated_training(memcached_client, n, atol):
@@ -130,8 +130,6 @@ def test_memcached_parallel_repeated_training(memcached_client, n, atol):
     num_runs = 100
     job = MapReduceJob.from_fun(foo)
     result = map_reduce(job, data=np.arange(n), num_jobs=10, num_runs=num_runs)
-    log.info(f"This is result: {result}")
-    log.info(f"This is real result: {np.sum(np.arange(n))}")
 
     assert abs(result[-1][0] - result[-2][0]) < atol
     assert abs(result[-1][0] - np.sum(np.arange(n))) < atol
