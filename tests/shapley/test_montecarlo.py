@@ -1,6 +1,7 @@
 import logging
 import os
 from functools import partial
+from time import time
 
 import numpy as np
 import pytest
@@ -164,8 +165,8 @@ def test_linear_montecarlo_with_outlier(
 @pytest.mark.parametrize(
     "n_points, n_features, regressor, score_type, max_iterations",
     [
-        (10, 3, RandomForestRegressor(n_estimators=2), "r2", 200),
-        (10, 3, DecisionTreeRegressor(), "r2", 200),
+        (10, 3, RandomForestRegressor(n_estimators=2), "r2", 20),
+        (10, 3, DecisionTreeRegressor(), "r2", 20),
     ],
 )
 def test_random_forest(boston_dataset, regressor, score_type, max_iterations):
@@ -178,7 +179,10 @@ def test_random_forest(boston_dataset, regressor, score_type, max_iterations):
         regressor,
         data=boston_dataset,
         scoring=score_type,
-        enable_cache=False,
+        enable_cache=True,
+        cache_options=MemcachedConfig(
+            allow_repeated_training=True, rtol_threshold=1, cache_threshold=0
+        ),
     )
     _, _ = permutation_montecarlo_shapley(
         rf_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
