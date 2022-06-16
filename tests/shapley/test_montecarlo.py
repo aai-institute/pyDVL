@@ -125,7 +125,7 @@ def test_linear_montecarlo_shapley(
     log.info(f"These are the exact values: {exact_values}")
     log.info(f"These are the predicted values: {values}")
     exact_values_list = list(exact_values.values())
-    atol = (exact_values_list[-1] - exact_values_list[0]) / 30
+    atol = (exact_values_list[-1] - exact_values_list[0]) / 10
     check_values(values, exact_values, rtol=rtol, atol=atol)
 
 
@@ -169,7 +169,9 @@ def test_linear_montecarlo_with_outlier(
         (10, 3, DecisionTreeRegressor(), "r2", 20),
     ],
 )
-def test_random_forest(boston_dataset, regressor, score_type, max_iterations):
+def test_random_forest(
+    boston_dataset, regressor, score_type, max_iterations, memcache_client_config
+):
     """This test checks that random forest can be trained in our library.
     Originally, it would also check that the returned values match between
     permutation and combinatorial montecarlo, but this was taking too long in the
@@ -181,7 +183,10 @@ def test_random_forest(boston_dataset, regressor, score_type, max_iterations):
         scoring=score_type,
         enable_cache=True,
         cache_options=MemcachedConfig(
-            allow_repeated_training=True, rtol_threshold=1, cache_threshold=0
+            client_config=memcache_client_config,
+            allow_repeated_training=True,
+            rtol_threshold=1,
+            cache_threshold=0,
         ),
     )
     _, _ = permutation_montecarlo_shapley(
