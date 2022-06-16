@@ -35,7 +35,10 @@ class ClientConfig:
 @dataclass
 class MemcachedConfig:
     client_config: ClientConfig = field(default_factory=ClientConfig)
-    threshold: float = 0.3
+    cache_threshold: float = 0.3
+    allow_repeated_training: bool = False
+    rtol_threshold: float = 0.1
+    min_repetitions: int = 3
     ignore_args: Iterable[str] = None
 
 
@@ -46,9 +49,34 @@ def _serialize(x):
     return pickled_output.getvalue()
 
 
+def get_running_avg_variance(
+    previous_avg: float, previous_variance: float, new_value: float, count: int
+):
+    """The method uses Welford's algorithm to calculate the running average and variance of
+    a set of numbers.
+
+    Args:
+        previous_avg: average value at previous step
+        previous_variance: variance at previous step
+        new_value: new value in the series of numbers
+        count: number of points seen so far
+
+    Returns:
+        new_average, new_variance, calculated with the new number
+    """
+    new_average = (new_value + count * previous_avg) / (count + 1)
+    new_variance = previous_variance + (
+        (new_value - previous_avg) * (new_value - new_average) - previous_variance
+    ) / (count + 1)
+    return new_average, new_variance
+
+
 def memcached(
     client_config: ClientConfig = None,
-    threshold: float = 0.3,
+    cache_threshold: float = 0.3,
+    allow_repeated_training: bool = False,
+    rtol_threshold: float = 0.1,
+    min_repetitions: int = 3,
     ignore_args: Iterable[str] = None,
 ):
     """Decorate a callable with this in order to have transparent caching.
@@ -64,8 +92,14 @@ def memcached(
         Will be merged on top of the default configuration.
 
 
-    :param threshold: computations taking below this value (in seconds) are not
+    :param cache_threshold: computations taking below this value (in seconds) are not
         cached
+    :param allow_repeated_training: If True, models with same data are re-trained and
+        results cached until rtol_threshold precision is reached
+    :para rtol_threshold: relative tolerance for repeated training. More precisely,
+        memcache will stop retraining the models once std/mean of the scores is smaller than
+        the given rtol_threshold
+    :param min_repetitions: minimum number of repetitions
     :param ignore_args: Do not take these keyword arguments into account when
         hashing the wrapped function for usage as key in memcached
     :return: A wrapped function
@@ -143,31 +177,46 @@ def memcached(
                 # NB: I need to create the hasher object here because it can't be
                 #  pickled
                 key = blake2b(signature + arg_signature).hexdigest().encode("ASCII")
-                result = None
-                try:
-                    result = self.client.get(key)
-                except socket.timeout as e:
-                    self.cache_info.timeouts += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")
-                except OSError as e:
-                    self.cache_info.errors += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")
-                except AttributeError as e:
-                    # FIXME: this depends on _recv() failing on invalid sockets
-                    # See pymemcache.base.py,
-                    self.cache_info.reconnects += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")
-                    self.client = connect(self.config)
+                key_count = (
+                    blake2b(signature + arg_signature + _serialize("count"))
+                    .hexdigest()
+                    .encode("ASCII")
+                )
+                key_variance = (
+                    blake2b(signature + arg_signature + _serialize("variance"))
+                    .hexdigest()
+                    .encode("ASCII")
+                )
 
-                start = time()
+                result = self.get_key_value(key)
                 if result is None:
+                    start = time()
                     result = fun(*args, **kwargs)
                     end = time()
-                    # TODO: make the threshold adaptive
-                    if end - start >= threshold:
+                    if end - start >= cache_threshold or allow_repeated_training:
                         self.client.set(key, result, noreply=True)
+                        self.client.set(key_count, 1, noreply=True)
+                        self.client.set(key_variance, 0, noreply=True)
                         self.cache_info.sets += 1
                     self.cache_info.misses += 1
+                elif allow_repeated_training:
+                    self.cache_info.hits += 1
+                    count = self.get_key_value(key_count)
+                    variance = self.get_key_value(key_variance)
+                    error_on_average = (variance / (count)) ** (1 / 2)
+                    if (
+                        error_on_average > rtol_threshold * result
+                        or count <= min_repetitions
+                    ):
+                        new_value = fun(*args, **kwargs)
+                        new_avg, new_var = get_running_avg_variance(
+                            result, variance, new_value, count
+                        )
+                        self.client.set(key, new_avg, noreply=True)
+                        self.client.set(key_count, count + 1, noreply=True)
+                        self.client.set(key_variance, new_var, noreply=True)
+                        self.cache_info.sets += 1
+                        result = new_avg
                 else:
                     self.cache_info.hits += 1
                 return result
@@ -185,6 +234,24 @@ def memcached(
                 self.config = d["config"]
                 self.cache_info = d["cache_info"]
                 self.client = Client(**self.config)
+
+            def get_key_value(self, key: str):
+                result = None
+                try:
+                    result = self.client.get(key)
+                except socket.timeout as e:
+                    self.cache_info.timeouts += 1
+                    logger.warning(f"{type(self).__name__}: {str(e)}")
+                except OSError as e:
+                    self.cache_info.errors += 1
+                    logger.warning(f"{type(self).__name__}: {str(e)}")
+                except AttributeError as e:
+                    # FIXME: this depends on _recv() failing on invalid sockets
+                    # See pymemcache.base.py,
+                    self.cache_info.reconnects += 1
+                    logger.warning(f"{type(self).__name__}: {str(e)}")
+                    self.client = connect(self.config)
+                return result
 
         Wrapped.__doc__ = (
             f"A wrapper around {fun.__name__}() with remote caching enabled.\n"

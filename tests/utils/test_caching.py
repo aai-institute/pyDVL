@@ -1,15 +1,42 @@
+import logging
+import os
 from typing import Iterable
 
 import numpy as np
+import pytest
 
 from valuation.utils import MapReduceJob, map_reduce, memcached
+from valuation.utils.caching import get_running_avg_variance
+
+log = logging.getLogger(os.path.basename(__file__))
+
+
+@pytest.mark.parametrize(
+    "numbers_series",
+    [
+        ([3, 4, 5, 6]),
+        (list(range(10))),
+        (list(range(1000))),
+    ],
+)
+def test_get_running_avg_variance(numbers_series):
+    true_avg = np.mean(numbers_series)
+    true_var = np.var(numbers_series)
+
+    prev_avg = np.mean(numbers_series[:-1])
+    prev_var = np.var(numbers_series[:-1])
+    new_value = numbers_series[-1]
+    count = len(numbers_series) - 1
+    new_avg, new_var = get_running_avg_variance(prev_avg, prev_var, new_value, count)
+    assert new_avg == true_avg
+    assert new_var == true_var
 
 
 def test_memcached_single_job(memcached_client):
     client, config = memcached_client
 
     # TODO: maybe this should be a fixture too...
-    @memcached(client_config=config, threshold=0)  # Always cache results
+    @memcached(client_config=config, cache_threshold=0)  # Always cache results
     def foo(indices: Iterable[int]) -> float:
         return float(np.sum(indices))
 
@@ -27,7 +54,7 @@ def test_memcached_parallel_jobs(memcached_client):
 
     @memcached(
         client_config=config,
-        threshold=0,  # Always cache results
+        cache_threshold=0,  # Always cache results
         # Note that we typically do NOT want to ignore run_id
         ignore_args=["job_id", "run_id"],
     )
@@ -48,3 +75,63 @@ def test_memcached_parallel_jobs(memcached_client):
     #  the timeout configured then we won't have num_runs hits. So we add this
     #  good old hard-coded magic number here.
     assert hits_after - hits_before >= num_runs - 2
+
+
+def test_memcached_repeated_training(memcached_client):
+    client, config = memcached_client
+
+    @memcached(
+        client_config=config,
+        cache_threshold=0,  # Always cache results
+        # Note that we typically do NOT want to ignore run_id
+        allow_repeated_training=True,
+        rtol_threshold=0.01,
+        ignore_args=["job_id", "run_id"],
+    )
+    def foo(indices: Iterable[int]) -> float:
+        # from valuation.utils.logging import logger
+        # logger.info(f"run_id: {run_id}, running...")
+        return float(np.sum(indices)) + np.random.normal(scale=10)
+
+    n = 7
+    foo(np.arange(n))
+    for _ in range(10_000):
+        result = foo(np.arange(n))
+
+    assert (result - np.sum(np.arange(n))) < 1
+    assert foo.cache_info.sets < foo.cache_info.hits
+
+
+@pytest.mark.parametrize(
+    "n, atol",
+    [
+        (7, 1),
+        (10, 3),
+        (20, 3),
+    ],
+)
+def test_memcached_parallel_repeated_training(memcached_client, n, atol):
+    client, config = memcached_client
+
+    @memcached(
+        client_config=config,
+        cache_threshold=0,  # Always cache results
+        # Note that we typically do NOT want to ignore run_id
+        allow_repeated_training=True,
+        rtol_threshold=0.01,
+        ignore_args=["job_id", "run_id"],
+    )
+    def foo(indices: Iterable[int]) -> float:
+        # from valuation.utils.logging import logger
+        # logger.info(f"run_id: {run_id}, running...")
+        return float(np.sum(indices)) + np.random.normal(scale=10)
+
+    n = 7
+    num_runs = 100
+    job = MapReduceJob.from_fun(foo)
+    result = map_reduce(job, data=np.arange(n), num_jobs=10, num_runs=num_runs)
+    log.info(f"This is result: {result}")
+    log.info(f"This is real result: {np.sum(np.arange(n))}")
+
+    assert abs(result[-1][0] - result[-2][0]) < atol
+    assert abs(result[-1][0] - np.sum(np.arange(n))) < atol
