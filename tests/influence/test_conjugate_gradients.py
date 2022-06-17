@@ -5,7 +5,6 @@ import numpy as np
 import pytest
 
 from solve.cg import conjugate_gradient, conjugate_gradient_error_bound
-from solve.rte import recursive_taylor_expansion
 
 
 class AlgorithmTestSettings:
