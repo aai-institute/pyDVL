@@ -70,9 +70,12 @@ def influences(
     influence_factors_job = MapReduceJob.from_fun(
         _calculate_influence_factors, np.concatenate
     )
-    influence_factors = map_reduce(
-        influence_factors_job, np.arange(len(data.x_test)), num_jobs=n_jobs
-    )[0]
+    if n_jobs == 1:
+        influence_factors = _calculate_influence_factors(np.arange(len(data.x_test)), 0)
+    else:
+        influence_factors = map_reduce(
+            influence_factors_job, np.arange(len(data.x_test)), num_jobs=n_jobs
+        )[0]
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -114,7 +117,14 @@ def influences(
     elif influence_type == InfluenceTypes.Perturbation:
         _calculate_influences = _calculate_influences_pert
 
-    influences_job = MapReduceJob.from_fun(
-        _calculate_influences, functools.partial(np.concatenate, axis=1)
-    )
-    return map_reduce(influences_job, np.arange(len(data.x_train)), num_jobs=n_jobs)[0]
+    if n_jobs == 1:
+        influences = _calculate_influences(np.arange(len(data.x_train)), 0)
+    else:
+        influences_job = MapReduceJob.from_fun(
+            _calculate_influences, functools.partial(np.concatenate, axis=1)
+        )
+        influences = map_reduce(
+            influences_job, np.arange(len(data.x_train)), num_jobs=n_jobs
+        )[0]
+
+    return influences

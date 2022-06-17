@@ -142,12 +142,11 @@ def boston_dataset(n_points, n_features):
 
 
 @pytest.fixture(scope="function")
-def linear_dataset():
+def linear_dataset(a, b, num_points):
     from sklearn.utils import Bunch
 
-    a = 2
-    b = 0
-    x = np.arange(-1, 1, 0.15)
+    step = 2 / num_points
+    x = np.arange(-1, 1, step)
     y = np.random.normal(loc=a * x + b, scale=0.1)
     db = Bunch()
     db.data, db.target = x.reshape(-1, 1), y
@@ -603,3 +602,30 @@ def pytest_runtest_call(item: pytest.Function):
 def pytest_terminal_summary(terminalreporter: "TerminalReporter"):
     tolerate_session = terminalreporter.config._tolerate_session
     tolerate_session.display(terminalreporter)
+
+
+def create_mock_dataset(
+    linear_model: Tuple[np.ndarray, np.ndarray],
+    train_set_size: int,
+    test_set_size: int = None,
+    noise: float = 0.01,
+) -> Dataset:
+    A, b = linear_model
+    o_d, i_d = tuple(A.shape)
+    data_model = lambda x: np.random.normal(x @ A.T + b, noise)
+
+    class WrappedDataset(object):
+        x_train: np.ndarray
+        y_train: np.ndarray
+        x_test: Optional[np.ndarray]
+        y_test: Optional[np.ndarray]
+
+    dataset = WrappedDataset()
+    dataset.x_train = np.random.uniform(size=[train_set_size, i_d])
+    dataset.y_train = data_model(dataset.x_train)
+
+    if test_set_size is not None:
+        dataset.x_test = np.random.uniform(size=[test_set_size, i_d])
+        dataset.y_test = data_model(dataset.x_test)
+
+    return dataset

@@ -10,12 +10,13 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Tuple,
     TypeVar,
 )
 
 import numpy as np
 
-from valuation.utils import logger, memcached
+from valuation.utils import Dataset, logger, memcached
 from valuation.utils.caching import ClientConfig
 from valuation.utils.parallel import MapReduceJob, map_reduce
 
@@ -197,7 +198,7 @@ def random_matrix_with_condition_number(
 
 
 def linear_regression_analytical_derivative_d_theta(
-    A: np.ndarray, b: np.ndarray, x: np.ndarray, y: np.ndarray
+    linear_model: Tuple[np.ndarray, np.ndarray], x: np.ndarray, y: np.ndarray
 ) -> np.ndarray:
     """
     Calculates the analytical derivative for batches of L with respect to vect(A). The loss function is the mse loss,
@@ -205,12 +206,12 @@ def linear_regression_analytical_derivative_d_theta(
     parameters \theta = \vect{A} and b are given in vectorized form by d_theta L(x, y) = np.kron(A @ x + b - y, x) / n
     and d_b L(x, y) = res(x, y) / n.
 
-    :param A: A np.ndarray of shape [NxM].
-    :param b: A np.ndarray of shape [N].
+    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
     :param x: A np.ndarray of shape [BxM],
     :param y: A np.nparray of shape [BxN].
     :returns. A np.ndarray of shape [Bx((N+1)*M)], where each row vector is [d_theta L(x, y), d_b L(x, y)]
     """
+    A, b = linear_model
     n, m = list(A.shape)
     residuals = x @ A.T + b - y
     kron_product = np.expand_dims(residuals, axis=2) * np.expand_dims(x, axis=1)
@@ -220,7 +221,7 @@ def linear_regression_analytical_derivative_d_theta(
 
 
 def linear_regression_analytical_derivative_d2_theta(
-    A: np.ndarray, b: np.ndarray, x: np.ndarray, y: np.ndarray
+    linear_model: Tuple[np.ndarray, np.ndarray], x: np.ndarray, y: np.ndarray
 ) -> np.ndarray:
     """
     Calculates the analytical derivative for batches of L with respect to vect(A). The loss function is the mse loss,
@@ -231,12 +232,12 @@ def linear_regression_analytical_derivative_d2_theta(
     d_theta d_b L(x, y) = d_b d_theta L(x, y) = np.kron(I, x) / n.
 
 
-    :param A: A np.ndarray of shape [NxM].
-    :param b: A np.ndarray of shape [N].
+    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
     :param x: A np.ndarray of shape [BxM],
     :param y: A np.nparray of shape [BxN].
     :returns. A np.ndarray of shape [((N+1)*M)x((N+1)*M)], representing the Hessian. It gets averaged over all samples.
     """
+    A, b = linear_model
     n, m = tuple(A.shape)
     d2_theta = np.einsum("ia,ib->iab", x, x)
     d2_theta = np.mean(d2_theta, axis=0)
@@ -251,7 +252,7 @@ def linear_regression_analytical_derivative_d2_theta(
 
 
 def linear_regression_analytical_derivative_d_x_d_theta(
-    A: np.ndarray, b: np.ndarray, x: np.ndarray, y: np.ndarray
+    linear_model: Tuple[np.ndarray, np.ndarray], x: np.ndarray, y: np.ndarray
 ) -> np.ndarray:
     """
     Calculates the analytical derivative for batches of L with respect to vect(A). The loss function is the mse loss,
@@ -259,12 +260,12 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     the parameters \theta = \vect{A} and b are given in vectorized form by
     d_x_d_theta L(x, y) =
 
-    :param A: A np.ndarray of shape [NxM].
-    :param b: A np.ndarray of shape [N].
+    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
     :param x: A np.ndarray of shape [BxM],
     :param y: A np.nparray of shape [BxN].
     :returns. A np.ndarray of shape [Bx((N+1)*M)xM], representing the derivative.
     """
+    A, b = linear_model
     n, m = tuple(A.shape)
     residuals = x @ A.T + b - y
     b = len(x)
@@ -280,32 +281,50 @@ def linear_regression_analytical_derivative_d_x_d_theta(
 
 
 def upweighting_influences_linear_regression_analytical(
-    A: np.ndarray,
-    b: np.ndarray,
-    test_x: np.ndarray,
-    test_y: np.ndarray,
-    train_x: np.ndarray,
-    train_y: np.ndarray,
+    linear_model: Tuple[np.ndarray, np.ndarray],
+    dataset: Dataset,
 ):
     """
     Calculate the influences of the training set onto the validation set for a linear model Ax+b=y.
 
-    :param A: A np.ndarray of shape [NxM]
-    :param b: A np.ndarray of shape [N]
-    :param test_x: A np.ndarray of shape [BxM]
-    :param test_y: A np.ndarray of shpae [BxN]
-    :param train_x: A np.ndarray of shape [CxM]
-    :param test_y: A np.ndarray of shape [CxN]
+    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
+    :param dataset: A dataset with train and test set for input dimension M and output dimension N.
     :returns: A np.ndarray of shape [BxC] with the influences of the training points on the test points.
     """
     test_grads_analytical = linear_regression_analytical_derivative_d_theta(
-        A, b, test_x, test_y
+        linear_model, dataset.x_test, dataset.y_test
     )
     train_grads_analytical = linear_regression_analytical_derivative_d_theta(
-        A, b, train_x, train_y
+        linear_model, dataset.x_train, dataset.y_train
     )
     hessian_analytical = linear_regression_analytical_derivative_d2_theta(
-        A, b, train_x, train_y
+        linear_model, dataset.x_train, dataset.y_train
     )
     s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
     return -np.einsum("ia,ja->ij", s_test_analytical, train_grads_analytical)
+
+
+def perturbation_influences_linear_regression_analytical(
+    linear_model: Tuple[np.ndarray, np.ndarray],
+    dataset: Dataset,
+):
+    """
+    Calculate the influences of each feature of the training set onto the validation set for a linear model Ax+b=y.
+
+    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
+    :param dataset: A dataset with train and test set for input dimension M and output dimension N.
+    :returns: A np.ndarray of shape [BxCxM] with the influences of the training points on the test points for each feature.
+    """
+    # check grads
+    test_grads_analytical = linear_regression_analytical_derivative_d_theta(
+        linear_model, dataset.x_test, dataset.y_test
+    )
+    train_second_deriv_analytical = linear_regression_analytical_derivative_d_x_d_theta(
+        linear_model, dataset.x_train, dataset.y_train
+    )
+
+    hessian_analytical = linear_regression_analytical_derivative_d2_theta(
+        linear_model, dataset.x_train, dataset.y_train
+    )
+    s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
+    return -np.einsum("ia,jab->ijb", s_test_analytical, train_second_deriv_analytical)

@@ -75,7 +75,6 @@ correctness_test_case_ids = list(
 )
 
 
-@pytest.mark.skip()
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number",
     test_cases_model_fit,
@@ -94,7 +93,7 @@ def test_linear_regression_model_fit(
 
     # generate datasets
     data_model = lambda x: np.random.normal(
-        x @ A.T, ModelTestSettings.DATA_OUTPUT_NOISE
+        x @ A.T + b, ModelTestSettings.DATA_OUTPUT_NOISE
     )
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
@@ -112,7 +111,13 @@ def test_linear_regression_model_fit(
     max_A_diff = np.max(np.abs(learned_A - A))
     assert (
         max_A_diff < ModelTestSettings.ACCEPTABLE_ABS_TOL_MODEL
-    ), "Model did not converged to target solution."
+    ), "A did not converged to target solution."
+
+    learned_b = model.model.b.detach().numpy()
+    max_b_diff = np.max(np.abs(learned_b - b))
+    assert (
+        max_b_diff < ModelTestSettings.ACCEPTABLE_ABS_TOL_MODEL
+    ), "b did not converged to target solution."
 
 
 @pytest.mark.parametrize(
@@ -137,12 +142,8 @@ def test_linear_regression_model_grad(
     train_y = data_model(train_x)
 
     model = PyTorchSupervisedModel(
-        model=LRTorchModel(dim=(input_dimension, output_dimension), init=(A, b)),
+        model=LRTorchModel(dim=(input_dimension, output_dimension), init=linear_model),
         objective=F.mse_loss,
-        num_epochs=1000,
-        batch_size=32,
-        optimizer=PyTorchOptimizer.ADAM_W,
-        optimizer_kwargs={"lr": 0.02},
     )
 
     train_grads_analytical = 2 * linear_regression_analytical_derivative_d_theta(
@@ -177,12 +178,8 @@ def test_linear_regression_model_hessian(
     train_y = data_model(train_x)
 
     model = PyTorchSupervisedModel(
-        model=LRTorchModel(dim=(input_dimension, output_dimension), init=(A, b)),
+        model=LRTorchModel(dim=(input_dimension, output_dimension), init=linear_model),
         objective=F.mse_loss,
-        num_epochs=1000,
-        batch_size=32,
-        optimizer=PyTorchOptimizer.ADAM_W,
-        optimizer_kwargs={"lr": 0.02},
     )
 
     test_hessian_analytical = 2 * linear_regression_analytical_derivative_d2_theta(
