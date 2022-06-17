@@ -1,4 +1,7 @@
-name: Merge develop, run tests and build docu
+name: Merge develop, run tests and build docs
+
+env:
+  PY_COLORS: "1"
 
 on:
   push:
