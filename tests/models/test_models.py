@@ -20,8 +20,8 @@ class ModelTestSettings:
     ACCEPTABLE_ABS_TOL_DERIVATIVE: float = 1e-5
 
     TEST_CONDITION_NUMBERS: List[int] = [5]
-    TEST_SET_SIZE: List[int] = [10]
-    TRAINING_SET_SIZE: List[int] = [5000]
+    TEST_SET_SIZE: List[int] = [20]
+    TRAINING_SET_SIZE: List[int] = [500]
     PROBLEM_DIMENSIONS: List[Tuple[int, int]] = [
         (2, 2),
         (10, 10),
