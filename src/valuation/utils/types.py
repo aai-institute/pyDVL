@@ -84,13 +84,6 @@ class TwiceDifferentiable(Protocol):
         """
         pass
 
-    def grad_grad(self, x: ndarray, y: ndarray, progress: bool = False) -> ndarray:
-        """
-        Calculate the gradient with respect to the parameters of the module with input parameters x[i] and y[i]. And
-        subsequently calculate the gradient of that expression worth x.
-        """
-        pass
-
     def mvp(
         self,
         x: ndarray,
