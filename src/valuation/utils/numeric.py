@@ -58,8 +58,8 @@ def random_powerset(
     dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
     num_jobs: int = 1,
     *,
-    client_config: Optional[ClientConfig] = None,
-    use_cache: bool = True,
+    enable_cache: bool = False,
+    client_config: Optional[ClientConfig] = None
 ) -> Generator[np.ndarray, None, None]:
     """Uniformly samples a subset from the power set of the argument, without
     pre-generating all subsets and in no order.
@@ -77,7 +77,7 @@ def random_powerset(
         set to be as likely as any other
     :param num_jobs: Duh. Must be >= 1
     :param client_config: Memcached client configuration
-    :param use_cache: If True, use cache.
+    :param enable_cache: If True, use cache.
     """
     if not isinstance(s, np.ndarray):
         raise TypeError
@@ -89,19 +89,22 @@ def random_powerset(
 
     def subset_probabilities(n: int) -> List[float]:
         def sub(sizes: List[int]) -> List[float]:
-            # FIXME: is the normalization ok?
             return [np.math.comb(n, j) / 2**n for j in sizes]
 
         job = MapReduceJob.from_fun(sub, lambda r: reduce(operator.add, r, []))
         ret = map_reduce(job, list(range(n + 1)), num_jobs=num_jobs)
         return ret[0]
 
-    if use_cache:
-        subset_probabilities = memcached(client_config=client_config, threshold=0.5)
+    if enable_cache:
+        _subset_probabilities = memcached(client_config=client_config, threshold=0.5)(
+            subset_probabilities
+        )
+    else:
+        _subset_probabilities = subset_probabilities
 
     while total <= max_subsets:
         if dist == PowerSetDistribution.WEIGHTED:
-            k = np.random.choice(np.arange(n + 1), p=subset_probabilities(n))
+            k = np.random.choice(np.arange(n + 1), p=_subset_probabilities(n))
         else:
             k = np.random.choice(np.arange(n + 1))
         subset = np.random.choice(s, replace=False, size=k)

@@ -26,13 +26,13 @@ pytestmark = [
         permutation_exact_shapley,
     ],
 )
-def test_exact_shapley(exact_shapley, method, benchmark, request):
+def test_exact_shapley(analytic_shapley, method, benchmark, request):
     if (
         request.getfixturevalue("num_samples") > 5
         and "permutation" in request.getfixturevalue("method").__name__
     ):
         pytest.skip("Permutation Exact Shapley takes too long for N > 5")
-    u, exact_values = exact_shapley
+    u, exact_values = analytic_shapley
     values = benchmark(method, u, progress=False)
     check_total_value(u, values)
     check_exact(values, exact_values)
@@ -46,10 +46,10 @@ def test_exact_shapley(exact_shapley, method, benchmark, request):
         permutation_montecarlo_shapley,
     ],
 )
-def test_montecarlo_shapley(exact_shapley, method, max_iterations, benchmark):
-    u, exact_values = exact_shapley
+def test_montecarlo_shapley(analytic_shapley, method, max_iterations, benchmark):
+    u, exact_values = analytic_shapley
     result = benchmark(
-        method, u, max_iterations=max_iterations, progress=False, use_cache=False
+        method, u, max_iterations=max_iterations, progress=False, enable_cache=False
     )
     values = result[0]
     # TODO: properly test these two checks because they fail for the combinatorial method
@@ -58,8 +58,8 @@ def test_montecarlo_shapley(exact_shapley, method, max_iterations, benchmark):
 
 
 @pytest.mark.xfail
-def test_truncated_montecarlo_shapley(exact_shapley, benchmark):
-    u, exact_values = exact_shapley
+def test_truncated_montecarlo_shapley(analytic_shapley, benchmark):
+    u, exact_values = analytic_shapley
     result = benchmark(
         truncated_montecarlo_shapley,
         u,

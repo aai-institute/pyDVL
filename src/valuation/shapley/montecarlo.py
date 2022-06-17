@@ -8,6 +8,8 @@ TODO:
    parallelization backend as an argument ("multiprocessing", "ray", "serial")
  * shapley values for groups of samples
 """
+import logging
+import os
 from collections import OrderedDict
 from time import time
 from typing import List, Optional, Tuple
@@ -26,6 +28,8 @@ from valuation.utils.parallel import (
     map_reduce,
 )
 from valuation.utils.progress import maybe_progress
+
+log = logging.getLogger(os.path.basename(__file__))
 
 __all__ = [
     "truncated_montecarlo_shapley",
@@ -285,11 +289,6 @@ def serial_truncated_montecarlo_shapley(
 def permutation_montecarlo_shapley(
     u: Utility, max_iterations: int, num_jobs: int = 1, progress: bool = False, **kwargs
 ) -> Tuple[OrderedDict, None]:
-    """
-    **FIXME**:
-        the sum of values tends to cancel out, even though the ranking is ok
-    """
-
     def fun(job_id: int):
         n = len(u.data)
         values = np.zeros(n).reshape((-1, 1))
@@ -304,6 +303,10 @@ def permutation_montecarlo_shapley(
                 prev_score = score
             values = np.concatenate([values, marginals], axis=1)
         # Careful: for some models there might be nans, e.g. for i=0 or i=1!
+        if np.any(np.isnan(values)):
+            log.warning(
+                f"Calculation returned {np.sum(np.isnan(values))} nan values out of {len(values)}"
+            )
         return np.nansum(values, axis=1)
 
     backend = make_nested_backend("loky")()
@@ -314,7 +317,6 @@ def permutation_montecarlo_shapley(
     return sort_values({i: v for i, v in enumerate(acc)}), None
 
 
-# FIXME: This is completely broken. Normalization is in a weird way. (??!?)
 def combinatorial_montecarlo_shapley(
     u: Utility,
     max_iterations: int,
@@ -324,21 +326,16 @@ def combinatorial_montecarlo_shapley(
 ) -> Tuple[OrderedDict, None]:
     """Computes an approximate Shapley value using the combinatorial
     definition and MonteCarlo samples.
-
-    **FIXME**:
-        this seems to have very high variance! It might help to implement
-        importance sampling with more weight for smaller set sizes, where value
-        contributions are likely to be higher.
-
-    **UPDATE**:
-        Seems dubious, since the uniform sampling strategy does not help
     """
     n = len(u.data)
 
-    # TODO: make this a parameter
     dist = PowerSetDistribution.WEIGHTED
 
     def fun(indices: np.ndarray, job_id: int) -> np.ndarray:
+        """Given indices and job id, this funcion calculates random
+        powersets of the training data and trains the model with them.
+        Used for parallelisation, as argument for MapReduceJob.
+        """
         values = np.zeros(len(indices))
         for i, idx in enumerate(indices):
             # Randomly sample subsets of full dataset without idx
@@ -357,7 +354,7 @@ def combinatorial_montecarlo_shapley(
             ):
                 values[i] += (u({idx}.union(s)) - u(s)) / np.math.comb(n - 1, len(s))
 
-        correction = 1 if dist == PowerSetDistribution.WEIGHTED else 2 ** (n - 1) / n
+        correction = 2 ** (n - 1) / n
         return correction * values / max_iterations
 
     job = MapReduceJob.from_fun(fun, np.concatenate)
