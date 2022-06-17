@@ -11,9 +11,10 @@ from valuation.models.linear_regression_torch_model import LRTorchModel
 from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
 from valuation.utils import (
     Dataset,
-    linear_regression_analytical_derivative_x_theta,
-    linear_regression_analytical_grads,
-    linear_regression_analytical_hessian,
+    linear_regression_analytical_derivative_d2_theta,
+    linear_regression_analytical_derivative_d_theta,
+    linear_regression_analytical_derivative_d_x_d_theta,
+    upweighting_influences_linear_regression_analytical,
 )
 
 test_cases = OrderedDict()
@@ -29,7 +30,7 @@ def test_upweighting_influences_valid_output(
 ):
     n_in_features = linear_dataset.x_test.shape[1]
     model = PyTorchSupervisedModel(
-        model=torch_model_factory(n_in_features, 1),
+        model=torch_model_factory((n_in_features, 1)),
         objective=F.mse_loss,
         num_epochs=10,
         batch_size=16,
@@ -54,7 +55,7 @@ def test_perturbation_influences_valid_output(
 ):
     n_in_features = linear_dataset.x_test.shape[1]
     model = PyTorchSupervisedModel(
-        model=torch_model_factory(n_in_features, 1),
+        model=torch_model_factory((n_in_features, 1)),
         objective=F.mse_loss,
         num_epochs=10,
         batch_size=16,
@@ -85,7 +86,12 @@ class InfluenceTestSettings:
     INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [5]
     INFLUENCE_TEST_SET_SIZE: List[int] = [10, 20]
     INFLUENCE_TRAINING_SET_SIZE: List[int] = [500, 1000]
-    INFLUENCE_DIMENSIONS: List[int] = [10, 30, 70, 100]
+    INFLUENCE_DIMENSIONS: List[Tuple[int, int]] = [
+        (10, 10),
+        (10, 20),
+        (20, 10),
+        (20, 20),
+    ]
 
 
 test_cases = list(
@@ -114,26 +120,25 @@ test_case_ids = list(map(lmb_test_case_to_str, zip(range(len(test_cases)), test_
 def test_upweighting_influences_lr_analytical(
     train_set_size: int,
     test_set_size: int,
-    problem_dimension: int,
     condition_number: float,
-    quadratic_matrix: np.ndarray,
+    linear_model: Tuple[np.ndarray, np.ndarray],
 ):
 
     # some settings
-    A = quadratic_matrix
-    d, _ = tuple(A.shape)
+    A, b = linear_model
+    o_d, i_d = tuple(A.shape)
 
     # generate datasets
     data_model = lambda x: np.random.normal(
-        x @ A.T, InfluenceTestSettings.DATA_OUTPUT_NOISE
+        x @ A.T + b, InfluenceTestSettings.DATA_OUTPUT_NOISE
     )
-    train_x = np.random.uniform(size=[train_set_size, d])
+    train_x = np.random.uniform(size=[train_set_size, i_d])
     train_y = data_model(train_x)
-    test_x = np.random.uniform(size=[test_set_size, d])
+    test_x = np.random.uniform(size=[test_set_size, i_d])
     test_y = data_model(test_x)
 
     model = PyTorchSupervisedModel(
-        model=LRTorchModel(d, d, A),
+        model=LRTorchModel(dim=tuple(A.shape), init=linear_model),
         objective=F.mse_loss,
         num_epochs=1000,
         batch_size=32,
@@ -141,14 +146,11 @@ def test_upweighting_influences_lr_analytical(
         optimizer_kwargs={"lr": 0.02},
     )
 
-    # check grads
-    test_grads_analytical = linear_regression_analytical_grads(A, test_x, test_y)
-    train_grads_analytical = linear_regression_analytical_grads(A, train_x, train_y)
-
-    hessian_analytical = linear_regression_analytical_hessian(A, train_x, train_y)
-    s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
-    influence_values_analytical = -np.einsum(
-        "ia,ja->ij", s_test_analytical, train_grads_analytical
+    influence_values_analytical = (
+        2
+        * upweighting_influences_linear_regression_analytical(
+            A, b, test_x, test_y, train_x, train_y
+        )
     )
 
     class Object(object):
@@ -180,24 +182,24 @@ def test_perturbation_influences_lr_analytical(
     test_set_size: int,
     problem_dimension: int,
     condition_number: float,
-    quadratic_matrix: np.ndarray,
+    linear_model: Tuple[np.ndarray, np.ndarray],
 ):
 
     # some settings
-    A = quadratic_matrix
-    d, _ = tuple(A.shape)
+    A, b = linear_model
+    output_dimension, input_dimension = tuple(A.shape)
 
     # generate datasets
     data_model = lambda x: np.random.normal(
-        x @ A.T, InfluenceTestSettings.DATA_OUTPUT_NOISE
+        x @ A.T + b, InfluenceTestSettings.DATA_OUTPUT_NOISE
     )
-    train_x = np.random.uniform(size=[train_set_size, d])
+    train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
-    test_x = np.random.uniform(size=[test_set_size, d])
+    test_x = np.random.uniform(size=[test_set_size, input_dimension])
     test_y = data_model(test_x)
 
     model = PyTorchSupervisedModel(
-        model=LRTorchModel(d, d, A),
+        model=LRTorchModel(dim=(output_dimension, input_dimension), init=(A, b)),
         objective=F.mse_loss,
         num_epochs=1000,
         batch_size=32,
@@ -206,14 +208,18 @@ def test_perturbation_influences_lr_analytical(
     )
 
     # check grads
-    test_grads_analytical = linear_regression_analytical_grads(A, test_x, test_y)
-    train_second_deriv_analytical = linear_regression_analytical_derivative_x_theta(
-        A, train_x, train_y
+    test_grads_analytical = linear_regression_analytical_derivative_d_theta(
+        A, b, test_x, test_y
+    )
+    train_second_deriv_analytical = linear_regression_analytical_derivative_d_x_d_theta(
+        A, b, train_x, train_y
     )
 
-    hessian_analytical = linear_regression_analytical_hessian(A, train_x, train_y)
+    hessian_analytical = linear_regression_analytical_derivative_d2_theta(
+        A, b, train_x, train_y
+    )
     s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
-    influence_values_analytical = -np.einsum(
+    influence_values_analytical = -2 * np.einsum(
         "ia,jab->ijb", s_test_analytical, train_second_deriv_analytical
     )
 

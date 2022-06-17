@@ -1,6 +1,6 @@
 import functools
 from collections import OrderedDict, defaultdict
-from typing import TYPE_CHECKING, Optional, Sequence, Type
+from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
 
 if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
@@ -157,25 +157,19 @@ def linear_dataset():
     return Dataset.from_sklearn(data=db, train_size=0.66)
 
 
-@pytest.fixture(scope="function")
-def linear_dataset():
-    from sklearn.utils import Bunch
-
-    a = 2
-    b = 0
-    x = np.arange(-1, 1, 0.15)
-    y = np.random.normal(loc=a * x + b, scale=0.1)
-    db = Bunch()
-    db.data, db.target = x.reshape(-1, 1), y
-    db.DESCR = f"y~N({a}*x + {b}, 1)"
-    db.feature_names = ["x"]
-    db.target_names = ["y"]
-    return Dataset.from_sklearn(data=db, train_size=0.66)
-
-
 def polynomial(coefficients, x):
     powers = np.arange(len(coefficients))
     return np.power(x, np.tile(powers, (len(x), 1)).T).T @ coefficients
+
+
+@pytest.fixture
+def input_dimension(request) -> int:
+    return request.param
+
+
+@pytest.fixture
+def output_dimension(request) -> int:
+    return request.param
 
 
 @pytest.fixture
@@ -199,7 +193,7 @@ def seed(request):
 
 
 @pytest.fixture(scope="function")
-def linear_equation_system(quadratic_matrix: np.ndarray, batch_size: int):
+def quadratic_linear_equation_system(quadratic_matrix: np.ndarray, batch_size: int):
     A = quadratic_matrix
     problem_dimension = A.shape[0]
     b = np.random.random([batch_size, problem_dimension])
@@ -214,7 +208,9 @@ def quadratic_matrix(problem_dimension: int, condition_number: float):
 
 
 @pytest.fixture(scope="function")
-def singular_linear_equation_system(quadratic_matrix: np.ndarray, batch_size: int):
+def singular_quadratic_linear_equation_system(
+    quadratic_matrix: np.ndarray, batch_size: int
+):
     A = quadratic_matrix
     problem_dimension = A.shape[0]
     i, j = tuple(np.random.choice(problem_dimension, replace=False, size=2))
@@ -224,6 +220,17 @@ def singular_linear_equation_system(quadratic_matrix: np.ndarray, batch_size: in
     v = (A[i] + A[j]) / 2
     A[i], A[j] = v, v
     b = np.random.random([batch_size, problem_dimension])
+    return A, b
+
+
+@pytest.fixture(scope="function")
+def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
+    output_dimension, input_dimension = problem_dimension
+    A = random_matrix_with_condition_number(
+        max(input_dimension, output_dimension), condition_number, positive_definite=True
+    )
+    A = A[:output_dimension, :input_dimension]
+    b = np.random.uniform(size=[output_dimension])
     return A, b
 
 
@@ -248,21 +255,6 @@ def polynomial_dataset(coefficients: np.ndarray):
 @pytest.fixture(scope="function")
 def polynomial_pipeline(coefficients):
     return make_pipeline(PolynomialFeatures(len(coefficients) - 1), LinearRegression())
-
-
-@pytest.fixture(scope="function")
-def linear_dataset(a, b, num_points):
-    from sklearn.utils import Bunch
-
-    step = 2 / num_points
-    x = np.arange(-1, 1, step)
-    y = np.random.normal(loc=a * x + b, scale=0.1)
-    db = Bunch()
-    db.data, db.target = x.reshape(-1, 1), y
-    db.DESCR = f"y~N({a}*x + {b}, 1)"
-    db.feature_names = ["x"]
-    db.target_names = ["y"]
-    return Dataset.from_sklearn(data=db, train_size=0.3)
 
 
 def dummy_utility(num_samples: int = 10):

@@ -196,52 +196,116 @@ def random_matrix_with_condition_number(
     return P if not positive_definite else P @ P.T  # cond(P @ P.T) = cond(P) ** 2
 
 
-def linear_regression_analytical_grads(
-    A: np.ndarray, x: np.ndarray, y: np.ndarray
+def linear_regression_analytical_derivative_d_theta(
+    A: np.ndarray, b: np.ndarray, x: np.ndarray, y: np.ndarray
 ) -> np.ndarray:
     """
-    Calculates the analytical derivative of L with respect to vect(A). The loss function is the mean squared error,
-    precisely L(x, y) = np.mean((A @ x - y) ** 2).
+    Calculates the analytical derivative for batches of L with respect to vect(A). The loss function is the mse loss,
+    precisely L(x, y) = 0.5 * (r(x, y)^T r(x, y)) / n of the residuals r(x, y) = A @ x + b - y. The first derivative worth the
+    parameters \theta = \vect{A} and b are given in vectorized form by d_theta L(x, y) = np.kron(A @ x + b - y, x) / n
+    and d_b L(x, y) = res(x, y) / n.
+
+    :param A: A np.ndarray of shape [NxM].
+    :param b: A np.ndarray of shape [N].
+    :param x: A np.ndarray of shape [BxM],
+    :param y: A np.nparray of shape [BxN].
+    :returns. A np.ndarray of shape [Bx((N+1)*M)], where each row vector is [d_theta L(x, y), d_b L(x, y)]
     """
-    n = A.shape[0]
-    residuals = x @ A.T - y
-    grads = []
-
-    for i in range(len(x)):
-        grad = np.kron(residuals[i], x[i])
-        grads.append(grad)
-
-    test_grads = np.stack(grads, axis=0)
-    return (2 / n) * test_grads
+    n, m = list(A.shape)
+    residuals = x @ A.T + b - y
+    kron_product = np.expand_dims(residuals, axis=2) * np.expand_dims(x, axis=1)
+    test_grads = np.reshape(kron_product, [-1, n * m])
+    full_grads = np.concatenate((test_grads, residuals), axis=1)
+    return full_grads / n
 
 
-def linear_regression_analytical_hessian(
-    A: np.ndarray, x: np.ndarray, y: np.ndarray
+def linear_regression_analytical_derivative_d2_theta(
+    A: np.ndarray, b: np.ndarray, x: np.ndarray, y: np.ndarray
 ) -> np.ndarray:
     """
-    Calculates the analytical hessian of L with respect to vect(A). The loss function is the mean squared error,
-    precisely L(x, y) = np.mean((A @ x - y) ** 2).
+    Calculates the analytical derivative for batches of L with respect to vect(A). The loss function is the mse loss,
+    precisely L(x, y) = 0.5 * (r(x, y)^T r(x, y)) / n of the residuals r(x, y) = A @ x + b - y. The second derivative worth
+    the parameters \theta = \vect{A} and b are given in vectorized form by
+    d^2_theta L(x, y) = np.kron(I, xx^T) / n,
+    d^2_b L(x, y) = eye(n) / n and
+    d_theta d_b L(x, y) = d_b d_theta L(x, y) = np.kron(I, x) / n.
+
+
+    :param A: A np.ndarray of shape [NxM].
+    :param b: A np.ndarray of shape [N].
+    :param x: A np.ndarray of shape [BxM],
+    :param y: A np.nparray of shape [BxN].
+    :returns. A np.ndarray of shape [((N+1)*M)x((N+1)*M)], representing the Hessian. It gets averaged over all samples.
     """
     n, m = tuple(A.shape)
-    inner_hessians = (2 / n) * np.einsum("ia,ib->iab", x, x)
-    inner_hessian = np.mean(inner_hessians, axis=0)
-    return np.kron(np.eye(n), inner_hessian)
+    d2_theta = np.einsum("ia,ib->iab", x, x)
+    d2_theta = np.mean(d2_theta, axis=0)
+    d2_theta = np.kron(np.eye(n), d2_theta)
+    d2_b = np.eye(n)
+    mean_x = np.mean(x, axis=0, keepdims=True)
+    d_theta_d_b = np.kron(np.eye(n), mean_x)
+    top_matrix = np.concatenate((d2_theta, d_theta_d_b.T), axis=1)
+    bottom_matrix = np.concatenate((d_theta_d_b, d2_b), axis=1)
+    full_matrix = np.concatenate((top_matrix, bottom_matrix), axis=0)
+    return full_matrix / n
 
 
-def linear_regression_analytical_derivative_x_theta(
-    A: np.ndarray, x: np.ndarray, y: np.ndarray
+def linear_regression_analytical_derivative_d_x_d_theta(
+    A: np.ndarray, b: np.ndarray, x: np.ndarray, y: np.ndarray
 ) -> np.ndarray:
     """
-    Calculates the analytical second derivative of L with respect to vect(A) and x afterwards. The loss function is the
-    mean squared error, precisely L(x, y) = np.mean((A @ x - y) ** 2).
+    Calculates the analytical derivative for batches of L with respect to vect(A). The loss function is the mse loss,
+    precisely L(x, y) = 0.5 * (r(x, y)^T r(x, y)) / n of the residuals r(x, y) = A @ x + b - y. The second derivative worth
+    the parameters \theta = \vect{A} and b are given in vectorized form by
+    d_x_d_theta L(x, y) =
+
+    :param A: A np.ndarray of shape [NxM].
+    :param b: A np.ndarray of shape [N].
+    :param x: A np.ndarray of shape [BxM],
+    :param y: A np.nparray of shape [BxN].
+    :returns. A np.ndarray of shape [Bx((N+1)*M)xM], representing the derivative.
     """
     n, m = tuple(A.shape)
+    residuals = x @ A.T + b - y
+    b = len(x)
+    outer_product_matrix = np.einsum("ab,ic->iacb", A, x)
+    outer_product_matrix = np.reshape(outer_product_matrix, [b, m * n, m])
+    tiled_identity = np.tile(np.expand_dims(np.eye(m), axis=0), [b, n, 1])
+    outer_product_matrix += tiled_identity * np.expand_dims(
+        np.repeat(residuals, m, axis=1), axis=2
+    )
+    b_part_derivative = np.tile(np.expand_dims(A, axis=0), [b, 1, 1])
+    full_derivative = np.concatenate((outer_product_matrix, b_part_derivative), axis=1)
+    return full_derivative / n
 
-    outer_product_matrix = np.einsum("ab,kc->kabc", A, x)
-    corrected_outer_product_matrix = outer_product_matrix * (
-        np.ones([n, n]) + np.eye(n)
+
+def upweighting_influences_linear_regression_analytical(
+    A: np.ndarray,
+    b: np.ndarray,
+    test_x: np.ndarray,
+    test_y: np.ndarray,
+    train_x: np.ndarray,
+    train_y: np.ndarray,
+):
+    """
+    Calculate the influences of the training set onto the validation set for a linear model Ax+b=y.
+
+    :param A: A np.ndarray of shape [NxM]
+    :param b: A np.ndarray of shape [N]
+    :param test_x: A np.ndarray of shape [BxM]
+    :param test_y: A np.ndarray of shpae [BxN]
+    :param train_x: A np.ndarray of shape [CxM]
+    :param test_y: A np.ndarray of shape [CxN]
+    :returns: A np.ndarray of shape [BxC] with the influences of the training points on the test points.
+    """
+    test_grads_analytical = linear_regression_analytical_derivative_d_theta(
+        A, b, test_x, test_y
     )
-    swapped_corrected_outer_product_matrix = np.swapaxes(
-        corrected_outer_product_matrix, 0, 1
+    train_grads_analytical = linear_regression_analytical_derivative_d_theta(
+        A, b, train_x, train_y
     )
-    return 2 * np.concatenate(tuple(swapped_corrected_outer_product_matrix), axis=1)
+    hessian_analytical = linear_regression_analytical_derivative_d2_theta(
+        A, b, train_x, train_y
+    )
+    s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
+    return -np.einsum("ia,ja->ij", s_test_analytical, train_grads_analytical)

@@ -42,8 +42,8 @@ test_case_ids = list(map(lmb_test_case_to_str, zip(range(len(test_cases)), test_
     ids=test_case_ids,
     indirect=True,
 )
-def test_conjugate_gradients_mvp(linear_equation_system: Tuple[np.ndarray, np.ndarray]):
-    A, b = linear_equation_system
+def test_conjugate_gradients_mvp(quadratic_linear_equation_system):
+    A, b = quadratic_linear_equation_system
     x0 = np.zeros_like(b)
     xn, n = conjugate_gradient(A, b, x0=x0)
     check_solution(A, b, n, x0, xn)
@@ -55,8 +55,8 @@ def test_conjugate_gradients_mvp(linear_equation_system: Tuple[np.ndarray, np.nd
     ids=test_case_ids,
     indirect=True,
 )
-def test_conjugate_gradients_fn(linear_equation_system: Tuple[np.ndarray, np.ndarray]):
-    A, b = linear_equation_system
+def test_conjugate_gradients_fn(quadratic_linear_equation_system):
+    A, b = quadratic_linear_equation_system
     new_A = np.copy(A)
     A = lambda v: v @ new_A.T
     x0 = np.zeros_like(b)
@@ -70,10 +70,8 @@ def test_conjugate_gradients_fn(linear_equation_system: Tuple[np.ndarray, np.nda
     ids=test_case_ids,
     indirect=True,
 )
-def test_conjugate_gradients_mvp_preconditioned(
-    linear_equation_system: Tuple[np.ndarray, np.ndarray]
-):
-    A, b = linear_equation_system
+def test_conjugate_gradients_mvp_preconditioned(quadratic_linear_equation_system):
+    A, b = quadratic_linear_equation_system
     M = np.diag(1 / np.diag(A))
     x0 = np.zeros_like(b)
     xn, n = conjugate_gradient(A, b, M=M, x0=x0)
@@ -86,9 +84,9 @@ def test_conjugate_gradients_mvp_preconditioned(
     indirect=True,
 )
 def test_conjugate_gradients_singular_matrix(
-    singular_linear_equation_system: Tuple[np.ndarray, np.ndarray]
+    singular_quadratic_linear_equation_system: Tuple[np.ndarray, np.ndarray]
 ):
-    A, b = singular_linear_equation_system
+    A, b = singular_quadratic_linear_equation_system
     x0 = np.zeros_like(b)
     try:
         xn, n = conjugate_gradient(
