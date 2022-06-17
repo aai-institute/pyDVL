@@ -127,7 +127,6 @@ def test_upweighting_influences_lr_analytical(
         progress=True,
         n_jobs=n_jobs,
         influence_type=InfluenceTypes.Up,
-        use_conjugate_gradient=False,
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
     assert influence_values.shape == (len(dataset.x_test), len(dataset.x_train))
@@ -212,7 +211,6 @@ def test_perturbation_influences_lr_analytical(
         progress=True,
         n_jobs=n_jobs,
         influence_type=InfluenceTypes.Perturbation,
-        use_conjugate_gradient=False,
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
     assert influence_values.shape == (

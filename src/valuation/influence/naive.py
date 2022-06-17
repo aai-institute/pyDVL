@@ -1,10 +1,10 @@
 import functools
 from enum import Enum
-from typing import Union
 
 import numpy as np
 from typing_protocol_intersection import ProtocolIntersection
 
+from solve.cg import conjugate_gradient
 from valuation.utils import (
     Dataset,
     MapReduceJob,
@@ -12,7 +12,6 @@ from valuation.utils import (
     available_cpus,
     map_reduce,
 )
-from valuation.utils.cg import conjugate_gradient
 from valuation.utils.types import TwiceDifferentiable
 
 
@@ -27,7 +26,7 @@ def influences(
     progress: bool = False,
     n_jobs: int = -1,
     influence_type: InfluenceTypes = InfluenceTypes.Up,
-    use_conjugate_gradient: bool = True,
+    use_conjugate_gradient: bool = False,
 ) -> np.ndarray:
     """
     Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
@@ -55,7 +54,9 @@ def influences(
     # ------------------------------------------------------------------------------------------------------------------
 
     twd: TwiceDifferentiable = model
-    hvp = lambda v: twd.mvp(data.x_train, data.y_train, v, progress=progress)
+    hvp = lambda v, **kwargs: twd.mvp(
+        data.x_train, data.y_train, v, progress=progress, **kwargs
+    )
 
     def _calculate_influence_factors(indices: np.ndarray, job_id: int) -> np.ndarray:
         """

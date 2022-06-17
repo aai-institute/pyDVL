@@ -98,6 +98,7 @@ class TwiceDifferentiable(Protocol):
         v: ndarray,
         progress: bool = False,
         second_x: bool = False,
+        **kwargs
     ) -> ndarray:
         """
         Calculate the hessian vector product over the loss with all input parameters x and y with the vector v.

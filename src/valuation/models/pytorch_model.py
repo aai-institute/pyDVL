@@ -68,9 +68,16 @@ class PyTorchSupervisedModel:
         v: np.ndarray,
         progress: bool = False,
         second_x: bool = False,
+        **kwargs,
     ) -> np.ndarray:
 
         x, y, v = tt(x), tt(y), tt(v)
+
+        if "num_samples" in kwargs:
+            num_samples = kwargs["num_samples"]
+            idx = np.random.choice(len(x), num_samples, replace=False)
+            x, y = x[idx], y[idx]
+
         x = nn.Parameter(x, requires_grad=True)
         loss = self.objective(self.model(x), y)
         grad_f = torch.autograd.grad(loss, self.model.parameters(), create_graph=True)
