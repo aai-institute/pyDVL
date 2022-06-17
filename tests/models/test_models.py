@@ -22,7 +22,14 @@ class ModelTestSettings:
     TEST_CONDITION_NUMBERS: List[int] = [5]
     TEST_SET_SIZE: List[int] = [10, 20]
     TRAINING_SET_SIZE: List[int] = [500, 1000]
-    PROBLEM_DIMENSIONS: List[Tuple[int, int]] = [(2, 2), (10, 10), (5, 10), (10, 5)]
+    PROBLEM_DIMENSIONS: List[Tuple[int, int]] = [
+        (2, 2),
+        (10, 10),
+        (5, 10),
+        (10, 5),
+        (10, 20),
+        (20, 10),
+    ]
 
 
 test_cases_model_fit = list(

@@ -88,7 +88,6 @@ class InfluenceTestSettings:
     INFLUENCE_TRAINING_SET_SIZE: List[int] = [500, 1000]
     INFLUENCE_DIMENSIONS: List[Tuple[int, int]] = [
         (10, 10),
-        (10, 20),
         (20, 10),
         (20, 20),
     ]
