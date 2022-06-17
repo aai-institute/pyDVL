@@ -27,6 +27,7 @@ def influences(
     progress: bool = False,
     n_jobs: int = -1,
     influence_type: InfluenceTypes = InfluenceTypes.Up,
+    use_conjugate_gradient: bool = True,
 ) -> np.ndarray:
     """
     Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
@@ -37,6 +38,8 @@ def influences(
     :param data: A dataset, which hold training and test datasets.
     :param progress: whether to display progress bars.
     :param n_jobs: The number of jobs to use for processing
+    :param influence_type: Either InfluenceTypes.Up or InfluenceTypes.Perturbation.
+    :param use_conjugate_gradient: Set to false if Hessian should be constructed completely.
     :returns: A np.ndarray of size (N, M) where N is the number of training pointsand M is the number of test points.
     """
 
@@ -65,7 +68,14 @@ def influences(
         """
         c_x_test, c_y_test = data.x_test[indices], data.y_test[indices]
         test_grads = twd.grad(c_x_test, c_y_test, progress=progress)
-        return -conjugate_gradient(hvp, test_grads)[0]
+
+        if use_conjugate_gradient:
+            x_sol = conjugate_gradient(hvp, test_grads)[0]
+        else:
+            n_params = test_grads.shape[1]
+            x_sol = np.linalg.solve(hvp(np.eye(n_params)), test_grads.T).T
+
+        return -x_sol
 
     influence_factors_job = MapReduceJob.from_fun(
         _calculate_influence_factors, np.concatenate
