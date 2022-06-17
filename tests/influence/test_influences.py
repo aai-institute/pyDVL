@@ -10,8 +10,10 @@ from valuation.influence.naive import InfluenceTypes, influences
 from valuation.models.linear_regression_torch_model import LRTorchModel
 from valuation.models.pytorch_model import PyTorchSupervisedModel
 from valuation.utils import (
-    perturbation_influences_linear_regression_analytical,
-    upweighting_influences_linear_regression_analytical,
+    influences_perturbation_linear_regression_analytical,
+    influences_up_linear_regression_analytical,
+    linear_influences_perturbation,
+    linear_influences_up,
 )
 
 
@@ -19,9 +21,9 @@ class InfluenceTestSettings:
     DATA_OUTPUT_NOISE: float = 0.01
     ACCEPTABLE_ABS_TOL_INFLUENCE: float = 1e-4
 
-    INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [10, 20]
-    INFLUENCE_TRAINING_SET_SIZE: List[int] = [500, 1000]
-    INFLUENCE_TEST_SET_SIZE: List[int] = [10, 20]
+    INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [5]
+    INFLUENCE_TRAINING_SET_SIZE: List[int] = [500]
+    INFLUENCE_TEST_SET_SIZE: List[int] = [20]
     INFLUENCE_N_JOBS: List[int] = [1, 2]
     INFLUENCE_DIMENSIONS: List[Tuple[int, int]] = [
         (10, 10),
@@ -72,8 +74,8 @@ def test_upweighting_influences_lr_analytical_cg(
         objective=F.mse_loss,
     )
 
-    influence_values_analytical = (
-        2 * upweighting_influences_linear_regression_analytical(linear_model, dataset)
+    influence_values_analytical = 2 * influences_up_linear_regression_analytical(
+        linear_model, dataset
     )
 
     influence_values = influences(
@@ -115,8 +117,8 @@ def test_upweighting_influences_lr_analytical(
         objective=F.mse_loss,
     )
 
-    influence_values_analytical = (
-        2 * upweighting_influences_linear_regression_analytical(linear_model, dataset)
+    influence_values_analytical = 2 * influences_up_linear_regression_analytical(
+        linear_model, dataset
     )
 
     influence_values = influences(
@@ -158,7 +160,7 @@ def test_perturbation_influences_lr_analytical_cg(
     )
 
     influence_values_analytical = (
-        2 * perturbation_influences_linear_regression_analytical(linear_model, dataset)
+        2 * influences_perturbation_linear_regression_analytical(linear_model, dataset)
     )
     influence_values = influences(
         model,
@@ -202,7 +204,7 @@ def test_perturbation_influences_lr_analytical(
     )
 
     influence_values_analytical = (
-        2 * perturbation_influences_linear_regression_analytical(linear_model, dataset)
+        2 * influences_perturbation_linear_regression_analytical(linear_model, dataset)
     )
     influence_values = influences(
         model,
@@ -224,3 +226,33 @@ def test_perturbation_influences_lr_analytical(
     assert (
         influences_max_abs_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_INFLUENCE
     ), "Perturbation influence values were wrong."
+
+
+@pytest.mark.parametrize(
+    "train_set_size,test_set_size,problem_dimension,condition_number",
+    itertools.product(
+        InfluenceTestSettings.INFLUENCE_TRAINING_SET_SIZE,
+        InfluenceTestSettings.INFLUENCE_TEST_SET_SIZE,
+        InfluenceTestSettings.INFLUENCE_DIMENSIONS,
+        InfluenceTestSettings.INFLUENCE_TEST_CONDITION_NUMBERS,
+    ),
+)
+def test_linear_influences_up_perturbations_analytical(
+    train_set_size: int,
+    test_set_size: int,
+    problem_dimension: int,
+    condition_number: float,
+    linear_model: Tuple[np.ndarray, np.ndarray],
+):
+    dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
+    up_influences = linear_influences_up(dataset)
+    assert np.logical_not(np.any(np.isnan(up_influences)))
+    assert up_influences.shape == (len(dataset.x_test), len(dataset.x_train))
+
+    pert_influences = linear_influences_perturbation(dataset)
+    assert np.logical_not(np.any(np.isnan(pert_influences)))
+    assert pert_influences.shape == (
+        len(dataset.x_test),
+        len(dataset.x_train),
+        dataset.x_train.shape[1],
+    )

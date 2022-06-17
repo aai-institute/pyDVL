@@ -15,6 +15,7 @@ from typing import (
 )
 
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 from valuation.utils import Dataset, logger, memcached
 from valuation.utils.caching import ClientConfig
@@ -280,7 +281,35 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     return full_derivative / n
 
 
-def upweighting_influences_linear_regression_analytical(
+def linear_influences_up(dataset: Dataset):
+    """
+    Calculate the influences of the training set onto the validation set for a linear model Ax+b=y.
+
+    :param dataset: A dataset with train and test set for input dimension M and output dimension N.
+    :returns: A np.ndarray of shape [BxC] with the influences of the training points on the test points.
+    """
+    lr = LinearRegression()
+    lr.fit(dataset.x_train, dataset.y_train)
+    A = lr.coef_
+    b = lr.intercept_
+    return influences_up_linear_regression_analytical((A, b), dataset)
+
+
+def linear_influences_perturbation(dataset: Dataset):
+    """
+    Calculate the influences of the training set onto the validation set for a linear model Ax+b=y.
+
+    :param dataset: A dataset with train and test set for input dimension M and output dimension N.
+    :returns: A np.ndarray of shape [BxCxM] with the influences of the training points on the test points for each feature.
+    """
+    lr = LinearRegression()
+    lr.fit(dataset.x_train, dataset.y_train)
+    A = lr.coef_
+    b = lr.intercept_
+    return influences_perturbation_linear_regression_analytical((A, b), dataset)
+
+
+def influences_up_linear_regression_analytical(
     linear_model: Tuple[np.ndarray, np.ndarray],
     dataset: Dataset,
 ):
@@ -304,7 +333,7 @@ def upweighting_influences_linear_regression_analytical(
     return -np.einsum("ia,ja->ij", s_test_analytical, train_grads_analytical)
 
 
-def perturbation_influences_linear_regression_analytical(
+def influences_perturbation_linear_regression_analytical(
     linear_model: Tuple[np.ndarray, np.ndarray],
     dataset: Dataset,
 ):
