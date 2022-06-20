@@ -9,3 +9,4 @@ click
 wheel
 pymemcache
 cloudpickle
+typing-protocol-intersection
