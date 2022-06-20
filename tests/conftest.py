@@ -153,7 +153,7 @@ def linear_dataset(a, b, num_points):
     db.DESCR = f"y~N({a}*x + {b}, 1)"
     db.feature_names = ["x"]
     db.target_names = ["y"]
-    return Dataset.from_sklearn(data=db, train_size=0.66)
+    return Dataset.from_sklearn(data=db, train_size=0.3)
 
 
 def polynomial(coefficients, x):
