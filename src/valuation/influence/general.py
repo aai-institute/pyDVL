@@ -1,9 +1,9 @@
 import functools
-from enum import Enum
 
 import numpy as np
 from typing_protocol_intersection import ProtocolIntersection
 
+from valuation.influence.types import InfluenceTypes
 from valuation.solve.cg import conjugate_gradient
 from valuation.utils import (
     Dataset,
@@ -13,11 +13,6 @@ from valuation.utils import (
     map_reduce,
 )
 from valuation.utils.types import TwiceDifferentiable
-
-
-class InfluenceTypes(Enum):
-    Up = 1
-    Perturbation = 2
 
 
 def influences(

@@ -6,15 +6,15 @@ import pytest
 import torch.nn.functional as F
 
 from tests.conftest import create_mock_dataset
-from valuation.influence.naive import InfluenceTypes, influences
-from valuation.models.linear_regression_torch_model import LRTorchModel
-from valuation.models.pytorch_model import PyTorchSupervisedModel
-from valuation.utils import (
+from valuation.influence.general import influences
+from valuation.influence.linear import (
     influences_perturbation_linear_regression_analytical,
     influences_up_linear_regression_analytical,
-    linear_influences_perturbation,
-    linear_influences_up,
+    linear_influences,
 )
+from valuation.influence.types import InfluenceTypes
+from valuation.models.linear_regression_torch_model import LRTorchModel
+from valuation.models.pytorch_model import PyTorchSupervisedModel
 
 
 class InfluenceTestSettings:
@@ -243,11 +243,13 @@ def test_linear_influences_up_perturbations_analytical(
     linear_model: Tuple[np.ndarray, np.ndarray],
 ):
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
-    up_influences = linear_influences_up(dataset)
+    up_influences = linear_influences(dataset, influence_type=InfluenceTypes.Up)
     assert np.logical_not(np.any(np.isnan(up_influences)))
     assert up_influences.shape == (len(dataset.x_test), len(dataset.x_train))
 
-    pert_influences = linear_influences_perturbation(dataset)
+    pert_influences = linear_influences(
+        dataset, influence_type=InfluenceTypes.Perturbation
+    )
     assert np.logical_not(np.any(np.isnan(pert_influences)))
     assert pert_influences.shape == (
         len(dataset.x_test),

@@ -19,7 +19,7 @@ from sklearn.linear_model import LinearRegression
 
 from valuation.utils import Dataset, logger, memcached
 from valuation.utils.caching import ClientConfig
-from valuation.utils.parallel import MapReduceJob, map_reduce
+from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
 
 T = TypeVar("T")
 
@@ -263,80 +263,3 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     b_part_derivative = np.tile(np.expand_dims(A, axis=0), [b, 1, 1])
     full_derivative = np.concatenate((outer_product_matrix, b_part_derivative), axis=1)
     return full_derivative / n
-
-
-def linear_influences_up(dataset: Dataset):
-    """
-    Calculate the influences of the training set onto the validation set for a linear model Ax+b=y.
-
-    :param dataset: A dataset with train and test set for input dimension M and output dimension N.
-    :returns: A np.ndarray of shape [BxC] with the influences of the training points on the test points.
-    """
-    lr = LinearRegression()
-    lr.fit(dataset.x_train, dataset.y_train)
-    A = lr.coef_
-    b = lr.intercept_
-    return influences_up_linear_regression_analytical((A, b), dataset)
-
-
-def linear_influences_perturbation(dataset: Dataset):
-    """
-    Calculate the influences of the training set onto the validation set for a linear model Ax+b=y.
-
-    :param dataset: A dataset with train and test set for input dimension M and output dimension N.
-    :returns: A np.ndarray of shape [BxCxM] with the influences of the training points on the test points for each feature.
-    """
-    lr = LinearRegression()
-    lr.fit(dataset.x_train, dataset.y_train)
-    A = lr.coef_
-    b = lr.intercept_
-    return influences_perturbation_linear_regression_analytical((A, b), dataset)
-
-
-def influences_up_linear_regression_analytical(
-    linear_model: Tuple[np.ndarray, np.ndarray],
-    dataset: Dataset,
-):
-    """
-    Calculate the influences of the training set onto the validation set for a linear model Ax+b=y.
-
-    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
-    :param dataset: A dataset with train and test set for input dimension M and output dimension N.
-    :returns: A np.ndarray of shape [BxC] with the influences of the training points on the test points.
-    """
-    test_grads_analytical = linear_regression_analytical_derivative_d_theta(
-        linear_model, dataset.x_test, dataset.y_test
-    )
-    train_grads_analytical = linear_regression_analytical_derivative_d_theta(
-        linear_model, dataset.x_train, dataset.y_train
-    )
-    hessian_analytical = linear_regression_analytical_derivative_d2_theta(
-        linear_model, dataset.x_train, dataset.y_train
-    )
-    s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
-    return -np.einsum("ia,ja->ij", s_test_analytical, train_grads_analytical)
-
-
-def influences_perturbation_linear_regression_analytical(
-    linear_model: Tuple[np.ndarray, np.ndarray],
-    dataset: Dataset,
-):
-    """
-    Calculate the influences of each feature of the training set onto the validation set for a linear model Ax+b=y.
-
-    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
-    :param dataset: A dataset with train and test set for input dimension M and output dimension N.
-    :returns: A np.ndarray of shape [BxCxM] with the influences of the training points on the test points for each feature.
-    """
-    test_grads_analytical = linear_regression_analytical_derivative_d_theta(
-        linear_model, dataset.x_test, dataset.y_test
-    )
-    train_second_deriv_analytical = linear_regression_analytical_derivative_d_x_d_theta(
-        linear_model, dataset.x_train, dataset.y_train
-    )
-
-    hessian_analytical = linear_regression_analytical_derivative_d2_theta(
-        linear_model, dataset.x_train, dataset.y_train
-    )
-    s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
-    return -np.einsum("ia,jab->ijb", s_test_analytical, train_second_deriv_analytical)

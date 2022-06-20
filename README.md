@@ -19,14 +19,17 @@ the following types of calculations.
 ### Direct linear influences
 
 These can only applied to a regression problem where x and y are from the real numbers. When
-a Dataset object is available, this is as simple as calling one of
+a Dataset object is available, this is as simple as calling
 
 ```python
 
-from valuation.utils import linear_influences_up, linear_influences_perturbation
+from valuation.influence.linear import linear_influences
+from valuation.influence.types import InfluenceTypes
 
-linear_influences_up(dataset)
-linear_influences_perturbation(dataset)
+linear_influences(
+    dataset, 
+    influence_type=InfluenceTypes.Up
+)
 ```
 
 the linear influence functions. Internally these method fit a linear regression model and use this
@@ -41,11 +44,13 @@ loss and data samples.
 
 ```python
 
-from valuation.influence.naive import influences
+from valuation.influence.general import influences
+from valuation.influence.types import InfluenceTypes
 
 influences(
-    model,
-    dataset
+   model,
+   dataset,
+   influence_type=InfluenceTypes.Up
 )
 ```
 
@@ -57,11 +62,13 @@ approximation to inverting the full matrix. In pyDVL this can be done
 by adding a parameter to the influences function call.
 
 ```python
-from valuation.influence.naive import influences
+from valuation.influence.general import influences
+from valuation.influence.types import InfluenceTypes
 
 influences(
     model,
     dataset,
+    influence_type=InfluenceTypes.Up,
     use_conjugate_gradient=True
 )
 ```
