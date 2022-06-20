@@ -75,6 +75,7 @@ correctness_test_case_ids = list(
 )
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number",
     test_cases_model_fit,
@@ -147,7 +148,7 @@ def test_linear_regression_model_grad(
     )
 
     train_grads_analytical = 2 * linear_regression_analytical_derivative_d_theta(
-        A, b, train_x, train_y
+        (A, b), train_x, train_y
     )
     train_grads_autograd = model.grad(train_x, train_y)
     train_grads_max_diff = np.max(np.abs(train_grads_analytical - train_grads_autograd))
@@ -183,7 +184,7 @@ def test_linear_regression_model_hessian(
     )
 
     test_hessian_analytical = 2 * linear_regression_analytical_derivative_d2_theta(
-        A, b, train_x, train_y
+        (A, b), train_x, train_y
     )
     estimated_hessian = model.mvp(
         train_x, train_y, np.eye((input_dimension + 1) * output_dimension)
@@ -225,7 +226,7 @@ def test_linear_regression_model_d_x_d_theta(
     )
 
     test_derivative = 2 * linear_regression_analytical_derivative_d_x_d_theta(
-        A, b, train_x, train_y
+        (A, b), train_x, train_y
     )
     estimated_derivative = np.stack(
         [
