@@ -1,0 +1,10 @@
+solve
+=====
+.. automodule:: valuation.solve
+   :members:
+   :undoc-members:
+
+.. toctree::
+   :glob:
+
+   solve/*

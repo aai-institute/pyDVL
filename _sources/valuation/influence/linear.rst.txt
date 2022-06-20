@@ -1,0 +1,5 @@
+linear
+======
+.. automodule:: valuation.influence.linear
+   :members:
+   :undoc-members:
