@@ -4,7 +4,7 @@ from enum import Enum
 import numpy as np
 from typing_protocol_intersection import ProtocolIntersection
 
-from solve.cg import conjugate_gradient
+from valuation.solve.cg import conjugate_gradient
 from valuation.utils import (
     Dataset,
     MapReduceJob,

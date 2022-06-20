@@ -4,7 +4,7 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 
-from solve.cg import conjugate_gradient, conjugate_gradient_error_bound
+from valuation.solve.cg import conjugate_gradient, conjugate_gradient_error_bound
 
 
 class AlgorithmTestSettings:
