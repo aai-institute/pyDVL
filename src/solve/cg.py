@@ -4,7 +4,6 @@ from typing import Callable, Union
 import numpy as np
 
 from valuation.utils import (
-    logger,
     mcmc_is_linear_function,
     mcmc_is_linear_function_positive_definite,
 )
@@ -26,10 +25,8 @@ def conjugate_gradient(
     https://en.wikipedia.org/wiki/Conjugate_gradient_method for more details of the algorithm. See also
     https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351 and
     https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf.
-
     :param A: A linear function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix.
-    It hasto be positive-definite v.T @ f(v) >= 0.
-    of shape [K, K]. The underlying matrix has to be symmetric and positive definite.
+    It has to be positive-definite v.T @ f(v) >= 0.
     :param b: A np.ndarray of shape [K] representing the targeted result of the matrix multiplication Ax.
     :param M: A function f : R[k] -> R[k] which approximates inv(A) or a matrix of shape [K, K]. The underlying matrix
     has to be symmetric and positive definite.

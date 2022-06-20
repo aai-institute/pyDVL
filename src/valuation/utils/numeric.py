@@ -202,16 +202,12 @@ def linear_regression_analytical_derivative_d_theta(
     linear_model: Tuple[np.ndarray, np.ndarray], x: np.ndarray, y: np.ndarray
 ) -> np.ndarray:
     """
-    Calculates the analytical derivative for batches of L with respect to vect(A). The loss function is the mse loss,
-    precisely L(x, y) = 0.5 * (r(x, y)^T r(x, y)) / n of the residuals r(x, y) = A @ x + b - y. The first derivative worth the
-    parameters \theta = \vect{A} and b are given in vectorized form by d_theta L(x, y) = np.kron(A @ x + b - y, x) / n
-    and d_b L(x, y) = res(x, y) / n.
-
     :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
-    :param x: A np.ndarray of shape [BxM],
+    :param x: A np.ndarray of shape [BxM].
     :param y: A np.nparray of shape [BxN].
-    :returns. A np.ndarray of shape [Bx((N+1)*M)], where each row vector is [d_theta L(x, y), d_b L(x, y)]
+    :returns: A np.ndarray of shape [Bx((N+1)*M)], where each row vector is [d_theta L(x, y), d_b L(x, y)]
     """
+
     A, b = linear_model
     n, m = list(A.shape)
     residuals = x @ A.T + b - y
@@ -225,18 +221,10 @@ def linear_regression_analytical_derivative_d2_theta(
     linear_model: Tuple[np.ndarray, np.ndarray], x: np.ndarray, y: np.ndarray
 ) -> np.ndarray:
     """
-    Calculates the analytical derivative for batches of L with respect to vect(A). The loss function is the mse loss,
-    precisely L(x, y) = 0.5 * (r(x, y)^T r(x, y)) / n of the residuals r(x, y) = A @ x + b - y. The second derivative worth
-    the parameters \theta = \vect{A} and b are given in vectorized form by
-    d^2_theta L(x, y) = np.kron(I, xx^T) / n,
-    d^2_b L(x, y) = eye(n) / n and
-    d_theta d_b L(x, y) = d_b d_theta L(x, y) = np.kron(I, x) / n.
-
-
     :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
     :param x: A np.ndarray of shape [BxM],
     :param y: A np.nparray of shape [BxN].
-    :returns. A np.ndarray of shape [((N+1)*M)x((N+1)*M)], representing the Hessian. It gets averaged over all samples.
+    :returns: A np.ndarray of shape [((N+1)*M)x((N+1)*M)], representing the Hessian. It gets averaged over all samples.
     """
     A, b = linear_model
     n, m = tuple(A.shape)
@@ -256,16 +244,12 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     linear_model: Tuple[np.ndarray, np.ndarray], x: np.ndarray, y: np.ndarray
 ) -> np.ndarray:
     """
-    Calculates the analytical derivative for batches of L with respect to vect(A). The loss function is the mse loss,
-    precisely L(x, y) = 0.5 * (r(x, y)^T r(x, y)) / n of the residuals r(x, y) = A @ x + b - y. The second derivative worth
-    the parameters \theta = \vect{A} and b are given in vectorized form by
-    d_x_d_theta L(x, y) =
-
-    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
-    :param x: A np.ndarray of shape [BxM],
+    :param linear_model: A tuple of np.ndarray of shape [NxM] and [N] representing A and b respectively.
+    :param x: A np.ndarray of shape [BxM].
     :param y: A np.nparray of shape [BxN].
-    :returns. A np.ndarray of shape [Bx((N+1)*M)xM], representing the derivative.
+    :return: A np.ndarray of shape [Bx((N+1)*M)xM], representing the derivative.
     """
+
     A, b = linear_model
     n, m = tuple(A.shape)
     residuals = x @ A.T + b - y
@@ -344,7 +328,6 @@ def influences_perturbation_linear_regression_analytical(
     :param dataset: A dataset with train and test set for input dimension M and output dimension N.
     :returns: A np.ndarray of shape [BxCxM] with the influences of the training points on the test points for each feature.
     """
-    # check grads
     test_grads_analytical = linear_regression_analytical_derivative_d_theta(
         linear_model, dataset.x_test, dataset.y_test
     )
