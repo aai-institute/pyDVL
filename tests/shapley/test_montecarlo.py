@@ -5,7 +5,6 @@ from time import time
 
 import numpy as np
 import pytest
-from pymemcache.client import Client
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
@@ -21,7 +20,7 @@ from valuation.utils import MemcachedConfig, Utility
 from valuation.utils.numeric import lower_bound_hoeffding
 from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
 
-log = logging.getLogger(os.path.basename(__file__))
+log = logging.getLogger(__name__)
 
 
 # noinspection PyTestParametrized
@@ -118,8 +117,6 @@ def test_linear_montecarlo_shapley(
         scoring=score_type,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
-    Client(**memcache_client_config).flush_all()
-
     values, _ = fun(
         linear_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
     )
@@ -156,7 +153,6 @@ def test_linear_montecarlo_with_outlier(
         scoring=score_type,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
-    Client(**memcache_client_config).flush_all()
     shapley_values, _ = fun(
         linear_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
     )
@@ -193,7 +189,6 @@ def test_random_forest(
             cache_threshold=0,
         ),
     )
-    Client(**memcache_client_config).flush_all()
 
     _, _ = permutation_montecarlo_shapley(
         rf_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs

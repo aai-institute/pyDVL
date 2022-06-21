@@ -8,7 +8,7 @@ import pytest
 from valuation.utils import MapReduceJob, map_reduce, memcached
 from valuation.utils.caching import get_running_avg_variance
 
-log = logging.getLogger(os.path.basename(__file__))
+log = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
@@ -16,7 +16,7 @@ log = logging.getLogger(os.path.basename(__file__))
     [
         ([3, 4, 5, 6]),
         (list(range(10))),
-        (list(range(1000))),
+        (np.linspace(1, 4, 10)),
     ],
 )
 def test_get_running_avg_variance(numbers_series):
@@ -78,7 +78,7 @@ def test_memcached_parallel_jobs(memcached_client):
 
 
 def test_memcached_repeated_training(memcached_client):
-    client, config = memcached_client
+    _, config = memcached_client
 
     @memcached(
         client_config=config,
@@ -105,13 +105,13 @@ def test_memcached_repeated_training(memcached_client):
 @pytest.mark.parametrize(
     "n, atol",
     [
+        (7, 3),
         (10, 3),
-        (20, 3),
-        (30, 3),
+        (20, 5),
     ],
 )
 def test_memcached_parallel_repeated_training(memcached_client, n, atol):
-    client, config = memcached_client
+    _, config = memcached_client
 
     @memcached(
         client_config=config,
@@ -126,7 +126,6 @@ def test_memcached_parallel_repeated_training(memcached_client, n, atol):
         # logger.info(f"run_id: {run_id}, running...")
         return float(np.sum(indices)) + np.random.normal(scale=10)
 
-    n = 7
     num_runs = 100
     job = MapReduceJob.from_fun(foo)
     result = map_reduce(job, data=np.arange(n), num_jobs=10, num_runs=num_runs)

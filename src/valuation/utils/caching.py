@@ -55,14 +55,11 @@ def get_running_avg_variance(
     """The method uses Welford's algorithm to calculate the running average and variance of
     a set of numbers.
 
-    Args:
-        previous_avg: average value at previous step
-        previous_variance: variance at previous step
-        new_value: new value in the series of numbers
-        count: number of points seen so far
-
-    Returns:
-        new_average, new_variance, calculated with the new number
+    :param previous_avg: average value at previous step
+    :param previous_variance: variance at previous step
+    :param new_value: new value in the series of numbers
+    :param count: number of points seen so far
+    :return new_average, new_variance, calculated with the new number
     """
     new_average = (new_value + count * previous_avg) / (count + 1)
     new_variance = previous_variance + (

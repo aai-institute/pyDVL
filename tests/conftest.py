@@ -8,11 +8,12 @@ if TYPE_CHECKING:
 
 import numpy as np
 import pytest
+from pymemcache.client import Client
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
-from valuation.utils import Dataset, Utility
+from valuation.utils import ClientConfig, Dataset, Utility
 from valuation.utils.logging import start_logging_server
 from valuation.utils.numeric import random_matrix_with_condition_number, spearman
 
@@ -24,7 +25,6 @@ def pytest_sessionstart():
 
 
 def is_memcache_responsive(hostname, port):
-    from pymemcache.client import Client
 
     try:
         client = Client(server=(hostname, port))
@@ -106,11 +106,11 @@ def memcached_service(docker_ip, docker_services, do_not_start_memcache):
 
 @pytest.fixture(scope="session")
 def memcache_client_config(memcached_service):
-    from valuation.utils import ClientConfig
 
     client_config = ClientConfig(
         server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
     )
+    Client(**client_config).flush_all()
     return client_config
 
 
