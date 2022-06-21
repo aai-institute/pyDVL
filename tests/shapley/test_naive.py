@@ -133,7 +133,7 @@ def test_polynomial_with_outlier(
 ):
     dataset, _ = polynomial_dataset
     outlier_idx = np.random.randint(len(dataset.y_train))
-    dataset.y_train[outlier_idx] -= 100
+    dataset.y_train[outlier_idx] *= 100
     poly_utility = Utility(
         polynomial_pipeline,
         dataset,

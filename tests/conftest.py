@@ -104,7 +104,7 @@ def memcached_service(docker_ip, docker_services, do_not_start_memcache):
         return hostname, port
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def memcache_client_config(memcached_service):
 
     client_config = ClientConfig(
