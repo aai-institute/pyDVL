@@ -1,6 +1,6 @@
 import functools
 from collections import OrderedDict, defaultdict
-from typing import TYPE_CHECKING, Optional, Sequence, Type
+from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
 
 if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
@@ -14,7 +14,7 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from valuation.utils import Dataset, Utility
 from valuation.utils.logging import start_logging_server
-from valuation.utils.numeric import spearman
+from valuation.utils.numeric import random_matrix_with_condition_number, spearman
 
 EXCEPTIONS_TYPE = Optional[Sequence[Type[BaseException]]]
 
@@ -141,9 +141,96 @@ def boston_dataset(n_points, n_features):
     return Dataset.from_sklearn(dataset, train_size=0.5)
 
 
+@pytest.fixture(scope="function")
+def linear_dataset(a, b, num_points):
+    from sklearn.utils import Bunch
+
+    step = 2 / num_points
+    x = np.arange(-1, 1, step)
+    y = np.random.normal(loc=a * x + b, scale=0.1)
+    db = Bunch()
+    db.data, db.target = x.reshape(-1, 1), y
+    db.DESCR = f"y~N({a}*x + {b}, 1)"
+    db.feature_names = ["x"]
+    db.target_names = ["y"]
+    return Dataset.from_sklearn(data=db, train_size=0.3)
+
+
 def polynomial(coefficients, x):
     powers = np.arange(len(coefficients))
     return np.power(x, np.tile(powers, (len(x), 1)).T).T @ coefficients
+
+
+@pytest.fixture
+def input_dimension(request) -> int:
+    return request.param
+
+
+@pytest.fixture
+def output_dimension(request) -> int:
+    return request.param
+
+
+@pytest.fixture
+def problem_dimension(request) -> int:
+    return request.param
+
+
+@pytest.fixture
+def batch_size(request) -> int:
+    return request.param
+
+
+@pytest.fixture
+def condition_number(request) -> float:
+    return request.param
+
+
+@pytest.fixture
+def seed(request):
+    return request.param
+
+
+@pytest.fixture(scope="function")
+def quadratic_linear_equation_system(quadratic_matrix: np.ndarray, batch_size: int):
+    A = quadratic_matrix
+    problem_dimension = A.shape[0]
+    b = np.random.random([batch_size, problem_dimension])
+    return A, b
+
+
+@pytest.fixture(scope="function")
+def quadratic_matrix(problem_dimension: int, condition_number: float):
+    return random_matrix_with_condition_number(
+        problem_dimension, condition_number, positive_definite=True
+    )
+
+
+@pytest.fixture(scope="function")
+def singular_quadratic_linear_equation_system(
+    quadratic_matrix: np.ndarray, batch_size: int
+):
+    A = quadratic_matrix
+    problem_dimension = A.shape[0]
+    i, j = tuple(np.random.choice(problem_dimension, replace=False, size=2))
+    if j < i:
+        i, j = j, i
+
+    v = (A[i] + A[j]) / 2
+    A[i], A[j] = v, v
+    b = np.random.random([batch_size, problem_dimension])
+    return A, b
+
+
+@pytest.fixture(scope="function")
+def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
+    output_dimension, input_dimension = problem_dimension
+    A = random_matrix_with_condition_number(
+        max(input_dimension, output_dimension), condition_number, positive_definite=True
+    )
+    A = A[:output_dimension, :input_dimension]
+    b = np.random.uniform(size=[output_dimension])
+    return A, b
 
 
 @pytest.fixture(scope="function")
@@ -167,21 +254,6 @@ def polynomial_dataset(coefficients: np.ndarray):
 @pytest.fixture(scope="function")
 def polynomial_pipeline(coefficients):
     return make_pipeline(PolynomialFeatures(len(coefficients) - 1), LinearRegression())
-
-
-@pytest.fixture(scope="function")
-def linear_dataset(a, b, num_points):
-    from sklearn.utils import Bunch
-
-    step = 2 / num_points
-    x = np.arange(-1, 1, step)
-    y = np.random.normal(loc=a * x + b, scale=0.1)
-    db = Bunch()
-    db.data, db.target = x.reshape(-1, 1), y
-    db.DESCR = f"y~N({a}*x + {b}, 1)"
-    db.feature_names = ["x"]
-    db.target_names = ["y"]
-    return Dataset.from_sklearn(data=db, train_size=0.3)
 
 
 def dummy_utility(num_samples: int = 10):
@@ -224,6 +296,31 @@ def analytic_shapley(num_samples):
         {i: i / float(max(u.data.x_train)) for i in u.data.indices}
     )
     return u, exact_values
+
+
+class TolerateErrors:
+    """A context manager to swallow errors up to a certain threshold.
+    Use to test (ε,δ)-approximations.
+    """
+
+    def __init__(
+        self, max_errors: int, exception_cls: Type[BaseException] = AssertionError
+    ):
+        self.max_errors = max_errors
+        self.Exception = exception_cls
+        self.error_count = 0
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            self.error_count += 1
+        if self.error_count > self.max_errors:
+            raise self.Exception(
+                f"Maximum number of {self.max_errors} error(s) reached"
+            )
+        return True
 
 
 def check_total_value(u: Utility, values: OrderedDict, atol: float = 1e-6):
@@ -505,3 +602,30 @@ def pytest_runtest_call(item: pytest.Function):
 def pytest_terminal_summary(terminalreporter: "TerminalReporter"):
     tolerate_session = terminalreporter.config._tolerate_session
     tolerate_session.display(terminalreporter)
+
+
+def create_mock_dataset(
+    linear_model: Tuple[np.ndarray, np.ndarray],
+    train_set_size: int,
+    test_set_size: int = None,
+    noise: float = 0.01,
+) -> Dataset:
+    A, b = linear_model
+    o_d, i_d = tuple(A.shape)
+    data_model = lambda x: np.random.normal(x @ A.T + b, noise)
+
+    class WrappedDataset(object):
+        x_train: np.ndarray
+        y_train: np.ndarray
+        x_test: Optional[np.ndarray]
+        y_test: Optional[np.ndarray]
+
+    dataset = WrappedDataset()
+    dataset.x_train = np.random.uniform(size=[train_set_size, i_d])
+    dataset.y_train = data_model(dataset.x_train)
+
+    if test_set_size is not None:
+        dataset.x_test = np.random.uniform(size=[test_set_size, i_d])
+        dataset.y_test = data_model(dataset.x_test)
+
+    return dataset
