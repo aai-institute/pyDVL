@@ -131,9 +131,9 @@ def test_linear_montecarlo_shapley(
 @pytest.mark.parametrize(
     "a, b, num_points, fun, score_type, max_iterations",
     [
-        (2, 3, 20, permutation_montecarlo_shapley, "r2", 1000),
-        (2, 3, 20, permutation_montecarlo_shapley, "explained_variance", 1000),
-        (2, 3, 20, permutation_montecarlo_shapley, "neg_median_absolute_error", 1000),
+        (2, 3, 20, permutation_montecarlo_shapley, "r2", 3000),
+        (2, 3, 20, permutation_montecarlo_shapley, "explained_variance", 3000),
+        (2, 3, 20, permutation_montecarlo_shapley, "neg_median_absolute_error", 3000),
     ],
 )
 def test_linear_montecarlo_with_outlier(
