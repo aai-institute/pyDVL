@@ -10,8 +10,3 @@ repos:
     rev: 5.8.0
     hooks:
       - id: isort
-  - repo: https://github.com/kynan/nbstripout
-    rev: 0.5.0
-    hooks:
-      - id: nbstripout
-        args: ["--strip-empty-cells", "--extra-keys", "metadata.pycharm cell.metadata.pycharm"]
