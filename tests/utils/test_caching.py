@@ -1,5 +1,6 @@
 import logging
 import os
+from time import sleep, time
 from typing import Iterable
 
 import numpy as np
@@ -100,6 +101,51 @@ def test_memcached_repeated_training(memcached_client):
 
     assert (result - np.sum(np.arange(n))) < 1
     assert foo.cache_info.sets < foo.cache_info.hits
+
+
+def test_memcached_faster_with_repeated_training(memcached_client):
+    _, config = memcached_client
+
+    @memcached(
+        client_config=config,
+        cache_threshold=0,  # Always cache results
+        # Note that we typically do NOT want to ignore run_id
+        allow_repeated_training=True,
+        rtol_threshold=0.1,
+        ignore_args=["job_id", "run_id"],
+    )
+    def foo_cache(indices: Iterable[int]) -> float:
+        # from valuation.utils.logging import logger
+        # logger.info(f"run_id: {run_id}, running...")
+        sleep(0.01)
+        return float(np.sum(indices)) + np.random.normal(scale=1)
+
+    def foo_no_cache(indices: Iterable[int]) -> float:
+        # from valuation.utils.logging import logger
+        # logger.info(f"run_id: {run_id}, running...")
+        sleep(0.01)
+        return float(np.sum(indices)) + np.random.normal(scale=1)
+
+    n = 3
+    foo_cache(np.arange(n))
+    foo_no_cache(np.arange(n))
+
+    start = time()
+    for _ in range(300):
+        result_fast = foo_cache(np.arange(n))
+    end = time()
+    fast_time = end - start
+
+    start = time()
+    results_slow = []
+    for _ in range(300):
+        result = foo_no_cache(np.arange(n))
+        results_slow.append(result)
+    end = time()
+    slow_time = end - start
+
+    assert (result_fast - np.mean(results_slow)) < 1
+    assert fast_time < slow_time
 
 
 @pytest.mark.parametrize(
