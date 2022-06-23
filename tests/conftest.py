@@ -460,7 +460,6 @@ class TolerateErrorsSession:
             return
         if len(self._tests) == 0:
             return
-        breakpoint()
         terminalreporter.ensure_newline()
         terminalreporter.write_line("")
         widths = {
