@@ -27,6 +27,10 @@ jobs:
         run: pip install tox
       - name: Run Tox
         run: tox
+      - name: Test Torch Modules
+        run: tox -e torch
+      - name: Test Notebooks
+        run: tox -e test-notebooks
       - name: Test Notebooks
         run: tox -e test-notebooks
         continue-on-error: true
