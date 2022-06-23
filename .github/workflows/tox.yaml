@@ -31,8 +31,6 @@ jobs:
         run: tox -e torch
       - name: Test Notebooks
         run: tox -e test-notebooks
-      - name: Test Notebooks
-        run: tox -e test-notebooks
         continue-on-error: true
       - name: Install Pandoc
         run: sudo apt-get install --no-install-recommends --yes pandoc
