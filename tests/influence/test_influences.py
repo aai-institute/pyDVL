@@ -80,7 +80,10 @@ def test_upweighting_influences_lr_analytical_cg(
 
     influence_values = influences(
         model,
-        dataset,
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
         progress=True,
         n_jobs=n_jobs,
         influence_type=InfluenceTypes.Up,
@@ -123,7 +126,10 @@ def test_upweighting_influences_lr_analytical(
 
     influence_values = influences(
         model,
-        dataset,
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
         progress=True,
         n_jobs=n_jobs,
         influence_type=InfluenceTypes.Up,
@@ -163,7 +169,10 @@ def test_perturbation_influences_lr_analytical_cg(
     )
     influence_values = influences(
         model,
-        dataset,
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
         progress=True,
         n_jobs=n_jobs,
         influence_type=InfluenceTypes.Perturbation,
@@ -207,7 +216,10 @@ def test_perturbation_influences_lr_analytical(
     )
     influence_values = influences(
         model,
-        dataset,
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
         progress=True,
         n_jobs=n_jobs,
         influence_type=InfluenceTypes.Perturbation,
@@ -243,7 +255,13 @@ def test_linear_influences_up_perturbations_analytical(
     linear_model: Tuple[np.ndarray, np.ndarray],
 ):
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
-    up_influences = linear_influences(dataset, influence_type=InfluenceTypes.Up)
+    up_influences = linear_influences(
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
+        influence_type=InfluenceTypes.Up,
+    )
     assert np.logical_not(np.any(np.isnan(up_influences)))
     assert up_influences.shape == (len(dataset.x_test), len(dataset.x_train))
 
