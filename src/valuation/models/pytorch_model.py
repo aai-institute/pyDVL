@@ -44,6 +44,10 @@ class PyTorchSupervisedModel:
         self.num_epochs = num_epochs
         self.batch_size = batch_size
 
+    def num_params(self) -> int:
+        model_parameters = filter(lambda p: p.requires_grad, self.model.parameters())
+        return sum([np.prod(p.size()) for p in model_parameters])
+
     def grad(self, x: np.ndarray, y: np.ndarray, progress: bool = False) -> np.ndarray:
 
         x = tt(x)
