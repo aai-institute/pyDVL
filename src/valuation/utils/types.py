@@ -1,7 +1,9 @@
-from typing import Callable, Protocol, TypeVar
+from typing import TYPE_CHECKING, Callable, Protocol, TypeVar
+
+if TYPE_CHECKING:
+    import torch
 
 from numpy import ndarray
-from torch import tensor
 
 __all__ = [
     "SupervisedModel",
@@ -100,5 +102,7 @@ class TwiceDifferentiable(Protocol):
 
 
 class TorchObjective(Protocol):
-    def __call__(self, x: tensor, y: tensor, **kwargs) -> tensor:
+    def __call__(
+        self, x: "torch.tensor", y: "torch.tensor", **kwargs
+    ) -> "torch.tensor":
         pass
