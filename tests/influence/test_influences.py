@@ -75,7 +75,11 @@ def test_upweighting_influences_lr_analytical_cg(
     )
 
     influence_values_analytical = 2 * influences_up_linear_regression_analytical(
-        linear_model, dataset
+        linear_model,
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
     )
 
     influence_values = influences(
@@ -121,7 +125,11 @@ def test_upweighting_influences_lr_analytical(
     )
 
     influence_values_analytical = 2 * influences_up_linear_regression_analytical(
-        linear_model, dataset
+        linear_model,
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
     )
 
     influence_values = influences(
@@ -165,7 +173,14 @@ def test_perturbation_influences_lr_analytical_cg(
     )
 
     influence_values_analytical = (
-        2 * influences_perturbation_linear_regression_analytical(linear_model, dataset)
+        2
+        * influences_perturbation_linear_regression_analytical(
+            linear_model,
+            dataset.x_train,
+            dataset.y_train,
+            dataset.x_test,
+            dataset.y_test,
+        )
     )
     influence_values = influences(
         model,
@@ -212,7 +227,14 @@ def test_perturbation_influences_lr_analytical(
     )
 
     influence_values_analytical = (
-        2 * influences_perturbation_linear_regression_analytical(linear_model, dataset)
+        2
+        * influences_perturbation_linear_regression_analytical(
+            linear_model,
+            dataset.x_train,
+            dataset.y_train,
+            dataset.x_test,
+            dataset.y_test,
+        )
     )
     influence_values = influences(
         model,
