@@ -2,15 +2,55 @@ import operator
 from enum import Enum
 from functools import reduce
 from itertools import chain, combinations
-from typing import Collection, Generator, Iterator, List, Optional, Sequence, TypeVar
+from typing import (
+    Callable,
+    Collection,
+    Generator,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+)
 
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
-from valuation.utils import memcached
+from valuation.utils import Dataset, logger, memcached
 from valuation.utils.caching import ClientConfig
-from valuation.utils.parallel import MapReduceJob, map_reduce
+from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
 
 T = TypeVar("T")
+
+
+def mcmc_is_linear_function(
+    A: Callable[[np.ndarray], np.ndarray], v: np.ndarray, verify_samples: int = 1000
+):
+    """Assumes nothing. Stochastically checks for property sum_i a_i * f(v_i) == f(sum_i a_i v_i)."""
+
+    dim = v.shape[1]
+    weights = np.random.uniform(size=[verify_samples, 1, dim])
+    sample_vectors = [np.random.uniform(size=[verify_samples, dim]) for _ in range(dim)]
+    lin_sample_vectors = [A(v) for v in sample_vectors]
+    x = (weights * np.stack(sample_vectors, axis=-1)).sum(-1)
+    A_x = A(x)
+    sum_A_v = (weights * np.stack(lin_sample_vectors, axis=-1)).sum(-1)
+    diff_value = np.max(np.abs(sum_A_v - A_x), axis=1)
+    return np.max(diff_value) <= 1e-10
+
+
+def mcmc_is_linear_function_positive_definite(
+    A: Callable[[np.ndarray], np.ndarray], v: np.ndarray, verify_samples: int = 1000
+):
+    """Assumes linear function. Stochastically checks for property v.T @ f(v) >= 0"""
+
+    dim = v.shape[1]
+    add_v = np.random.uniform(size=[verify_samples, dim])
+    v = np.concatenate((v, add_v), axis=0)
+    product = np.einsum("ia,ia->i", v, A(v))
+    is_positive_definite = np.sum(product <= 1e-7) == 0
+    return is_positive_definite
 
 
 def vanishing_derivatives(x: np.ndarray, min_values: int, atol: float) -> int:
@@ -58,6 +98,7 @@ def random_powerset(
     dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
     num_jobs: int = 1,
     *,
+    enable_cache: bool = False,
     client_config: Optional[ClientConfig] = None
 ) -> Generator[np.ndarray, None, None]:
     """Uniformly samples a subset from the power set of the argument, without
@@ -85,19 +126,24 @@ def random_powerset(
     if max_subsets is None:
         max_subsets = np.inf
 
-    @memcached(client_config=client_config, threshold=0.5)
     def subset_probabilities(n: int) -> List[float]:
         def sub(sizes: List[int]) -> List[float]:
-            # FIXME: is the normalization ok?
             return [np.math.comb(n, j) / 2**n for j in sizes]
 
         job = MapReduceJob.from_fun(sub, lambda r: reduce(operator.add, r, []))
         ret = map_reduce(job, list(range(n + 1)), num_jobs=num_jobs)
         return ret[0]
 
+    if enable_cache:
+        _subset_probabilities = memcached(client_config=client_config, threshold=0.5)(
+            subset_probabilities
+        )
+    else:
+        _subset_probabilities = subset_probabilities
+
     while total <= max_subsets:
         if dist == PowerSetDistribution.WEIGHTED:
-            k = np.random.choice(np.arange(n + 1), p=subset_probabilities(n))
+            k = np.random.choice(np.arange(n + 1), p=_subset_probabilities(n))
         else:
             k = np.random.choice(np.arange(n + 1))
         subset = np.random.choice(s, replace=False, size=k)
@@ -127,3 +173,93 @@ def spearman(x: np.ndarray, y: np.ndarray) -> float:
         raise TypeError("Input must be numpy.ndarray")
 
     return 1 - 6 * np.sum((x - y) ** 2) / (lx**3 - lx)
+
+
+def random_matrix_with_condition_number(
+    n: int, condition_number: float, positive_definite: bool = False
+) -> np.ndarray:
+    """
+    https://gist.github.com/bstellato/23322fe5d87bb71da922fbc41d658079#file-random_mat_condition_number-py
+    https://math.stackexchange.com/questions/1351616/condition-number-of-ata
+    """
+
+    if positive_definite:
+        condition_number = np.sqrt(condition_number)
+
+    log_condition_number = np.log(condition_number)
+    exp_vec = np.linspace(
+        -log_condition_number / 4.0, log_condition_number * (n + 1) / (4 * (n - 1)), n
+    )
+    s = np.exp(exp_vec)
+    S = np.diag(s)
+    U, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
+    V, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
+    P = U.dot(S).dot(V.T)
+    return P if not positive_definite else P @ P.T  # cond(P @ P.T) = cond(P) ** 2
+
+
+def linear_regression_analytical_derivative_d_theta(
+    linear_model: Tuple[np.ndarray, np.ndarray], x: np.ndarray, y: np.ndarray
+) -> np.ndarray:
+    """
+    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
+    :param x: A np.ndarray of shape [BxM].
+    :param y: A np.nparray of shape [BxN].
+    :returns: A np.ndarray of shape [Bx((N+1)*M)], where each row vector is [d_theta L(x, y), d_b L(x, y)]
+    """
+
+    A, b = linear_model
+    n, m = list(A.shape)
+    residuals = x @ A.T + b - y
+    kron_product = np.expand_dims(residuals, axis=2) * np.expand_dims(x, axis=1)
+    test_grads = np.reshape(kron_product, [-1, n * m])
+    full_grads = np.concatenate((test_grads, residuals), axis=1)
+    return full_grads / n
+
+
+def linear_regression_analytical_derivative_d2_theta(
+    linear_model: Tuple[np.ndarray, np.ndarray], x: np.ndarray, y: np.ndarray
+) -> np.ndarray:
+    """
+    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
+    :param x: A np.ndarray of shape [BxM],
+    :param y: A np.nparray of shape [BxN].
+    :returns: A np.ndarray of shape [((N+1)*M)x((N+1)*M)], representing the Hessian. It gets averaged over all samples.
+    """
+    A, b = linear_model
+    n, m = tuple(A.shape)
+    d2_theta = np.einsum("ia,ib->iab", x, x)
+    d2_theta = np.mean(d2_theta, axis=0)
+    d2_theta = np.kron(np.eye(n), d2_theta)
+    d2_b = np.eye(n)
+    mean_x = np.mean(x, axis=0, keepdims=True)
+    d_theta_d_b = np.kron(np.eye(n), mean_x)
+    top_matrix = np.concatenate((d2_theta, d_theta_d_b.T), axis=1)
+    bottom_matrix = np.concatenate((d_theta_d_b, d2_b), axis=1)
+    full_matrix = np.concatenate((top_matrix, bottom_matrix), axis=0)
+    return full_matrix / n
+
+
+def linear_regression_analytical_derivative_d_x_d_theta(
+    linear_model: Tuple[np.ndarray, np.ndarray], x: np.ndarray, y: np.ndarray
+) -> np.ndarray:
+    """
+    :param linear_model: A tuple of np.ndarray of shape [NxM] and [N] representing A and b respectively.
+    :param x: A np.ndarray of shape [BxM].
+    :param y: A np.nparray of shape [BxN].
+    :return: A np.ndarray of shape [Bx((N+1)*M)xM], representing the derivative.
+    """
+
+    A, b = linear_model
+    n, m = tuple(A.shape)
+    residuals = x @ A.T + b - y
+    b = len(x)
+    outer_product_matrix = np.einsum("ab,ic->iacb", A, x)
+    outer_product_matrix = np.reshape(outer_product_matrix, [b, m * n, m])
+    tiled_identity = np.tile(np.expand_dims(np.eye(m), axis=0), [b, n, 1])
+    outer_product_matrix += tiled_identity * np.expand_dims(
+        np.repeat(residuals, m, axis=1), axis=2
+    )
+    b_part_derivative = np.tile(np.expand_dims(A, axis=0), [b, 1, 1])
+    full_derivative = np.concatenate((outer_product_matrix, b_part_derivative), axis=1)
+    return full_derivative / n

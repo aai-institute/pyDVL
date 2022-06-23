@@ -83,9 +83,14 @@ def start_logging_server(
     host: str = "localhost", port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT
 ) -> Process:
     global server
+    import platform
 
     if server is not None:
         return server
+    if platform.system() != "Linux":
+        from multiprocessing import set_start_method
+
+        set_start_method("fork")
 
     logging.basicConfig(
         format="%(relativeCreated)5d %(name)-15s %(levelname)-8s %(message)s"
@@ -118,3 +123,10 @@ server: Optional[Process] = None
 logger = None
 
 set_logger()
+
+
+def raise_or_log(message, raise_exception: bool):
+    if raise_exception:
+        raise Exception(message)
+    else:
+        logger.warning(message)
