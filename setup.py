@@ -16,5 +16,5 @@ setup(
     ],
     setup_requires=["wheel"],
     tests_require=test_requirements,
-    author="Miguel de Benito Delgado <debenito@unternehmertum.de>",
+    author="appliedAI",
 )
