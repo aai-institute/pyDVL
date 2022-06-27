@@ -1,10 +1,8 @@
 import itertools
-import sys
 from typing import List, Tuple
 
 import numpy as np
 import pytest
-import torch.nn.functional as F
 
 from tests.conftest import create_mock_dataset
 from valuation.influence.general import influences
@@ -16,6 +14,11 @@ from valuation.influence.linear import (
 from valuation.influence.types import InfluenceTypes
 from valuation.models.linear_regression_torch_model import LRTorchModel
 from valuation.models.pytorch_model import PyTorchSupervisedModel
+
+try:
+    import torch.nn.functional as F
+except ImportError:
+    pass
 
 
 class InfluenceTestSettings:

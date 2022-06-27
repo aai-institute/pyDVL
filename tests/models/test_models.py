@@ -4,7 +4,6 @@ from typing import List, Tuple
 
 import numpy as np
 import pytest
-import torch.nn.functional as F
 
 from valuation.models.linear_regression_torch_model import LRTorchModel
 from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
@@ -13,6 +12,11 @@ from valuation.utils import (
     linear_regression_analytical_derivative_d_theta,
     linear_regression_analytical_derivative_d_x_d_theta,
 )
+
+try:
+    import torch.nn.functional as F
+except ImportError:
+    pass
 
 
 class ModelTestSettings:
