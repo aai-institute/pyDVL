@@ -1,8 +1,12 @@
 from typing import Tuple
 
 import numpy as np
-import torch
-import torch.nn as nn
+
+try:
+    import torch
+    import torch.nn as nn
+except ImportError:
+    pass
 
 
 class LRTorchModel(nn.Module):

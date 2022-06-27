@@ -1,7 +1,9 @@
-from typing import TYPE_CHECKING, Callable, Protocol, TypeVar
+from typing import Callable, Protocol, TypeVar
 
-if TYPE_CHECKING:
+try:
     import torch
+except ImportError:
+    pass
 
 from numpy import ndarray
 
