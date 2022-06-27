@@ -1,9 +1,7 @@
-from typing import Callable, Protocol, TypeVar
+from typing import TYPE_CHECKING, Callable, Protocol, TypeVar
 
-try:
+if TYPE_CHECKING:
     import torch
-except ImportError:
-    pass
 
 from numpy import ndarray
 
@@ -105,6 +103,6 @@ class TwiceDifferentiable(Protocol):
 
 class TorchObjective(Protocol):
     def __call__(
-        self, x: "torch.tensor", y: "torch.tensor", **kwargs
-    ) -> "torch.tensor":
+        self, x: "torch.Tensor", y: "torch.Tensor", **kwargs
+    ) -> "torch.Tensor":
         pass
