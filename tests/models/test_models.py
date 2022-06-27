@@ -4,6 +4,7 @@ from typing import List, Tuple
 
 import numpy as np
 import pytest
+import torch.nn.functional as F
 
 from valuation.models.linear_regression_torch_model import LRTorchModel
 from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
@@ -12,11 +13,6 @@ from valuation.utils import (
     linear_regression_analytical_derivative_d_theta,
     linear_regression_analytical_derivative_d_x_d_theta,
 )
-
-try:
-    import torch.nn.functional as F
-except ImportError:
-    pass
 
 
 class ModelTestSettings:
@@ -81,7 +77,6 @@ correctness_test_case_ids = list(
 
 
 @pytest.mark.torch
-@pytest.mark.skipif("torch" not in sys.modules, reason="requires the torch library")
 @pytest.mark.skip()
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number",
@@ -129,7 +124,6 @@ def test_linear_regression_model_fit(
 
 
 @pytest.mark.torch
-@pytest.mark.skipif("torch" not in sys.modules, reason="requires the torch library")
 @pytest.mark.parametrize(
     "train_set_size,problem_dimension,condition_number",
     test_cases_model_correctness,
@@ -167,7 +161,6 @@ def test_linear_regression_model_grad(
 
 
 @pytest.mark.torch
-@pytest.mark.skipif("torch" not in sys.modules, reason="requires the torch library")
 @pytest.mark.parametrize(
     "train_set_size,problem_dimension,condition_number",
     test_cases_model_correctness,
@@ -207,7 +200,6 @@ def test_linear_regression_model_hessian(
 
 
 @pytest.mark.torch
-@pytest.mark.skipif("torch" not in sys.modules, reason="requires the torch library")
 @pytest.mark.parametrize(
     "train_set_size,problem_dimension,condition_number",
     test_cases_model_correctness,
