@@ -2,19 +2,15 @@ from enum import Enum
 from typing import Dict
 
 import numpy as np
+import torch
+import torch.nn as nn
+from torch import autograd
+from torch.autograd import Variable
+from torch.optim import Adam, AdamW
+from torch.utils.data import DataLoader, Dataset
 
 from valuation.utils import maybe_progress
 from valuation.utils.types import TorchObjective
-
-try:
-    import torch
-    import torch.nn as nn
-    from torch import autograd
-    from torch.autograd import Variable
-    from torch.optim import Adam, AdamW
-    from torch.utils.data import DataLoader, Dataset
-except ImportError:
-    pass
 
 
 def tt(v):
