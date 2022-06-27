@@ -1,4 +1,5 @@
 import itertools
+import sys
 from typing import List, Tuple
 
 import numpy as np
@@ -52,6 +53,7 @@ def lmb_test_case_to_str(packed_i_test_case):
 test_case_ids = list(map(lmb_test_case_to_str, zip(range(len(test_cases)), test_cases)))
 
 
+@pytest.mark.torch
 @pytest.mark.skip("Conjugate gradient sometimes is not accurate.")
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number,n_jobs",
@@ -96,6 +98,8 @@ def test_upweighting_influences_lr_analytical_cg(
     ), "Upweighting influence values were wrong."
 
 
+@pytest.mark.torch
+@pytest.mark.skipif("torch" not in sys.modules, reason="requires the torch library")
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number,n_jobs",
     test_cases,
@@ -138,6 +142,7 @@ def test_upweighting_influences_lr_analytical(
     ), "Upweighting influence values were wrong."
 
 
+@pytest.mark.torch
 @pytest.mark.skip("Conjugate gradient sometimes is not accurate.")
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number,n_jobs",
@@ -183,6 +188,8 @@ def test_perturbation_influences_lr_analytical_cg(
     ), "Perturbation influence values were wrong."
 
 
+@pytest.mark.torch
+@pytest.mark.skipif("torch" not in sys.modules, reason="requires the torch library")
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number,n_jobs",
     test_cases,
@@ -226,6 +233,8 @@ def test_perturbation_influences_lr_analytical(
     ), "Perturbation influence values were wrong."
 
 
+@pytest.mark.torch
+@pytest.mark.skipif("torch" not in sys.modules, reason="requires the torch library")
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number",
     itertools.product(

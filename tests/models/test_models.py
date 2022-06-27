@@ -1,4 +1,5 @@
 import itertools
+import sys
 from typing import List, Tuple
 
 import numpy as np
@@ -75,6 +76,8 @@ correctness_test_case_ids = list(
 )
 
 
+@pytest.mark.torch
+@pytest.mark.skipif("torch" not in sys.modules, reason="requires the torch library")
 @pytest.mark.skip()
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number",
@@ -121,6 +124,8 @@ def test_linear_regression_model_fit(
     ), "b did not converged to target solution."
 
 
+@pytest.mark.torch
+@pytest.mark.skipif("torch" not in sys.modules, reason="requires the torch library")
 @pytest.mark.parametrize(
     "train_set_size,problem_dimension,condition_number",
     test_cases_model_correctness,
@@ -157,6 +162,8 @@ def test_linear_regression_model_grad(
     ), "Train set produces wrong gradients."
 
 
+@pytest.mark.torch
+@pytest.mark.skipif("torch" not in sys.modules, reason="requires the torch library")
 @pytest.mark.parametrize(
     "train_set_size,problem_dimension,condition_number",
     test_cases_model_correctness,
@@ -195,6 +202,8 @@ def test_linear_regression_model_hessian(
     ), "Hessian was wrong."
 
 
+@pytest.mark.torch
+@pytest.mark.skipif("torch" not in sys.modules, reason="requires the torch library")
 @pytest.mark.parametrize(
     "train_set_size,problem_dimension,condition_number",
     test_cases_model_correctness,
