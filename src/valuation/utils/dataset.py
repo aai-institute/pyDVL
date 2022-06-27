@@ -68,6 +68,9 @@ class Dataset:
         self.description = description or "No description"
         self._indices = np.arange(len(self.x_train))
 
+    def __iter__(self):
+        return self.x_train, self.y_train, self.x_test, self.y_test
+
     def feature(self, name: str) -> IndexExpression:
         try:
             return np.index_exp[:, self.feature_names.index(name)]
