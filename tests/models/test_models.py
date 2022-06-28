@@ -1,9 +1,9 @@
 import itertools
+import sys
 from typing import List, Tuple
 
 import numpy as np
 import pytest
-import torch.nn.functional as F
 
 from valuation.models.binary_logistic_regression import (
     BinaryLogisticRegressionTorchModel,
@@ -15,6 +15,14 @@ from valuation.utils import (
     linear_regression_analytical_derivative_d_theta,
     linear_regression_analytical_derivative_d_x_d_theta,
 )
+
+try:
+    import torch.nn.functional as F
+
+    from valuation.models.linear_regression_torch_model import LRTorchModel
+    from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
+except ImportError:
+    pass
 
 
 class ModelTestSettings:
@@ -92,6 +100,7 @@ correctness_test_case_ids = list(
 )
 
 
+@pytest.mark.torch
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number",
     test_cases_logistic_regression_fit,
@@ -135,6 +144,7 @@ def test_logistic_regression_model_fit(
     assert angle_similiarity > 0.99, "Angle similarity is not enough"
 
 
+@pytest.mark.torch
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number",
     test_cases_linear_regression_fit,
@@ -180,6 +190,7 @@ def test_linear_regression_model_fit(
     ), "b did not converged to target solution."
 
 
+@pytest.mark.torch
 @pytest.mark.parametrize(
     "train_set_size,problem_dimension,condition_number",
     test_cases_linear_regression_derivatives,
@@ -216,6 +227,7 @@ def test_linear_regression_model_grad(
     ), "Train set produces wrong gradients."
 
 
+@pytest.mark.torch
 @pytest.mark.parametrize(
     "train_set_size,problem_dimension,condition_number",
     test_cases_linear_regression_derivatives,
@@ -254,6 +266,7 @@ def test_linear_regression_model_hessian(
     ), "Hessian was wrong."
 
 
+@pytest.mark.torch
 @pytest.mark.parametrize(
     "train_set_size,problem_dimension,condition_number",
     test_cases_linear_regression_derivatives,
