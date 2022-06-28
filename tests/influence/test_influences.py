@@ -3,7 +3,6 @@ from typing import List, Tuple
 
 import numpy as np
 import pytest
-import torch.nn.functional as F
 
 from tests.conftest import create_mock_dataset
 from valuation.influence.general import influences
@@ -13,8 +12,14 @@ from valuation.influence.linear import (
     linear_influences,
 )
 from valuation.influence.types import InfluenceTypes
-from valuation.models.linear_regression_torch_model import LRTorchModel
-from valuation.models.pytorch_model import PyTorchSupervisedModel
+
+try:
+    import torch.nn.functional as F
+
+    from valuation.models.linear_regression_torch_model import LRTorchModel
+    from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
+except ImportError:
+    pass
 
 
 class InfluenceTestSettings:
@@ -52,6 +57,7 @@ def lmb_test_case_to_str(packed_i_test_case):
 test_case_ids = list(map(lmb_test_case_to_str, zip(range(len(test_cases)), test_cases)))
 
 
+@pytest.mark.torch
 @pytest.mark.skip("Conjugate gradient sometimes is not accurate.")
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number,n_jobs",
@@ -96,6 +102,7 @@ def test_upweighting_influences_lr_analytical_cg(
     ), "Upweighting influence values were wrong."
 
 
+@pytest.mark.torch
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number,n_jobs",
     test_cases,
@@ -138,6 +145,7 @@ def test_upweighting_influences_lr_analytical(
     ), "Upweighting influence values were wrong."
 
 
+@pytest.mark.torch
 @pytest.mark.skip("Conjugate gradient sometimes is not accurate.")
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number,n_jobs",
@@ -183,6 +191,7 @@ def test_perturbation_influences_lr_analytical_cg(
     ), "Perturbation influence values were wrong."
 
 
+@pytest.mark.torch
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number,n_jobs",
     test_cases,
@@ -226,6 +235,7 @@ def test_perturbation_influences_lr_analytical(
     ), "Perturbation influence values were wrong."
 
 
+@pytest.mark.torch
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number",
     itertools.product(
