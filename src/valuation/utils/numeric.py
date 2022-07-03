@@ -282,3 +282,12 @@ def sample_classification_dataset_using_gaussians(
         + mus[y]
     )
     return x, y
+
+
+def decision_boundary_fixed_variance_2d(
+    mu_1: np.ndarray, mu_2: np.ndarray
+) -> Callable[[np.ndarray], np.ndarray]:
+    a = np.asarray([[0, 1], [-1, 0]]) @ (mu_2 - mu_1)
+    b = (mu_1 + mu_2) / 2
+    a = a.reshape([1, -1])
+    return lambda z: z.reshape([-1, 1]) * a + b
