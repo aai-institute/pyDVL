@@ -96,15 +96,6 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
             1000,
         ),
         (2, 0, 12, combinatorial_montecarlo_shapley, "explained_variance", 0.5, 2000),
-        (
-            2,
-            2,
-            12,
-            combinatorial_montecarlo_shapley,
-            "neg_median_absolute_error",
-            2,
-            2000,
-        ),
     ],
 )
 def test_linear_montecarlo_shapley(
