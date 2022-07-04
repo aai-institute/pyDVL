@@ -1,5 +1,7 @@
 # pyDVL
 
+[![CI](https://github.com/appliedAI-Initiative/valuation/actions/workflows/tox.yaml/badge.svg)](https://github.com/appliedAI-Initiative/valuation/actions/workflows/tox.yaml)
+
 Welcome to the pyDVL library for data valuation!
 
 Please open new issues for bugs, feature requests and extensions. See more details about the structure and
