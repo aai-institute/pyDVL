@@ -1,15 +1,9 @@
 import itertools
-import sys
 from typing import List, Tuple
 
 import numpy as np
 import pytest
 
-from valuation.models.binary_logistic_regression import (
-    BinaryLogisticRegressionTorchModel,
-)
-from valuation.models.linear_regression_torch_model import LRTorchModel
-from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
 from valuation.utils import (
     linear_regression_analytical_derivative_d2_theta,
     linear_regression_analytical_derivative_d_theta,
@@ -19,6 +13,9 @@ from valuation.utils import (
 try:
     import torch.nn.functional as F
 
+    from valuation.models.binary_logistic_regression import (
+        BinaryLogisticRegressionTorchModel,
+    )
     from valuation.models.linear_regression_torch_model import LRTorchModel
     from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
 except ImportError:
