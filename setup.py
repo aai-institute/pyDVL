@@ -2,6 +2,7 @@ from setuptools import find_packages, setup
 
 test_requirements = ["pytest"]
 
+
 # this function should be put in 'setup.py'
 def get_extra_requires(path, add_all=True):
     import re
@@ -41,5 +42,5 @@ setup(
     setup_requires=["wheel"],
     tests_require=test_requirements,
     extras_require=get_extra_requires("requirements-extra.txt"),
-    author="Miguel de Benito Delgado <debenito@unternehmertum.de>",
+    author="appliedAI",
 )
