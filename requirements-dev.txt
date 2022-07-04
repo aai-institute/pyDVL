@@ -1,4 +1,5 @@
 tox
+tox-wheel
 black
 pytest
 jupyter

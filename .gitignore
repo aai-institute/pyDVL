@@ -134,6 +134,7 @@ dmypy.json
 
 # reports
 pylint.html
+.pylint.d
 
 # Saved data
 runs/

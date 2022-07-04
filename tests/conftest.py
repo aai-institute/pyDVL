@@ -456,42 +456,45 @@ class TolerateErrorsSession:
         return self._tests[key].failed > self._tests[key].max_failures
 
     def display(self, terminalreporter: "TerminalReporter"):
-        if not self.quiet:
-            terminalreporter.ensure_newline()
-            terminalreporter.write_line("")
-            widths = {
-                "name": 3
-                + max(len(self.labels["name"]), max(len(name) for name in self._tests))
-            }
-            for key in self.columns:
-                widths[key] = 5 + len(self.labels[key])
+        if self.quiet:
+            return
+        if len(self._tests) == 0:
+            return
+        terminalreporter.ensure_newline()
+        terminalreporter.write_line("")
+        widths = {
+            "name": 3
+            + max(len(self.labels["name"]), max(len(name) for name in self._tests))
+        }
+        for key in self.columns:
+            widths[key] = 5 + len(self.labels[key])
 
-            labels_line = self.labels["name"].ljust(widths["name"]) + "".join(
-                self.labels[prop].rjust(widths[prop]) for prop in self.columns
+        labels_line = self.labels["name"].ljust(widths["name"]) + "".join(
+            self.labels[prop].rjust(widths[prop]) for prop in self.columns
+        )
+        terminalreporter.write_line(
+            " tolerate: {count} tests ".format(count=len(self._tests)).center(
+                len(labels_line), "-"
+            ),
+            yellow=True,
+        )
+        terminalreporter.write_line(labels_line)
+        terminalreporter.write_line("-" * len(labels_line), yellow=True)
+        for name in self._tests:
+            has_error = self.has_exceeded_max_failures(name)
+            terminalreporter.write(
+                name.ljust(widths["name"]),
+                red=has_error,
+                green=not has_error,
+                bold=True,
             )
-            terminalreporter.write_line(
-                " tolerate: {count} tests ".format(count=len(self._tests)).center(
-                    len(labels_line), "-"
-                ),
-                yellow=True,
-            )
-            terminalreporter.write_line(labels_line)
-            terminalreporter.write_line("-" * len(labels_line), yellow=True)
-            for name in self._tests:
-                has_error = self.has_exceeded_max_failures(name)
+            for prop in self.columns:
                 terminalreporter.write(
-                    name.ljust(widths["name"]),
-                    red=has_error,
-                    green=not has_error,
-                    bold=True,
+                    "{0:>{1}}".format(self._tests[name][prop], widths[prop])
                 )
-                for prop in self.columns:
-                    terminalreporter.write(
-                        "{0:>{1}}".format(self._tests[name][prop], widths[prop])
-                    )
-                terminalreporter.write("\n")
-            terminalreporter.write_line("-" * len(labels_line), yellow=True)
-            terminalreporter.write_line("")
+            terminalreporter.write("\n")
+        terminalreporter.write_line("-" * len(labels_line), yellow=True)
+        terminalreporter.write_line("")
 
 
 class TolerateErrorsTestItem:
@@ -599,7 +602,9 @@ def pytest_runtest_call(item: pytest.Function):
     yield
 
 
-def pytest_terminal_summary(terminalreporter: "TerminalReporter"):
+def pytest_terminal_summary(
+    terminalreporter: "TerminalReporter", exitstatus: int, config: "Config"
+):
     tolerate_session = terminalreporter.config._tolerate_session
     tolerate_session.display(terminalreporter)
 
