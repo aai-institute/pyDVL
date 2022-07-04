@@ -1,5 +1,5 @@
 from copy import copy
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 from numpy.lib.index_tricks import IndexExpression
