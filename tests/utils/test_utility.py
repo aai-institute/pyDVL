@@ -20,7 +20,7 @@ def test_cache(linear_dataset, memcache_client_config):
         scoring="r2",
         enable_cache=True,
         cache_options=MemcachedConfig(
-            client_config=memcache_client_config, threshold=0
+            client_config=memcache_client_config, cache_threshold=0
         ),
     )
     subsets = list(powerset(u.data.indices))
