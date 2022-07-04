@@ -81,12 +81,19 @@ def test_upweighting_influences_lr_analytical_cg(
     )
 
     influence_values_analytical = 2 * influences_up_linear_regression_analytical(
-        linear_model, dataset
+        linear_model,
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
     )
 
     influence_values = influences(
         model,
-        dataset,
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
         progress=True,
         n_jobs=n_jobs,
         influence_type=InfluenceTypes.Up,
@@ -125,12 +132,19 @@ def test_upweighting_influences_lr_analytical(
     )
 
     influence_values_analytical = 2 * influences_up_linear_regression_analytical(
-        linear_model, dataset
+        linear_model,
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
     )
 
     influence_values = influences(
         model,
-        dataset,
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
         progress=True,
         n_jobs=n_jobs,
         influence_type=InfluenceTypes.Up,
@@ -167,11 +181,21 @@ def test_perturbation_influences_lr_analytical_cg(
     )
 
     influence_values_analytical = (
-        2 * influences_perturbation_linear_regression_analytical(linear_model, dataset)
+        2
+        * influences_perturbation_linear_regression_analytical(
+            linear_model,
+            dataset.x_train,
+            dataset.y_train,
+            dataset.x_test,
+            dataset.y_test,
+        )
     )
     influence_values = influences(
         model,
-        dataset,
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
         progress=True,
         n_jobs=n_jobs,
         influence_type=InfluenceTypes.Perturbation,
@@ -212,11 +236,21 @@ def test_perturbation_influences_lr_analytical(
     )
 
     influence_values_analytical = (
-        2 * influences_perturbation_linear_regression_analytical(linear_model, dataset)
+        2
+        * influences_perturbation_linear_regression_analytical(
+            linear_model,
+            dataset.x_train,
+            dataset.y_train,
+            dataset.x_test,
+            dataset.y_test,
+        )
     )
     influence_values = influences(
         model,
-        dataset,
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
         progress=True,
         n_jobs=n_jobs,
         influence_type=InfluenceTypes.Perturbation,
@@ -253,12 +287,22 @@ def test_linear_influences_up_perturbations_analytical(
     linear_model: Tuple[np.ndarray, np.ndarray],
 ):
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
-    up_influences = linear_influences(dataset, influence_type=InfluenceTypes.Up)
+    up_influences = linear_influences(
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
+        influence_type=InfluenceTypes.Up,
+    )
     assert np.logical_not(np.any(np.isnan(up_influences)))
     assert up_influences.shape == (len(dataset.x_test), len(dataset.x_train))
 
     pert_influences = linear_influences(
-        dataset, influence_type=InfluenceTypes.Perturbation
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
+        influence_type=InfluenceTypes.Perturbation,
     )
     assert np.logical_not(np.any(np.isnan(pert_influences)))
     assert pert_influences.shape == (

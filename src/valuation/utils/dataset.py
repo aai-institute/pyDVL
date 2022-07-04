@@ -1,4 +1,5 @@
-from typing import List
+from copy import copy
+from typing import List, Tuple
 
 import numpy as np
 from numpy.lib.index_tricks import IndexExpression
@@ -67,6 +68,9 @@ class Dataset:
 
         self.description = description or "No description"
         self._indices = np.arange(len(self.x_train))
+
+    def __iter__(self):
+        return self.x_train, self.y_train, self.x_test, self.y_test
 
     def feature(self, name: str) -> IndexExpression:
         try:
@@ -150,3 +154,21 @@ def polynomial_dataset(coefficients: np.ndarray):
     db.feature_names = ["x"]
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.5), coefficients
+
+
+def flip_dataset(
+    dataset: Dataset, flip_percentage: float, in_place: bool = False
+) -> Tuple[Dataset, np.ndarray]:
+    """
+    Takes a binary classification problem and inverts a certain percentage of the labels.
+
+    :param dataset: A binary classification problem.
+    :param flip_percentage: A float between [0, 1] describing how much labels shall be flipped.
+    :param in_place: True, if the old dataset should be not copied but used by value as reference.
+    :returns: A dataset differing in 5% of the labels to the orignal one.
+    """
+    flipped_dataset = copy(dataset) if not in_place else dataset
+    flip_num_samples = int(flip_percentage * len(dataset.x_train))
+    idx = np.random.choice(len(dataset.x_train), replace=False, size=flip_num_samples)
+    flipped_dataset.y_train[idx] = 1 - flipped_dataset.y_train[idx]
+    return flipped_dataset, idx

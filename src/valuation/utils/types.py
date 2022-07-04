@@ -80,6 +80,9 @@ def unpackable(cls: type) -> type:
 
 
 class TwiceDifferentiable(Protocol):
+    def num_params(self) -> int:
+        pass
+
     def grad(self, x: ndarray, y: ndarray, progress: bool = False) -> ndarray:
         """
         Calculate the gradient with respect to the parameters of the module with input parameters x[i] and y[i].
@@ -106,3 +109,9 @@ class TorchObjective(Protocol):
         self, x: "torch.Tensor", y: "torch.Tensor", **kwargs
     ) -> "torch.Tensor":
         pass
+
+
+MatrixVectorProduct = Callable[[ndarray], ndarray]
+MatrixVectorProductInversionAlgorithm = Callable[
+    [MatrixVectorProduct, ndarray], ndarray
+]
