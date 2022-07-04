@@ -29,7 +29,7 @@ from valuation.utils.parallel import (
 )
 from valuation.utils.progress import maybe_progress
 
-log = logging.getLogger(os.path.basename(__file__))
+log = logging.getLogger(__name__)
 
 __all__ = [
     "truncated_montecarlo_shapley",

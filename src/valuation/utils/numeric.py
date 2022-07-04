@@ -135,9 +135,9 @@ def random_powerset(
         return ret[0]
 
     if enable_cache:
-        _subset_probabilities = memcached(client_config=client_config, threshold=0.5)(
-            subset_probabilities
-        )
+        _subset_probabilities = memcached(
+            client_config=client_config, cache_threshold=0.5
+        )(subset_probabilities)
     else:
         _subset_probabilities = subset_probabilities
 
