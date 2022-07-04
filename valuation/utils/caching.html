@@ -129,7 +129,7 @@
 TODO: wrap this to allow for different backends</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="valuation.utils.caching.ClientConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ClientConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">('localhost'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">11211)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connect_timeout:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_delay:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">serde:</span> <span class="pre">pymemcache.serde.PickleSerde</span> <span class="pre">=</span> <span class="pre">&lt;pymemcache.serde.PickleSerde</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x7f54dc8f2ee0&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/caching.py#L26"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.caching.ClientConfig" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ClientConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">('localhost'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">11211)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connect_timeout:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_delay:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">serde:</span> <span class="pre">pymemcache.serde.PickleSerde</span> <span class="pre">=</span> <span class="pre">&lt;pymemcache.serde.PickleSerde</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x7f1880cb6100&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/caching.py#L26"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.caching.ClientConfig" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="valuation.utils.caching.ClientConfig.server">
@@ -175,7 +175,7 @@ TODO: wrap this to allow for different backends</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="valuation.utils.caching.MemcachedConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MemcachedConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_config:</span> <span class="pre">valuation.utils.caching.ClientConfig</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_args:</span> <span class="pre">Iterable[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/caching.py#L36"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.caching.MemcachedConfig" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MemcachedConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_config:</span> <span class="pre">valuation.utils.caching.ClientConfig</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_repeated_training:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol_threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_repetitions:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_args:</span> <span class="pre">Iterable[str]</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/caching.py#L36"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.caching.MemcachedConfig" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="valuation.utils.caching.MemcachedConfig.client_config">
@@ -183,8 +183,23 @@ TODO: wrap this to allow for different backends</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="valuation.utils.caching.MemcachedConfig.threshold">
-<span class="sig-name descname"><span class="pre">threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.3</span></em><a class="headerlink" href="#valuation.utils.caching.MemcachedConfig.threshold" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="valuation.utils.caching.MemcachedConfig.cache_threshold">
+<span class="sig-name descname"><span class="pre">cache_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.3</span></em><a class="headerlink" href="#valuation.utils.caching.MemcachedConfig.cache_threshold" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valuation.utils.caching.MemcachedConfig.allow_repeated_training">
+<span class="sig-name descname"><span class="pre">allow_repeated_training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#valuation.utils.caching.MemcachedConfig.allow_repeated_training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valuation.utils.caching.MemcachedConfig.rtol_threshold">
+<span class="sig-name descname"><span class="pre">rtol_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></em><a class="headerlink" href="#valuation.utils.caching.MemcachedConfig.rtol_threshold" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valuation.utils.caching.MemcachedConfig.min_repetitions">
+<span class="sig-name descname"><span class="pre">min_repetitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#valuation.utils.caching.MemcachedConfig.min_repetitions" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -210,8 +225,28 @@ TODO: wrap this to allow for different backends</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="valuation.utils.caching.get_running_avg_variance">
+<span class="sig-name descname"><span class="pre">get_running_avg_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">previous_avg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">previous_variance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/caching.py#L52"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.caching.get_running_avg_variance" title="Permalink to this definition"></a></dt>
+<dd><p>The method uses Welford’s algorithm to calculate the running average and variance of
+a set of numbers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>previous_avg</strong> – average value at previous step</p></li>
+<li><p><strong>previous_variance</strong> – variance at previous step</p></li>
+<li><p><strong>new_value</strong> – new value in the series of numbers</p></li>
+<li><p><strong>count</strong> – number of points seen so far</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>new_average, new_variance, calculated with the new number</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="valuation.utils.caching.memcached">
-<span class="sig-name descname"><span class="pre">memcached</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#valuation.utils.caching.ClientConfig" title="valuation.utils.caching.ClientConfig"><span class="pre">ClientConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/caching.py#L49"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.caching.memcached" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">memcached</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#valuation.utils.caching.ClientConfig" title="valuation.utils.caching.ClientConfig"><span class="pre">ClientConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_repeated_training</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_repetitions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/caching.py#L71"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.caching.memcached" title="Permalink to this definition"></a></dt>
 <dd><p>Decorate a callable with this in order to have transparent caching.</p>
 <p>The function’s code, constants and all arguments (except for those in
 <cite>ignore_args</cite> are used to generate the key for the remote cache.</p>
@@ -225,14 +260,22 @@ instead of a function. This has the drawback of a messy docstring.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>client_config</strong> – config for pymemcache.client.Client().
 Will be merged on top of the default configuration.</p></li>
-<li><p><strong>threshold</strong> – computations taking below this value (in seconds) are not
+<li><p><strong>cache_threshold</strong> – computations taking below this value (in seconds) are not
 cached</p></li>
+<li><p><strong>allow_repeated_training</strong> – If True, models with same data are re-trained and
+results cached until rtol_threshold precision is reached</p></li>
+<li><p><strong>min_repetitions</strong> – minimum number of repetitions</p></li>
 <li><p><strong>ignore_args</strong> – Do not take these keyword arguments into account when
 hashing the wrapped function for usage as key in memcached</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A wrapped function</p>
+<dt class="field-even">Para rtol_threshold</dt>
+<dd class="field-even"><p>relative tolerance for repeated training. More precisely,
+memcache will stop retraining the models once std/mean of the scores is smaller than
+the given rtol_threshold</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A wrapped function</p>
 </dd>
 </dl>
 <p>The default configuration is:</p>
