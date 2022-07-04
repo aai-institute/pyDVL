@@ -24,7 +24,9 @@ except ImportError:
 
 class ModelTestSettings:
     DATA_OUTPUT_NOISE: float = 0.01
-    ACCEPTABLE_ABS_TOL_MODEL: float = 0.02
+    ACCEPTABLE_ABS_TOL_MODEL: float = (
+        0.04  # TODO: Reduce bound if tests are running with fixed seeds.
+    )
     ACCEPTABLE_ABS_TOL_DERIVATIVE: float = 1e-5
 
     TEST_CONDITION_NUMBERS: List[int] = [5]
@@ -132,13 +134,13 @@ def test_logistic_regression_model_fit(
     model.fit(train_x, train_y)
     pred_y = (model.predict(train_x) > 0.5).astype(int)
     accuracy = np.sum(pred_y == train_y) / len(pred_y)
-    assert accuracy >= 0.98, "Accuracy is not enough"
+    assert accuracy >= 0.95, "Accuracy is not enough"
 
     learned_A = model.model.A.detach().numpy()
     angle_similiarity = (learned_A * A).sum() / (
         np.linalg.norm(learned_A) * np.linalg.norm(A)
     )
-    assert angle_similiarity > 0.99, "Angle similarity is not enough"
+    assert angle_similiarity > 0.95, "Angle similarity is not enough"
 
 
 @pytest.mark.torch

@@ -298,7 +298,11 @@ def test_linear_influences_up_perturbations_analytical(
     assert up_influences.shape == (len(dataset.x_test), len(dataset.x_train))
 
     pert_influences = linear_influences(
-        dataset, influence_type=InfluenceTypes.Perturbation
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
+        influence_type=InfluenceTypes.Perturbation,
     )
     assert np.logical_not(np.any(np.isnan(pert_influences)))
     assert pert_influences.shape == (

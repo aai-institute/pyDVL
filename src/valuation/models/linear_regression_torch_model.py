@@ -12,7 +12,8 @@ class LRTorchModel(nn.Module):
         self.n_input = n_input
         self.n_output = n_output
         if init is None:
-            init_A = np.zeros(n_output, n_input)
+            r = np.sqrt(6 / (n_input + n_output))
+            init_A = np.random.uniform(-r, r, size=[n_output, n_input])
             init_b = np.zeros(n_output)
             init = (init_A, init_b)
 
