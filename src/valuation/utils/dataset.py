@@ -1,4 +1,4 @@
-from typing import List
+from typing import Callable, Dict, Iterable, List, Union
 
 import numpy as np
 from numpy.lib.index_tricks import IndexExpression
@@ -74,6 +74,11 @@ class Dataset:
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
+    def get_train_data(self, indices):
+        x = self.x_train[indices]
+        y = self.y_train[indices]
+        return x, y
+
     def target(self, name: str) -> IndexExpression:
         try:
             return np.index_exp[:, self.target_names.index(name)]
@@ -128,6 +133,70 @@ class Dataset:
 
     except ModuleNotFoundError:
         pass
+
+
+class GroupedDataset(Dataset):
+    """Class that groups data-points.
+    Useful for calculating Shapley values of coalitions."""
+
+    def __init__(
+        self,
+        x_train: np.ndarray,
+        y_train: np.ndarray,
+        x_test: np.ndarray,
+        y_test: np.ndarray,
+        data_groups: List,
+        feature_names=None,
+        target_names=None,
+        description=None,
+    ):
+        super().__init__(
+            x_train, y_train, x_test, y_test, feature_names, target_names, description
+        )
+        self.groups = {k: [] for k in set(data_groups)}
+        for idx, group in enumerate(data_groups):
+            self.groups[group].append(idx)
+        self._indices = list(self.groups.keys())
+        assert self._indices == list(
+            range(len(self._indices))
+        ), f"Group indices must be contiguous integers, instead got {self._indices}"
+
+    def __len__(self):
+        return len(self.groups)
+
+    @property
+    def indices(self):
+        """Indices of the grouped data points"""
+        return np.array(self._indices)
+
+    def get_train_data(self, indices):
+        data_indices = [idx for group_id in indices for idx in self.groups[group_id]]
+        return super().get_train_data(data_indices)
+
+    @classmethod
+    def from_sklearn(
+        cls,
+        data: Bunch,
+        data_groups: List,
+        train_size: float = 0.8,
+        random_state: int = None,
+    ) -> "Dataset":
+        dataset = super().from_sklearn(data, train_size, random_state)
+        return get_grouped_dataset(dataset, data_groups)
+
+
+def get_grouped_dataset(dataset: Dataset, data_groups: List):
+    grouped_dataset = GroupedDataset(
+        x_train=dataset.x_train,
+        y_train=dataset.y_train,
+        x_test=dataset.x_test,
+        y_test=dataset.y_test,
+        data_groups=data_groups,
+        feature_names=dataset.feature_names,
+        target_names=dataset.target_names,
+        description=dataset.description,
+    )
+    return grouped_dataset
 
 
 def polynomial(coefficients, x):

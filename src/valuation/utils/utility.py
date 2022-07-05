@@ -1,10 +1,11 @@
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional, Tuple, Union
 
 import numpy as np
 from sklearn.metrics import check_scoring
 
 from valuation.utils import (
     Dataset,
+    GroupedDataset,
     MemcachedConfig,
     Scorer,
     SupervisedModel,
@@ -26,7 +27,7 @@ class Utility:
     def __init__(
         self,
         model: SupervisedModel,
-        data: Dataset,
+        data: Union[Dataset, GroupedDataset],
         scoring: Optional[Scorer],
         catch_errors: bool = True,
         default_score: float = 0,
@@ -84,8 +85,7 @@ class Utility:
         if not indices:
             return 0
         scorer = check_scoring(self.model, self.scoring)
-        x = self.data.x_train[list(indices)]
-        y = self.data.y_train[list(indices)]
+        x, y = self.data.get_train_data(list(indices))
         try:
             self.model.fit(x, y)
             return float(scorer(self.model, self.data.x_test, self.data.y_test))

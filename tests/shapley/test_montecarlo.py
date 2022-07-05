@@ -15,7 +15,7 @@ from valuation.shapley import (
     permutation_montecarlo_shapley,
     truncated_montecarlo_shapley,
 )
-from valuation.utils import MemcachedConfig, Utility
+from valuation.utils import MemcachedConfig, Utility, get_grouped_dataset
 from valuation.utils.numeric import lower_bound_hoeffding
 from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
 
@@ -95,15 +95,6 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
             1000,
         ),
         (2, 0, 12, combinatorial_montecarlo_shapley, "explained_variance", 0.5, 2000),
-        (
-            2,
-            2,
-            12,
-            combinatorial_montecarlo_shapley,
-            "neg_median_absolute_error",
-            0.5,
-            2000,
-        ),
     ],
 )
 def test_linear_montecarlo_shapley(
@@ -159,6 +150,55 @@ def test_linear_montecarlo_with_outlier(
     check_total_value(linear_utility, shapley_values, atol=total_atol)
 
     assert int(list(shapley_values.keys())[0]) == outlier_idx
+
+
+@pytest.mark.parametrize(
+    "a, b, num_points, num_groups, fun, score_type, rtol, max_iterations",
+    [
+        (
+            2,
+            2,
+            200,
+            5,
+            permutation_montecarlo_shapley,
+            "r2",
+            0.2,
+            100,
+        ),
+        (2, 0, 200, 5, permutation_montecarlo_shapley, "explained_variance", 0.5, 100),
+    ],
+)
+def test_grouped_linear_montecarlo_shapley(
+    linear_dataset,
+    num_groups,
+    fun,
+    score_type,
+    rtol,
+    max_iterations,
+    memcache_client_config,
+):
+    num_jobs = min(8, available_cpus())
+    data_groups = (list(range(num_groups)) * len(linear_dataset))[: len(linear_dataset)]
+    grouped_linear_dataset = get_grouped_dataset(linear_dataset, data_groups)
+    grouped_linear_utility = Utility(
+        LinearRegression(),
+        data=grouped_linear_dataset,
+        scoring=score_type,
+        cache_options=MemcachedConfig(client_config=memcache_client_config),
+    )
+
+    values, _ = fun(
+        grouped_linear_utility,
+        max_iterations=max_iterations,
+        progress=False,
+        num_jobs=num_jobs,
+    )
+    exact_values = combinatorial_exact_shapley(grouped_linear_utility, progress=False)
+    log.info(f"These are the exact values: {exact_values}")
+    log.info(f"These are the predicted values: {values}")
+    exact_values_list = list(exact_values.values())
+    atol = (exact_values_list[-1] - exact_values_list[0]) / 30
+    check_values(values, exact_values, rtol=rtol, atol=atol)
 
 
 @pytest.mark.parametrize(
