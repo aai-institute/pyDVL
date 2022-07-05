@@ -28,7 +28,7 @@ class NNTorchModel(nn.Module):
 
             layers.append(linear_layer)
             if num_layer < num_layers - 1:
-                layers.append(Tanh())
+                layers.append(ReLU())
 
         self.layers = nn.Sequential(*layers)
 
