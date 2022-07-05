@@ -10,7 +10,7 @@ import logging
 import os
 import shutil
 
-log = logging.getLogger(os.path.basename(__file__))
+log = logging.getLogger(__name__)
 
 
 def module_template(module_qualname: str):

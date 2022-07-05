@@ -1,6 +1,7 @@
 import logging
 import os
 from functools import partial
+from time import time
 
 import numpy as np
 import pytest
@@ -19,7 +20,7 @@ from valuation.utils import MemcachedConfig, Utility, get_grouped_dataset
 from valuation.utils.numeric import lower_bound_hoeffding
 from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
 
-log = logging.getLogger(os.path.basename(__file__))
+log = logging.getLogger(__name__)
 
 
 # noinspection PyTestParametrized
@@ -27,7 +28,7 @@ log = logging.getLogger(os.path.basename(__file__))
     "num_samples, fun, rtol, max_iterations",
     [
         (12, permutation_montecarlo_shapley, 0.1, 1),
-        (8, combinatorial_montecarlo_shapley, 0.15, 1e3),
+        (8, combinatorial_montecarlo_shapley, 0.15, 3e3),
     ],
 )
 def test_analytic_montecarlo_shapley(analytic_shapley, fun, rtol, max_iterations):
@@ -107,7 +108,6 @@ def test_linear_montecarlo_shapley(
         scoring=score_type,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
-
     values, _ = fun(
         linear_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
     )
@@ -115,16 +115,16 @@ def test_linear_montecarlo_shapley(
     log.info(f"These are the exact values: {exact_values}")
     log.info(f"These are the predicted values: {values}")
     exact_values_list = list(exact_values.values())
-    atol = (exact_values_list[-1] - exact_values_list[0]) / 30
+    atol = (exact_values_list[-1] - exact_values_list[0]) / 10
     check_values(values, exact_values, rtol=rtol, atol=atol)
 
 
 @pytest.mark.parametrize(
     "a, b, num_points, fun, score_type, max_iterations",
     [
-        (2, 5, 20, permutation_montecarlo_shapley, "r2", 1000),
-        (2, 3, 20, permutation_montecarlo_shapley, "explained_variance", 1000),
-        (2, 3, 20, permutation_montecarlo_shapley, "neg_median_absolute_error", 1000),
+        (2, 3, 20, permutation_montecarlo_shapley, "r2", 3000),
+        (2, 3, 20, permutation_montecarlo_shapley, "explained_variance", 3000),
+        (2, 3, 20, permutation_montecarlo_shapley, "neg_median_absolute_error", 3000),
     ],
 )
 def test_linear_montecarlo_with_outlier(
@@ -137,7 +137,7 @@ def test_linear_montecarlo_with_outlier(
 ):
     outlier_idx = np.random.randint(len(linear_dataset.y_train))
     num_jobs = min(8, available_cpus())
-    linear_dataset.y_train[outlier_idx] *= 100
+    linear_dataset.y_train[outlier_idx] -= 100
     linear_utility = Utility(
         LinearRegression(),
         data=linear_dataset,
@@ -147,6 +147,7 @@ def test_linear_montecarlo_with_outlier(
     shapley_values, _ = fun(
         linear_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
     )
+    log.info(f"These are the shapley values: {shapley_values}")
     check_total_value(linear_utility, shapley_values, atol=total_atol)
 
     assert int(list(shapley_values.keys())[0]) == outlier_idx
@@ -204,11 +205,13 @@ def test_grouped_linear_montecarlo_shapley(
 @pytest.mark.parametrize(
     "n_points, n_features, regressor, score_type, max_iterations",
     [
-        (10, 3, RandomForestRegressor(n_estimators=2), "r2", 200),
-        (10, 3, DecisionTreeRegressor(), "r2", 200),
+        (10, 3, RandomForestRegressor(n_estimators=2), "r2", 20),
+        (10, 3, DecisionTreeRegressor(), "r2", 20),
     ],
 )
-def test_random_forest(boston_dataset, regressor, score_type, max_iterations):
+def test_random_forest(
+    boston_dataset, regressor, score_type, max_iterations, memcache_client_config
+):
     """This test checks that random forest can be trained in our library.
     Originally, it would also check that the returned values match between
     permutation and combinatorial montecarlo, but this was taking too long in the
@@ -218,8 +221,15 @@ def test_random_forest(boston_dataset, regressor, score_type, max_iterations):
         regressor,
         data=boston_dataset,
         scoring=score_type,
-        enable_cache=False,
+        enable_cache=True,
+        cache_options=MemcachedConfig(
+            client_config=memcache_client_config,
+            allow_repeated_training=True,
+            rtol_threshold=1,
+            cache_threshold=0,
+        ),
     )
+
     _, _ = permutation_montecarlo_shapley(
         rf_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
     )
