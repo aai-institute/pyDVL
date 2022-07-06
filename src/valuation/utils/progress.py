@@ -32,12 +32,12 @@ class MockProgress(collections.abc.Iterator):
         def __truediv__(self, other):
             pass
 
-    def __init__(self, iterator: Iterator):
+    def __init__(self, iterable: Iterable):
         # Since there is no _it in __dict__ at this point, doing here
         # self._it = iterator
         # results in a call to __getattr__() and the assignment fails, so we
         # use __dict__ instead
-        self.__dict__["_it"] = iterator
+        self.__dict__["_it"] = iterable
 
     def __iter__(self):
         return iter(self._it)
