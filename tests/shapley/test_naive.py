@@ -73,8 +73,10 @@ def test_grouped_linear(
     total_atol=1e-5,
 ):
     # assign groups recursively
-    data_groups = (list(range(num_groups)) * len(linear_dataset))[: len(linear_dataset)]
-    grouped_linear_dataset = get_grouped_dataset(linear_dataset, data_groups)
+    group_indices = (list(range(num_groups)) * len(linear_dataset))[
+        : len(linear_dataset)
+    ]
+    grouped_linear_dataset = get_grouped_dataset(linear_dataset, group_indices)
     grouped_linear_utility = Utility(
         LinearRegression(),
         data=grouped_linear_dataset,
