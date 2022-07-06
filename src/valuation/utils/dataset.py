@@ -1,7 +1,6 @@
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
-from numpy.lib.index_tricks import IndexExpression
 from sklearn.model_selection import train_test_split
 from sklearn.utils import Bunch, check_X_y
 
@@ -70,13 +69,13 @@ class Dataset:
         self.description = description or "No description"
         self._indices = np.arange(len(self.x_train))
 
-    def feature(self, name: str) -> IndexExpression:
+    def feature(self, name: str) -> Tuple[slice, int]:
         try:
             return np.index_exp[:, self.feature_names.index(name)]
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
-    def target(self, name: str) -> IndexExpression:
+    def target(self, name: str) -> Tuple[slice, int]:
         try:
             return np.index_exp[:, self.target_names.index(name)]
         except ValueError:
@@ -146,8 +145,7 @@ def polynomial_dataset(coefficients: np.ndarray):
     y = np.random.normal(loc=locs, scale=0.3)
     db = Bunch()
     db.data, db.target = x.reshape(-1, 1), y
-    poly = [f"{c} x^{i}" for i, c in enumerate(coefficients)]
-    poly = " + ".join(poly)
+    poly = " + ".join([f"{c} x^{i}" for i, c in enumerate(coefficients)])
     db.DESCR = f"$y \\sim N({poly}, 1)$"
     db.feature_names = ["x"]
     db.target_names = ["y"]
