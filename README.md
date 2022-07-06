@@ -38,7 +38,7 @@ pyDVL requires Memcached in order to cache certain results and speed up computat
 You need to run it either locally or using Docker:
 
 ```shell
-docker container run -p 11211:11211 memcached:latest
+docker container run -it --rm -p 11211:11211 memcached:latest -v
 ```
 
 Refer to the notebooks in the [notebooks](notebooks) folder for usage examples.
