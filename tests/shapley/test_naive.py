@@ -73,10 +73,9 @@ def test_grouped_linear(
     total_atol=1e-5,
 ):
     # assign groups recursively
-    group_indices = (list(range(num_groups)) * len(linear_dataset))[
-        : len(linear_dataset)
-    ]
-    grouped_linear_dataset = get_grouped_dataset(linear_dataset, group_indices)
+    data_groups = np.random.randint(0, num_groups, len(linear_dataset))
+
+    grouped_linear_dataset = get_grouped_dataset(linear_dataset, data_groups)
     grouped_linear_utility = Utility(
         LinearRegression(),
         data=grouped_linear_dataset,

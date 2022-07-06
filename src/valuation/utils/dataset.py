@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import Callable, Dict, Iterable, List, Union
 
 import numpy as np
@@ -18,6 +19,7 @@ class Dataset:
         y_test: np.ndarray,
         feature_names=None,
         target_names=None,
+        data_names=None,
         description=None,
     ):
         self.x_train, self.y_train = check_X_y(x_train, y_train)
@@ -67,6 +69,7 @@ class Dataset:
 
         self.description = description or "No description"
         self._indices = np.arange(len(self.x_train))
+        self._data_names = list(data_names) if data_names is not None else self._indices
 
     def feature(self, name: str) -> IndexExpression:
         try:
@@ -90,6 +93,11 @@ class Dataset:
         """Index of positions in data.x_train. Contiguous integers from 0 to
         len(Dataset)."""
         return self._indices
+
+    @property
+    def data_names(self):
+        """Names of each individual datapoint. Used for reporting Shapley values."""
+        return self._data_names
 
     @property
     def dim(self):
@@ -145,7 +153,7 @@ class GroupedDataset(Dataset):
         y_train: np.ndarray,
         x_test: np.ndarray,
         y_test: np.ndarray,
-        group_indices: List,
+        data_groups: List,
         feature_names=None,
         target_names=None,
         description=None,
@@ -153,13 +161,11 @@ class GroupedDataset(Dataset):
         super().__init__(
             x_train, y_train, x_test, y_test, feature_names, target_names, description
         )
-        self.groups = {k: [] for k in set(group_indices)}
-        for idx, group in enumerate(group_indices):
+        self.groups = OrderedDict({k: [] for k in set(data_groups)})
+        for idx, group in enumerate(data_groups):
             self.groups[group].append(idx)
-        self._indices = list(self.groups.keys())
-        assert self._indices == list(
-            range(len(self._indices))
-        ), f"Group indices must be contiguous integers, instead got {self._indices}"
+        self.group_items = list(self.groups.items())
+        self._indices = list(range(len(self.groups.keys())))
 
     def __len__(self):
         return len(self.groups)
@@ -169,29 +175,35 @@ class GroupedDataset(Dataset):
         """Indices of the grouped data points"""
         return np.array(self._indices)
 
+    @property
+    def data_names(self):
+        return list(self.groups.keys())
+
     def get_train_data(self, indices):
-        data_indices = [idx for group_id in indices for idx in self.groups[group_id]]
+        data_indices = [
+            idx for group_id in indices for idx in self.group_items[group_id][1]
+        ]
         return super().get_train_data(data_indices)
 
     @classmethod
     def from_sklearn(
         cls,
         data: Bunch,
-        group_indices: List,
+        data_groups: List,
         train_size: float = 0.8,
         random_state: int = None,
     ) -> "Dataset":
         dataset = super().from_sklearn(data, train_size, random_state)
-        return get_grouped_dataset(dataset, group_indices)
+        return get_grouped_dataset(dataset, data_groups)
 
 
-def get_grouped_dataset(dataset: Dataset, group_indices: List):
+def get_grouped_dataset(dataset: Dataset, data_groups: List):
     grouped_dataset = GroupedDataset(
         x_train=dataset.x_train,
         y_train=dataset.y_train,
         x_test=dataset.x_test,
         y_test=dataset.y_test,
-        group_indices=group_indices,
+        data_groups=data_groups,
         feature_names=dataset.feature_names,
         target_names=dataset.target_names,
         description=dataset.description,

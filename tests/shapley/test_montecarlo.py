@@ -159,12 +159,12 @@ def test_linear_montecarlo_with_outlier(
         (
             2,
             2,
-            200,
-            5,
+            20,
+            10,
             permutation_montecarlo_shapley,
             "r2",
             0.2,
-            1000,
+            100,
         ),
         (2, 0, 200, 5, permutation_montecarlo_shapley, "explained_variance", 0.2, 1000),
     ],
@@ -179,10 +179,8 @@ def test_grouped_linear_montecarlo_shapley(
     memcache_client_config,
 ):
     num_jobs = min(8, available_cpus())
-    group_indices = (list(range(num_groups)) * len(linear_dataset))[
-        : len(linear_dataset)
-    ]
-    grouped_linear_dataset = get_grouped_dataset(linear_dataset, group_indices)
+    data_groups = np.random.randint(0, num_groups, len(linear_dataset))
+    grouped_linear_dataset = get_grouped_dataset(linear_dataset, data_groups)
     grouped_linear_utility = Utility(
         LinearRegression(),
         data=grouped_linear_dataset,
