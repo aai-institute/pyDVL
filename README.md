@@ -1,22 +1,57 @@
 # pyDVL
 
-[![CI](https://github.com/appliedAI-Initiative/valuation/actions/workflows/tox.yaml/badge.svg)](https://github.com/appliedAI-Initiative/valuation/actions/workflows/tox.yaml)
+[![CI](https://github.com/appliedAI-Initiative/valuation/actions/workflows/tox.yaml/badge.svg)](https://github.com/appliedAI-Initiative/valuation/actions/workflows/tox.yaml) 
+
 
 Welcome to the pyDVL library for data valuation!
 
-Please open new issues for bugs, feature requests and extensions. See more details about the structure and
-workflow in the [developer's readme](README-dev.md).
+Refer to our [documentation](https://appliedAI-Initiative.github.io/valuation) for more detailed information.
+
+# Installation
+
+## Dependencies
+
+pyDVL requires the following dependencies:
+
+- Python (>=3.8)
+- Scikit-Learn
+- Numpy
+- Joblib
+- PyMemcached
+- Tqdm
+- Matplotlib
+
+Optionally, if you want to use Influence functions it also requires:
+
+- PyTorch
+
+## User Installation
+
+```shell
+$ pip install pydvl
+```
+
+# Usage
+
+pyDVL requires Memcached in order to cache certain results and speed up computation.
+
+You need to run it either locally or using Docker:
+
+```shell
+docker container run -p 11211:11211 memcached:latest
+```
+
+Refer to the notebooks in the [notebooks](notebooks) folder for usage examples.
 
 ## Influence functions
 
 To use all features of influence functions execute ```pip install pyDVL[influence]```. It is noteworthy to say that
-this includes heavy autograd frameworks and thus is left out by default. There are two possilbites to 
+this includes heavy autograd frameworks and thus is left out by default. There are two possibilities to 
 calculate influences. For linear regression the influences can be calculated via the
 direct analytical function (this is used in testing as well). For more general models or loss functions
 one can use the ```TwiceDifferentiable``` protocol, which provides the required methods for calculating the influences.
 In general there are two types of influences, namely Up-weighting and Perturbation influences. Each method supports 
-the choice of one ot them by pinning an enumeration in the parameters. Furthermore we distinguish between
-the following types of calculations.
+the choice of one ot them by pinning an enumeration in the parameters. Furthermore, we distinguish between the following types of calculations.
 
 ### Direct linear influences
 
@@ -75,7 +110,12 @@ influences(
 )
 ```
 
-## To do
+# Contributing
+
+Please open new issues for bugs, feature requests and extensions. See more details about the structure and
+workflow in the [developer's readme](README-dev.md).
+
+# To do
 
 * fix all 'em broken things.
 * pytest plugin for algorithms with epsilon,delta guarantees:
