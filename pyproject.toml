@@ -37,5 +37,6 @@ output-format = "jsonextended"
 
 [tool.mypy]
 mypy_path = './src/valuation'
+ignore_missing_imports = true
 warn_return_any = true
 warn_unused_configs = true
