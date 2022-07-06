@@ -53,7 +53,7 @@ def _serialize(x):
 
 def get_running_avg_variance(
     previous_avg: float, previous_variance: float, new_value: float, count: int
-):
+) -> Tuple[float, float]:
     """The method uses Welford's algorithm to calculate the running average and variance of
     a set of numbers.
 
@@ -76,7 +76,7 @@ def memcached(
     allow_repeated_training: bool = False,
     rtol_threshold: float = 0.1,
     min_repetitions: int = 3,
-    ignore_args: Iterable[str] = None,
+    ignore_args: Optional[Iterable[str]] = None,
 ):
     """Decorate a callable with this in order to have transparent caching.
 
@@ -152,7 +152,7 @@ def memcached(
                     f"to {config.server}: {str(e)}"
                 )
 
-    def wrapper(fun: Callable):
+    def wrapper(fun: Callable[..., float]):
         # noinspection PyUnresolvedReferences
         signature: bytes = _serialize((fun.__code__.co_code, fun.__code__.co_consts))
 
@@ -166,8 +166,8 @@ def memcached(
                 )(0, 0, 0, 0, 0, 0)
                 self.client = connect(self.config)
 
-            def __call__(self, *args, **kwargs):
-                key_kwargs = {k: v for k, v in kwargs.items() if k not in ignore_args}
+            def __call__(self, *args, **kwargs) -> float:
+                key_kwargs = {k: v for k, v in kwargs.items() if k not in ignore_args}  # type: ignore
                 arg_signature: bytes = _serialize((args, list(key_kwargs.items())))
 
                 # FIXME: do I really need to hash this?
@@ -175,19 +175,15 @@ def memcached(
                 # FIXME: determine right bit size
                 # NB: I need to create the hasher object here because it can't be
                 #  pickled
-                key = blake2b(signature + arg_signature).hexdigest().encode("ASCII")
-                key_count = (
-                    blake2b(signature + arg_signature + _serialize("count"))
-                    .hexdigest()
-                    .encode("ASCII")
-                )
-                key_variance = (
-                    blake2b(signature + arg_signature + _serialize("variance"))
-                    .hexdigest()
-                    .encode("ASCII")
-                )
+                key = blake2b(signature + arg_signature).hexdigest()
+                key_count = blake2b(
+                    signature + arg_signature + _serialize("count")
+                ).hexdigest()
+                key_variance = blake2b(
+                    signature + arg_signature + _serialize("variance")
+                ).hexdigest()
 
-                result = self.get_key_value(key)
+                result: float = self.get_key_value(key)
                 if result is None:
                     start = time()
                     result = fun(*args, **kwargs)
