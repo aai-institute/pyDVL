@@ -8,7 +8,18 @@ import inspect
 import multiprocessing as mp
 import os
 import queue
-from typing import Any, Callable, Collection, Generic, List, Optional, Type, TypeVar
+from multiprocessing.managers import ValueProxy
+from typing import (
+    Any,
+    Callable,
+    Collection,
+    Generator,
+    Generic,
+    List,
+    Optional,
+    Type,
+    TypeVar,
+)
 
 from joblib import Parallel, delayed
 from tqdm import tqdm
@@ -45,7 +56,7 @@ class MapReduceJob(Generic[T]):
         raise NotImplementedError()
 
     def reduce(self, chunks: List[R]) -> R:
-        return chunks
+        raise NotImplementedError()
 
     @staticmethod
     # FIXME: Can't make the type for fun more specific,
@@ -100,7 +111,7 @@ class MapReduceJob(Generic[T]):
 
                 return fun(data, *args, **kwargs)
 
-            def reduce(self, chunks: List[T]) -> T:
+            def reduce(self, chunks: List[R]) -> R:
                 return reducer(chunks)
 
         return NewJob()
@@ -131,7 +142,7 @@ def make_nested_backend(backend: str = "loky"):
     )
 
 
-def chunkify(fun, data, njobs: int, run_id: int) -> List:
+def chunkify(fun, data, njobs: int, run_id: int) -> Generator:
     # Splits a list of values into chunks for each job
     n = len(data)
     chunk_size = 1 + n // njobs
@@ -169,7 +180,7 @@ def map_reduce(
         return [fun.reduce([job_result])]
 
     if num_jobs <= num_runs:
-        ret = Parallel(n_jobs=num_jobs)(
+        ret: List = Parallel(n_jobs=num_jobs)(
             delayed(fun)(data, job_id=1, run_id=r + 1) for r in range(num_runs)
         )
         # HACK for consistency with fun.reduce()'s expected input format
@@ -219,7 +230,7 @@ class InterruptibleWorker(mp.Process):
     """
 
     def __init__(
-        self, worker_id: int, tasks: mp.Queue, results: mp.Queue, abort: mp.Value
+        self, worker_id: int, tasks: mp.Queue, results: mp.Queue, abort: ValueProxy
     ):
         """
         :param worker_id: mostly for display purposes
@@ -273,10 +284,10 @@ class Coordinator:
     """Meh..."""
 
     def __init__(self, processor: Callable[[Any], None]):
-        self.tasks_q = mp.Queue()
-        self.results_q = mp.Queue()
-        self.abort_flag = mp.Value("b", False)
-        self.workers = []
+        self.tasks_q: mp.Queue = mp.Queue()
+        self.results_q: mp.Queue = mp.Queue()
+        self.abort_flag: ValueProxy = mp.Value("b", False)
+        self.workers: List[InterruptibleWorker] = []
         self.process_result = processor
 
     def instantiate(self, n: int, cls: Type[InterruptibleWorker], **kwargs):
