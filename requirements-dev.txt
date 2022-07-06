@@ -7,3 +7,4 @@ jupyter
 nbconvert
 bump2version
 pre-commit
+mypy

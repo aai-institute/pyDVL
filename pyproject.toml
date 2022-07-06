@@ -34,3 +34,8 @@ load-plugins = ["pylint_json2html"]
 
 [tool.pylint.reports]
 output-format = "jsonextended"
+
+[tool.mypy]
+mypy_path = './src/valuation'
+warn_return_any = true
+warn_unused_configs = true
