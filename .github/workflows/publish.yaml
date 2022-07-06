@@ -3,7 +3,8 @@ name: Upload Python Package
 on:
   release:
     types: [created]
-  push
+  push:
+    branches: [develop]
 
 jobs:
   deploy:
@@ -22,7 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install setuptools wheel twine
       - name: Build and publish to TestPyPI
-        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        if: github.event_name == 'push'
         env:
           TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
