@@ -164,7 +164,7 @@ def test_linear_montecarlo_with_outlier(
             permutation_montecarlo_shapley,
             "r2",
             0.2,
-            100,
+            1000,
         ),
         (2, 0, 200, 5, permutation_montecarlo_shapley, "explained_variance", 0.2, 1000),
     ],
