@@ -15,11 +15,12 @@ from typing import (
 )
 
 import numpy as np
-from sklearn.linear_model import LinearRegression
 
-from valuation.utils import Dataset, logger, memcached
+from valuation.utils import memcached
 from valuation.utils.caching import ClientConfig
-from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
+from valuation.utils.parallel import MapReduceJob, map_reduce
+
+__all__ = ["powerset", "random_powerset"]
 
 T = TypeVar("T")
 

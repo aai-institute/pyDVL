@@ -5,6 +5,8 @@ from numpy.lib.index_tricks import IndexExpression
 from sklearn.model_selection import train_test_split
 from sklearn.utils import Bunch, check_X_y
 
+__all__ = ["Dataset", "polynomial_dataset"]
+
 
 class Dataset:
     """Meh... Just a bunch of properties and shortcuts.

@@ -3,6 +3,8 @@ from typing import Iterable, Iterator, Union
 
 from tqdm.auto import tqdm
 
+__all__ = ["MockProgress", "maybe_progress"]
+
 
 class MockProgress(collections.abc.Iterator):
     """A Naive mock class to use with maybe_progress and tqdm.

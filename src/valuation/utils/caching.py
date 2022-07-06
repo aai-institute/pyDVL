@@ -18,6 +18,8 @@ from pymemcache.serde import PickleSerde
 from valuation.utils.logging import logger
 from valuation.utils.types import unpackable
 
+__all__ = ["ClientConfig", "MemcachedConfig", "memcached"]
+
 PICKLE_VERSION = 5  # python >= 3.8
 
 
