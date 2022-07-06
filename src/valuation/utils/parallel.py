@@ -88,9 +88,7 @@ class MapReduceJob(Generic[T]):
         """
 
         class NewJob(MapReduceJob):
-            def __call__(self, data, *args, **kwargs):
-                args = dict()
-
+            def __call__(self, data, *args, **kwargs) -> R:
                 if (
                     run_id_arg is None
                     and "run_id" not in inspect.signature(fun).parameters.keys()

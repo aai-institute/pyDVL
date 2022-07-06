@@ -18,6 +18,9 @@ __all__ = [
     "start_logging_server",
 ]
 
+server: Optional[Process] = None
+logger: Optional[logging.Logger] = None
+
 
 class LogRecordStreamHandler(socketserver.StreamRequestHandler):
     """Handler for a streaming logging request.
@@ -118,19 +121,11 @@ def set_logger(
     if _logger is not None:
         logger = _logger
     elif logger is None:
-        import logging.handlers
-
         logger = logging.getLogger("root")
         logger.setLevel(logging.DEBUG)
         # socket handler sends the raw event, pickled
-        socketHandler = logging.handlers.SocketHandler(host, port)
-        logger.addHandler(socketHandler)
-
-
-server: Optional[Process] = None
-logger: Optional[logging.Logger] = None
-
-set_logger()
+        socket_handler = logging.handlers.SocketHandler(host, port)
+        logger.addHandler(socket_handler)
 
 
 def raise_or_log(message, raise_exception: bool):
@@ -141,3 +136,6 @@ def raise_or_log(message, raise_exception: bool):
             raise Exception("Logging server should be initialized first")
         else:
             logger.warning(message)
+
+
+set_logger()
