@@ -128,7 +128,7 @@ def set_logger(
 
 
 server: Optional[Process] = None
-logger = None
+logger: Optional[logging.Logger] = None
 
 set_logger()
 
@@ -137,4 +137,7 @@ def raise_or_log(message, raise_exception: bool):
     if raise_exception:
         raise Exception(message)
     else:
-        logger.warning(message)
+        if logger is None:
+            raise Exception("Logging server should be initialized first")
+        else:
+            logger.warning(message)
