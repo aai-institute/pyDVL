@@ -12,6 +12,7 @@ build-backend = "setuptools.build_meta"
 profile = "black"
 
 [tool.pytest.ini_options]
+addopts = "--cov --cov-append --cov-report=term-missing"
 testpaths = [
     "tests"
 ]

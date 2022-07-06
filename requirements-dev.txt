@@ -2,8 +2,8 @@ tox
 tox-wheel
 black
 pytest
+pytest-timeout
 jupyter
+nbconvert
 bump2version
 pre-commit
-nbconvert
-pytest-timeout
