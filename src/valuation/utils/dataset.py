@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import List
+from typing import Iterable, List
 
 import numpy as np
 from numpy.lib.index_tricks import IndexExpression
@@ -16,10 +16,10 @@ class Dataset:
         y_train: np.ndarray,
         x_test: np.ndarray,
         y_test: np.ndarray,
-        feature_names=None,
-        target_names=None,
-        data_names=None,
-        description=None,
+        feature_names: Iterable = None,
+        target_names: Iterable = None,
+        data_names: Iterable = None,
+        description: str = None,
     ):
         """Class for better handling datasets in the Dval library
 
@@ -167,10 +167,10 @@ class GroupedDataset(Dataset):
         y_train: np.ndarray,
         x_test: np.ndarray,
         y_test: np.ndarray,
-        data_groups: List,
-        feature_names=None,
-        target_names=None,
-        description=None,
+        data_groups: Iterable,
+        feature_names: Iterable = None,
+        target_names: Iterable = None,
+        description: str = None,
     ):
         super().__init__(
             x_train, y_train, x_test, y_test, feature_names, target_names, description
