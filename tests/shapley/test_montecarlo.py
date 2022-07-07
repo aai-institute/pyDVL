@@ -160,7 +160,7 @@ def test_linear_montecarlo_with_outlier(
             2,
             2,
             20,
-            10,
+            7,
             permutation_montecarlo_shapley,
             "r2",
             0.2,
