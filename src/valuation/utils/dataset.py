@@ -90,9 +90,9 @@ class Dataset:
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
-    def get_train_data(self, indices):
-        x = self.x_train[indices]
-        y = self.y_train[indices]
+    def get_train_data(self, train_indices):
+        x = self.x_train[train_indices]
+        y = self.y_train[train_indices]
         return x, y
 
     def target(self, name: str) -> IndexExpression:
@@ -206,9 +206,9 @@ class GroupedDataset(Dataset):
     def data_names(self):
         return list(self.groups.keys())
 
-    def get_train_data(self, indices):
+    def get_train_data(self, train_indices):
         data_indices = [
-            idx for group_id in indices for idx in self.group_items[group_id][1]
+            idx for group_id in train_indices for idx in self.group_items[group_id][1]
         ]
         return super().get_train_data(data_indices)
 
