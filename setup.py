@@ -1,4 +1,10 @@
+from pathlib import Path
+
 from setuptools import find_packages, setup
+
+# read the contents of README file
+repository_root = Path(__file__).parent
+long_description = (repository_root / "README.md").read_text()
 
 test_requirements = ["pytest"]
 
@@ -43,4 +49,6 @@ setup(
     tests_require=test_requirements,
     extras_require=get_extra_requires("requirements-extra.txt"),
     author="appliedAI",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
 )
