@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "num_samples, fun, rtol, max_iterations",
     [
-        (12, permutation_montecarlo_shapley, 0.1, 1),
+        (12, permutation_montecarlo_shapley, 0.1, 100),
         (8, combinatorial_montecarlo_shapley, 0.15, 3e3),
     ],
 )
@@ -99,7 +99,13 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
     ],
 )
 def test_linear_montecarlo_shapley(
-    linear_dataset, fun, score_type, rtol, max_iterations, memcache_client_config
+    linear_dataset,
+    fun,
+    score_type,
+    rtol,
+    max_iterations,
+    memcache_client_config,
+    total_atol=1,
 ):
     num_jobs = min(8, available_cpus())
     linear_utility = Utility(
@@ -117,6 +123,7 @@ def test_linear_montecarlo_shapley(
     exact_values_list = list(exact_values.values())
     atol = (exact_values_list[-1] - exact_values_list[0]) / 10
     check_values(values, exact_values, rtol=rtol, atol=atol)
+    check_total_value(linear_utility, values, atol=total_atol)
 
 
 @pytest.mark.parametrize(
@@ -133,7 +140,7 @@ def test_linear_montecarlo_with_outlier(
     score_type,
     max_iterations,
     memcache_client_config,
-    total_atol=1e-2,
+    total_atol=1,
 ):
     outlier_idx = np.random.randint(len(linear_dataset.y_train))
     num_jobs = min(8, available_cpus())
@@ -144,10 +151,11 @@ def test_linear_montecarlo_with_outlier(
         scoring=score_type,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
-    shapley_values, _ = fun(
+    shapley_values, sval_std = fun(
         linear_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
     )
     log.info(f"These are the shapley values: {shapley_values}")
+    log.info(f"These are the shapley values: {sval_std}")
     check_total_value(linear_utility, shapley_values, atol=total_atol)
 
     assert int(list(shapley_values.keys())[0]) == outlier_idx

@@ -311,18 +311,24 @@ def permutation_montecarlo_shapley(
                 prev_score = score
             values = np.concatenate([values, marginals], axis=1)
         # Careful: for some models there might be nans, e.g. for i=0 or i=1!
-        if np.any(np.isnan(values)):
-            log.warning(
-                f"Calculation returned {np.sum(np.isnan(values))} nan values out of {len(values)}"
-            )
-        return np.nansum(values, axis=1)
+        return values
 
     backend = make_nested_backend("loky")()
     results = Parallel(n_jobs=num_jobs, backend=backend)(
         delayed(fun)(job_id=j + 1) for j in range(num_jobs)
     )
-    acc = np.row_stack(results).sum(axis=0) / (max_iterations * num_jobs)
-    return sort_values({u.data.data_names[i]: v for i, v in enumerate(acc)}), None
+    full_results = np.concatenate(results, axis=1)
+    if np.any(np.isnan(full_results)):
+        log.warning(
+            f"Calculation returned {np.sum(np.isnan(full_results))} nan values out of {full_results.size}"
+        )
+    acc = np.nanmean(full_results, axis=1)
+    acc_std = np.nanstd(full_results, axis=1) / np.sqrt(full_results.shape[1])
+    sorted_shapley_values = sort_values(
+        {u.data.data_names[i]: v for i, v in enumerate(acc)}
+    )
+    montecarlo_error = {u.data.data_names[i]: v for i, v in enumerate(acc_std)}
+    return sorted_shapley_values, montecarlo_error
 
 
 def combinatorial_montecarlo_shapley(
@@ -334,6 +340,7 @@ def combinatorial_montecarlo_shapley(
     n = len(u.data)
 
     dist = PowerSetDistribution.WEIGHTED
+    correction = 2 ** (n - 1) / n
 
     def fun(indices: np.ndarray, job_id: int) -> np.ndarray:
         """Given indices and job id, this funcion calculates random
@@ -360,11 +367,10 @@ def combinatorial_montecarlo_shapley(
             ):
                 values[i] += (u({idx}.union(s)) - u(s)) / np.math.comb(n - 1, len(s))
 
-        correction = 2 ** (n - 1) / n
         return correction * values / max_iterations
 
     job = MapReduceJob.from_fun(fun, np.concatenate)
-    results = map_reduce(job, u.data.indices, num_jobs=num_jobs)[0]
+    results = np.mean(map_reduce(job, u.data.indices, num_jobs=num_jobs), axis=0)
 
     return sort_values({u.data.data_names[i]: v for i, v in enumerate(results)}), None
 
@@ -390,7 +396,7 @@ def shapley_dval(
     x_test: np.ndarray,
     y_test: np.ndarray,
     scoring: Optional[Scorer],
-    max_iterations: int,
+    max_permutations: int,
     data_groups: List = None,
     num_jobs: int = -1,
     enable_cache: bool = True,
@@ -402,4 +408,4 @@ def shapley_dval(
     else:
         dataset = GroupedDataset(x_train, y_train, x_test, y_test, data_groups)
     utility = Utility(model, dataset, scoring, enable_cache=enable_cache)
-    return montecarlo_shapley(utility, max_iterations, num_jobs)
+    return montecarlo_shapley(utility, max_permutations, num_jobs)
