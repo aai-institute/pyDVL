@@ -52,4 +52,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           tox -e bump-dev-version-and-create-tag
-          git push origin --tags
+          git status
+          git log
+          # git push origin --tags
