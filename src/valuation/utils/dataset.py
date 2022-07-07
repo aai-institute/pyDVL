@@ -172,6 +172,19 @@ class GroupedDataset(Dataset):
         target_names: Iterable = None,
         description: str = None,
     ):
+        """Class for better grouped datasets.
+
+        :param x_train: train input data
+        :param y_train: labels of train data
+        :param x_test: input of test data
+        :param y_test: labels of test data
+        :param data_groups: Iterable of the same length of x_train.
+            For each train data-point, it associates a group label (which could be of any type, e.g. string or int).
+            Data-points with the same label will then be grouped withing the GroupedDataset class.
+        :param feature_names: name of the features of input data
+        :param target_names: name of target data
+        :param description: description of the dataset
+        """
         super().__init__(
             x_train, y_train, x_test, y_test, feature_names, target_names, description
         )
