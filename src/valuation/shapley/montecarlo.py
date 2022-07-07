@@ -18,7 +18,15 @@ import numpy as np
 from joblib import Parallel, delayed
 
 from valuation.reporting.scores import sort_values, sort_values_array
-from valuation.utils import Utility, bootstrap_test_score, vanishing_derivatives
+from valuation.utils import (
+    Dataset,
+    GroupedDataset,
+    Scorer,
+    SupervisedModel,
+    Utility,
+    bootstrap_test_score,
+    vanishing_derivatives,
+)
 from valuation.utils.numeric import PowerSetDistribution, random_powerset
 from valuation.utils.parallel import (
     Coordinator,
@@ -359,3 +367,39 @@ def combinatorial_montecarlo_shapley(
     results = map_reduce(job, u.data.indices, num_jobs=num_jobs)[0]
 
     return sort_values({u.data.data_names[i]: v for i, v in enumerate(results)}), None
+
+
+def montecarlo_shapley(
+    u: Utility,
+    max_iterations: int,
+    num_jobs: int = 1,
+    progress: bool = False,
+    use_combinatorial=False,
+):
+    """Facade for montecarlo shapley methods. By default, it uses permutation_montecarlo_shapley"""
+    if use_combinatorial:
+        return combinatorial_montecarlo_shapley(u, max_iterations, num_jobs, progress)
+    else:
+        return permutation_montecarlo_shapley(u, max_iterations, num_jobs, progress)
+
+
+def shapley_dval(
+    model: SupervisedModel,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    x_test: np.ndarray,
+    y_test: np.ndarray,
+    scoring: Optional[Scorer],
+    max_iterations: int,
+    data_groups: List = None,
+    num_jobs: int = -1,
+    enable_cache: bool = True,
+):
+    """Simplifies shapley calculation for external users.
+    It retains only the most essential parameters of Montecarlo Shapley."""
+    if data_groups is None:
+        dataset = Dataset(x_train, y_train, x_test, y_test)
+    else:
+        dataset = GroupedDataset(x_train, y_train, x_test, y_test, data_groups)
+    utility = Utility(model, dataset, scoring, enable_cache=enable_cache)
+    return montecarlo_shapley(utility, max_iterations, num_jobs)
