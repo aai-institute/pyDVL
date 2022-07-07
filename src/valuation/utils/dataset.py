@@ -8,8 +8,7 @@ from sklearn.utils import Bunch, check_X_y
 
 
 class Dataset:
-    """Meh... Just a bunch of properties and shortcuts.
-    I should probably ditch / redesign this."""
+    """Class for better handling datasets in the Dval library"""
 
     def __init__(
         self,
@@ -22,6 +21,20 @@ class Dataset:
         data_names=None,
         description=None,
     ):
+        """Class for better handling datasets in the Dval library
+
+        :param x_train: train input data
+        :param y_train: labels of train data
+        :param x_test: input of test data
+        :param y_test: labels of test data
+        :param feature_names: name of the features of input data
+        :param target_names: name of target data
+        :param data_names: optional name for each entry in the train dataset.
+            Must have the same length as x_train.
+            For example input data may be indexed by timestamp (as it is typical for timeseries).
+            In order to refer to them with such timestamps, one can pass the times column to data_names.
+        :param description: description of the dataset
+        """
         self.x_train, self.y_train = check_X_y(x_train, y_train)
         self.x_test, self.y_test = check_X_y(x_test, y_test)
 
@@ -128,6 +141,7 @@ class Dataset:
             y_test,
             feature_names=data.get("feature_names"),
             target_names=data.get("target_names"),
+            data_names=data.get("data_names"),
             description=data.get("DESCR"),
         )
 
@@ -194,21 +208,20 @@ class GroupedDataset(Dataset):
         random_state: int = None,
     ) -> "Dataset":
         dataset = super().from_sklearn(data, train_size, random_state)
-        return get_grouped_dataset(dataset, data_groups)
+        return cls.from_dataset(dataset, data_groups)
 
-
-def get_grouped_dataset(dataset: Dataset, data_groups: List):
-    grouped_dataset = GroupedDataset(
-        x_train=dataset.x_train,
-        y_train=dataset.y_train,
-        x_test=dataset.x_test,
-        y_test=dataset.y_test,
-        data_groups=data_groups,
-        feature_names=dataset.feature_names,
-        target_names=dataset.target_names,
-        description=dataset.description,
-    )
-    return grouped_dataset
+    @classmethod
+    def from_dataset(cls, dataset: Dataset, data_groups: List):
+        return GroupedDataset(
+            x_train=dataset.x_train,
+            y_train=dataset.y_train,
+            x_test=dataset.x_test,
+            y_test=dataset.y_test,
+            data_groups=data_groups,
+            feature_names=dataset.feature_names,
+            target_names=dataset.target_names,
+            description=dataset.description,
+        )
 
 
 def polynomial(coefficients, x):

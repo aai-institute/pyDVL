@@ -27,7 +27,7 @@ class Utility:
     def __init__(
         self,
         model: SupervisedModel,
-        data: Union[Dataset, GroupedDataset],
+        data: Dataset,
         scoring: Optional[Scorer],
         catch_errors: bool = True,
         default_score: float = 0,

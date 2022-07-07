@@ -4,7 +4,7 @@ from itertools import permutations
 import numpy as np
 
 from valuation.reporting.scores import sort_values
-from valuation.utils import GroupedDataset, Utility, maybe_progress, powerset
+from valuation.utils import Utility, maybe_progress, powerset
 
 
 def permutation_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:

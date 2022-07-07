@@ -6,7 +6,7 @@ from sklearn.linear_model import LinearRegression
 
 from tests.conftest import check_total_value, check_values
 from valuation.shapley import combinatorial_exact_shapley, permutation_exact_shapley
-from valuation.utils import MemcachedConfig, Utility, get_grouped_dataset
+from valuation.utils import GroupedDataset, MemcachedConfig, Utility
 
 log = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ def test_grouped_linear(
     # assign groups recursively
     data_groups = np.random.randint(0, num_groups, len(linear_dataset))
 
-    grouped_linear_dataset = get_grouped_dataset(linear_dataset, data_groups)
+    grouped_linear_dataset = GroupedDataset.from_dataset(linear_dataset, data_groups)
     grouped_linear_utility = Utility(
         LinearRegression(),
         data=grouped_linear_dataset,

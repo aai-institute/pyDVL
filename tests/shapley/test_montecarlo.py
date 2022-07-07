@@ -16,7 +16,7 @@ from valuation.shapley import (
     permutation_montecarlo_shapley,
     truncated_montecarlo_shapley,
 )
-from valuation.utils import MemcachedConfig, Utility, get_grouped_dataset
+from valuation.utils import GroupedDataset, MemcachedConfig, Utility
 from valuation.utils.numeric import lower_bound_hoeffding
 from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
 
@@ -180,7 +180,7 @@ def test_grouped_linear_montecarlo_shapley(
 ):
     num_jobs = min(8, available_cpus())
     data_groups = np.random.randint(0, num_groups, len(linear_dataset))
-    grouped_linear_dataset = get_grouped_dataset(linear_dataset, data_groups)
+    grouped_linear_dataset = GroupedDataset.from_dataset(linear_dataset, data_groups)
     grouped_linear_utility = Utility(
         LinearRegression(),
         data=grouped_linear_dataset,
