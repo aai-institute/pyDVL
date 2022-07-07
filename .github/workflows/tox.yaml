@@ -49,7 +49,7 @@ jobs:
           user_name: ${{ env.GITHUB_BOT_USERNAME }}
           user_email: ${{ env.GITHUB_BOT_EMAIL }}
       - name: Build and publish to TestPyPI
-        # if: ${{ github.ref == 'refs/heads/develop' }}
+        if: ${{ github.ref == 'refs/heads/develop' }}
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
@@ -57,6 +57,6 @@ jobs:
           git config user.name "${{ env.GITHUB_BOT_USERNAME }}"
           git config user.email "${{ env.GITHUB_BOT_EMAIL }}"
           tox -e bump-dev-version-and-create-tag
-          # tox -e publish-test-package
+          tox -e publish-test-package
           git push
           git push --tags
