@@ -45,7 +45,7 @@ jobs:
       - name: Build and publish to TestPyPI
         # if: ${{ github.ref == 'refs/heads/develop' }}
         env:
-          TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
+          TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
         run: |
           tox -e publish-test-package
