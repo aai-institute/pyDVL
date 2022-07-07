@@ -1,5 +1,7 @@
 from typing import Dict, Tuple
 
+import matplotlib as mpl
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -9,6 +11,7 @@ def plot_datasets(
     x_min: np.ndarray = None,
     x_max: np.ndarray = None,
     line: np.ndarray = None,
+    suptitle: str = None,
     s: float = None,
 ):
     """
@@ -24,32 +27,45 @@ def plot_datasets(
     """
 
     num_datasets = len(datasets)
-    fig, ax = plt.subplots(1, num_datasets, figsize=(12, 4))
+    fig = plt.figure(figsize=(6 * num_datasets, 4), constrained_layout=True)
+    spec = fig.add_gridspec(20, num_datasets)
+    ax = [fig.add_subplot(spec[:-1, i]) for i in range(num_datasets)]
+    ax.append(fig.add_subplot(spec[-1, :]))
 
     discrete_keys = [
         key for key, dataset in datasets.items() if dataset[1].dtype == int
     ]
-    all_discrete_sets = len(discrete_keys) == len(datasets)
+    if 0 < len(discrete_keys) < len(datasets):
+        "You can only plot either discrete or only continuous plots."
+
+    is_discrete = len(discrete_keys) == len(datasets)
     continuous_keys = [key for key in datasets.keys() if key not in discrete_keys]
 
     v_min = (
-        None
-        if all_discrete_sets
-        else min([np.min(datasets[k][1]) for k in continuous_keys])
+        None if is_discrete else min([np.min(datasets[k][1]) for k in continuous_keys])
     )
     v_max = (
-        None
-        if all_discrete_sets
-        else max([np.max(datasets[k][1]) for k in continuous_keys])
+        None if is_discrete else max([np.max(datasets[k][1]) for k in continuous_keys])
     )
-    points = None
 
-    if num_datasets == 1:
-        ax = [ax]
+    num_classes = None
+    if is_discrete:
+        cmap_name = "tab10"
+        cmap = plt.get_cmap(cmap_name)
+        all_y = np.concatenate(tuple([v[1] for _, v in datasets.items()]), axis=0)
+        unique_y = np.sort(np.unique(all_y))
+        num_classes = len(unique_y)
+        handles = [
+            mpatches.Patch(color=cmap(i), label=y) for i, y in enumerate(unique_y)
+        ]
+    else:
+        cmap_name = "plasma"
+        cmap = plt.get_cmap(cmap_name)
 
     for i, dataset_name in enumerate(datasets.keys()):
         x, y = datasets[dataset_name]
-        is_discrete = y.dtype == int
+        if x.shape[1] != 2:
+            raise AttributeError("The maximum number of allowede features is 2.")
 
         ax[i].set_title(dataset_name)
         if x_min is not None:
@@ -60,20 +76,24 @@ def plot_datasets(
         if line is not None:
             ax[i].plot(line[:, 0], line[:, 1], color="black")
 
-        ret = ax[i].scatter(
+        ax[i].scatter(
             x[:, 0],
             x[:, 1],
-            c=y,
-            vmin=v_min,
-            vmax=v_max,
-            cmap="plasma" if not is_discrete else "tab10",
+            c=cmap(y),
             s=s,
         )
-        if not is_discrete:
-            points = ret
 
-    if not all_discrete_sets:
-        plt.colorbar(points)
+    if is_discrete:
+        ax[-1].legend(handles=handles, loc="center", ncol=num_classes)
+        ax[-1].axis("off")
+    else:
+        norm = mpl.colors.Normalize(vmin=v_min, vmax=v_max)
+        cb1 = mpl.colorbar.ColorbarBase(
+            ax[-1], cmap=cmap, norm=norm, orientation="horizontal"
+        )
+        cb1.set_label("Influence values")
 
-    plt.legend()
+    if suptitle is not None:
+        plt.suptitle(suptitle)
+
     plt.show()

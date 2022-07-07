@@ -13,8 +13,8 @@ from valuation.utils import maybe_progress
 from valuation.utils.types import TorchObjective
 
 
-def tt(v):
-    return torch.tensor(v, dtype=torch.float32)
+def tt(v, dtype=torch.float32):
+    return torch.tensor(v, dtype=dtype)
 
 
 def flatten_gradient(grad):
@@ -35,8 +35,10 @@ class PyTorchSupervisedModel:
         optimizer_kwargs: Dict = None,
         num_epochs: int = 1,
         batch_size: int = 64,
+        y_dtype=torch.float32,
     ):
         self.model = model
+        self.y_dtype = y_dtype
         self.objective = objective
         self.optimizer = optimizer
         self.optimizer_kwargs = {} if optimizer_kwargs is None else optimizer_kwargs
@@ -50,7 +52,7 @@ class PyTorchSupervisedModel:
     def grad(self, x: np.ndarray, y: np.ndarray, progress: bool = False) -> np.ndarray:
 
         x = tt(x)
-        y = tt(y)
+        y = torch.tensor(y, dtype=self.y_dtype)
 
         grads = [
             flatten_gradient(
@@ -77,7 +79,7 @@ class PyTorchSupervisedModel:
         **kwargs,
     ) -> np.ndarray:
 
-        x, y, v = tt(x), tt(y), tt(v)
+        x, y, v = tt(x), torch.tensor(y, dtype=self.y_dtype), tt(v)
 
         if "num_samples" in kwargs:
             num_samples = kwargs["num_samples"]
@@ -103,18 +105,29 @@ class PyTorchSupervisedModel:
         return hvp.detach().numpy()
 
     def fit(self, x: np.ndarray, y: np.ndarray):
-        from valuation.utils.logging import logger
 
         x = tt(x)
-        y = tt(y)
+        y = torch.tensor(y, dtype=self.y_dtype)
 
         optimizer_factory = {
             PyTorchOptimizer.ADAM: Adam,
             PyTorchOptimizer.ADAM_W: AdamW,
         }
+        optimizer_init_kwargs_keys = {"lr", "weight_decay"}
+        reduced_optimizer_kwargs = {
+            k: v
+            for k, v in self.optimizer_kwargs.items()
+            if k in optimizer_init_kwargs_keys
+        }
         optimizer = optimizer_factory[self.optimizer](
-            self.model.parameters(), **self.optimizer_kwargs
+            self.model.parameters(), **reduced_optimizer_kwargs
         )
+        use_cosine_annealing = self.optimizer_kwargs.get("cosine_annealing", False)
+        scheduler = None
+        if use_cosine_annealing:
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer, T_max=self.num_epochs
+            )
 
         class InternalDataset(Dataset):
             def __len__(self):
@@ -136,6 +149,9 @@ class PyTorchSupervisedModel:
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
+
+                if use_cosine_annealing:
+                    scheduler.step()
 
     def predict(self, x: np.ndarray) -> np.ndarray:
         return self.model(tt(x)).detach().numpy()

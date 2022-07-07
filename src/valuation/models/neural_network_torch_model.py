@@ -2,7 +2,7 @@ from typing import List
 
 import torch
 import torch.nn as nn
-from torch.nn import ReLU, Tanh
+from torch.nn import ReLU, Sigmoid, Softmax, Tanh
 
 
 class NNTorchModel(nn.Module):
@@ -28,7 +28,9 @@ class NNTorchModel(nn.Module):
 
             layers.append(linear_layer)
             if num_layer < num_layers - 1:
-                layers.append(ReLU())
+                layers.append(Tanh())
+            else:
+                layers.append(Softmax(dim=-1))
 
         self.layers = nn.Sequential(*layers)
 
