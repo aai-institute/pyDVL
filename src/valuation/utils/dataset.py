@@ -90,7 +90,11 @@ class Dataset:
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
-    def get_train_data(self, train_indices):
+    def get_train_data(self, train_indices: List[int]):
+        """Given a set of indices, it returns the train data that refer to those indices.
+        This is used when calling different sub-sets of indices to calculate data shapley values.
+        Notice that train_indices is not typically equal to the full indices, but only a subset of it.
+        """
         x = self.x_train[train_indices]
         y = self.y_train[train_indices]
         return x, y
