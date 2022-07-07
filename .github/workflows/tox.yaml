@@ -58,4 +58,5 @@ jobs:
           git config user.email "${{ env.GITHUB_BOT_EMAIL }}"
           tox -e bump-dev-version-and-create-tag
           # tox -e publish-test-package
-          git push --atomic origin --tags
+          git push
+          git push --tags
