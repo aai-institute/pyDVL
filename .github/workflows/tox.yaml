@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [develop]
 
+env:
+  GITHUB_BOT_USERNAME: github-actions[bot]
+  GITHUB_BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -42,14 +46,16 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/_build/html
+          user_name: ${{ env.GITHUB_BOT_USERNAME }}
+          user_email: ${{ env.GITHUB_BOT_EMAIL }}
       - name: Build and publish to TestPyPI
         # if: ${{ github.ref == 'refs/heads/develop' }}
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "${{ env.GITHUB_BOT_USERNAME }}"
+          git config user.email "${{ env.GITHUB_BOT_EMAIL }}"
           tox -e bump-dev-version-and-create-tag
           # tox -e publish-test-package
           git status
