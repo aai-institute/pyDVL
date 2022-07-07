@@ -47,4 +47,9 @@ jobs:
         env:
           TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
-        run: tox -e publish-test-package
+        run: |
+          tox -e publish-test-package
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          tox -e bump-dev-version-and-create-tag
+          git push origin --tags
