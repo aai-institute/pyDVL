@@ -1,4 +1,4 @@
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Tuple
 
 import numpy as np
 from sklearn.metrics import check_scoring

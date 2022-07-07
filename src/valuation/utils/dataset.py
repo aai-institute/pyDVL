@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Callable, Dict, Iterable, List, Union
+from typing import List
 
 import numpy as np
 from numpy.lib.index_tricks import IndexExpression
