@@ -1,0 +1,7 @@
+Notebooks
+=========
+
+.. toctree::
+   :glob:
+
+   *

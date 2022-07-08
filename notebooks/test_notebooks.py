@@ -8,7 +8,7 @@ from nbconvert.preprocessors import ExecutePreprocessor
 
 ROOT_DIR = Path(".").parent.parent
 NOTEBOOKS_DIR = os.fspath(ROOT_DIR / "notebooks")
-DOCS_DIR = os.fspath(ROOT_DIR / "docs")
+DOCS_NOTEBOOKS_DIR = os.fspath(ROOT_DIR / "docs" / "notebooks")
 resources = {"metadata": {"path": NOTEBOOKS_DIR}}
 
 log = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ def test_notebook(notebook):
             ep.preprocess_cell(cell, resources=resources, index=i)
 
     # saving the executed notebook to docs
-    output_path = os.path.join(DOCS_DIR, notebook)
+    output_path = os.path.join(DOCS_NOTEBOOKS_DIR, notebook)
     log.info(f"Saving executed notebook to {output_path} for documentation purposes")
     with open(output_path, "w", encoding="utf-8") as f:
         nbformat.write(nb, f)

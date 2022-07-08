@@ -12,6 +12,7 @@ You can find the library's repository here_.
    :glob:
 
    *
+   notebooks/index
 
 
 .. toctree::
