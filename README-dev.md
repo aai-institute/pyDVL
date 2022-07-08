@@ -145,6 +145,17 @@ to automatically publish packages to [TestPyPI](https://test.pypi.org/).
 The last 2 are used in the [publish.yaml](.github/workflows/publish.yaml) CI workflow
 to publish packages to [PyPI](https://pypi.org/) from the develop after a Github release creation.
 
+#### Release to TestPyPI
+
+We use bump2version to bump the build part of the version number, 
+create a tag and push it from CI.
+
+To do that, we use 2 different tox environments:
+
+- **publish-test-package**: Builds and publishes a package to TestPyPI
+- **bump-dev-version-and-create-tag**: Uses bump2version to bump the dev version, 
+  commit the new version and create a corresponding git tag.
+
 #### Automatic release process
 
 In order to create an automatic release, a few prerequisites need to be
