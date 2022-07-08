@@ -126,23 +126,24 @@ the coverage badge the url will be:
 The github and azure ci pipelines are rather rudimentary. Pull requests are
 always welcome!
 
-### Development and Release Process with Gitlab
+### Development and Release Process with Github
 
 In order to be able to automatically release new versions of the package from
-develop and master, the CI pipeline should have access to the following
-variables (they should already be set on global level):
+the develop branch, the CI pipeline should have access to the following
+secret variables:
 
 ```
-PYPI_REPO_URL
-PYPI_REPO_USER
-PYPI_REPO_PASS
+TEST_PYPI_USERNAME
+TEST_PYPI_PASSWORD
+PYPI_USERNAME
+PYPI_PASSWORD
 ```
 
-They will be used in the release steps in the gitlab pipeline.
+The first 2 are used after tests run on the develop branch's CI workflow 
+to automatically publish packages to [TestPyPI](https://test.pypi.org/).
 
-You will also need to set up Gitlab CI deploy keys for 
-automatically committing from the develop pipeline during version bumping
-
+The last 2 are used in the [publish.yaml](.github/workflows/publish.yaml) CI workflow
+to publish packages to [PyPI](https://pypi.org/) from the develop after a Github release creation.
 
 #### Automatic release process
 
