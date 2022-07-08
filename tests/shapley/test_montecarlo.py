@@ -27,15 +27,17 @@ log = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "num_samples, fun, rtol, max_iterations",
     [
-        (12, permutation_montecarlo_shapley, 0.1, 100),
-        (8, combinatorial_montecarlo_shapley, 0.15, 3e3),
+        (12, permutation_montecarlo_shapley, 0.1, 1),
+        (8, combinatorial_montecarlo_shapley, 0.15, 1e3),
     ],
 )
 def test_analytic_montecarlo_shapley(analytic_shapley, fun, rtol, max_iterations):
     u, exact_values = analytic_shapley
     num_jobs = min(8, available_cpus())
 
-    values, _ = fun(u, max_iterations=max_iterations, progress=False, num_jobs=num_jobs)
+    values, _ = fun(
+        u, max_iterations=int(max_iterations), progress=False, num_jobs=num_jobs
+    )
 
     check_values(values, exact_values, rtol=rtol)
 

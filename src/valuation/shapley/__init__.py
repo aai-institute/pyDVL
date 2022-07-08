@@ -1,5 +1,6 @@
 from valuation.shapley.montecarlo import (
     combinatorial_montecarlo_shapley,
+    create_utility,
     permutation_montecarlo_shapley,
     serial_truncated_montecarlo_shapley,
     shapley_dval,
@@ -18,4 +19,5 @@ __all__ = [
     "combinatorial_exact_shapley",
     "permutation_exact_shapley",
     "shapley_dval",
+    "create_utility",
 ]
