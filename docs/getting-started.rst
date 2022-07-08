@@ -7,13 +7,17 @@ in order to cache certain results and speed-up the computations.
 
 You can either install it directly on your system and run it. For that refer to the
 `Getting Started section <https://github.com/memcached/memcached/wiki#getting-started>`_
-of Memcached's wiki.
+of Memcached's wiki. You can run it using:
+
+.. code-block:: shell
+
+   $ memcached -u user
 
 Or you can run it inside a container:
 
 .. code-block:: shell
 
-    docker container run -it --rm -p 11211:11211 memcached:latest -v
+    $ docker container run -it --rm -p 11211:11211 memcached:latest -v
 
 Caching is enabled by default but can be disabled if not needed or desired.
 
