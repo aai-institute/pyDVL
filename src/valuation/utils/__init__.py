@@ -20,4 +20,7 @@ __all__ = [
     "bootstrap_test_score",
     "powerset",
     "maybe_progress",
+    "linear_regression_analytical_derivative_d_theta",
+    "linear_regression_analytical_derivative_d_x_d_theta",
+    "linear_regression_analytical_derivative_d2_theta",
 ]

@@ -1,3 +1,4 @@
+import math
 from collections import OrderedDict
 from itertools import permutations
 
@@ -21,7 +22,7 @@ def permutation_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
         permutations(u.data.indices),
         progress,
         desc="Permutation",
-        total=np.math.factorial(n),
+        total=math.factorial(n),
     ):
         for i, idx in enumerate(p):
             values[idx] += u(p[: i + 1]) - u(p[:i])

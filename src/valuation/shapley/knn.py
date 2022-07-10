@@ -24,7 +24,7 @@ def exact_knn_shapley(
     defaults.update(model.get_params())
     # HACK: NearestNeighbors doesn't support this. There will be more...
     del defaults["weights"]
-    n_neighbors = defaults["n_neighbors"]  # This must be set!
+    n_neighbors: int = defaults["n_neighbors"]  # This must be set!
     defaults["n_neighbors"] = len(data)  # We want all training points sorted
 
     assert n_neighbors < len(data)

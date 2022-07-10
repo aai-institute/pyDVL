@@ -21,7 +21,15 @@ from valuation.utils import memcached
 from valuation.utils.caching import ClientConfig
 from valuation.utils.parallel import MapReduceJob, map_reduce
 
-__all__ = ["powerset", "random_powerset"]
+__all__ = [
+    "powerset",
+    "random_powerset",
+    "mcmc_is_linear_function",
+    "mcmc_is_linear_function_positive_definite",
+    "linear_regression_analytical_derivative_d2_theta",
+    "linear_regression_analytical_derivative_d_theta",
+    "linear_regression_analytical_derivative_d_x_d_theta",
+]
 
 T = TypeVar("T")
 

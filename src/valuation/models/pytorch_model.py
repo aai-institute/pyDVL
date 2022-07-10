@@ -30,7 +30,7 @@ class PyTorchSupervisedModel:
     def __init__(
         self,
         model: nn.Module,
-        objective: TorchObjective = None,
+        objective: TorchObjective,
         optimizer: PyTorchOptimizer = PyTorchOptimizer.ADAM_W,
         optimizer_kwargs: Dict = None,
         num_epochs: int = 1,
