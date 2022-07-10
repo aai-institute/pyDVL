@@ -25,7 +25,13 @@ jobs:
           cache: 'pip'
       - name: Install Tox and any other packages
         run: pip install tox
-      - name: Run Tox
+      - name: Run Linter
+        run: tox -e linting
+        continue-on-error: true
+      - name: Run Type Checking
+        run: tox -e type-checking
+        continue-on-error: true
+      - name: Run Tests
         run: tox
       - name: Test Torch Modules
         run: tox -e torch
