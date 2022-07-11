@@ -20,4 +20,5 @@ __all__ = [
     "bootstrap_test_score",
     "powerset",
     "maybe_progress",
+    "load_spotify_dataset",
 ]

@@ -1,7 +1,9 @@
+import os
 from collections import OrderedDict
 from typing import Callable, Dict, Iterable, List, Union
 
 import numpy as np
+import pandas as pd
 from numpy.lib.index_tricks import IndexExpression
 from sklearn.model_selection import train_test_split
 from sklearn.utils import Bunch, check_X_y
@@ -231,3 +233,15 @@ def polynomial_dataset(coefficients: np.ndarray):
     db.feature_names = ["x"]
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.5), coefficients
+
+
+def load_spotify_dataset(min_year=2014):
+    """Load spotify music dataset and selects song after min_year.
+    If os. is True, it returns a small dataset for testing purposes."""
+    CI = os.environ.get("CI") in ("True", "true")
+    data = pd.read_csv("../data/top_hits_spotify_dataset.csv")
+    data["genre"] = data["genre"].astype("category").cat.codes
+    if CI:
+        return data.iloc[:3]
+    else:
+        return data[data["year"] > min_year]

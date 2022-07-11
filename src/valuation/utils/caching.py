@@ -71,7 +71,7 @@ def get_running_avg_variance(
 def memcached(
     client_config: ClientConfig = None,
     cache_threshold: float = 0.3,
-    allow_repeated_training: bool = True,
+    allow_repeated_training: bool = False,
     rtol_threshold: float = 0.1,
     min_repetitions: int = 3,
     ignore_args: Iterable[str] = None,
