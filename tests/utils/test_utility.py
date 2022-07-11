@@ -8,9 +8,9 @@ from valuation.utils import MemcachedConfig, Utility, powerset
 
 # noinspection PyUnresolvedReferences
 @pytest.mark.parametrize(
-    "a, b, num_points",
+    "a, b, num_points, seed",
     [
-        (2, 0, 8),
+        (2, 0, 8, None),
     ],
 )
 def test_cache(linear_dataset, memcache_client_config):

@@ -142,9 +142,10 @@ def boston_dataset(n_points, n_features):
 
 
 @pytest.fixture(scope="function")
-def linear_dataset(a, b, num_points):
+def linear_dataset(a, b, num_points, seed):
     from sklearn.utils import Bunch
 
+    np.random.seed(seed)
     step = 2 / num_points
     x = np.arange(-1, 1, step)
     y = np.random.normal(loc=a * x + b, scale=0.1)

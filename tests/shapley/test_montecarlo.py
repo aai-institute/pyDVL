@@ -83,19 +83,29 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points, fun, score_type, rtol, max_iterations",
+    "a, b, num_points, seed, fun, score_type, rtol, max_iterations",
     [
-        (2, 0, 20, permutation_montecarlo_shapley, "explained_variance", 0.2, 1000),
+        (2, 0, 20, 42, permutation_montecarlo_shapley, "explained_variance", 0.2, 500),
         (
             2,
             2,
             12,
+            42,
             permutation_montecarlo_shapley,
             "r2",
             0.2,
-            1000,
+            500,
         ),
-        (2, 0, 12, combinatorial_montecarlo_shapley, "explained_variance", 0.5, 2000),
+        (
+            2,
+            0,
+            12,
+            42,
+            combinatorial_montecarlo_shapley,
+            "explained_variance",
+            0.5,
+            500,
+        ),
     ],
 )
 def test_linear_montecarlo_shapley(
@@ -120,11 +130,19 @@ def test_linear_montecarlo_shapley(
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points, fun, score_type, max_iterations",
+    "a, b, num_points, seed, fun, score_type, max_iterations",
     [
-        (2, 3, 20, permutation_montecarlo_shapley, "r2", 3000),
-        (2, 3, 20, permutation_montecarlo_shapley, "explained_variance", 3000),
-        (2, 3, 20, permutation_montecarlo_shapley, "neg_median_absolute_error", 3000),
+        (2, 3, 20, 42, permutation_montecarlo_shapley, "r2", 500),
+        (2, 3, 20, 42, permutation_montecarlo_shapley, "explained_variance", 500),
+        (
+            2,
+            3,
+            20,
+            42,
+            permutation_montecarlo_shapley,
+            "neg_median_absolute_error",
+            500,
+        ),
     ],
 )
 def test_linear_montecarlo_with_outlier(
