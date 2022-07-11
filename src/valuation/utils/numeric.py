@@ -29,6 +29,7 @@ __all__ = [
     "linear_regression_analytical_derivative_d2_theta",
     "linear_regression_analytical_derivative_d_theta",
     "linear_regression_analytical_derivative_d_x_d_theta",
+    "vanishing_derivatives",
 ]
 
 T = TypeVar("T")
