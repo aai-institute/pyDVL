@@ -57,6 +57,45 @@ def test_linear(
 
 
 @pytest.mark.parametrize(
+    "a, b, num_points, num_groups, score_type",
+    [
+        (2, 0, 50, 3, "r2"),
+        (2, 1, 100, 5, "r2"),
+        (2, 1, 100, 5, "explained_variance"),
+    ],
+)
+def test_grouped_linear(
+    linear_dataset,
+    num_groups,
+    memcache_client_config,
+    score_type,
+    rtol=0.01,
+    total_atol=1e-5,
+):
+    # assign groups recursively
+    data_groups = np.random.randint(0, num_groups, len(linear_dataset))
+
+    grouped_linear_dataset = GroupedDataset.from_dataset(linear_dataset, data_groups)
+    grouped_linear_utility = Utility(
+        LinearRegression(),
+        data=grouped_linear_dataset,
+        scoring=score_type,
+        cache_options=MemcachedConfig(client_config=memcache_client_config),
+    )
+    values_combinatorial = combinatorial_exact_shapley(
+        grouped_linear_utility, progress=False
+    )
+    check_total_value(grouped_linear_utility, values_combinatorial, atol=total_atol)
+
+    values_permutation = permutation_exact_shapley(
+        grouped_linear_utility, progress=False
+    )
+    check_total_value(grouped_linear_utility, values_permutation, atol=total_atol)
+
+    check_values(values_combinatorial, values_permutation, rtol=rtol)
+
+
+@pytest.mark.parametrize(
     "a, b, num_points, score_type",
     [
         (2, 1, 20, "explained_variance"),
