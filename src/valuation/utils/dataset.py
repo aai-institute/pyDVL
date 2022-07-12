@@ -1,6 +1,6 @@
 import os
 from collections import OrderedDict
-from typing import Callable, Dict, Iterable, List, Union
+from typing import Iterable, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,8 +11,7 @@ from sklearn.utils import Bunch, check_X_y
 
 
 class Dataset:
-    """Meh... Just a bunch of properties and shortcuts.
-    I should probably ditch / redesign this."""
+    """Class for better handling datasets in the Dval library"""
 
     def __init__(
         self,
@@ -20,11 +19,25 @@ class Dataset:
         y_train: np.ndarray,
         x_test: np.ndarray,
         y_test: np.ndarray,
-        feature_names=None,
-        target_names=None,
-        data_names=None,
-        description=None,
+        feature_names: Iterable = None,
+        target_names: Iterable = None,
+        data_names: Iterable = None,
+        description: str = None,
     ):
+        """Class for better handling datasets in the Dval library
+
+        :param x_train: train input data
+        :param y_train: labels of train data
+        :param x_test: input of test data
+        :param y_test: labels of test data
+        :param feature_names: name of the features of input data
+        :param target_names: name of target data
+        :param data_names: optional name for each entry in the train dataset.
+            Must have the same length as x_train.
+            For example input data may be indexed by timestamp (as it is typical for timeseries).
+            In order to refer to them with such timestamps, one can pass the times column to data_names.
+        :param description: description of the dataset
+        """
         self.x_train, self.y_train = check_X_y(x_train, y_train)
         self.x_test, self.y_test = check_X_y(x_test, y_test)
 
@@ -80,9 +93,13 @@ class Dataset:
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
-    def get_train_data(self, indices):
-        x = self.x_train[indices]
-        y = self.y_train[indices]
+    def get_train_data(self, train_indices: List[int]):
+        """Given a set of indices, it returns the train data that refer to those indices.
+        This is used when calling different sub-sets of indices to calculate data shapley values.
+        Notice that train_indices is not typically equal to the full indices, but only a subset of it.
+        """
+        x = self.x_train[train_indices]
+        y = self.y_train[train_indices]
         return x, y
 
     def target(self, name: str) -> IndexExpression:
@@ -131,6 +148,7 @@ class Dataset:
             y_test,
             feature_names=data.get("feature_names"),
             target_names=data.get("target_names"),
+            data_names=data.get("data_names"),
             description=data.get("DESCR"),
         )
 
@@ -156,14 +174,32 @@ class GroupedDataset(Dataset):
         y_train: np.ndarray,
         x_test: np.ndarray,
         y_test: np.ndarray,
-        data_groups: List,
-        feature_names=None,
-        target_names=None,
-        description=None,
+        data_groups: Iterable,
+        feature_names: Optional[Iterable] = None,
+        target_names: Optional[Iterable] = None,
+        description: Optional[str] = None,
     ):
+        """Class for better grouped datasets.
+
+        :param x_train: train input data
+        :param y_train: labels of train data
+        :param x_test: input of test data
+        :param y_test: labels of test data
+        :param data_groups: Iterable of the same length of x_train.
+            For each train data-point, it associates a group label (which could be of any type, e.g. string or int).
+            Data-points with the same label will then be grouped withing the GroupedDataset class.
+        :param feature_names: name of the features of input data
+        :param target_names: name of target data
+        :param description: description of the dataset
+        """
         super().__init__(
             x_train, y_train, x_test, y_test, feature_names, target_names, description
         )
+        if len(data_groups) != len(x_train):
+            raise ValueError(
+                f"data_groups and x_train must have the same length. Instead got {len(data_groups)=} and {len(x_train)=}"
+            )
+
         self.groups = OrderedDict({k: [] for k in set(data_groups)})
         for idx, group in enumerate(data_groups):
             self.groups[group].append(idx)
@@ -182,9 +218,9 @@ class GroupedDataset(Dataset):
     def data_names(self):
         return list(self.groups.keys())
 
-    def get_train_data(self, indices):
+    def get_train_data(self, train_indices):
         data_indices = [
-            idx for group_id in indices for idx in self.group_items[group_id][1]
+            idx for group_id in train_indices for idx in self.group_items[group_id][1]
         ]
         return super().get_train_data(data_indices)
 
@@ -195,23 +231,22 @@ class GroupedDataset(Dataset):
         data_groups: List,
         train_size: float = 0.8,
         random_state: int = None,
-    ) -> "Dataset":
+    ) -> "GroupedDataset":
         dataset = super().from_sklearn(data, train_size, random_state)
-        return get_grouped_dataset(dataset, data_groups)
+        return cls.from_dataset(dataset, data_groups)
 
-
-def get_grouped_dataset(dataset: Dataset, data_groups: List):
-    grouped_dataset = GroupedDataset(
-        x_train=dataset.x_train,
-        y_train=dataset.y_train,
-        x_test=dataset.x_test,
-        y_test=dataset.y_test,
-        data_groups=data_groups,
-        feature_names=dataset.feature_names,
-        target_names=dataset.target_names,
-        description=dataset.description,
-    )
-    return grouped_dataset
+    @classmethod
+    def from_dataset(cls, dataset: Dataset, data_groups: List):
+        return GroupedDataset(
+            x_train=dataset.x_train,
+            y_train=dataset.y_train,
+            x_test=dataset.x_test,
+            y_test=dataset.y_test,
+            data_groups=data_groups,
+            feature_names=dataset.feature_names,
+            target_names=dataset.target_names,
+            description=dataset.description,
+        )
 
 
 def polynomial(coefficients, x):

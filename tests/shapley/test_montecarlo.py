@@ -16,7 +16,7 @@ from valuation.shapley import (
     permutation_montecarlo_shapley,
     truncated_montecarlo_shapley,
 )
-from valuation.utils import MemcachedConfig, Utility, get_grouped_dataset
+from valuation.utils import GroupedDataset, MemcachedConfig, Utility
 from valuation.utils.numeric import lower_bound_hoeffding
 from valuation.utils.parallel import MapReduceJob, available_cpus, map_reduce
 
@@ -87,7 +87,7 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
 @pytest.mark.parametrize(
     "a, b, num_points, fun, score_type, rtol, max_iterations",
     [
-        (2, 0, 20, permutation_montecarlo_shapley, "explained_variance", 0.2, 1000),
+        (2, 0, 20, permutation_montecarlo_shapley, "explained_variance", 0.2, 500),
         (
             2,
             2,
@@ -95,9 +95,17 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
             permutation_montecarlo_shapley,
             "r2",
             0.2,
-            1000,
+            500,
         ),
-        (2, 0, 12, combinatorial_montecarlo_shapley, "explained_variance", 0.5, 2000),
+        (
+            2,
+            0,
+            12,
+            combinatorial_montecarlo_shapley,
+            "explained_variance",
+            0.5,
+            500,
+        ),
     ],
 )
 def test_linear_montecarlo_shapley(
@@ -131,9 +139,16 @@ def test_linear_montecarlo_shapley(
 @pytest.mark.parametrize(
     "a, b, num_points, fun, score_type, max_iterations",
     [
-        (2, 3, 20, permutation_montecarlo_shapley, "r2", 3000),
-        (2, 3, 20, permutation_montecarlo_shapley, "explained_variance", 3000),
-        (2, 3, 20, permutation_montecarlo_shapley, "neg_median_absolute_error", 3000),
+        (2, 3, 20, permutation_montecarlo_shapley, "r2", 500),
+        (2, 3, 20, permutation_montecarlo_shapley, "explained_variance", 500),
+        (
+            2,
+            3,
+            20,
+            permutation_montecarlo_shapley,
+            "neg_median_absolute_error",
+            500,
+        ),
     ],
 )
 def test_linear_montecarlo_with_outlier(
@@ -170,7 +185,7 @@ def test_linear_montecarlo_with_outlier(
             2,
             2,
             20,
-            10,
+            4,
             permutation_montecarlo_shapley,
             "r2",
             0.2,
@@ -190,7 +205,7 @@ def test_grouped_linear_montecarlo_shapley(
 ):
     num_jobs = min(8, available_cpus())
     data_groups = np.random.randint(0, num_groups, len(linear_dataset))
-    grouped_linear_dataset = get_grouped_dataset(linear_dataset, data_groups)
+    grouped_linear_dataset = GroupedDataset.from_dataset(linear_dataset, data_groups)
     grouped_linear_utility = Utility(
         LinearRegression(),
         data=grouped_linear_dataset,

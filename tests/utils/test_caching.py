@@ -156,8 +156,9 @@ def test_memcached_faster_with_repeated_training(memcached_client):
         (20, 10),
     ],
 )
-def test_memcached_parallel_repeated_training(memcached_client, n, atol):
+def test_memcached_parallel_repeated_training(memcached_client, n, atol, seed=42):
     _, config = memcached_client
+    np.random.seed(seed)
 
     @memcached(
         client_config=config,
