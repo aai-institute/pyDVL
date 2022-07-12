@@ -159,6 +159,7 @@ def map_reduce(
         job_result = fun(data, job_id=1, run_id=1)
         return [fun.reduce([job_result])]
 
+    # TODO: fix map_reduce, expecially when num_jobs>num_runs.
     # By-passing this if-else statement for the moment, until map_reduce is fixed
     # if num_jobs <= num_runs:
     if True:
