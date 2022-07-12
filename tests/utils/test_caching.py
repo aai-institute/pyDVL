@@ -153,7 +153,7 @@ def test_memcached_faster_with_repeated_training(memcached_client):
     [
         (7, 3),
         (10, 3),
-        (20, 5),
+        (20, 10),
     ],
 )
 def test_memcached_parallel_repeated_training(memcached_client, n, atol, seed=42):

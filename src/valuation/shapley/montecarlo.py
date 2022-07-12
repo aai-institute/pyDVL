@@ -314,7 +314,7 @@ def permutation_montecarlo_shapley(
         delayed(fun)(job_id=j + 1) for j in range(num_jobs)
     )
     acc = np.row_stack(results).sum(axis=0) / (max_iterations * num_jobs)
-    return sort_values({i: v for i, v in enumerate(acc)}), None
+    return sort_values({u.data.data_names[i]: v for i, v in enumerate(acc)}), None
 
 
 def combinatorial_montecarlo_shapley(
@@ -358,4 +358,4 @@ def combinatorial_montecarlo_shapley(
     job = MapReduceJob.from_fun(fun, np.concatenate)
     results = map_reduce(job, u.data.indices, num_jobs=num_jobs)[0]
 
-    return sort_values({i: v for i, v in enumerate(results)}), None
+    return sort_values({u.data.data_names[i]: v for i, v in enumerate(results)}), None
