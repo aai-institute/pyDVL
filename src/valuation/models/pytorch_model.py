@@ -9,7 +9,7 @@ from torch.autograd import Variable
 from torch.optim import Adam, AdamW
 from torch.utils.data import DataLoader, Dataset
 
-from valuation.utils import maybe_progress
+from valuation.utils import logger, maybe_progress
 from valuation.utils.types import TorchObjective
 
 
@@ -145,7 +145,7 @@ class PyTorchSupervisedModel:
                 pred_y = self.model(batch_x)
                 loss = self.objective(torch.squeeze(pred_y), torch.squeeze(batch_y))
 
-                print(f"Training loss: {loss.item()}")
+                logger.info(f"Training loss: {loss.item()}")
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()

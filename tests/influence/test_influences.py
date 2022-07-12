@@ -310,3 +310,31 @@ def test_linear_influences_up_perturbations_analytical(
         len(dataset.x_train),
         dataset.x_train.shape[1],
     )
+
+
+@pytest.mark.torch
+def test_influences_with_neural_network_explicit_hessian():
+    dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
+    up_influences = linear_influences(
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
+        influence_type=InfluenceTypes.Up,
+    )
+    assert np.logical_not(np.any(np.isnan(up_influences)))
+    assert up_influences.shape == (len(dataset.x_test), len(dataset.x_train))
+
+    pert_influences = linear_influences(
+        dataset.x_train,
+        dataset.y_train,
+        dataset.x_test,
+        dataset.y_test,
+        influence_type=InfluenceTypes.Perturbation,
+    )
+    assert np.logical_not(np.any(np.isnan(pert_influences)))
+    assert pert_influences.shape == (
+        len(dataset.x_test),
+        len(dataset.x_train),
+        dataset.x_train.shape[1],
+    )

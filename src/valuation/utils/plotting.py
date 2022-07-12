@@ -50,7 +50,7 @@ def plot_datasets(
 
     num_classes = None
     if is_discrete:
-        cmap_name = "tab10"
+        cmap_name = "Set1"
         cmap = plt.get_cmap(cmap_name)
         all_y = np.concatenate(tuple([v[1] for _, v in datasets.items()]), axis=0)
         unique_y = np.sort(np.unique(all_y))
@@ -76,12 +76,7 @@ def plot_datasets(
         if line is not None:
             ax[i].plot(line[:, 0], line[:, 1], color="black")
 
-        ax[i].scatter(
-            x[:, 0],
-            x[:, 1],
-            c=cmap(y),
-            s=s,
-        )
+        ax[i].scatter(x[:, 0], x[:, 1], c=cmap(y), s=s, edgecolors="black")
 
     if is_discrete:
         ax[-1].legend(handles=handles, loc="center", ncol=num_classes)
