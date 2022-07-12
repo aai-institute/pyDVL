@@ -20,8 +20,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="KNN Shapley" href="knn_shapley.html" />
-    <link rel="prev" title="valuation" href="index.html" /> 
+    <link rel="next" title="Installing pyDVL" href="install.html" />
+    <link rel="prev" title="pyDVL" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,8 +44,14 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Guides and Tutorials</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="knn_shapley.html">KNN Shapley</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-dataset">Creating Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-utility">Creating Utility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#computing-shapley-values">Computing Shapley values</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/index.html">Notebooks</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Modules</span></p>
 <ul>
@@ -102,16 +108,66 @@
 </style>
 <section id="getting-started">
 <h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h1>
-<p>Welcome to the valuation library.
-See the project’s <a class="reference external" href="https://github.com/appliedAI-Initiative/valuation">repository</a>  for more information.</p>
+<p>In order to use the library, you need to use <a class="reference external" href="https://memcached.org/">Memcached</a>,
+an in-memory key-value store for small chunks of arbitrary data (strings, objects),
+in order to cache certain results and speed-up the computations.</p>
+<p>You can either install it directly on your system and run it. For that refer to the
+<a class="reference external" href="https://github.com/memcached/memcached/wiki#getting-started">Getting Started section</a>
+of Memcached’s wiki. You can run it using:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ memcached -u user
+</pre></div>
+</div>
+<p>Or you can run it inside a container:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ docker container run -it --rm -p <span class="m">11211</span>:11211 memcached:latest -v
+</pre></div>
+</div>
+<p>Caching is enabled by default but can be disabled if not needed or desired.</p>
+<section id="creating-dataset">
+<h2>Creating Dataset<a class="headerlink" href="#creating-dataset" title="Permalink to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">50</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">16</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="creating-utility">
+<h2>Creating Utility<a class="headerlink" href="#creating-utility" title="Permalink to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="computing-shapley-values">
+<h2>Computing Shapley values<a class="headerlink" href="#computing-shapley-values" title="Permalink to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">map_reduce</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.shapley.montecarlo</span> <span class="kn">import</span> <span class="n">combinatorial_montecarlo_shapley</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.reporting.scores</span> <span class="kn">import</span> <span class="n">compute_fb_scores</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.reporting.plots</span> <span class="kn">import</span> <span class="n">shapley_results</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fun</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">truncated_montecarlo_shapley</span><span class="p">,</span> <span class="n">utility</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">values_nmcs</span><span class="p">,</span> <span class="n">hist_nmcs</span> <span class="o">=</span> <span class="n">map_reduce</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">num_runs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">num_jobs</span><span class="o">=</span><span class="mi">160</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scores_nmcs</span> <span class="o">=</span> <span class="n">compute_fb_scores</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values_nmcs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shapley_results</span><span class="p">(</span><span class="n">scores_nmcs</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="valuation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="knn_shapley.html" class="btn btn-neutral float-right" title="KNN Shapley" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="pyDVL" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="install.html" class="btn btn-neutral float-right" title="Installing pyDVL" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
