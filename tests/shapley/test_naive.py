@@ -29,12 +29,12 @@ def test_analytic_exact_shapley(analytic_shapley, fun, rtol, total_atol):
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points, seed, score_type",
+    "a, b, num_points, score_type",
     [
-        (2, 0, 20, None, "r2"),
-        (2, 1, 20, None, "r2"),
-        (2, 1, 20, None, "neg_median_absolute_error"),
-        (2, 1, 20, None, "explained_variance"),
+        (2, 0, 20, "r2"),
+        (2, 1, 20, "r2"),
+        (2, 1, 20, "neg_median_absolute_error"),
+        (2, 1, 20, "explained_variance"),
     ],
 )
 def test_linear(
@@ -57,12 +57,12 @@ def test_linear(
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points, seed, score_type",
+    "a, b, num_points, score_type",
     [
-        (2, 1, 20, None, "explained_variance"),
-        (2, 0, 20, None, "r2"),
-        (2, 1, 20, None, "neg_median_absolute_error"),
-        (2, 1, 20, None, "r2"),
+        (2, 1, 20, "explained_variance"),
+        (2, 0, 20, "r2"),
+        (2, 1, 20, "neg_median_absolute_error"),
+        (2, 1, 20, "r2"),
     ],
 )
 def test_linear_with_outlier(
