@@ -1,5 +1,6 @@
 from collections import OrderedDict
-from typing import Iterable, List, Optional
+from copy import copy
+from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
 from numpy.lib.index_tricks import IndexExpression
