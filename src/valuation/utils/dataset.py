@@ -192,9 +192,11 @@ class GroupedDataset(Dataset):
         super().__init__(
             x_train, y_train, x_test, y_test, feature_names, target_names, description
         )
-        assert len(data_groups) == len(
-            x_train
-        ), f"data_groups and x_train must have the same length. Instead got {len(data_groups)=} and {len(x_train)=}"
+        if len(data_groups) != len(x_train):
+            raise ValueError(
+                f"data_groups and x_train must have the same length. Instead got {len(data_groups)=} and {len(x_train)=}"
+            )
+
         self.groups = OrderedDict({k: [] for k in set(data_groups)})
         for idx, group in enumerate(data_groups):
             self.groups[group].append(idx)
