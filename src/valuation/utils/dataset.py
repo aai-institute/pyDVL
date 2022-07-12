@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 import numpy as np
 from numpy.lib.index_tricks import IndexExpression
@@ -172,9 +172,9 @@ class GroupedDataset(Dataset):
         x_test: np.ndarray,
         y_test: np.ndarray,
         data_groups: Iterable,
-        feature_names: Iterable = None,
-        target_names: Iterable = None,
-        description: str = None,
+        feature_names: Optional[Iterable] = None,
+        target_names: Optional[Iterable] = None,
+        description: Optional[str] = None,
     ):
         """Class for better grouped datasets.
 
@@ -226,7 +226,7 @@ class GroupedDataset(Dataset):
         data_groups: List,
         train_size: float = 0.8,
         random_state: int = None,
-    ) -> "Dataset":
+    ) -> "GroupedDataset":
         dataset = super().from_sklearn(data, train_size, random_state)
         return cls.from_dataset(dataset, data_groups)
 
