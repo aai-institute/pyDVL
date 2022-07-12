@@ -2,6 +2,7 @@ import os
 from collections import OrderedDict
 from typing import Callable, Dict, Iterable, List, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from numpy.lib.index_tricks import IndexExpression
@@ -245,3 +246,18 @@ def load_spotify_dataset(min_year=2014):
         return data.iloc[:3]
     else:
         return data[data["year"] > min_year]
+
+
+def plot_dval(dval_df, figsize=None, title=None, xlabel=None, ylabel=None):
+    plt.figure(figsize=figsize)
+    plt.errorbar(
+        x=dval_df["data_key"],
+        y=dval_df["shapley_dval"],
+        yerr=dval_df["dval_std"],
+        fmt="o",
+    )
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.xticks(rotation=45)
+    plt.show()

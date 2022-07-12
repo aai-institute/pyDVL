@@ -431,5 +431,5 @@ def shapley_dval(
         )
     return pd.DataFrame(
         list(zip(dval.keys(), dval.values(), dval_std.values())),
-        columns=["artist", "shapley_dval", "dval_std"],
+        columns=["data_key", "shapley_dval", "dval_std"],
     )

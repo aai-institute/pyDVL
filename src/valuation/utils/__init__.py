@@ -21,4 +21,5 @@ __all__ = [
     "powerset",
     "maybe_progress",
     "load_spotify_dataset",
+    "plot_dval",
 ]
