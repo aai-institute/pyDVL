@@ -27,7 +27,7 @@ def influences(
     """
     Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
     calculating the influence factors for all test points, with respect to the training points. Subsequently,
-    all influence get calculated over the train set.
+    all influence get calculated over the complete train set.
 
     :param model: A model which has to implement the TwiceDifferentiable interface.
     :param x_train: A np.ndarray of shape [MxK] containing the features of the train set of data points.
