@@ -154,13 +154,3 @@ def influences(
         influence_function, functools.partial(np.concatenate, axis=1)
     )
     return map_reduce(influences_job, np.arange(len(x_train)), num_jobs=n_jobs)[0]
-
-
-def accuracy_over_num_most_influential_points(
-    model: TwiceDifferentiable,
-    x_train: np.ndarray,
-    y_train: np.ndarray,
-    x_test: np.ndarray = None,
-    y_test: np.ndarray = None,
-) -> np.ndarray:
-    pass
