@@ -3,8 +3,6 @@ name: Upload Python Package
 on:
   release:
     types: [created]
-  push:
-    branches: [develop]
 
 jobs:
   deploy:
@@ -21,7 +19,6 @@ jobs:
       - name: Install Dev Requirements
         run: pip install -r requirements-dev.txt
       - name: Build and publish to PyPI
-        if: ${{ github.event_name == 'release' }}
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
