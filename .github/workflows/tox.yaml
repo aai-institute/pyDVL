@@ -22,13 +22,13 @@ jobs:
         run: |
           git fetch origin develop:develop --update-head-ok
           git merge develop
-      - name: Setup Python 3.8
+      - name: Set up Python 3.8
         uses: actions/setup-python@v3
         with:
           python-version: 3.8
           cache: 'pip'
-      - name: Install Tox and any other packages
-        run: pip install tox
+      - name: Install Dev Requirements
+        run: pip install -r requirements-dev.txt
       - name: Run Tox
         run: tox
       - name: Test Torch Modules
@@ -48,3 +48,15 @@ jobs:
           publish_dir: ./docs/_build/html
           user_name: ${{ env.GITHUB_BOT_USERNAME }}
           user_email: ${{ env.GITHUB_BOT_EMAIL }}
+      - name: Build and publish to TestPyPI
+        if: ${{ github.ref == 'refs/heads/develop' }}
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
+        run: |
+          git config user.name "${{ env.GITHUB_BOT_USERNAME }}"
+          git config user.email "${{ env.GITHUB_BOT_EMAIL }}"
+          tox -e bump-dev-version-and-create-tag
+          tox -e publish-test-package
+          git push
+          git push --tags
