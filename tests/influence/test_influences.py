@@ -1,8 +1,12 @@
 import itertools
+from copy import copy
 from typing import List, Tuple
 
 import numpy as np
 import pytest
+import torch
+from sklearn.datasets import load_wine
+from sklearn.preprocessing import MinMaxScaler
 
 from tests.conftest import create_mock_dataset
 from valuation.influence.general import influences
@@ -12,6 +16,8 @@ from valuation.influence.linear import (
     linear_influences,
 )
 from valuation.influence.types import InfluenceTypes
+from valuation.models.neural_network_torch_model import NNTorchModel
+from valuation.utils import Dataset
 
 try:
     import torch.nn.functional as F
@@ -314,27 +320,40 @@ def test_linear_influences_up_perturbations_analytical(
 
 @pytest.mark.torch
 def test_influences_with_neural_network_explicit_hessian():
-    dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
-    up_influences = linear_influences(
-        dataset.x_train,
-        dataset.y_train,
-        dataset.x_test,
-        dataset.y_test,
-        influence_type=InfluenceTypes.Up,
+    dataset = Dataset.from_sklearn(load_wine())
+    x_transformer = MinMaxScaler()
+    transformed_dataset = copy(dataset)
+    transformed_dataset.x_train = x_transformer.fit_transform(
+        transformed_dataset.x_train
     )
-    assert np.logical_not(np.any(np.isnan(up_influences)))
-    assert up_influences.shape == (len(dataset.x_test), len(dataset.x_train))
+    transformed_dataset.x_test = x_transformer.transform(transformed_dataset.x_test)
+    feature_dimension = dataset.x_train.shape[1]
+    unique_classes = np.unique(np.concatenate((dataset.y_train, dataset.y_test)))
+    num_classes = len(unique_classes)
 
-    pert_influences = linear_influences(
-        dataset.x_train,
-        dataset.y_train,
-        dataset.x_test,
-        dataset.y_test,
-        influence_type=InfluenceTypes.Perturbation,
+    network_size = [16, 16]
+    model = PyTorchSupervisedModel(
+        model=NNTorchModel(feature_dimension, num_classes, network_size),
+        objective=F.cross_entropy,
+        num_epochs=300,
+        batch_size=32,
+        optimizer=PyTorchOptimizer.ADAM,
+        optimizer_kwargs={
+            "lr": 0.001,
+            "weight_decay": 0.001,
+            "cosine_annealing": True,
+        },
+        y_dtype=torch.long,
     )
-    assert np.logical_not(np.any(np.isnan(pert_influences)))
-    assert pert_influences.shape == (
-        len(dataset.x_test),
-        len(dataset.x_train),
-        dataset.x_train.shape[1],
+    model.fit(transformed_dataset.x_train, transformed_dataset.y_train)
+
+    train_influences = influences(
+        model,
+        transformed_dataset.x_train,
+        transformed_dataset.y_train,
+        transformed_dataset.x_test,
+        transformed_dataset.y_test,
+        inversion_method="direct",
     )
+
+    assert np.all(np.logical_not(np.isnan(train_influences)))
