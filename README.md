@@ -56,7 +56,10 @@ from valuation.influence.linear import linear_influences
 from valuation.influence.types import InfluenceTypes
 
 linear_influences(
-    dataset, 
+    x_train,
+    y_train,
+    x_test,
+    y_test, 
     influence_type=InfluenceTypes.Up
 )
 ```
@@ -78,7 +81,10 @@ from valuation.influence.types import InfluenceTypes
 
 influences(
    model,
-   dataset,
+   x_train,
+   y_train,
+   x_test,
+   y_test, 
    influence_type=InfluenceTypes.Up
 )
 ```
@@ -96,7 +102,10 @@ from valuation.influence.types import InfluenceTypes
 
 influences(
     model,
-    dataset,
+    x_train,
+    y_train,
+    x_test,
+    y_test,
     influence_type=InfluenceTypes.Up,
     use_conjugate_gradient=True
 )

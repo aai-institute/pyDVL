@@ -263,3 +263,31 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     b_part_derivative = np.tile(np.expand_dims(A, axis=0), [b, 1, 1])
     full_derivative = np.concatenate((outer_product_matrix, b_part_derivative), axis=1)
     return full_derivative / n
+
+
+def sample_classification_dataset_using_gaussians(
+    mus: np.ndarray, sigma: float, num_samples: int
+):
+    num_features = mus.shape[1]
+    num_classes = mus.shape[0]
+    gaussian_cov = sigma * np.eye(num_features)
+    gaussian_chol = np.linalg.cholesky(gaussian_cov)
+    y = np.random.randint(num_classes, size=num_samples)
+    x = (
+        np.einsum(
+            "ij,kj->ki",
+            gaussian_chol,
+            np.random.normal(size=[num_samples, num_features]),
+        )
+        + mus[y]
+    )
+    return x, y
+
+
+def decision_boundary_fixed_variance_2d(
+    mu_1: np.ndarray, mu_2: np.ndarray
+) -> Callable[[np.ndarray], np.ndarray]:
+    a = np.asarray([[0, 1], [-1, 0]]) @ (mu_2 - mu_1)
+    b = (mu_1 + mu_2) / 2
+    a = a.reshape([1, -1])
+    return lambda z: z.reshape([-1, 1]) * a + b

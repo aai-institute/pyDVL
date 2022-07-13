@@ -1,5 +1,6 @@
 from collections import OrderedDict
-from typing import Iterable, List, Optional
+from copy import copy
+from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
 from numpy.lib.index_tricks import IndexExpression
@@ -21,20 +22,6 @@ class Dataset:
         data_names: Iterable = None,
         description: str = None,
     ):
-        """Class for better handling datasets in the Dval library
-
-        :param x_train: train input data
-        :param y_train: labels of train data
-        :param x_test: input of test data
-        :param y_test: labels of test data
-        :param feature_names: name of the features of input data
-        :param target_names: name of target data
-        :param data_names: optional name for each entry in the train dataset.
-            Must have the same length as x_train.
-            For example input data may be indexed by timestamp (as it is typical for timeseries).
-            In order to refer to them with such timestamps, one can pass the times column to data_names.
-        :param description: description of the dataset
-        """
         self.x_train, self.y_train = check_X_y(x_train, y_train)
         self.x_test, self.y_test = check_X_y(x_test, y_test)
 
@@ -83,6 +70,9 @@ class Dataset:
         self.description = description or "No description"
         self._indices = np.arange(len(self.x_train))
         self._data_names = list(data_names) if data_names is not None else self._indices
+
+    def __iter__(self):
+        return self.x_train, self.y_train, self.x_test, self.y_test
 
     def feature(self, name: str) -> IndexExpression:
         try:
@@ -145,7 +135,6 @@ class Dataset:
             y_test,
             feature_names=data.get("feature_names"),
             target_names=data.get("target_names"),
-            data_names=data.get("data_names"),
             description=data.get("DESCR"),
         )
 
@@ -266,3 +255,21 @@ def polynomial_dataset(coefficients: np.ndarray):
     db.feature_names = ["x"]
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.5), coefficients
+
+
+def flip_dataset(
+    dataset: Dataset, flip_percentage: float, in_place: bool = False
+) -> Tuple[Dataset, np.ndarray]:
+    """
+    Takes a binary classification problem and inverts a certain percentage of the labels.
+
+    :param dataset: A binary classification problem.
+    :param flip_percentage: A float between [0, 1] describing how much labels shall be flipped.
+    :param in_place: True, if the old dataset should be not copied but used by value as reference.
+    :returns: A dataset differing in 5% of the labels to the orignal one.
+    """
+    flipped_dataset = copy(dataset) if not in_place else dataset
+    flip_num_samples = int(flip_percentage * len(dataset.x_train))
+    idx = np.random.choice(len(dataset.x_train), replace=False, size=flip_num_samples)
+    flipped_dataset.y_train[idx] = 1 - flipped_dataset.y_train[idx]
+    return flipped_dataset, idx

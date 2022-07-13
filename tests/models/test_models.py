@@ -1,5 +1,4 @@
 import itertools
-import sys
 from typing import List, Tuple
 
 import numpy as np
@@ -14,6 +13,9 @@ from valuation.utils import (
 try:
     import torch.nn.functional as F
 
+    from valuation.models.binary_logistic_regression import (
+        BinaryLogisticRegressionTorchModel,
+    )
     from valuation.models.linear_regression_torch_model import LRTorchModel
     from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
 except ImportError:
@@ -22,7 +24,9 @@ except ImportError:
 
 class ModelTestSettings:
     DATA_OUTPUT_NOISE: float = 0.01
-    ACCEPTABLE_ABS_TOL_MODEL: float = 0.02
+    ACCEPTABLE_ABS_TOL_MODEL: float = (
+        0.04  # TODO: Reduce bound if tests are running with fixed seeds.
+    )
     ACCEPTABLE_ABS_TOL_DERIVATIVE: float = 1e-5
 
     TEST_CONDITION_NUMBERS: List[int] = [5]
@@ -38,7 +42,7 @@ class ModelTestSettings:
     ]
 
 
-test_cases_model_fit = list(
+test_cases_linear_regression_fit = list(
     itertools.product(
         ModelTestSettings.TRAINING_SET_SIZE,
         ModelTestSettings.TEST_SET_SIZE,
@@ -47,8 +51,16 @@ test_cases_model_fit = list(
     )
 )
 
+test_cases_logistic_regression_fit = list(
+    itertools.product(
+        ModelTestSettings.TRAINING_SET_SIZE,
+        ModelTestSettings.TEST_SET_SIZE,
+        [(1, 3), (1, 7), (1, 20)],
+        ModelTestSettings.TEST_CONDITION_NUMBERS,
+    )
+)
 
-test_cases_model_correctness = list(
+test_cases_linear_regression_derivatives = list(
     itertools.product(
         ModelTestSettings.TRAINING_SET_SIZE,
         ModelTestSettings.PROBLEM_DIMENSIONS,
@@ -70,22 +82,71 @@ def lmb_correctness_test_case_to_str(packed_i_test_case):
 fit_test_case_ids = list(
     map(
         lmb_fit_test_case_to_str,
-        zip(range(len(test_cases_model_fit)), test_cases_model_fit),
+        zip(
+            range(len(test_cases_linear_regression_fit)),
+            test_cases_linear_regression_fit,
+        ),
     )
 )
 correctness_test_case_ids = list(
     map(
         lmb_correctness_test_case_to_str,
-        zip(range(len(test_cases_model_correctness)), test_cases_model_correctness),
+        zip(
+            range(len(test_cases_linear_regression_derivatives)),
+            test_cases_linear_regression_derivatives,
+        ),
     )
 )
 
 
 @pytest.mark.torch
-@pytest.mark.skip()
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number",
-    test_cases_model_fit,
+    test_cases_logistic_regression_fit,
+)
+def test_logistic_regression_model_fit(
+    train_set_size: int,
+    test_set_size: int,
+    condition_number: float,
+    linear_model: Tuple[np.ndarray, np.ndarray],
+):
+
+    # some settings
+    A, b = linear_model
+    output_dimension, input_dimension = tuple(A.shape)
+    sigmoid = lambda z: 1 / (1 + np.exp(-z))
+
+    # generate datasets
+    data_model = lambda x: (
+        sigmoid(np.random.normal(x @ A.T + b, ModelTestSettings.DATA_OUTPUT_NOISE))
+        > 0.5
+    ).astype(int)
+    train_x = np.random.uniform(low=-1, high=1, size=[train_set_size, input_dimension])
+    train_y = data_model(train_x)
+    model = PyTorchSupervisedModel(
+        model=BinaryLogisticRegressionTorchModel(input_dimension),
+        objective=F.binary_cross_entropy,
+        num_epochs=1000,
+        batch_size=32,
+        optimizer=PyTorchOptimizer.ADAM,
+        optimizer_kwargs={"lr": 0.001, "weight_decay": 1e-4},
+    )
+    model.fit(train_x, train_y)
+    pred_y = (model.predict(train_x) > 0.5).astype(int)
+    accuracy = np.sum(pred_y == train_y) / len(pred_y)
+    assert accuracy >= 0.95, "Accuracy is not enough"
+
+    learned_A = model.model.A.detach().numpy()
+    angle_similiarity = (learned_A * A).sum() / (
+        np.linalg.norm(learned_A) * np.linalg.norm(A)
+    )
+    assert angle_similiarity > 0.95, "Angle similarity is not enough"
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize(
+    "train_set_size,test_set_size,problem_dimension,condition_number",
+    test_cases_linear_regression_fit,
     ids=fit_test_case_ids,
 )
 def test_linear_regression_model_fit(
@@ -131,7 +192,7 @@ def test_linear_regression_model_fit(
 @pytest.mark.torch
 @pytest.mark.parametrize(
     "train_set_size,problem_dimension,condition_number",
-    test_cases_model_correctness,
+    test_cases_linear_regression_derivatives,
     ids=correctness_test_case_ids,
 )
 def test_linear_regression_model_grad(
@@ -168,7 +229,7 @@ def test_linear_regression_model_grad(
 @pytest.mark.torch
 @pytest.mark.parametrize(
     "train_set_size,problem_dimension,condition_number",
-    test_cases_model_correctness,
+    test_cases_linear_regression_derivatives,
     ids=correctness_test_case_ids,
 )
 def test_linear_regression_model_hessian(
@@ -207,7 +268,7 @@ def test_linear_regression_model_hessian(
 @pytest.mark.torch
 @pytest.mark.parametrize(
     "train_set_size,problem_dimension,condition_number",
-    test_cases_model_correctness,
+    test_cases_linear_regression_derivatives,
     ids=correctness_test_case_ids,
 )
 def test_linear_regression_model_d_x_d_theta(

@@ -5,16 +5,13 @@ import torch
 import torch.nn as nn
 
 
-class LRTorchModel(nn.Module):
-    def __init__(self, dim=Tuple[int, int], init: Tuple[np.ndarray, np.ndarray] = None):
+class BinaryLogisticRegressionTorchModel(nn.Module):
+    def __init__(self, n_input: int, init: Tuple[np.ndarray, np.ndarray] = None):
         super().__init__()
-        n_output, n_input = dim
         self.n_input = n_input
-        self.n_output = n_output
         if init is None:
-            r = np.sqrt(6 / (n_input + n_output))
-            init_A = np.random.uniform(-r, r, size=[n_output, n_input])
-            init_b = np.zeros(n_output)
+            init_A = np.random.normal(0, 0.02, size=(1, n_input))
+            init_b = np.random.normal(0, 0.02, size=(1))
             init = (init_A, init_b)
 
         self.A = nn.Parameter(
@@ -25,4 +22,4 @@ class LRTorchModel(nn.Module):
         )
 
     def forward(self, x: torch.tensor) -> torch.tensor:
-        return x @ self.A.T + self.b
+        return torch.sigmoid(x @ self.A.T + self.b)
