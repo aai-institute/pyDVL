@@ -38,7 +38,7 @@ setup(
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     include_package_data=True,
-    version="0.1.0-dev2",
+    version="0.1.0-dev3",
     description="The python Data Valuation Library",
     install_requires=[
         line
