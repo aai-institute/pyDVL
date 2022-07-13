@@ -10,6 +10,10 @@ def plot_datasets(
     datasets: Dict[str, Tuple[np.ndarray, np.ndarray]],
     x_min: np.ndarray = None,
     x_max: np.ndarray = None,
+    xlabel: str = None,
+    ylabel: str = None,
+    vline: float = None,
+    cmap_name: str = None,
     line: np.ndarray = None,
     suptitle: str = None,
     s: float = None,
@@ -50,7 +54,8 @@ def plot_datasets(
 
     num_classes = None
     if is_discrete:
-        cmap_name = "Set1"
+        if cmap_name is None:
+            cmap_name = "Set1"
         cmap = plt.get_cmap(cmap_name)
         all_y = np.concatenate(tuple([v[1] for _, v in datasets.items()]), axis=0)
         unique_y = np.sort(np.unique(all_y))
@@ -59,7 +64,8 @@ def plot_datasets(
             mpatches.Patch(color=cmap(i), label=y) for i, y in enumerate(unique_y)
         ]
     else:
-        cmap_name = "plasma"
+        if cmap_name is None:
+            cmap_name = "plasma"
         cmap = plt.get_cmap(cmap_name)
 
     for i, dataset_name in enumerate(datasets.keys()):
@@ -77,6 +83,14 @@ def plot_datasets(
             ax[i].plot(line[:, 0], line[:, 1], color="black")
 
         ax[i].scatter(x[:, 0], x[:, 1], c=cmap(y), s=s, edgecolors="black")
+
+        if xlabel is not None:
+            ax[i].set_xlabel(xlabel)
+        if ylabel is not None:
+            ax[i].set_ylabel(ylabel)
+
+        if vline is not None:
+            ax[i].axvline(vline, color="black", linestyle="--")
 
     if is_discrete:
         ax[-1].legend(handles=handles, loc="center", ncol=num_classes)
