@@ -1,0 +1,5 @@
+binary\_logistic\_regression
+============================
+.. automodule:: valuation.models.binary_logistic_regression
+   :members:
+   :undoc-members:

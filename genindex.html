@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; pyDVL 0.1.0.dev1 documentation</title>
+  <title>Index &mdash; pyDVL 0.1.0.dev2 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -128,6 +128,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/reporting/scores.html#valuation.reporting.scores.backward_elimination">backward_elimination() (in module valuation.reporting.scores)</a>
 </li>
+      <li><a href="valuation/models/binary_logistic_regression.html#valuation.models.binary_logistic_regression.BinaryLogisticRegressionTorchModel">BinaryLogisticRegressionTorchModel (class in valuation.models.binary_logistic_regression)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/utils.html#valuation.utils.bootstrap_test_score">bootstrap_test_score() (in module valuation.utils)</a>
@@ -200,6 +202,8 @@
         <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.Dataset">(class in valuation.utils.dataset)</a>
 </li>
       </ul></li>
+      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.decision_boundary_fixed_variance_2d">decision_boundary_fixed_variance_2d() (in module valuation.utils.numeric)</a>
+</li>
       <li><a href="valuation/utils.html#valuation.utils.Dataset.dim">dim (Dataset property)</a>, <a href="valuation/utils/dataset.html#valuation.utils.dataset.Dataset.dim">[1]</a>
 </li>
   </ul></td>
@@ -230,8 +234,14 @@
       </ul></li>
       <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.flatten_gradient">flatten_gradient() (in module valuation.models.pytorch_model)</a>
 </li>
-      <li><a href="valuation/models/linear_regression_torch_model.html#valuation.models.linear_regression_torch_model.LRTorchModel.forward">forward() (LRTorchModel method)</a>
+      <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.flip_dataset">flip_dataset() (in module valuation.utils.dataset)</a>
 </li>
+      <li><a href="valuation/models/binary_logistic_regression.html#valuation.models.binary_logistic_regression.BinaryLogisticRegressionTorchModel.forward">forward() (BinaryLogisticRegressionTorchModel method)</a>
+
+      <ul>
+        <li><a href="valuation/models/linear_regression_torch_model.html#valuation.models.linear_regression_torch_model.LRTorchModel.forward">(LRTorchModel method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/reporting/scores.html#valuation.reporting.scores.forward_selection">forward_selection() (in module valuation.reporting.scores)</a>
@@ -428,6 +438,8 @@
 </li>
         <li><a href="valuation/models.html#module-valuation.models">valuation.models</a>
 </li>
+        <li><a href="valuation/models/binary_logistic_regression.html#module-valuation.models.binary_logistic_regression">valuation.models.binary_logistic_regression</a>
+</li>
         <li><a href="valuation/models/linear_regression_torch_model.html#module-valuation.models.linear_regression_torch_model">valuation.models.linear_regression_torch_model</a>
 </li>
         <li><a href="valuation/models/pytorch_model.html#module-valuation.models.pytorch_model">valuation.models.pytorch_model</a>
@@ -462,6 +474,8 @@
 </li>
         <li><a href="valuation/utils/parallel.html#module-valuation.utils.parallel">valuation.utils.parallel</a>
 </li>
+        <li><a href="valuation/utils/plotting.html#module-valuation.utils.plotting">valuation.utils.plotting</a>
+</li>
         <li><a href="valuation/utils/progress.html#module-valuation.utils.progress">valuation.utils.progress</a>
 </li>
         <li><a href="valuation/utils/types.html#module-valuation.utils.types">valuation.utils.types</a>
@@ -485,10 +499,16 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/loo/naive.html#valuation.loo.naive.naive_loo">naive_loo() (in module valuation.loo.naive)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/utils/caching.html#valuation.utils.caching.ClientConfig.no_delay">no_delay (ClientConfig attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.PyTorchSupervisedModel.num_params">num_params() (PyTorchSupervisedModel method)</a>
+
+      <ul>
+        <li><a href="valuation/utils/types.html#valuation.utils.types.TwiceDifferentiable.num_params">(TwiceDifferentiable method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -511,12 +531,14 @@
       </ul></li>
       <li><a href="valuation/influence/types.html#valuation.influence.types.InfluenceTypes.Perturbation">Perturbation (InfluenceTypes attribute)</a>
 </li>
-      <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.polynomial">polynomial() (in module valuation.utils.dataset)</a>
+      <li><a href="valuation/utils/plotting.html#valuation.utils.plotting.plot_datasets">plot_datasets() (in module valuation.utils.plotting)</a>
 </li>
-      <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.polynomial_dataset">polynomial_dataset() (in module valuation.utils.dataset)</a>
+      <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.polynomial">polynomial() (in module valuation.utils.dataset)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.polynomial_dataset">polynomial_dataset() (in module valuation.utils.dataset)</a>
+</li>
       <li><a href="valuation/utils.html#valuation.utils.powerset">powerset() (in module valuation.utils)</a>
 
       <ul>
@@ -563,6 +585,8 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.sample_classification_dataset_using_gaussians">sample_classification_dataset_using_gaussians() (in module valuation.utils.numeric)</a>
+</li>
       <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.PyTorchSupervisedModel.score">score() (PyTorchSupervisedModel method)</a>
 
       <ul>
@@ -585,10 +609,10 @@
 </li>
       <li><a href="valuation/utils/logging.html#valuation.utils.logging.set_logger">set_logger() (in module valuation.utils.logging)</a>
 </li>
-      <li><a href="valuation/reporting/plots.html#valuation.reporting.plots.shaded_mean_std">shaded_mean_std() (in module valuation.reporting.plots)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="valuation/reporting/plots.html#valuation.reporting.plots.shaded_mean_std">shaded_mean_std() (in module valuation.reporting.plots)</a>
+</li>
       <li><a href="valuation/reporting/plots.html#valuation.reporting.plots.shapley_results">shapley_results() (in module valuation.reporting.plots)</a>
 </li>
       <li><a href="valuation/reporting/scores.html#valuation.reporting.scores.sort_values">sort_values() (in module valuation.reporting.scores)</a>
@@ -623,8 +647,12 @@
 </li>
       <li><a href="valuation/utils/types.html#valuation.utils.types.TorchObjective">TorchObjective (class in valuation.utils.types)</a>
 </li>
-      <li><a href="valuation/models/linear_regression_torch_model.html#valuation.models.linear_regression_torch_model.LRTorchModel.training">training (LRTorchModel attribute)</a>
+      <li><a href="valuation/models/binary_logistic_regression.html#valuation.models.binary_logistic_regression.BinaryLogisticRegressionTorchModel.training">training (BinaryLogisticRegressionTorchModel attribute)</a>
+
+      <ul>
+        <li><a href="valuation/models/linear_regression_torch_model.html#valuation.models.linear_regression_torch_model.LRTorchModel.training">(LRTorchModel attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/shapley.html#valuation.shapley.truncated_montecarlo_shapley">truncated_montecarlo_shapley() (in module valuation.shapley)</a>
@@ -734,6 +762,13 @@
 
       <ul>
         <li><a href="valuation/models.html#module-valuation.models">module</a>
+</li>
+      </ul></li>
+      <li>
+    valuation.models.binary_logistic_regression
+
+      <ul>
+        <li><a href="valuation/models/binary_logistic_regression.html#module-valuation.models.binary_logistic_regression">module</a>
 </li>
       </ul></li>
       <li>
@@ -855,6 +890,13 @@
 
       <ul>
         <li><a href="valuation/utils/parallel.html#module-valuation.utils.parallel">module</a>
+</li>
+      </ul></li>
+      <li>
+    valuation.utils.plotting
+
+      <ul>
+        <li><a href="valuation/utils/plotting.html#module-valuation.utils.plotting">module</a>
 </li>
       </ul></li>
       <li>
