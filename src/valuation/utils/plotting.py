@@ -27,7 +27,7 @@ def plot_datasets(
     :param x_min: Set to define the minimum boundaries of the plot.
     :param x_max: Set to define the maximum boundaries of the plot.
     :param line: Optional, line of shape [Mx2], where each row is a point of the 2-dimensional line.
-    :parm s: The thickness of the points to plot.
+    :param s: The thickness of the points to plot.
     """
 
     num_datasets = len(datasets)
