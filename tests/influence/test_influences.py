@@ -15,13 +15,14 @@ from valuation.influence.linear import (
     linear_influences,
 )
 from valuation.influence.types import InfluenceTypes
-from valuation.models.neural_network_torch_model import NNTorchModel
 from valuation.utils import Dataset
 
 try:
+    import torch
     import torch.nn.functional as F
 
     from valuation.models.linear_regression_torch_model import LRTorchModel
+    from valuation.models.neural_network_torch_model import NNTorchModel
     from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
 except ImportError:
     pass
@@ -342,7 +343,7 @@ def test_influences_with_neural_network_explicit_hessian():
             "weight_decay": 0.001,
             "cosine_annealing": True,
         },
-        y_dtype="long",
+        y_dtype=torch.long,
     )
     model.fit(transformed_dataset.x_train, transformed_dataset.y_train)
 
