@@ -43,10 +43,28 @@ def influences(
     :returns: A np.ndarray of shape [NxM] specifying the influences.
     """
 
+    def hvp_to_inv_diag_conditioner(hvp: Callable[[np.ndarray], np.ndarray], d: int):
+        """
+        This method uses the hvp function to construct a simple pre-conditioner 1/diag(H).
+        """
+        diags = np.empty(d)
+
+        for i in range(d):
+            inp = np.zeros(d)
+            inp[i] = 1
+            diags[i] = hvp(np.reshape(inp, [1, -1]))[0, i]
+
+        def _inv_diag_conditioner(v):
+            return v / diags
+
+        return _inv_diag_conditioner
+
     n_params = model.num_params()
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
         "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,
-        "cg": lambda hvp, x: conjugate_gradient(hvp, x)[0],
+        "cg": lambda hvp, x: conjugate_gradient(
+            hvp, x, M=hvp_to_inv_diag_conditioner(hvp, d=x.shape[1])
+        )[0],
     }
 
     if inversion_method is None:

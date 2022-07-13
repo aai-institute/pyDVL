@@ -30,7 +30,8 @@ except ImportError:
 
 class InfluenceTestSettings:
     DATA_OUTPUT_NOISE: float = 0.01
-    ACCEPTABLE_ABS_TOL_INFLUENCE: float = 1e-4
+    ACCEPTABLE_ABS_TOL_INFLUENCE: float = 3e-4
+    ACCEPTABLE_ABS_TOL_INFLUENCE_CG: float = 1e-3
 
     INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [5]
     INFLUENCE_TRAINING_SET_SIZE: List[int] = [500]
@@ -64,7 +65,6 @@ test_case_ids = list(map(lmb_test_case_to_str, zip(range(len(test_cases)), test_
 
 
 @pytest.mark.torch
-@pytest.mark.skip("Conjugate gradient sometimes is not accurate.")
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number,n_jobs",
     test_cases,
@@ -103,7 +103,7 @@ def test_upweighting_influences_lr_analytical_cg(
         progress=True,
         n_jobs=n_jobs,
         influence_type=InfluenceTypes.Up,
-        use_conjugate_gradient=True,
+        inversion_method="cg",
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
     assert influence_values.shape == (len(dataset.x_test), len(dataset.x_train))
@@ -111,7 +111,7 @@ def test_upweighting_influences_lr_analytical_cg(
         np.abs(influence_values - influence_values_analytical)
     )
     assert (
-        influences_max_abs_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_INFLUENCE
+        influences_max_abs_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_INFLUENCE_CG
     ), "Upweighting influence values were wrong."
 
 
@@ -166,7 +166,6 @@ def test_upweighting_influences_lr_analytical(
 
 
 @pytest.mark.torch
-@pytest.mark.skip("Conjugate gradient sometimes is not accurate.")
 @pytest.mark.parametrize(
     "train_set_size,test_set_size,problem_dimension,condition_number,n_jobs",
     test_cases,
@@ -205,7 +204,7 @@ def test_perturbation_influences_lr_analytical_cg(
         progress=True,
         n_jobs=n_jobs,
         influence_type=InfluenceTypes.Perturbation,
-        use_conjugate_gradient=True,
+        inversion_method="cg",
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
     assert influence_values.shape == (
