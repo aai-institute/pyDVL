@@ -21,14 +21,12 @@ def plot_datasets(
     """
     Plots a dictionary of 2-dimensional datasets to either a continuous regression value or a discrete class label.
     In the former case the plasma color map is selected and in the later the tab10 color map is chosen.
-
     :param datasets: A dictionary mapping dataset names to a tuple of (features, target_variable). Note that the
     features have size [Nx2] and the target_variable [N].
     :param x_min: Set to define the minimum boundaries of the plot.
     :param x_max: Set to define the maximum boundaries of the plot.
     :param line: Optional, line of shape [Mx2], where each row is a point of the 2-dimensional line.
     :param s: The thickness of the points to plot.
-
     """
 
     num_datasets = len(datasets)
