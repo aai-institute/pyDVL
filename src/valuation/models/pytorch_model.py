@@ -145,7 +145,7 @@ class PyTorchSupervisedModel:
                 pred_y = self.model(batch_x)
                 loss = self.objective(torch.squeeze(pred_y), torch.squeeze(batch_y))
 
-                logger.info(f"Training loss: {loss.item()}")
+                logger.debug(f"Training loss: {loss.item()}")
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
