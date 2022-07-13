@@ -4,7 +4,6 @@ from typing import List, Tuple
 
 import numpy as np
 import pytest
-import torch
 from sklearn.datasets import load_wine
 from sklearn.preprocessing import MinMaxScaler
 
@@ -343,7 +342,7 @@ def test_influences_with_neural_network_explicit_hessian():
             "weight_decay": 0.001,
             "cosine_annealing": True,
         },
-        y_dtype=torch.long,
+        y_dtype="long",
     )
     model.fit(transformed_dataset.x_train, transformed_dataset.y_train)
 
