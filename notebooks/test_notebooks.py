@@ -11,11 +11,18 @@ NOTEBOOKS_DIR = os.fspath(ROOT_DIR / "notebooks")
 DOCS_NOTEBOOKS_DIR = os.fspath(ROOT_DIR / "docs" / "notebooks")
 resources = {"metadata": {"path": NOTEBOOKS_DIR}}
 
+OMITTED_NOTEBOOKS = []
+
 log = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
-    "notebook", [file for file in os.listdir(NOTEBOOKS_DIR) if file.endswith(".ipynb")]
+    "notebook",
+    [
+        file
+        for file in os.listdir(NOTEBOOKS_DIR)
+        if file.endswith(".ipynb") and file not in OMITTED_NOTEBOOKS
+    ],
 )
 def test_notebook(notebook):
     notebook_path = os.path.join(NOTEBOOKS_DIR, notebook)
