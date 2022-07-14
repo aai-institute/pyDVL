@@ -15,11 +15,10 @@ def conjugate_gradient(
     b: np.ndarray,
     x0: np.ndarray = None,
     M: Union[np.ndarray, Callable[[np.ndarray], np.ndarray]] = None,
-    rtol: float = 1e-10,
+    rtol: float = 1e-5,
     max_iterations: int = None,
     verify_assumptions: bool = False,
     raise_exception: bool = False,
-    max_step_size: float = 10.0,
 ):
     """
     Implementation of a batched conjugate gradient algorithm. It uses vector matrix products for efficient calculation. See
@@ -103,7 +102,7 @@ def conjugate_gradient(
         r_dot_u = np.einsum(
             "ia,ia->i", r[not_yet_converged_indices], u[not_yet_converged_indices]
         )
-        alpha = np.minimum(max_step_size, r_dot_u / p_dot_mvp)
+        alpha = r_dot_u / p_dot_mvp
 
         # update x and r
         reshaped_alpha = alpha.reshape([-1, 1])
