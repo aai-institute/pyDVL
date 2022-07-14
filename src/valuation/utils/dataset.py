@@ -1,9 +1,10 @@
 from collections import OrderedDict
 from copy import copy
-from typing import Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 from numpy.lib.index_tricks import IndexExpression
+from sklearn.manifold import TSNE
 from sklearn.model_selection import train_test_split
 from sklearn.utils import Bunch, check_X_y
 
@@ -273,3 +274,35 @@ def flip_dataset(
     idx = np.random.choice(len(dataset.x_train), replace=False, size=flip_num_samples)
     flipped_dataset.y_train[idx] = 1 - flipped_dataset.y_train[idx]
     return flipped_dataset, idx
+
+
+def dataset_tsne_encode(dataset: Dataset, n_components: int = 2) -> Dataset:
+    """
+    Use TSNE embedding method to reduce the number of features in a dataset.
+
+    :param dataset: A dataset object to modify.
+    :param n_components: The number of components to reduce the dateset to.
+    :returns: A new copy with the embedded features, e.g. x_train and x_test.
+    """
+    tsne = TSNE(n_components=n_components, learning_rate="auto", init="pca")
+    transformed_samples = tsne.fit_transform(
+        np.concatenate((dataset.x_train, dataset.x_test), axis=0)
+    )
+    tsne_dataset = copy(dataset)
+    tsne_dataset.x_train = transformed_samples[: len(tsne_dataset.x_train)]
+    tsne_dataset.x_test = transformed_samples[-len(tsne_dataset.x_test) :]
+    return tsne_dataset
+
+
+def dataset_to_json(dataset: Dataset) -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
+    """
+    Converts a dataset to a json format. Usually this is used as a bridge between
+    plotting and a dataset.
+
+    :param dataset: A dataset object to modify.
+    :returns: A dictionary with dataset names mapping to tuples of (x, y) samples.
+    """
+    return {
+        "train": (dataset.x_train, dataset.y_train),
+        "test": (dataset.x_test, dataset.y_test),
+    }
