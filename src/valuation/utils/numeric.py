@@ -284,11 +284,6 @@ def sample_classification_dataset_using_gaussians(
     return x, y
 
 
-####
-## Helper functions
-####
-
-
 def decision_boundary_fixed_variance_2d(
     mu_1: np.ndarray, mu_2: np.ndarray
 ) -> Callable[[np.ndarray], np.ndarray]:
@@ -296,11 +291,3 @@ def decision_boundary_fixed_variance_2d(
     b = (mu_1 + mu_2) / 2
     a = a.reshape([1, -1])
     return lambda z: z.reshape([-1, 1]) * a + b
-
-
-def min_distance_points_to_line_2d(
-    x: np.ndarray, a: np.ndarray, b: np.ndarray
-) -> np.ndarray:
-    a = np.reshape(a, [2, 1])
-    r = np.abs(x @ a + b) / np.sqrt(np.sum(a**2))
-    return r[:, 0]
