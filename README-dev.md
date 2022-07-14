@@ -1,6 +1,6 @@
-# valuation development guide
+# pyDVL development guide
 
-This repository contains the valuation python library together with utilities
+This repository contains the pyDVL python library together with utilities
 for building, testing, documentation and configuration management.
 
 ## Local Development
