@@ -66,7 +66,7 @@ Computing Shapley values
 
 
 Computing Influence functions
-------------------------
+-----------------------------
 
 There are two possibilities to calculate influences. For linear regression the influences can be calculated via the
 direct analytical function (this is used in testing as well). For more general models or loss functions
@@ -75,7 +75,7 @@ In general there are two types of influences, namely Up-weighting and Perturbati
 the choice of one ot them by pinning an enumeration in the parameters. Furthermore, we distinguish between the following types of calculations.
 
 Direct linear influences
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 These can only applied to a regression problem where x and y are from the real numbers. When
 a Dataset object is available, this is as simple as calling
@@ -99,7 +99,7 @@ to subsequently calculate the influences. Take a closer look at their inner defi
 in calculation or optimize the calculation for your specific application.
 
 Exact influences using TwiceDifferentiable protocol
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you create a model, which supports the ``TwiceDifferentiable`` protocol. This means that it is
 capable of calculating second derivative matrix vector products and gradients with respect to the
@@ -121,8 +121,8 @@ loss and data samples.
    ... )
 
 
-Influences using TwiceDifferentiable protocol and approximate matrix inversion
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+nfluences using TwiceDifferentiable protocol and approximate matrix inversion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sometimes it is not possible to construct the complete Hessian in RAM.
 In that case one can use conjugate gradient as a space-efficient
