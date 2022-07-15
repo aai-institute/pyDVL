@@ -63,3 +63,84 @@ Computing Shapley values
    >>> values_nmcs, hist_nmcs = map_reduce(fun, num_runs=10, num_jobs=160)
    >>> scores_nmcs = compute_fb_scores(model=model, data=data, values=values_nmcs)
    >>> shapley_results(scores_nmcs)
+
+
+Computing Influence functions
+------------------------
+
+There are two possibilities to calculate influences. For linear regression the influences can be calculated via the
+direct analytical function (this is used in testing as well). For more general models or loss functions
+one can use the ``TwiceDifferentiable`` protocol, which provides the required methods for calculating the influences.
+In general there are two types of influences, namely Up-weighting and Perturbation influences. Each method supports
+the choice of one ot them by pinning an enumeration in the parameters. Furthermore, we distinguish between the following types of calculations.
+
+Direct linear influences
+^^^^^^^^^^^^^^^^^^^^^^^
+
+These can only applied to a regression problem where x and y are from the real numbers. When
+a Dataset object is available, this is as simple as calling
+
+.. code-block:: python
+
+   >>> from valuation.influence.linear import linear_influences
+   >>> from valuation.influence.types import InfluenceTypes
+
+   >>> linear_influences(
+   ...     x_train,
+   ...     y_train,
+   ...     x_test,
+   ...     y_test,
+   ...     influence_type=InfluenceTypes.Up
+   ... )
+
+
+the linear influence functions. Internally these method fit a linear regression model and use this
+to subsequently calculate the influences. Take a closer look at their inner definition, to reuse a model
+in calculation or optimize the calculation for your specific application.
+
+Exact influences using TwiceDifferentiable protocol
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you create a model, which supports the ``TwiceDifferentiable`` protocol. This means that it is
+capable of calculating second derivative matrix vector products and gradients with respect to the
+loss and data samples.
+
+.. code-block:: python
+
+   >>> from valuation.influence.general import influences
+   >>> from valuation.influence.types import InfluenceTypes
+   >>>
+   >>> influences(
+   ... model,
+   ... x_train,
+   ... y_train,
+   ... x_test,
+   ... y_test,
+   ... influence_type=InfluenceTypes.Up
+   ... inversion_method="direct"
+   ... )
+
+
+Influences using TwiceDifferentiable protocol and approximate matrix inversion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes it is not possible to construct the complete Hessian in RAM.
+In that case one can use conjugate gradient as a space-efficient
+approximation to inverting the full matrix. In pyDVL this can be done
+by adding a parameter to the influences function call.
+
+
+.. code-block:: python
+
+   >>> from valuation.influence.general import influences
+   >>> from valuation.influence.types import InfluenceTypes
+
+   >>> influences(
+   ... model,
+   ... x_train,
+   ... y_train,
+   ... x_test,
+   ... y_test,
+   ... influence_type=InfluenceTypes.Up,
+   ... inversion_method="cg"
+   ... )
