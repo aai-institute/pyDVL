@@ -1,11 +1,20 @@
+"""
+Contains parallelized influence calculation functions for general models.
+"""
+
+__all__ = ["influences"]
+
 import functools
 from typing import Callable, Dict, Optional
 
 import numpy as np
 
 from valuation.influence.types import InfluenceTypes
-from valuation.solve.cg import conjugate_gradient
 from valuation.utils import MapReduceJob, available_cpus, logger, map_reduce
+from valuation.utils.cg import (
+    batched_preconditioned_conjugate_gradient,
+    hvp_to_inv_diag_conditioner,
+)
 from valuation.utils.types import (
     MatrixVectorProductInversionAlgorithm,
     TwiceDifferentiable,
@@ -40,29 +49,14 @@ def influences(
     :param influence_type: Either InfluenceTypes.Up or InfluenceTypes.Perturbation.
     :param inversion_method: Set the inversion method to a specific one, can be either None for direct inversion
      (and explicit construction of the Hessian) or 'cg' for conjugate gradient.
+    :param max_data_points: Constrain the number of data points which shall be used
     :returns: A np.ndarray of shape [NxM] specifying the influences.
     """
-
-    def hvp_to_inv_diag_conditioner(hvp: Callable[[np.ndarray], np.ndarray], d: int):
-        """
-        This method uses the hvp function to construct a simple pre-conditioner 1/diag(H).
-        """
-        diags = np.empty(d)
-
-        for i in range(d):
-            inp = np.zeros(d)
-            inp[i] = 1
-            diags[i] = hvp(np.reshape(inp, [1, -1]))[0, i]
-
-        def _inv_diag_conditioner(v):
-            return v / diags
-
-        return _inv_diag_conditioner
 
     n_params = model.num_params()
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
         "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,
-        "cg": lambda hvp, x: conjugate_gradient(
+        "cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(
             hvp, x, M=hvp_to_inv_diag_conditioner(hvp, d=x.shape[1])
         )[0],
     }

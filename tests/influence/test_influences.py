@@ -21,9 +21,13 @@ try:
     import torch
     import torch.nn.functional as F
 
-    from valuation.models.linear_regression_torch_model import LRTorchModel
-    from valuation.models.neural_network_torch_model import NNTorchModel
-    from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
+    from valuation.models import (
+        LinearRegressionTorchModel,
+        NeuralNetworkTorchModel,
+        TorchModule,
+        TorchObjective,
+        TorchOptimizer,
+    )
 except ImportError:
     pass
 
@@ -81,9 +85,9 @@ def test_upweighting_influences_lr_analytical_cg(
     A, _ = tuple(linear_model)
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
 
-    model = PyTorchSupervisedModel(
-        model=LRTorchModel(dim=tuple(A.shape), init=linear_model),
-        objective=F.mse_loss,
+    model = TorchModule(
+        model=LinearRegressionTorchModel(dim=tuple(A.shape), init=linear_model),
+        objective=TorchObjective(F.mse_loss),
     )
 
     influence_values_analytical = 2 * influences_up_linear_regression_analytical(
@@ -132,8 +136,8 @@ def test_upweighting_influences_lr_analytical(
     A, _ = tuple(linear_model)
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
 
-    model = PyTorchSupervisedModel(
-        model=LRTorchModel(dim=tuple(A.shape), init=linear_model),
+    model = TorchModule(
+        model=LinearRegressionTorchModel(dim=tuple(A.shape), init=linear_model),
         objective=F.mse_loss,
     )
 
@@ -181,8 +185,9 @@ def test_perturbation_influences_lr_analytical_cg(
 ):
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
     A, _ = linear_model
-    model = PyTorchSupervisedModel(
-        model=LRTorchModel(dim=tuple(A.shape), init=linear_model), objective=F.mse_loss
+    model = TorchModule(
+        model=LinearRegressionTorchModel(dim=tuple(A.shape), init=linear_model),
+        objective=F.mse_loss,
     )
 
     influence_values_analytical = (
@@ -236,8 +241,9 @@ def test_perturbation_influences_lr_analytical(
 ):
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
     A, _ = linear_model
-    model = PyTorchSupervisedModel(
-        model=LRTorchModel(dim=tuple(A.shape), init=linear_model), objective=F.mse_loss
+    model = TorchModule(
+        model=LinearRegressionTorchModel(dim=tuple(A.shape), init=linear_model),
+        objective=F.mse_loss,
     )
 
     influence_values_analytical = (
@@ -331,18 +337,17 @@ def test_influences_with_neural_network_explicit_hessian():
     num_classes = len(unique_classes)
 
     network_size = [16, 16]
-    model = PyTorchSupervisedModel(
-        model=NNTorchModel(feature_dimension, num_classes, network_size),
-        objective=F.cross_entropy,
+    model = TorchModule(
+        model=NeuralNetworkTorchModel(feature_dimension, num_classes, network_size),
+        objective=TorchObjective(F.cross_entropy, "long"),
         num_epochs=300,
         batch_size=32,
-        optimizer=PyTorchOptimizer.ADAM,
+        optimizer=TorchOptimizer.ADAM,
         optimizer_kwargs={
             "lr": 0.001,
             "weight_decay": 0.001,
             "cosine_annealing": True,
         },
-        y_dtype=torch.long,
     )
     model.fit(transformed_dataset.x_train, transformed_dataset.y_train)
 
