@@ -1,7 +1,8 @@
 """
 Contains
 
-- batched
+- batched conjugate gradient.
+- error bound for conjugate gradient.
 """
 
 from types import LambdaType

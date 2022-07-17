@@ -10,11 +10,11 @@ from typing import Callable, Dict, Optional
 import numpy as np
 
 from valuation.influence.types import InfluenceTypes
-from valuation.utils import MapReduceJob, available_cpus, logger, map_reduce
-from valuation.utils.cg import (
+from valuation.solve.cg import (
     batched_preconditioned_conjugate_gradient,
     hvp_to_inv_diag_conditioner,
 )
+from valuation.utils import MapReduceJob, available_cpus, logger, map_reduce
 from valuation.utils.types import (
     MatrixVectorProductInversionAlgorithm,
     TwiceDifferentiable,

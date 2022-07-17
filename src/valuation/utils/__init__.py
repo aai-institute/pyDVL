@@ -1,5 +1,4 @@
 from valuation.utils.caching import *
-from valuation.utils.cg import *
 from valuation.utils.dataset import *
 from valuation.utils.numeric import *
 from valuation.utils.parallel import *
@@ -21,10 +20,7 @@ __all__ = [
     "bootstrap_test_score",
     "powerset",
     "maybe_progress",
-    "batched_preconditioned_conjugate_gradient",
-    "conjugate_gradient_condition_number_based_error_bound",
     "mcmc_is_linear_function",
     "mcmc_is_linear_function_positive_definite",
-    "hvp_to_inv_diag_conditioner",
     "MatrixVectorProduct",
 ]
