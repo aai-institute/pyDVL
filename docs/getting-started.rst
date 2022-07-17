@@ -121,8 +121,8 @@ loss and data samples.
    ... )
 
 
-nfluences using TwiceDifferentiable protocol and approximate matrix inversion
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Influences using TwiceDifferentiable protocol and approximate matrix inversion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sometimes it is not possible to construct the complete Hessian in RAM.
 In that case one can use conjugate gradient as a space-efficient
