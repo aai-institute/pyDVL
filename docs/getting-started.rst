@@ -86,11 +86,10 @@ a Dataset object is available, this is as simple as calling
    >>> from valuation.influence.types import InfluenceTypes
 
    >>> linear_influences(
-   ...     x_train,
-   ...     y_train,
-   ...     x_test,
-   ...     y_test,
-   ...     influence_type=InfluenceTypes.Up
+   ...    x_train,
+   ...    y_train,
+   ...    x_test,
+   ...    y_test
    ... )
 
 
@@ -111,13 +110,11 @@ loss and data samples.
    >>> from valuation.influence.types import InfluenceTypes
    >>>
    >>> influences(
-   ... model,
-   ... x_train,
-   ... y_train,
-   ... x_test,
-   ... y_test,
-   ... influence_type=InfluenceTypes.Up
-   ... inversion_method="direct"
+   ...    model,
+   ...    x_train,
+   ...    y_train,
+   ...    x_test,
+   ...    y_test
    ... )
 
 
@@ -127,7 +124,7 @@ Influences using TwiceDifferentiable protocol and approximate matrix inversion
 Sometimes it is not possible to construct the complete Hessian in RAM.
 In that case one can use conjugate gradient as a space-efficient
 approximation to inverting the full matrix. In pyDVL this can be done
-by adding a parameter to the influences function call.
+by adding ``inversion_method`` parameter to the influences function call.
 
 
 .. code-block:: python
@@ -136,11 +133,31 @@ by adding a parameter to the influences function call.
    >>> from valuation.influence.types import InfluenceTypes
 
    >>> influences(
+   ...     model,
+   ...     x_train,
+   ...     y_train,
+   ...     x_test,
+   ...     y_test,
+   ...     inversion_method="cg"
+   ... )
+
+
+Perturbation influences
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+All previous mentioned influences can be calculated feature-wise by adding ``influence_type`` parameter
+to the influences function call.
+
+.. code-block:: python
+
+   >>> from valuation.influence.general import influences
+   >>> from valuation.influence.types import InfluenceTypes
+   >>>
+   >>> influences(
    ... model,
-   ... x_train,
-   ... y_train,
-   ... x_test,
-   ... y_test,
-   ... influence_type=InfluenceTypes.Up,
-   ... inversion_method="cg"
+   ...     x_train,
+   ...     y_train,
+   ...     x_test,
+   ...     y_test,
+   ...     influence_type=InfluenceTypes.Perturbation
    ... )
