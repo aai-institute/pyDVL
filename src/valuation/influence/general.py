@@ -27,7 +27,7 @@ def influences(
     """
     Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
     calculating the influence factors for all test points, with respect to the training points. Subsequently,
-    all influence get calculated over the train set.
+    all influence get calculated over the complete train set.
 
     :param model: A model which has to implement the TwiceDifferentiable interface.
     :param x_train: A np.ndarray of shape [MxK] containing the features of the train set of data points.
@@ -43,11 +43,32 @@ def influences(
     :returns: A np.ndarray of shape [NxM] specifying the influences.
     """
 
+    def hvp_to_inv_diag_conditioner(hvp: Callable[[np.ndarray], np.ndarray], d: int):
+        """
+        This method uses the hvp function to construct a simple pre-conditioner 1/diag(H).
+        """
+        diags = np.empty(d)
+
+        for i in range(d):
+            inp = np.zeros(d)
+            inp[i] = 1
+            diags[i] = hvp(np.reshape(inp, [1, -1]))[0, i]
+
+        def _inv_diag_conditioner(v):
+            return v / diags
+
+        return _inv_diag_conditioner
+
     n_params = model.num_params()
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
-        None: lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,
-        "cg": lambda hvp, x: conjugate_gradient(hvp, x)[0],
+        "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,
+        "cg": lambda hvp, x: conjugate_gradient(
+            hvp, x, M=hvp_to_inv_diag_conditioner(hvp, d=x.shape[1])
+        )[0],
     }
+
+    if inversion_method is None:
+        inversion_method = "direct"
 
     cpu_count = available_cpus()
     if n_jobs == -1:
