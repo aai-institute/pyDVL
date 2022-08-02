@@ -305,6 +305,7 @@ def permutation_montecarlo_shapley(
             values[iter_idx] = marginals
         return values
 
+    # TODO move to map_reduce as soon as it is fixed
     backend = make_nested_backend("loky")()
     results = Parallel(n_jobs=num_jobs, backend=backend)(
         delayed(fun)(job_id=j + 1) for j in range(num_jobs)
