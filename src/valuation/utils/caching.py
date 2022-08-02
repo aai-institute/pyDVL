@@ -34,7 +34,8 @@ class ClientConfig:
 @unpackable
 @dataclass
 class MemcachedConfig:
-    """Configuration for memcache.
+    """Configuration for memcache:
+
     - cache_threshold determines the minimum number of seconds a model training needs
     to take to cache its scores. If a model is super fast to train, you may just want
     to re-train it every time without saving the score. In most cases, caching the model,
