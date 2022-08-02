@@ -35,13 +35,11 @@ class ClientConfig:
 @dataclass
 class MemcachedConfig:
     """Configuration for memcache.
-
     - cache_threshold determines the minimum number of seconds a model training needs
     to take to cache its scores. If a model is super fast to train, you may just want
     to re-train it every time without saving the score. In most cases, caching the model,
     even when it takes very little to train, is preferable.
     The default to cache_threshold is 0.3 seconds.
-
     - if allow_repeated_training is set to true, instead of storing just a single score of a model,
     the cache will store a running average of its score until a certain relative tolerance
     (set by the rtol_threshold argument) is achieved. More precisely, since most machine learning
@@ -51,11 +49,9 @@ class MemcachedConfig:
     same training set, then we recommend to set allow_repeated_training to True.
     If instead the score is not impacted too much by non-deterministic training, setting allow_repeated_training
     to false will speed up the shapley_dval calculation substantially.
-
     - As mentioned above, the rtol_threshold argument regulates the relative tolerance for returning the running
     average of a model instead of re-training it. If allow_repeated_training is True, set rtol_threshold to
     small values and the shapley coefficients will have higher precision.
-
     - Similarly to rtol_threshold, min_repetitions regulates repeated trainings by setting the minimum number of
     repeated training a model has to go through before the cache can return its average score.
     If the model training is very noisy, set min_repetitions to higher values and the scores will be more
