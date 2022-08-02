@@ -28,13 +28,11 @@ To install the latest release use:
 
     pip install pyDVL
 
-To use all features of influence functions execute:
+If you want to use Influence Functions you should use:
 
 .. code-block:: shell
 
     pip install pyDVL[influence]
-
-This includes a heavy autograd framework and thus is left out by default.
 
 In order to check the installation you can use:
 

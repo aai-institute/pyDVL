@@ -1,5 +1,8 @@
 from typing import TYPE_CHECKING, Callable, Protocol, TypeVar
 
+if TYPE_CHECKING:
+    import torch
+
 from numpy import ndarray
 
 __all__ = [
@@ -7,8 +10,7 @@ __all__ = [
     "Scorer",
     "unpackable",
     "TwiceDifferentiable",
-    "MatrixVectorProduct",
-    "MatrixVectorProductInversionAlgorithm",
+    "TorchObjective",
 ]
 
 
@@ -102,8 +104,14 @@ class TwiceDifferentiable(Protocol):
         pass
 
 
-MatrixVectorProduct = Callable[[ndarray], ndarray]
+class TorchObjective(Protocol):
+    def __call__(
+        self, x: "torch.Tensor", y: "torch.Tensor", **kwargs
+    ) -> "torch.Tensor":
+        pass
 
+
+MatrixVectorProduct = Callable[[ndarray], ndarray]
 MatrixVectorProductInversionAlgorithm = Callable[
     [MatrixVectorProduct, ndarray], ndarray
 ]
