@@ -1,3 +1,9 @@
+"""
+Contains tests for LinearRegression, BinaryLogisticRegression as well as TorchModule, TwiceDifferentiable interface and
+its associated gradient and matrix vector product calculations. Note that there is no test for the neural network
+module.
+"""
+
 import itertools
 from typing import List, Tuple
 
@@ -13,11 +19,12 @@ from valuation.utils import (
 try:
     import torch.nn.functional as F
 
-    from valuation.models.binary_logistic_regression import (
+    from valuation.models import (
         BinaryLogisticRegressionTorchModel,
+        LinearRegressionTorchModel,
+        TorchModule,
+        TorchOptimizer,
     )
-    from valuation.models.linear_regression_torch_model import LRTorchModel
-    from valuation.models.pytorch_model import PyTorchOptimizer, PyTorchSupervisedModel
 except ImportError:
     pass
 
@@ -123,12 +130,12 @@ def test_logistic_regression_model_fit(
     ).astype(int)
     train_x = np.random.uniform(low=-1, high=1, size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
-    model = PyTorchSupervisedModel(
+    model = TorchModule(
         model=BinaryLogisticRegressionTorchModel(input_dimension),
         objective=F.binary_cross_entropy,
         num_epochs=1000,
         batch_size=32,
-        optimizer=PyTorchOptimizer.ADAM,
+        optimizer=TorchOptimizer.ADAM,
         optimizer_kwargs={"lr": 0.001, "weight_decay": 1e-4},
     )
     model.fit(train_x, train_y)
@@ -167,12 +174,12 @@ def test_linear_regression_model_fit(
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
 
-    model = PyTorchSupervisedModel(
-        model=LRTorchModel((output_dimension, input_dimension)),
+    model = TorchModule(
+        model=LinearRegressionTorchModel((output_dimension, input_dimension)),
         objective=F.mse_loss,
         num_epochs=1000,
         batch_size=32,
-        optimizer=PyTorchOptimizer.ADAM_W,
+        optimizer=TorchOptimizer.ADAM_W,
         optimizer_kwargs={"lr": 0.05},
     )
     model.fit(train_x, train_y)
@@ -211,8 +218,10 @@ def test_linear_regression_model_grad(
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
 
-    model = PyTorchSupervisedModel(
-        model=LRTorchModel(dim=(input_dimension, output_dimension), init=linear_model),
+    model = TorchModule(
+        model=LinearRegressionTorchModel(
+            dim=(input_dimension, output_dimension), init=linear_model
+        ),
         objective=F.mse_loss,
     )
 
@@ -248,8 +257,10 @@ def test_linear_regression_model_hessian(
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
 
-    model = PyTorchSupervisedModel(
-        model=LRTorchModel(dim=(input_dimension, output_dimension), init=linear_model),
+    model = TorchModule(
+        model=LinearRegressionTorchModel(
+            dim=(input_dimension, output_dimension), init=linear_model
+        ),
         objective=F.mse_loss,
     )
 
@@ -287,12 +298,14 @@ def test_linear_regression_model_d_x_d_theta(
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
 
-    model = PyTorchSupervisedModel(
-        model=LRTorchModel(dim=(input_dimension, output_dimension), init=(A, b)),
+    model = TorchModule(
+        model=LinearRegressionTorchModel(
+            dim=(input_dimension, output_dimension), init=(A, b)
+        ),
         objective=F.mse_loss,
         num_epochs=1000,
         batch_size=32,
-        optimizer=PyTorchOptimizer.ADAM_W,
+        optimizer=TorchOptimizer.ADAM_W,
         optimizer_kwargs={"lr": 0.02},
     )
 

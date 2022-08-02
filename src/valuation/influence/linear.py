@@ -1,14 +1,24 @@
+"""
+Contains all functions for closed form solution of influences for standard linear regression.
+"""
+
+__all__ = [
+    "linear_influences",
+    "influences_up_linear_regression_analytical",
+    "influences_perturbation_linear_regression_analytical",
+]
+
 from typing import Tuple
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
 from valuation.influence.types import InfluenceTypes
-from valuation.utils import (
+from valuation.utils import logger
+from valuation.utils.numeric import (
     linear_regression_analytical_derivative_d2_theta,
     linear_regression_analytical_derivative_d_theta,
     linear_regression_analytical_derivative_d_x_d_theta,
-    logger,
 )
 
 
@@ -21,11 +31,11 @@ def linear_influences(
 ):
     """
     Calculate the linear influences of the training set onto the validation set assuming a linear model Ax+b=y.
-
     :param x_train: A np.ndarray of shape [MxK] containing the features of the train set of data points.
     :param y_train: A np.ndarray of shape [MxL] containing the targets of the train set of data points.
     :param x_test: A np.ndarray of shape [NxK] containing the features of the test set of data points.
     :param y_test: A np.ndarray of shape [NxL] containing the targets of the test set of data points.
+    :param influence_type: Either up-weighting InfluenceTypes.Up or perturbation influences InfluenceTypes.Up.
     :returns: A np.ndarray of shape [BxC] with the influences of the training points on the test points.
     """
 

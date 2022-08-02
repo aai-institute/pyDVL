@@ -20,4 +20,7 @@ __all__ = [
     "bootstrap_test_score",
     "powerset",
     "maybe_progress",
+    "mcmc_is_linear_function",
+    "mcmc_is_linear_function_positive_definite",
+    "MatrixVectorProduct",
 ]
