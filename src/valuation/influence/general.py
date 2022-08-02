@@ -1,10 +1,19 @@
+"""
+Contains parallelized influence calculation functions for general models.
+"""
+
+__all__ = ["influences"]
+
 import functools
 from typing import Callable, Dict, Optional
 
 import numpy as np
 
 from valuation.influence.types import InfluenceTypes
-from valuation.solve.cg import conjugate_gradient
+from valuation.solve.cg import (
+    batched_preconditioned_conjugate_gradient,
+    hvp_to_inv_diag_conditioner,
+)
 from valuation.utils import MapReduceJob, available_cpus, logger, map_reduce
 from valuation.utils.types import (
     MatrixVectorProductInversionAlgorithm,
@@ -27,7 +36,7 @@ def influences(
     """
     Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
     calculating the influence factors for all test points, with respect to the training points. Subsequently,
-    all influence get calculated over the train set.
+    all influence get calculated over the complete train set.
 
     :param model: A model which has to implement the TwiceDifferentiable interface.
     :param x_train: A np.ndarray of shape [MxK] containing the features of the train set of data points.
@@ -40,14 +49,20 @@ def influences(
     :param influence_type: Either InfluenceTypes.Up or InfluenceTypes.Perturbation.
     :param inversion_method: Set the inversion method to a specific one, can be either None for direct inversion
      (and explicit construction of the Hessian) or 'cg' for conjugate gradient.
+    :param max_data_points: Constrain the number of data points which shall be used
     :returns: A np.ndarray of shape [NxM] specifying the influences.
     """
 
     n_params = model.num_params()
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
-        None: lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,
-        "cg": lambda hvp, x: conjugate_gradient(hvp, x)[0],
+        "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,
+        "cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(
+            hvp, x, M=hvp_to_inv_diag_conditioner(hvp, d=x.shape[1])
+        )[0],
     }
+
+    if inversion_method is None:
+        inversion_method = "direct"
 
     cpu_count = available_cpus()
     if n_jobs == -1:
