@@ -2,7 +2,6 @@ import os
 from collections import OrderedDict
 from typing import Iterable, List, Optional
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from numpy.lib.index_tricks import IndexExpression
@@ -271,28 +270,28 @@ def polynomial_dataset(coefficients: np.ndarray):
     return Dataset.from_sklearn(data=db, train_size=0.5), coefficients
 
 
-def load_spotify_dataset(min_year=2014):
+def load_spotify_dataset(
+    val_size: float,
+    test_size: float,
+    min_year: int = 2014,
+    target_column: str = "popularity",
+    random_state: int = 42,
+):
     """Load spotify music dataset and selects song after min_year.
     If os. is True, it returns a small dataset for testing purposes."""
     CI = os.environ.get("CI") in ("True", "true")
     data = pd.read_csv("../data/top_hits_spotify_dataset.csv")
     data["genre"] = data["genre"].astype("category").cat.codes
     if CI:
-        return data.iloc[:3]
+        data = data.iloc[:3]
     else:
-        return data[data["year"] > min_year]
-
-
-def plot_dval(dval_df, figsize=None, title=None, xlabel=None, ylabel=None):
-    plt.figure(figsize=figsize)
-    plt.errorbar(
-        x=dval_df["data_key"],
-        y=dval_df["shapley_dval"],
-        yerr=dval_df["dval_std"],
-        fmt="o",
+        data = data[data["year"] > min_year]
+    y = data[target_column]
+    X = data.drop(target_column, axis=1)
+    X, X_test, y, y_test = train_test_split(
+        X, y, test_size=test_size, random_state=random_state
     )
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.xticks(rotation=45)
-    plt.show()
+    X_train, X_val, y_train, y_val = train_test_split(
+        X, y, test_size=val_size, random_state=random_state
+    )
+    return [X_train, y_train], [X_val, y_val], [X_test, y_test]

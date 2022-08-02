@@ -55,11 +55,3 @@ def combinatorial_exact_shapley(u: Utility, progress: bool = True) -> OrderedDic
     values /= n
 
     return sort_values({u.data.data_names[i]: v for i, v in enumerate(values)})
-
-
-def exact_shapley(u: Utility, progress: bool = True, use_combinatorial=False):
-    """Facade for exact shapley methods. By default, it uses permutation_exact_shapley"""
-    if use_combinatorial:
-        return combinatorial_exact_shapley(u, progress)
-    else:
-        return permutation_exact_shapley(u, progress)

@@ -19,16 +19,7 @@ import pandas as pd
 from joblib import Parallel, delayed
 
 from valuation.reporting.scores import sort_values, sort_values_array
-from valuation.utils import (
-    Dataset,
-    GroupedDataset,
-    MemcachedConfig,
-    Scorer,
-    SupervisedModel,
-    Utility,
-    bootstrap_test_score,
-    vanishing_derivatives,
-)
+from valuation.utils import Utility, bootstrap_test_score, vanishing_derivatives
 from valuation.utils.numeric import PowerSetDistribution, random_powerset
 from valuation.utils.parallel import (
     Coordinator,
@@ -388,48 +379,3 @@ def combinatorial_montecarlo_shapley(
     )
     montecarlo_error = {u.data.data_names[i]: v for i, v in enumerate(acc_std)}
     return sorted_shapley_values, montecarlo_error
-
-
-def create_utility(
-    model: SupervisedModel,
-    x_train: np.ndarray,
-    y_train: np.ndarray,
-    x_test: np.ndarray,
-    y_test: np.ndarray,
-    scoring: Optional[Scorer],
-    data_groups: List = None,
-    enable_cache: bool = True,
-    cache_options: MemcachedConfig = None,
-):
-    if data_groups is None:
-        dataset = Dataset(x_train, y_train, x_test, y_test)
-    else:
-        dataset = GroupedDataset(x_train, y_train, x_test, y_test, data_groups)
-    return Utility(
-        model, dataset, scoring, enable_cache=enable_cache, cache_options=cache_options
-    )
-
-
-def shapley_dval(
-    u: Utility,
-    iterations_per_job: int,
-    num_jobs: int = 1,
-    use_combinatorial=False,
-):
-    """Facade for montecarlo shapley methods. By default, it uses permutation_montecarlo_shapley"""
-    if num_jobs == 1:
-        progress = True
-    else:
-        progress = False
-    if use_combinatorial:
-        dval, dval_std = combinatorial_montecarlo_shapley(
-            u, iterations_per_job, num_jobs, progress
-        )
-    else:
-        dval, dval_std = permutation_montecarlo_shapley(
-            u, iterations_per_job, num_jobs, progress
-        )
-    return pd.DataFrame(
-        list(zip(dval.keys(), dval.values(), dval_std.values())),
-        columns=["data_key", "shapley_dval", "dval_std"],
-    )

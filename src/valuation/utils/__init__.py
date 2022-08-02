@@ -2,6 +2,7 @@ from valuation.utils.caching import *
 from valuation.utils.dataset import *
 from valuation.utils.numeric import *
 from valuation.utils.parallel import *
+from valuation.utils.plotting import *
 from valuation.utils.progress import *
 from valuation.utils.types import *
 from valuation.utils.utility import *
@@ -21,5 +22,5 @@ __all__ = [
     "powerset",
     "maybe_progress",
     "load_spotify_dataset",
-    "plot_dval",
+    "plot_shapley_pydvl",
 ]
