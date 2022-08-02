@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Dict, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
