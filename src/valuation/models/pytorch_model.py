@@ -43,6 +43,10 @@ class PyTorchSupervisedModel:
         self.num_epochs = num_epochs
         self.batch_size = batch_size
 
+    def num_params(self) -> int:
+        model_parameters = filter(lambda p: p.requires_grad, self.model.parameters())
+        return sum([np.prod(p.size()) for p in model_parameters])
+
     def grad(self, x: np.ndarray, y: np.ndarray, progress: bool = False) -> np.ndarray:
 
         x = tt(x)
@@ -51,7 +55,10 @@ class PyTorchSupervisedModel:
         grads = [
             flatten_gradient(
                 autograd.grad(
-                    self.objective(self.model(x[i]), y[i]), self.model.parameters()
+                    self.objective(
+                        torch.squeeze(self.model(x[i])), torch.squeeze(y[i])
+                    ),
+                    self.model.parameters(),
                 )
             )
             .detach()
@@ -78,7 +85,7 @@ class PyTorchSupervisedModel:
             x, y = x[idx], y[idx]
 
         x = nn.Parameter(x, requires_grad=True)
-        loss = self.objective(self.model(x), y)
+        loss = self.objective(torch.squeeze(self.model(x)), torch.squeeze(y))
         grad_f = torch.autograd.grad(loss, self.model.parameters(), create_graph=True)
         grad_f = flatten_gradient(grad_f)
         z = (grad_f * Variable(v)).sum(dim=1)
@@ -123,7 +130,7 @@ class PyTorchSupervisedModel:
             for train_batch in dataloader:
                 batch_x, batch_y = train_batch
                 pred_y = self.model(batch_x)
-                loss = self.objective(pred_y, batch_y)
+                loss = self.objective(torch.squeeze(pred_y), torch.squeeze(batch_y))
 
                 print(f"Training loss: {loss.item()}")
                 loss.backward()
