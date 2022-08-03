@@ -1,3 +1,5 @@
+name: Run Tests
+
 on:
   workflow_call:
     inputs:
@@ -7,7 +9,7 @@ on:
         required: false
 
 jobs:
-  reusable_test_workflow:
+  run-tests:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -24,6 +26,11 @@ jobs:
         cache: 'pip'
     - name: Install Dev Requirements
       run: pip install -r requirements-dev.txt
+    - name: Cache Tox Directory for Tests
+      uses: actions/cache@v3
+      with:
+        key: tox-${{ runner.os }}-${{ hashFiles('tox.ini', 'requirements.txt') }}
+        path: .tox
     - name: Run Tox
       run: tox
       if: inputs.tests_to_run == 'default'

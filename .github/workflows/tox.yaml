@@ -1,4 +1,4 @@
-name: Merge develop, run tests and build docu
+name: Merge develop, run tests and build docs
 
 on:
   push:
@@ -11,19 +11,23 @@ env:
   GITHUB_BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
 
 jobs:
-  default-tests:
+  non-torch-tests:
+    name: Run tests that do not use PyTorch
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: default
   torch-tests:
+    name: Run tests that use PyTorch
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: torch
   notebook-tests:
+    name: Run Notebooks
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: notebooks
   build:
+    name: Build & Push Docs and maybe release Package to TestPyPI
     runs-on: ubuntu-latest
     needs: [default-tests, torch-tests, notebook-tests]
     steps:
@@ -48,6 +52,11 @@ jobs:
         with:
           name: notebooks
           path: docs/notebooks/
+      - name: Cache Tox Directory for Docs
+        uses: actions/cache@v3
+        with:
+          key: tox-${{ runner.os }}-${{ hashFiles('tox.ini') }}
+          path: .tox
       - name: Build Docs
         run: tox -e docs
       - name: Deploy Docs
