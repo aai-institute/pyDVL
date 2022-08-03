@@ -12,15 +12,15 @@ env:
 
 jobs:
   default-tests:
-    uses: ./.github/workflows/valuation/run-tests-workflow.yaml
+    uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: default
   torch-tests:
-    uses: ./.github/workflows/valuation/run-tests-workflow.yaml
+    uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: torch
   notebooks-tests:
-    uses: ./.github/workflows/valuation/run-tests-workflow.yaml
+    uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: notebooks
   build:
