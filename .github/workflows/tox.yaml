@@ -11,9 +11,20 @@ env:
   GITHUB_BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
 
 jobs:
+  default-tests:
+    uses: ./.github/workflows/valuation/run-tests-workflow.yaml
+    with:
+      tests_to_run: default
+  torch-tests:
+    uses: ./.github/workflows/valuation/run-tests-workflow.yaml
+    with:
+      tests_to_run: torch
+  notebooks-tests:
+    uses: ./.github/workflows/valuation/run-tests-workflow.yaml
+    with:
+      tests_to_run: notebooks
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -29,13 +40,6 @@ jobs:
           cache: 'pip'
       - name: Install Dev Requirements
         run: pip install -r requirements-dev.txt
-      - name: Run Tox
-        run: tox
-      - name: Test Torch Modules
-        run: tox -e torch
-      - name: Test Notebooks
-        run: tox -e test-notebooks
-        continue-on-error: true
       - name: Install Pandoc
         run: sudo apt-get install --no-install-recommends --yes pandoc
       - name: Build Docs
