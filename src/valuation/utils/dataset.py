@@ -270,12 +270,14 @@ def load_spotify_dataset(
     """Load spotify music dataset and selects song after min_year.
     If os. is True, it returns a small dataset for testing purposes."""
     CI = os.environ.get("CI") in ("True", "true")
-    data = pd.read_csv("../data/top_hits_spotify_dataset.csv")
-    data["genre"] = data["genre"].astype("category").cat.codes
     if CI:
+        url = "https://github.com/appliedAI-Initiative/valuation/blob/notebook_and_shapley_interface/data/top_hits_spotify_dataset.csv"
+        data = pd.read_csv(url)
         data = data.iloc[:3]
     else:
+        data = pd.read_csv("../data/top_hits_spotify_dataset.csv")
         data = data[data["year"] > min_year]
+    data["genre"] = data["genre"].astype("category").cat.codes
     y = data[target_column]
     X = data.drop(target_column, axis=1)
     X, X_test, y, y_test = train_test_split(
