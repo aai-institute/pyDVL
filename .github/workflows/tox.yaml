@@ -55,7 +55,7 @@ jobs:
       - name: Cache Tox Directory for Docs
         uses: actions/cache@v3
         with:
-          key: tox-${{ runner.os }}-${{ hashFiles('tox.ini') }}
+          key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini') }}
           path: .tox
       - name: Build Docs
         run: tox -e docs

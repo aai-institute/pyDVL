@@ -29,7 +29,7 @@ jobs:
     - name: Cache Tox Directory for Tests
       uses: actions/cache@v3
       with:
-        key: tox-${{ runner.os }}-${{ hashFiles('tox.ini', 'requirements.txt') }}
+        key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini', 'requirements.txt') }}
         path: .tox
     - name: Run Tox
       run: tox
