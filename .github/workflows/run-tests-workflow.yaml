@@ -1,0 +1,49 @@
+name: Run Tests
+
+on:
+  workflow_call:
+    inputs:
+      tests_to_run:
+        description: "Determines which tests to run using Tox. Should be one of: default, torch, notebooks"
+        type: string
+        required: false
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Merge develop into current branch
+      run: |
+        git fetch origin develop:develop --update-head-ok
+        git merge develop
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.8
+        cache: 'pip'
+    - name: Install Dev Requirements
+      run: pip install -r requirements-dev.txt
+    - name: Cache Tox Directory for Tests
+      uses: actions/cache@v3
+      with:
+        key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini', 'requirements.txt') }}
+        path: .tox
+    - name: Run Tox
+      run: tox
+      if: inputs.tests_to_run == 'default'
+    - name: Test Torch Modules
+      run: tox -e torch
+      if: inputs.tests_to_run == 'torch'
+    - name: Test Notebooks
+      run: tox -e test-notebooks
+      if: inputs.tests_to_run == 'notebooks'
+      continue-on-error: true
+    - name: Upload resulting notebooks
+      uses: actions/upload-artifact@v3
+      with:
+        name: notebooks
+        path: docs/notebooks/*.ipynb
+      if: inputs.tests_to_run == 'notebooks'

@@ -1,4 +1,4 @@
-name: Merge develop, run tests and build docu
+name: Merge develop, run tests and build docs
 
 on:
   push:
@@ -11,9 +11,25 @@ env:
   GITHUB_BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
 
 jobs:
+  non-torch-tests:
+    name: Run tests that do not use PyTorch
+    uses: ./.github/workflows/run-tests-workflow.yaml
+    with:
+      tests_to_run: default
+  torch-tests:
+    name: Run tests that use PyTorch
+    uses: ./.github/workflows/run-tests-workflow.yaml
+    with:
+      tests_to_run: torch
+  notebook-tests:
+    name: Run Notebooks
+    uses: ./.github/workflows/run-tests-workflow.yaml
+    with:
+      tests_to_run: notebooks
   build:
+    name: Build & Push Docs and maybe release Package to TestPyPI
     runs-on: ubuntu-latest
-
+    needs: [non-torch-tests, torch-tests, notebook-tests]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -29,15 +45,18 @@ jobs:
           cache: 'pip'
       - name: Install Dev Requirements
         run: pip install -r requirements-dev.txt
-      - name: Run Tox
-        run: tox
-      - name: Test Torch Modules
-        run: tox -e torch
-      - name: Test Notebooks
-        run: tox -e test-notebooks
-        continue-on-error: true
       - name: Install Pandoc
         run: sudo apt-get install --no-install-recommends --yes pandoc
+      - name: Download resulting notebook artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: notebooks
+          path: docs/notebooks/
+      - name: Cache Tox Directory for Docs
+        uses: actions/cache@v3
+        with:
+          key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini') }}
+          path: .tox
       - name: Build Docs
         run: tox -e docs
       - name: Deploy Docs
