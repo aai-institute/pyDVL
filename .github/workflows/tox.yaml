@@ -19,12 +19,13 @@ jobs:
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: torch
-  notebooks-tests:
+  notebook-tests:
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: notebooks
   build:
     runs-on: ubuntu-latest
+    needs: [default-tests, torch-tests, notebook-tests]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -42,6 +43,11 @@ jobs:
         run: pip install -r requirements-dev.txt
       - name: Install Pandoc
         run: sudo apt-get install --no-install-recommends --yes pandoc
+      - name: Download resulting notebook artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: notebooks
+          path: docs/notebooks/
       - name: Build Docs
         run: tox -e docs
       - name: Deploy Docs
