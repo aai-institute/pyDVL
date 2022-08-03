@@ -1,0 +1,5 @@
+torch\_module
+=============
+.. automodule:: valuation.models.torch_module
+   :members:
+   :undoc-members:

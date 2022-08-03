@@ -1,5 +1,0 @@
-linear\_regression\_torch\_model
-================================
-.. automodule:: valuation.models.linear_regression_torch_model
-   :members:
-   :undoc-members:

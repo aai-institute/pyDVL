@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting started &mdash; pyDVL 0.1.0.dev6 documentation</title>
+  <title>Getting started &mdash; pyDVL 0.1.0.dev7 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -48,6 +48,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#creating-dataset">Creating Dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-utility">Creating Utility</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#computing-shapley-values">Computing Shapley values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#computing-influence-functions">Computing Influence functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#direct-linear-influences">Direct linear influences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exact-influences-using-twicedifferentiable-protocol">Exact influences using TwiceDifferentiable protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#influences-using-twicedifferentiable-protocol-and-approximate-matrix-inversion">Influences using TwiceDifferentiable protocol and approximate matrix inversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#perturbation-influences">Perturbation influences</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installing pyDVL</a></li>
@@ -159,6 +166,89 @@ of Memcached’s wiki. You can run it using:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">shapley_results</span><span class="p">(</span><span class="n">scores_nmcs</span><span class="p">)</span>
 </pre></div>
 </div>
+</section>
+<section id="computing-influence-functions">
+<h2>Computing Influence functions<a class="headerlink" href="#computing-influence-functions" title="Permalink to this heading"></a></h2>
+<p>There are two possibilities to calculate influences. For linear regression the influences can be calculated via the
+direct analytical function (this is used in testing as well). For more general models or loss functions
+one can use the <code class="docutils literal notranslate"><span class="pre">TwiceDifferentiable</span></code> protocol, which provides the required methods for calculating the influences.
+In general there are two types of influences, namely Up-weighting and Perturbation influences. Each method supports
+the choice of one ot them by pinning an enumeration in the parameters. Furthermore, we distinguish between the following types of calculations.</p>
+<section id="direct-linear-influences">
+<h3>Direct linear influences<a class="headerlink" href="#direct-linear-influences" title="Permalink to this heading"></a></h3>
+<p>These can only applied to a regression problem where x and y are from the real numbers. When
+a Dataset object is available, this is as simple as calling</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.linear</span> <span class="kn">import</span> <span class="n">linear_influences</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.types</span> <span class="kn">import</span> <span class="n">InfluenceTypes</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">linear_influences</span><span class="p">(</span>
+<span class="gp">... </span>   <span class="n">x_train</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">y_train</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">x_test</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">y_test</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>the linear influence functions. Internally these method fit a linear regression model and use this
+to subsequently calculate the influences. Take a closer look at their inner definition, to reuse a model
+in calculation or optimize the calculation for your specific application.</p>
+</section>
+<section id="exact-influences-using-twicedifferentiable-protocol">
+<h3>Exact influences using TwiceDifferentiable protocol<a class="headerlink" href="#exact-influences-using-twicedifferentiable-protocol" title="Permalink to this heading"></a></h3>
+<p>If you create a model, which supports the <code class="docutils literal notranslate"><span class="pre">TwiceDifferentiable</span></code> protocol. This means that it is
+capable of calculating second derivative matrix vector products and gradients with respect to the
+loss and data samples.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.general</span> <span class="kn">import</span> <span class="n">influences</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.types</span> <span class="kn">import</span> <span class="n">InfluenceTypes</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">influences</span><span class="p">(</span>
+<span class="gp">... </span>   <span class="n">model</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">x_train</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">y_train</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">x_test</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">y_test</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="influences-using-twicedifferentiable-protocol-and-approximate-matrix-inversion">
+<h3>Influences using TwiceDifferentiable protocol and approximate matrix inversion<a class="headerlink" href="#influences-using-twicedifferentiable-protocol-and-approximate-matrix-inversion" title="Permalink to this heading"></a></h3>
+<p>Sometimes it is not possible to construct the complete Hessian in RAM.
+In that case one can use conjugate gradient as a space-efficient
+approximation to inverting the full matrix. In pyDVL this can be done
+by adding <code class="docutils literal notranslate"><span class="pre">inversion_method</span></code> parameter to the influences function call.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.general</span> <span class="kn">import</span> <span class="n">influences</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.types</span> <span class="kn">import</span> <span class="n">InfluenceTypes</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">influences</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">model</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">x_train</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">y_train</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">x_test</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">y_test</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="perturbation-influences">
+<h3>Perturbation influences<a class="headerlink" href="#perturbation-influences" title="Permalink to this heading"></a></h3>
+<p>All previous mentioned influences can be calculated feature-wise by adding <code class="docutils literal notranslate"><span class="pre">influence_type</span></code> parameter
+to the influences function call.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.general</span> <span class="kn">import</span> <span class="n">influences</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.types</span> <span class="kn">import</span> <span class="n">InfluenceTypes</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">influences</span><span class="p">(</span>
+<span class="gp">... </span><span class="n">model</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">x_train</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">y_train</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">x_test</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">y_test</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">influence_type</span><span class="o">=</span><span class="n">InfluenceTypes</span><span class="o">.</span><span class="n">Perturbation</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
 </section>
 </section>
 
