@@ -275,7 +275,10 @@ def load_spotify_dataset(
         data = pd.read_csv(url)
         data = data.iloc[:3]
     else:
-        data = pd.read_csv("../data/top_hits_spotify_dataset.csv")
+        file_dir_path = os.path.dirname(os.path.abspath(__file__))
+        data = pd.read_csv(
+            os.path.join(file_dir_path, "../../../data/top_hits_spotify_dataset.csv")
+        )
         data = data[data["year"] > min_year]
     data["genre"] = data["genre"].astype("category").cat.codes
     y = data[target_column]
