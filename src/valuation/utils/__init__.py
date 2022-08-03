@@ -23,4 +23,7 @@ __all__ = [
     "maybe_progress",
     "load_spotify_dataset",
     "plot_shapley_pydvl",
+    "mcmc_is_linear_function",
+    "mcmc_is_linear_function_positive_definite",
+    "MatrixVectorProduct",
 ]
