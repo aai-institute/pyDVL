@@ -42,7 +42,7 @@ class MemcachedConfig:
     ignore_args: Iterable[str] = None
 
 
-def _serialize(x):
+def serialize(x):
     pickled_output = BytesIO()
     pickler = Pickler(pickled_output, PICKLE_VERSION)
     pickler.dump(x)
@@ -70,6 +70,7 @@ def get_running_avg_variance(
 
 def memcached(
     client_config: ClientConfig = None,
+    signature: bytes = None,
     cache_threshold: float = 0.3,
     allow_repeated_training: bool = False,
     rtol_threshold: float = 0.1,
@@ -91,6 +92,7 @@ def memcached(
 
     :param cache_threshold: computations taking below this value (in seconds) are not
         cached
+    :param signature: signature to use as prefix for cache key creation
     :param allow_repeated_training: If True, models with same data are re-trained and
         results cached until rtol_threshold precision is reached
     :para rtol_threshold: relative tolerance for repeated training. More precisely,
@@ -151,8 +153,8 @@ def memcached(
                 )
 
     def wrapper(fun: Callable):
-        # noinspection PyUnresolvedReferences
-        signature: bytes = _serialize((fun.__code__.co_code, fun.__code__.co_consts))
+        if signature is None:
+            signature = serialize((fun.__code__.co_code, fun.__code__.co_consts))
 
         @wraps(fun, updated=[])  # don't try to use update() for a class
         class Wrapped:
@@ -166,7 +168,7 @@ def memcached(
 
             def __call__(self, *args, **kwargs):
                 key_kwargs = {k: v for k, v in kwargs.items() if k not in ignore_args}
-                arg_signature: bytes = _serialize((args, list(key_kwargs.items())))
+                arg_signature: bytes = serialize((args, list(key_kwargs.items())))
 
                 # FIXME: do I really need to hash this?
                 # FIXME: ensure that the hashing algorithm is portable
@@ -175,12 +177,12 @@ def memcached(
                 #  pickled
                 key = blake2b(signature + arg_signature).hexdigest().encode("ASCII")
                 key_count = (
-                    blake2b(signature + arg_signature + _serialize("count"))
+                    blake2b(signature + arg_signature + serialize("count"))
                     .hexdigest()
                     .encode("ASCII")
                 )
                 key_variance = (
-                    blake2b(signature + arg_signature + _serialize("variance"))
+                    blake2b(signature + arg_signature + serialize("variance"))
                     .hexdigest()
                     .encode("ASCII")
                 )

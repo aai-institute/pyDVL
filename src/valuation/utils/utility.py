@@ -5,12 +5,12 @@ from sklearn.metrics import check_scoring
 
 from valuation.utils import (
     Dataset,
-    GroupedDataset,
     MemcachedConfig,
     Scorer,
     SupervisedModel,
     maybe_progress,
     memcached,
+    serialize,
 )
 from valuation.utils.logging import logger
 
@@ -57,8 +57,14 @@ class Utility:
         if enable_cache:
             if cache_options is None:
                 cache_options = dict()
-
-            self._utility_wrapper = memcached(**cache_options)(self._utility)
+            print(data.__name__)
+            print(data.__sizeof__())
+            signature = serialize(
+                (model.__name__(), model.__sizeof__(), data.__name__, data.__sizeof__())
+            )
+            self._utility_wrapper = memcached(**cache_options, signature=signature)(
+                self._utility
+            )
         else:
             self._utility_wrapper = self._utility
 
