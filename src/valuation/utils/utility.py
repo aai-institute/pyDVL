@@ -58,7 +58,6 @@ class Utility:
             if cache_options is None:
                 cache_options = dict()
             signature = serialize((hash(model), hash(data), scoring))
-            print(signature)
             self._utility_wrapper = memcached(**cache_options)(
                 self._utility, signature=signature
             )

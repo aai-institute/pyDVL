@@ -181,8 +181,8 @@ def memcached(
                     start = time()
                     value = fun(*args, **kwargs)
                     end = time()
+                    result_dict["value"] = value
                     if end - start >= cache_threshold or allow_repeated_training:
-                        result_dict["value"] = value
                         result_dict["count"] = 1
                         result_dict["variance"] = 0
                         self.client.set(key, result_dict, noreply=True)
