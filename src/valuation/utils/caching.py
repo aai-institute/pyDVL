@@ -101,7 +101,6 @@ def memcached(
     rtol_threshold: float = 0.1,
     min_repetitions: int = 3,
     ignore_args: Iterable[str] = None,
-    unique_prefix: bool = True,
 ):
     """Decorate a callable with this in order to have transparent caching.
 
@@ -126,8 +125,6 @@ def memcached(
     :param min_repetitions: minimum number of repetitions
     :param ignore_args: Do not take these keyword arguments into account when
         hashing the wrapped function for usage as key in memcached
-    :param unique_prefix: if True, the key hash will have a unique identifier so that
-        multiple instantiations of the same cached method will use different caches.
     :return: A wrapped function
 
     The default configuration is::
@@ -179,15 +176,7 @@ def memcached(
 
     def wrapper(fun: Callable):
         # noinspection PyUnresolvedReferences
-        if unique_prefix:
-            wrapper_id = uuid.uuid4().hex
-            signature: bytes = _serialize(
-                (wrapper_id, fun.__code__.co_code, fun.__code__.co_consts)
-            )
-        else:
-            signature: bytes = _serialize(
-                (fun.__code__.co_code, fun.__code__.co_consts)
-            )
+        signature: bytes = _serialize((fun.__code__.co_code, fun.__code__.co_consts))
 
         @wraps(fun, updated=[])  # don't try to use update() for a class
         class Wrapped:

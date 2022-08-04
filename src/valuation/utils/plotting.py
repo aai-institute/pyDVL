@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 
-def plot_shapley_pydvl(
+def plot_shapley(
     dval_df: pd.DataFrame,
     figsize: Tuple[int, int] = None,
     title: str = None,

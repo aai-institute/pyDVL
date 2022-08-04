@@ -19,8 +19,6 @@ __all__ = [
     "combinatorial_montecarlo_shapley",
     "combinatorial_exact_shapley",
     "permutation_exact_shapley",
-    "shapley_dval",
-    "create_utility",
 ]
 
 
