@@ -70,7 +70,6 @@ def get_running_avg_variance(
 
 def memcached(
     client_config: ClientConfig = None,
-    signature: bytes = None,
     cache_threshold: float = 0.3,
     allow_repeated_training: bool = False,
     rtol_threshold: float = 0.1,
@@ -92,7 +91,6 @@ def memcached(
 
     :param cache_threshold: computations taking below this value (in seconds) are not
         cached
-    :param signature: signature to use as prefix for cache key creation
     :param allow_repeated_training: If True, models with same data are re-trained and
         results cached until rtol_threshold precision is reached
     :para rtol_threshold: relative tolerance for repeated training. More precisely,
@@ -152,7 +150,7 @@ def memcached(
                     f'to {config["server"]}: {str(e)}'
                 )
 
-    def wrapper(fun: Callable):
+    def wrapper(fun: Callable, signature: bytes = None):
         if signature is None:
             signature = serialize((fun.__code__.co_code, fun.__code__.co_consts))
 
@@ -176,49 +174,42 @@ def memcached(
                 # NB: I need to create the hasher object here because it can't be
                 #  pickled
                 key = blake2b(signature + arg_signature).hexdigest().encode("ASCII")
-                key_count = (
-                    blake2b(signature + arg_signature + serialize("count"))
-                    .hexdigest()
-                    .encode("ASCII")
-                )
-                key_variance = (
-                    blake2b(signature + arg_signature + serialize("variance"))
-                    .hexdigest()
-                    .encode("ASCII")
-                )
 
-                result = self.get_key_value(key)
-                if result is None:
+                result_dict = self.get_key_value(key)
+                if result_dict is None:
+                    result_dict = {}
                     start = time()
-                    result = fun(*args, **kwargs)
+                    value = fun(*args, **kwargs)
                     end = time()
                     if end - start >= cache_threshold or allow_repeated_training:
-                        self.client.set(key, result, noreply=True)
-                        self.client.set(key_count, 1, noreply=True)
-                        self.client.set(key_variance, 0, noreply=True)
+                        result_dict["value"] = value
+                        result_dict["count"] = 1
+                        result_dict["variance"] = 0
+                        self.client.set(key, result_dict, noreply=True)
                         self.cache_info.sets += 1
                     self.cache_info.misses += 1
                 elif allow_repeated_training:
                     self.cache_info.hits += 1
-                    count = self.get_key_value(key_count)
-                    variance = self.get_key_value(key_variance)
+                    value = result_dict["value"]
+                    count = result_dict["count"]
+                    variance = result_dict["variance"]
                     error_on_average = (variance / (count)) ** (1 / 2)
                     if (
-                        error_on_average > rtol_threshold * result
+                        error_on_average > rtol_threshold * value
                         or count <= min_repetitions
                     ):
                         new_value = fun(*args, **kwargs)
                         new_avg, new_var = get_running_avg_variance(
-                            result, variance, new_value, count
+                            value, variance, new_value, count
                         )
-                        self.client.set(key, new_avg, noreply=True)
-                        self.client.set(key_count, count + 1, noreply=True)
-                        self.client.set(key_variance, new_var, noreply=True)
+                        result_dict["value"] = new_avg
+                        result_dict["count"] = count + 1
+                        result_dict["variance"] = new_var
+                        self.client.set(key, result_dict, noreply=True)
                         self.cache_info.sets += 1
-                        result = new_avg
                 else:
                     self.cache_info.hits += 1
-                return result
+                return result_dict["value"]
 
             def __getstate__(self):
                 """Enables pickling after a socket has been opened to the

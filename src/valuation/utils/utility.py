@@ -57,13 +57,10 @@ class Utility:
         if enable_cache:
             if cache_options is None:
                 cache_options = dict()
-            print(data.__name__)
-            print(data.__sizeof__())
-            signature = serialize(
-                (model.__name__(), model.__sizeof__(), data.__name__, data.__sizeof__())
-            )
-            self._utility_wrapper = memcached(**cache_options, signature=signature)(
-                self._utility
+            signature = serialize((hash(model), hash(data), scoring))
+            print(signature)
+            self._utility_wrapper = memcached(**cache_options)(
+                self._utility, signature=signature
             )
         else:
             self._utility_wrapper = self._utility
