@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 
-def shapley_pydvl(
+def get_shapley_values(
     u: Utility,
     iterations_per_job: int,
     num_jobs: int = 1,
