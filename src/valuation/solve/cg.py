@@ -6,7 +6,7 @@ Contains
 """
 
 from types import LambdaType
-from typing import Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import numpy as np
 
@@ -17,15 +17,21 @@ from valuation.utils import (
 from valuation.utils.logging import raise_or_log
 from valuation.utils.types import MatrixVectorProduct
 
+if TYPE_CHECKING:
+    try:
+        from numpy.typing import NDArray
+    except ImportError:
+        from numpy import ndarray as NDArray
+
 
 def batched_preconditioned_conjugate_gradient(
-    A: Union[np.ndarray, Callable[[np.ndarray], np.ndarray]],
-    b: np.ndarray,
-    x0: np.ndarray = None,
-    M: Union[np.ndarray, Callable[[np.ndarray], np.ndarray]] = None,
+    A: Union[NDArray, Callable[[NDArray], NDArray]],
+    b: NDArray,
+    x0: Optional[NDArray] = None,
+    M: Optional[Union[NDArray, Callable[[NDArray], NDArray]]] = None,
     rtol: float = 1e-10,
     max_iterations: int = None,
-    max_step_size: Optional[float] = 10.0,
+    max_step_size: float = 10.0,
     verify_assumptions: bool = False,
     raise_exception: bool = False,
 ):
@@ -36,7 +42,7 @@ def batched_preconditioned_conjugate_gradient(
     https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf. On top, it constrains the maximum step size.
     :param A: A linear function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix.
     It has to be positive-definite v.T @ f(v) >= 0.
-    :param b: A np.ndarray of shape [K] representing the targeted result of the matrix multiplication Ax.
+    :param b: A NDArray of shape [K] representing the targeted result of the matrix multiplication Ax.
     :param M: A function f : R[k] -> R[k] which approximates inv(A) or a matrix of shape [K, K]. The underlying matrix
     has to be symmetric and positive definite.
     :param max_iterations: Maximum number of iterations to use in conjugate gradient. Default is 10 times K.
@@ -45,18 +51,14 @@ def batched_preconditioned_conjugate_gradient(
     See also max_iterations. Default is 10.0.
     :param verify_assumptions: True, iff the matrix should be checked for positive-definiteness by a stochastic rule.
     :param raise_exception: True, iff an assumption should be raised, instead of a warning only.
-    :return: A np.ndarray of shape [K] representing the solution of Ax=b.
+    :return: A NDArray of shape [K] representing the solution of Ax=b.
     """
-
     # wrap A into a function.
-    new_A = np.copy(A)
-    A = A if isinstance(A, LambdaType) else lambda v: v @ new_A.T
+    if not callable(A):
+        A = lambda v: v @ np.copy(A).T  # type: ignore
     if M is not None:
-        if isinstance(M, LambdaType):
-            M = M
-        else:
-            new_M = np.copy(M)
-            M = lambda v: v @ new_M.T
+        if not callable(M):
+            M = lambda v: v @ np.copy(M).T  # type: ignore
 
     k = A(b).shape[0]
     if A(b).size == 0:
@@ -160,7 +162,7 @@ def batched_preconditioned_conjugate_gradient(
 
 
 def conjugate_gradient_condition_number_based_error_bound(
-    A: np.ndarray, n: int, x0: np.ndarray, xt: np.ndarray
+    A: NDArray, n: int, x0: NDArray, xt: NDArray
 ) -> float:
     """
     Error bound for conjugate gradient based on the condition number of the weight matrix A. Used for testing purposes.
@@ -178,12 +180,12 @@ def conjugate_gradient_condition_number_based_error_bound(
     eig_val_min = np.min(eigvals)
     kappa = np.abs(eig_val_max / eig_val_min)
     norm_A = lambda v: np.sqrt(np.einsum("ia,ab,ib->i", v, A, v))
-    error_init = norm_A(xt - x0)
+    error_init: float = norm_A(xt - x0)
 
     sqrt_kappa = np.sqrt(kappa)
     div = (sqrt_kappa + 1) / (sqrt_kappa - 1)
     div_n = div**n
-    return (2 * error_init) / (div_n + 1 / div_n)
+    return (2 * error_init) / (div_n + 1 / div_n)  # type: ignore
 
 
 def hvp_to_inv_diag_conditioner(
@@ -203,7 +205,7 @@ def hvp_to_inv_diag_conditioner(
         inp[i] = 1
         diags[i] = hvp(np.reshape(inp, [1, -1]))[0, i]
 
-    def _inv_diag_conditioner(v: np.ndarray):
+    def _inv_diag_conditioner(v: NDArray):
         return v / diags
 
     return _inv_diag_conditioner
