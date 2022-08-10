@@ -45,16 +45,19 @@ jobs:
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: default
+    needs: [lint]
   torch-tests:
     name: Run tests that use PyTorch
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: torch
+    needs: [lint]
   notebook-tests:
     name: Run Notebooks
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: notebooks
+    needs: [lint]
   build:
     name: Build & Push Docs and maybe release Package to TestPyPI
     runs-on: ubuntu-latest
