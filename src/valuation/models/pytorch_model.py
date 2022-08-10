@@ -10,7 +10,8 @@ from torch.optim import Adam, AdamW
 from torch.utils.data import DataLoader, Dataset
 
 from valuation.utils import maybe_progress
-from valuation.utils.types import TorchObjective
+
+from .torch_module import TorchObjective
 
 
 def tt(v):
@@ -93,7 +94,7 @@ class PyTorchSupervisedModel:
             for i in maybe_progress(range(len(z)), progress)
         ]
         hvp = torch.stack([grad.contiguous().view(-1) for grad in all_flattened_grads])
-        return hvp.detach().numpy()
+        return hvp.detach().numpy()  # type: ignore
 
     def fit(self, x: np.ndarray, y: np.ndarray):
         from valuation.utils.logging import logger
@@ -131,8 +132,8 @@ class PyTorchSupervisedModel:
                 optimizer.zero_grad()
 
     def predict(self, x: np.ndarray) -> np.ndarray:
-        return self.model(tt(x)).detach().numpy()
+        return self.model(tt(x)).detach().numpy()  # type: ignore
 
     def score(self, x: np.ndarray, y: np.ndarray) -> float:
         x, y = tt(x), tt(y)
-        return self.objective(self.model(x), y).detach().numpy()
+        return self.objective(self.model(x), y).detach().numpy()  # type: ignore
