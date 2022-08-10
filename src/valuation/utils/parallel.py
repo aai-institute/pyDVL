@@ -19,10 +19,13 @@ from typing import (
     Optional,
     Type,
     TypeVar,
+    Union,
 )
 
 from joblib import Parallel, delayed
 from tqdm import tqdm
+
+from .progress import MockProgress
 
 __all__ = [
     "MapReduceJob",
@@ -326,7 +329,7 @@ class Coordinator:
         except queue.Empty:
             pass
 
-    def clear_results(self, pbar: Optional[tqdm] = None):
+    def clear_results(self, pbar: Optional[Union[tqdm, MockProgress]] = None):
         if pbar:
             pbar.set_description_str("Gathering pending results")
             pbar.total = len(self.workers)
@@ -343,7 +346,7 @@ class Coordinator:
         for w in self.workers:
             w.start()
 
-    def end(self, pbar: Optional[tqdm] = None):
+    def end(self, pbar: Optional[Union[tqdm, MockProgress]] = None):
         self.clear_tasks()
         # Any workers still running won't post their results after the
         # None task has been placed...

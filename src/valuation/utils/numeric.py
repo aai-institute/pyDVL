@@ -13,6 +13,7 @@ from enum import Enum
 from functools import reduce
 from itertools import chain, combinations
 from typing import (
+    TYPE_CHECKING,
     Callable,
     Collection,
     Generator,
@@ -22,6 +23,7 @@ from typing import (
     Sequence,
     Tuple,
     TypeVar,
+    Union,
 )
 
 import numpy as np
@@ -29,6 +31,12 @@ import numpy as np
 from valuation.utils import memcached
 from valuation.utils.caching import ClientConfig
 from valuation.utils.parallel import MapReduceJob, map_reduce
+
+if TYPE_CHECKING:
+    try:
+        from numpy.typing import NDArray
+    except ImportError:
+        from numpy import ndarray as NDArray
 
 __all__ = [
     "powerset",
@@ -83,7 +91,7 @@ def vanishing_derivatives(x: np.ndarray, min_values: int, atol: float) -> int:
     return int(np.sum(zeros >= min_values / 2))
 
 
-def powerset(it: Sequence[T]) -> Iterator[Collection[T]]:
+def powerset(it: Union[Sequence[T], "NDArray"]) -> Iterator[Collection[T]]:
     """Returns an iterator for the power set of the argument.
 
     Subsets are generated in sequence by growing size. See `random_powerset()`
@@ -324,7 +332,7 @@ def decision_boundary_fixed_variance_2d(
     a = np.asarray([[0, 1], [-1, 0]]) @ (mu_2 - mu_1)
     b = (mu_1 + mu_2) / 2
     a = a.reshape([1, -1])
-    return lambda z: z.reshape([-1, 1]) * a + b
+    return lambda z: z.reshape([-1, 1]) * a + b  # type: ignore
 
 
 def min_distance_points_to_line_2d(
@@ -339,4 +347,4 @@ def min_distance_points_to_line_2d(
     """
     a = np.reshape(a, [2, 1])
     r = np.abs(p @ a + b) / np.sqrt(np.sum(a**2))
-    return r[:, 0]
+    return r[:, 0]  # type: ignore

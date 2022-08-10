@@ -1,7 +1,7 @@
 import os
 from collections import OrderedDict
 from copy import copy
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
@@ -9,7 +9,7 @@ from sklearn.manifold import TSNE
 from sklearn.model_selection import train_test_split
 from sklearn.utils import Bunch, check_X_y
 
-__all__ = ["Dataset", "polynomial_dataset", "load_spotify_dataset"]
+__all__ = ["Dataset", "GroupedDataset", "polynomial_dataset", "load_spotify_dataset"]
 
 
 class Dataset:
@@ -124,7 +124,11 @@ class Dataset:
 
     @classmethod
     def from_sklearn(
-        cls, data: Bunch, train_size: float = 0.8, random_state: int = None
+        cls,
+        data: Bunch,
+        train_size: float = 0.8,
+        random_state: Optional[int] = None,
+        **kwargs,
     ) -> "Dataset":
         """Constructs a Dataset object from an sklearn bunch as returned
         by the load_* functions in `sklearn.datasets`
@@ -142,6 +146,7 @@ class Dataset:
             description=data.get("DESCR"),
         )
 
+    # TODO: This doesn't look good. Why do we do this?
     try:
         import pandas as pd
 
@@ -164,7 +169,7 @@ class GroupedDataset(Dataset):
         y_train: np.ndarray,
         x_test: np.ndarray,
         y_test: np.ndarray,
-        data_groups: Iterable,
+        data_groups: Sequence,
         feature_names: Optional[Iterable] = None,
         target_names: Optional[Iterable] = None,
         description: Optional[str] = None,
@@ -190,11 +195,13 @@ class GroupedDataset(Dataset):
                 f"data_groups and x_train must have the same length. Instead got {len(data_groups)=} and {len(x_train)=}"
             )
 
-        self.groups = OrderedDict({k: [] for k in set(data_groups)})
+        self.groups: OrderedDict[Any, List[int]] = OrderedDict(
+            {k: [] for k in set(data_groups)}
+        )
         for idx, group in enumerate(data_groups):
             self.groups[group].append(idx)
         self.group_items = list(self.groups.items())
-        self._indices = list(range(len(self.groups.keys())))
+        self._indices = np.arange(len(self.groups.keys()))
 
     def __len__(self):
         return len(self.groups)
@@ -218,15 +225,18 @@ class GroupedDataset(Dataset):
     def from_sklearn(
         cls,
         data: Bunch,
-        data_groups: List,
         train_size: float = 0.8,
-        random_state: int = None,
+        random_state: Optional[int] = None,
+        **kwargs,
     ) -> "GroupedDataset":
+        data_groups: Optional[List] = kwargs.get("data_groups")
+        if data_groups is None:
+            raise ValueError("data_groups argument is missing")
         dataset = super().from_sklearn(data, train_size, random_state)
         return cls.from_dataset(dataset, data_groups)
 
     @classmethod
-    def from_dataset(cls, dataset: Dataset, data_groups: List):
+    def from_dataset(cls, dataset: Dataset, data_groups: List) -> "GroupedDataset":
         return GroupedDataset(
             x_train=dataset.x_train,
             y_train=dataset.y_train,

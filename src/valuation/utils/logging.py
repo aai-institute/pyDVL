@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 server: Optional[Process] = None
-logger: Optional[logging.Logger] = None
+logger: logging.Logger
 
 
 class LogRecordStreamHandler(socketserver.StreamRequestHandler):

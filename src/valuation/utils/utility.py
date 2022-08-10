@@ -5,7 +5,6 @@ from sklearn.metrics import check_scoring
 
 from valuation.utils import (
     Dataset,
-    GroupedDataset,
     MemcachedConfig,
     Scorer,
     SupervisedModel,

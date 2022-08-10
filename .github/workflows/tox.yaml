@@ -11,6 +11,25 @@ env:
   GITHUB_BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
 
 jobs:
+  lint:
+    name: Lint code and check type hints
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.8
+        cache: 'pip'
+    - name: Install Dev Requirements
+      run: pip install -r requirements-dev.txt
+    - name: Cache Tox Directory for Linting
+      uses: actions/cache@v3
+      with:
+        key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini') }}
+        path: .tox
+    - name: Check Type Hints
+      run: tox -e type-checking
+      continue-on-error: true
   non-torch-tests:
     name: Run tests that do not use PyTorch
     uses: ./.github/workflows/run-tests-workflow.yaml
