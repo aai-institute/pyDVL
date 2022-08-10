@@ -1,3 +1,12 @@
+"""
+Contains
+
+- shapley related stuff.
+- analytical derivatives for MSE and Linear Regression.
+- methods for sampling datasets.
+- code for calculating decision boundary in BinaryLogisticRegression.
+"""
+
 import math
 import operator
 from enum import Enum
@@ -259,7 +268,7 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     :param linear_model: A tuple of np.ndarray of shape [NxM] and [N] representing A and b respectively.
     :param x: A np.ndarray of shape [BxM].
     :param y: A np.nparray of shape [BxN].
-    :return: A np.ndarray of shape [Bx((N+1)*M)xM], representing the derivative.
+    :returns: A np.ndarray of shape [Bx((N+1)*M)xM], representing the derivative.
     """
 
     A, b = linear_model
@@ -275,3 +284,59 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     b_part_derivative = np.tile(np.expand_dims(A, axis=0), [B, 1, 1])
     full_derivative = np.concatenate((outer_product_matrix, b_part_derivative), axis=1)
     return full_derivative / N  # type: ignore
+
+
+def sample_classification_dataset_using_gaussians(
+    mus: np.ndarray, sigma: float, num_samples: int
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Sample from a uniform Gaussian mixture model.
+    :param mus: 2d-matrix [CxD] with the means of the components in the rows.
+    :param sigma: Standard deviation of each dimension of each component.
+    :param num_samples: The number of samples to generate.
+    :returns: A tuple of matrix x of shape [NxD] and target vector y of shape [N].
+    """
+    num_features = mus.shape[1]
+    num_classes = mus.shape[0]
+    gaussian_cov = sigma * np.eye(num_features)
+    gaussian_chol = np.linalg.cholesky(gaussian_cov)
+    y = np.random.randint(num_classes, size=num_samples)
+    x = (
+        np.einsum(
+            "ij,kj->ki",
+            gaussian_chol,
+            np.random.normal(size=[num_samples, num_features]),
+        )
+        + mus[y]
+    )
+    return x, y
+
+
+def decision_boundary_fixed_variance_2d(
+    mu_1: np.ndarray, mu_2: np.ndarray
+) -> Callable[[np.ndarray], np.ndarray]:
+    """
+    Closed-form solution for decision boundary dot(a, b) + b = 0 with fixed variance.
+    :param mu_1: First mean.
+    :param mu_2: Second mean.
+    :returns: A callable which converts a continuous line (-infty, infty) to the decision boundary in feature space.
+    """
+    a = np.asarray([[0, 1], [-1, 0]]) @ (mu_2 - mu_1)
+    b = (mu_1 + mu_2) / 2
+    a = a.reshape([1, -1])
+    return lambda z: z.reshape([-1, 1]) * a + b
+
+
+def min_distance_points_to_line_2d(
+    p: np.ndarray, a: np.ndarray, b: np.ndarray
+) -> np.ndarray:
+    """
+    Closed-form solution for minimum distance of point to line specified by dot(a, x) + b = 0.
+    :param p: A 2-dimensional matrix [NxD] representing the points.
+    :param a: A 1-dimensional vector [D] representing the slope.
+    :param b: The offset of the line.
+    :returns: A 1-dimensional vector [N] with the shortest distance for each point to the line.
+    """
+    a = np.reshape(a, [2, 1])
+    r = np.abs(p @ a + b) / np.sqrt(np.sum(a**2))
+    return r[:, 0]

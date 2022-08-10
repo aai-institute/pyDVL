@@ -1,10 +1,11 @@
 tox
 tox-wheel
-black
 pytest
 pytest-timeout
+pre-commit
+bump2version
+twine
+black
 jupyter
 nbconvert
-bump2version
-pre-commit
 mypy

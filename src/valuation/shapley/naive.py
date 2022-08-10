@@ -28,7 +28,7 @@ def permutation_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
             values[idx] += u(p[: i + 1]) - u(p[:i])
     values /= np.math.factorial(n)
 
-    return sort_values({i: v for i, v in enumerate(values)})
+    return sort_values({u.data.data_names[i]: v for i, v in enumerate(values)})
 
 
 def combinatorial_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
@@ -55,4 +55,4 @@ def combinatorial_exact_shapley(u: Utility, progress: bool = True) -> OrderedDic
             values[i] += (u({i}.union(s)) - u(s)) / np.math.comb(n - 1, len(s))
     values /= n
 
-    return sort_values({i: v for i, v in enumerate(values)})
+    return sort_values({u.data.data_names[i]: v for i, v in enumerate(values)})

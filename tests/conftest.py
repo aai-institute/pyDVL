@@ -11,7 +11,7 @@ import pytest
 from pymemcache.client import Client
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 
 from valuation.utils import ClientConfig, Dataset, Utility
 from valuation.utils.logging import start_logging_server
@@ -142,9 +142,10 @@ def boston_dataset(n_points, n_features):
 
 
 @pytest.fixture(scope="function")
-def linear_dataset(a, b, num_points):
+def linear_dataset(a, b, num_points, seed=42):
     from sklearn.utils import Bunch
 
+    np.random.seed(seed)
     step = 2 / num_points
     x = np.arange(-1, 1, step)
     y = np.random.normal(loc=a * x + b, scale=0.1)
@@ -633,4 +634,10 @@ def create_mock_dataset(
         dataset.x_test = np.random.uniform(size=[test_set_size, i_d])
         dataset.y_test = data_model(dataset.x_test)
 
+    scaler_x = MinMaxScaler()
+    scaler_y = MinMaxScaler()
+    dataset.x_train = scaler_x.fit_transform(dataset.x_train)
+    dataset.y_train = scaler_y.fit_transform(dataset.y_train)
+    dataset.x_test = scaler_x.transform(dataset.x_test)
+    dataset.y_test = scaler_y.transform(dataset.y_test)
     return dataset
