@@ -29,7 +29,10 @@ def get_shapley_values(
     use_combinatorial=False,
     use_exact=False,
 ):
-    """Facade for all shapley methods. By default, it uses permutation_montecarlo_shapley
+    """
+    #TODO write better docstring for this method
+
+    Facade for all shapley methods. By default, it uses permutation_montecarlo_shapley
 
     :param u: Utility object
     :param iterations_per_job: number of montecarlo iterations for each separate job
