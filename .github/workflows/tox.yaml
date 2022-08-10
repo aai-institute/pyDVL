@@ -39,7 +39,6 @@ jobs:
       continue-on-error: true
     - name: Check Type Hints
       run: tox -e type-checking
-      continue-on-error: true
   non-torch-tests:
     name: Run tests that do not use PyTorch
     uses: ./.github/workflows/run-tests-workflow.yaml
