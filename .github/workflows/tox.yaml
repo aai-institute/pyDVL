@@ -50,13 +50,6 @@ jobs:
         with:
           python-version: 3.8
           cache: 'pip'
-      - name: Cache tox envs and pip packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/pip
-            .tox
-          key: ${{runner.os}}-${{github.ref}}-${{hashFiles('requirements.txt', 'requirements-extra.txt' 'setup.py', 'tox.ini')}}
       - name: Install Dev Requirements
         run: pip install -r requirements-dev.txt
       - name: Install Pandoc
