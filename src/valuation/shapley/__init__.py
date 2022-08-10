@@ -26,8 +26,8 @@ def get_shapley_values(
     u: Utility,
     iterations_per_job: int,
     num_jobs: int = 1,
-    use_combinatorial=False,
-    use_exact=False,
+    use_combinatorial: bool = False,
+    use_exact: bool = False,
 ):
     """
     #TODO write better docstring for this method

@@ -9,13 +9,11 @@ TODO:
  * shapley values for groups of samples
 """
 import logging
-import os
 from collections import OrderedDict
 from time import time
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 from joblib import Parallel, delayed
 
 from valuation.reporting.scores import sort_values, sort_values_array
@@ -289,7 +287,7 @@ def serial_truncated_montecarlo_shapley(
 
 def permutation_montecarlo_shapley(
     u: Utility, max_iterations: int, num_jobs: int = 1, progress: bool = False
-) -> Tuple[OrderedDict, None]:
+) -> Tuple[OrderedDict, Dict]:
     def fun(job_id: int):
         n = len(u.data)
         values = np.zeros(shape=(max_iterations, n))
@@ -327,7 +325,7 @@ def permutation_montecarlo_shapley(
 
 def combinatorial_montecarlo_shapley(
     u: Utility, max_iterations: int, num_jobs: int = 1, progress: bool = False
-) -> Tuple[OrderedDict, None]:
+) -> Tuple[OrderedDict, Dict]:
     """Computes an approximate Shapley value using the combinatorial
     definition and MonteCarlo samples.
     """
