@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 server: Optional[Process] = None
-logger: logging.Logger
+logger: logging.Logger = None
 
 
 class LogRecordStreamHandler(socketserver.StreamRequestHandler):
@@ -115,7 +115,7 @@ def start_logging_server(
 def set_logger(
     host: str = "localhost",
     port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT,
-    _logger=None,
+    _logger: Optional[logging.Logger] = None,
 ):
     global logger
     if _logger is not None:
