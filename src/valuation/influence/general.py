@@ -14,7 +14,8 @@ from valuation.solve.cg import (
     batched_preconditioned_conjugate_gradient,
     hvp_to_inv_diag_conditioner,
 )
-from valuation.utils import MapReduceJob, available_cpus, logger, map_reduce
+from valuation.utils import MapReduceJob, available_cpus, map_reduce
+from valuation.utils.logging import logger
 from valuation.utils.types import (
     MatrixVectorProductInversionAlgorithm,
     TwiceDifferentiable,
@@ -25,13 +26,13 @@ def influences(
     model: TwiceDifferentiable,
     x_train: np.ndarray,
     y_train: np.ndarray,
-    x_test: np.ndarray = None,
-    y_test: np.ndarray = None,
+    x_test: np.ndarray,
+    y_test: np.ndarray,
     progress: bool = False,
     n_jobs: int = -1,
     influence_type: InfluenceTypes = InfluenceTypes.Up,
-    inversion_method: str = None,
-    max_data_points: int = None,
+    inversion_method: Optional[str] = None,
+    max_data_points: Optional[int] = None,
 ) -> np.ndarray:
     """
     Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
@@ -55,8 +56,8 @@ def influences(
 
     n_params = model.num_params()
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
-        "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,
-        "cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(
+        "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,  # type: ignore
+        "cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(  # type: ignore
             hvp, x, M=hvp_to_inv_diag_conditioner(hvp, d=x.shape[1])
         )[0],
     }
@@ -129,7 +130,7 @@ def influences(
         """
         c_x_train, c_y_train = x_train[indices], y_train[indices]
         train_grads = model.grad(c_x_train, c_y_train)
-        return np.einsum("ta,va->tv", influence_factors, train_grads)
+        return np.einsum("ta,va->tv", influence_factors, train_grads)  # type: ignore
 
     def _calculate_influences_pert(indices: np.ndarray, job_id: int) -> np.ndarray:
         """
@@ -165,4 +166,4 @@ def influences(
     influences_job = MapReduceJob.from_fun(
         influence_function, functools.partial(np.concatenate, axis=1)
     )
-    return map_reduce(influences_job, np.arange(len(x_train)), num_jobs=n_jobs)[0]
+    return map_reduce(influences_job, np.arange(len(x_train)), num_jobs=n_jobs)[0]  # type: ignore
