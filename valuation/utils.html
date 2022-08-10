@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>utils &mdash; pyDVL 0.1.0.dev8 documentation</title>
+  <title>utils &mdash; pyDVL 0.1.0.dev9 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -408,6 +408,30 @@ iterator as well, but ignores any accesses to methods or properties.</p>
 <li><p><strong>it</strong> – the iterator to wrap</p></li>
 <li><p><strong>display</strong> – set to True to return a tqdm bar</p></li>
 <li><p><strong>tqdm_kwargs</strong> – will be forwarded to tqdm</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.utils.load_spotify_dataset">
+<span class="sig-name descname"><span class="pre">load_spotify_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_year</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2014</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'popularity'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.load_spotify_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Load spotify music dataset and selects song after min_year.
+If os. is True, it returns a small dataset for testing purposes.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="valuation.utils.plot_shapley">
+<span class="sig-name descname"><span class="pre">plot_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dval_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.plot_shapley" title="Permalink to this definition"></a></dt>
+<dd><p>Plots the shapley values, as returned from shapley.get_shapley_values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dval_df</strong> – dataframe with the shapley values</p></li>
+<li><p><strong>figsize</strong> – tuple with figure size</p></li>
+<li><p><strong>title</strong> – string, title of the plot</p></li>
+<li><p><strong>xlabel</strong> – string, x label of the plot</p></li>
+<li><p><strong>ylabel</strong> – string, y label of the plot</p></li>
 </ul>
 </dd>
 </dl>
