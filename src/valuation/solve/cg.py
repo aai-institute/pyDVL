@@ -25,10 +25,10 @@ if TYPE_CHECKING:
 
 
 def batched_preconditioned_conjugate_gradient(
-    A: Union[NDArray, Callable[[NDArray], NDArray]],
-    b: NDArray,
-    x0: Optional[NDArray] = None,
-    M: Optional[Union[NDArray, Callable[[NDArray], NDArray]]] = None,
+    A: Union["NDArray", Callable[["NDArray"], "NDArray"]],
+    b: "NDArray",
+    x0: Optional["NDArray"] = None,
+    M: Optional[Union["NDArray", Callable[["NDArray"], "NDArray"]]] = None,
     rtol: float = 1e-10,
     max_iterations: int = None,
     max_step_size: float = 10.0,
@@ -162,7 +162,7 @@ def batched_preconditioned_conjugate_gradient(
 
 
 def conjugate_gradient_condition_number_based_error_bound(
-    A: NDArray, n: int, x0: NDArray, xt: NDArray
+    A: "NDArray", n: int, x0: "NDArray", xt: "NDArray"
 ) -> float:
     """
     Error bound for conjugate gradient based on the condition number of the weight matrix A. Used for testing purposes.

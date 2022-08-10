@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 server: Optional[Process] = None
-logger: logging.Logger = None
+logger: logging.Logger = logging.getLogger("root")
 
 
 class LogRecordStreamHandler(socketserver.StreamRequestHandler):
@@ -120,8 +120,8 @@ def set_logger(
     global logger
     if _logger is not None:
         logger = _logger
-    elif logger is None:
-        logger = logging.getLogger("root")
+    else:
+        logger.handlers.clear()
         logger.setLevel(logging.DEBUG)
         # socket handler sends the raw event, pickled
         socket_handler = logging.handlers.SocketHandler(host, port)

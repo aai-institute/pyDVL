@@ -43,14 +43,14 @@ def plot_shapley(
 
 
 def plot_datasets(
-    datasets: Dict[str, Tuple[NDArray, NDArray]],
-    x_min: Optional[NDArray] = None,
-    x_max: Optional[NDArray] = None,
+    datasets: Dict[str, Tuple["NDArray", "NDArray"]],
+    x_min: Optional["NDArray"] = None,
+    x_max: Optional["NDArray"] = None,
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     vline: Optional[float] = None,
     cmap_name: Optional[str] = None,
-    line: Optional[NDArray] = None,
+    line: Optional["NDArray"] = None,
     suptitle: Optional[str] = None,
     s: Optional[float] = None,
 ):
