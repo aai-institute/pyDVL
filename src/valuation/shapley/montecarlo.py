@@ -9,9 +9,10 @@ TODO:
  * shapley values for groups of samples
 """
 import logging
+import math
 from collections import OrderedDict
 from time import time
-from typing import Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -27,6 +28,12 @@ from valuation.utils.parallel import (
     map_reduce,
 )
 from valuation.utils.progress import maybe_progress
+
+if TYPE_CHECKING:
+    try:
+        from numpy.typing import NDArray
+    except ImportError:
+        from numpy import ndarray as NDArray
 
 log = logging.getLogger(__name__)
 
@@ -334,7 +341,7 @@ def combinatorial_montecarlo_shapley(
     dist = PowerSetDistribution.WEIGHTED
     correction = 2 ** (n - 1) / n
 
-    def fun(indices: np.ndarray, job_id: int) -> np.ndarray:
+    def fun(indices: np.ndarray, job_id: int) -> "NDArray":
         """Given indices and job id, this funcion calculates random
         powersets of the training data and trains the model with them.
         Used for parallelisation, as argument for MapReduceJob.
@@ -359,11 +366,13 @@ def combinatorial_montecarlo_shapley(
                     position=job_id,
                 )
             ):
-                values[idx, s_idx] = (u({idx}.union(s)) - u(s)) / np.math.comb(
+                values[idx, s_idx] = (u({idx}.union(s)) - u(s)) / math.comb(
                     n - 1, len(s)
                 )
 
-        return correction * values
+        result: "NDArray" = correction * values
+
+        return result
 
     job = MapReduceJob.from_fun(fun, np.concatenate)
     full_results = map_reduce(job, u.data.indices, num_jobs=num_jobs)[0]
