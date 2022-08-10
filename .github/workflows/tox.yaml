@@ -15,6 +15,13 @@ jobs:
     name: Lint code and check type hints
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Merge develop into current branch
+      run: |
+        git fetch origin develop:develop --update-head-ok
+        git merge develop
     - name: Set up Python 3.8
       uses: actions/setup-python@v3
       with:
