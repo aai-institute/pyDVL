@@ -281,6 +281,8 @@ def load_spotify_dataset(
         data.to_csv(file_path, index=False)
 
     data = data[data["year"] > min_year]
+    # TODO reading off an env variable within the method is dirty. Look into other solutions
+    # to switching to reduced dataset when testing
     CI = os.environ.get("CI") in ("True", "true")
     if CI:
         data = data.iloc[:3]
