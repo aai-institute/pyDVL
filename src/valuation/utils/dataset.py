@@ -1,8 +1,10 @@
+import os
 from collections import OrderedDict
 from copy import copy
 from typing import Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
+import pandas as pd
 from numpy.lib.index_tricks import IndexExpression
 from sklearn.manifold import TSNE
 from sklearn.model_selection import train_test_split
@@ -256,6 +258,45 @@ def polynomial_dataset(coefficients: np.ndarray):
     db.feature_names = ["x"]
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.5), coefficients
+
+
+def load_spotify_dataset(
+    val_size: float,
+    test_size: float,
+    min_year: int = 2014,
+    target_column: str = "popularity",
+    random_state: int = 42,
+):
+    """Load spotify music dataset and selects song after min_year.
+    If os. is True, it returns a small dataset for testing purposes."""
+    file_dir_path = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(
+        file_dir_path, "../../../data/top_hits_spotify_dataset.csv"
+    )
+    if os.path.exists(file_path):
+        data = pd.read_csv(file_path)
+    else:
+        url = "https://github.com/appliedAI-Initiative/valuation/blob/notebook_and_shapley_interface/data/top_hits_spotify_dataset.csv"
+        data = pd.read_csv(url)
+        data.to_csv(file_path, index=False)
+
+    data = data[data["year"] > min_year]
+    # TODO reading off an env variable within the method is dirty. Look into other solutions
+    # to switching to reduced dataset when testing
+    CI = os.environ.get("CI") in ("True", "true")
+    if CI:
+        data = data.iloc[:3]
+
+    data["genre"] = data["genre"].astype("category").cat.codes
+    y = data[target_column]
+    X = data.drop(target_column, axis=1)
+    X, X_test, y, y_test = train_test_split(
+        X, y, test_size=test_size, random_state=random_state
+    )
+    X_train, X_val, y_train, y_val = train_test_split(
+        X, y, test_size=val_size, random_state=random_state
+    )
+    return [X_train, y_train], [X_val, y_val], [X_test, y_test]
 
 
 def flip_dataset(
