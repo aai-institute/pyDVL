@@ -26,6 +26,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Merge develop into current branch
+      if: github.ref != 'refs/heads/develop'
       run: |
         git fetch origin develop:develop --update-head-ok
         git merge develop
