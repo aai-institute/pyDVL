@@ -1,10 +1,16 @@
-name: Merge develop, run tests and build docs
+name: Merge develop, run tests and build documentation
 
 on:
   push:
-    branches: [develop]
+    branches: [develop, main]
   pull_request:
     branches: [develop]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: Why did you trigger the pipeline?
+        required: False
+        default: Check if it runs again due to external changes
 
 env:
   GITHUB_BOT_USERNAME: github-actions[bot]
@@ -19,10 +25,6 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: Merge develop into current branch
-      run: |
-        git fetch origin develop:develop --update-head-ok
-        git merge develop
     - name: Set up Python 3.8
       uses: actions/setup-python@v3
       with:
@@ -66,10 +68,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Merge develop into current branch
-        run: |
-          git fetch origin develop:develop --update-head-ok
-          git merge develop
       - name: Set up Python 3.8
         uses: actions/setup-python@v3
         with:
