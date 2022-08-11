@@ -12,7 +12,7 @@ Refer to our [documentation](https://appliedAI-Initiative.github.io/valuation) f
 To install the latest release use:
 
 ```shell
-$ pip install pydvl
+$ pip install pyDVL
 ```
 
 For more instructions and information refer to the [Installing pyDVL section](https://appliedAI-Initiative.github.io/valuation/install.html)
@@ -39,9 +39,3 @@ Refer to the notebooks in the [notebooks](notebooks) folder for usage examples.
 
 Please open new issues for bugs, feature requests and extensions. See more details about the structure and
 workflow in the [developer's readme](README-dev.md).
-
-# To do
-
-* fix all 'em broken things.
-* pytest plugin for algorithms with epsilon,delta guarantees:
-  run n times, expect roughly n*delta failures at most.
