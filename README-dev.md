@@ -113,20 +113,7 @@ Notebooks also form part of the documentation, see the explanation above.
 
 ## CI/CD and Release Process
 
-This repository contains ci/cd pipelines for multiple providers. The most
-sophisticated one is the [gitlab ci pipeline](.gitlab-ci.yml) (this is what we
-use internally at appliedAI), it will run the test suite and publish docu,
-badges and reports. Badges can accessed from the pipeline's artifacts, e.g. for
-the coverage badge the url will be:
-
-```
-<gitlab_project_url>/-/jobs/artifacts/develop/raw/badges/coverage.svg?job=tox_use_cache
-```
-
-The github and azure ci pipelines are rather rudimentary. Pull requests are
-always welcome!
-
-### Development and Release Process with Github
+### Development and Release Process
 
 In order to be able to automatically release new versions of the package from
 the develop branch, the CI pipeline should have access to the following
