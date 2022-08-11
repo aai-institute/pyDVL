@@ -9,6 +9,7 @@ on:
 env:
   GITHUB_BOT_USERNAME: github-actions[bot]
   GITHUB_BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  PY_COLORS: 1
 
 jobs:
   lint:
