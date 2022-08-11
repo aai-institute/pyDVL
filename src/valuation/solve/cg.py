@@ -55,10 +55,12 @@ def batched_preconditioned_conjugate_gradient(
     """
     # wrap A into a function.
     if not callable(A):
-        A = lambda v: v @ np.copy(A).T  # type: ignore
+        new_A = np.copy(A)
+        A = lambda v: v @ new_A.T  # type: ignore
     if M is not None:
         if not callable(M):
-            M = lambda v: v @ np.copy(M).T  # type: ignore
+            new_M = np.copy(M)
+            M = lambda v: v @ new_M.T  # type: ignore
 
     k = A(b).shape[0]
     if A(b).size == 0:
