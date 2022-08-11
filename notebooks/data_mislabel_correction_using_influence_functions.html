@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Influence functions for data mislabeling &mdash; pyDVL 0.1.0.dev9 documentation</title>
+  <title>Influence functions for data mislabeling &mdash; pyDVL 0.1.0.dev10 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -413,7 +413,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">decision_boundary_fixed_variance_2d</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.utils.numeric</span> <span class="kn">import</span> <span class="n">decision_boundary_fixed_variance_2d</span>
 
 <span class="n">decision_boundary_fn</span> <span class="o">=</span> <span class="n">decision_boundary_fixed_variance_2d</span><span class="p">(</span><span class="n">mus</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mus</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 <span class="n">decision_boundary</span> <span class="o">=</span> <span class="n">decision_boundary_fn</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
@@ -561,7 +561,7 @@ the mean absolute influence to filter for the wrong data labels. After calculati
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">flip_dataset</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.utils.dataset</span> <span class="kn">import</span> <span class="n">flip_dataset</span>
 
 <span class="n">flipped_dataset</span><span class="p">,</span> <span class="n">flipped_idx</span> <span class="o">=</span> <span class="n">flip_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">flip_percentage</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
 </pre></div>
@@ -621,7 +621,7 @@ the mean absolute influence to filter for the wrong data labels. After calculati
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&#39;Around 76.86% could be identified. But there are 23.14% remaining samples&#39;
+&#39;Around 75.43% could be identified. But there are 24.57% remaining samples&#39;
 </pre></div></div>
 </div>
 <p>Furthermore, the accuracy is evaluated, e.g. the number of same elements in the ground truth and the detected samples. Depending on the dataset a detection of up to 80% percent could be achieved. One might further inspect the selection method for the indices as it only selects the highest influence points as flipped samples. Furthermore, it is unclear how flipping all samples back and retraining the model affects the loss of the initial dataset.</p>
@@ -666,14 +666,6 @@ p(x|y=1)&amp;=\mathcal{N}\left (\mu_2, \sigma^2 I \right)
 \text{NMAI}(x) &amp;= \frac{1}{N} \sum_{i=1}^N \max(0, -I(x, x_i))
 \end{align*}\end{split}\]</div>
 <p>are given. Note the functional relation <span class="math notranslate nohighlight">\(\text{MAI}(x) = \text{PMAI}(x) + \text{NMAI}(x)\)</span>.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-</div>
 </section>
 </section>
 

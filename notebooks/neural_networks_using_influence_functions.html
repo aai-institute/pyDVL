@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clean dataset using influence functions and neural networks &mdash; pyDVL 0.1.0.dev9 documentation</title>
+  <title>Clean dataset using influence functions and neural networks &mdash; pyDVL 0.1.0.dev10 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -399,7 +399,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">dataset_tsne_encode</span><span class="p">,</span> <span class="n">dataset_to_json</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.utils.dataset</span> <span class="kn">import</span> <span class="n">dataset_tsne_encode</span><span class="p">,</span> <span class="n">dataset_to_json</span>
 <span class="kn">from</span> <span class="nn">valuation.utils.plotting</span> <span class="kn">import</span> <span class="n">plot_datasets</span>
 
 <span class="n">tsne_dataset</span> <span class="o">=</span> <span class="n">dataset_tsne_encode</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
@@ -514,7 +514,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay at 0x7fa3120080a0&gt;
+&lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay at 0x7f21f33bbfa0&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -898,7 +898,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&#39;The optimal number of samples is 56&#39;
+&#39;The optimal number of samples is 51&#39;
 </pre></div></div>
 </div>
 <p>Over multiple runs with different the optimal number of samples canges, but it can be said to be safe to remove around 30% of the samples of the wine dataset to easily achieve the same data accuracy.</p>

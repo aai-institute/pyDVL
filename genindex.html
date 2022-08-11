@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; pyDVL 0.1.0.dev9 documentation</title>
+  <title>Index &mdash; pyDVL 0.1.0.dev10 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -96,7 +96,6 @@
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
- | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -104,10 +103,18 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/utils/parallel.html#valuation.utils.parallel.InterruptibleWorker.aborted">aborted() (InterruptibleWorker method)</a>
 </li>
-      <li><a href="valuation/models.html#valuation.models.TorchOptimizer.ADAM">ADAM (TorchOptimizer attribute)</a>, <a href="valuation/models/torch_module.html#valuation.models.torch_module.TorchOptimizer.ADAM">[1]</a>
+      <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.PyTorchOptimizer.ADAM">ADAM (PyTorchOptimizer attribute)</a>
+
+      <ul>
+        <li><a href="valuation/models.html#valuation.models.TorchOptimizer.ADAM">(TorchOptimizer attribute)</a>, <a href="valuation/models/torch_module.html#valuation.models.torch_module.TorchOptimizer.ADAM">[1]</a>
 </li>
-      <li><a href="valuation/models.html#valuation.models.TorchOptimizer.ADAM_W">ADAM_W (TorchOptimizer attribute)</a>, <a href="valuation/models/torch_module.html#valuation.models.torch_module.TorchOptimizer.ADAM_W">[1]</a>
+      </ul></li>
+      <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.PyTorchOptimizer.ADAM_W">ADAM_W (PyTorchOptimizer attribute)</a>
+
+      <ul>
+        <li><a href="valuation/models.html#valuation.models.TorchOptimizer.ADAM_W">(TorchOptimizer attribute)</a>, <a href="valuation/models/torch_module.html#valuation.models.torch_module.TorchOptimizer.ADAM_W">[1]</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/utils/caching.html#valuation.utils.caching.MemcachedConfig.allow_repeated_training">allow_repeated_training (MemcachedConfig attribute)</a>
@@ -206,20 +213,14 @@
         <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.GroupedDataset.data_names">(GroupedDataset property)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/utils.html#valuation.utils.Dataset">Dataset (class in valuation.utils)</a>
 
       <ul>
         <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.Dataset">(class in valuation.utils.dataset)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.dataset_to_json">dataset_to_json() (in module valuation.utils.dataset)</a>
-</li>
-      <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.dataset_tsne_encode">dataset_tsne_encode() (in module valuation.utils.dataset)</a>
-</li>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.decision_boundary_fixed_variance_2d">decision_boundary_fixed_variance_2d() (in module valuation.utils.numeric)</a>
-</li>
       <li><a href="valuation/utils.html#valuation.utils.Dataset.dim">dim (Dataset property)</a>, <a href="valuation/utils/dataset.html#valuation.utils.dataset.Dataset.dim">[1]</a>
 </li>
   </ul></td>
@@ -242,13 +243,15 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/utils.html#valuation.utils.Dataset.feature">feature() (Dataset method)</a>, <a href="valuation/utils/dataset.html#valuation.utils.dataset.Dataset.feature">[1]</a>
 </li>
-      <li><a href="valuation/utils.html#valuation.utils.SupervisedModel.fit">fit() (SupervisedModel method)</a>, <a href="valuation/utils/types.html#valuation.utils.types.SupervisedModel.fit">[1]</a>
+      <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.PyTorchSupervisedModel.fit">fit() (PyTorchSupervisedModel method)</a>
 
       <ul>
+        <li><a href="valuation/utils.html#valuation.utils.SupervisedModel.fit">(SupervisedModel method)</a>, <a href="valuation/utils/types.html#valuation.utils.types.SupervisedModel.fit">[1]</a>
+</li>
         <li><a href="valuation/models.html#valuation.models.TorchModule.fit">(TorchModule method)</a>, <a href="valuation/models/torch_module.html#valuation.models.torch_module.TorchModule.fit">[1]</a>
 </li>
       </ul></li>
-      <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.flip_dataset">flip_dataset() (in module valuation.utils.dataset)</a>
+      <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.flatten_gradient">flatten_gradient() (in module valuation.models.pytorch_model)</a>
 </li>
       <li><a href="valuation/models.html#valuation.models.BinaryLogisticRegressionTorchModel.forward">forward() (BinaryLogisticRegressionTorchModel method)</a>, <a href="valuation/models/torch_model.html#valuation.models.torch_model.BinaryLogisticRegressionTorchModel.forward">[1]</a>
 
@@ -282,8 +285,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/utils/parallel.html#valuation.utils.parallel.Coordinator.get_and_process">get_and_process() (Coordinator method)</a>
 </li>
-      <li><a href="valuation/utils/caching.html#valuation.utils.caching.get_running_avg_variance">get_running_avg_variance() (in module valuation.utils.caching)</a>
-</li>
       <li><a href="valuation/utils.html#valuation.utils.Dataset.get_train_data">get_train_data() (Dataset method)</a>, <a href="valuation/utils/dataset.html#valuation.utils.dataset.Dataset.get_train_data">[1]</a>
 
       <ul>
@@ -292,9 +293,11 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="valuation/models.html#valuation.models.TorchModule.grad">grad() (TorchModule method)</a>, <a href="valuation/models/torch_module.html#valuation.models.torch_module.TorchModule.grad">[1]</a>
+      <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.PyTorchSupervisedModel.grad">grad() (PyTorchSupervisedModel method)</a>
 
       <ul>
+        <li><a href="valuation/models.html#valuation.models.TorchModule.grad">(TorchModule method)</a>, <a href="valuation/models/torch_module.html#valuation.models.torch_module.TorchModule.grad">[1]</a>
+</li>
         <li><a href="valuation/utils/types.html#valuation.utils.types.TwiceDifferentiable.grad">(TwiceDifferentiable method)</a>
 </li>
       </ul></li>
@@ -324,8 +327,6 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="valuation/utils/parallel.html#valuation.utils.parallel.Identity">Identity() (in module valuation.utils.parallel)</a>
-</li>
       <li><a href="valuation/utils/caching.html#valuation.utils.caching.MemcachedConfig.ignore_args">ignore_args (MemcachedConfig attribute)</a>
 </li>
       <li><a href="valuation/utils.html#valuation.utils.Dataset.indices">indices (Dataset property)</a>, <a href="valuation/utils/dataset.html#valuation.utils.dataset.Dataset.indices">[1]</a>
@@ -374,20 +375,32 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/influence/linear.html#valuation.influence.linear.linear_influences">linear_influences() (in module valuation.influence.linear)</a>
 </li>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.linear_regression_analytical_derivative_d2_theta">linear_regression_analytical_derivative_d2_theta() (in module valuation.utils.numeric)</a>
+      <li><a href="valuation/utils.html#valuation.utils.linear_regression_analytical_derivative_d2_theta">linear_regression_analytical_derivative_d2_theta() (in module valuation.utils)</a>
+
+      <ul>
+        <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.linear_regression_analytical_derivative_d2_theta">(in module valuation.utils.numeric)</a>
 </li>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.linear_regression_analytical_derivative_d_theta">linear_regression_analytical_derivative_d_theta() (in module valuation.utils.numeric)</a>
+      </ul></li>
+      <li><a href="valuation/utils.html#valuation.utils.linear_regression_analytical_derivative_d_theta">linear_regression_analytical_derivative_d_theta() (in module valuation.utils)</a>
+
+      <ul>
+        <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.linear_regression_analytical_derivative_d_theta">(in module valuation.utils.numeric)</a>
 </li>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.linear_regression_analytical_derivative_d_x_d_theta">linear_regression_analytical_derivative_d_x_d_theta() (in module valuation.utils.numeric)</a>
+      </ul></li>
+      <li><a href="valuation/utils.html#valuation.utils.linear_regression_analytical_derivative_d_x_d_theta">linear_regression_analytical_derivative_d_x_d_theta() (in module valuation.utils)</a>
+
+      <ul>
+        <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.linear_regression_analytical_derivative_d_x_d_theta">(in module valuation.utils.numeric)</a>
 </li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/models.html#valuation.models.LinearRegressionTorchModel">LinearRegressionTorchModel (class in valuation.models)</a>
 
       <ul>
         <li><a href="valuation/models/torch_model.html#valuation.models.torch_model.LinearRegressionTorchModel">(class in valuation.models.torch_model)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/utils.html#valuation.utils.load_spotify_dataset">load_spotify_dataset() (in module valuation.utils)</a>
 
       <ul>
@@ -398,16 +411,12 @@
 </li>
       <li><a href="valuation/utils/logging.html#valuation.utils.logging.LogRecordStreamHandler">LogRecordStreamHandler (class in valuation.utils.logging)</a>
 </li>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.lower_bound_hoeffding">lower_bound_hoeffding() (in module valuation.utils.numeric)</a>
-</li>
   </ul></td>
 </tr></table>
 
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="valuation/utils/parallel.html#valuation.utils.parallel.make_nested_backend">make_nested_backend() (in module valuation.utils.parallel)</a>
-</li>
       <li><a href="valuation/utils.html#valuation.utils.map_reduce">map_reduce() (in module valuation.utils)</a>
 
       <ul>
@@ -448,13 +457,7 @@
       </ul></li>
       <li><a href="valuation/utils/caching.html#valuation.utils.caching.MemcachedConfig">MemcachedConfig (class in valuation.utils.caching)</a>
 </li>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.min_distance_points_to_line_2d">min_distance_points_to_line_2d() (in module valuation.utils.numeric)</a>
-</li>
       <li><a href="valuation/utils/caching.html#valuation.utils.caching.MemcachedConfig.min_repetitions">min_repetitions (MemcachedConfig attribute)</a>
-</li>
-      <li><a href="valuation/utils/progress.html#valuation.utils.progress.MockProgress">MockProgress (class in valuation.utils.progress)</a>
-</li>
-      <li><a href="valuation/utils/progress.html#valuation.utils.progress.MockProgress.MiniMock">MockProgress.MiniMock (class in valuation.utils.progress)</a>
 </li>
       <li><a href="valuation/utils.html#valuation.utils.Utility.model">model (Utility attribute)</a>, <a href="valuation/utils/utility.html#valuation.utils.utility.Utility.model">[1]</a>
 </li>
@@ -479,6 +482,8 @@
         <li><a href="valuation/loo/naive.html#module-valuation.loo.naive">valuation.loo.naive</a>
 </li>
         <li><a href="valuation/models.html#module-valuation.models">valuation.models</a>
+</li>
+        <li><a href="valuation/models/pytorch_model.html#module-valuation.models.pytorch_model">valuation.models.pytorch_model</a>
 </li>
         <li><a href="valuation/models/torch_model.html#module-valuation.models.torch_model">valuation.models.torch_model</a>
 </li>
@@ -525,9 +530,11 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="valuation/models.html#valuation.models.TorchModule.mvp">mvp() (TorchModule method)</a>, <a href="valuation/models/torch_module.html#valuation.models.torch_module.TorchModule.mvp">[1]</a>
+      <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.PyTorchSupervisedModel.mvp">mvp() (PyTorchSupervisedModel method)</a>
 
       <ul>
+        <li><a href="valuation/models.html#valuation.models.TorchModule.mvp">(TorchModule method)</a>, <a href="valuation/models/torch_module.html#valuation.models.torch_module.TorchModule.mvp">[1]</a>
+</li>
         <li><a href="valuation/utils/types.html#valuation.utils.types.TwiceDifferentiable.mvp">(TwiceDifferentiable method)</a>
 </li>
       </ul></li>
@@ -587,8 +594,6 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.polynomial">polynomial() (in module valuation.utils.dataset)</a>
-</li>
       <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.polynomial_dataset">polynomial_dataset() (in module valuation.utils.dataset)</a>
 </li>
       <li><a href="valuation/utils.html#valuation.utils.powerset">powerset() (in module valuation.utils)</a>
@@ -597,15 +602,19 @@
         <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.powerset">(in module valuation.utils.numeric)</a>
 </li>
       </ul></li>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.PowerSetDistribution">PowerSetDistribution (class in valuation.utils.numeric)</a>
-</li>
-      <li><a href="valuation/utils.html#valuation.utils.SupervisedModel.predict">predict() (SupervisedModel method)</a>, <a href="valuation/utils/types.html#valuation.utils.types.SupervisedModel.predict">[1]</a>
+      <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.PyTorchSupervisedModel.predict">predict() (PyTorchSupervisedModel method)</a>
 
       <ul>
+        <li><a href="valuation/utils.html#valuation.utils.SupervisedModel.predict">(SupervisedModel method)</a>, <a href="valuation/utils/types.html#valuation.utils.types.SupervisedModel.predict">[1]</a>
+</li>
         <li><a href="valuation/models.html#valuation.models.TorchModule.predict">(TorchModule method)</a>, <a href="valuation/models/torch_module.html#valuation.models.torch_module.TorchModule.predict">[1]</a>
 </li>
       </ul></li>
       <li><a href="valuation/utils/parallel.html#valuation.utils.parallel.Coordinator.put">put() (Coordinator method)</a>
+</li>
+      <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.PyTorchOptimizer">PyTorchOptimizer (class in valuation.models.pytorch_model)</a>
+</li>
+      <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.PyTorchSupervisedModel">PyTorchSupervisedModel (class in valuation.models.pytorch_model)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -613,16 +622,12 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="valuation/utils/logging.html#valuation.utils.logging.raise_or_log">raise_or_log() (in module valuation.utils.logging)</a>
-</li>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.random_matrix_with_condition_number">random_matrix_with_condition_number() (in module valuation.utils.numeric)</a>
-</li>
       <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.random_powerset">random_powerset() (in module valuation.utils.numeric)</a>
+</li>
+      <li><a href="valuation/utils.html#valuation.utils.MapReduceJob.reduce">reduce() (MapReduceJob method)</a>, <a href="valuation/utils/parallel.html#valuation.utils.parallel.MapReduceJob.reduce">[1]</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="valuation/utils.html#valuation.utils.MapReduceJob.reduce">reduce() (MapReduceJob method)</a>, <a href="valuation/utils/parallel.html#valuation.utils.parallel.MapReduceJob.reduce">[1]</a>
-</li>
       <li><a href="valuation/utils/caching.html#valuation.utils.caching.MemcachedConfig.rtol_threshold">rtol_threshold (MemcachedConfig attribute)</a>
 </li>
       <li><a href="valuation/utils/parallel.html#valuation.utils.parallel.InterruptibleWorker.run">run() (InterruptibleWorker method)</a>
@@ -633,11 +638,11 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.sample_classification_dataset_using_gaussians">sample_classification_dataset_using_gaussians() (in module valuation.utils.numeric)</a>
-</li>
-      <li><a href="valuation/utils.html#valuation.utils.SupervisedModel.score">score() (SupervisedModel method)</a>, <a href="valuation/utils/types.html#valuation.utils.types.SupervisedModel.score">[1]</a>
+      <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.PyTorchSupervisedModel.score">score() (PyTorchSupervisedModel method)</a>
 
       <ul>
+        <li><a href="valuation/utils.html#valuation.utils.SupervisedModel.score">(SupervisedModel method)</a>, <a href="valuation/utils/types.html#valuation.utils.types.SupervisedModel.score">[1]</a>
+</li>
         <li><a href="valuation/models.html#valuation.models.TorchModule.score">(TorchModule method)</a>, <a href="valuation/models/torch_module.html#valuation.models.torch_module.TorchModule.score">[1]</a>
 </li>
       </ul></li>
@@ -668,8 +673,6 @@
       <li><a href="valuation/reporting/scores.html#valuation.reporting.scores.sort_values_array">sort_values_array() (in module valuation.reporting.scores)</a>
 </li>
       <li><a href="valuation/reporting/scores.html#valuation.reporting.scores.sort_values_history">sort_values_history() (in module valuation.reporting.scores)</a>
-</li>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.spearman">spearman() (in module valuation.utils.numeric)</a>
 </li>
       <li><a href="valuation/reporting/plots.html#valuation.reporting.plots.spearman_correlation">spearman_correlation() (in module valuation.reporting.plots)</a>
 </li>
@@ -727,6 +730,8 @@
         <li><a href="valuation/shapley/montecarlo.html#valuation.shapley.montecarlo.truncated_montecarlo_shapley">(in module valuation.shapley.montecarlo)</a>
 </li>
       </ul></li>
+      <li><a href="valuation/models/pytorch_model.html#valuation.models.pytorch_model.tt">tt() (in module valuation.models.pytorch_model)</a>
+</li>
       <li><a href="valuation/utils/types.html#valuation.utils.types.TwiceDifferentiable">TwiceDifferentiable (class in valuation.utils.types)</a>
 </li>
   </ul></td>
@@ -735,8 +740,6 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.PowerSetDistribution.UNIFORM">UNIFORM (PowerSetDistribution attribute)</a>
-</li>
       <li><a href="valuation/utils.html#valuation.utils.unpackable">unpackable() (in module valuation.utils)</a>
 
       <ul>
@@ -829,6 +832,13 @@
 </li>
       </ul></li>
       <li>
+    valuation.models.pytorch_model
+
+      <ul>
+        <li><a href="valuation/models/pytorch_model.html#module-valuation.models.pytorch_model">module</a>
+</li>
+      </ul></li>
+      <li>
     valuation.models.torch_model
 
       <ul>
@@ -870,6 +880,8 @@
         <li><a href="valuation/shapley.html#module-valuation.shapley">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     valuation.shapley.knn
 
@@ -877,8 +889,6 @@
         <li><a href="valuation/shapley/knn.html#module-valuation.shapley.knn">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     valuation.shapley.montecarlo
 
@@ -983,14 +993,6 @@
         <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.vanishing_derivatives">(in module valuation.utils.numeric)</a>
 </li>
       </ul></li>
-  </ul></td>
-</tr></table>
-
-<h2 id="W">W</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.PowerSetDistribution.WEIGHTED">WEIGHTED (PowerSetDistribution attribute)</a>
-</li>
   </ul></td>
 </tr></table>
 
