@@ -26,8 +26,8 @@ def influences(
     model: TwiceDifferentiable,
     x_train: np.ndarray,
     y_train: np.ndarray,
-    x_test: np.ndarray,
-    y_test: np.ndarray,
+    x_test: Optional[np.ndarray] = None,
+    y_test: Optional[np.ndarray] = None,
     progress: bool = False,
     n_jobs: int = -1,
     influence_type: InfluenceTypes = InfluenceTypes.Up,
@@ -104,7 +104,7 @@ def influences(
         :param job_id: A id which describes the current job id.
         :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension and test sample.
         """
-        c_x_test, c_y_test = x_test[indices], y_test[indices]
+        c_x_test, c_y_test = x_test[indices], y_test[indices]  # type: ignore
         test_grads = model.grad(c_x_test, c_y_test, progress=progress)
         return -1 * dict_fact_algos[inversion_method](hvp, test_grads)
 
