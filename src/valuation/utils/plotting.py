@@ -1,10 +1,16 @@
-from typing import Dict, Tuple
+from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
 import matplotlib as mpl
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
+if TYPE_CHECKING:
+    try:
+        from numpy.typing import NDArray
+    except ImportError:
+        from numpy import ndarray as NDArray
 
 
 def plot_shapley(
@@ -37,16 +43,16 @@ def plot_shapley(
 
 
 def plot_datasets(
-    datasets: Dict[str, Tuple[np.ndarray, np.ndarray]],
-    x_min: np.ndarray = None,
-    x_max: np.ndarray = None,
-    xlabel: str = None,
-    ylabel: str = None,
-    vline: float = None,
-    cmap_name: str = None,
-    line: np.ndarray = None,
-    suptitle: str = None,
-    s: float = None,
+    datasets: Dict[str, Tuple["NDArray", "NDArray"]],
+    x_min: Optional["NDArray"] = None,
+    x_max: Optional["NDArray"] = None,
+    xlabel: Optional[str] = None,
+    ylabel: Optional[str] = None,
+    vline: Optional[float] = None,
+    cmap_name: Optional[str] = None,
+    line: Optional["NDArray"] = None,
+    suptitle: Optional[str] = None,
+    s: Optional[float] = None,
 ):
     """
     Plots a dictionary of 2-dimensional datasets to either a continuous regression value or a discrete class label.
@@ -104,9 +110,9 @@ def plot_datasets(
 
         ax[i].set_title(dataset_name)
         if x_min is not None:
-            ax[i].set_xlim(x_min[0], x_max[0])
+            ax[i].set_xlim(x_min[0], x_max[0])  # type: ignore
         if x_max is not None:
-            ax[i].set_ylim(x_min[1], x_max[1])
+            ax[i].set_ylim(x_min[1], x_max[1])  # type: ignore
 
         if line is not None:
             ax[i].plot(line[:, 0], line[:, 1], color="black")

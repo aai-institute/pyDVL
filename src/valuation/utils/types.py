@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Callable, Protocol, TypeVar
+from typing import TYPE_CHECKING, Callable, Protocol, Type, Union
 
 from numpy import ndarray
 
@@ -27,11 +27,10 @@ class SupervisedModel(Protocol):
 
 # ScorerNames = Literal[very long list here]
 # instead... ScorerNames = str
+Scorer = Union[str, Callable[[SupervisedModel, ndarray, ndarray], float]]
 
-Scorer = TypeVar("Scorer", str, Callable[[SupervisedModel, ndarray, ndarray], float])
 
-
-def unpackable(cls: type) -> type:
+def unpackable(cls: Type) -> Type:
     """A class decorator that allows unpacking of all attributes of an object
     with the double asterisk operator. E.g.::
 

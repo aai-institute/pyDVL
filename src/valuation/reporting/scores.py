@@ -1,7 +1,9 @@
 from collections import OrderedDict
 from functools import partial
 from itertools import chain
-from typing import List, Mapping, Sequence
+from typing import List, Mapping
+from typing import OrderedDict as OrderedDictType
+from typing import Sequence
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -10,19 +12,21 @@ from tqdm import tqdm, trange
 from valuation.utils import Dataset, SupervisedModel
 
 
-def sort_values_array(values: np.ndarray) -> OrderedDict:
+def sort_values_array(values: np.ndarray) -> OrderedDictType[int, np.ndarray]:
     vals = np.mean(values, axis=1)
-    return OrderedDict(sorted(enumerate(vals), key=lambda x: x[1]))
+    return OrderedDict(sorted(enumerate(vals), key=lambda x: x[1]))  # type: ignore
 
 
-def sort_values_history(values: Mapping[int, Sequence[float]]) -> OrderedDict:
+def sort_values_history(
+    values: Mapping[int, Sequence[float]]
+) -> OrderedDictType[int, Sequence[float]]:
     """Sorts a dict of sample_id: [values] by the last item in each list."""
-    return OrderedDict(sorted(values.items(), key=lambda x: x[1][-1]))
+    return OrderedDict(sorted(values.items(), key=lambda x: x[1][-1]))  # type: ignore
 
 
-def sort_values(values: Mapping[int, float]) -> OrderedDict:
+def sort_values(values: Mapping[int, float]) -> OrderedDictType[int, float]:
     """Sorts a dict of sample_id: value_float by value."""
-    return OrderedDict(sorted(values.items(), key=lambda x: x[1]))
+    return OrderedDict(sorted(values.items(), key=lambda x: x[1]))  # type: ignore
 
 
 def backward_elimination(

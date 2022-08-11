@@ -9,23 +9,55 @@ on:
 env:
   GITHUB_BOT_USERNAME: github-actions[bot]
   GITHUB_BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  PY_COLORS: 1
 
 jobs:
+  lint:
+    name: Lint code and check type hints
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Merge develop into current branch
+      run: |
+        git fetch origin develop:develop --update-head-ok
+        git merge develop
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.8
+        cache: 'pip'
+    - name: Install Dev Requirements
+      run: pip install -r requirements-dev.txt
+    - name: Cache Tox Directory for Linting
+      uses: actions/cache@v3
+      with:
+        key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini') }}
+        path: .tox
+    - name: Lint Code
+      run: tox -e linting
+      continue-on-error: true
+    - name: Check Type Hints
+      run: tox -e type-checking
   non-torch-tests:
     name: Run tests that do not use PyTorch
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: default
+    needs: [lint]
   torch-tests:
     name: Run tests that use PyTorch
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: torch
+    needs: [lint]
   notebook-tests:
     name: Run Notebooks
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: notebooks
+    needs: [lint]
   build:
     name: Build & Push Docs and maybe release Package to TestPyPI
     runs-on: ubuntu-latest
