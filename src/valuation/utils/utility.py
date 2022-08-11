@@ -95,21 +95,3 @@ class Utility:
                 return self.default_score
             else:
                 raise e
-
-
-def bootstrap_test_score(
-    u: Utility, bootstrap_iterations: int, progress: bool = False
-) -> Tuple[float, float]:
-    """That. Here for lack of a better place."""
-    scorer = check_scoring(u.model, u.scoring)
-    _scores = []
-    u.model.fit(u.data.x_train, u.data.y_train)
-    n_test = len(u.data.x_test)
-    for _ in maybe_progress(
-        range(bootstrap_iterations), progress, desc="Bootstrapping"
-    ):
-        sample = np.random.randint(low=0, high=n_test, size=n_test)
-        score = scorer(u.model, u.data.x_test[sample], u.data.y_test[sample])
-        _scores.append(score)
-
-    return float(np.mean(_scores)), float(np.std(_scores))

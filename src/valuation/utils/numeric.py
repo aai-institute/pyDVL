@@ -22,6 +22,7 @@ from typing import (
     Sequence,
     Tuple,
     TypeVar,
+    Union,
 )
 
 import numpy as np
@@ -60,16 +61,6 @@ def mcmc_is_linear_function_positive_definite(
     product = np.einsum("ia,ia->i", v, A(v))
     is_positive_definite = np.sum(product <= 1e-7) == 0
     return is_positive_definite
-
-
-def vanishing_derivatives(x: np.ndarray, min_values: int, atol: float) -> int:
-    """Returns the number of rows whose empirical derivatives have converged
-    to zero, up to an absolute tolerance of atol.
-    """
-    last_values = x[:, -min_values - 1 :]
-    d = np.diff(last_values, axis=1)
-    zeros = np.isclose(d, 0.0, atol=atol).sum(axis=1)
-    return int(np.sum(zeros >= min_values / 2))
 
 
 def powerset(it: Sequence[T]) -> Iterator[Collection[T]]:
@@ -328,3 +319,25 @@ def min_distance_points_to_line_2d(
     a = np.reshape(a, [2, 1])
     r = np.abs(p @ a + b) / np.sqrt(np.sum(a**2))
     return r[:, 0]
+
+
+def get_running_avg_variance(
+    previous_avg: Union[float, np.ndarray],
+    previous_variance: Union[float, np.ndarray],
+    new_value: Union[float, np.ndarray],
+    count: int,
+):
+    """The method uses Welford's algorithm to calculate the running average and variance of
+    a set of numbers.
+
+    :param previous_avg: average value at previous step
+    :param previous_variance: variance at previous step
+    :param new_value: new value in the series of numbers
+    :param count: number of points seen so far
+    :return: new_average, new_variance, calculated with the new number
+    """
+    new_average = (new_value + count * previous_avg) / (count + 1)
+    new_variance = previous_variance + (
+        (new_value - previous_avg) * (new_value - new_average) - previous_variance
+    ) / (count + 1)
+    return new_average, new_variance
