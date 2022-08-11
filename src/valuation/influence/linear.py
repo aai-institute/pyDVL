@@ -14,7 +14,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 from valuation.influence.types import InfluenceTypes
-from valuation.utils import logger
+from valuation.utils.logging import logger
 from valuation.utils.numeric import (
     linear_regression_analytical_derivative_d2_theta,
     linear_regression_analytical_derivative_d_theta,

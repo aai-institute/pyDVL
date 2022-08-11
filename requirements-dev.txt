@@ -8,3 +8,5 @@ twine
 black
 jupyter
 nbconvert
+mypy
+types-tqdm

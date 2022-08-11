@@ -9,7 +9,7 @@ from functools import wraps
 from hashlib import blake2b
 from io import BytesIO
 from time import time
-from typing import Callable, Iterable
+from typing import Callable, Dict, Iterable, Optional, Tuple, Union
 
 from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
@@ -19,13 +19,15 @@ from pymemcache.serde import PickleSerde
 from valuation.utils.logging import logger
 from valuation.utils.types import unpackable
 
+__all__ = ["ClientConfig", "MemcachedConfig", "memcached"]
+
 PICKLE_VERSION = 5  # python >= 3.8
 
 
 @unpackable
 @dataclass
 class ClientConfig:
-    server: str = ("localhost", 11211)
+    server: Union[str, Tuple[str, Union[str, int]]] = ("localhost", 11211)
     connect_timeout: float = 1.0
     timeout: float = 1.0
     no_delay: bool = True
@@ -65,7 +67,7 @@ class MemcachedConfig:
     allow_repeated_training: bool = True
     rtol_threshold: float = 0.1
     min_repetitions: int = 3
-    ignore_args: Iterable[str] = None
+    ignore_args: Optional[Iterable[str]] = None
 
 
 def _serialize(x):
@@ -77,7 +79,7 @@ def _serialize(x):
 
 def get_running_avg_variance(
     previous_avg: float, previous_variance: float, new_value: float, count: int
-):
+) -> Tuple[float, float]:
     """The method uses Welford's algorithm to calculate the running average and variance of
     a set of numbers.
 
@@ -100,7 +102,7 @@ def memcached(
     allow_repeated_training: bool = False,
     rtol_threshold: float = 0.1,
     min_repetitions: int = 3,
-    ignore_args: Iterable[str] = None,
+    ignore_args: Optional[Iterable[str]] = None,
 ):
     """Decorate a callable with this in order to have transparent caching.
 
@@ -146,7 +148,7 @@ def memcached(
         """First tries to establish a connection, then tries setting and
         getting a value."""
         try:
-            test_config = dict(**config)
+            test_config: Dict = dict(**config)
             # test_config.update(timeout=config.connect_timeout)  # allow longer delays
             client = RetryingClient(
                 Client(**test_config),
@@ -155,9 +157,9 @@ def memcached(
                 retry_for=[MemcacheUnexpectedCloseError],
             )
         except Exception as e:
-            logger.error(
+            logger.error(  # type: ignore
                 f"@memcached: Timeout connecting "
-                f'to {config["server"]} after '
+                f"to {config.server} after "
                 f"{config.connect_timeout} seconds: {str(e)}"
             )
             raise e
@@ -169,12 +171,12 @@ def memcached(
                 client.delete(temp_key, 0)
                 return client
             except AssertionError as e:
-                logger.error(
+                logger.error(  # type: ignore
                     f"@memcached: Failure saving dummy value "
-                    f'to {config["server"]}: {str(e)}'
+                    f"to {config.server}: {str(e)}"
                 )
 
-    def wrapper(fun: Callable):
+    def wrapper(fun: Callable[..., float]):
         # noinspection PyUnresolvedReferences
         signature: bytes = _serialize((fun.__code__.co_code, fun.__code__.co_consts))
 
@@ -188,8 +190,8 @@ def memcached(
                 )(0, 0, 0, 0, 0, 0)
                 self.client = connect(self.config)
 
-            def __call__(self, *args, **kwargs):
-                key_kwargs = {k: v for k, v in kwargs.items() if k not in ignore_args}
+            def __call__(self, *args, **kwargs) -> float:
+                key_kwargs = {k: v for k, v in kwargs.items() if k not in ignore_args}  # type: ignore
                 arg_signature: bytes = _serialize((args, list(key_kwargs.items())))
 
                 # FIXME: do I really need to hash this?
@@ -197,19 +199,15 @@ def memcached(
                 # FIXME: determine right bit size
                 # NB: I need to create the hasher object here because it can't be
                 #  pickled
-                key = blake2b(signature + arg_signature).hexdigest().encode("ASCII")
-                key_count = (
-                    blake2b(signature + arg_signature + _serialize("count"))
-                    .hexdigest()
-                    .encode("ASCII")
-                )
-                key_variance = (
-                    blake2b(signature + arg_signature + _serialize("variance"))
-                    .hexdigest()
-                    .encode("ASCII")
-                )
+                key = blake2b(signature + arg_signature).hexdigest()
+                key_count = blake2b(
+                    signature + arg_signature + _serialize("count")
+                ).hexdigest()
+                key_variance = blake2b(
+                    signature + arg_signature + _serialize("variance")
+                ).hexdigest()
 
-                result = self.get_key_value(key)
+                result: float = self.get_key_value(key)
                 if result is None:
                     start = time()
                     result = fun(*args, **kwargs)
@@ -262,15 +260,15 @@ def memcached(
                     result = self.client.get(key)
                 except socket.timeout as e:
                     self.cache_info.timeouts += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")
+                    logger.warning(f"{type(self).__name__}: {str(e)}")  # type: ignore
                 except OSError as e:
                     self.cache_info.errors += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")
+                    logger.warning(f"{type(self).__name__}: {str(e)}")  # type: ignore
                 except AttributeError as e:
                     # FIXME: this depends on _recv() failing on invalid sockets
                     # See pymemcache.base.py,
                     self.cache_info.reconnects += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")
+                    logger.warning(f"{type(self).__name__}: {str(e)}")  # type: ignore
                     self.client = connect(self.config)
                 return result
 
@@ -286,7 +284,7 @@ def memcached(
         # TODO: pick from some config file or something
         config = ClientConfig()
         if client_config is not None:
-            config.update(client_config)
+            config.update(client_config)  # type: ignore
         return Wrapped(config)
 
     return wrapper

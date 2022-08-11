@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 import pickle
 from functools import partial
 

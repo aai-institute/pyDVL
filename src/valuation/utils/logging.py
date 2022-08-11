@@ -10,6 +10,17 @@ import struct
 from multiprocessing import Process
 from typing import Optional
 
+__all__ = [
+    "LogRecordStreamHandler",
+    "LogRecordSocketReceiver",
+    "set_logger",
+    "logger",
+    "start_logging_server",
+]
+
+server: Optional[Process] = None
+logger: logging.Logger = logging.getLogger("root")
+
 
 class LogRecordStreamHandler(socketserver.StreamRequestHandler):
     """Handler for a streaming logging request.
@@ -104,29 +115,27 @@ def start_logging_server(
 def set_logger(
     host: str = "localhost",
     port: int = logging.handlers.DEFAULT_TCP_LOGGING_PORT,
-    _logger=None,
+    _logger: Optional[logging.Logger] = None,
 ):
     global logger
     if _logger is not None:
         logger = _logger
-    elif logger is None:
-        import logging.handlers
-
-        logger = logging.getLogger("root")
+    else:
+        logger.handlers.clear()
         logger.setLevel(logging.DEBUG)
         # socket handler sends the raw event, pickled
-        socketHandler = logging.handlers.SocketHandler(host, port)
-        logger.addHandler(socketHandler)
-
-
-server: Optional[Process] = None
-logger = None
-
-set_logger()
+        socket_handler = logging.handlers.SocketHandler(host, port)
+        logger.addHandler(socket_handler)
 
 
 def raise_or_log(message, raise_exception: bool):
     if raise_exception:
         raise Exception(message)
     else:
-        logger.warning(message)
+        if logger is None:
+            raise Exception("Logging server should be initialized first")
+        else:
+            logger.warning(message)
+
+
+set_logger()
