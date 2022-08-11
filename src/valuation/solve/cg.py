@@ -207,7 +207,7 @@ def hvp_to_inv_diag_conditioner(
         inp[i] = 1
         diags[i] = hvp(np.reshape(inp, [1, -1]))[0, i]
 
-    def _inv_diag_conditioner(v: NDArray):
+    def _inv_diag_conditioner(v: "NDArray"):
         return v / diags
 
     return _inv_diag_conditioner
