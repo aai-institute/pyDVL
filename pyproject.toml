@@ -12,6 +12,7 @@ build-backend = "setuptools.build_meta"
 profile = "black"
 
 [tool.pytest.ini_options]
+addopts = "--cov --cov-append --cov-report=term-missing"
 testpaths = [
     "tests"
 ]
@@ -33,3 +34,9 @@ load-plugins = ["pylint_json2html"]
 
 [tool.pylint.reports]
 output-format = "jsonextended"
+
+[tool.mypy]
+mypy_path = './src/valuation'
+ignore_missing_imports = true
+warn_return_any = true
+warn_unused_configs = true

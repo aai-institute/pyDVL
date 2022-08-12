@@ -4,6 +4,9 @@ on:
   release:
     types: [created]
 
+env:
+  PY_COLORS: 1
+
 jobs:
   deploy:
     runs-on: ubuntu-latest

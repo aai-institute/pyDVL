@@ -99,8 +99,8 @@ def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue):
     :param num_values: Use only these many values from the data (from the start
                        of the OrderedDicts)
     """
-    r = np.ndarray((len(vv), len(vv)))
-    p = np.ndarray((len(vv), len(vv)))
+    r: np.ndarray = np.ndarray((len(vv), len(vv)))
+    p: np.ndarray = np.ndarray((len(vv), len(vv)))
     for i, a in enumerate(vv):
         for j, b in enumerate(vv):
             spearman = sp.stats.spearmanr(

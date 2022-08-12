@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# valuation documentation build configuration file
+# pyDVL documentation build configuration file
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -254,7 +254,7 @@ html_static_path = []
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "valuation_doc"
+htmlhelp_basename = "pydvl_doc"
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -300,9 +300,9 @@ latex_elements = {
 man_pages = [
     (
         "index",
-        "valuation",
+        "pydvl",
         "",
-        ["Miguel de Benito Delgado <debenito@unternehmertum.de>"],
+        ["appliedAI"],
         1,
     )
 ]
