@@ -57,7 +57,7 @@ def mcmc_is_linear_function_positive_definite(
     return is_positive_definite
 
 
-def powerset(it: Sequence[T]) -> Iterator[Collection[T]]:
+def powerset(it: np.ndarray) -> Iterator[Collection[T]]:
     """Returns an iterator for the power set of the argument.
 
     Subsets are generated in sequence by growing size. See `random_powerset()`

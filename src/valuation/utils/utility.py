@@ -1,17 +1,9 @@
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional
 
 import numpy as np
 from sklearn.metrics import check_scoring
 
-from valuation.utils import (
-    Dataset,
-    GroupedDataset,
-    MemcachedConfig,
-    Scorer,
-    SupervisedModel,
-    maybe_progress,
-    memcached,
-)
+from valuation.utils import Dataset, MemcachedConfig, Scorer, SupervisedModel, memcached
 from valuation.utils.logging import logger
 
 __all__ = ["Utility"]
@@ -22,17 +14,17 @@ class Utility:
 
     model: SupervisedModel
     data: Dataset
-    scoring: Scorer
+    scoring: Optional[Scorer]
 
     def __init__(
         self,
         model: SupervisedModel,
         data: Dataset,
-        scoring: Optional[Scorer],
+        scoring: Optional[Scorer] = None,
         catch_errors: bool = True,
         default_score: float = 0,
         enable_cache: bool = True,
-        cache_options: MemcachedConfig = None,
+        cache_options: Optional[MemcachedConfig] = None,
     ):
         """
         :param model: Any supervised model
@@ -56,9 +48,8 @@ class Utility:
 
         if enable_cache:
             if cache_options is None:
-                cache_options = dict()
-
-            self._utility_wrapper = memcached(**cache_options)(self._utility)
+                cache_options = dict()  # type: ignore
+            self._utility_wrapper = memcached(**cache_options)(self._utility)  # type: ignore
         else:
             self._utility_wrapper = self._utility
 
@@ -67,18 +58,17 @@ class Utility:
         # self.__call__.__doc__ = self._utility_wrapper.__doc__
 
     def __call__(self, indices: Iterable[int]) -> float:
-        return self._utility_wrapper(frozenset(indices))
+        utility: float = self._utility_wrapper(frozenset(indices))
+        return utility
 
     def _utility(self, indices: frozenset) -> float:
         """Fits the model on a subset of the training data and scores it on the
         test data. If the object is constructed with cache_size > 0, results are
         memoized to avoid duplicate computation. This is useful in particular
         when computing utilities of permutations of indices.
-
         :param indices: a subset of indices from data.x_train.index. The type
          must be hashable for the caching to work, e.g. wrap the argument with
          `frozenset` (rather than `tuple` since order should not matter)
-
         :return: 0 if no indices are passed, otherwise the value the scorer
         on the test data.
         """
@@ -91,7 +81,7 @@ class Utility:
             return float(scorer(self.model, self.data.x_test, self.data.y_test))
         except Exception as e:
             if self.catch_errors:
-                logger.warning(str(e))
+                logger.warning(str(e))  # type: ignore
                 return self.default_score
             else:
                 raise e

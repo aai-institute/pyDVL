@@ -9,11 +9,12 @@ TODO:
  * shapley values for groups of samples
 """
 import logging
+import math
 import warnings
 from collections import OrderedDict
 from functools import partial
 from time import time
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import ray
@@ -60,7 +61,7 @@ class ShapleyCoordinator:
         self.score_tolerance = score_tolerance
         self.progress = progress
         self.max_iterations = max_iterations
-        self.workers_status = {}
+        self.workers_status: Dict[int, Dict[str, float]] = {}
         self._is_done = False
         self.total_iterations = 0
 
@@ -112,6 +113,11 @@ class ShapleyCoordinator:
             ):
                 self._is_done = True
 
+    # here just for type checking
+    @classmethod
+    def remote(cls, *args, **kwargs):
+        pass
+
 
 @ray.remote
 class ShapleyWorker:
@@ -148,8 +154,8 @@ class ShapleyWorker:
         )
         self.coordinator = coordinator
         self.update_frequency = update_frequency
-        self.avg_dvl: np.ndarray = None
-        self.var_dvl: np.ndarray = None
+        self.avg_dvl: Optional[np.ndarray] = None
+        self.var_dvl: Optional[np.ndarray] = None
         self.permutation_count = 0
 
     def run(self):
@@ -181,6 +187,11 @@ class ShapleyWorker:
             )
             is_done = ray.get(self.coordinator.is_done.remote())
 
+    # here just for type checking
+    @classmethod
+    def remote(cls, *args, **kwargs):
+        pass
+
 
 def truncated_montecarlo_shapley(
     u: Utility,
@@ -190,7 +201,7 @@ def truncated_montecarlo_shapley(
     progress: bool = False,
     coordinator_update_frequency: int = 10,
     worker_update_frequency: int = 5,
-) -> Tuple[OrderedDict, List[int]]:
+) -> Tuple[OrderedDict, Dict]:
     """MonteCarlo approximation to the Shapley value of data points.
 
     Instead of naively implementing the expectation, we sequentially add points
@@ -276,7 +287,7 @@ def _permutation_montecarlo_shapley(
 
 def permutation_montecarlo_shapley(
     u: Utility, max_iterations: int, num_workers: int = 1, progress: bool = False
-) -> Tuple[OrderedDict, None]:
+) -> Tuple[OrderedDict, Dict]:
     iterations_per_job = max_iterations // num_workers
 
     fun = partial(_permutation_montecarlo_shapley, u, iterations_per_job, progress)
@@ -301,7 +312,7 @@ def permutation_montecarlo_shapley(
 
 def combinatorial_montecarlo_shapley(
     u: Utility, max_iterations: int, num_workers: int = 1, progress: bool = False
-) -> Tuple[OrderedDict, None]:
+) -> Tuple[OrderedDict, Dict]:
     """Computes an approximate Shapley value using the combinatorial
     definition and MonteCarlo samples.
     """
@@ -311,7 +322,7 @@ def combinatorial_montecarlo_shapley(
     correction = 2 ** (n - 1) / n
     iterations_per_job = max_iterations // num_workers
 
-    def fun(indices: np.ndarray, job_id: int) -> np.ndarray:
+    def fun(indices: np.ndarray, job_id: int):
         """Given indices and job id, this funcion calculates random
         powersets of the training data and trains the model with them.
         """
@@ -335,7 +346,7 @@ def combinatorial_montecarlo_shapley(
                     position=job_id,
                 )
             ):
-                values[idx, s_idx] = (u({idx}.union(s)) - u(s)) / np.math.comb(
+                values[idx, s_idx] = (u({idx}.union(s)) - u(s)) / math.comb(
                     n - 1, len(s)
                 )
 
