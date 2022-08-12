@@ -8,9 +8,8 @@ Contains
 """
 
 
-import operator
+import math
 from enum import Enum
-from functools import reduce
 from itertools import chain, combinations
 from typing import (
     Callable,
@@ -18,7 +17,6 @@ from typing import (
     Generator,
     Iterator,
     List,
-    Optional,
     Sequence,
     Tuple,
     TypeVar,
@@ -26,8 +24,6 @@ from typing import (
 )
 
 import numpy as np
-
-from valuation.utils.parallel import MapReduceJob, map_reduce
 
 T = TypeVar("T")
 
@@ -118,10 +114,10 @@ def random_powerset(
     n = len(s)
     total = 1
     if max_subsets is None:
-        max_subsets = np.inf
+        max_subsets = np.iinfo(np.int32).max
 
     def subset_probabilities(n: int) -> List[float]:
-        return [np.math.comb(n, j) / 2**n for j in range(n + 1)]
+        return [math.comb(n, j) / 2**n for j in range(n + 1)]
 
     _subset_probabilities = subset_probabilities
 
@@ -156,7 +152,7 @@ def spearman(x: np.ndarray, y: np.ndarray) -> float:
     except AttributeError:
         raise TypeError("Input must be numpy.ndarray")
 
-    return 1 - 6 * np.sum((x - y) ** 2) / (lx**3 - lx)
+    return 1 - 6 * float(np.sum((x - y) ** 2)) / (lx**3 - lx)
 
 
 def random_matrix_with_condition_number(
@@ -179,7 +175,8 @@ def random_matrix_with_condition_number(
     U, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
     V, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
     P = U.dot(S).dot(V.T)
-    return P if not positive_definite else P @ P.T  # cond(P @ P.T) = cond(P) ** 2
+    # cond(P @ P.T) = cond(P) ** 2
+    return P if not positive_definite else P @ P.T  # type: ignore
 
 
 def linear_regression_analytical_derivative_d_theta(
@@ -198,7 +195,7 @@ def linear_regression_analytical_derivative_d_theta(
     kron_product = np.expand_dims(residuals, axis=2) * np.expand_dims(x, axis=1)
     test_grads = np.reshape(kron_product, [-1, n * m])
     full_grads = np.concatenate((test_grads, residuals), axis=1)
-    return full_grads / n
+    return full_grads / n  # type: ignore
 
 
 def linear_regression_analytical_derivative_d2_theta(
@@ -221,7 +218,7 @@ def linear_regression_analytical_derivative_d2_theta(
     top_matrix = np.concatenate((d2_theta, d_theta_d_b.T), axis=1)
     bottom_matrix = np.concatenate((d_theta_d_b, d2_b), axis=1)
     full_matrix = np.concatenate((top_matrix, bottom_matrix), axis=0)
-    return full_matrix / n
+    return full_matrix / n  # type: ignore
 
 
 def linear_regression_analytical_derivative_d_x_d_theta(
@@ -235,18 +232,18 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     """
 
     A, b = linear_model
-    n, m = tuple(A.shape)
+    N, M = tuple(A.shape)
     residuals = x @ A.T + b - y
-    b = len(x)
+    B = len(x)
     outer_product_matrix = np.einsum("ab,ic->iacb", A, x)
-    outer_product_matrix = np.reshape(outer_product_matrix, [b, m * n, m])
-    tiled_identity = np.tile(np.expand_dims(np.eye(m), axis=0), [b, n, 1])
+    outer_product_matrix = np.reshape(outer_product_matrix, [B, M * N, M])
+    tiled_identity = np.tile(np.expand_dims(np.eye(M), axis=0), [B, N, 1])
     outer_product_matrix += tiled_identity * np.expand_dims(
-        np.repeat(residuals, m, axis=1), axis=2
+        np.repeat(residuals, M, axis=1), axis=2
     )
-    b_part_derivative = np.tile(np.expand_dims(A, axis=0), [b, 1, 1])
+    b_part_derivative = np.tile(np.expand_dims(A, axis=0), [B, 1, 1])
     full_derivative = np.concatenate((outer_product_matrix, b_part_derivative), axis=1)
-    return full_derivative / n
+    return full_derivative / N  # type: ignore
 
 
 def sample_classification_dataset_using_gaussians(
@@ -287,7 +284,7 @@ def decision_boundary_fixed_variance_2d(
     a = np.asarray([[0, 1], [-1, 0]]) @ (mu_2 - mu_1)
     b = (mu_1 + mu_2) / 2
     a = a.reshape([1, -1])
-    return lambda z: z.reshape([-1, 1]) * a + b
+    return lambda z: z.reshape([-1, 1]) * a + b  # type: ignore
 
 
 def min_distance_points_to_line_2d(
@@ -302,7 +299,7 @@ def min_distance_points_to_line_2d(
     """
     a = np.reshape(a, [2, 1])
     r = np.abs(p @ a + b) / np.sqrt(np.sum(a**2))
-    return r[:, 0]
+    return r[:, 0]  # type: ignore
 
 
 def get_running_avg_variance(
