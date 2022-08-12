@@ -34,7 +34,7 @@ except ImportError:
 
 class InfluenceTestSettings:
     DATA_OUTPUT_NOISE: float = 0.01
-    ACCEPTABLE_ABS_TOL_INFLUENCE: float = 4e-4
+    ACCEPTABLE_ABS_TOL_INFLUENCE: float = 5e-4
     ACCEPTABLE_ABS_TOL_INFLUENCE_CG: float = 1e-3
 
     INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [5]
