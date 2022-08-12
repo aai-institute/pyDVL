@@ -27,8 +27,6 @@ from typing import (
 
 import numpy as np
 
-from valuation.utils import memcached
-from valuation.utils.caching import ClientConfig
 from valuation.utils.parallel import MapReduceJob, map_reduce
 
 T = TypeVar("T")
@@ -97,9 +95,6 @@ def random_powerset(
     max_subsets: int = None,
     dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
     num_jobs: int = 1,
-    *,
-    enable_cache: bool = False,
-    client_config: Optional[ClientConfig] = None
 ) -> Generator[np.ndarray, None, None]:
     """Uniformly samples a subset from the power set of the argument, without
     pre-generating all subsets and in no order.
@@ -116,7 +111,6 @@ def random_powerset(
         by the number of sets of size k, or "uniformly", taking e.g. the empty
         set to be as likely as any other
     :param num_jobs: Duh. Must be >= 1
-    :param client_config: Memcached client configuration
     """
     if not isinstance(s, np.ndarray):
         raise TypeError
@@ -127,19 +121,9 @@ def random_powerset(
         max_subsets = np.inf
 
     def subset_probabilities(n: int) -> List[float]:
-        def sub(sizes: List[int]) -> List[float]:
-            return [np.math.comb(n, j) / 2**n for j in sizes]
+        return [np.math.comb(n, j) / 2**n for j in range(n + 1)]
 
-        job = MapReduceJob.from_fun(sub, lambda r: reduce(operator.add, r, []))
-        ret = map_reduce(job, list(range(n + 1)), num_jobs=num_jobs)
-        return ret[0]
-
-    if enable_cache:
-        _subset_probabilities = memcached(
-            client_config=client_config, cache_threshold=0.5
-        )(subset_probabilities)
-    else:
-        _subset_probabilities = subset_probabilities
+    _subset_probabilities = subset_probabilities
 
     while total <= max_subsets:
         if dist == PowerSetDistribution.WEIGHTED:

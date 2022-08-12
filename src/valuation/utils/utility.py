@@ -14,7 +14,7 @@ from valuation.utils import (
 )
 from valuation.utils.logging import logger
 
-__all__ = ["Utility", "bootstrap_test_score"]
+__all__ = ["Utility"]
 
 
 class Utility:

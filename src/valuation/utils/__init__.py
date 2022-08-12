@@ -18,7 +18,6 @@ __all__ = [
     "vanishing_derivatives",
     "unpackable",
     "Utility",
-    "bootstrap_test_score",
     "powerset",
     "maybe_progress",
     "load_spotify_dataset",
@@ -26,4 +25,5 @@ __all__ = [
     "mcmc_is_linear_function",
     "mcmc_is_linear_function_positive_definite",
     "MatrixVectorProduct",
+    "get_running_avg_variance",
 ]

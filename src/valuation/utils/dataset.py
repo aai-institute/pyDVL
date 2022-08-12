@@ -265,7 +265,7 @@ def load_spotify_dataset(
     test_size: float,
     min_year: int = 2014,
     target_column: str = "popularity",
-    random_state: int = 42,
+    random_state: int = 24,
 ):
     """Load spotify music dataset and selects song after min_year.
     If os. is True, it returns a small dataset for testing purposes."""
