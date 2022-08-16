@@ -9,7 +9,7 @@ from functools import wraps
 from hashlib import blake2b
 from io import BytesIO
 from time import time
-from typing import Callable, Dict, Iterable, Optional, Tuple
+from typing import Callable, Dict, Iterable, Optional, Tuple, Union
 
 from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
@@ -26,7 +26,7 @@ PICKLE_VERSION = 5  # python >= 3.8
 @unpackable
 @dataclass
 class ClientConfig:
-    server: Tuple[str, int] = ("localhost", 11211)
+    server: Union[str, Tuple[str, Union[str, int]]] = ("localhost", 11211)
     connect_timeout: float = 1.0
     timeout: float = 1.0
     no_delay: bool = True
@@ -77,12 +77,12 @@ def _serialize(x):
 
 
 def memcached(
-    client_config: ClientConfig = None,
+    client_config: Optional[ClientConfig] = None,
     cache_threshold: float = 0.3,
     allow_repeated_training: bool = False,
     rtol_threshold: float = 0.1,
     min_repetitions: int = 3,
-    ignore_args: Iterable[str] = None,
+    ignore_args: Optional[Iterable[str]] = None,
 ):
     """Decorate a callable with this in order to have transparent caching.
 

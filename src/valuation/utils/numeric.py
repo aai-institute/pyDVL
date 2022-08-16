@@ -12,18 +12,34 @@ import math
 from enum import Enum
 from itertools import chain, combinations
 from typing import (
+    TYPE_CHECKING,
     Callable,
     Collection,
     Generator,
     Iterator,
     List,
-    Sequence,
     Tuple,
     TypeVar,
     Union,
 )
 
 import numpy as np
+
+if TYPE_CHECKING:
+    try:
+        from numpy.typing import NDArray
+    except ImportError:
+        from numpy import ndarray as NDArray
+
+__all__ = [
+    "powerset",
+    "random_powerset",
+    "mcmc_is_linear_function",
+    "mcmc_is_linear_function_positive_definite",
+    "linear_regression_analytical_derivative_d2_theta",
+    "linear_regression_analytical_derivative_d_theta",
+    "linear_regression_analytical_derivative_d_x_d_theta",
+]
 
 T = TypeVar("T")
 
@@ -90,7 +106,6 @@ def random_powerset(
     s: np.ndarray,
     max_subsets: int = None,
     dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
-    num_jobs: int = 1,
 ) -> Generator[np.ndarray, None, None]:
     """Uniformly samples a subset from the power set of the argument, without
     pre-generating all subsets and in no order.
@@ -106,7 +121,6 @@ def random_powerset(
     :param dist: whether to sample from the "true" distribution, i.e. weighted
         by the number of sets of size k, or "uniformly", taking e.g. the empty
         set to be as likely as any other
-    :param num_jobs: Duh. Must be >= 1
     """
     if not isinstance(s, np.ndarray):
         raise TypeError

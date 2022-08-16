@@ -142,10 +142,9 @@ def boston_dataset(n_points, n_features):
 
 
 @pytest.fixture(scope="function")
-def linear_dataset(a, b, num_points, seed=42):
+def linear_dataset(a, b, num_points):
     from sklearn.utils import Bunch
 
-    np.random.seed(seed)
     step = 2 / num_points
     x = np.arange(-1, 1, step)
     y = np.random.normal(loc=a * x + b, scale=0.1)
@@ -192,6 +191,11 @@ def seed(request):
     return request.param
 
 
+@pytest.fixture(autouse=True)
+def seed_numpy(seed=42):
+    np.random.seed(seed)
+
+
 @pytest.fixture(scope="function")
 def quadratic_linear_equation_system(quadratic_matrix: np.ndarray, batch_size: int):
     A = quadratic_matrix
@@ -235,11 +239,10 @@ def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
 
 
 @pytest.fixture(scope="function")
-def polynomial_dataset(coefficients: np.ndarray, seed=42):
+def polynomial_dataset(coefficients: np.ndarray):
     """Coefficients must be for monomials of increasing degree"""
     from sklearn.utils import Bunch
 
-    np.random.seed(seed)
     x = np.arange(-1, 1, 0.05)
     locs = polynomial(coefficients, x)
     y = np.random.normal(loc=locs, scale=0.3)
