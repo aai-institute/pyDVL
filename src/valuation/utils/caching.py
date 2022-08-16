@@ -189,6 +189,7 @@ def memcached(
                     ["sets", "misses", "hits", "timeouts", "errors", "reconnects"],
                 )(0, 0, 0, 0, 0, 0)
                 self.client = connect(self.config)
+                self._signature = signature
 
             def __call__(self, *args, **kwargs) -> float:
                 key_kwargs = {k: v for k, v in kwargs.items() if k not in ignore_args}  # type: ignore
@@ -199,7 +200,7 @@ def memcached(
                 # FIXME: determine right bit size
                 # NB: I need to create the hasher object here because it can't be
                 #  pickled
-                key = blake2b(signature + arg_signature).hexdigest().encode("ASCII")  # type: ignore
+                key = blake2b(self._signature + arg_signature).hexdigest().encode("ASCII")  # type: ignore
 
                 result_dict: Dict = self.get_key_value(key)
                 if result_dict is None:
