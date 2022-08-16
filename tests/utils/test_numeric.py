@@ -34,11 +34,9 @@ def test_random_powerset(n, max_subsets, count_amplifier=3):
     where count_amplifier must be bigger than 1.
     """
     s = np.arange(1, n + 1)
-    num_cpus = available_cpus()
     result = random_powerset(
         s,
         max_subsets=max_subsets,
-        num_jobs=num_cpus,
     )
 
     result_exact = set(powerset(s))
