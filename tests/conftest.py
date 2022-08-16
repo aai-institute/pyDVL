@@ -235,10 +235,11 @@ def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
 
 
 @pytest.fixture(scope="function")
-def polynomial_dataset(coefficients: np.ndarray):
+def polynomial_dataset(coefficients: np.ndarray, seed=42):
     """Coefficients must be for monomials of increasing degree"""
     from sklearn.utils import Bunch
 
+    np.random.seed(seed)
     x = np.arange(-1, 1, 0.05)
     locs = polynomial(coefficients, x)
     y = np.random.normal(loc=locs, scale=0.3)
