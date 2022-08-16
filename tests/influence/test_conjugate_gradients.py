@@ -19,7 +19,7 @@ class AlgorithmTestSettings:
 
     CG_TEST_CONDITION_NUMBERS: List[int] = [10]
     CG_TEST_BATCH_SIZES: List[int] = [16, 32]
-    CG_TEST_DIMENSIONS: List[int] = list(np.arange(2, 100, 5))
+    CG_TEST_DIMENSIONS: List[int] = [2, 20, 60, 100]
 
 
 test_cases = list(
