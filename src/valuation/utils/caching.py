@@ -176,7 +176,10 @@ def memcached(
                     f"to {config.server}: {str(e)}"
                 )
 
-    def wrapper(fun: Callable[..., float], signature: bytes):
+    def wrapper(fun: Callable[..., float], signature: Optional[bytes] = None):
+        if signature is None:
+            signature = serialize((fun.__code__.co_code, fun.__code__.co_consts))
+
         @wraps(fun, updated=[])  # don't try to use update() for a class
         class Wrapped:
             def __init__(self, config: ClientConfig):
@@ -196,7 +199,7 @@ def memcached(
                 # FIXME: determine right bit size
                 # NB: I need to create the hasher object here because it can't be
                 #  pickled
-                key = blake2b(signature + arg_signature).hexdigest().encode("ASCII")
+                key = blake2b(signature + arg_signature).hexdigest().encode("ASCII")  # type: ignore
 
                 result_dict: Dict = self.get_key_value(key)
                 if result_dict is None:
