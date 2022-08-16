@@ -74,6 +74,7 @@ class ShapleyCoordinator:
     def get_results(self):
         dvl_values = []
         dvl_std = []
+        self.total_iterations = 0
         if len(self.workers_status) == 0:
             return np.array([]), np.array([])
         for _, worker_data in self.workers_status.items():
