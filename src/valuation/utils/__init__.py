@@ -18,6 +18,7 @@ __all__ = [
     "vanishing_derivatives",
     "unpackable",
     "Utility",
+    "serialize",
     "bootstrap_test_score",
     "powerset",
     "maybe_progress",
