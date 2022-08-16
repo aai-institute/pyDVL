@@ -34,7 +34,7 @@ except ImportError:
 
 class InfluenceTestSettings:
     DATA_OUTPUT_NOISE: float = 0.01
-    ACCEPTABLE_ABS_TOL_INFLUENCE: float = 3e-4
+    ACCEPTABLE_ABS_TOL_INFLUENCE: float = 4e-4
     ACCEPTABLE_ABS_TOL_INFLUENCE_CG: float = 1e-3
 
     INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [5]
@@ -62,7 +62,10 @@ test_cases = list(
 
 def lmb_test_case_to_str(packed_i_test_case):
     i, test_case = packed_i_test_case
-    return f"Problem #{i} of dimension {test_case[2]} with train size {test_case[0]}, test size {test_case[1]}, condition number {test_case[3]} and {test_case[4]} jobs."
+    return (
+        f"Problem #{i} of dimension {test_case[2]} with train size {test_case[0]}, "
+        f"test size {test_case[1]}, condition number {test_case[3]} and {test_case[4]} jobs."
+    )
 
 
 test_case_ids = list(map(lmb_test_case_to_str, zip(range(len(test_cases)), test_cases)))
@@ -81,8 +84,7 @@ def test_upweighting_influences_lr_analytical_cg(
     linear_model: Tuple[np.ndarray, np.ndarray],
     n_jobs: int,
 ):
-
-    A, _ = tuple(linear_model)
+    A, _ = linear_model
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
 
     model = TorchModule(

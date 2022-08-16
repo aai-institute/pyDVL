@@ -3,12 +3,13 @@ Distributed caching of functions, using memcached.
 TODO: wrap this to allow for different backends
 """
 import socket
+import uuid
 from dataclasses import dataclass, field, make_dataclass
 from functools import wraps
 from hashlib import blake2b
 from io import BytesIO
 from time import time
-from typing import Callable, Iterable
+from typing import Callable, Dict, Iterable, Optional, Tuple, Union
 
 from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
@@ -18,13 +19,15 @@ from pymemcache.serde import PickleSerde
 from valuation.utils.logging import logger
 from valuation.utils.types import unpackable
 
+__all__ = ["ClientConfig", "MemcachedConfig", "memcached"]
+
 PICKLE_VERSION = 5  # python >= 3.8
 
 
 @unpackable
 @dataclass
 class ClientConfig:
-    server: str = ("localhost", 11211)
+    server: Union[str, Tuple[str, Union[str, int]]] = ("localhost", 11211)
     connect_timeout: float = 1.0
     timeout: float = 1.0
     no_delay: bool = True
@@ -34,12 +37,37 @@ class ClientConfig:
 @unpackable
 @dataclass
 class MemcachedConfig:
+    """Configuration for memcache
+
+    :param cache_threshold: determines the minimum number of seconds a model training needs
+        to take to cache its scores. If a model is super fast to train, you may just want
+        to re-train it every time without saving the score. In most cases, caching the model,
+        even when it takes very little to train, is preferable.
+        The default to cache_threshold is 0.3 seconds.
+    :param allow_repeated_training: if set to true, instead of storing just a single score of a model,
+        the cache will store a running average of its score until a certain relative tolerance
+        (set by the rtol_threshold argument) is achieved. More precisely, since most machine learning
+        model-trainings are non-deterministic, depending on the starting weights or on randomness in
+        the training process, the trained model can have very different scores.
+        In your workflow, if you observe that the training process is very noisy even relative to the
+        same training set, then we recommend to set allow_repeated_training to True.
+        If instead the score is not impacted too much by non-deterministic training, setting allow_repeated_training
+        to false will speed up the shapley_dval calculation substantially.
+    :param rtol_threshold argument: as mentioned above, it regulates the relative tolerance for returning the running
+        average of a model instead of re-training it. If allow_repeated_training is True, set rtol_threshold to
+        small values and the shapley coefficients will have higher precision.
+    :param min_repetitions: similarly to rtol_threshold, it regulates repeated trainings by setting the minimum number of
+        repeated training a model has to go through before the cache can return its average score.
+        If the model training is very noisy, set min_repetitions to higher values and the scores will be more
+        reflective of the real average performance of the trained models.
+    """
+
     client_config: ClientConfig = field(default_factory=ClientConfig)
     cache_threshold: float = 0.3
-    allow_repeated_training: bool = False
+    allow_repeated_training: bool = True
     rtol_threshold: float = 0.1
     min_repetitions: int = 3
-    ignore_args: Iterable[str] = None
+    ignore_args: Optional[Iterable[str]] = None
 
 
 def serialize(x):
@@ -51,7 +79,7 @@ def serialize(x):
 
 def get_running_avg_variance(
     previous_avg: float, previous_variance: float, new_value: float, count: int
-):
+) -> Tuple[float, float]:
     """The method uses Welford's algorithm to calculate the running average and variance of
     a set of numbers.
 
@@ -74,7 +102,7 @@ def memcached(
     allow_repeated_training: bool = False,
     rtol_threshold: float = 0.1,
     min_repetitions: int = 3,
-    ignore_args: Iterable[str] = None,
+    ignore_args: Optional[Iterable[str]] = None,
 ):
     """Decorate a callable with this in order to have transparent caching.
 
@@ -120,7 +148,7 @@ def memcached(
         """First tries to establish a connection, then tries setting and
         getting a value."""
         try:
-            test_config = dict(**config)
+            test_config: Dict = dict(**config)
             # test_config.update(timeout=config.connect_timeout)  # allow longer delays
             client = RetryingClient(
                 Client(**test_config),
@@ -129,30 +157,28 @@ def memcached(
                 retry_for=[MemcacheUnexpectedCloseError],
             )
         except Exception as e:
-            logger.error(
+            logger.error(  # type: ignore
                 f"@memcached: Timeout connecting "
-                f'to {config["server"]} after '
+                f"to {config.server} after "
                 f"{config.connect_timeout} seconds: {str(e)}"
             )
             raise e
         else:
             try:
-                import uuid
-
                 temp_key = str(uuid.uuid4())
                 client.set(temp_key, 7)
                 assert client.get(temp_key) == 7
                 client.delete(temp_key, 0)
                 return client
             except AssertionError as e:
-                logger.error(
+                logger.error(  # type: ignore
                     f"@memcached: Failure saving dummy value "
-                    f'to {config["server"]}: {str(e)}'
+                    f"to {config.server}: {str(e)}"
                 )
 
-    def wrapper(fun: Callable, signature: bytes = None):
+    def wrapper(fun: Callable[..., float], signature: bytes = None):
         if signature is None:
-            signature = serialize((fun.__code__.co_code, fun.__code__.co_consts))
+            signature: bytes = serialize((fun.__code__.co_code, fun.__code__.co_consts))
 
         @wraps(fun, updated=[])  # don't try to use update() for a class
         class Wrapped:
@@ -164,8 +190,8 @@ def memcached(
                 )(0, 0, 0, 0, 0, 0)
                 self.client = connect(self.config)
 
-            def __call__(self, *args, **kwargs):
-                key_kwargs = {k: v for k, v in kwargs.items() if k not in ignore_args}
+            def __call__(self, *args, **kwargs) -> float:
+                key_kwargs = {k: v for k, v in kwargs.items() if k not in ignore_args}  # type: ignore
                 arg_signature: bytes = serialize((args, list(key_kwargs.items())))
 
                 # FIXME: do I really need to hash this?
@@ -175,7 +201,7 @@ def memcached(
                 #  pickled
                 key = blake2b(signature + arg_signature).hexdigest().encode("ASCII")
 
-                result_dict = self.get_key_value(key)
+                result_dict: float = self.get_key_value(key)
                 if result_dict is None:
                     result_dict = {}
                     start = time()
@@ -231,15 +257,15 @@ def memcached(
                     result = self.client.get(key)
                 except socket.timeout as e:
                     self.cache_info.timeouts += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")
+                    logger.warning(f"{type(self).__name__}: {str(e)}")  # type: ignore
                 except OSError as e:
                     self.cache_info.errors += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")
+                    logger.warning(f"{type(self).__name__}: {str(e)}")  # type: ignore
                 except AttributeError as e:
                     # FIXME: this depends on _recv() failing on invalid sockets
                     # See pymemcache.base.py,
                     self.cache_info.reconnects += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")
+                    logger.warning(f"{type(self).__name__}: {str(e)}")  # type: ignore
                     self.client = connect(self.config)
                 return result
 
@@ -255,7 +281,7 @@ def memcached(
         # TODO: pick from some config file or something
         config = ClientConfig()
         if client_config is not None:
-            config.update(client_config)
+            config.update(client_config)  # type: ignore
         return Wrapped(config)
 
     return wrapper

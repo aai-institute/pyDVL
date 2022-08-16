@@ -10,8 +10,8 @@ from valuation.utils import (
     SupervisedModel,
     maybe_progress,
     memcached,
-    serialize,
 )
+from valuation.utils.caching import serialize
 from valuation.utils.logging import logger
 
 __all__ = ["Utility", "bootstrap_test_score"]
@@ -22,17 +22,17 @@ class Utility:
 
     model: SupervisedModel
     data: Dataset
-    scoring: Scorer
+    scoring: Optional[Scorer]
 
     def __init__(
         self,
         model: SupervisedModel,
         data: Dataset,
-        scoring: Optional[Scorer],
+        scoring: Optional[Scorer] = None,
         catch_errors: bool = True,
         default_score: float = 0,
         enable_cache: bool = True,
-        cache_options: MemcachedConfig = None,
+        cache_options: Optional[MemcachedConfig] = None,
     ):
         """
         :param model: Any supervised model
@@ -56,7 +56,7 @@ class Utility:
 
         if enable_cache:
             if cache_options is None:
-                cache_options = dict()
+                cache_options = dict()  # type: ignore
             signature = serialize((hash(model), hash(data), hash(scoring)))
             self._utility_wrapper = memcached(**cache_options)(
                 self._utility, signature=signature
@@ -69,7 +69,8 @@ class Utility:
         # self.__call__.__doc__ = self._utility_wrapper.__doc__
 
     def __call__(self, indices: Iterable[int]) -> float:
-        return self._utility_wrapper(frozenset(indices))
+        utility: float = self._utility_wrapper(frozenset(indices))
+        return utility
 
     def _utility(self, indices: frozenset) -> float:
         """Fits the model on a subset of the training data and scores it on the
@@ -93,7 +94,7 @@ class Utility:
             return float(scorer(self.model, self.data.x_test, self.data.y_test))
         except Exception as e:
             if self.catch_errors:
-                logger.warning(str(e))
+                logger.warning(str(e))  # type: ignore
                 return self.default_score
             else:
                 raise e
@@ -107,7 +108,7 @@ def bootstrap_test_score(
     _scores = []
     u.model.fit(u.data.x_train, u.data.y_train)
     n_test = len(u.data.x_test)
-    for _ in maybe_progress(
+    for _ in maybe_progress(  # type: ignore
         range(bootstrap_iterations), progress, desc="Bootstrapping"
     ):
         sample = np.random.randint(low=0, high=n_test, size=n_test)

@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 from enum import Enum
-from typing import Any, Callable, Dict, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 import numpy as np
 import torch
@@ -20,7 +20,8 @@ from torch.autograd import Variable
 from torch.optim import Adam, AdamW
 from torch.utils.data import DataLoader, Dataset
 
-from valuation.utils import logger, maybe_progress
+from valuation.utils import maybe_progress
+from valuation.utils.logging import logger
 
 
 def tt(v: Union[np.ndarray, torch.Tensor], dtype: str = "float") -> torch.Tensor:
@@ -72,7 +73,7 @@ class TorchObjective:
         self._objective = objective
 
     def __call__(self, y_pred, y_target, **kwargs) -> torch.Tensor:
-        return self._objective(y_pred, tt(y_target, self._dtype), **kwargs)
+        return self._objective(y_pred, tt(y_target, self._dtype), **kwargs)  # type: ignore
 
 
 class TorchModule:
@@ -84,9 +85,9 @@ class TorchModule:
     def __init__(
         self,
         model: nn.Module,
-        objective: TorchObjective = None,
+        objective: TorchObjective,
         optimizer: TorchOptimizer = TorchOptimizer.ADAM_W,
-        optimizer_kwargs: Dict[str, Union[str, int, float]] = None,
+        optimizer_kwargs: Optional[Dict[str, Union[str, int, float]]] = None,
         num_epochs: int = 1,
         batch_size: int = 64,
     ):
@@ -130,11 +131,13 @@ class TorchModule:
             self.model.parameters(), **reduced_optimizer_kwargs
         )
         use_cosine_annealing = self.optimizer_kwargs.get("cosine_annealing", False)
-        scheduler = None
+
         if use_cosine_annealing:
             scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
                 optimizer, T_max=self.num_epochs
             )
+        else:
+            scheduler = None
 
         class InternalDataset(Dataset):
             """
@@ -161,7 +164,7 @@ class TorchModule:
                 optimizer.step()
                 optimizer.zero_grad()
 
-                if use_cosine_annealing:
+                if scheduler:
                     scheduler.step()
 
     def predict(self, x: np.ndarray) -> np.ndarray:
@@ -170,7 +173,7 @@ class TorchModule:
         :param x: A np.ndarray [NxD] representing the features x_i.
         :returns: A np.ndarray [NxK] representing the predicted values.
         """
-        return self.model(tt(x)).detach().numpy()
+        return self.model(tt(x)).detach().numpy()  # type: ignore
 
     def score(self, x: np.ndarray, y: np.ndarray) -> float:
         """
@@ -180,7 +183,7 @@ class TorchModule:
         :returns: The aggregated value over all samples N.
         """
         x, y = tt(x), tt(y)
-        return self.objective(self.model(x), y).detach().numpy()
+        return self.objective(self.model(x), y).detach().numpy()  # type: ignore
 
     def num_params(self) -> int:
         """
@@ -258,4 +261,4 @@ class TorchModule:
             for i in maybe_progress(range(len(z)), progress)
         ]
         hvp = torch.stack([grad.contiguous().view(-1) for grad in all_flattened_grads])
-        return hvp.detach().numpy()
+        return hvp.detach().numpy()  # type: ignore

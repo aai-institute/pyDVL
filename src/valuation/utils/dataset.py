@@ -1,12 +1,15 @@
+import os
 from collections import OrderedDict
 from copy import copy
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
-from numpy.lib.index_tricks import IndexExpression
+import pandas as pd
 from sklearn.manifold import TSNE
 from sklearn.model_selection import train_test_split
 from sklearn.utils import Bunch, check_X_y
+
+__all__ = ["Dataset", "GroupedDataset", "polynomial_dataset", "load_spotify_dataset"]
 
 
 class Dataset:
@@ -75,7 +78,7 @@ class Dataset:
     def __iter__(self):
         return self.x_train, self.y_train, self.x_test, self.y_test
 
-    def feature(self, name: str) -> IndexExpression:
+    def feature(self, name: str) -> Tuple[slice, int]:
         try:
             return np.index_exp[:, self.feature_names.index(name)]
         except ValueError:
@@ -90,7 +93,7 @@ class Dataset:
         y = self.y_train[train_indices]
         return x, y
 
-    def target(self, name: str) -> IndexExpression:
+    def target(self, name: str) -> Tuple[slice, int]:
         try:
             return np.index_exp[:, self.target_names.index(name)]
         except ValueError:
@@ -121,7 +124,11 @@ class Dataset:
 
     @classmethod
     def from_sklearn(
-        cls, data: Bunch, train_size: float = 0.8, random_state: int = None
+        cls,
+        data: Bunch,
+        train_size: float = 0.8,
+        random_state: Optional[int] = None,
+        **kwargs,
     ) -> "Dataset":
         """Constructs a Dataset object from an sklearn bunch as returned
         by the load_* functions in `sklearn.datasets`
@@ -139,6 +146,7 @@ class Dataset:
             description=data.get("DESCR"),
         )
 
+    # TODO: This doesn't look good. Why do we do this?
     try:
         import pandas as pd
 
@@ -161,7 +169,7 @@ class GroupedDataset(Dataset):
         y_train: np.ndarray,
         x_test: np.ndarray,
         y_test: np.ndarray,
-        data_groups: Iterable,
+        data_groups: Sequence,
         feature_names: Optional[Iterable] = None,
         target_names: Optional[Iterable] = None,
         description: Optional[str] = None,
@@ -187,11 +195,13 @@ class GroupedDataset(Dataset):
                 f"data_groups and x_train must have the same length. Instead got {len(data_groups)=} and {len(x_train)=}"
             )
 
-        self.groups = OrderedDict({k: [] for k in set(data_groups)})
+        self.groups: OrderedDict[Any, List[int]] = OrderedDict(
+            {k: [] for k in set(data_groups)}
+        )
         for idx, group in enumerate(data_groups):
             self.groups[group].append(idx)
         self.group_items = list(self.groups.items())
-        self._indices = list(range(len(self.groups.keys())))
+        self._indices = np.arange(len(self.groups.keys()))
 
     def __len__(self):
         return len(self.groups)
@@ -215,15 +225,18 @@ class GroupedDataset(Dataset):
     def from_sklearn(
         cls,
         data: Bunch,
-        data_groups: List,
         train_size: float = 0.8,
-        random_state: int = None,
+        random_state: Optional[int] = None,
+        **kwargs,
     ) -> "GroupedDataset":
+        data_groups: Optional[List] = kwargs.get("data_groups")
+        if data_groups is None:
+            raise ValueError("data_groups argument is missing")
         dataset = super().from_sklearn(data, train_size, random_state)
         return cls.from_dataset(dataset, data_groups)
 
     @classmethod
-    def from_dataset(cls, dataset: Dataset, data_groups: List):
+    def from_dataset(cls, dataset: Dataset, data_groups: List) -> "GroupedDataset":
         return GroupedDataset(
             x_train=dataset.x_train,
             y_train=dataset.y_train,
@@ -250,12 +263,50 @@ def polynomial_dataset(coefficients: np.ndarray):
     y = np.random.normal(loc=locs, scale=0.3)
     db = Bunch()
     db.data, db.target = x.reshape(-1, 1), y
-    poly = [f"{c} x^{i}" for i, c in enumerate(coefficients)]
-    poly = " + ".join(poly)
+    poly = " + ".join([f"{c} x^{i}" for i, c in enumerate(coefficients)])
     db.DESCR = f"$y \\sim N({poly}, 1)$"
     db.feature_names = ["x"]
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.5), coefficients
+
+
+def load_spotify_dataset(
+    val_size: float,
+    test_size: float,
+    min_year: int = 2014,
+    target_column: str = "popularity",
+    random_state: int = 42,
+):
+    """Load spotify music dataset and selects song after min_year.
+    If os. is True, it returns a small dataset for testing purposes."""
+    file_dir_path = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(
+        file_dir_path, "../../../data/top_hits_spotify_dataset.csv"
+    )
+    if os.path.exists(file_path):
+        data = pd.read_csv(file_path)
+    else:
+        url = "https://github.com/appliedAI-Initiative/valuation/blob/notebook_and_shapley_interface/data/top_hits_spotify_dataset.csv"
+        data = pd.read_csv(url)
+        data.to_csv(file_path, index=False)
+
+    data = data[data["year"] > min_year]
+    # TODO reading off an env variable within the method is dirty. Look into other solutions
+    # to switching to reduced dataset when testing
+    CI = os.environ.get("CI") in ("True", "true")
+    if CI:
+        data = data.iloc[:3]
+
+    data["genre"] = data["genre"].astype("category").cat.codes
+    y = data[target_column]
+    X = data.drop(target_column, axis=1)
+    X, X_test, y, y_test = train_test_split(
+        X, y, test_size=test_size, random_state=random_state
+    )
+    X_train, X_val, y_train, y_val = train_test_split(
+        X, y, test_size=val_size, random_state=random_state
+    )
+    return [X_train, y_train], [X_val, y_val], [X_test, y_test]
 
 
 def flip_dataset(
