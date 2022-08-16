@@ -1,4 +1,4 @@
-""" FIXME: more to do... """
+# TODO add more tests!
 
 import pytest
 from sklearn.linear_model import LinearRegression
@@ -51,9 +51,9 @@ def test_different_cache(linear_dataset, memcache_client_config):
         ),
     )
     u2 = Utility(
-        model=LinearRegression(),
+        model=LinearRegression(fit_intercept=False),
         data=linear_dataset,
-        scoring="explained_variance",
+        scoring="r2",
         enable_cache=True,
         cache_options=MemcachedConfig(
             client_config=memcache_client_config, cache_threshold=0

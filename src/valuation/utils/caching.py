@@ -251,6 +251,7 @@ def memcached(
                 self.config = d["config"]
                 self.cache_info = d["cache_info"]
                 self.client = Client(**self.config)
+                self._signature = signature
 
             def get_key_value(self, key: bytes):
                 result = None
