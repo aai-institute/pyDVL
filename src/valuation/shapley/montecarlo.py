@@ -68,6 +68,7 @@ class ShapleyCoordinator:
     def add_status(self, worker_id, shapley_stats):
         self.workers_status[worker_id] = shapley_stats
 
+    # this should have @property, but if I use it ray.get messes up
     def is_done(self):
         return self._is_done
 
