@@ -18,6 +18,7 @@ __all__ = [
     "vanishing_derivatives",
     "unpackable",
     "Utility",
+    "serialize",
     "powerset",
     "maybe_progress",
     "linear_regression_analytical_derivative_d_theta",

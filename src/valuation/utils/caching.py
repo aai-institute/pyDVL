@@ -69,7 +69,7 @@ class MemcachedConfig:
     ignore_args: Optional[Iterable[str]] = None
 
 
-def _serialize(x):
+def serialize(x):
     pickled_output = BytesIO()
     pickler = Pickler(pickled_output, PICKLE_VERSION)
     pickler.dump(x)
@@ -156,9 +156,9 @@ def memcached(
                     f"to {config.server}: {str(e)}"
                 )
 
-    def wrapper(fun: Callable[..., float]):
-        # noinspection PyUnresolvedReferences
-        signature: bytes = _serialize((fun.__code__.co_code, fun.__code__.co_consts))
+    def wrapper(fun: Callable[..., float], signature: Optional[bytes] = None):
+        if signature is None:
+            signature = serialize((fun.__code__.co_code, fun.__code__.co_consts))
 
         @wraps(fun, updated=[])  # don't try to use update() for a class
         class Wrapped:
@@ -169,56 +169,54 @@ def memcached(
                     ["sets", "misses", "hits", "timeouts", "errors", "reconnects"],
                 )(0, 0, 0, 0, 0, 0)
                 self.client = connect(self.config)
+                self._signature = signature
 
             def __call__(self, *args, **kwargs) -> float:
                 key_kwargs = {k: v for k, v in kwargs.items() if k not in ignore_args}  # type: ignore
-                arg_signature: bytes = _serialize((args, list(key_kwargs.items())))
+                arg_signature: bytes = serialize((args, list(key_kwargs.items())))
 
                 # FIXME: do I really need to hash this?
                 # FIXME: ensure that the hashing algorithm is portable
                 # FIXME: determine right bit size
                 # NB: I need to create the hasher object here because it can't be
                 #  pickled
-                key = blake2b(signature + arg_signature).hexdigest()
-                key_count = blake2b(
-                    signature + arg_signature + _serialize("count")
-                ).hexdigest()
-                key_variance = blake2b(
-                    signature + arg_signature + _serialize("variance")
-                ).hexdigest()
+                key = blake2b(self._signature + arg_signature).hexdigest().encode("ASCII")  # type: ignore
 
-                result: float = self.get_key_value(key)
-                if result is None:
+                result_dict: Dict = self.get_key_value(key)
+                if result_dict is None:
+                    result_dict = {}
                     start = time()
-                    result = fun(*args, **kwargs)
+                    value = fun(*args, **kwargs)
                     end = time()
+                    result_dict["value"] = value
                     if end - start >= cache_threshold or allow_repeated_training:
-                        self.client.set(key, result, noreply=True)
-                        self.client.set(key_count, 1, noreply=True)
-                        self.client.set(key_variance, 0, noreply=True)
+                        result_dict["count"] = 1
+                        result_dict["variance"] = 0
+                        self.client.set(key, result_dict, noreply=True)
                         self.cache_info.sets += 1
                     self.cache_info.misses += 1
                 elif allow_repeated_training:
                     self.cache_info.hits += 1
-                    count = self.get_key_value(key_count)
-                    variance = self.get_key_value(key_variance)
-                    error_on_average = (variance / (count)) ** (1 / 2)
+                    value = result_dict["value"]
+                    count = result_dict["count"]
+                    variance = result_dict["variance"]
+                    error_on_average = (variance / count) ** (1 / 2)
                     if (
-                        error_on_average > rtol_threshold * result
+                        error_on_average > rtol_threshold * value
                         or count <= min_repetitions
                     ):
                         new_value = fun(*args, **kwargs)
                         new_avg, new_var = get_running_avg_variance(
-                            result, variance, new_value, count
+                            value, variance, new_value, count
                         )
-                        self.client.set(key, new_avg, noreply=True)
-                        self.client.set(key_count, count + 1, noreply=True)
-                        self.client.set(key_variance, new_var, noreply=True)
+                        result_dict["value"] = new_avg
+                        result_dict["count"] = count + 1
+                        result_dict["variance"] = new_var
+                        self.client.set(key, result_dict, noreply=True)
                         self.cache_info.sets += 1
-                        result = new_avg
                 else:
                     self.cache_info.hits += 1
-                return result
+                return result_dict["value"]  # type: ignore
 
             def __getstate__(self):
                 """Enables pickling after a socket has been opened to the
@@ -233,8 +231,9 @@ def memcached(
                 self.config = d["config"]
                 self.cache_info = d["cache_info"]
                 self.client = Client(**self.config)
+                self._signature = signature
 
-            def get_key_value(self, key: str):
+            def get_key_value(self, key: bytes):
                 result = None
                 try:
                     result = self.client.get(key)
