@@ -57,6 +57,21 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture(scope="session")
+def random_seed():
+    return 24
+
+
+@pytest.fixture(scope="session", autouse=True)
+def pytorch_seed(random_seed):
+    try:
+        import torch
+
+        torch.manual_seed(random_seed)
+    except ImportError:
+        pass
+
+
+@pytest.fixture(scope="session")
 def do_not_start_memcache(request):
     return request.config.getoption("--do-not-start-memcache")
 
