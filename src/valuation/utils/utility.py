@@ -53,13 +53,14 @@ class Utility:
         self.scoring = scoring
         self.catch_errors = catch_errors
         self.default_score = default_score
+        self._signature = None
 
         if enable_cache:
             if cache_options is None:
                 cache_options = dict()  # type: ignore
-            signature = serialize((hash(model), hash(data), hash(scoring)))
+            self._signature = serialize((hash(model), hash(data), hash(scoring)))
             self._utility_wrapper = memcached(**cache_options)(  # type: ignore
-                self._utility, signature=signature
+                self._utility, signature=self._signature
             )
         else:
             self._utility_wrapper = self._utility
@@ -98,6 +99,10 @@ class Utility:
                 return self.default_score
             else:
                 raise e
+
+    @property
+    def signature(self):
+        return self._signature
 
 
 def bootstrap_test_score(

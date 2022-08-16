@@ -60,4 +60,4 @@ def test_different_cache(linear_dataset, memcache_client_config):
         ),
     )
 
-    assert u1._utility_wrapper._signature != u2._utility_wrapper._signature
+    assert u1.signature != u2.signature
