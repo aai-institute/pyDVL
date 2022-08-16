@@ -176,10 +176,7 @@ def memcached(
                     f"to {config.server}: {str(e)}"
                 )
 
-    def wrapper(fun: Callable[..., float], signature: bytes = None):
-        if signature is None:
-            signature: bytes = serialize((fun.__code__.co_code, fun.__code__.co_consts))
-
+    def wrapper(fun: Callable[..., float], signature: bytes):
         @wraps(fun, updated=[])  # don't try to use update() for a class
         class Wrapped:
             def __init__(self, config: ClientConfig):
@@ -201,7 +198,7 @@ def memcached(
                 #  pickled
                 key = blake2b(signature + arg_signature).hexdigest().encode("ASCII")
 
-                result_dict: float = self.get_key_value(key)
+                result_dict: Dict = self.get_key_value(key)
                 if result_dict is None:
                     result_dict = {}
                     start = time()
@@ -219,7 +216,7 @@ def memcached(
                     value = result_dict["value"]
                     count = result_dict["count"]
                     variance = result_dict["variance"]
-                    error_on_average = (variance / (count)) ** (1 / 2)
+                    error_on_average = (variance / count) ** (1 / 2)
                     if (
                         error_on_average > rtol_threshold * value
                         or count <= min_repetitions
@@ -235,7 +232,7 @@ def memcached(
                         self.cache_info.sets += 1
                 else:
                     self.cache_info.hits += 1
-                return result_dict["value"]
+                return result_dict["value"]  # type: ignore
 
             def __getstate__(self):
                 """Enables pickling after a socket has been opened to the
@@ -251,7 +248,7 @@ def memcached(
                 self.cache_info = d["cache_info"]
                 self.client = Client(**self.config)
 
-            def get_key_value(self, key: str):
+            def get_key_value(self, key: bytes):
                 result = None
                 try:
                     result = self.client.get(key)
