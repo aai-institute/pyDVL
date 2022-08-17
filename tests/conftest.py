@@ -57,6 +57,24 @@ def pytest_addoption(parser):
     )
 
 
+@pytest.fixture()
+def seed(request):
+    try:
+        return request.param
+    except AttributeError:
+        return 24
+
+
+@pytest.fixture(autouse=True)
+def pytorch_seed(seed):
+    try:
+        import torch
+
+        torch.manual_seed(seed)
+    except ImportError:
+        pass
+
+
 @pytest.fixture(scope="session")
 def do_not_start_memcache(request):
     return request.config.getoption("--do-not-start-memcache")
@@ -184,11 +202,6 @@ def batch_size(request) -> int:
 
 @pytest.fixture
 def condition_number(request) -> float:
-    return request.param
-
-
-@pytest.fixture
-def seed(request):
     return request.param
 
 
