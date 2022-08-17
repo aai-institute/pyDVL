@@ -7,10 +7,9 @@ Contains
 - code for calculating decision boundary in BinaryLogisticRegression.
 """
 
+
 import math
-import operator
 from enum import Enum
-from functools import reduce
 from itertools import chain, combinations
 from typing import (
     TYPE_CHECKING,
@@ -19,18 +18,12 @@ from typing import (
     Generator,
     Iterator,
     List,
-    Optional,
-    Sequence,
     Tuple,
     TypeVar,
     Union,
 )
 
 import numpy as np
-
-from valuation.utils import memcached
-from valuation.utils.caching import ClientConfig
-from valuation.utils.parallel import MapReduceJob, map_reduce
 
 if TYPE_CHECKING:
     try:
@@ -46,7 +39,6 @@ __all__ = [
     "linear_regression_analytical_derivative_d2_theta",
     "linear_regression_analytical_derivative_d_theta",
     "linear_regression_analytical_derivative_d_x_d_theta",
-    "vanishing_derivatives",
 ]
 
 T = TypeVar("T")
@@ -81,17 +73,7 @@ def mcmc_is_linear_function_positive_definite(
     return is_positive_definite
 
 
-def vanishing_derivatives(x: np.ndarray, min_values: int, atol: float) -> int:
-    """Returns the number of rows whose empirical derivatives have converged
-    to zero, up to an absolute tolerance of atol.
-    """
-    last_values = x[:, -min_values - 1 :]
-    d = np.diff(last_values, axis=1)
-    zeros = np.isclose(d, 0.0, atol=atol).sum(axis=1)
-    return int(np.sum(zeros >= min_values / 2))
-
-
-def powerset(it: Union[Sequence[T], "NDArray"]) -> Iterator[Collection[T]]:
+def powerset(it: np.ndarray) -> Iterator[Collection[T]]:
     """Returns an iterator for the power set of the argument.
 
     Subsets are generated in sequence by growing size. See `random_powerset()`
@@ -124,10 +106,6 @@ def random_powerset(
     s: np.ndarray,
     max_subsets: int = None,
     dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
-    num_jobs: int = 1,
-    *,
-    enable_cache: bool = False,
-    client_config: Optional[ClientConfig] = None
 ) -> Generator[np.ndarray, None, None]:
     """Uniformly samples a subset from the power set of the argument, without
     pre-generating all subsets and in no order.
@@ -143,8 +121,6 @@ def random_powerset(
     :param dist: whether to sample from the "true" distribution, i.e. weighted
         by the number of sets of size k, or "uniformly", taking e.g. the empty
         set to be as likely as any other
-    :param num_jobs: Duh. Must be >= 1
-    :param client_config: Memcached client configuration
     """
     if not isinstance(s, np.ndarray):
         raise TypeError
@@ -155,19 +131,9 @@ def random_powerset(
         max_subsets = np.iinfo(np.int32).max
 
     def subset_probabilities(n: int) -> List[float]:
-        def sub(sizes: List[int]) -> List[float]:
-            return [math.comb(n, j) / 2**n for j in sizes]
+        return [math.comb(n, j) / 2**n for j in range(n + 1)]
 
-        job = MapReduceJob.from_fun(sub, lambda r: reduce(operator.add, r, []))
-        ret: List[List[float]] = map_reduce(job, list(range(n + 1)), num_jobs=num_jobs)
-        return ret[0]
-
-    if enable_cache:
-        _subset_probabilities = memcached(
-            client_config=client_config, cache_threshold=0.5
-        )(subset_probabilities)
-    else:
-        _subset_probabilities = subset_probabilities
+    _subset_probabilities = subset_probabilities
 
     while total <= max_subsets:
         if dist == PowerSetDistribution.WEIGHTED:
@@ -348,3 +314,25 @@ def min_distance_points_to_line_2d(
     a = np.reshape(a, [2, 1])
     r = np.abs(p @ a + b) / np.sqrt(np.sum(a**2))
     return r[:, 0]  # type: ignore
+
+
+def get_running_avg_variance(
+    previous_avg: Union[float, np.ndarray],
+    previous_variance: Union[float, np.ndarray],
+    new_value: Union[float, np.ndarray],
+    count: int,
+):
+    """The method uses Welford's algorithm to calculate the running average and variance of
+    a set of numbers.
+
+    :param previous_avg: average value at previous step
+    :param previous_variance: variance at previous step
+    :param new_value: new value in the series of numbers
+    :param count: number of points seen so far
+    :return: new_average, new_variance, calculated with the new number
+    """
+    new_average = (new_value + count * previous_avg) / (count + 1)
+    new_variance = previous_variance + (
+        (new_value - previous_avg) * (new_value - new_average) - previous_variance
+    ) / (count + 1)
+    return new_average, new_variance

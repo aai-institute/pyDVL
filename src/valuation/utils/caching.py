@@ -17,9 +17,8 @@ from pymemcache.client import Client, RetryingClient
 from pymemcache.serde import PickleSerde
 
 from valuation.utils.logging import logger
+from valuation.utils.numeric import get_running_avg_variance
 from valuation.utils.types import unpackable
-
-__all__ = ["ClientConfig", "MemcachedConfig", "memcached"]
 
 PICKLE_VERSION = 5  # python >= 3.8
 
@@ -77,27 +76,8 @@ def serialize(x):
     return pickled_output.getvalue()
 
 
-def get_running_avg_variance(
-    previous_avg: float, previous_variance: float, new_value: float, count: int
-) -> Tuple[float, float]:
-    """The method uses Welford's algorithm to calculate the running average and variance of
-    a set of numbers.
-
-    :param previous_avg: average value at previous step
-    :param previous_variance: variance at previous step
-    :param new_value: new value in the series of numbers
-    :param count: number of points seen so far
-    :return: new_average, new_variance, calculated with the new number
-    """
-    new_average = (new_value + count * previous_avg) / (count + 1)
-    new_variance = previous_variance + (
-        (new_value - previous_avg) * (new_value - new_average) - previous_variance
-    ) / (count + 1)
-    return new_average, new_variance
-
-
 def memcached(
-    client_config: ClientConfig = None,
+    client_config: Optional[ClientConfig] = None,
     cache_threshold: float = 0.3,
     allow_repeated_training: bool = False,
     rtol_threshold: float = 0.1,

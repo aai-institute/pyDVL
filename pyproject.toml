@@ -39,7 +39,9 @@ load-plugins = ["pylint_json2html"]
 output-format = "jsonextended"
 
 [tool.mypy]
+python_version = "3.8"
 mypy_path = './src/valuation'
 ignore_missing_imports = true
 warn_return_any = true
 warn_unused_configs = true
+

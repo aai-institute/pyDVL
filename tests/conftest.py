@@ -16,6 +16,7 @@ from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 from valuation.utils import ClientConfig, Dataset, Utility
 from valuation.utils.logging import start_logging_server
 from valuation.utils.numeric import random_matrix_with_condition_number, spearman
+from valuation.utils.parallel import available_cpus
 
 EXCEPTIONS_TYPE = Optional[Sequence[Type[BaseException]]]
 
@@ -160,10 +161,9 @@ def boston_dataset(n_points, n_features):
 
 
 @pytest.fixture(scope="function")
-def linear_dataset(a, b, num_points, seed=42):
+def linear_dataset(a, b, num_points):
     from sklearn.utils import Bunch
 
-    np.random.seed(seed)
     step = 2 / num_points
     x = np.arange(-1, 1, step)
     y = np.random.normal(loc=a * x + b, scale=0.1)
@@ -203,6 +203,16 @@ def batch_size(request) -> int:
 @pytest.fixture
 def condition_number(request) -> float:
     return request.param
+
+
+@pytest.fixture(autouse=True)
+def seed_numpy(seed=42):
+    np.random.seed(seed)
+
+
+@pytest.fixture
+def num_workers():
+    return min(8, available_cpus())
 
 
 @pytest.fixture(scope="function")

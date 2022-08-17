@@ -19,7 +19,6 @@ __all__ = [
     "unpackable",
     "Utility",
     "serialize",
-    "bootstrap_test_score",
     "powerset",
     "maybe_progress",
     "linear_regression_analytical_derivative_d_theta",
@@ -30,4 +29,5 @@ __all__ = [
     "mcmc_is_linear_function",
     "mcmc_is_linear_function_positive_definite",
     "MatrixVectorProduct",
+    "get_running_avg_variance",
 ]

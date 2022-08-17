@@ -2,18 +2,7 @@ import numpy as np
 import pytest
 
 from valuation.utils import available_cpus
-from valuation.utils.numeric import (
-    powerset,
-    random_powerset,
-    spearman,
-    vanishing_derivatives,
-)
-
-
-def test_vanishing_derivatives():
-    # 1/x for x>1e3
-    vv = 1 / np.arange(1000, 1100, step=1).reshape(10, -1)
-    assert vanishing_derivatives(vv, 7, 1e-2) == 10
+from valuation.utils.numeric import powerset, random_powerset, spearman
 
 
 def test_powerset():
@@ -33,7 +22,7 @@ def test_powerset():
 
 
 @pytest.mark.parametrize("n, max_subsets", [(0, 10), (1, 1e3)])
-def test_random_powerset(n, max_subsets, memcache_client_config, count_amplifier=3):
+def test_random_powerset(n, max_subsets, count_amplifier=3):
     """
     Tests that random_powerset samples the same items as the powerset method and
     with constant frequency.
@@ -45,13 +34,9 @@ def test_random_powerset(n, max_subsets, memcache_client_config, count_amplifier
     where count_amplifier must be bigger than 1.
     """
     s = np.arange(1, n + 1)
-    num_cpus = available_cpus()
     result = random_powerset(
         s,
         max_subsets=max_subsets,
-        num_jobs=num_cpus,
-        enable_cache=True,
-        client_config=memcache_client_config,
     )
 
     result_exact = set(powerset(s))

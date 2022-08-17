@@ -27,16 +27,17 @@ log = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "num_samples, fun, rtol, max_iterations",
     [
-        (12, permutation_montecarlo_shapley, 0.1, 1),
+        (12, permutation_montecarlo_shapley, 0.1, 10),
         (8, combinatorial_montecarlo_shapley, 0.15, 3e3),
     ],
 )
-def test_analytic_montecarlo_shapley(analytic_shapley, fun, rtol, max_iterations):
+def test_analytic_montecarlo_shapley(
+    analytic_shapley, fun, rtol, max_iterations, num_workers
+):
     u, exact_values = analytic_shapley
-    num_jobs = min(8, available_cpus())
 
     values, _ = fun(
-        u, max_iterations=int(max_iterations), progress=False, num_jobs=num_jobs
+        u, max_iterations=int(max_iterations), progress=False, num_workers=num_workers
     )
 
     check_values(values, exact_values, rtol=rtol)
@@ -71,7 +72,7 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
         fun,
         max_iterations=max_iterations // jobs_per_run,
         progress=False,
-        num_jobs=jobs_per_run,
+        num_workers=jobs_per_run,
     )
     job = MapReduceJob.from_fun(_fun, lambda r: r[0][0])
     results = map_reduce(job, u, num_jobs=num_runs, num_runs=num_runs)
@@ -87,15 +88,15 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
 @pytest.mark.parametrize(
     "a, b, num_points, fun, score_type, rtol, max_iterations",
     [
-        (2, 0, 20, permutation_montecarlo_shapley, "explained_variance", 0.2, 500),
+        (2, 0, 20, permutation_montecarlo_shapley, "explained_variance", 0.2, 5000),
         (
             2,
             2,
             12,
-            permutation_montecarlo_shapley,
+            truncated_montecarlo_shapley,
             "r2",
             0.2,
-            500,
+            5000,
         ),
         (
             2,
@@ -104,7 +105,7 @@ def test_hoeffding_bound_montecarlo(analytic_shapley, fun, delta, eps, tolerate)
             combinatorial_montecarlo_shapley,
             "explained_variance",
             0.5,
-            500,
+            5000,
         ),
     ],
 )
@@ -115,9 +116,9 @@ def test_linear_montecarlo_shapley(
     rtol,
     max_iterations,
     memcache_client_config,
+    num_workers,
     total_atol=1,
 ):
-    num_jobs = min(8, available_cpus())
     linear_utility = Utility(
         LinearRegression(),
         data=linear_dataset,
@@ -125,7 +126,10 @@ def test_linear_montecarlo_shapley(
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     values, _ = fun(
-        linear_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
+        linear_utility,
+        max_iterations=max_iterations,
+        progress=False,
+        num_workers=num_workers,
     )
     exact_values = combinatorial_exact_shapley(linear_utility, progress=False)
     log.info(f"These are the exact values: {exact_values}")
@@ -137,17 +141,18 @@ def test_linear_montecarlo_shapley(
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points, fun, score_type, max_iterations",
+    "a, b, num_points, fun, score_type, max_iterations, total_atol",
     [
-        (2, 3, 20, permutation_montecarlo_shapley, "r2", 500),
-        (2, 3, 20, permutation_montecarlo_shapley, "explained_variance", 500),
+        (2, 3, 20, permutation_montecarlo_shapley, "r2", 500, 1),
+        (2, 3, 20, truncated_montecarlo_shapley, "explained_variance", 500, 200),
         (
             2,
             3,
             20,
-            permutation_montecarlo_shapley,
+            truncated_montecarlo_shapley,
             "neg_median_absolute_error",
             500,
+            3,
         ),
     ],
 )
@@ -157,10 +162,10 @@ def test_linear_montecarlo_with_outlier(
     score_type,
     max_iterations,
     memcache_client_config,
-    total_atol=1,
+    total_atol,
+    num_workers,
 ):
     outlier_idx = np.random.randint(len(linear_dataset.y_train))
-    num_jobs = min(8, available_cpus())
     linear_dataset.y_train[outlier_idx] -= 100
     linear_utility = Utility(
         LinearRegression(),
@@ -169,10 +174,13 @@ def test_linear_montecarlo_with_outlier(
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     shapley_values, sval_std = fun(
-        linear_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
+        linear_utility,
+        max_iterations=max_iterations,
+        progress=False,
+        num_workers=num_workers,
     )
-    log.info(f"These are the shapley values: {shapley_values}")
-    log.info(f"These are the shapley values: {sval_std}")
+    log.info(f"{shapley_values=}")
+    log.info(f"{outlier_idx=}")
     check_total_value(linear_utility, shapley_values, atol=total_atol)
 
     assert int(list(shapley_values.keys())[0]) == outlier_idx
@@ -189,9 +197,10 @@ def test_linear_montecarlo_with_outlier(
             permutation_montecarlo_shapley,
             "r2",
             0.2,
-            1000,
+            10000,
         ),
-        (2, 0, 200, 5, permutation_montecarlo_shapley, "explained_variance", 0.2, 1000),
+        (2, 0, 200, 5, truncated_montecarlo_shapley, "explained_variance", 0.2, 1000),
+        (2, 0, 200, 5, truncated_montecarlo_shapley, "r2", 0.2, 10000),
     ],
 )
 def test_grouped_linear_montecarlo_shapley(
@@ -202,8 +211,8 @@ def test_grouped_linear_montecarlo_shapley(
     rtol,
     max_iterations,
     memcache_client_config,
+    num_workers,
 ):
-    num_jobs = min(8, available_cpus())
     data_groups = np.random.randint(0, num_groups, len(linear_dataset))
     grouped_linear_dataset = GroupedDataset.from_dataset(linear_dataset, data_groups)
     grouped_linear_utility = Utility(
@@ -217,7 +226,7 @@ def test_grouped_linear_montecarlo_shapley(
         grouped_linear_utility,
         max_iterations=max_iterations,
         progress=False,
-        num_jobs=num_jobs,
+        num_workers=num_workers,
     )
     exact_values = combinatorial_exact_shapley(grouped_linear_utility, progress=False)
     log.info(f"These are the exact values: {exact_values}")
@@ -235,13 +244,17 @@ def test_grouped_linear_montecarlo_shapley(
     ],
 )
 def test_random_forest(
-    boston_dataset, regressor, score_type, max_iterations, memcache_client_config
+    boston_dataset,
+    regressor,
+    score_type,
+    max_iterations,
+    memcache_client_config,
+    num_workers,
 ):
     """This test checks that random forest can be trained in our library.
     Originally, it would also check that the returned values match between
     permutation and combinatorial montecarlo, but this was taking too long in the
     pipeline and was removed."""
-    num_jobs = min(8, available_cpus())
     rf_utility = Utility(
         regressor,
         data=boston_dataset,
@@ -255,47 +268,9 @@ def test_random_forest(
         ),
     )
 
-    _, _ = permutation_montecarlo_shapley(
-        rf_utility, max_iterations=max_iterations, progress=False, num_jobs=num_jobs
-    )
-
-
-# noinspection PyTestParametrized
-@pytest.mark.skip("Truncation not yet fully implemented")
-@pytest.mark.parametrize("num_samples", [200])
-def test_truncated_montecarlo_shapley(analytic_shapley, tolerate):
-    u, exact_values = analytic_shapley
-    num_cpus = min(available_cpus(), len(u.data))
-    num_runs = 10
-    delta = 0.01  # Sample bound holds with probability 1-𝛿
-    eps = 0.05
-
-    min_permutations = lower_bound_hoeffding(delta=delta, eps=eps, score_range=1)
-
-    print(
-        f"test_truncated_montecarlo_shapley running for {num_runs} runs "
-        f" of max. {min_permutations} iterations each"
-    )
-
-    fun = partial(
-        truncated_montecarlo_shapley,
-        u=u,
-        bootstrap_iterations=10,
-        min_scores=5,
-        score_tolerance=0.1,
-        min_values=10,
-        value_tolerance=eps,
-        max_iterations=min_permutations,
-        num_workers=num_cpus,
+    _, _ = truncated_montecarlo_shapley(
+        rf_utility,
+        max_iterations=max_iterations,
         progress=False,
+        num_workers=num_workers,
     )
-    results = []
-    for i in range(num_runs):
-        results.append(fun(run_id=i))
-
-    max_failures = max(1, int(delta * len(results)))
-    for values, _ in results:
-        with tolerate(max_failures=max_failures):
-            # Trivial bound on total error using triangle inequality
-            check_total_value(u, values, atol=len(u.data) * eps)
-            check_rank_correlation(values, exact_values, threshold=0.8)

@@ -10,52 +10,123 @@ TODO:
 """
 import logging
 import math
+import warnings
 from collections import OrderedDict
+from functools import partial
 from time import time
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+import ray
 from joblib import Parallel, delayed
 
-from valuation.reporting.scores import sort_values, sort_values_array
-from valuation.utils import Utility, bootstrap_test_score, vanishing_derivatives
-from valuation.utils.numeric import PowerSetDistribution, random_powerset
-from valuation.utils.parallel import (
-    Coordinator,
-    InterruptibleWorker,
-    MapReduceJob,
-    make_nested_backend,
-    map_reduce,
+from valuation.reporting.scores import sort_values
+from valuation.utils import Utility
+from valuation.utils.numeric import (
+    PowerSetDistribution,
+    get_running_avg_variance,
+    random_powerset,
 )
+from valuation.utils.parallel import available_cpus
 from valuation.utils.progress import maybe_progress
-
-if TYPE_CHECKING:
-    try:
-        from numpy.typing import NDArray
-    except ImportError:
-        from numpy import ndarray as NDArray
 
 log = logging.getLogger(__name__)
 
 __all__ = [
     "truncated_montecarlo_shapley",
-    "serial_truncated_montecarlo_shapley",
     "permutation_montecarlo_shapley",
     "combinatorial_montecarlo_shapley",
 ]
 
 
-class ShapleyWorker(InterruptibleWorker):
+@ray.remote
+class ShapleyCoordinator:
+    def __init__(
+        self,
+        score_tolerance: Optional[float] = None,
+        max_iterations: Optional[int] = None,
+        progress: Optional[bool] = True,
+    ):
+        """
+        :param score_tolerance: For every permutation, computation stops
+            after the mean increase in performance is within score_tolerance of
+            global_score
+        :param progress: set to True to display progress bars
+        """
+        if score_tolerance is None and max_iterations is None:
+            raise ValueError(
+                "At least one between score_tolerance and max_iterations must be passed,"
+                "or the process cannot be stopped."
+            )
+        self.score_tolerance = score_tolerance
+        self.progress = progress
+        self.max_iterations = max_iterations
+        self.workers_status: Dict[int, Dict[str, float]] = {}
+        self._is_done = False
+        self.total_iterations = 0
+
+    def add_status(self, worker_id, shapley_stats):
+        self.workers_status[worker_id] = shapley_stats
+
+    # this should be a @property, but with it ray.get messes up
+    def is_done(self):
+        return self._is_done
+
+    def get_results(self):
+        dvl_values = []
+        dvl_std = []
+        self.total_iterations = 0
+        if len(self.workers_status) == 0:
+            return np.array([]), np.array([])
+        for _, worker_data in self.workers_status.items():
+            dvl_values.append(worker_data["dvl_values"])
+            dvl_std.append(worker_data["dvl_std"])
+            self.total_iterations += worker_data["num_iter"]
+        dvl_values = np.asarray(dvl_values)
+        dvl_std = np.asarray(dvl_std)
+
+        if np.any(dvl_std == 0):
+            log.warning(
+                "Found std=0 for some workers. Increase update time of workers or coordinator."
+            )
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            num_workers = len(dvl_values)
+            dvl_value = np.average(dvl_values, axis=0, weights=1 / dvl_std)
+            dvl_std = np.average(dvl_std, axis=0, weights=1 / dvl_std) / np.sqrt(
+                num_workers
+            )
+        return dvl_value, dvl_std
+
+    def check_status(self):
+        if len(self.workers_status) == 0:
+            log.info("No worker has updated its status yet.")
+        else:
+            dvl_value, dvl_std = self.get_results()
+            std_to_val_ratio = np.median(dvl_std) / np.median(dvl_value)
+            if (
+                self.score_tolerance is not None
+                and std_to_val_ratio < self.score_tolerance
+            ):
+                self._is_done = True
+            if (
+                self.max_iterations is not None
+                and self.total_iterations > self.max_iterations
+            ):
+                self._is_done = True
+
+
+@ray.remote
+class ShapleyWorker:
     """A worker. It should work."""
 
     def __init__(
         self,
         u: Utility,
-        global_score: float,
-        score_tolerance: float,
-        min_scores: int,
+        coordinator: ShapleyCoordinator,
+        worker_id: int,
         progress: bool,
-        **kwargs,
+        update_frequency: int = 30,
     ):
         """
         :param u: Utility object with model, data, and scoring function
@@ -68,62 +139,61 @@ class ShapleyWorker(InterruptibleWorker):
         :param progress: set to True to display progress bars
 
         """
-        super().__init__(**kwargs)
 
         self.u = u
-        self.global_score = global_score
-        self.min_scores = min_scores
-        self.score_tolerance = score_tolerance
         self.num_samples = len(self.u.data)
-        self.progress = progress
+        self.worker_id = worker_id
         self.pbar = maybe_progress(
             self.num_samples,
-            self.progress,
-            position=self.id,
-            desc=f"Worker {self.id:02d}",
+            progress,
+            position=worker_id,
+            desc=f"Worker {worker_id}",
         )
+        self.coordinator = coordinator
+        self.update_frequency = update_frequency
+        self.avg_dvl: Optional[np.ndarray] = None
+        self.var_dvl: Optional[np.ndarray] = None
+        self.permutation_count = 0
 
-    def _run(self, permutation: np.ndarray) -> Tuple[np.ndarray, Optional[int]]:
+    def run(self):
         """ """
-        n = len(permutation)
-        scores = np.zeros(n)
-
-        self.pbar.reset()
-        early_stop = None
-        prev_score = 0.0
-        last_scores = -np.inf * np.ones(self.min_scores)
-        for i, idx in enumerate(permutation):
-            if self.aborted():
-                break
-            # Stop if last min_scores have an average mean below threshold:
-            mean_score = np.nanmean(last_scores)
-            if np.isclose(mean_score, self.global_score, atol=self.score_tolerance):
-                early_stop = i
-                break
-            score = self.u(permutation[: i + 1])
-            last_scores[i % self.min_scores] = score  # order doesn't matter
-            scores[idx] = score - prev_score
-            prev_score = score
-            self.pbar.set_postfix_str(
-                f"last {self.min_scores} scores: " f"{mean_score:.2e}"
+        is_done = ray.get(self.coordinator.is_done.remote())
+        while not is_done:
+            start_time = time()
+            elapsed_time = 0
+            while elapsed_time < self.update_frequency:
+                values = _permutation_montecarlo_shapley(self.u, max_permutations=1)[0]
+                if self.avg_dvl is None:
+                    self.avg_dvl = values
+                    self.var_dvl = np.array([0] * len(self.avg_dvl))
+                    self.permutation_count = 1
+                else:
+                    self.avg_dvl, self.var_dvl = get_running_avg_variance(
+                        self.avg_dvl, self.var_dvl, values, self.permutation_count
+                    )
+                    self.permutation_count += 1
+                elapsed_time = time() - start_time
+            self.coordinator.add_status.remote(
+                self.worker_id,
+                {
+                    "dvl_values": self.avg_dvl,
+                    "dvl_std": np.sqrt(self.var_dvl)
+                    / self.permutation_count ** (1 / 2),
+                    "num_iter": self.permutation_count,
+                },
             )
-            self.pbar.update()
-        # self.pbar.close()
-        return scores, early_stop
+            is_done = ray.get(self.coordinator.is_done.remote())
 
 
 def truncated_montecarlo_shapley(
     u: Utility,
-    bootstrap_iterations: int,
-    min_scores: int,
-    score_tolerance: float,
-    min_values: int,
-    value_tolerance: float,
-    max_iterations: int,
-    num_workers: int,
-    run_id: int = 0,
+    score_tolerance: Optional[float] = None,
+    max_iterations: Optional[int] = None,
+    num_workers: Optional[int] = None,
     progress: bool = False,
-) -> Tuple[OrderedDict, List[int]]:
+    coordinator_update_frequency: int = 10,
+    worker_update_frequency: int = 5,
+) -> Tuple[OrderedDict, Dict]:
     """MonteCarlo approximation to the Shapley value of data points.
 
     Instead of naively implementing the expectation, we sequentially add points
@@ -134,186 +204,88 @@ def truncated_montecarlo_shapley(
     the moving average for all values falls below another threshold.
 
     :param u: Utility object with model, data, and scoring function
-    :param bootstrap_iterations: Repeat the computation of `global_score`
-        this many times to estimate its variance.
-    :param min_scores: Use so many of the last scores in order to compute
-        the moving average.
-    :param score_tolerance: For every permutation, computation stops
-        after the mean increase in performance is within score_tolerance*stddev
-        of the bootstrapped score over the **test** set (i.e. we bootstrap to
-        compute variance of scores, then use that to stop)
-    :param min_values: complete at least these many value computations for
-        every index and use so many of the last values for each sample index
-        in order to compute the moving averages of values.
-    :param value_tolerance: Stop sampling permutations after the first
-        derivative of the means of the last min_steps values are within
-        eps close to 0
-    :param max_iterations: never run more than this many iterations (in
-        total, across all workers: if num_workers = 100 and max_iterations =
-        100, then each worker will run at most one job)
-    :param num_workers: number of workers processing permutations. Set e.g.
-        to available_cpus()/t if each worker runs on t threads.
-    :param run_id: for display purposes (location of progress bar)
+    :param score_tolerance: During calculation of shapley values, the
+        coordinator will check if the median standard deviation over average
+        score for each point's has dropped below score_tolerance.
+        If so, the computation will be terminated.
+    :param max_iterations: a sum of the total number of permutation is calculated
+        If the current number of permutations has exceeded max_iterations, computation
+        will stop.
+    :param num_workers: number of workers processing permutations. Typically set
+        to available_cpus().
     :param progress: set to True to use tqdm progress bars.
-    :return: Dict of approximated Shapley values for the indices
+    :return: Tuple, with the first element being a
+        Dict of approximated Shapley values for the indices, the second being the
+        montecarlo error related to each dvl value.
     """
-    n = len(u.data)
-    values = np.zeros(n).reshape((-1, 1))
-    converged_history = []
+    if num_workers is None:
+        num_workers = available_cpus()
 
-    mean, std = bootstrap_test_score(u, bootstrap_iterations)
-    global_score = mean
-    score_tolerance *= std
-
-    def process_result(result: Tuple):
-        nonlocal values
-        scores, _ = result
-        values = np.concatenate([values, scores.reshape((-1, 1))], axis=1)
-
-    worker_params = {
-        "u": u,
-        "global_score": global_score,
-        "score_tolerance": score_tolerance,
-        "min_scores": min_scores,
-        "progress": progress,
-    }
-    boss = Coordinator(processor=process_result)
-    boss.instantiate(num_workers, ShapleyWorker, **worker_params)
-
-    # Fill the queue before starting the workers or they will immediately quit
-    for _ in range(2 * num_workers):
-        boss.put(np.random.permutation(u.data.indices))
-
-    boss.start()
-
-    pbar = maybe_progress(n, progress, position=0, desc=f"Run {run_id}. Converged")
-    converged = iteration = 0
-    while converged < n and iteration <= max_iterations:
-        boss.get_and_process()
-        boss.put(np.random.permutation(u.data.indices))
-        iteration += 1
-
-        converged = vanishing_derivatives(
-            values, min_values=min_values, atol=value_tolerance
+    ray.init(num_cpus=num_workers)
+    u_id = ray.put(u)
+    try:
+        coordinator = ShapleyCoordinator.remote(  # type: ignore
+            score_tolerance, max_iterations, progress
         )
-        converged_history.append(converged)
-        # converged can decrease. reset() clears times, but if just call
-        # update(), the bar collapses. This is some hackery to fix that:
-        pbar.n = converged
-        pbar.last_print_n, pbar.last_print_t = converged, time()
-        pbar.refresh()
+        workers = [
+            ShapleyWorker.remote(  # type: ignore
+                u=u_id,
+                coordinator=coordinator,
+                worker_id=worker_id,
+                progress=progress,
+                update_frequency=worker_update_frequency,
+            )
+            for worker_id in range(num_workers)
+        ]
+        for worker_id in range(num_workers):
+            workers[worker_id].run.remote()
+        last_update_time = time()
+        is_done = False
+        while not is_done:
+            if time() - last_update_time > coordinator_update_frequency:
+                coordinator.check_status.remote()
+                is_done = ray.get(coordinator.is_done.remote())
+                last_update_time = time()
+        dvl_values, dvl_std = ray.get(coordinator.get_results.remote())
+        ray.shutdown()
+        sorted_shapley_values = sort_values(
+            {u.data.data_names[i]: v for i, v in enumerate(dvl_values)}
+        )
+        montecarlo_error = {u.data.data_names[i]: v for i, v in enumerate(dvl_std)}
+        return sorted_shapley_values, montecarlo_error
 
-    boss.end(pbar)
-    pbar.close()
-    return sort_values_array(values), converged_history
+    except KeyboardInterrupt as e:
+        ray.shutdown()
+        raise e
 
 
-# @checkpoint(["converged_history", "values"])
-def serial_truncated_montecarlo_shapley(
-    u: Utility,
-    bootstrap_iterations: int,
-    score_tolerance: float,
-    min_steps: int,
-    value_tolerance: float,
-    max_iterations: int,
-    progress: bool = False,
-) -> Tuple[OrderedDict, List[int]]:
-    """Truncated MonteCarlo method to compute Shapley values of data points
-    using only one CPU.
-
-    Instead of naively implementing the expectation, we sequentially add points
-    to a dataset from a permutation. We compute scores and stop when model
-    performance doesn't increase beyond a threshold.
-
-    We keep sampling permutations and updating all values until the change in
-    the moving average for all values falls below another threshold.
-
-    :param u: Utility object with model, data, and scoring function
-    :param bootstrap_iterations: Repeat global_score computation this many
-        times to estimate variance.
-    :param score_tolerance: For every permutation, computation stops
-        after the mean increase in performance is within score_tolerance*stddev
-        of the bootstrapped score over the **test** set (i.e. we bootstrap to
-        compute variance of scores, then use that to stop)
-    :param min_steps: use so many of the last values for each sample index
-        in order to compute the moving averages of values.
-    :param value_tolerance: Stop sampling permutations after the first
-        derivative of the means of the last min_steps values are within
-        eps close to 0
-    :param max_iterations: never run more than these many iterations
-    :param progress: whether to display progress bars
-    :return: Dict of approximated Shapley values for the indices
-    """
+def _permutation_montecarlo_shapley(
+    u: Utility, max_permutations: int, progress: bool = False, job_id: int = 1
+):
     n = len(u.data)
-    all_marginals = np.zeros(n).reshape((-1, 1))
-
-    converged_history = []
-
-    m, s = bootstrap_test_score(u, bootstrap_iterations)
-    global_score, eps = m, score_tolerance * s
-
-    iteration = 1
-    pbar = maybe_progress(
-        range(max_iterations), progress, position=0, desc="Iterations"
-    )
-    pbar2 = maybe_progress(range(n), progress, position=1, desc="Converged")
-    while iteration < max_iterations:
-        permutation = np.random.permutation(u.data.indices)
-        marginals = np.zeros(n)
+    values = np.zeros(shape=(max_permutations, n))
+    pbar = maybe_progress(max_permutations, progress, position=job_id)
+    for iter_idx, _ in enumerate(pbar):
         prev_score = 0.0
-        last_scores = -np.inf * np.ones(min_steps)
-        pbar2.reset(total=n)
-        for i, j in enumerate(permutation):
-            if np.isclose(np.nanmean(last_scores), global_score, atol=eps):
-                continue
-            # Careful: for some models there might be nans, e.g. for i=0 or i=1!
+        permutation = np.random.permutation(u.data.indices)
+        marginals = np.zeros(shape=(n))
+        for i, idx in enumerate(permutation):
             score = u(permutation[: i + 1])
-            last_scores[i % min_steps] = score  # order doesn't matter
-            marginals[j] = score - prev_score
+            marginals[idx] = score - prev_score
             prev_score = score
-
-        all_marginals = np.concatenate(
-            [all_marginals, marginals.reshape((-1, 1))], axis=1
-        )
-
-        converged = vanishing_derivatives(
-            all_marginals, min_values=min_steps, atol=value_tolerance
-        )
-        converged_history.append(converged)
-        pbar2.update(converged)
-        if converged >= n:
-            break
-        iteration += 1
-        pbar.update()
-
-    pbar.close()
-    values = np.nanmean(all_marginals, axis=1)
-    values = {i: v for i, v in enumerate(values)}
-    return sort_values(values), converged_history
+        values[iter_idx] = marginals
+    return values
 
 
 def permutation_montecarlo_shapley(
-    u: Utility, max_iterations: int, num_jobs: int = 1, progress: bool = False
+    u: Utility, max_iterations: int, num_workers: int = 1, progress: bool = False
 ) -> Tuple[OrderedDict, Dict]:
-    def fun(job_id: int):
-        n = len(u.data)
-        values = np.zeros(shape=(max_iterations, n))
-        pbar = maybe_progress(max_iterations, progress, position=job_id)
-        for iter_idx, _ in enumerate(pbar):
-            prev_score = 0.0
-            permutation = np.random.permutation(u.data.indices)
-            marginals = np.zeros(shape=(n))
-            for i, idx in enumerate(permutation):
-                score = u(permutation[: i + 1])
-                marginals[idx] = score - prev_score
-                prev_score = score
-            values[iter_idx] = marginals
-        return values
+    iterations_per_job = max_iterations // num_workers
 
+    fun = partial(_permutation_montecarlo_shapley, u, iterations_per_job, progress)
     # TODO move to map_reduce as soon as it is fixed
-    backend = make_nested_backend("loky")()
-    results = Parallel(n_jobs=num_jobs, backend=backend)(
-        delayed(fun)(job_id=j + 1) for j in range(num_jobs)
+    results = Parallel(n_jobs=num_workers)(
+        delayed(fun)(job_id=j + 1) for j in range(num_workers)
     )
     full_results = np.concatenate(results, axis=0)
     # Careful: for some models there might be nans, e.g. for i=0 or i=1!
@@ -331,7 +303,7 @@ def permutation_montecarlo_shapley(
 
 
 def combinatorial_montecarlo_shapley(
-    u: Utility, max_iterations: int, num_jobs: int = 1, progress: bool = False
+    u: Utility, max_iterations: int, num_workers: int = 1, progress: bool = False
 ) -> Tuple[OrderedDict, Dict]:
     """Computes an approximate Shapley value using the combinatorial
     definition and MonteCarlo samples.
@@ -340,20 +312,20 @@ def combinatorial_montecarlo_shapley(
 
     dist = PowerSetDistribution.WEIGHTED
     correction = 2 ** (n - 1) / n
+    iterations_per_job = max_iterations // num_workers
 
-    def fun(indices: np.ndarray, job_id: int) -> "NDArray":
+    def fun(indices: np.ndarray, job_id: int):
         """Given indices and job id, this funcion calculates random
         powersets of the training data and trains the model with them.
-        Used for parallelisation, as argument for MapReduceJob.
         """
-        values = np.zeros(shape=(len(indices), max_iterations))
+        values = np.zeros(shape=(len(indices), iterations_per_job))
         for idx in indices:
             # Randomly sample subsets of full dataset without idx
             subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
             power_set = random_powerset(
                 subset,
                 dist=dist,
-                max_subsets=max_iterations,
+                max_subsets=iterations_per_job,
             )
             # Normalization accounts for a uniform dist. on powerset (i.e. not
             # weighted by set size) and the montecarlo sampling
@@ -362,7 +334,7 @@ def combinatorial_montecarlo_shapley(
                     power_set,
                     progress,
                     desc=f"Index {idx}",
-                    total=max_iterations,
+                    total=iterations_per_job,
                     position=job_id,
                 )
             ):
@@ -370,12 +342,12 @@ def combinatorial_montecarlo_shapley(
                     n - 1, len(s)
                 )
 
-        result: "NDArray" = correction * values
+        return correction * values
 
-        return result
-
-    job = MapReduceJob.from_fun(fun, np.concatenate)
-    full_results = map_reduce(job, u.data.indices, num_jobs=num_jobs)[0]
+    results = Parallel(n_jobs=num_workers)(
+        delayed(fun)(u.data.indices, job_id=j + 1) for j in range(num_workers)
+    )
+    full_results = np.concatenate(results, axis=1)
     if np.any(np.isnan(full_results)):
         log.warning(
             f"Calculation returned {np.sum(np.isnan(full_results))} nan values out of {full_results.size}"

@@ -1,20 +1,13 @@
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional
 
 import numpy as np
 from sklearn.metrics import check_scoring
 
-from valuation.utils import (
-    Dataset,
-    MemcachedConfig,
-    Scorer,
-    SupervisedModel,
-    maybe_progress,
-    memcached,
-)
+from valuation.utils import Dataset, MemcachedConfig, Scorer, SupervisedModel, memcached
 from valuation.utils.caching import serialize
 from valuation.utils.logging import logger
 
-__all__ = ["Utility", "bootstrap_test_score"]
+__all__ = ["Utility"]
 
 
 class Utility:
@@ -78,11 +71,9 @@ class Utility:
         test data. If the object is constructed with cache_size > 0, results are
         memoized to avoid duplicate computation. This is useful in particular
         when computing utilities of permutations of indices.
-
         :param indices: a subset of indices from data.x_train.index. The type
          must be hashable for the caching to work, e.g. wrap the argument with
          `frozenset` (rather than `tuple` since order should not matter)
-
         :return: 0 if no indices are passed, otherwise the value the scorer
         on the test data.
         """
@@ -103,21 +94,3 @@ class Utility:
     @property
     def signature(self):
         return self._signature
-
-
-def bootstrap_test_score(
-    u: Utility, bootstrap_iterations: int, progress: bool = False
-) -> Tuple[float, float]:
-    """That. Here for lack of a better place."""
-    scorer = check_scoring(u.model, u.scoring)
-    _scores = []
-    u.model.fit(u.data.x_train, u.data.y_train)
-    n_test = len(u.data.x_test)
-    for _ in maybe_progress(  # type: ignore
-        range(bootstrap_iterations), progress, desc="Bootstrapping"
-    ):
-        sample = np.random.randint(low=0, high=n_test, size=n_test)
-        score = scorer(u.model, u.data.x_test[sample], u.data.y_test[sample])
-        _scores.append(score)
-
-    return float(np.mean(_scores)), float(np.std(_scores))
