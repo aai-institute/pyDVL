@@ -256,8 +256,19 @@ def load_spotify_dataset(
     target_column: str = "popularity",
     random_state: int = 24,
 ):
-    """Load spotify music dataset and selects song after min_year.
-    If os. is True, it returns a small dataset for testing purposes."""
+    """Downloads (if not already cached) and loads spotify music dataset.
+    More info on the dataset can be found
+    at https://www.kaggle.com/datasets/mrmorj/dataset-of-songs-in-spotify.
+
+    If this method is called within the CI pipeline, it will load a reduced version of the dataset
+    for test purposes.
+    :param val_size: size of the validation set
+    :param test_size: size of the test set
+    :param min_year: minimum year of the returned data
+    :param target_column: column to be returned as y (labels)
+    :param random_state: fixes sklearn random seed
+    :return: Tuple with 3 elements, each being a list sith [input_data, related_labels]
+    """
     file_dir_path = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(
         file_dir_path, "../../../data/top_hits_spotify_dataset.csv"
