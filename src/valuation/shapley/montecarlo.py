@@ -68,7 +68,7 @@ class ShapleyCoordinator:
     def add_status(self, worker_id, shapley_stats):
         self.workers_status[worker_id] = shapley_stats
 
-    # this should have @property, but if I use it ray.get messes up
+    # this should be a @property, but with it ray.get messes up
     def is_done(self):
         return self._is_done
 
@@ -114,11 +114,6 @@ class ShapleyCoordinator:
                 and self.total_iterations > self.max_iterations
             ):
                 self._is_done = True
-
-    # here just for type checking
-    @classmethod
-    def remote(cls, *args, **kwargs):
-        pass
 
 
 @ray.remote
@@ -171,7 +166,7 @@ class ShapleyWorker:
                 if self.avg_dvl is None:
                     self.avg_dvl = values
                     self.var_dvl = np.array([0] * len(self.avg_dvl))
-                    self.worker_count = 1
+                    self.permutation_count = 1
                 else:
                     self.avg_dvl, self.var_dvl = get_running_avg_variance(
                         self.avg_dvl, self.var_dvl, values, self.permutation_count
@@ -188,11 +183,6 @@ class ShapleyWorker:
                 },
             )
             is_done = ray.get(self.coordinator.is_done.remote())
-
-    # here just for type checking
-    @classmethod
-    def remote(cls, *args, **kwargs):
-        pass
 
 
 def truncated_montecarlo_shapley(
@@ -234,11 +224,11 @@ def truncated_montecarlo_shapley(
     ray.init(num_cpus=num_workers)
     u_id = ray.put(u)
     try:
-        coordinator = ShapleyCoordinator.remote(
+        coordinator = ShapleyCoordinator.remote(  # type: ignore
             score_tolerance, max_iterations, progress
         )
         workers = [
-            ShapleyWorker.remote(
+            ShapleyWorker.remote(  # type: ignore
                 u=u_id,
                 coordinator=coordinator,
                 worker_id=worker_id,

@@ -16,6 +16,7 @@ from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 from valuation.utils import ClientConfig, Dataset, Utility
 from valuation.utils.logging import start_logging_server
 from valuation.utils.numeric import random_matrix_with_condition_number, spearman
+from valuation.utils.parallel import available_cpus
 
 EXCEPTIONS_TYPE = Optional[Sequence[Type[BaseException]]]
 
@@ -194,6 +195,11 @@ def seed(request):
 @pytest.fixture(autouse=True)
 def seed_numpy(seed=42):
     np.random.seed(seed)
+
+
+@pytest.fixture
+def num_workers():
+    return min(8, available_cpus())
 
 
 @pytest.fixture(scope="function")

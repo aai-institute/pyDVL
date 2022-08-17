@@ -31,9 +31,10 @@ log = logging.getLogger(__name__)
         (8, combinatorial_montecarlo_shapley, 0.15, 3e3),
     ],
 )
-def test_analytic_montecarlo_shapley(analytic_shapley, fun, rtol, max_iterations):
+def test_analytic_montecarlo_shapley(
+    analytic_shapley, fun, rtol, max_iterations, num_workers
+):
     u, exact_values = analytic_shapley
-    num_workers = min(8, available_cpus())
 
     values, _ = fun(
         u, max_iterations=int(max_iterations), progress=False, num_workers=num_workers
@@ -115,9 +116,9 @@ def test_linear_montecarlo_shapley(
     rtol,
     max_iterations,
     memcache_client_config,
+    num_workers,
     total_atol=1,
 ):
-    num_workers = min(8, available_cpus())
     linear_utility = Utility(
         LinearRegression(),
         data=linear_dataset,
@@ -162,9 +163,9 @@ def test_linear_montecarlo_with_outlier(
     max_iterations,
     memcache_client_config,
     total_atol,
+    num_workers,
 ):
     outlier_idx = np.random.randint(len(linear_dataset.y_train))
-    num_workers = min(8, available_cpus())
     linear_dataset.y_train[outlier_idx] -= 100
     linear_utility = Utility(
         LinearRegression(),
@@ -210,8 +211,8 @@ def test_grouped_linear_montecarlo_shapley(
     rtol,
     max_iterations,
     memcache_client_config,
+    num_workers,
 ):
-    num_workers = min(8, available_cpus())
     data_groups = np.random.randint(0, num_groups, len(linear_dataset))
     grouped_linear_dataset = GroupedDataset.from_dataset(linear_dataset, data_groups)
     grouped_linear_utility = Utility(
@@ -243,13 +244,17 @@ def test_grouped_linear_montecarlo_shapley(
     ],
 )
 def test_random_forest(
-    boston_dataset, regressor, score_type, max_iterations, memcache_client_config
+    boston_dataset,
+    regressor,
+    score_type,
+    max_iterations,
+    memcache_client_config,
+    num_workers,
 ):
     """This test checks that random forest can be trained in our library.
     Originally, it would also check that the returned values match between
     permutation and combinatorial montecarlo, but this was taking too long in the
     pipeline and was removed."""
-    num_workers = min(8, available_cpus())
     rf_utility = Utility(
         regressor,
         data=boston_dataset,
