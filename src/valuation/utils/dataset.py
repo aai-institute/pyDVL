@@ -257,7 +257,9 @@ class GroupedDataset(Dataset):
         return cls.from_dataset(dataset, data_groups)
 
     @classmethod
-    def from_dataset(cls, dataset: Dataset, data_groups: Iterable) -> "GroupedDataset":
+    def from_dataset(
+        cls, dataset: Dataset, data_groups: Sequence[Any]
+    ) -> "GroupedDataset":
         """Given a dataset, it makes it into a grouped dataset by passing a list of data
         groups, one for each element in the training set.
 
