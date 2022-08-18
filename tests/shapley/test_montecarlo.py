@@ -1,7 +1,5 @@
 import logging
-import os
 from functools import partial
-from time import time
 
 import numpy as np
 import pytest
