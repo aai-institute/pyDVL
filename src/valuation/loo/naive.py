@@ -10,7 +10,12 @@ from valuation.utils.utility import Utility
 def naive_loo(
     model: SupervisedModel, data: Dataset, progress: bool = True, **kwargs
 ) -> OrderedDict[int, float]:
-    """Computes the LOO score for each training point in the dataset."""
+    """Computes leave one out score. No caching nor parallelization is implemented.
+
+    :param model: Any supervised model.
+    :param data: a split Dataset
+    :param progress: whether to display a progress bar
+    """
     u = Utility(model, data, **kwargs)
 
     def compute_utility(x: np.ndarray) -> float:

@@ -1,6 +1,5 @@
 """
 Distributed caching of functions, using memcached.
-TODO: wrap this to allow for different backends
 """
 import socket
 import uuid
@@ -84,19 +83,19 @@ def memcached(
     min_repetitions: int = 3,
     ignore_args: Optional[Iterable[str]] = None,
 ):
-    """Decorate a callable with this in order to have transparent caching.
-
-    The function's code, constants and all arguments (except for those in
-    `ignore_args` are used to generate the key for the remote cache.
-
-    **FIXME?**:
-        Due to the need to pickle memcached functions, this returns a class
-        instead of a function. This has the drawback of a messy docstring.
+    """Wrap a callable with this in order to have transparent caching.
+    Given a function and a signature, memcached creates a distributed cache
+    that, for each set of inputs, keeps track of the average returned value,
+    with variance and number of times it was calculated.
+    If the function is deterministic, i.e. same input corresponds to the same
+    exact output, set allow_repeated_training to False.
+    If instead the function is noisy, memcache allows to set the minimum number
+    of repetitions and the relative tolerance on the average output after which
+    the cache will not be updated anymore. In other words, the function computation will
+    be repeated until the average has stabilized.
 
     :param client_config: config for pymemcache.client.Client().
         Will be merged on top of the default configuration.
-
-
     :param cache_threshold: computations taking below this value (in seconds) are not
         cached
     :param allow_repeated_training: If True, models with same data are re-trained and
@@ -129,7 +128,6 @@ def memcached(
         getting a value."""
         try:
             test_config: Dict = dict(**config)
-            # test_config.update(timeout=config.connect_timeout)  # allow longer delays
             client = RetryingClient(
                 Client(**test_config),
                 attempts=3,
@@ -175,11 +173,6 @@ def memcached(
                 key_kwargs = {k: v for k, v in kwargs.items() if k not in ignore_args}  # type: ignore
                 arg_signature: bytes = serialize((args, list(key_kwargs.items())))
 
-                # FIXME: do I really need to hash this?
-                # FIXME: ensure that the hashing algorithm is portable
-                # FIXME: determine right bit size
-                # NB: I need to create the hasher object here because it can't be
-                #  pickled
                 key = blake2b(self._signature + arg_signature).hexdigest().encode("ASCII")  # type: ignore
 
                 result_dict: Dict = self.get_key_value(key)

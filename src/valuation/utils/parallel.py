@@ -1,9 +1,7 @@
+"""FIXME this part of the code has become obsolete after switching to ray parallelization.
+Documentation and methods are not thoroughly tested.
 """
-OUTDATED COMMENT, FIXME: All value functions return a dictionary of
-{index: value} and some status / historical information of the algorithm.
-This module provides utility functions to run these in parallel and multiple
-times, then gather the results for later processing / reporting.
-"""
+
 import inspect
 import multiprocessing as mp
 import os
@@ -180,10 +178,7 @@ def map_reduce(
         job_result = fun(data, job_id=1, run_id=1)
         return [fun.reduce([job_result])]
 
-    # TODO: fix map_reduce, expecially when num_jobs>num_runs.
-    # By-passing this if-else statement for the moment, until map_reduce is fixed
-    # if num_jobs <= num_runs:
-    if True:
+    if num_jobs <= num_runs:
         ret: List = Parallel(n_jobs=num_jobs)(
             delayed(fun)(data, job_id=1, run_id=r + 1) for r in range(num_runs)
         )

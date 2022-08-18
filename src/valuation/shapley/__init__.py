@@ -28,17 +28,27 @@ def get_shapley_values(
     **kwargs,
 ):
     """
-    #TODO write better docstring for this method
+    Given a utility, a max number of iterations and the number of workers, it calculates
+    the Shapley values. Depending on the algorithm used, it also takes additional optional arguments.
 
-    Facade for all shapley methods. By default, it uses permutation_montecarlo_shapley
+    Options for the algorithms are:
+    - 'exact_combinatorial': uses combinatorial implementation of data Shapley
+    - 'exact_permutation': uses permutation based implementation of data Shapley
+    - 'permutation_montecarlo': uses the approximate montecarlo implementation of permutation data Shapley.
+        It parallelizes computation only within the local machine
+    - 'combinatorial_montecarlo':  uses montecarlo implementation of combinatorial data Shapley.
+        It parallelizes computation only within the local machine
+    - 'truncated_montecarlo': default option, uses permutation_montecarlo implementation but stops the
+        computation whenever a certain accuracy is reached. It runs also on a cluster with several machines.
 
-    :param u: Utility object
-    :param iterations_per_job: number of montecarlo iterations for each separate job
-    :param num_jobs: Number of parallel jobs to run. Defaults to 1
+
+    :param u: Utility object with model, data, and scoring function
+    :param max_iterations: total number of iterations, used for montecarlo methods
+    :param num_workers: Number of parallel workers. Defaults to 1
     :param mode: Choose which shapley algorithm to use. Options are
         'truncated_montecarlo', 'exact_combinatorial', 'exact_permutation',
-        ''
-    :return: dataframe with data keys (group names or data indices), shapley_dval
+        'combinatorial_montecarlo', 'permutation_montecarlo'. Defaults to 'truncated_montecarlo'
+    :return: dataframe with columns being data keys (group names or data indices), shapley_dval
         (calculated shapley values) and dval_std, being the montecarlo standard deviation of
         shapley_dval
     """

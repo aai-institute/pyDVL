@@ -77,6 +77,8 @@ class ShapleyCoordinator:
     def is_done(self):
         """
         Used by workers to check whether to terminate the process.
+        It returns a flag which is True when the processes must be terminated,
+        False otherwise.
         """
         return self._is_done
 
