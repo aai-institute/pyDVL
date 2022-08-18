@@ -142,7 +142,6 @@ def test_linear_montecarlo_shapley(
     "a, b, num_points, fun, score_type, max_iterations, total_atol",
     [
         (2, 3, 20, permutation_montecarlo_shapley, "r2", 500, 1),
-        (2, 3, 20, truncated_montecarlo_shapley, "explained_variance", 500, 200),
         (
             2,
             3,
@@ -152,6 +151,7 @@ def test_linear_montecarlo_shapley(
             500,
             3,
         ),
+        (2, 3, 20, truncated_montecarlo_shapley, "r2", 500, 200),
     ],
 )
 def test_linear_montecarlo_with_outlier(
