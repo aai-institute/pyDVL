@@ -3,7 +3,31 @@
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from valuation.utils import MemcachedConfig, Utility, powerset
+from valuation.utils import DataUtilityLearning, MemcachedConfig, Utility, powerset
+
+
+# noinspection PyUnresolvedReferences
+@pytest.mark.parametrize(
+    "a, b, num_points",
+    [
+        (2, 0, 8),
+    ],
+)
+@pytest.mark.parametrize("training_budget", [2, 10])
+def test_data_utility_learning_wrapper(linear_dataset, training_budget):
+    u = Utility(
+        model=LinearRegression(),
+        data=linear_dataset,
+        scoring="r2",
+        enable_cache=False,
+    )
+    wrapped_u = DataUtilityLearning(u, training_budget, LinearRegression())
+    subsets = list(powerset(wrapped_u.utility.data.indices))
+
+    for s in subsets:
+        wrapped_u(s)
+
+    assert len(wrapped_u._utility_samples) == min(len(subsets), training_budget)
 
 
 # noinspection PyUnresolvedReferences
