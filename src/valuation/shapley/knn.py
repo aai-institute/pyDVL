@@ -10,7 +10,7 @@ from valuation.utils import Dataset, maybe_progress
 def exact_knn_shapley(
     data: Dataset, model: KNeighborsClassifier, progress: bool = True
 ) -> OrderedDict:
-    """Computes exact Shapley values for a KNN classifier or regressor.py
+    """Computes exact Shapley values for a KNN classifier or regressor
 
     :param data: split Dataset
     :param model: model to extract parameters from. The object will not be
