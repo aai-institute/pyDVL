@@ -255,7 +255,9 @@ def truncated_montecarlo_shapley(
     """
     if num_workers is None:
         num_workers = available_cpus()
-
+    # TODO Passing the address to the algorithm is a temporary measure.
+    # A better way would be to pass these options through a configuration object
+    # reading from file, environment and CLI. This could be done through omega or hydra
     ray.init(address=address, num_cpus=num_workers)
     u_id = ray.put(u)
     try:
