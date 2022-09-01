@@ -253,6 +253,9 @@ def truncated_montecarlo_shapley(
         Dict of approximated Shapley values for the indices, the second being the
         montecarlo error related to each dvl value.
     """
+    if num_workers is None:
+        num_workers = available_cpus()
+
     ray.init(address=address, num_cpus=num_workers)
     u_id = ray.put(u)
     try:
