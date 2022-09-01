@@ -220,7 +220,7 @@ def truncated_montecarlo_shapley(
     score_tolerance: Optional[float] = None,
     max_iterations: Optional[int] = None,
     num_workers: Optional[int] = None,
-    address: Optional[int] = None,
+    address: Optional[str] = None,
     progress: bool = False,
     coordinator_update_frequency: int = 10,
     worker_update_frequency: int = 5,
@@ -244,8 +244,8 @@ def truncated_montecarlo_shapley(
     :param num_workers: number of workers processing permutations. If None, it will be set
         to available_cpus().
     :param address: if None, shapley calculation will run only on local machine.
-        If auto, it will use a local cluster if already started.
-        If address = "ray://{ip address}", it will run the process on the cluster
+        If "auto", it will use a local cluster if already started.
+        If "ray://{ip address}", it will run the process on the cluster
         found at the IP address passed, e.g. "ray://123.45.67.89:10001" will run the process
         on the cluster at 123.45.67.89:10001.
     :param progress: set to True to use tqdm progress bars.
