@@ -1,7 +1,9 @@
 import logging
 
 import numpy as np
+from sklearn import datasets
 from sklearn.metrics import make_scorer
+from sklearn.neighbors import KNeighborsClassifier
 
 from valuation.shapley import knn_shapley, permutation_montecarlo_shapley
 from valuation.utils import Dataset, Utility
@@ -17,11 +19,9 @@ def knn_loss_function(labels, predictions, n_classes=3):
     return np.mean(pred_proba)
 
 
-def test_knn_montecarlo_match():
-    from sklearn import datasets
+def test_knn_montecarlo_match(seed):
 
-    data = Dataset.from_sklearn(datasets.load_iris(), random_state=42)
-    from sklearn.neighbors import KNeighborsClassifier
+    data = Dataset.from_sklearn(datasets.load_iris(), random_state=seed)
 
     knn = KNeighborsClassifier(n_neighbors=5)
 
