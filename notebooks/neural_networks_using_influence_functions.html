@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clean dataset using influence functions and neural networks &mdash; pyDVL 0.1.0.dev15 documentation</title>
+  <title>Clean dataset using influence functions and neural networks &mdash; pyDVL 0.1.0.dev16 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="valuation" href="../valuation/index.html" />
-    <link rel="prev" title="KNN Shapley" href="knn_shapley.html" /> 
+    <link rel="prev" title="Influence functions for data mislabeling" href="data_mislabel_correction_using_influence_functions.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -51,7 +51,6 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Notebooks</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="data_mislabel_correction_using_influence_functions.html">Influence functions for data mislabeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_mislabel_correction_using_influence_functions.html#Appendix">Appendix</a></li>
-<li class="toctree-l2"><a class="reference internal" href="knn_shapley.html">KNN Shapley</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Clean dataset using influence functions and neural networks</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#Visualizing-the-multi-dimensional-data-using-a-TSNE-embedding-and-class-colors">Visualizing the multi-dimensional data using a TSNE embedding and class colors</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Fit-a-neural-network-to-the-data">Fit a neural network to the data</a></li>
@@ -514,7 +513,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay at 0x7f9dd0363040&gt;
+&lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay at 0x7fd547b46850&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -898,7 +897,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&#39;The optimal number of samples is 106&#39;
+&#39;The optimal number of samples is 111&#39;
 </pre></div></div>
 </div>
 <p>Over multiple runs with different the optimal number of samples canges, but it can be said to be safe to remove around 30% of the samples of the wine dataset to easily achieve the same data accuracy.</p>
@@ -909,7 +908,7 @@ div.rendered_html tbody tr:hover {
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="knn_shapley.html" class="btn btn-neutral float-left" title="KNN Shapley" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="data_mislabel_correction_using_influence_functions.html" class="btn btn-neutral float-left" title="Influence functions for data mislabeling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="../valuation/index.html" class="btn btn-neutral float-right" title="valuation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
