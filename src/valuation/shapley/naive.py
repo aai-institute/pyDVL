@@ -9,7 +9,16 @@ from valuation.utils import Utility, maybe_progress, powerset
 
 
 def permutation_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
-    """Computes the exact Shapley value using permutations."""
+    """Computes the exact Shapley value using permutations.
+    When the length of the training set is > 10 it returns an error since the
+    computation becomes too expensive.
+    Used mostly for internal testing and simple use cases. Please refer to the
+    montecarlo methods for all other cases.
+
+    :param u: Utility object with model, data, and scoring function
+    :param progress: set to True to use tqdm progress bars.
+    :return: OrderedDict of exact Shapley values
+    """
 
     n = len(u.data)
     # Note that the cache in utility saves most of the refitting because we
@@ -32,7 +41,16 @@ def permutation_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
 
 
 def combinatorial_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
-    """Computes the exact Shapley value using the combinatorial definition."""
+    """Computes the exact Shapley value using the combinatorial definition.
+    When the length of the training set is > 20 it returns an error since the
+    computation becomes too expensive.
+    Used mostly for internal testing and simple use cases. Please refer to the
+    montecarlo methods for all other cases.
+
+    :param u: Utility object with model, data, and scoring function
+    :param progress: set to True to use tqdm progress bars.
+    :return: OrderedDict of exact Shapley values
+    """
 
     n = len(u.data)
     from valuation.utils.logging import logger

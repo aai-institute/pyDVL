@@ -1,20 +1,10 @@
-"""
-Simple implementation of DataShapley [1].
-
-TODO:
- * don't copy data to all workers foolishly
- * use ray / whatever to distribute jobs to multiple machines
- * provide a single interface "montecarlo_shapley" for all methods with the
-   parallelization backend as an argument ("multiprocessing", "ray", "serial")
- * shapley values for groups of samples
-"""
 import logging
 import math
 import warnings
 from collections import OrderedDict
 from functools import partial
 from time import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import ray
@@ -48,10 +38,18 @@ class ShapleyCoordinator:
         progress: Optional[bool] = True,
     ):
         """
-        :param score_tolerance: For every permutation, computation stops
-            after the mean increase in performance is within score_tolerance of
-            global_score
-        :param progress: set to True to display progress bars
+         The coordinator has two main tasks: aggregating the results of the workers
+         and terminating the process once a certain accuracy or total number of
+         iterations is reached.
+
+        :param score_tolerance: During calculation of shapley values, the
+             coordinator will check if the median standard deviation over average
+             score for each point's has dropped below score_tolerance.
+             If so, the computation will be terminated.
+         :param max_iterations: a sum of the total number of permutation is calculated
+             If the current number of permutations has exceeded max_iterations, computation
+             will stop.
+         :param progress: True to plot progress, False otherwise.
         """
         if score_tolerance is None and max_iterations is None:
             raise ValueError(
@@ -65,40 +63,62 @@ class ShapleyCoordinator:
         self._is_done = False
         self.total_iterations = 0
 
-    def add_status(self, worker_id, shapley_stats):
+    def add_status(self, worker_id: int, shapley_stats: Dict):
+        """
+        Used by workers to report their status. It puts the results
+        directly into the worker_status dictionary.
+
+        :param worker_id: id of the worker
+        :param shapley_stats: results of worker calculations
+        """
         self.workers_status[worker_id] = shapley_stats
 
     # this should be a @property, but with it ray.get messes up
     def is_done(self):
+        """
+        Used by workers to check whether to terminate the process.
+        It returns a flag which is True when the processes must be terminated,
+        False otherwise.
+        """
         return self._is_done
 
     def get_results(self):
+        """
+        It aggregates the results of the different workers and returns
+        the average and std of the values. If no worker has reported yet,
+        it returns two empty arrays
+        """
         dvl_values = []
-        dvl_std = []
+        dvl_stds = []
+        dvl_iterations = []
         self.total_iterations = 0
         if len(self.workers_status) == 0:
             return np.array([]), np.array([])
         for _, worker_data in self.workers_status.items():
             dvl_values.append(worker_data["dvl_values"])
-            dvl_std.append(worker_data["dvl_std"])
+            dvl_stds.append(worker_data["dvl_std"])
+            dvl_iterations.append(worker_data["num_iter"])
             self.total_iterations += worker_data["num_iter"]
-        dvl_values = np.asarray(dvl_values)
-        dvl_std = np.asarray(dvl_std)
 
-        if np.any(dvl_std == 0):
-            log.warning(
-                "Found std=0 for some workers. Increase update time of workers or coordinator."
-            )
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            num_workers = len(dvl_values)
-            dvl_value = np.average(dvl_values, axis=0, weights=1 / dvl_std)
-            dvl_std = np.average(dvl_std, axis=0, weights=1 / dvl_std) / np.sqrt(
-                num_workers
-            )
+        num_workers = len(dvl_values)
+        if num_workers > 1:
+            dvl_value = np.average(dvl_values, axis=0, weights=dvl_iterations)
+            dvl_std = np.sqrt(
+                np.average(
+                    (dvl_values - dvl_value) ** 2, axis=0, weights=dvl_iterations
+                )
+            ) / (num_workers - 1) ** (1 / 2)
+        else:
+            dvl_value = dvl_values[0]
+            dvl_std = dvl_stds[0]
         return dvl_value, dvl_std
 
     def check_status(self):
+        """
+        It checks whether the accuracy of the calculation or the total number of iterations have crossed
+        the set thresholds.
+        If so, it sets the is_done label as True.
+        """
         if len(self.workers_status) == 0:
             log.info("No worker has updated its status yet.")
         else:
@@ -129,17 +149,16 @@ class ShapleyWorker:
         update_frequency: int = 30,
     ):
         """
+        The workers calculate the Shapley values using the permutation
+        definition and report the results to the coordinator.
+
         :param u: Utility object with model, data, and scoring function
-        :param global_score: Score of the model on an independent test set
-        :param score_tolerance: For every permutation, computation stops
-         after the mean increase in performance is within score_tolerance of
-         global_score
-        :param min_scores: Use so many of the last samples for a permutation
-         in order to compute the moving average of scores.
-        :param progress: set to True to display progress bars
-
+        :param coordinator: worker results will be pushed to this coordinator
+        :param worker_id: id used for reporting through maybe_progress
+        :param progress: set to True to report progress, else False
+        :param update_frequency: interval in seconds among different updates to
+            and from the coordinator
         """
-
         self.u = u
         self.num_samples = len(self.u.data)
         self.worker_id = worker_id
@@ -156,13 +175,24 @@ class ShapleyWorker:
         self.permutation_count = 0
 
     def run(self):
-        """ """
+        """Runs the worker.
+        It calls _permutation_montecarlo_shapley a certain number of times and calculates
+        Shapley values on different permutations of the indices.
+        After a number of seconds equal to update_frequency has passed, it reports the results
+        to the coordinator. Before starting the next iteration, it checks the is_done flag, and if true
+        terminates.
+        """
         is_done = ray.get(self.coordinator.is_done.remote())
         while not is_done:
             start_time = time()
             elapsed_time = 0
             while elapsed_time < self.update_frequency:
                 values = _permutation_montecarlo_shapley(self.u, max_permutations=1)[0]
+                if np.any(np.isnan(values)):
+                    log.warning(
+                        "Nan values found in model scoring. Ignoring current permutation."
+                    )
+                    continue
                 if self.avg_dvl is None:
                     self.avg_dvl = values
                     self.var_dvl = np.array([0] * len(self.avg_dvl))
@@ -190,6 +220,7 @@ def truncated_montecarlo_shapley(
     score_tolerance: Optional[float] = None,
     max_iterations: Optional[int] = None,
     num_workers: Optional[int] = None,
+    address: Optional[str] = None,
     progress: bool = False,
     coordinator_update_frequency: int = 10,
     worker_update_frequency: int = 5,
@@ -197,11 +228,10 @@ def truncated_montecarlo_shapley(
     """MonteCarlo approximation to the Shapley value of data points.
 
     Instead of naively implementing the expectation, we sequentially add points
-    to a dataset from a permutation. We compute scores and stop when model
-    performance doesn't increase beyond a threshold.
-
-    We keep sampling permutations and updating all values until the change in
-    the moving average for all values falls below another threshold.
+    to a dataset from a permutation. We keep sampling permutations and updating
+    all shapley values until the std/value score in
+    the moving average falls below a given threshold (score_tolerance) or
+    or when the number of iterations exceeds a certain number (max_iterations).
 
     :param u: Utility object with model, data, and scoring function
     :param score_tolerance: During calculation of shapley values, the
@@ -211,17 +241,22 @@ def truncated_montecarlo_shapley(
     :param max_iterations: a sum of the total number of permutation is calculated
         If the current number of permutations has exceeded max_iterations, computation
         will stop.
-    :param num_workers: number of workers processing permutations. Typically set
+    :param num_workers: number of workers processing permutations. If None, it will be set
         to available_cpus().
+    :param address: if None, shapley calculation will run only on local machine.
+        If "auto", it will use a local cluster if already started.
+        If "ray://{ip address}", it will run the process on the cluster
+        found at the IP address passed, e.g. "ray://123.45.67.89:10001" will run the process
+        on the cluster at 123.45.67.89:10001.
     :param progress: set to True to use tqdm progress bars.
-    :return: Tuple, with the first element being a
+    :return: Tuple, with the first element being an ordered
         Dict of approximated Shapley values for the indices, the second being the
         montecarlo error related to each dvl value.
     """
     if num_workers is None:
         num_workers = available_cpus()
 
-    ray.init(num_cpus=num_workers)
+    ray.init(address=address, num_cpus=num_workers)
     u_id = ray.put(u)
     try:
         coordinator = ShapleyCoordinator.remote(  # type: ignore
@@ -262,6 +297,17 @@ def truncated_montecarlo_shapley(
 def _permutation_montecarlo_shapley(
     u: Utility, max_permutations: int, progress: bool = False, job_id: int = 1
 ):
+    """It calculates the difference between the score of a model with and without
+    each training datapoint. This is repeated a number max_permutations of times and
+    with different permutations.
+
+    :param u: Utility object with model, data, and scoring function
+    :param max_iterations: total number of iterations (permutations) to use
+    :param progress: true to plot progress bar
+    :param job_id: id to use for reporting progress
+    :return: a matrix with each row being a different permutation
+        and each column being the score of a different data point
+    """
     n = len(u.data)
     values = np.zeros(shape=(max_permutations, n))
     pbar = maybe_progress(max_permutations, progress, position=job_id)
@@ -280,10 +326,19 @@ def _permutation_montecarlo_shapley(
 def permutation_montecarlo_shapley(
     u: Utility, max_iterations: int, num_workers: int = 1, progress: bool = False
 ) -> Tuple[OrderedDict, Dict]:
+    """Computes an approximate Shapley value using independent permutations of the indices.
+
+    :param u: Utility object with model, data, and scoring function
+    :param max_iterations: total number of iterations (permutations) to use
+    :param num_workers: number of workers to distribute the jobs
+    :param progress: true to plot progress bar
+    :return: Tuple, with the first element being an ordered
+        Dict of approximated Shapley values for the indices, the second being the
+        montecarlo error related to each of them.
+    """
     iterations_per_job = max_iterations // num_workers
 
     fun = partial(_permutation_montecarlo_shapley, u, iterations_per_job, progress)
-    # TODO move to map_reduce as soon as it is fixed
     results = Parallel(n_jobs=num_workers)(
         delayed(fun)(job_id=j + 1) for j in range(num_workers)
     )
@@ -305,8 +360,15 @@ def permutation_montecarlo_shapley(
 def combinatorial_montecarlo_shapley(
     u: Utility, max_iterations: int, num_workers: int = 1, progress: bool = False
 ) -> Tuple[OrderedDict, Dict]:
-    """Computes an approximate Shapley value using the combinatorial
-    definition and MonteCarlo samples.
+    """Computes an approximate Shapley value using the combinatorial definition.
+
+    :param u: utility
+    :param max_iterations: total number of iterations (permutations) to use
+    :param num_workers: number of workers to distribute the jobs
+    :param progress: true to plot progress bar
+    :return: Tuple, with the first element being an ordered
+        Dict of approximated Shapley values for the indices, the second being the
+        montecarlo error related to each of them.
     """
     n = len(u.data)
 
@@ -316,7 +378,8 @@ def combinatorial_montecarlo_shapley(
 
     def fun(indices: np.ndarray, job_id: int):
         """Given indices and job id, this funcion calculates random
-        powersets of the training data and trains the model with them.
+        powerset of the indices and for each it trains and evaluates the model.
+        Then, it returns the shapley values for each of the indices.
         """
         values = np.zeros(shape=(len(indices), iterations_per_job))
         for idx in indices:

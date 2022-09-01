@@ -13,7 +13,7 @@ __all__ = ["Dataset", "GroupedDataset", "load_spotify_dataset"]
 
 
 class Dataset:
-    """Class for better handling datasets in the Dval library"""
+    """Class for better handling datasets"""
 
     def __init__(
         self,
@@ -26,6 +26,21 @@ class Dataset:
         data_names: Iterable = None,
         description: str = None,
     ):
+        """It holds a dataset, split into train and test data, together
+        with several labels on feature names, data point names and description
+
+        :param x_train: train input data
+        :param y_train: labels of train data
+        :param x_test: input of test data
+        :param y_test: labels of test data
+        :param feature_names: name of the features of input data
+        :param target_names: name of target data
+        :param data_names: name given to each data point.
+            For example, if the dataset is a time series, each row represents
+            a time step which can be referenced directly using timestamps instead
+            of the row number.
+        :param description: description of the dataset
+        """
         self.x_train, self.y_train = check_X_y(x_train, y_train)
         self.x_test, self.y_test = check_X_y(x_test, y_test)
 
@@ -86,7 +101,7 @@ class Dataset:
 
     def get_train_data(self, train_indices: List[int]):
         """Given a set of indices, it returns the train data that refer to those indices.
-        This is used when calling different sub-sets of indices to calculate data shapley values.
+        This is used when calling different sub-sets of indices to calculate shapley values.
         Notice that train_indices is not typically equal to the full indices, but only a subset of it.
         """
         x = self.x_train[train_indices]
@@ -131,7 +146,12 @@ class Dataset:
         **kwargs,
     ) -> "Dataset":
         """Constructs a Dataset object from an sklearn bunch as returned
-        by the load_* functions in `sklearn.datasets`
+        by the load_* functions in `sklearn.datasets`.
+
+        :param data: sklearn dataset
+        :param train_size: size of the training dataset. Used in train_test_split
+        :param random_state: seed for train test split
+        :return: Dataset with the selected sklearn data
         """
         x_train, x_test, y_train, y_test = train_test_split(
             data.data, data.target, train_size=train_size, random_state=random_state
@@ -146,22 +166,10 @@ class Dataset:
             description=data.get("DESCR"),
         )
 
-    # TODO: This doesn't look good. Why do we do this?
-    try:
-        import pandas as pd
-
-        @classmethod
-        def from_pandas(cls, df: pd.DataFrame) -> "Dataset":
-            """That."""
-            raise NotImplementedError
-
-    except ModuleNotFoundError:
-        pass
-
 
 class GroupedDataset(Dataset):
     """Class that groups data-points.
-    Useful for calculating Shapley values of coalitions."""
+    Used for calculating Shapley values of coalitions."""
 
     def __init__(
         self,
@@ -174,7 +182,7 @@ class GroupedDataset(Dataset):
         target_names: Optional[Iterable] = None,
         description: Optional[str] = None,
     ):
-        """Class for better grouped datasets.
+        """Class for grouping datasets.
 
         :param x_train: train input data
         :param y_train: labels of train data
@@ -208,14 +216,17 @@ class GroupedDataset(Dataset):
 
     @property
     def indices(self):
-        """Indices of the grouped data points"""
+        """Indices of the grouped data points.
+        These are not the indices of all the dataset, but only those referencing the groups."""
         return np.array(self._indices)
 
     @property
     def data_names(self):
+        """Name given to the groups."""
         return list(self.groups.keys())
 
     def get_train_data(self, train_indices):
+        """Given a set of indices, it returns the related groups."""
         data_indices = [
             idx for group_id in train_indices for idx in self.group_items[group_id][1]
         ]
@@ -229,6 +240,16 @@ class GroupedDataset(Dataset):
         random_state: Optional[int] = None,
         **kwargs,
     ) -> "GroupedDataset":
+        """Constructs a Dataset object from an sklearn bunch as returned
+        by the load_* functions in `sklearn.datasets` and groups it.
+
+        :param data: sklearn dataset
+        :param train_size: size of the training dataset. Used in train_test_split
+        :param random_state: seed for train test split
+        :param data_groups: for each element in the training set, it associates a group
+            index or name.
+        :return: Dataset with the selected sklearn data
+        """
         data_groups: Optional[List] = kwargs.get("data_groups")
         if data_groups is None:
             raise ValueError("data_groups argument is missing")
@@ -236,7 +257,17 @@ class GroupedDataset(Dataset):
         return cls.from_dataset(dataset, data_groups)
 
     @classmethod
-    def from_dataset(cls, dataset: Dataset, data_groups: List) -> "GroupedDataset":
+    def from_dataset(
+        cls, dataset: Dataset, data_groups: Sequence[Any]
+    ) -> "GroupedDataset":
+        """Given a dataset, it makes it into a grouped dataset by passing a list of data
+        groups, one for each element in the training set.
+
+        :param dataset: Dataset object
+        :param data_groups: for each element in the training set, it associates a group
+            index or name.
+        :return: GroupedDataset, with the initial Dataset grouped by data_groups.
+        """
         return GroupedDataset(
             x_train=dataset.x_train,
             y_train=dataset.y_train,
@@ -256,8 +287,19 @@ def load_spotify_dataset(
     target_column: str = "popularity",
     random_state: int = 24,
 ):
-    """Load spotify music dataset and selects song after min_year.
-    If os. is True, it returns a small dataset for testing purposes."""
+    """Downloads (if not already cached) and loads spotify music dataset.
+    More info on the dataset can be found
+    at https://www.kaggle.com/datasets/mrmorj/dataset-of-songs-in-spotify.
+
+    If this method is called within the CI pipeline, it will load a reduced version of the dataset
+    for test purposes.
+    :param val_size: size of the validation set
+    :param test_size: size of the test set
+    :param min_year: minimum year of the returned data
+    :param target_column: column to be returned as y (labels)
+    :param random_state: fixes sklearn random seed
+    :return: Tuple with 3 elements, each being a list sith [input_data, related_labels]
+    """
     file_dir_path = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(
         file_dir_path, "../../../data/top_hits_spotify_dataset.csv"
