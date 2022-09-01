@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>utils &mdash; pyDVL 0.1.0.dev14 documentation</title>
+  <title>utils &mdash; pyDVL 0.1.0.dev15 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -128,14 +128,16 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="valuation.utils.memcached">
 <span class="sig-name descname"><span class="pre">memcached</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="utils/caching.html#valuation.utils.caching.ClientConfig" title="valuation.utils.caching.ClientConfig"><span class="pre">ClientConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_repeated_training</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_repetitions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.memcached" title="Permalink to this definition"></a></dt>
-<dd><p>Decorate a callable with this in order to have transparent caching.</p>
-<p>The function’s code, constants and all arguments (except for those in
-<cite>ignore_args</cite> are used to generate the key for the remote cache.</p>
-<dl class="simple">
-<dt><strong>FIXME?</strong>:</dt><dd><p>Due to the need to pickle memcached functions, this returns a class
-instead of a function. This has the drawback of a messy docstring.</p>
-</dd>
-</dl>
+<dd><p>Wrap a callable with this in order to have transparent caching.
+Given a function and a signature, memcached creates a distributed cache
+that, for each set of inputs, keeps track of the average returned value,
+with variance and number of times it was calculated.
+If the function is deterministic, i.e. same input corresponds to the same
+exact output, set allow_repeated_training to False.
+If instead the function is noisy, memcache allows to set the minimum number
+of repetitions and the relative tolerance on the average output after which
+the cache will not be updated anymore. In other words, the function computation will
+be repeated until the average has stabilized.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -198,7 +200,7 @@ the given rtol_threshold</p>
 <dt class="sig sig-object py" id="valuation.utils.Dataset">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.Dataset" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Class for better handling datasets in the Dval library</p>
+<p>Class for better handling datasets</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="valuation.utils.Dataset.feature">
 <span class="sig-name descname"><span class="pre">feature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">slice</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#valuation.utils.Dataset.feature" title="Permalink to this definition"></a></dt>
@@ -208,7 +210,7 @@ the given rtol_threshold</p>
 <dt class="sig sig-object py" id="valuation.utils.Dataset.get_train_data">
 <span class="sig-name descname"><span class="pre">get_train_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#valuation.utils.Dataset.get_train_data" title="Permalink to this definition"></a></dt>
 <dd><p>Given a set of indices, it returns the train data that refer to those indices.
-This is used when calling different sub-sets of indices to calculate data shapley values.
+This is used when calling different sub-sets of indices to calculate shapley values.
 Notice that train_indices is not typically equal to the full indices, but only a subset of it.</p>
 </dd></dl>
 
@@ -240,18 +242,19 @@ len(Dataset).</p>
 <dt class="sig sig-object py" id="valuation.utils.Dataset.from_sklearn">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_sklearn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Bunch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="utils/dataset.html#valuation.utils.dataset.Dataset" title="valuation.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></span><a class="headerlink" href="#valuation.utils.Dataset.from_sklearn" title="Permalink to this definition"></a></dt>
 <dd><p>Constructs a Dataset object from an sklearn bunch as returned
-by the load_* functions in <cite>sklearn.datasets</cite></p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="valuation.utils.Dataset.pd">
-<span class="sig-name descname"><span class="pre">pd</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;module</span> <span class="pre">'pandas'</span> <span class="pre">from</span> <span class="pre">'/home/runner/work/pyDVL/pyDVL/.tox/docs/lib/python3.8/site-packages/pandas/__init__.py'&gt;</span></em><a class="headerlink" href="#valuation.utils.Dataset.pd" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="valuation.utils.Dataset.from_pandas">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_pandas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="utils/dataset.html#valuation.utils.dataset.Dataset" title="valuation.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></span><a class="headerlink" href="#valuation.utils.Dataset.from_pandas" title="Permalink to this definition"></a></dt>
-<dd><p>That.</p>
+by the load_* functions in <cite>sklearn.datasets</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – sklearn dataset</p></li>
+<li><p><strong>train_size</strong> – size of the training dataset. Used in train_test_split</p></li>
+<li><p><strong>random_state</strong> – seed for train test split</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dataset with the selected sklearn data</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -372,7 +375,8 @@ with the double asterisk operator. E.g.:</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="valuation.utils.Utility.signature">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#valuation.utils.Utility.signature" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Signature used for caching model results</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -464,8 +468,17 @@ iterator as well, but ignores any accesses to methods or properties.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="valuation.utils.load_spotify_dataset">
 <span class="sig-name descname"><span class="pre">load_spotify_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_year</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2014</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'popularity'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">24</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.load_spotify_dataset" title="Permalink to this definition"></a></dt>
-<dd><p>Load spotify music dataset and selects song after min_year.
-If os. is True, it returns a small dataset for testing purposes.</p>
+<dd><p>Downloads (if not already cached) and loads spotify music dataset.
+More info on the dataset can be found
+at <a class="reference external" href="https://www.kaggle.com/datasets/mrmorj/dataset-of-songs-in-spotify">https://www.kaggle.com/datasets/mrmorj/dataset-of-songs-in-spotify</a>.</p>
+<p>If this method is called within the CI pipeline, it will load a reduced version of the dataset
+for test purposes.
+:param val_size: size of the validation set
+:param test_size: size of the test set
+:param min_year: minimum year of the returned data
+:param target_column: column to be returned as y (labels)
+:param random_state: fixes sklearn random seed
+:return: Tuple with 3 elements, each being a list sith [input_data, related_labels]</p>
 </dd></dl>
 
 <dl class="py function">
