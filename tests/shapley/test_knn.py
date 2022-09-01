@@ -47,6 +47,6 @@ def test_knn_montecarlo_match(seed):
     log.info(f"{shapley_keys=}")
 
     # will check only matching top elements since the scoring functions are not exactly the same
-    top_knn = knn_keys[:3]
+    top_knn = knn_keys[:2]
     top_montecarlo = shapley_keys[:10]
     assert np.all([k in top_montecarlo for k in top_knn])
