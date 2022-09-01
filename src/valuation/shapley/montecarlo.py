@@ -220,6 +220,7 @@ def truncated_montecarlo_shapley(
     score_tolerance: Optional[float] = None,
     max_iterations: Optional[int] = None,
     num_workers: Optional[int] = None,
+    ip_address: Optional[int] = None,
     progress: bool = False,
     coordinator_update_frequency: int = 10,
     worker_update_frequency: int = 5,
@@ -242,6 +243,7 @@ def truncated_montecarlo_shapley(
         will stop.
     :param num_workers: number of workers processing permutations. If None, it will be set
         to available_cpus().
+    :param ip_address: ip address of cluster to use for shapley values calculation.
     :param progress: set to True to use tqdm progress bars.
     :return: Tuple, with the first element being an ordered
         Dict of approximated Shapley values for the indices, the second being the
@@ -249,8 +251,8 @@ def truncated_montecarlo_shapley(
     """
     if num_workers is None:
         num_workers = available_cpus()
-
-    ray.init(num_cpus=num_workers)
+    address = None if ip_address is None else f"ray://{ip_address}"
+    ray.init(address=address, num_cpus=num_workers)
     u_id = ray.put(u)
     try:
         coordinator = ShapleyCoordinator.remote(  # type: ignore
