@@ -39,8 +39,7 @@ def get_shapley_values(
     - 'combinatorial_montecarlo':  uses montecarlo implementation of combinatorial data Shapley.
         It parallelizes computation only within the local machine
     - 'truncated_montecarlo': default option, uses permutation_montecarlo implementation but stops the
-        computation whenever a certain accuracy is reached. It runs also on a cluster with several machines
-        if the argument ip_address is passed.
+        computation whenever a certain accuracy is reached. It runs also on a cluster if the address is passed.
 
     :param u: Utility object with model, data, and scoring function
     :param max_iterations: total number of iterations, used for montecarlo methods
