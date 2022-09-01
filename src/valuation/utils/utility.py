@@ -23,6 +23,7 @@ class Utility:
         data: Dataset,
         scoring: Optional[Scorer] = None,
         catch_errors: bool = True,
+        show_warnings: bool = True,
         default_score: float = 0,
         enable_cache: bool = True,
         cache_options: Optional[MemcachedConfig] = None,
@@ -45,6 +46,8 @@ class Utility:
             training data is passed, which happens often during the Shapley value calculations.
             When this happens, the default_score is returned as a score and Shapley value
             calculation continues.
+        :param show_warnings: True for printing warnings fit fails.
+            Used only when catch_errors is True
         :param default_score: score in the case of models that have not been fit,
             e.g. when too little data is passed, or errors arise.
         :param enable_cache: whether to use memcached for memoization.
@@ -53,6 +56,7 @@ class Utility:
         self.data = data
         self.scoring = scoring
         self.catch_errors = catch_errors
+        self.show_warnings = show_warnings
         self.default_score = default_score
         self._signature = None
 
@@ -90,7 +94,8 @@ class Utility:
             return float(scorer(self.model, self.data.x_test, self.data.y_test))
         except Exception as e:
             if self.catch_errors:
-                logger.warning(str(e))  # type: ignore
+                if self.show_warnings:
+                    logger.warning(str(e))  # type: ignore
                 return self.default_score
             else:
                 raise e

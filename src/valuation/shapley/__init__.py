@@ -1,5 +1,6 @@
 import pandas as pd
 
+from valuation.shapley.knn import knn_shapley
 from valuation.shapley.montecarlo import (
     combinatorial_montecarlo_shapley,
     permutation_montecarlo_shapley,
@@ -17,6 +18,7 @@ __all__ = [
     "combinatorial_montecarlo_shapley",
     "combinatorial_exact_shapley",
     "permutation_exact_shapley",
+    "knn_shapley",
 ]
 
 
