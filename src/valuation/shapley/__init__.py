@@ -1,3 +1,5 @@
+from typing import Dict, Optional
+
 import pandas as pd
 
 from valuation.shapley.montecarlo import (
@@ -25,6 +27,7 @@ def get_shapley_values(
     max_iterations: int,
     num_workers: int = 1,
     mode="truncated_montecarlo",
+    progress: bool = False,
     **kwargs,
 ):
     """
@@ -42,20 +45,13 @@ def get_shapley_values(
         (calculated shapley values) and dval_std, being the montecarlo standard deviation of
         shapley_dval
     """
-    # TODO fix progress showing and maybe_progress
-    progress = False
-    if mode == "truncated_montecarlo":
-        dval, dval_std = truncated_montecarlo_shapley(
-            u=u,
-            max_iterations=max_iterations,
-            num_workers=num_workers,
-            progress=progress,
-            **kwargs,
-        )
-    elif mode == "combinatorial_exact":
-        dval, dval_std = combinatorial_exact_shapley(u, progress)
+
+    dval_std: Optional[Dict] = None
+
+    if mode == "combinatorial_exact":
+        dval = combinatorial_exact_shapley(u, progress)
     elif mode == "permutation_exact":
-        dval, dval_std = permutation_exact_shapley(u, progress)
+        dval = permutation_exact_shapley(u, progress)
     elif mode == "combinatorial_montecarlo":
         dval, dval_std = combinatorial_montecarlo_shapley(
             u, max_iterations, num_workers, progress
@@ -64,10 +60,25 @@ def get_shapley_values(
         dval, dval_std = permutation_montecarlo_shapley(
             u, max_iterations, num_workers, progress
         )
+    elif mode == "truncated_montecarlo":
+        # TODO: fix progress showing and maybe_progress
+        progress = False
+        dval, dval_std = truncated_montecarlo_shapley(
+            u=u,
+            max_iterations=max_iterations,
+            num_workers=num_workers,
+            progress=progress,
+            **kwargs,
+        )
     else:
         raise ValueError(f"Invalid value encountered in {mode=}")
 
-    return pd.DataFrame(
-        list(zip(dval.keys(), dval.values(), dval_std.values())),
-        columns=["data_key", "shapley_dval", "dval_std"],
+    df = pd.DataFrame(
+        list(zip(dval.keys(), dval.values())),
+        columns=["data_key", "shapley_dval"],
     )
+
+    if dval_std is not None:
+        df["dval_std"] = dval_std
+
+    return df
