@@ -144,7 +144,7 @@ class DataUtilityLearning:
     def _convert_indices_to_boolean_vector(self, x: Iterable[int]) -> "NDArray":
         boolean_vector = np.zeros((1, len(self.utility.data)), dtype=bool)
         if x:
-            boolean_vector[:, x] = True
+            boolean_vector[:, tuple(x)] = True
         return boolean_vector
 
     def __call__(self, indices: Iterable[int]) -> float:
@@ -162,3 +162,7 @@ class DataUtilityLearning:
                 self._is_model_fit = True
             utility = self.model.predict(indices_boolean_vector).item()
         return utility
+
+    @property
+    def data(self) -> Dataset:
+        return self.utility.data
