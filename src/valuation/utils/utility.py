@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, FrozenSet, Iterable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, List, Optional, Tuple
 
 import numpy as np
 from sklearn.metrics import check_scoring
@@ -49,13 +49,15 @@ class Utility:
         self.scoring = scoring
         self.catch_errors = catch_errors
         self.default_score = default_score
-        self._signature = None
+        self.enable_cache = enable_cache
+        self.cache_options = cache_options
+        self._signature = serialize((hash(model), hash(data), hash(scoring)))
 
-        if enable_cache:
+        if self.enable_cache:
             if cache_options is None:
-                cache_options = dict()  # type: ignore
+                self.cache_options = dict()  # type: ignore
             self._signature = serialize((hash(model), hash(data), hash(scoring)))
-            self._utility_wrapper = memcached(**cache_options)(  # type: ignore
+            self._utility_wrapper = memcached(**self.cache_options)(  # type: ignore
                 self._utility, signature=self._signature
             )
         else:
@@ -64,6 +66,18 @@ class Utility:
         # FIXME: can't modify docstring of methods. Instead, I could use a
         #  factory which creates the class on the fly with the right doc.
         # self.__call__.__doc__ = self._utility_wrapper.__doc__
+
+    def _initialize_utility_wrapper(self):
+        if self.enable_cache:
+            if self.cache_options is None:
+                cache_options = dict()  # type: ignore
+            else:
+                cache_options = self.cache_options
+            self._utility_wrapper = memcached(**cache_options)(  # type: ignore
+                self._utility, signature=self._signature
+            )
+        else:
+            self._utility_wrapper = self._utility
 
     def __call__(self, indices: Iterable[int]) -> float:
         utility: float = self._utility_wrapper(frozenset(indices))
@@ -97,6 +111,17 @@ class Utility:
     @property
     def signature(self):
         return self._signature
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Don't pickle _utility_wrapper
+        del state["_utility_wrapper"]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # Add _utility_wrapper back since it doesn't exist in the pickle
+        self._initialize_utility_wrapper()
 
 
 class DataUtilityLearning:
@@ -139,7 +164,7 @@ class DataUtilityLearning:
         self.model = model
         self._current_iteration = 0
         self._is_model_fit = False
-        self._utility_samples: List[Tuple["NDArray", float]] = []
+        self._utility_samples: Dict[FrozenSet, Tuple["NDArray", float]] = dict()
 
     def _convert_indices_to_boolean_vector(self, x: Iterable[int]) -> "NDArray":
         boolean_vector = np.zeros((1, len(self.utility.data)), dtype=bool)
@@ -149,18 +174,22 @@ class DataUtilityLearning:
 
     def __call__(self, indices: Iterable[int]) -> float:
         indices_boolean_vector = self._convert_indices_to_boolean_vector(indices)
+        frozen_indices = frozenset(indices)
         if self._current_iteration < self.training_budget:
-            utility = self.utility(indices)
-            self._utility_samples.append((indices_boolean_vector, utility))
+            utility = self.utility(frozen_indices)
+            self._utility_samples[frozen_indices] = (indices_boolean_vector, utility)
             self._current_iteration += 1
         else:
             if not self._is_model_fit:
-                X, y = zip(*self._utility_samples)
+                X, y = zip(*self._utility_samples.values())
                 X = np.vstack(X)
                 y = np.asarray(y)
                 self.model.fit(X, y)
                 self._is_model_fit = True
-            utility = self.model.predict(indices_boolean_vector).item()
+            if frozen_indices in self._utility_samples:
+                utility = self._utility_samples[frozen_indices][1]
+            else:
+                utility = self.model.predict(indices_boolean_vector).item()
         return utility
 
     @property

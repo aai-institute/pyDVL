@@ -24,7 +24,7 @@ __all__ = [
 
 def get_shapley_values(
     u: Utility,
-    max_iterations: int,
+    max_iterations: Optional[int] = None,
     num_workers: int = 1,
     mode="truncated_montecarlo",
     progress: bool = False,
@@ -47,6 +47,10 @@ def get_shapley_values(
     """
 
     dval_std: Optional[Dict] = None
+
+    if "exact" not in mode:
+        if max_iterations is None:
+            raise ValueError(f"max_iterations is required for '{mode}'")
 
     if mode == "combinatorial_exact":
         dval = combinatorial_exact_shapley(u, progress)
