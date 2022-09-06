@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Dict, Union, cast
+from typing import Dict, Union
 
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
@@ -7,10 +7,10 @@ from valuation.reporting.scores import sort_values
 from valuation.utils import Dataset, maybe_progress
 
 
-def exact_knn_shapley(
+def knn_shapley(
     data: Dataset, model: KNeighborsClassifier, progress: bool = True
 ) -> OrderedDict:
-    """Computes exact Shapley values for a KNN classifier or regressor
+    """Computes exact Shapley values for a KNN classifier
 
     :param data: split Dataset
     :param model: model to extract parameters from. The object will not be
@@ -25,7 +25,7 @@ def exact_knn_shapley(
     defaults.update(model.get_params())
     # HACK: NearestNeighbors doesn't support this. There will be more...
     del defaults["weights"]
-    n_neighbors: int = cast(int, defaults["n_neighbors"])  # This must be set!
+    n_neighbors: int = int(defaults["n_neighbors"])
     defaults["n_neighbors"] = len(data)  # We want all training points sorted
 
     assert n_neighbors < len(data)
@@ -33,10 +33,7 @@ def exact_knn_shapley(
 
     nns = NearestNeighbors(**defaults).fit(data.x_train)
     # closest to farthest
-    # FIXME: ensure distances are sorted in ascending order?
-    distances, indices = nns.kneighbors(data.x_test)
-    # for d in distances:
-    #     assert (sorted(d) == d).all()
+    _, indices = nns.kneighbors(data.x_test)
 
     values = {i: 0.0 for i in data.indices}
     n = len(data)
@@ -58,14 +55,3 @@ def exact_knn_shapley(
             values[ii[i]] += (value_at_x - values[ii[i]]) / j
 
     return sort_values(values)
-
-
-if __name__ == "__main__":
-    from sklearn import datasets
-
-    data = Dataset.from_sklearn(datasets.load_iris())
-    from sklearn.neighbors import KNeighborsClassifier
-
-    knn = KNeighborsClassifier(n_neighbors=5)
-    values = exact_knn_shapley(data, knn, True)
-    print(values)
