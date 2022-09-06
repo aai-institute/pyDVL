@@ -59,23 +59,25 @@ def get_shapley_values(
 
     dval_std: Optional[Dict] = None
 
-    if "exact" not in mode:
-        if max_iterations is None:
-            raise ValueError(f"max_iterations is required for '{mode}'")
-
     if mode == "combinatorial_exact":
         dval = combinatorial_exact_shapley(u, progress)
     elif mode == "permutation_exact":
         dval = permutation_exact_shapley(u, progress)
     elif mode == "combinatorial_montecarlo":
+        if max_iterations is None:
+            raise ValueError(f"max_iterations is required for '{mode}'")
         dval, dval_std = combinatorial_montecarlo_shapley(
             u, max_iterations, num_workers, progress
         )
     elif mode == "permutation_montecarlo":
+        if max_iterations is None:
+            raise ValueError(f"max_iterations is required for '{mode}'")
         dval, dval_std = permutation_montecarlo_shapley(
             u, max_iterations, num_workers, progress
         )
     elif mode == "truncated_montecarlo":
+        if max_iterations is None:
+            raise ValueError(f"max_iterations is required for '{mode}'")
         # TODO: fix progress showing and maybe_progress
         progress = False
         dval, dval_std = truncated_montecarlo_shapley(
