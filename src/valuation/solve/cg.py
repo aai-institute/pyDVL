@@ -10,10 +10,7 @@ from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import numpy as np
 
-from valuation.utils import (
-    mcmc_is_linear_function,
-    mcmc_is_linear_function_positive_definite,
-)
+from valuation.utils import is_linear_function, is_positive_definite
 from valuation.utils.logging import raise_or_log
 from valuation.utils.types import MatrixVectorProduct
 
@@ -67,12 +64,12 @@ def batched_preconditioned_conjugate_gradient(
         return b
 
     if verify_assumptions:
-        if not mcmc_is_linear_function(A, b):
+        if not is_linear_function(A, b):
             raise_or_log(
                 "The function seems to not be linear.", raise_exception=raise_exception
             )
 
-        if not mcmc_is_linear_function_positive_definite(A, b):
+        if not is_positive_definite(A, b):
             raise_or_log(
                 "The function seems to not be linear.", raise_exception=raise_exception
             )

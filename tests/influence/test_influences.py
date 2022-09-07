@@ -102,13 +102,9 @@ def test_upweighting_influences_lr_analytical_cg(
 
     influence_values = influences(
         model,
-        dataset.x_train,
-        dataset.y_train,
-        dataset.x_test,
-        dataset.y_test,
+        dataset,
         progress=True,
-        n_jobs=n_jobs,
-        influence_type=InfluenceTypes.Up,
+        influence_type="up",
         inversion_method="cg",
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
@@ -153,13 +149,9 @@ def test_upweighting_influences_lr_analytical(
 
     influence_values = influences(
         model,
-        dataset.x_train,
-        dataset.y_train,
-        dataset.x_test,
-        dataset.y_test,
+        dataset,
         progress=True,
-        n_jobs=n_jobs,
-        influence_type=InfluenceTypes.Up,
+        influence_type="up",
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
     assert influence_values.shape == (len(dataset.x_test), len(dataset.x_train))
@@ -204,13 +196,9 @@ def test_perturbation_influences_lr_analytical_cg(
     )
     influence_values = influences(
         model,
-        dataset.x_train,
-        dataset.y_train,
-        dataset.x_test,
-        dataset.y_test,
+        dataset,
         progress=True,
-        n_jobs=n_jobs,
-        influence_type=InfluenceTypes.Perturbation,
+        influence_type="perturbation",
         inversion_method="cg",
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
@@ -260,13 +248,9 @@ def test_perturbation_influences_lr_analytical(
     )
     influence_values = influences(
         model,
-        dataset.x_train,
-        dataset.y_train,
-        dataset.x_test,
-        dataset.y_test,
+        dataset,
         progress=True,
-        n_jobs=n_jobs,
-        influence_type=InfluenceTypes.Perturbation,
+        influence_type="perturbation",
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
     assert influence_values.shape == (
@@ -355,10 +339,7 @@ def test_influences_with_neural_network_explicit_hessian():
 
     train_influences = influences(
         model,
-        transformed_dataset.x_train,
-        transformed_dataset.y_train,
-        transformed_dataset.x_test,
-        transformed_dataset.y_test,
+        transformed_dataset,
         inversion_method="direct",
     )
 

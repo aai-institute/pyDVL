@@ -636,26 +636,24 @@ def pytest_terminal_summary(
 def create_mock_dataset(
     linear_model: Tuple[np.ndarray, np.ndarray],
     train_set_size: int,
-    test_set_size: int = None,
+    test_set_size: int,
     noise: float = 0.01,
 ) -> Dataset:
     A, b = linear_model
     o_d, i_d = tuple(A.shape)
     data_model = lambda x: np.random.normal(x @ A.T + b, noise)
 
-    class WrappedDataset(object):
-        x_train: np.ndarray
-        y_train: np.ndarray
-        x_test: Optional[np.ndarray]
-        y_test: Optional[np.ndarray]
-
-    dataset = WrappedDataset()
-    dataset.x_train = np.random.uniform(size=[train_set_size, i_d])
-    dataset.y_train = data_model(dataset.x_train)
-
-    if test_set_size is not None:
-        dataset.x_test = np.random.uniform(size=[test_set_size, i_d])
-        dataset.y_test = data_model(dataset.x_test)
+    x_train = np.random.uniform(size=[train_set_size, i_d])
+    y_train = data_model(x_train)
+    x_test = np.random.uniform(size=[test_set_size, i_d])
+    y_test = data_model(x_test)
+    dataset = Dataset(
+        x_train=x_train,
+        y_train=y_train,
+        x_test=x_test,
+        y_test=y_test,
+        is_multi_output=True,
+    )
 
     scaler_x = MinMaxScaler()
     scaler_y = MinMaxScaler()
