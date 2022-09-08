@@ -8,7 +8,7 @@ from typing import Dict, Optional
 
 import numpy as np
 
-from valuation.solve.cg import (
+from valuation.influence.cg import (
     batched_preconditioned_conjugate_gradient,
     hvp_to_inv_diag_conditioner,
 )

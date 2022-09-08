@@ -4,20 +4,103 @@ Contains all models used in test and demonstration. Note that they could be writ
 """
 
 __all__ = [
-    "LinearRegressionTorchModel",
-    "BinaryLogisticRegressionTorchModel",
-    "NeuralNetworkTorchModel",
+    "TorchLinearRegression",
+    "TorchBinaryLogisticRegression",
+    "TorchNeuralNetwork",
+    "fit_torch_model",
 ]
 
-from typing import List, Tuple
+from typing import Any, Callable, List, Optional, Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn import Softmax, Tanh
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import _LRScheduler
+from torch.utils.data import DataLoader, Dataset
+
+from valuation.utils.logging import logger
 
 
-class LinearRegressionTorchModel(nn.Module):
+def fit_torch_model(
+    model: nn.Module,
+    x: torch.tensor,
+    y: torch.tensor,
+    loss: Callable[[torch.Tensor, torch.Tensor, Any], torch.Tensor],
+    optimizer: Optimizer,
+    scheduler: Optional[_LRScheduler] = None,
+    num_epochs: int = 1,
+    batch_size: int = 64,
+):
+    """
+    Wrapper of pytorch fit method. It fits the model to the supplied data.
+    It represents a simple machine learning loop, iterating over a number of
+    epochs, sampling data with a certain batch size, calculating gradients and updating the parameters through a
+    loss function.
+    :param x: Matrix of shape [NxD] representing the features x_i.
+    :param y: Matrix of shape [NxK] representing the prediction targets y_i.
+    :param optimizer: Select either ADAM or ADAM_W.
+    :param scheduler: A pytorch scheduler. If None, no scheduler is used.
+    :param num_epochs: Number of epochs to repeat training.
+    :param batch_size: Batch size to use in training.
+    :param tensor_type: accuracy of tensors. Typically 'float' or 'long'
+    """
+
+    class InternalDataset(Dataset):
+        """
+        Simple hidden class wrapper for the data loader.
+        """
+
+        def __len__(self):
+            return len(x)
+
+        def __getitem__(self, idx):
+            return x[idx], y[idx]
+
+    dataset = InternalDataset()
+    dataloader = DataLoader(dataset, batch_size=batch_size)
+
+    for epoch in range(num_epochs):
+        for train_batch in dataloader:
+            batch_x, batch_y = train_batch
+            pred_y = model(batch_x)
+            loss_value = loss(torch.squeeze(pred_y), torch.squeeze(batch_y))
+
+            logger.debug(f"Epoch: {epoch} ---> Training loss: {loss_value.item()}")
+            loss_value.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+
+            if scheduler:
+                scheduler.step()
+
+
+def predict(model: nn.Module, x: torch.tensor) -> np.ndarray:
+    """
+    Use internal model to deliver prediction in numpy.
+    :param x: A np.ndarray [NxD] representing the features x_i.
+    :returns: A np.ndarray [NxK] representing the predicted values.
+    """
+    return model(x).detach().numpy()  # type: ignore
+
+
+def score(
+    model: nn.Module,
+    x: torch.tensor,
+    y: torch.tensor,
+    score: Callable[[torch.Tensor, torch.Tensor, Any], torch.Tensor],
+) -> float:
+    """
+    Use internal model to measure how good is prediction through a loss function.
+    :param x: A np.ndarray [NxD] representing the features x_i.
+    :param y: A np.ndarray [NxK] representing the predicted target values y_i.
+    :returns: The aggregated value over all samples N.
+    """
+    return score(model(x), y).detach().numpy()  # type: ignore
+
+
+class TorchLinearRegression(nn.Module):
     """
     A simple linear regression model (with bias) f(x)=Ax+b.
     """
@@ -54,7 +137,7 @@ class LinearRegressionTorchModel(nn.Module):
         return x @ self.A.T + self.b
 
 
-class BinaryLogisticRegressionTorchModel(nn.Module):
+class TorchBinaryLogisticRegression(nn.Module):
     """
     A simple binary logistic regression model p(y)=sigmoid(dot(a, x) + b).
     """
@@ -88,7 +171,7 @@ class BinaryLogisticRegressionTorchModel(nn.Module):
         return torch.sigmoid(x @ self.A.T + self.b)
 
 
-class NeuralNetworkTorchModel(nn.Module):
+class TorchNeuralNetwork(nn.Module):
     """
     A simple fully-connected neural network f(x) model defined by y = v_K, v_i = o(A v_(i-1) + b), v_1 = x. It contains
     K layers and K - 2 hidden layers. It holds that K >= 2, because every network contains a input and output.
