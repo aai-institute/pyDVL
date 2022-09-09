@@ -4,14 +4,17 @@ Contains parallelized influence calculation functions for general models.
 
 __all__ = ["influences"]
 
-from typing import Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 import numpy as np
+import torch
+import torch.nn as nn
 
 from valuation.influence.cg import (
     batched_preconditioned_conjugate_gradient,
     hvp_to_inv_diag_conditioner,
 )
+from valuation.influence.frameworks import TorchTwiceDifferentiable
 from valuation.influence.types import (
     MatrixVectorProductInversionAlgorithm,
     TwiceDifferentiable,
@@ -106,7 +109,8 @@ influence_type_function_dict = {
 
 
 def influences(
-    model: TwiceDifferentiable,
+    model: nn.Module,
+    loss: Callable[[torch.Tensor, torch.Tensor, Any], torch.Tensor],
     data: Dataset,
     progress: bool = False,
     inversion_method: str = "direct",
@@ -118,7 +122,7 @@ def influences(
     calculating the influence factors for all test points, with respect to the training points. Subsequently,
     all influence get calculated over the complete train set.
 
-    :param model: A model following the TwiceDifferentiable interface.
+    :param model: A supervised model from a supported framework. Currently, only pytorch nn.Module is supported.
     :param data: a dataset
 
     :param progress: whether to display progress bars.
@@ -131,8 +135,8 @@ def influences(
     :returns: A np.ndarray specifying the influences. Shape is [NxM], where N is number of test points and
         M number of train points.
     """
-
-    n_params = model.num_params()
+    differentiable_model = TorchTwiceDifferentiable(model, loss)
+    n_params = differentiable_model.num_params()
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
         "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,  # type: ignore
         "cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(  # type: ignore
@@ -141,7 +145,7 @@ def influences(
     }
 
     influence_factors = calculate_influence_factors(
-        model,
+        differentiable_model,
         data,
         dict_fact_algos[inversion_method],
         train_indices=train_points_idxs,
@@ -149,4 +153,4 @@ def influences(
     )
     influence_function = influence_type_function_dict[influence_type]
 
-    return influence_function(model, data, influence_factors)
+    return influence_function(differentiable_model, data, influence_factors)

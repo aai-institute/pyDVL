@@ -21,7 +21,7 @@ try:
     import torch
     import torch.nn.functional as F
 
-    from valuation.influence.differentiable_frameworks import TorchTwiceDifferentiable
+    from valuation.influence.frameworks import TorchTwiceDifferentiable
     from valuation.influence.model_wrappers import (
         TorchLinearRegression,
         TorchNeuralNetwork,
@@ -86,10 +86,8 @@ def test_upweighting_influences_lr_analytical_cg(
     A, _ = linear_model
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
 
-    model = TorchTwiceDifferentiable(
-        model=TorchLinearRegression(dim=tuple(A.shape), init=linear_model),
-        loss=F.mse_loss,
-    )
+    model = TorchLinearRegression(dim=tuple(A.shape), init=linear_model)
+    loss = F.mse_loss
 
     influence_values_analytical = 2 * influences_up_linear_regression_analytical(
         linear_model,
@@ -98,6 +96,7 @@ def test_upweighting_influences_lr_analytical_cg(
 
     influence_values = influences(
         model,
+        loss,
         dataset,
         progress=True,
         influence_type="up",
@@ -130,10 +129,8 @@ def test_upweighting_influences_lr_analytical(
     A, _ = tuple(linear_model)
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
 
-    model = TorchTwiceDifferentiable(
-        model=TorchLinearRegression(dim=tuple(A.shape), init=linear_model),
-        loss=F.mse_loss,
-    )
+    model = TorchLinearRegression(dim=tuple(A.shape), init=linear_model)
+    loss = F.mse_loss
 
     influence_values_analytical = 2 * influences_up_linear_regression_analytical(
         linear_model,
@@ -142,6 +139,7 @@ def test_upweighting_influences_lr_analytical(
 
     influence_values = influences(
         model,
+        loss,
         dataset,
         progress=True,
         influence_type="up",
@@ -172,10 +170,9 @@ def test_perturbation_influences_lr_analytical_cg(
 ):
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
     A, _ = linear_model
-    model = TorchTwiceDifferentiable(
-        model=TorchLinearRegression(dim=tuple(A.shape), init=linear_model),
-        loss=F.mse_loss,
-    )
+
+    model = TorchLinearRegression(dim=tuple(A.shape), init=linear_model)
+    loss = F.mse_loss
 
     influence_values_analytical = (
         2
@@ -186,6 +183,7 @@ def test_perturbation_influences_lr_analytical_cg(
     )
     influence_values = influences(
         model,
+        loss,
         dataset,
         progress=True,
         influence_type="perturbation",
@@ -221,10 +219,9 @@ def test_perturbation_influences_lr_analytical(
 ):
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
     A, _ = linear_model
-    model = TorchTwiceDifferentiable(
-        model=TorchLinearRegression(dim=tuple(A.shape), init=linear_model),
-        loss=F.mse_loss,
-    )
+
+    model = TorchLinearRegression(dim=tuple(A.shape), init=linear_model)
+    loss = F.mse_loss
 
     influence_values_analytical = (
         2
@@ -235,6 +232,7 @@ def test_perturbation_influences_lr_analytical(
     )
     influence_values = influences(
         model,
+        loss,
         dataset,
         progress=True,
         influence_type="perturbation",
@@ -326,13 +324,12 @@ def test_influences_with_neural_network_explicit_hessian():
         scheduler=lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs),
     )
 
-    mvp_model = TorchTwiceDifferentiable(
-        model=nn,
-        loss=loss,
-    )
+    model = nn
+    loss = loss
 
     train_influences = influences(
-        mvp_model,
+        model,
+        loss,
         transformed_dataset,
         inversion_method="direct",
     )

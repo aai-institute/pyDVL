@@ -19,7 +19,7 @@ from valuation.utils import (
 try:
     import torch.nn.functional as F
 
-    from valuation.influence.differentiable_frameworks import TorchTwiceDifferentiable
+    from valuation.influence.frameworks import TorchTwiceDifferentiable
     from valuation.influence.model_wrappers import TorchLinearRegression
 except ImportError:
     pass
