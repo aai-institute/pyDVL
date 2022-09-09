@@ -1,5 +1,5 @@
 """
-Contains tests for LinearRegression, BinaryLogisticRegression as well as TorchModule, TwiceDifferentiable interface and
+Contains tests for LinearRegression, BinaryLogisticRegression as well as TwiceDifferentiable modules and
 its associated gradient and matrix vector product calculations. Note that there is no test for the neural network
 module.
 """
@@ -19,7 +19,8 @@ from valuation.utils import (
 try:
     import torch.nn.functional as F
 
-    from valuation.influence.models import TorchLinearRegression, TorchMvp
+    from valuation.influence.differentiable_frameworks import TorchTwiceDifferentiable
+    from valuation.influence.model_wrappers import TorchLinearRegression
 except ImportError:
     pass
 
@@ -125,7 +126,7 @@ def test_linear_regression_model_grad(
         dim=(input_dimension, output_dimension), init=linear_model
     )
     loss = F.mse_loss
-    mvp_model = TorchMvp(model=model, loss=loss)
+    mvp_model = TorchTwiceDifferentiable(model=model, loss=loss)
 
     train_grads_analytical = 2 * linear_regression_analytical_derivative_d_theta(
         (A, b), train_x, train_y
@@ -162,7 +163,7 @@ def test_linear_regression_model_hessian(
         dim=(input_dimension, output_dimension), init=linear_model
     )
     loss = F.mse_loss
-    mvp_model = TorchMvp(model=model, loss=loss)
+    mvp_model = TorchTwiceDifferentiable(model=model, loss=loss)
 
     test_hessian_analytical = 2 * linear_regression_analytical_derivative_d2_theta(
         (A, b), train_x, train_y
@@ -199,7 +200,7 @@ def test_linear_regression_model_d_x_d_theta(
     train_y = data_model(train_x)
     model = TorchLinearRegression(dim=(input_dimension, output_dimension), init=(A, b))
     loss = F.mse_loss
-    mvp_model = TorchMvp(model=model, loss=loss)
+    mvp_model = TorchTwiceDifferentiable(model=model, loss=loss)
 
     test_derivative = 2 * linear_regression_analytical_derivative_d_x_d_theta(
         (A, b), train_x, train_y

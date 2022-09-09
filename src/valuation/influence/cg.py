@@ -10,9 +10,9 @@ from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import numpy as np
 
+from valuation.influence.types import MatrixVectorProduct
 from valuation.utils import is_linear_function, is_positive_definite
 from valuation.utils.logging import raise_or_log
-from valuation.utils.types import MatrixVectorProduct
 
 if TYPE_CHECKING:
     try:

@@ -12,11 +12,11 @@ from valuation.influence.cg import (
     batched_preconditioned_conjugate_gradient,
     hvp_to_inv_diag_conditioner,
 )
-from valuation.utils import Dataset
-from valuation.utils.types import (
+from valuation.influence.types import (
     MatrixVectorProductInversionAlgorithm,
     TwiceDifferentiable,
 )
+from valuation.utils import Dataset
 
 
 def calculate_influence_factors(

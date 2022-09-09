@@ -21,9 +21,9 @@ try:
     import torch
     import torch.nn.functional as F
 
-    from valuation.influence.models import (
+    from valuation.influence.differentiable_frameworks import TorchTwiceDifferentiable
+    from valuation.influence.model_wrappers import (
         TorchLinearRegression,
-        TorchMvp,
         TorchNeuralNetwork,
         fit_torch_model,
     )
@@ -86,7 +86,7 @@ def test_upweighting_influences_lr_analytical_cg(
     A, _ = linear_model
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
 
-    model = TorchMvp(
+    model = TorchTwiceDifferentiable(
         model=TorchLinearRegression(dim=tuple(A.shape), init=linear_model),
         loss=F.mse_loss,
     )
@@ -130,7 +130,7 @@ def test_upweighting_influences_lr_analytical(
     A, _ = tuple(linear_model)
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
 
-    model = TorchMvp(
+    model = TorchTwiceDifferentiable(
         model=TorchLinearRegression(dim=tuple(A.shape), init=linear_model),
         loss=F.mse_loss,
     )
@@ -172,7 +172,7 @@ def test_perturbation_influences_lr_analytical_cg(
 ):
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
     A, _ = linear_model
-    model = TorchMvp(
+    model = TorchTwiceDifferentiable(
         model=TorchLinearRegression(dim=tuple(A.shape), init=linear_model),
         loss=F.mse_loss,
     )
@@ -221,7 +221,7 @@ def test_perturbation_influences_lr_analytical(
 ):
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
     A, _ = linear_model
-    model = TorchMvp(
+    model = TorchTwiceDifferentiable(
         model=TorchLinearRegression(dim=tuple(A.shape), init=linear_model),
         loss=F.mse_loss,
     )
@@ -326,7 +326,7 @@ def test_influences_with_neural_network_explicit_hessian():
         scheduler=lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs),
     )
 
-    mvp_model = TorchMvp(
+    mvp_model = TorchTwiceDifferentiable(
         model=nn,
         loss=loss,
     )

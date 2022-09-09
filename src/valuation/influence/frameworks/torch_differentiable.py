@@ -3,10 +3,10 @@ Contains all parts of pyTorch based machine learning model.
 """
 
 __all__ = [
-    "TorchMvp",
+    "TorchTwiceDifferentiable",
 ]
 
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Union
 
 import numpy as np
 import torch
@@ -14,6 +14,7 @@ import torch.nn as nn
 from torch import autograd
 from torch.autograd import Variable
 
+from valuation.influence.types import TwiceDifferentiable
 from valuation.utils import maybe_progress
 
 
@@ -38,7 +39,7 @@ def flatten_gradient(grad):
     return torch.cat([el.view(-1) for el in grad])
 
 
-class TorchMvp:
+class TorchTwiceDifferentiable(TwiceDifferentiable):
     """
     Calculates second-derivative matrix vector products (Mvp) of a pytorch torch.nn.Module
     """
@@ -102,7 +103,7 @@ class TorchMvp:
         **kwargs,
     ) -> np.ndarray:
         """
-        Calculates matrix vector product of vector v..
+        Calculates matrix vector product of vector v.
         :param x: A np.ndarray [NxD] representing the features x_i.
         :param y: A np.ndarray [NxK] representing the predicted target values y_i.
         :param v: A np.ndarray [NxP] to be multiplied with the Hessian.

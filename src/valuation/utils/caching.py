@@ -8,7 +8,7 @@ from functools import wraps
 from hashlib import blake2b
 from io import BytesIO
 from time import time
-from typing import Callable, Dict, Iterable, Optional, Tuple, Union
+from typing import Callable, Dict, Iterable, Optional, Tuple, Type, Union
 
 from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
@@ -17,9 +17,54 @@ from pymemcache.serde import PickleSerde
 
 from valuation.utils.logging import logger
 from valuation.utils.numeric import get_running_avg_variance
-from valuation.utils.types import unpackable
 
 PICKLE_VERSION = 5  # python >= 3.8
+
+
+def unpackable(cls: Type) -> Type:
+    """A class decorator that allows unpacking of all attributes of an object
+    with the double asterisk operator. E.g.::
+
+       @unpackable
+       @dataclass
+       class Schtuff:
+           a: int
+           b: str
+
+       x = Schtuff(a=1, b='meh')
+       d = dict(**x)
+    """
+
+    def keys(self):
+        return self.__dict__.keys()
+
+    def __getitem__(self, item):
+        return getattr(self, item)
+
+    def __len__(self):
+        return len(self.keys())
+
+    def __iter__(self):
+        for k in self.keys():
+            yield getattr(self, k)
+
+    # HACK: I needed this somewhere else
+    def update(self, values: dict):
+        for k, v in values.items():
+            setattr(self, k, v)
+
+    def items(self):
+        for k in self.keys():
+            yield k, getattr(self, k)
+
+    setattr(cls, "keys", keys)
+    setattr(cls, "__getitem__", __getitem__)
+    setattr(cls, "__len__", __len__)
+    setattr(cls, "__iter__", __iter__)
+    setattr(cls, "update", update)
+    setattr(cls, "items", items)
+
+    return cls
 
 
 @unpackable
