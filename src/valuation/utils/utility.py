@@ -16,15 +16,25 @@ __all__ = ["Utility", "DataUtilityLearning"]
 class Utility:
     """A convenience wrapper with configurable memoization
 
-    :param model: Any supervised model
-    :param data: a split :class:`Dataset`
+    It holds all the most important elements of the Shapley values calculation,
+    namely the model, the data and the scoring.
+    It can also cache the training results, which speeds up
+    the overall calculation for big models that take a long time to train.
+
+    :param model: Any supervised model. Typical choices can be found at
+            https://scikit-learn.org/stable/supervised_learning.html
+    :param data: :class:`Dataset` or :class:`GroupedDataset`.
     :param scoring: Same as in sklearn's `cross_validate()`: a string,
         a scorer callable or None for the default `model.score()`. Greater
         values must be better. If they are not, a negated version can be
         used (see `make_scorer`)
-    :param catch_errors: set to True to return `np.nan` if fit() fails. This
-        hack helps when a step in a pipeline fails if there are too few data
-        points
+    :param catch_errors: set to True to catch the errors when fit() fails. This
+        could happen in several steps of the pipeline, e.g. when too little
+        training data is passed, which happens often during the Shapley value calculations.
+        When this happens, the default_score is returned as a score and Shapley value
+        calculation continues.
+    :param show_warnings: True for printing warnings fit fails.
+        Used only when catch_errors is True
     :param default_score: score in the case of models that have not been fit,
         e.g. when too little data is passed, or errors arise.
     :param enable_cache: whether to use memcached for memoization.
@@ -45,30 +55,6 @@ class Utility:
         enable_cache: bool = True,
         cache_options: Optional[MemcachedConfig] = None,
     ):
-        """
-        It holds all the most important elements of the Shapley values calculation,
-        namely the model, the data and the scoring.
-        It can also cache the training results, which speeds up
-        the overall calculation for big models that take a long time to train.
-
-        :param model: Any supervised model. Typical choices can be found at
-            https://scikit-learn.org/stable/supervised_learning.html
-        :param data: dataset or grouped dataset.
-        :param scoring: Same as in sklearn's `cross_validate()`: a string,
-            a scorer callable or None for the default `model.score()`. Greater
-            values must be better. If they are not, a negated version can be
-            used (see `make_scorer`)
-        :param catch_errors: set to True to catch the errors when fit() fails. This
-            could happen in several steps of the pipeline, e.g. when too little
-            training data is passed, which happens often during the Shapley value calculations.
-            When this happens, the default_score is returned as a score and Shapley value
-            calculation continues.
-        :param show_warnings: True for printing warnings fit fails.
-            Used only when catch_errors is True
-        :param default_score: score in the case of models that have not been fit,
-            e.g. when too little data is passed, or errors arise.
-        :param enable_cache: whether to use memcached for memoization.
-        """
         self.model = model
         self.data = data
         self.scoring = scoring
