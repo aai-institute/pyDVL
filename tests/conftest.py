@@ -13,7 +13,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 
-from valuation.utils import ClientConfig, Dataset, Utility
+from valuation.utils import Dataset, MemcachedClientConfig, Utility
 from valuation.utils.logging import start_logging_server
 from valuation.utils.numeric import random_matrix_with_condition_number, spearman
 from valuation.utils.parallel import available_cpus
@@ -126,7 +126,7 @@ def memcached_service(docker_ip, docker_services, do_not_start_memcache):
 @pytest.fixture(scope="function")
 def memcache_client_config(memcached_service):
 
-    client_config = ClientConfig(
+    client_config = MemcachedClientConfig(
         server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
     )
     Client(**client_config).flush_all()

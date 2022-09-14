@@ -1,4 +1,5 @@
 from valuation.utils.caching import *
+from valuation.utils.config import *
 from valuation.utils.dataset import *
 from valuation.utils.numeric import *
 from valuation.utils.parallel import *
@@ -15,7 +16,6 @@ __all__ = [
     "map_reduce",
     "MapReduceJob",
     "available_cpus",
-    "vanishing_derivatives",
     "unpackable",
     "Utility",
     "serialize",
