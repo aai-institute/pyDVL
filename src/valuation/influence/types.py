@@ -1,4 +1,5 @@
-from typing import Callable, Protocol
+from abc import ABC
+from typing import Callable
 
 from numpy import ndarray
 
@@ -9,7 +10,7 @@ __all__ = [
 ]
 
 
-class TwiceDifferentiable(Protocol):
+class TwiceDifferentiable(ABC):
     def num_params(self) -> int:
         pass
 

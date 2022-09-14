@@ -25,7 +25,6 @@ try:
     from valuation.influence.model_wrappers import (
         TorchLinearRegression,
         TorchNeuralNetwork,
-        fit_torch_model,
     )
 except ImportError:
     pass
@@ -86,7 +85,7 @@ def test_upweighting_influences_lr_analytical_cg(
     A, _ = linear_model
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
 
-    model = TorchLinearRegression(dim=tuple(A.shape), init=linear_model)
+    model = TorchLinearRegression(A.shape[0], A.shape[1], init=linear_model)
     loss = F.mse_loss
 
     influence_values_analytical = 2 * influences_up_linear_regression_analytical(
@@ -129,7 +128,7 @@ def test_upweighting_influences_lr_analytical(
     A, _ = tuple(linear_model)
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
 
-    model = TorchLinearRegression(dim=tuple(A.shape), init=linear_model)
+    model = TorchLinearRegression(A.shape[0], A.shape[1], init=linear_model)
     loss = F.mse_loss
 
     influence_values_analytical = 2 * influences_up_linear_regression_analytical(
@@ -171,7 +170,7 @@ def test_perturbation_influences_lr_analytical_cg(
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
     A, _ = linear_model
 
-    model = TorchLinearRegression(dim=tuple(A.shape), init=linear_model)
+    model = TorchLinearRegression(A.shape[0], A.shape[1], init=linear_model)
     loss = F.mse_loss
 
     influence_values_analytical = (
@@ -220,7 +219,7 @@ def test_perturbation_influences_lr_analytical(
     dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
     A, _ = linear_model
 
-    model = TorchLinearRegression(dim=tuple(A.shape), init=linear_model)
+    model = TorchLinearRegression(A.shape[0], A.shape[1], init=linear_model)
     loss = F.mse_loss
 
     influence_values_analytical = (
@@ -313,8 +312,7 @@ def test_influences_with_neural_network_explicit_hessian():
     nn = TorchNeuralNetwork(feature_dimension, num_classes, network_size)
     optimizer = Adam(params=nn.parameters(), lr=0.001, weight_decay=0.001)
     loss = F.cross_entropy
-    fit_torch_model(
-        model=nn,
+    nn.fit(
         x=transformed_dataset.x_train,
         y=transformed_dataset.y_train,
         num_epochs=num_epochs,

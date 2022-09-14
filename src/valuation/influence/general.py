@@ -26,8 +26,8 @@ def calculate_influence_factors(
     model: TwiceDifferentiable,
     data: Dataset,
     inversion_func: MatrixVectorProductInversionAlgorithm,
-    train_indices: Optional[np.array] = None,
-    test_indices: Optional[np.array] = None,
+    train_indices: Optional[np.ndarray] = None,
+    test_indices: Optional[np.ndarray] = None,
     progress: bool = False,
 ) -> np.ndarray:
     """
@@ -55,7 +55,7 @@ def _calculate_influences_up(
     model: TwiceDifferentiable,
     data: Dataset,
     influence_factors: np.ndarray,
-    train_indices: Optional[np.array] = None,
+    train_indices: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """
     Calculates the influence from the influence factors and the scores of the training points.
@@ -76,7 +76,7 @@ def _calculate_influences_pert(
     model: TwiceDifferentiable,
     data: Dataset,
     influence_factors: np.ndarray,
-    train_indices: Optional[np.array] = None,
+    train_indices: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """
     Calculates the influence from the influence factors and the scores of the training points.
@@ -110,12 +110,12 @@ influence_type_function_dict = {
 
 def influences(
     model: nn.Module,
-    loss: Callable[[torch.Tensor, torch.Tensor, Any], torch.Tensor],
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     data: Dataset,
     progress: bool = False,
     inversion_method: str = "direct",
     influence_type: str = "up",
-    train_points_idxs: Optional[int] = None,
+    train_points_idxs: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """
     Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
