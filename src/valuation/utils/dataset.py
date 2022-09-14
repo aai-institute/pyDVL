@@ -23,7 +23,7 @@ class Dataset:
         y_test: Union[np.ndarray, pd.DataFrame],
         feature_names: Optional[Sized] = None,
         target_names: Optional[Sized] = None,
-        data_names: Sized = None,
+        data_names: Optional[Sized] = None,
         description: str = None,
         is_multi_output=False,
     ):
