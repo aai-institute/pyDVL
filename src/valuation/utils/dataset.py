@@ -21,9 +21,9 @@ class Dataset:
         y_train: Union[np.ndarray, pd.DataFrame],
         x_test: Union[np.ndarray, pd.DataFrame],
         y_test: Union[np.ndarray, pd.DataFrame],
-        feature_names: Optional[np.ndarray] = None,
-        target_names: Optional[np.ndarray] = None,
-        data_names: Iterable = None,
+        feature_names: Optional[Sized] = None,
+        target_names: Optional[Sized] = None,
+        data_names: Sized = None,
         description: str = None,
         is_multi_output=False,
     ):
@@ -103,7 +103,7 @@ class Dataset:
 
         self.description = description or "No description"
         self._indices = np.arange(len(self.x_train))
-        self._data_names = list(data_names) if data_names is not None else self._indices
+        self._data_names = data_names if data_names is not None else self._indices
 
     def __iter__(self):
         return self.x_train, self.y_train, self.x_test, self.y_test
@@ -205,8 +205,8 @@ class GroupedDataset(Dataset):
         x_test: np.ndarray,
         y_test: np.ndarray,
         data_groups: Sequence,
-        feature_names: Optional[np.ndarray] = None,
-        target_names: Optional[np.ndarray] = None,
+        feature_names: Optional[Sized] = None,
+        target_names: Optional[Sized] = None,
         description: Optional[str] = None,
     ):
         """Class for grouping datasets.
