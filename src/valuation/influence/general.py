@@ -23,7 +23,7 @@ from valuation.influence.types import (
 from valuation.utils import Dataset
 
 
-class InfluenceType(Enum):
+class InfluenceType(str, Enum):
     """
     Different influence types.
     """
@@ -32,7 +32,7 @@ class InfluenceType(Enum):
     Perturbation = "perturbation"
 
 
-class InversionMethod(Enum):
+class InversionMethod(str, Enum):
     """
     Different inversion methods types.
     """
