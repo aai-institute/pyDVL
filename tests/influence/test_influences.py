@@ -8,7 +8,6 @@ from sklearn.datasets import load_wine
 from sklearn.preprocessing import MinMaxScaler
 
 from tests.conftest import create_mock_dataset
-from valuation.influence.general import influences
 from valuation.influence.linear import (
     influences_perturbation_linear_regression_analytical,
     influences_up_linear_regression_analytical,
@@ -21,7 +20,7 @@ try:
     import torch.nn.functional as F
     from torch.optim import Adam, lr_scheduler
 
-    from valuation.influence.frameworks import TorchTwiceDifferentiable
+    from valuation.influence.general import influences
     from valuation.influence.model_wrappers import (
         TorchLinearRegression,
         TorchNeuralNetwork,

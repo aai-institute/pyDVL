@@ -4,6 +4,7 @@ Contains parallelized influence calculation functions for general models.
 
 __all__ = ["influences"]
 
+from enum import Enum
 from typing import Any, Callable, Dict, Optional
 
 import numpy as np
@@ -20,6 +21,24 @@ from valuation.influence.types import (
     TwiceDifferentiable,
 )
 from valuation.utils import Dataset
+
+
+class InfluenceType(Enum):
+    """
+    Different influence types.
+    """
+
+    Up = "up"
+    Perturbation = "perturbation"
+
+
+class InversionMethod(Enum):
+    """
+    Different inversion methods types.
+    """
+
+    Direct = "direct"
+    Cg = "cg"
 
 
 def calculate_influence_factors(
@@ -113,8 +132,8 @@ def influences(
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     data: Dataset,
     progress: bool = False,
-    inversion_method: str = "direct",
-    influence_type: str = "up",
+    inversion_method: InversionMethod = InversionMethod.Direct,
+    influence_type: InfluenceType = InfluenceType.Up,
     train_points_idxs: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """
