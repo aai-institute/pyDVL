@@ -22,7 +22,10 @@ from valuation.utils.numeric import (
 
 
 def linear_influences(
-    data: Dataset,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    x_test: np.ndarray,
+    y_test: np.ndarray,
     influence_type: str = "up",
 ):
     """
@@ -34,19 +37,25 @@ def linear_influences(
     """
 
     lr = LinearRegression()
-    lr.fit(data.x_train, data.y_train)
+    lr.fit(x_train, y_train)
     A = lr.coef_
     b = lr.intercept_
 
     if influence_type == "up":
         return influences_up_linear_regression_analytical(
             (A, b),
-            data,
+            x_train,
+            y_train,
+            x_test,
+            y_test,
         )
     elif influence_type == "perturbation":
         return influences_perturbation_linear_regression_analytical(
             (A, b),
-            data,
+            x_train,
+            y_train,
+            x_test,
+            y_test,
         )
     else:
         raise NotImplementedError(
@@ -56,7 +65,10 @@ def linear_influences(
 
 def influences_up_linear_regression_analytical(
     linear_model: Tuple[np.ndarray, np.ndarray],
-    data: Dataset,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    x_test: np.ndarray,
+    y_test: np.ndarray,
 ):
     """
     Calculate the influences of the training set onto the validation set for a linear model Ax+b=y.
@@ -67,13 +79,13 @@ def influences_up_linear_regression_analytical(
     """
 
     test_grads_analytical = linear_regression_analytical_derivative_d_theta(
-        linear_model, data.x_test, data.y_test
+        linear_model, x_test, y_test
     )
     train_grads_analytical = linear_regression_analytical_derivative_d_theta(
-        linear_model, data.x_train, data.y_train
+        linear_model, x_train, y_train
     )
     hessian_analytical = linear_regression_analytical_derivative_d2_theta(
-        linear_model, data.x_train, data.y_train
+        linear_model, x_train, y_train
     )
     s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
     return -np.einsum("ia,ja->ij", s_test_analytical, train_grads_analytical)
@@ -81,7 +93,10 @@ def influences_up_linear_regression_analytical(
 
 def influences_perturbation_linear_regression_analytical(
     linear_model: Tuple[np.ndarray, np.ndarray],
-    data: Dataset,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    x_test: np.ndarray,
+    y_test: np.ndarray,
 ):
     """
     Calculate the influences of each feature of the training set onto the validation set for a linear model Ax+b=y.
@@ -92,14 +107,14 @@ def influences_perturbation_linear_regression_analytical(
     """
 
     test_grads_analytical = linear_regression_analytical_derivative_d_theta(
-        linear_model, data.x_test, data.y_test
+        linear_model, x_test, y_test
     )
     train_second_deriv_analytical = linear_regression_analytical_derivative_d_x_d_theta(
-        linear_model, data.x_train, data.y_train
+        linear_model, x_train, y_train
     )
 
     hessian_analytical = linear_regression_analytical_derivative_d2_theta(
-        linear_model, data.x_train, data.y_train
+        linear_model, x_train, y_train
     )
     s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
     return -np.einsum("ia,jab->ijb", s_test_analytical, train_second_deriv_analytical)

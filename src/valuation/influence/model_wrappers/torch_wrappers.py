@@ -25,8 +25,10 @@ from valuation.utils.logging import logger
 
 def fit_torch_model(
     model: nn.Module,
-    x: torch.tensor,
-    y: torch.tensor,
+    x_train: torch.tensor,
+    y_train: torch.tensor,
+    x_val: torch.tensor,
+    y_val: torch.tensor,
     loss: Callable[[torch.Tensor, torch.Tensor, Any], torch.Tensor],
     optimizer: Optimizer,
     scheduler: Optional[_LRScheduler] = None,
@@ -53,19 +55,23 @@ def fit_torch_model(
         """
 
         def __len__(self):
-            return len(x)
+            return len(x_train)
 
         def __getitem__(self, idx):
-            return x[idx], y[idx]
+            return x_train[idx], y_train[idx]
 
     dataset = InternalDataset()
     dataloader = DataLoader(dataset, batch_size=batch_size)
+    train_loss = []
+    val_loss = []
 
     for epoch in range(num_epochs):
+        batch_loss = []
         for train_batch in dataloader:
             batch_x, batch_y = train_batch
             pred_y = model(batch_x)
             loss_value = loss(torch.squeeze(pred_y), torch.squeeze(batch_y))
+            batch_loss.append(loss_value.item())
 
             logger.debug(f"Epoch: {epoch} ---> Training loss: {loss_value.item()}")
             loss_value.backward()
@@ -74,6 +80,10 @@ def fit_torch_model(
 
             if scheduler:
                 scheduler.step()
+        pred_loss = model(x_val)
+        val_loss.append(loss(torch.squeeze(pred_loss), torch.squeeze(y_val)).item())
+        train_loss.append(np.mean(batch_loss))
+    return train_loss, val_loss
 
 
 def predict(model: nn.Module, x: torch.tensor) -> np.ndarray:
@@ -122,10 +132,10 @@ class TorchLinearRegression(nn.Module):
             init = (init_A, init_b)
 
         self.A = nn.Parameter(
-            torch.tensor(init[0], dtype=torch.float32), requires_grad=True
+            torch.tensor(init[0], dtype=torch.float64), requires_grad=True
         )
         self.b = nn.Parameter(
-            torch.tensor(init[1], dtype=torch.float32), requires_grad=True
+            torch.tensor(init[1], dtype=torch.float64), requires_grad=True
         )
 
     def forward(self, x: torch.tensor) -> torch.tensor:

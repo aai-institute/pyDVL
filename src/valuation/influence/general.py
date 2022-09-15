@@ -24,7 +24,10 @@ from valuation.utils import Dataset
 
 def calculate_influence_factors(
     model: TwiceDifferentiable,
-    data: Dataset,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    x_test: np.ndarray,
+    y_test: np.ndarray,
     inversion_func: MatrixVectorProductInversionAlgorithm,
     train_indices: Optional[np.array] = None,
     test_indices: Optional[np.array] = None,
@@ -41,8 +44,6 @@ def calculate_influence_factors(
         of the loss (s_test in the paper).
     :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
     """
-    x_train, y_train = data.get_train_data(train_indices)
-    x_test, y_test = data.get_test_data(test_indices)
 
     hvp = lambda v, **kwargs: model.mvp(
         x_train, y_train, v, progress=progress, **kwargs
@@ -53,7 +54,8 @@ def calculate_influence_factors(
 
 def _calculate_influences_up(
     model: TwiceDifferentiable,
-    data: Dataset,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
     influence_factors: np.ndarray,
     train_indices: Optional[np.array] = None,
 ) -> np.ndarray:
@@ -67,14 +69,14 @@ def _calculate_influences_up(
     :param influence_factors: np.ndarray containing influence factors
     :returns: A np.ndarray of size [NxM], where N is number of test points and M number of train points.
     """
-    x_train, y_train = data.get_train_data(train_indices)
     train_grads = model.grad(x_train, y_train)
     return np.einsum("ta,va->tv", influence_factors, train_grads)  # type: ignore
 
 
 def _calculate_influences_pert(
     model: TwiceDifferentiable,
-    data: Dataset,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
     influence_factors: np.ndarray,
     train_indices: Optional[np.array] = None,
 ) -> np.ndarray:
@@ -89,7 +91,6 @@ def _calculate_influences_pert(
     :returns: A np.ndarray of size [NxM], where N is number of test points and M number of train points.
     """
     all_pert_influences = []
-    x_train, y_train = data.get_train_data(train_indices)
     for i in np.arange(len(x_train)):
         perturbation_influences = model.mvp(
             x_train[i],
@@ -111,7 +112,10 @@ influence_type_function_dict = {
 def influences(
     model: nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor, Any], torch.Tensor],
-    data: Dataset,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    x_test: np.ndarray,
+    y_test: np.ndarray,
     progress: bool = False,
     inversion_method: str = "direct",
     influence_type: str = "up",
@@ -146,11 +150,14 @@ def influences(
 
     influence_factors = calculate_influence_factors(
         differentiable_model,
-        data,
+        x_train,
+        y_train,
+        x_test,
+        y_test,
         dict_fact_algos[inversion_method],
         train_indices=train_points_idxs,
         progress=progress,
     )
     influence_function = influence_type_function_dict[influence_type]
 
-    return influence_function(differentiable_model, data, influence_factors)
+    return influence_function(differentiable_model, x_train, y_train, influence_factors)
