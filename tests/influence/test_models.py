@@ -1,5 +1,5 @@
 """
-Contains tests for LinearRegression, BinaryLogisticRegression as well as TorchModule, TwiceDifferentiable interface and
+Contains tests for LinearRegression, BinaryLogisticRegression as well as TwiceDifferentiable modules and
 its associated gradient and matrix vector product calculations. Note that there is no test for the neural network
 module.
 """
@@ -19,12 +19,8 @@ from valuation.utils import (
 try:
     import torch.nn.functional as F
 
-    from valuation.models import (
-        BinaryLogisticRegressionTorchModel,
-        LinearRegressionTorchModel,
-        TorchModule,
-        TorchOptimizer,
-    )
+    from valuation.influence.frameworks import TorchTwiceDifferentiable
+    from valuation.influence.model_wrappers import TorchLinearRegression
 except ImportError:
     pass
 
@@ -106,96 +102,6 @@ correctness_test_case_ids = list(
 
 @pytest.mark.torch
 @pytest.mark.parametrize(
-    "train_set_size,test_set_size,problem_dimension,condition_number",
-    test_cases_logistic_regression_fit,
-)
-def test_logistic_regression_model_fit(
-    train_set_size: int,
-    test_set_size: int,
-    condition_number: float,
-    linear_model: Tuple[np.ndarray, np.ndarray],
-):
-
-    # some settings
-    A, b = linear_model
-    output_dimension, input_dimension = tuple(A.shape)
-    sigmoid = lambda z: 1 / (1 + np.exp(-z))
-
-    # generate datasets
-    data_model = lambda x: (
-        sigmoid(np.random.normal(x @ A.T + b, ModelTestSettings.DATA_OUTPUT_NOISE))
-        > 0.5
-    ).astype(int)
-    train_x = np.random.uniform(low=-1, high=1, size=[train_set_size, input_dimension])
-    train_y = data_model(train_x)
-    model = TorchModule(
-        model=BinaryLogisticRegressionTorchModel(input_dimension),
-        objective=F.binary_cross_entropy,
-        num_epochs=1000,
-        batch_size=32,
-        optimizer=TorchOptimizer.ADAM,
-        optimizer_kwargs={"lr": 0.001, "weight_decay": 1e-4},
-    )
-    model.fit(train_x, train_y)
-    pred_y = (model.predict(train_x) > 0.5).astype(int)
-    accuracy = np.sum(pred_y == train_y) / len(pred_y)
-    assert accuracy >= 0.95, "Accuracy is not enough"
-
-    learned_A = model.model.A.detach().numpy()
-    angle_similiarity = (learned_A * A).sum() / (
-        np.linalg.norm(learned_A) * np.linalg.norm(A)
-    )
-    assert angle_similiarity > 0.95, "Angle similarity is not enough"
-
-
-@pytest.mark.torch
-@pytest.mark.parametrize(
-    "train_set_size,test_set_size,problem_dimension,condition_number",
-    test_cases_linear_regression_fit,
-    ids=fit_test_case_ids,
-)
-def test_linear_regression_model_fit(
-    train_set_size: int,
-    test_set_size: int,
-    condition_number: float,
-    linear_model: Tuple[np.ndarray, np.ndarray],
-):
-
-    # some settings
-    A, b = linear_model
-    output_dimension, input_dimension = tuple(A.shape)
-
-    # generate datasets
-    data_model = lambda x: np.random.normal(
-        x @ A.T + b, ModelTestSettings.DATA_OUTPUT_NOISE
-    )
-    train_x = np.random.uniform(size=[train_set_size, input_dimension])
-    train_y = data_model(train_x)
-
-    model = TorchModule(
-        model=LinearRegressionTorchModel((output_dimension, input_dimension)),
-        objective=F.mse_loss,
-        num_epochs=1000,
-        batch_size=32,
-        optimizer=TorchOptimizer.ADAM_W,
-        optimizer_kwargs={"lr": 0.05},
-    )
-    model.fit(train_x, train_y)
-    learned_A = model.model.A.detach().numpy()
-    max_A_diff = np.max(np.abs(learned_A - A))
-    assert (
-        max_A_diff < ModelTestSettings.ACCEPTABLE_ABS_TOL_MODEL
-    ), "A did not converged to target solution."
-
-    learned_b = model.model.b.detach().numpy()
-    max_b_diff = np.max(np.abs(learned_b - b))
-    assert (
-        max_b_diff < ModelTestSettings.ACCEPTABLE_ABS_TOL_MODEL
-    ), "b did not converged to target solution."
-
-
-@pytest.mark.torch
-@pytest.mark.parametrize(
     "train_set_size,problem_dimension,condition_number",
     test_cases_linear_regression_derivatives,
     ids=correctness_test_case_ids,
@@ -216,17 +122,14 @@ def test_linear_regression_model_grad(
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
 
-    model = TorchModule(
-        model=LinearRegressionTorchModel(
-            dim=(input_dimension, output_dimension), init=linear_model
-        ),
-        objective=F.mse_loss,
-    )
+    model = TorchLinearRegression(input_dimension, output_dimension, init=linear_model)
+    loss = F.mse_loss
+    mvp_model = TorchTwiceDifferentiable(model=model, loss=loss)
 
     train_grads_analytical = 2 * linear_regression_analytical_derivative_d_theta(
         (A, b), train_x, train_y
     )
-    train_grads_autograd = model.grad(train_x, train_y)
+    train_grads_autograd = mvp_model.grad(train_x, train_y)
     train_grads_max_diff = np.max(np.abs(train_grads_analytical - train_grads_autograd))
     assert (
         train_grads_max_diff < ModelTestSettings.ACCEPTABLE_ABS_TOL_DERIVATIVE
@@ -254,18 +157,14 @@ def test_linear_regression_model_hessian(
     )
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
-
-    model = TorchModule(
-        model=LinearRegressionTorchModel(
-            dim=(input_dimension, output_dimension), init=linear_model
-        ),
-        objective=F.mse_loss,
-    )
+    model = TorchLinearRegression(input_dimension, output_dimension, init=linear_model)
+    loss = F.mse_loss
+    mvp_model = TorchTwiceDifferentiable(model=model, loss=loss)
 
     test_hessian_analytical = 2 * linear_regression_analytical_derivative_d2_theta(
         (A, b), train_x, train_y
     )
-    estimated_hessian = model.mvp(
+    estimated_hessian = mvp_model.mvp(
         train_x, train_y, np.eye((input_dimension + 1) * output_dimension)
     )
     test_hessian_max_diff = np.max(np.abs(test_hessian_analytical - estimated_hessian))
@@ -295,24 +194,16 @@ def test_linear_regression_model_d_x_d_theta(
     )
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
-
-    model = TorchModule(
-        model=LinearRegressionTorchModel(
-            dim=(input_dimension, output_dimension), init=(A, b)
-        ),
-        objective=F.mse_loss,
-        num_epochs=1000,
-        batch_size=32,
-        optimizer=TorchOptimizer.ADAM_W,
-        optimizer_kwargs={"lr": 0.02},
-    )
+    model = TorchLinearRegression(input_dimension, output_dimension, init=(A, b))
+    loss = F.mse_loss
+    mvp_model = TorchTwiceDifferentiable(model=model, loss=loss)
 
     test_derivative = 2 * linear_regression_analytical_derivative_d_x_d_theta(
         (A, b), train_x, train_y
     )
     estimated_derivative = np.stack(
         [
-            model.mvp(
+            mvp_model.mvp(
                 train_x[i],
                 train_y[i],
                 np.eye((input_dimension + 1) * output_dimension),

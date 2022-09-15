@@ -4,7 +4,7 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 
-from valuation.solve.cg import (
+from valuation.influence.cg import (
     batched_preconditioned_conjugate_gradient,
     conjugate_gradient_condition_number_based_error_bound,
 )

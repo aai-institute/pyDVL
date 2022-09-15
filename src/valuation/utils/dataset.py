@@ -1,7 +1,7 @@
 import os
 from collections import OrderedDict
 from copy import copy
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Sized, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -17,14 +17,15 @@ class Dataset:
 
     def __init__(
         self,
-        x_train: np.ndarray,
-        y_train: np.ndarray,
-        x_test: np.ndarray,
-        y_test: np.ndarray,
-        feature_names: Iterable = None,
-        target_names: Iterable = None,
-        data_names: Iterable = None,
+        x_train: Union[np.ndarray, pd.DataFrame],
+        y_train: Union[np.ndarray, pd.DataFrame],
+        x_test: Union[np.ndarray, pd.DataFrame],
+        y_test: Union[np.ndarray, pd.DataFrame],
+        feature_names: Optional[Sized] = None,
+        target_names: Optional[Sized] = None,
+        data_names: Optional[Sized] = None,
         description: str = None,
+        is_multi_output=False,
     ):
         """It holds a dataset, split into train and test data, together
         with several labels on feature names, data point names and description
@@ -39,10 +40,16 @@ class Dataset:
             For example, if the dataset is a time series, each row represents
             a time step which can be referenced directly using timestamps instead
             of the row number.
+        :param is_multi_output: set to True if y holds multiple labels for each data point.
+            False if y is a 1d array holding a single label per point.
         :param description: description of the dataset
         """
-        self.x_train, self.y_train = check_X_y(x_train, y_train)
-        self.x_test, self.y_test = check_X_y(x_test, y_test)
+        self.x_train, self.y_train = check_X_y(
+            x_train, y_train, multi_output=is_multi_output
+        )
+        self.x_test, self.y_test = check_X_y(
+            x_test, y_test, multi_output=is_multi_output
+        )
 
         if x_train.shape[-1] != x_test.shape[-1]:
             raise ValueError(
@@ -60,18 +67,26 @@ class Dataset:
                 f"{x_test.shape[-1]} and {y_test.shape[-1]}"
             )
 
-        def make_names(s: str, a: np.ndarray) -> List[str]:
+        def make_names(s: str, a: np.ndarray) -> np.ndarray:
             n = a.shape[1] if len(a.shape) > 1 else 1
-            return [f"{s}{i:0{1 + int(np.log10(n))}d}" for i in range(1, n + 1)]
+            return np.array(
+                [f"{s}{i:0{1 + int(np.log10(n))}d}" for i in range(1, n + 1)]
+            )
 
-        self.feature_names = (
-            list(feature_names)
-            if feature_names is not None
-            else make_names("x", x_train)
-        )
-        self.target_names = (
-            list(target_names) if target_names is not None else make_names("y", y_train)
-        )
+        self.feature_names = feature_names
+        self.target_names = target_names
+
+        if self.feature_names is None:
+            if isinstance(x_train, pd.DataFrame):
+                self.feature_names = np.asarray(x_train.columns)
+            else:
+                self.feature_names = make_names("x", x_train)
+
+        if self.target_names is None:
+            if isinstance(y_train, pd.DataFrame):
+                self.target_names = np.asarray(y_train.columns)
+            else:
+                self.target_names = make_names("y", y_train)
 
         if len(self.x_train.shape) > 1:
             if (
@@ -88,29 +103,41 @@ class Dataset:
 
         self.description = description or "No description"
         self._indices = np.arange(len(self.x_train))
-        self._data_names = list(data_names) if data_names is not None else self._indices
+        self._data_names = data_names if data_names is not None else self._indices
 
     def __iter__(self):
         return self.x_train, self.y_train, self.x_test, self.y_test
 
     def feature(self, name: str) -> Tuple[slice, int]:
         try:
-            return np.index_exp[:, self.feature_names.index(name)]
+            return np.index_exp[:, self.feature_names.index(name)]  # type: ignore
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
-    def get_train_data(self, train_indices: List[int]):
+    def get_train_data(self, train_indices: Optional[Iterable[int]]):
         """Given a set of indices, it returns the train data that refer to those indices.
         This is used when calling different sub-sets of indices to calculate shapley values.
         Notice that train_indices is not typically equal to the full indices, but only a subset of it.
         """
-        x = self.x_train[train_indices]
-        y = self.y_train[train_indices]
-        return x, y
+        if train_indices is None:
+            return self.x_train, self.y_train
+        else:
+            x = self.x_train[train_indices]
+            y = self.y_train[train_indices]
+            return x, y
+
+    def get_test_data(self, test_indices: Optional[Iterable[int]]):
+        """Given a set of indices, it returns the test data that refer to those indices."""
+        if test_indices is None:
+            return self.x_test, self.y_test
+        else:
+            x = self.x_test[test_indices]
+            y = self.y_test[test_indices]
+            return x, y
 
     def target(self, name: str) -> Tuple[slice, int]:
         try:
-            return np.index_exp[:, self.target_names.index(name)]
+            return np.index_exp[:, self.target_names.index(name)]  # type: ignore
         except ValueError:
             raise ValueError(f"Target {name} is not in {self.target_names}")
 
@@ -178,8 +205,8 @@ class GroupedDataset(Dataset):
         x_test: np.ndarray,
         y_test: np.ndarray,
         data_groups: Sequence,
-        feature_names: Optional[Iterable] = None,
-        target_names: Optional[Iterable] = None,
+        feature_names: Optional[Sized] = None,
+        target_names: Optional[Sized] = None,
         description: Optional[str] = None,
     ):
         """Class for grouping datasets.
