@@ -5,11 +5,14 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
+import torch
+from sklearn.datasets import load_wine
 from sklearn.manifold import TSNE
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import Bunch, check_X_y
 
-__all__ = ["Dataset", "GroupedDataset", "load_spotify_dataset"]
+__all__ = ["Dataset", "GroupedDataset", "load_spotify_dataset", "load_wine_dataset"]
 
 
 class Dataset:
@@ -353,6 +356,38 @@ def load_spotify_dataset(
         X, y, test_size=val_size, random_state=random_state
     )
     return [X_train, y_train], [X_val, y_val], [X_test, y_test]
+
+
+def load_wine_dataset(train_size, test_size, random_seed):
+    wine_bunch = load_wine(as_frame=True)
+    x, x_test, y, y_test = train_test_split(
+        wine_bunch.data,
+        wine_bunch.target,
+        train_size=1 - test_size,
+        random_state=random_seed,
+    )
+    x_train, x_val, y_train, y_val = train_test_split(
+        x, y, train_size=train_size / (1 - test_size), random_state=random_seed
+    )
+    x_transformer = MinMaxScaler()
+
+    transformed_x_train = x_transformer.fit_transform(x_train)
+    transformed_x_test = x_transformer.transform(x_test)
+
+    transformed_x_train = torch.tensor(transformed_x_train, dtype=torch.float)
+    transformed_y_train = torch.tensor(y_train.to_numpy(), dtype=torch.long)
+
+    transformed_x_test = torch.tensor(transformed_x_test, dtype=torch.float)
+    transformed_y_test = torch.tensor(y_test.to_numpy(), dtype=torch.long)
+
+    transformed_x_val = x_transformer.transform(x_val)
+    transformed_x_val = torch.tensor(transformed_x_val, dtype=torch.float)
+    transformed_y_val = torch.tensor(y_val.to_numpy(), dtype=torch.long)
+    return (
+        (transformed_x_train, transformed_y_train),
+        (transformed_x_val, transformed_y_val),
+        (transformed_x_test, transformed_y_test),
+    )
 
 
 def flip_dataset(

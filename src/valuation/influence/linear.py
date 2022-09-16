@@ -42,7 +42,7 @@ def linear_influences(
     b = lr.intercept_
 
     if influence_type == "up":
-        return influences_up_linear_regression_analytical(
+        return -1 * influences_up_linear_regression_analytical(
             (A, b),
             x_train,
             y_train,
@@ -50,7 +50,7 @@ def linear_influences(
             y_test,
         )
     elif influence_type == "perturbation":
-        return influences_perturbation_linear_regression_analytical(
+        return -1 * influences_perturbation_linear_regression_analytical(
             (A, b),
             x_train,
             y_train,

@@ -29,8 +29,6 @@ def calculate_influence_factors(
     x_test: np.ndarray,
     y_test: np.ndarray,
     inversion_func: MatrixVectorProductInversionAlgorithm,
-    train_indices: Optional[np.array] = None,
-    test_indices: Optional[np.array] = None,
     progress: bool = False,
 ) -> np.ndarray:
     """
@@ -57,7 +55,6 @@ def _calculate_influences_up(
     x_train: np.ndarray,
     y_train: np.ndarray,
     influence_factors: np.ndarray,
-    train_indices: Optional[np.array] = None,
 ) -> np.ndarray:
     """
     Calculates the influence from the influence factors and the scores of the training points.
@@ -78,7 +75,6 @@ def _calculate_influences_pert(
     x_train: np.ndarray,
     y_train: np.ndarray,
     influence_factors: np.ndarray,
-    train_indices: Optional[np.array] = None,
 ) -> np.ndarray:
     """
     Calculates the influence from the influence factors and the scores of the training points.
@@ -117,9 +113,9 @@ def influences(
     x_test: np.ndarray,
     y_test: np.ndarray,
     progress: bool = False,
-    inversion_method: str = "direct",
     influence_type: str = "up",
-    train_points_idxs: Optional[int] = None,
+    inversion_method: str = "direct",
+    inversion_method_kwargs: Dict = {},
 ) -> np.ndarray:
     """
     Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
@@ -134,8 +130,6 @@ def influences(
         (and explicit construction of the Hessian) or 'cg' for conjugate gradient.
     :param influence_type: Which algorithm to use to calculate influences.
         Currently supported options: 'up' or 'perturbation'
-    :param train_points_idxs: It indicates which train data points to calculate the influence score of.
-        If None, it calculates influences for all training data points.
     :returns: A np.ndarray specifying the influences. Shape is [NxM], where N is number of test points and
         M number of train points.
     """
@@ -144,7 +138,10 @@ def influences(
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
         "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,  # type: ignore
         "cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(  # type: ignore
-            hvp, x, M=hvp_to_inv_diag_conditioner(hvp, d=x.shape[1])
+            hvp,
+            x,
+            M=hvp_to_inv_diag_conditioner(hvp, d=x.shape[1]),
+            **inversion_method_kwargs
         )[0],
     }
 
@@ -155,9 +152,10 @@ def influences(
         x_test,
         y_test,
         dict_fact_algos[inversion_method],
-        train_indices=train_points_idxs,
         progress=progress,
     )
     influence_function = influence_type_function_dict[influence_type]
 
-    return influence_function(differentiable_model, x_train, y_train, influence_factors)
+    return -1 * influence_function(
+        differentiable_model, x_train, y_train, influence_factors
+    )
