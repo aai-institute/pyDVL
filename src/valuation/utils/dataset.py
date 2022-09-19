@@ -1,7 +1,17 @@
 import os
 from collections import OrderedDict
 from copy import copy
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Sized, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Sized,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import pandas as pd
@@ -360,7 +370,7 @@ def load_spotify_dataset(
     return [X_train, y_train], [X_val, y_val], [X_test, y_test]
 
 
-def load_wine_dataset(train_size, test_size, random_seed):
+def load_wine_dataset(train_size, test_size, random_seed=None):
     wine_bunch = load_wine(as_frame=True)
     x, x_test, y, y_test = train_test_split(
         wine_bunch.data,
@@ -392,6 +402,61 @@ def load_wine_dataset(train_size, test_size, random_seed):
     )
 
 
+def synthetic_classification_dataset(
+    mus: np.ndarray,
+    sigma: float,
+    num_samples: int,
+    train_size: float,
+    test_size: float,
+    random_seed=None,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Sample from a uniform Gaussian mixture model.
+    :param mus: 2d-matrix [CxD] with the means of the components in the rows.
+    :param sigma: Standard deviation of each dimension of each component.
+    :param num_samples: The number of samples to generate.
+    :returns: A tuple of matrix x of shape [NxD] and target vector y of shape [N].
+    """
+    num_features = mus.shape[1]
+    num_classes = mus.shape[0]
+    gaussian_cov = sigma * np.eye(num_features)
+    gaussian_chol = np.linalg.cholesky(gaussian_cov)
+    y = np.random.randint(num_classes, size=num_samples)
+    x = (
+        np.einsum(
+            "ij,kj->ki",
+            gaussian_chol,
+            np.random.normal(size=[num_samples, num_features]),
+        )
+        + mus[y]
+    )
+    x, x_test, y, y_test = train_test_split(
+        x,
+        y,
+        train_size=1 - test_size,
+        random_state=random_seed,
+    )
+    x_train, x_val, y_train, y_val = train_test_split(
+        x, y, train_size=train_size / (1 - test_size), random_state=random_seed
+    )
+    return (x_train, y_train), (x_val, y_val), (x_test, y_test)
+
+
+def decision_boundary_fixed_variance_2d(
+    mu_1: np.ndarray, mu_2: np.ndarray
+) -> Callable[[np.ndarray], np.ndarray]:
+    """
+    Closed-form solution for decision boundary dot(a, b) + b = 0 with fixed variance.
+    :param mu_1: First mean.
+    :param mu_2: Second mean.
+    :returns: A callable which converts a continuous line (-infty, infty) to the decision boundary in feature space.
+    """
+    a = np.asarray([[0, 1], [-1, 0]]) @ (mu_2 - mu_1)
+    b = (mu_1 + mu_2) / 2
+    a = a.reshape([1, -1])
+    return lambda z: z.reshape([-1, 1]) * a + b  # type: ignore
+
+
 def flip_dataset(
     dataset: Dataset, flip_percentage: float, in_place: bool = False
 ) -> Tuple[Dataset, np.ndarray]:
@@ -408,35 +473,3 @@ def flip_dataset(
     idx = np.random.choice(len(dataset.x_train), replace=False, size=flip_num_samples)
     flipped_dataset.y_train[idx] = 1 - flipped_dataset.y_train[idx]
     return flipped_dataset, idx
-
-
-def dataset_tsne_encode(dataset: Dataset, n_components: int = 2) -> Dataset:
-    """
-    Use TSNE embedding method to reduce the number of features in a dataset.
-
-    :param dataset: A dataset object to modify.
-    :param n_components: The number of components to reduce the dateset to.
-    :returns: A new copy with the embedded features, e.g. x_train and x_test.
-    """
-    tsne = TSNE(n_components=n_components, learning_rate="auto", init="pca")
-    transformed_samples = tsne.fit_transform(
-        np.concatenate((dataset.x_train, dataset.x_test), axis=0)
-    )
-    tsne_dataset = copy(dataset)
-    tsne_dataset.x_train = transformed_samples[: len(tsne_dataset.x_train)]
-    tsne_dataset.x_test = transformed_samples[-len(tsne_dataset.x_test) :]
-    return tsne_dataset
-
-
-def dataset_to_json(dataset: Dataset) -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
-    """
-    Converts a dataset to a json format. Usually this is used as a bridge between
-    plotting and a dataset.
-
-    :param dataset: A dataset object to modify.
-    :returns: A dictionary with dataset names mapping to tuples of (x, y) samples.
-    """
-    return {
-        "train": (dataset.x_train, dataset.y_train),
-        "test": (dataset.x_test, dataset.y_test),
-    }

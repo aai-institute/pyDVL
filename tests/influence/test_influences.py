@@ -16,6 +16,7 @@ from valuation.influence.linear import (
     influences_up_linear_regression_analytical,
     linear_influences,
 )
+from valuation.utils.dataset import load_wine_dataset
 
 try:
     import torch
@@ -309,15 +310,9 @@ def test_linear_influences_up_perturbations_analytical(
 
 @pytest.mark.torch
 def test_influences_with_neural_network_explicit_hessian():
-    dataset = load_wine()
-    x_train, x_test, y_train, y_test = train_test_split(dataset.data, dataset.target)
-    x_transformer = MinMaxScaler()
-    x_train = torch.tensor(x_transformer.fit_transform(x_train), dtype=torch.float)
-    y_train = torch.tensor(y_train, dtype=torch.long)
-    x_test = torch.tensor(x_transformer.transform(x_test), dtype=torch.float)
-    y_test = torch.tensor(y_test, dtype=torch.long)
-    feature_dimension = x_train.shape[1]
-    unique_classes = np.unique(np.concatenate((y_train, y_test)))
+    train_ds, val_ds, test_ds = load_wine_dataset(train_size=0.3, test_size=0.6)
+    feature_dimension = train_ds[0].shape[1]
+    unique_classes = np.unique(np.concatenate((train_ds[1], test_ds[1])))
     num_classes = len(unique_classes)
     num_epochs = 300
     network_size = [16, 16]
@@ -325,10 +320,8 @@ def test_influences_with_neural_network_explicit_hessian():
     optimizer = Adam(params=nn.parameters(), lr=0.001, weight_decay=0.001)
     loss = F.cross_entropy
     nn.fit(
-        x_train=x_train,
-        y_train=y_train,
-        x_val=x_test,
-        y_val=y_test,
+        *train_ds,
+        *test_ds,
         num_epochs=num_epochs,
         batch_size=32,
         loss=loss,
@@ -342,10 +335,8 @@ def test_influences_with_neural_network_explicit_hessian():
     train_influences = influences(
         model,
         loss,
-        x_train,
-        y_train,
-        x_test,
-        y_test,
+        *train_ds,
+        *test_ds,
         inversion_method="direct",
     )
 
