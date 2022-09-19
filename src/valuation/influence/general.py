@@ -4,6 +4,7 @@ Contains parallelized influence calculation functions for general models.
 
 __all__ = ["influences"]
 
+from enum import Enum
 from typing import Any, Callable, Dict, Optional
 
 import numpy as np
@@ -20,6 +21,24 @@ from valuation.influence.types import (
     TwiceDifferentiable,
 )
 from valuation.utils import Dataset
+
+
+class InfluenceType(str, Enum):
+    """
+    Different influence types.
+    """
+
+    Up = "up"
+    Perturbation = "perturbation"
+
+
+class InversionMethod(str, Enum):
+    """
+    Different inversion methods types.
+    """
+
+    Direct = "direct"
+    Cg = "cg"
 
 
 def calculate_influence_factors(
@@ -113,8 +132,8 @@ def influences(
     x_test: np.ndarray,
     y_test: np.ndarray,
     progress: bool = False,
-    influence_type: str = "up",
-    inversion_method: str = "direct",
+    inversion_method: InversionMethod = InversionMethod.Direct,
+    influence_type: InfluenceType = InfluenceType.Up,
     inversion_method_kwargs: Dict = {},
 ) -> np.ndarray:
     """

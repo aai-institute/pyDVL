@@ -4,5 +4,4 @@ __all__ = [
     "TorchLinearRegression",
     "TorchBinaryLogisticRegression",
     "TorchNeuralNetwork",
-    "fit_torch_model",
 ]

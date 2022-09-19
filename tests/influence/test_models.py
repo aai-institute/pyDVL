@@ -122,9 +122,7 @@ def test_linear_regression_model_grad(
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
 
-    model = TorchLinearRegression(
-        dim=(input_dimension, output_dimension), init=linear_model
-    )
+    model = TorchLinearRegression(input_dimension, output_dimension, init=linear_model)
     loss = F.mse_loss
     mvp_model = TorchTwiceDifferentiable(model=model, loss=loss)
 
@@ -159,9 +157,7 @@ def test_linear_regression_model_hessian(
     )
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
-    model = TorchLinearRegression(
-        dim=(input_dimension, output_dimension), init=linear_model
-    )
+    model = TorchLinearRegression(input_dimension, output_dimension, init=linear_model)
     loss = F.mse_loss
     mvp_model = TorchTwiceDifferentiable(model=model, loss=loss)
 
@@ -198,7 +194,7 @@ def test_linear_regression_model_d_x_d_theta(
     )
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
-    model = TorchLinearRegression(dim=(input_dimension, output_dimension), init=(A, b))
+    model = TorchLinearRegression(input_dimension, output_dimension, init=(A, b))
     loss = F.mse_loss
     mvp_model = TorchTwiceDifferentiable(model=model, loss=loss)
 

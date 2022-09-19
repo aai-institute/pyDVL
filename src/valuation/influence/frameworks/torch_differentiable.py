@@ -33,7 +33,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
     def __init__(
         self,
         model: nn.Module,
-        loss: Callable[[torch.Tensor, torch.Tensor, Any], torch.Tensor],
+        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     ):
         """
         :param model: A torch.nn.Module representing a (differentiable) function f(x).

@@ -7,9 +7,9 @@ __all__ = [
     "TorchLinearRegression",
     "TorchBinaryLogisticRegression",
     "TorchNeuralNetwork",
-    "fit_torch_model",
 ]
 
+from abc import ABC
 from typing import Any, Callable, List, Optional, Tuple
 
 import numpy as np
@@ -23,106 +23,117 @@ from torch.utils.data import DataLoader, Dataset
 from valuation.utils.logging import logger
 
 
-def fit_torch_model(
-    model: nn.Module,
-    x_train: torch.tensor,
-    y_train: torch.tensor,
-    x_val: torch.tensor,
-    y_val: torch.tensor,
-    loss: Callable[[torch.Tensor, torch.Tensor, Any], torch.Tensor],
-    optimizer: Optimizer,
-    scheduler: Optional[_LRScheduler] = None,
-    num_epochs: int = 1,
-    batch_size: int = 64,
-):
+class InternalDataset(Dataset):
     """
-    Wrapper of pytorch fit method. It fits the model to the supplied data.
-    It represents a simple machine learning loop, iterating over a number of
-    epochs, sampling data with a certain batch size, calculating gradients and updating the parameters through a
-    loss function.
-    :param x: Matrix of shape [NxD] representing the features x_i.
-    :param y: Matrix of shape [NxK] representing the prediction targets y_i.
-    :param optimizer: Select either ADAM or ADAM_W.
-    :param scheduler: A pytorch scheduler. If None, no scheduler is used.
-    :param num_epochs: Number of epochs to repeat training.
-    :param batch_size: Batch size to use in training.
-    :param tensor_type: accuracy of tensors. Typically 'float' or 'long'
+    Simple class wrapper for the data loader.
+    TODO: remove it once dataset is compatible with data loaders
     """
 
-    class InternalDataset(Dataset):
+    def __init__(self, x, y) -> None:
+        super().__init__()
+        self.x = x
+        self.y = y
+
+    def __len__(self):
+        return len(self.x)
+
+    def __getitem__(self, idx):
+        return self.x[idx], self.y[idx]
+
+
+class TorchModel(ABC):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        pass
+
+    def fit(
+        self,
+        x_train: torch.tensor,
+        y_train: torch.tensor,
+        x_val: torch.tensor,
+        y_val: torch.tensor,
+        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        optimizer: Optimizer,
+        scheduler: Optional[_LRScheduler] = None,
+        num_epochs: int = 1,
+        batch_size: int = 64,
+    ):
         """
-        Simple hidden class wrapper for the data loader.
+        Wrapper of pytorch fit method. It fits the model to the supplied data.
+        It represents a simple machine learning loop, iterating over a number of
+        epochs, sampling data with a certain batch size, calculating gradients and updating the parameters through a
+        loss function.
+        :param x: Matrix of shape [NxD] representing the features x_i.
+        :param y: Matrix of shape [NxK] representing the prediction targets y_i.
+        :param optimizer: Select either ADAM or ADAM_W.
+        :param scheduler: A pytorch scheduler. If None, no scheduler is used.
+        :param num_epochs: Number of epochs to repeat training.
+        :param batch_size: Batch size to use in training.
+        :param tensor_type: accuracy of tensors. Typically 'float' or 'long'
         """
 
-        def __len__(self):
-            return len(x_train)
+        dataset = InternalDataset(x_train, y_train)
+        dataloader = DataLoader(dataset, batch_size=batch_size)
+        train_loss = []
+        val_loss = []
 
-        def __getitem__(self, idx):
-            return x_train[idx], y_train[idx]
+        for epoch in range(num_epochs):
+            batch_loss = []
+            for train_batch in dataloader:
+                batch_x, batch_y = train_batch
+                pred_y = self.forward(batch_x)
+                loss_value = loss(torch.squeeze(pred_y), torch.squeeze(batch_y))
+                batch_loss.append(loss_value.item())
 
-    dataset = InternalDataset()
-    dataloader = DataLoader(dataset, batch_size=batch_size)
-    train_loss = []
-    val_loss = []
+                logger.debug(f"Epoch: {epoch} ---> Training loss: {loss_value.item()}")
+                loss_value.backward()
+                optimizer.step()
+                optimizer.zero_grad()
 
-    for epoch in range(num_epochs):
-        batch_loss = []
-        for train_batch in dataloader:
-            batch_x, batch_y = train_batch
-            pred_y = model(batch_x)
-            loss_value = loss(torch.squeeze(pred_y), torch.squeeze(batch_y))
-            batch_loss.append(loss_value.item())
+                if scheduler:
+                    scheduler.step()
+            pred_val = self.forward(x_val)
+            val_loss.append(loss(torch.squeeze(pred_val), torch.squeeze(y_val)).item())
+            train_loss.append(np.mean(batch_loss))
+        return train_loss, val_loss
 
-            logger.debug(f"Epoch: {epoch} ---> Training loss: {loss_value.item()}")
-            loss_value.backward()
-            optimizer.step()
-            optimizer.zero_grad()
+    def predict(self, x: torch.Tensor) -> np.ndarray:
+        """
+        Use internal model to deliver prediction in numpy.
+        :param x: A np.ndarray [NxD] representing the features x_i.
+        :returns: A np.ndarray [NxK] representing the predicted values.
+        """
+        return self.forward(x).detach().numpy()  # type: ignore
 
-            if scheduler:
-                scheduler.step()
-        pred_loss = model(x_val)
-        val_loss.append(loss(torch.squeeze(pred_loss), torch.squeeze(y_val)).item())
-        train_loss.append(np.mean(batch_loss))
-    return train_loss, val_loss
-
-
-def predict(model: nn.Module, x: torch.tensor) -> np.ndarray:
-    """
-    Use internal model to deliver prediction in numpy.
-    :param x: A np.ndarray [NxD] representing the features x_i.
-    :returns: A np.ndarray [NxK] representing the predicted values.
-    """
-    return model(x).detach().numpy()  # type: ignore
-
-
-def score(
-    model: nn.Module,
-    x: torch.tensor,
-    y: torch.tensor,
-    score: Callable[[torch.Tensor, torch.Tensor, Any], torch.Tensor],
-) -> float:
-    """
-    Use internal model to measure how good is prediction through a loss function.
-    :param x: A np.ndarray [NxD] representing the features x_i.
-    :param y: A np.ndarray [NxK] representing the predicted target values y_i.
-    :returns: The aggregated value over all samples N.
-    """
-    return score(model(x), y).detach().numpy()  # type: ignore
+    def score(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        score: Callable[[torch.Tensor, torch.Tensor, Any], torch.Tensor],
+    ) -> float:
+        """
+        Use internal model to measure how good is prediction through a loss function.
+        :param x: A np.ndarray [NxD] representing the features x_i.
+        :param y: A np.ndarray [NxK] representing the predicted target values y_i.
+        :returns: The aggregated value over all samples N.
+        """
+        return score(self.forward(x), y).detach().numpy()  # type: ignore
 
 
-class TorchLinearRegression(nn.Module):
+class TorchLinearRegression(nn.Module, TorchModel):
     """
     A simple linear regression model (with bias) f(x)=Ax+b.
     """
 
-    def __init__(self, dim=Tuple[int, int], init: Tuple[np.ndarray, np.ndarray] = None):
+    def __init__(
+        self, n_input: int, n_output: int, init: Tuple[np.ndarray, np.ndarray] = None
+    ):
         """
-        :param dim: A tuple (K, D) representing the size of the model.
+        :param n_input: input to the model.
+        :param n_output: output of the model
         :param init A tuple with two matrices, namely A of shape [K, D] and b of shape [K]. If set to None Xavier
         uniform initialization is used.
         """
         super().__init__()
-        n_output, n_input = dim
         self.n_input = n_input
         self.n_output = n_output
         if init is None:
@@ -138,7 +149,7 @@ class TorchLinearRegression(nn.Module):
             torch.tensor(init[1], dtype=torch.float64), requires_grad=True
         )
 
-    def forward(self, x: torch.tensor) -> torch.tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Calculate A @ x + b using RAM-optimized calculation layout.
         :param x: Tensor [NxD] representing the features x_i.
@@ -147,7 +158,7 @@ class TorchLinearRegression(nn.Module):
         return x @ self.A.T + self.b
 
 
-class TorchBinaryLogisticRegression(nn.Module):
+class TorchBinaryLogisticRegression(nn.Module, TorchModel):
     """
     A simple binary logistic regression model p(y)=sigmoid(dot(a, x) + b).
     """
@@ -172,7 +183,7 @@ class TorchBinaryLogisticRegression(nn.Module):
             torch.tensor(init[1], dtype=torch.float32), requires_grad=True
         )
 
-    def forward(self, x: torch.tensor) -> torch.tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Calculate sigmoid(dot(a, x) + b) using RAM-optimized calculation layout.
         :param x: Tensor [NxD] representing the features x_i.
@@ -181,7 +192,7 @@ class TorchBinaryLogisticRegression(nn.Module):
         return torch.sigmoid(x @ self.A.T + self.b)
 
 
-class TorchNeuralNetwork(nn.Module):
+class TorchNeuralNetwork(nn.Module, TorchModel):
     """
     A simple fully-connected neural network f(x) model defined by y = v_K, v_i = o(A v_(i-1) + b), v_1 = x. It contains
     K layers and K - 2 hidden layers. It holds that K >= 2, because every network contains a input and output.
@@ -196,8 +207,8 @@ class TorchNeuralNetwork(nn.Module):
         init: List[Tuple[np.ndarray, np.ndarray]] = None,
     ):
         """
-        :param n_input: Number of feature inputs to the NeuralNetworkTorchModel.
-        :param n_output: Number of outputs to the NeuralNetworkTorchModel or the number of classes.
+        :param n_input: Number of feature in input.
+        :param n_output: Output length.
         :param n_neurons_per_layer: Each integer represents the size of a hidden layer. Overall this list has K - 2
         :param output_probabilities: True, if the model should output probabilities. In the case of n_output 2 the
         number of outputs reduce to 1.
@@ -239,7 +250,7 @@ class TorchNeuralNetwork(nn.Module):
 
         self.layers = nn.Sequential(*layers)
 
-    def forward(self, x: torch.tensor) -> torch.tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Perform forward-pass through the network.
         :param x: Tensor input of shape [NxD].

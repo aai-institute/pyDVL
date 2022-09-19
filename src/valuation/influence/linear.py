@@ -13,6 +13,7 @@ from typing import Tuple
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
+from valuation.influence.general import InfluenceType
 from valuation.utils import Dataset
 from valuation.utils.numeric import (
     linear_regression_analytical_derivative_d2_theta,
@@ -26,7 +27,7 @@ def linear_influences(
     y_train: np.ndarray,
     x_test: np.ndarray,
     y_test: np.ndarray,
-    influence_type: str = "up",
+    influence_type: InfluenceType = InfluenceType.Up,
 ):
     """
     Calculate the linear influences of the training set onto the validation set assuming a linear model Ax+b=y.
