@@ -1,6 +1,5 @@
 import os
 from collections import OrderedDict
-from copy import copy
 from typing import (
     Any,
     Callable,
@@ -15,9 +14,7 @@ from typing import (
 
 import numpy as np
 import pandas as pd
-import torch
 from sklearn.datasets import load_wine
-from sklearn.manifold import TSNE
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import Bunch, check_X_y
@@ -371,6 +368,8 @@ def load_spotify_dataset(
 
 
 def load_wine_dataset(train_size, test_size, random_seed=None):
+    import torch
+
     wine_bunch = load_wine(as_frame=True)
     x, x_test, y, y_test = train_test_split(
         wine_bunch.data,

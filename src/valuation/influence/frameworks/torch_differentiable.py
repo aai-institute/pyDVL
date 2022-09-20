@@ -6,7 +6,7 @@ __all__ = [
     "TorchTwiceDifferentiable",
 ]
 
-from typing import Any, Callable, Union
+from typing import Callable, Union
 
 import numpy as np
 import torch
