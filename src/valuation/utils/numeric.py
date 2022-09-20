@@ -321,7 +321,7 @@ def get_running_avg_variance(
     previous_variance: Union[float, np.ndarray],
     new_value: Union[float, np.ndarray],
     count: int,
-):
+) -> Tuple["NDArray", "NDArray"]:
     """The method uses Welford's algorithm to calculate the running average and variance of
     a set of numbers.
 
