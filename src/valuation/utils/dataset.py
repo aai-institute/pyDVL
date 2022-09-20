@@ -455,21 +455,3 @@ def decision_boundary_fixed_variance_2d(
     b = (mu_1 + mu_2) / 2
     a = a.reshape([1, -1])
     return lambda z: z.reshape([-1, 1]) * a + b  # type: ignore
-
-
-def flip_dataset(
-    dataset: Dataset, flip_percentage: float, in_place: bool = False
-) -> Tuple[Dataset, np.ndarray]:
-    """
-    Takes a binary classification problem and inverts a certain percentage of the labels.
-
-    :param dataset: A binary classification problem.
-    :param flip_percentage: A float between [0, 1] describing how much labels shall be flipped.
-    :param in_place: True, if the old dataset should be not copied but used by value as reference.
-    :returns: A dataset differing in 5% of the labels to the orignal one.
-    """
-    flipped_dataset = copy(dataset) if not in_place else dataset
-    flip_num_samples = int(flip_percentage * len(dataset.x_train))
-    idx = np.random.choice(len(dataset.x_train), replace=False, size=flip_num_samples)
-    flipped_dataset.y_train[idx] = 1 - flipped_dataset.y_train[idx]
-    return flipped_dataset, idx

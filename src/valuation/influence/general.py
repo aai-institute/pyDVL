@@ -57,7 +57,7 @@ def calculate_influence_factors(
     :param data: a dataset
     :param train_indices: which train indices to calculate the influence factors of
     :param test_indices: which test indices to use to calculate the influence factors
-    :param inversion_func: function to use to invert the the product of hvp (hessian vector product) and the gradient
+    :param inversion_func: function to use to invert the product of hvp (hessian vector product) and the gradient
         of the loss (s_test in the paper).
     :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
     """
@@ -176,5 +176,8 @@ def influences(
     influence_function = influence_type_function_dict[influence_type]
 
     return -1 * influence_function(
-        differentiable_model, x_train, y_train, influence_factors
+        differentiable_model,
+        x_train,
+        y_train,
+        influence_factors,
     )
