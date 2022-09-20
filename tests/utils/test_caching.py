@@ -151,12 +151,16 @@ def test_memcached_faster_with_repeated_training(memcached_client):
 @pytest.mark.parametrize(
     "n, atol",
     [
-        (7, 3),
-        (10, 3),
+        (5, 3),
+        (10, 4),
         (20, 10),
     ],
 )
-def test_memcached_parallel_repeated_training(memcached_client, n, atol, seed=42):
+@pytest.mark.parametrize("n_jobs", [1, 2])
+@pytest.mark.parametrize("n_runs", [100])
+def test_memcached_parallel_repeated_training(
+    memcached_client, n, atol, n_jobs, n_runs, seed=42
+):
     _, config = memcached_client
     np.random.seed(seed)
 
@@ -176,8 +180,7 @@ def test_memcached_parallel_repeated_training(memcached_client, n, atol, seed=42
     def reduce_func(chunks: Iterable[float]) -> float:
         return np.sum(chunks).item()
 
-    n_runs = 100
-    map_reduce_job = MapReduceJob(map_func, reduce_func, n_jobs=2, n_runs=n_runs)
+    map_reduce_job = MapReduceJob(map_func, reduce_func, n_jobs=n_jobs, n_runs=n_runs)
     result = map_reduce_job(np.arange(n))
 
     exact_value = np.sum(np.arange(n)).item()
