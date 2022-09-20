@@ -12,6 +12,14 @@ __all__ = ["MemcachedClientConfig", "MemcachedConfig"]
 
 @unpackable
 @dataclass
+class ParallelConfig:
+    backend: str = "ray"
+    address: Optional[Union[str, Tuple[str, int]]] = None
+    num_workers: Optional[int] = None
+
+
+@unpackable
+@dataclass
 class MemcachedClientConfig:
     server: Union[str, Tuple[str, Union[str, int]]] = ("localhost", 11211)
     connect_timeout: float = 1.0
