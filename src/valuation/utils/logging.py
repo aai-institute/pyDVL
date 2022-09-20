@@ -138,4 +138,4 @@ def raise_or_log(message, raise_exception: bool):
             logger.warning(message)
 
 
-set_logger()
+# set_logger()
