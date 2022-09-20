@@ -126,7 +126,7 @@ influence_type_function_dict = {
 
 def influences(
     model: nn.Module,
-    loss: Callable[[torch.Tensor, torch.Tensor, Any], torch.Tensor],
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     x_train: np.ndarray,
     y_train: np.ndarray,
     x_test: np.ndarray,

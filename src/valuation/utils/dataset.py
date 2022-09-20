@@ -409,7 +409,7 @@ def synthetic_classification_dataset(
     train_size: float,
     test_size: float,
     random_seed=None,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Tuple[Any, Any]]:
     """
     Sample from a uniform Gaussian mixture model.
     :param mus: 2d-matrix [CxD] with the means of the components in the rows.
