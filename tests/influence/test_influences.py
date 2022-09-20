@@ -1,13 +1,8 @@
 import itertools
-from copy import copy
 from typing import List, Tuple
 
 import numpy as np
 import pytest
-from sklearn.datasets import load_wine
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
-from torch.optim import Adam, lr_scheduler
 
 from tests.conftest import create_mock_dataset
 from valuation.influence.general import influences
@@ -19,10 +14,9 @@ from valuation.influence.linear import (
 from valuation.utils.dataset import load_wine_dataset
 
 try:
-    import torch
     import torch.nn.functional as F
+    from torch.optim import Adam, lr_scheduler
 
-    from valuation.influence.frameworks import TorchTwiceDifferentiable
     from valuation.influence.model_wrappers import (
         TorchLinearRegression,
         TorchNeuralNetwork,
