@@ -26,7 +26,7 @@ R = TypeVar("R")
 Identity = lambda x, *args, **kwargs: x
 
 MapFunction = Callable[..., R]
-ReduceFunction = Callable[[List[R]], R]
+ReduceFunction = Callable[[Iterable[R]], R]
 
 __all__ = ["MapReduceJob"]
 
@@ -112,7 +112,7 @@ class MapReduceJob(Generic[T, R]):
         n_jobs: Optional[int] = None,
         n_runs: Optional[int] = None,
         chunkify_inputs: Optional[bool] = None,
-    ) -> R:
+    ) -> List[R]:
         if n_jobs is not None:
             self.n_jobs = n_jobs
         if n_runs is not None:
@@ -143,7 +143,7 @@ class MapReduceJob(Generic[T, R]):
 
         return map_results
 
-    def reduce(self, chunks: List[List[R]]) -> R:
+    def reduce(self, chunks: List[List[R]]) -> List[R]:
         futures = []
 
         reduce_func = self._wrap_function(self._reduce_func)
