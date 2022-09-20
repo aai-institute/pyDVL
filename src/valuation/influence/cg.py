@@ -63,14 +63,18 @@ def batched_preconditioned_conjugate_gradient(
 
     if verify_assumptions:
         if not is_linear_function(A, b):
-            raise_or_log(
-                "The function seems to not be linear.", raise_exception=raise_exception
-            )
+            msg = "The function seems to not be linear."
+            if raise_exception:
+                raise Exception(msg)
+            else:
+                logger.warning(msg)
 
         if not is_positive_definite(A, b):
-            raise_or_log(
-                "The function seems to not be linear.", raise_exception=raise_exception
-            )
+            msg = "The function seems to not be linear."
+            if raise_exception:
+                raise Exception(msg)
+            else:
+                logger.warning(msg)
 
     if b.ndim == 1:
         b = b.reshape([1, -1])

@@ -142,7 +142,7 @@ class Worker(abc.ABC):
     def _compute_values(self, *args, **kwargs) -> "NDArray":
         raise NotImplementedError()
 
-    def run(self):
+    def run(self, *args, **kwargs):
         """Runs the worker.
         It calls _permutation_montecarlo_shapley a certain number of times and calculates
         Shapley values on different permutations of the indices.

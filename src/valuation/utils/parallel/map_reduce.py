@@ -10,6 +10,7 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Sequence,
     TypeVar,
     Union,
 )
@@ -84,6 +85,7 @@ class MapReduceJob(Generic[T, R]):
         parallel_backend = init_parallel_backend(self.config)
         self._parallel_backend_ref = weakref.ref(parallel_backend)
 
+        self._n_jobs = 1
         self.n_jobs = n_jobs
         self.n_runs = n_runs
         self.chunkify_inputs = chunkify_inputs
@@ -103,11 +105,6 @@ class MapReduceJob(Generic[T, R]):
         self._map_func = map_func
         self._reduce_func = reduce_func
 
-    def _wrap_function(self, func):
-        parallel_backend = self._parallel_backend_ref()
-        remote_func = parallel_backend.wrap(wrap_func_with_remote_args(func))
-        return remote_func.remote
-
     def __call__(
         self,
         inputs: Union[Collection[T], Any],
@@ -115,7 +112,7 @@ class MapReduceJob(Generic[T, R]):
         n_jobs: Optional[int] = None,
         n_runs: Optional[int] = None,
         chunkify_inputs: Optional[bool] = None,
-    ) -> List[List[R]]:
+    ) -> R:
         if n_jobs is not None:
             self.n_jobs = n_jobs
         if n_runs is not None:
@@ -127,7 +124,7 @@ class MapReduceJob(Generic[T, R]):
         reduce_results = self.reduce(map_results)
         return reduce_results
 
-    def map(self, inputs: Union[Collection[T], Any]) -> List[List[R]]:
+    def map(self, inputs: Union[Sequence[T], Any]) -> List[List[R]]:
         map_results = []
 
         map_func = self._wrap_function(self._map_func)
@@ -146,7 +143,7 @@ class MapReduceJob(Generic[T, R]):
 
         return map_results
 
-    def reduce(self, chunks: List[List[R]]) -> List[List[R]]:
+    def reduce(self, chunks: List[List[R]]) -> R:
         futures = []
 
         reduce_func = self._wrap_function(self._reduce_func)
@@ -154,12 +151,15 @@ class MapReduceJob(Generic[T, R]):
         for i in range(self.n_runs):
             future = reduce_func(chunks[i], **self.reduce_kwargs)
             futures.append(future)
-        parallel_backend = self._parallel_backend_ref()
-        results = parallel_backend.get(futures, timeout=300)
-        return results
+        results = self.parallel_backend.get(futures, timeout=300)
+        return results  # type: ignore
+
+    def _wrap_function(self, func):
+        remote_func = self.parallel_backend.wrap(wrap_func_with_remote_args(func))
+        return remote_func.remote
 
     @staticmethod
-    def _chunkify(data: Collection[T], num_chunks: int) -> Iterator[Collection[T]]:
+    def _chunkify(data: Sequence[T], num_chunks: int) -> Iterator[Sequence[T]]:
         # Splits a list of values into chunks for each job
         n = len(data)
         chunk_size = n // num_chunks
@@ -172,10 +172,16 @@ class MapReduceJob(Generic[T, R]):
             yield data[n - remainder :]
 
     @property
+    def parallel_backend(self):
+        parallel_backend = self._parallel_backend_ref()
+        if parallel_backend is None:
+            raise RuntimeError(f"Could not get reference to parallel backend instance")
+        return parallel_backend
+
+    @property
     def n_jobs(self) -> int:
         return self._n_jobs
 
     @n_jobs.setter
     def n_jobs(self, value: int):
-        parallel_backend = self._parallel_backend_ref()
-        self._n_jobs = parallel_backend.effective_n_jobs(value)
+        self._n_jobs = self.parallel_backend.effective_n_jobs(value)

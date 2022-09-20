@@ -25,7 +25,7 @@ __all__ = [
 def get_shapley_values(
     u: Utility,
     max_iterations: int,
-    num_workers: int = 1,
+    n_jobs: int = 1,
     mode="truncated_montecarlo",
     **kwargs,
 ):
@@ -45,7 +45,7 @@ def get_shapley_values(
 
     :param u: Utility object with model, data, and scoring function
     :param max_iterations: total number of iterations, used for montecarlo methods
-    :param num_workers: Number of parallel workers. Defaults to 1
+    :param n_jobs: Number of parallel jobs. Defaults to 1
     :param mode: Choose which shapley algorithm to use. Options are
         'truncated_montecarlo', 'exact_combinatorial', 'exact_permutation',
         'combinatorial_montecarlo', 'permutation_montecarlo'. Defaults to 'truncated_montecarlo'
@@ -59,7 +59,7 @@ def get_shapley_values(
         dval, dval_std = truncated_montecarlo_shapley(
             u=u,
             max_iterations=max_iterations,
-            num_workers=num_workers,
+            n_jobs=n_jobs,
             progress=progress,
             **kwargs,
         )
@@ -69,11 +69,11 @@ def get_shapley_values(
         dval, dval_std = permutation_exact_shapley(u, progress)
     elif mode == "combinatorial_montecarlo":
         dval, dval_std = combinatorial_montecarlo_shapley(
-            u, max_iterations, num_workers, progress
+            u, max_iterations, n_jobs=n_jobs, progress=progress
         )
     elif mode == "permutation_montecarlo":
         dval, dval_std = permutation_montecarlo_shapley(
-            u, max_iterations, num_workers, progress
+            u, max_iterations, n_jobs=n_jobs, progress=progress
         )
     else:
         raise ValueError(f"Invalid value encountered in {mode=}")

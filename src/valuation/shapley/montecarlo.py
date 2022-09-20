@@ -2,7 +2,7 @@ import logging
 import math
 from collections import OrderedDict
 from time import sleep, time
-from typing import Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
 import numpy as np
 
@@ -14,6 +14,9 @@ from valuation.utils.parallel import MapReduceJob, init_parallel_backend
 from valuation.utils.progress import maybe_progress
 
 from .actor import get_shapley_coordinator, get_shapley_worker
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 log = logging.getLogger(__name__)
 
@@ -65,6 +68,8 @@ def truncated_montecarlo_shapley(
     """
     parallel_backend = init_parallel_backend(config)
 
+    n_jobs = parallel_backend.effective_n_jobs(n_jobs)
+
     u_id = parallel_backend.put(u)
 
     coordinator = get_shapley_coordinator(  # type: ignore
@@ -100,7 +105,7 @@ def truncated_montecarlo_shapley(
 
 def _permutation_montecarlo_shapley(
     u: Utility, max_permutations: int, progress: bool = False, job_id: int = 1, **kwargs
-):
+) -> "NDArray":
     """It calculates the difference between the score of a model with and without
     each training datapoint. This is repeated a number max_permutations of times and
     with different permutations.
@@ -151,7 +156,7 @@ def permutation_montecarlo_shapley(
 
     iterations_per_job = max_iterations // n_jobs
 
-    map_reduce_job = MapReduceJob(
+    map_reduce_job: MapReduceJob["Utility", "NDArray"] = MapReduceJob(
         map_func=_permutation_montecarlo_shapley,
         reduce_func=np.concatenate,
         map_kwargs=dict(max_permutations=iterations_per_job, progress=progress),
@@ -247,7 +252,7 @@ def combinatorial_montecarlo_shapley(
 
     iterations_per_job = max_iterations // n_jobs
 
-    map_reduce_job = MapReduceJob(
+    map_reduce_job: MapReduceJob["Utility", "NDArray"] = MapReduceJob(
         map_func=_combinatorial_montecarlo_shapley,
         reduce_func=np.concatenate,
         map_kwargs=dict(

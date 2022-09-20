@@ -23,11 +23,11 @@ def get_shapley_coordinator(
 ) -> "ShapleyCoordinator":
     if config.backend == "ray":
         remote_cls = ray.remote(ShapleyCoordinator)
-        coordinator = remote_cls.remote(*args, **kwargs)
-        coordinator = RayActorWrapper(coordinator)
+        coordinator_handle = remote_cls.remote(*args, **kwargs)
+        coordinator = RayActorWrapper(coordinator_handle)
     else:
-        raise ValueError(f"Unexpected parallel type {config.type}")
-    return coordinator
+        raise ValueError(f"Unexpected parallel type {config.backend}")
+    return coordinator  # type: ignore
 
 
 def get_shapley_worker(
@@ -35,11 +35,11 @@ def get_shapley_worker(
 ) -> "ShapleyWorker":
     if config.backend == "ray":
         remote_cls = ray.remote(ShapleyWorker)
-        worker = remote_cls.remote(*args, **kwargs)
-        worker = RayActorWrapper(worker)
+        worker_handle = remote_cls.remote(*args, **kwargs)
+        worker = RayActorWrapper(worker_handle)
     else:
-        raise ValueError(f"Unexpected parallel type {config.type}")
-    return worker
+        raise ValueError(f"Unexpected parallel type {config.backend}")
+    return worker  # type: ignore
 
 
 class ShapleyCoordinator(Coordinator):
@@ -172,4 +172,4 @@ class ShapleyWorker(Worker):
         # Importing it here avoids errors with circular imports
         from .montecarlo import _permutation_montecarlo_shapley
 
-        return _permutation_montecarlo_shapley(self.u, max_permutations=1)[0]
+        return _permutation_montecarlo_shapley(self.u, max_permutations=1)[0]  # type: ignore

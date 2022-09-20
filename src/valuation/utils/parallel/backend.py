@@ -1,6 +1,6 @@
 import os
 from dataclasses import asdict
-from typing import Any, Callable, Iterable, Optional, TypeVar, Union
+from typing import Any, Iterable, Optional, TypeVar, Union
 
 import ray
 from ray import ObjectRef
@@ -36,16 +36,16 @@ class RayParallelBackend:
             return v
 
     def put(self, x: Any, **kwargs) -> ObjectRef:
-        return ray.put(x, **kwargs)
+        return ray.put(x, **kwargs)  # type: ignore
 
     def wrap(self, x):
         return ray.remote(x)
 
-    def effective_n_jobs(self, n_jobs: int) -> int:
+    def effective_n_jobs(self, n_jobs: Optional[int]) -> int:
         if n_jobs == 0:
             raise ValueError("n_jobs == 0 in Parallel has no meaning")
-        elif n_jobs < 0:
-            ray_cpus = int(ray._private.state.cluster_resources()["CPU"])
+        elif n_jobs is None or n_jobs < 0:
+            ray_cpus = int(ray._private.state.cluster_resources()["CPU"])  # type: ignore
             eff_n_jobs = ray_cpus
         else:
             eff_n_jobs = n_jobs
