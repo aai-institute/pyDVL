@@ -2,12 +2,9 @@ import functools
 from collections import OrderedDict, defaultdict
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
 
-if TYPE_CHECKING:
-    from _pytest.terminal import TerminalReporter
-    from _pytest.config import Config
-
 import numpy as np
 import pytest
+import ray
 from pymemcache.client import Client
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
@@ -18,7 +15,17 @@ from valuation.utils.logging import start_logging_server
 from valuation.utils.numeric import random_matrix_with_condition_number, spearman
 from valuation.utils.parallel import available_cpus
 
+if TYPE_CHECKING:
+    from _pytest.config import Config
+    from _pytest.terminal import TerminalReporter
+
 EXCEPTIONS_TYPE = Optional[Sequence[Type[BaseException]]]
+
+
+@pytest.fixture(scope="session", autouse=True)
+def ray_shutdown():
+    yield
+    ray.shutdown()
 
 
 def pytest_sessionstart():
@@ -215,6 +222,11 @@ def num_workers():
     return min(8, available_cpus())
 
 
+@pytest.fixture
+def n_jobs(num_workers):
+    return num_workers
+
+
 @pytest.fixture(scope="function")
 def quadratic_linear_equation_system(quadratic_matrix: np.ndarray, batch_size: int):
     A = quadratic_matrix
@@ -368,7 +380,7 @@ def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e
     v = np.array(list(values.values()))
     ev = np.array(list(exact_values.values()))
 
-    assert np.allclose(v, ev, atol=atol)
+    assert np.allclose(v, ev, atol=atol), f"{v} != {ev}"
 
 
 def check_values(
@@ -418,7 +430,8 @@ def check_rank_correlation(
     ranks = np.array(list(values.keys())[:k])
     ranks_exact = np.array(list(exact_values.keys())[:k])
 
-    assert spearman(ranks, ranks_exact) >= threshold
+    correlation = spearman(ranks, ranks_exact)
+    assert correlation >= threshold, f"{correlation} < {threshold}"
 
 
 # start_logging_server()
@@ -561,7 +574,7 @@ class TolerateErrorFixture:
         if self.session.has_exceeded_max_failures(self.name):
             self.session.increment_num_skipped(self.name)
             pytest.skip(
-                f"Maximum number of allowed failures, {self.session.get_max_failures(self.name)}, was already reached"
+                f"Maximum number of allowed failures, {self.session.get_max_failures(self.name)}, was already exceeded"
             )
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
@@ -573,7 +586,7 @@ class TolerateErrorFixture:
                 self.session.increment_num_failures(self.name)
         if self.session.has_exceeded_max_failures(self.name):
             pytest.fail(
-                f"Maximum number of allowed failures, {self.session.get_max_failures(self.name)}, reached"
+                f"Maximum number of allowed failures, {self.session.get_max_failures(self.name)}, was exceeded"
             )
         return True
 

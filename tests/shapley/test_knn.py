@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 def knn_loss_function(labels, predictions, n_classes=3):
-    log.info(f"{predictions=}")
+    log.debug(f"{predictions=}")
     if len(predictions[0]) < n_classes:
         raise RuntimeError("Found less classes than expected.")
     pred_proba = [predictions[i][label] for i, label in enumerate(labels)]
@@ -40,11 +40,11 @@ def test_knn_montecarlo_match(seed):
         utility,
         max_iterations=500,
         progress=False,
-        num_workers=8,
+        n_jobs=8,
     )
     shapley_keys = list(shapley_values.keys())
-    log.info(f"{knn_keys=}")
-    log.info(f"{shapley_keys=}")
+    log.debug(f"{knn_keys=}")
+    log.debug(f"{shapley_keys=}")
 
     # will check only matching top elements since the scoring functions are not exactly the same
     top_knn = knn_keys[:2]

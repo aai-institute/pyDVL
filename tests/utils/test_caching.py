@@ -59,23 +59,23 @@ def test_memcached_parallel_jobs(memcached_client):
         # Note that we typically do NOT want to ignore run_id
         ignore_args=["job_id", "run_id"],
     )
-    def foo(indices: Iterable[int], job_id: int, run_id: int) -> float:
+    def foo(indices: Iterable[int], *args, **kwargs) -> float:
         # from valuation.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
         return float(np.sum(indices))
 
     n = 1234
-    num_runs = 10
+    n_runs = 10
     hits_before = client.stats()[b"get_hits"]
-    job = MapReduceJob.from_fun(foo, np.sum)
-    result = map_reduce(job, data=np.arange(n), num_jobs=4, num_runs=num_runs)
+    map_reduce_job = MapReduceJob(foo, np.sum, n_jobs=4, n_runs=n_runs)
+    result = map_reduce_job(np.arange(n))
     hits_after = client.stats()[b"get_hits"]
 
     assert result[0] == n * (n - 1) / 2  # Sanity check
     # FIXME! This is non-deterministic: if packets are delayed for longer than
     #  the timeout configured then we won't have num_runs hits. So we add this
     #  good old hard-coded magic number here.
-    assert hits_after - hits_before >= num_runs - 2
+    assert hits_after - hits_before >= n_runs - 2
 
 
 def test_memcached_repeated_training(memcached_client):
@@ -168,14 +168,19 @@ def test_memcached_parallel_repeated_training(memcached_client, n, atol, seed=42
         rtol_threshold=0.01,
         ignore_args=["job_id", "run_id"],
     )
-    def foo(indices: Iterable[int]) -> float:
+    def map_func(indices: Iterable[int]) -> float:
         # from valuation.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
-        return float(np.sum(indices)) + np.random.normal(scale=10)
+        return np.sum(indices).item() + np.random.normal(scale=10)
 
-    num_runs = 100
-    job = MapReduceJob.from_fun(foo)
-    result = map_reduce(job, data=np.arange(n), num_jobs=10, num_runs=num_runs)
+    def reduce_func(chunks: Iterable[float]) -> float:
+        return np.sum(chunks).item()
 
-    assert abs(result[-1][0] - result[-2][0]) < atol
-    assert abs(result[-1][0] - np.sum(np.arange(n))) < atol
+    n_runs = 100
+    map_reduce_job = MapReduceJob(map_func, reduce_func, n_jobs=2, n_runs=n_runs)
+    result = map_reduce_job(np.arange(n))
+
+    exact_value = np.sum(np.arange(n)).item()
+
+    assert np.isclose(result[-1], result[-2], atol=atol)
+    assert np.isclose(result[-1], exact_value, atol=atol)
