@@ -1,3 +1,5 @@
+.. _pyDVL Installation:
+
 ================
 Installing pyDVL
 ================
@@ -10,7 +12,7 @@ pyDVL requires the following dependencies:
 - Python (>=3.8)
 - Scikit-Learn
 - Numpy
-- Joblib
+- Ray
 - PyMemcached
 - Tqdm
 - Matplotlib

@@ -1,5 +1,5 @@
-Notebooks
-=========
+Examples
+========
 
 .. toctree::
    :glob:

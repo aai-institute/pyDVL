@@ -1,18 +1,19 @@
-pyDVL
-=====
+pyDVL Documentation
+===================
 
 Welcome to the pyDVL library for data valuation!
 
-You can find the library's repository here_.
+**Useful links:** :ref:`Installation <pyDVL Installation>` | `Source Repository`_ | `Issue Tracker`_
 
-.. _here: https://github.com/appliedAI-Initiative/valuation
+.. _Source Repository: https://github.com/appliedAI-Initiative/pyDVL
+.. _Issue Tracker: https://github.com/appliedAI-Initiative/pyDVL/issues
 
 .. toctree::
-   :caption: Guides and Tutorials
+   :caption: Examples, Guides and Tutorials
    :glob:
 
    *
-   notebooks/index
+   examples/index
 
 
 .. toctree::
