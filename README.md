@@ -1,11 +1,18 @@
-# pyDVL
+<p align="center">
+    <img alt="pyDVL" src="logo.svg" width="250" />
+</p>
 
-[![CI](https://github.com/appliedAI-Initiative/valuation/actions/workflows/tox.yaml/badge.svg)](https://github.com/appliedAI-Initiative/valuation/actions/workflows/tox.yaml) 
+<p align="center">
+    A library for data valuation.
+</p>
 
+<p align="center">
+    <a href="https://github.com/appliedAI-Initiative/valuation/actions/workflows/tox.yaml"><img src="https://github.com/appliedAI-Initiative/valuation/actions/workflows/tox.yaml/badge.svg" alt="Build Status" /></a>
+</p>
 
-Welcome to the pyDVL library for data valuation!
-
-Refer to our [documentation](https://appliedAI-Initiative.github.io/valuation) for more detailed information.
+<p align="center">
+    <a href="https://appliedAI-Initiative.github.io/valuation">Docs</a>
+</p>
 
 # Installation
 
