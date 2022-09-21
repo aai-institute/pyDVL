@@ -18,6 +18,19 @@ _PARALLEL_BACKED: Optional["RayParallelBackend"] = None
 
 
 class RayParallelBackend:
+    """Class used to wrap ray to make it transparent to algorithms. It shouldn't be initialized directly.
+    You should instead call `init_parallel_backend`.
+
+    :param config: instance of :class:`~valuation.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+
+    :Example:
+
+    >>> from valuation.utils.parallel.backend import RayParallelBackend
+    >>> from valuation.utils.config import ParallelConfig
+    >>> config = ParallelConfig(backend="ray", num_workers=8)
+    >>> parallel_backend = RayParallelBackend(config)
+    """
+
     def __init__(self, config: ParallelConfig):
         config_dict = asdict(config)
         config_dict.pop("backend")
@@ -51,8 +64,24 @@ class RayParallelBackend:
             eff_n_jobs = n_jobs
         return eff_n_jobs
 
+    def __repr__(self) -> str:
+        return f"<RayParallelBackend: {self.config}>"
+
 
 def init_parallel_backend(config: ParallelConfig) -> "RayParallelBackend":
+    """Initializes the parallel backend and returns an instance of it.
+
+    :param config: instance of :class:`~valuation.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+
+    :Example:
+
+    >>> from valuation.utils.parallel.backend import init_parallel_backend
+    >>> from valuation.utils.config import ParallelConfig
+    >>> config = ParallelConfig(backend="ray", num_workers=8)
+    >>> parallel_backend = init_parallel_backend(config)
+    >>> parallel_backend
+    <RayParallelBackend: {'address': None, 'num_cpus': 8}>
+    """
     global _PARALLEL_BACKED
     if _PARALLEL_BACKED is None:
         _PARALLEL_BACKED = RayParallelBackend(config)
