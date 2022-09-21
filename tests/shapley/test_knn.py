@@ -11,14 +11,6 @@ from valuation.utils import Dataset, Utility
 log = logging.getLogger(__name__)
 
 
-def knn_loss_function(labels, predictions, n_classes=3):
-    log.debug(f"{predictions=}")
-    if len(predictions[0]) < n_classes:
-        raise RuntimeError("Found less classes than expected.")
-    pred_proba = [predictions[i][label] for i, label in enumerate(labels)]
-    return np.mean(pred_proba)
-
-
 def test_knn_montecarlo_match(seed):
 
     data = Dataset.from_sklearn(datasets.load_iris(), random_state=seed)
@@ -27,6 +19,14 @@ def test_knn_montecarlo_match(seed):
 
     knn_values = knn_shapley(data, knn, False)
     knn_keys = list(knn_values.keys())
+
+    def knn_loss_function(labels, predictions, n_classes=3):
+        log.debug(f"{predictions=}")
+        if len(predictions[0]) < n_classes:
+            raise RuntimeError("Found less classes than expected.")
+        pred_proba = [predictions[i][label] for i, label in enumerate(labels)]
+        return np.mean(pred_proba)
+
     scorer = make_scorer(knn_loss_function, greater_is_better=True, needs_proba=True)
 
     utility = Utility(
