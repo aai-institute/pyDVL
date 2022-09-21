@@ -1,11 +1,9 @@
 import abc
 import inspect
-import weakref
 from time import time
 from typing import TYPE_CHECKING, Dict, Optional, Union
 
 import numpy as np
-import ray
 from ray import ObjectRef
 
 from ..logging import logger
@@ -47,7 +45,6 @@ class RayActorWrapper:
 
     def __init__(self, actor_handle: ObjectRef, parallel_backend: RayParallelBackend):
         self.actor_handle = actor_handle
-        self._parallel_backend_ref = weakref.ref(parallel_backend)
 
         def remote_caller(method_name: str):
             # Wrapper for remote class's methods to mimic local calls
@@ -56,7 +53,7 @@ class RayActorWrapper:
                     *args, **kwargs
                 )
                 if block:
-                    return self.parallel_backend.get(
+                    return parallel_backend.get(
                         obj_ref, timeout=300
                     )  # Block until called method returns.
                 else:
@@ -69,13 +66,6 @@ class RayActorWrapper:
             if not name.startswith("__"):
                 # Wrap public methods for remote-as-local calls.
                 setattr(self, name, remote_caller(name))
-
-    @property
-    def parallel_backend(self):
-        parallel_backend = self._parallel_backend_ref()
-        if parallel_backend is None:
-            raise RuntimeError(f"Could not get reference to parallel backend instance")
-        return parallel_backend
 
 
 class Coordinator(abc.ABC):

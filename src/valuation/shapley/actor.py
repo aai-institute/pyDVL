@@ -22,8 +22,8 @@ def get_shapley_coordinator(
     parallel_backend = init_parallel_backend(config)
     if config.backend == "ray":
         remote_cls = parallel_backend.wrap(ShapleyCoordinator)
-        coordinator_handle = remote_cls.remote(*args, **kwargs)
-        coordinator = RayActorWrapper(coordinator_handle, parallel_backend)
+        handle = remote_cls.remote(*args, **kwargs)
+        coordinator = RayActorWrapper(handle, parallel_backend)
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
     return coordinator  # type: ignore
@@ -35,8 +35,8 @@ def get_shapley_worker(
     parallel_backend = init_parallel_backend(config)
     if config.backend == "ray":
         remote_cls = parallel_backend.wrap(ShapleyWorker)
-        worker_handle = remote_cls.remote(*args, **kwargs)
-        worker = RayActorWrapper(worker_handle, parallel_backend)
+        handle = remote_cls.remote(*args, **kwargs)
+        worker = RayActorWrapper(handle, parallel_backend)
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
     return worker  # type: ignore
