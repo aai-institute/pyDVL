@@ -30,15 +30,15 @@
      showgrid="false"
      showguides="true"
      showborder="true"
-     inkscape:zoom="7.0989122"
-     inkscape:cx="46.274695"
-     inkscape:cy="103.46656"
+     inkscape:zoom="3.3605977"
+     inkscape:cx="34.07132"
+     inkscape:cy="-7.2903698"
      inkscape:window-width="1920"
      inkscape:window-height="1016"
      inkscape:window-x="0"
      inkscape:window-y="27"
      inkscape:window-maximized="1"
-     inkscape:current-layer="text788" />
+     inkscape:current-layer="g7265" />
   <defs
      id="defs2">
     <linearGradient
@@ -158,7 +158,7 @@
       <path
          id="rect6380"
          style="fill:#312c2b;fill-opacity:1;stroke:none;stroke-width:0.205648"
-         d="M 22.007672,6.7902794 V 8.7860233 H 19.249184 V 45.502128 h 2.758488 V 73.482333 H 53.0218 V 45.502128 H 71.03517 V 8.7860233 H 53.0218 V 6.7902794 Z" />
+         d="M 22.007672,6.7461025 V 8.7418464 H 19.249184 V 45.457951 h 2.758488 V 73.438156 H 53.0218 V 45.457951 H 71.03517 V 8.7418464 H 53.0218 V 6.7461025 Z" />
       <path
          id="path4030-3"
          style="fill:url(#linearGradient14577);fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
