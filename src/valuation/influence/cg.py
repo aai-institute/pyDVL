@@ -35,17 +35,18 @@ def batched_preconditioned_conjugate_gradient(
     https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351 and
     https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf. On top, it constrains the maximum step size.
 
-    :param A: A linear function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix.
-    It has to be positive-definite v.T @ f(v) >= 0.
+    :param A: A linear function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix. \
+        It has to be positive-definite v.T @ f(v) >= 0.
     :param b: A NDArray of shape [K] representing the targeted result of the matrix multiplication Ax.
-    :param M: A function f : R[k] -> R[k] which approximates inv(A) or a matrix of shape [K, K]. The underlying matrix
-    has to be symmetric and positive definite.
+    :param M: A function f : R[k] -> R[k] which approximates inv(A) or a matrix of shape [K, K]. The underlying matrix \
+        has to be symmetric and positive definite.
     :param max_iterations: Maximum number of iterations to use in conjugate gradient. Default is 10 times K.
     :param rtol: Relative tolerance of the residual with respect to the 2-norm of b.
-    :param max_step_size: Maximum step size along a gradient direction. Might be necessary for numerical stability.
-    See also max_iterations. Default is 10.0.
+    :param max_step_size: Maximum step size along a gradient direction. Might be necessary for numerical stability. \
+        See also max_iterations. Default is 10.0.
     :param verify_assumptions: True, iff the matrix should be checked for positive-definiteness by a stochastic rule.
     :param raise_exception: True, iff an assumption should be raised, instead of a warning only.
+
     :return: A NDArray of shape [K] representing the solution of Ax=b.
     """
     # wrap A into a function.
