@@ -1,5 +1,5 @@
 <p align="center">
-    <img alt="pyDVL" src="logo.svg" width="250" />
+    <img alt="pyDVL" src="logo.svg" width="200"/>
 </p>
 
 <p align="center">

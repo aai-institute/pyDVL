@@ -2,13 +2,13 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="69.672112mm"
-   height="93.805496mm"
-   viewBox="0 0 69.672112 93.805496"
+   width="100%"
+   height="100%"
+   viewBox="0 0 69.67212 93.805488"
    version="1.1"
    id="svg5"
    inkscape:version="1.2 (1:1.2.1+202207142221+cd75a1ee6d)"
-   sodipodi:docname="pydvl_logo_final.svg"
+   sodipodi:docname="logo.svg"
    inkscape:export-filename="../Downloads/pydvl_logo_final.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
@@ -94,7 +94,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-15.063393,-3.8736616)">
+     transform="translate(-15.063394,-3.8736616)">
     <text
        xml:space="preserve"
        transform="matrix(0.26458333,0,0,0.26458333,9.2512958,62.006401)"
@@ -102,9 +102,9 @@
        style="font-style:normal;font-weight:normal;font-size:96px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect790);display:inline;fill:#72b971;fill-opacity:1;stroke:none"><tspan
          x="14.958984"
          y="118.41016"
-         id="tspan7368"><tspan
+         id="tspan367"><tspan
            style="font-family:Viga;-inkscape-font-specification:Viga"
-           id="tspan7366">pyDVL</tspan></tspan></text>
+           id="tspan365">pyDVL</tspan></tspan></text>
     <path
        style="display:none;fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 15.143326,65.74127 -0.0085,-58.9867355 a 5.2843485,5.2843485 135.03136 0 1 5.290898,-5.2851086 l 59.235801,0.073412 a 5.2964101,5.2964101 45.045339 0 1 5.289846,5.2982244 l -0.01325,38.5838447 a 5.309161,5.309161 134.92512 0 1 -5.293461,5.307315 l -10.355115,0.03062 a 5.296304,5.296304 134.85566 0 0 -5.280631,5.307304 l 0.02012,9.668636 a 5.2809345,5.2809345 134.93891 0 1 -5.280654,5.291925 l -38.3126,0.002 A 5.2921616,5.2921616 44.994394 0 1 15.143326,65.74127 Z"
@@ -135,7 +135,7 @@
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="Layer 2"
-     transform="translate(-15.063393,-3.8736616)">
+     transform="translate(-15.063394,-3.8736616)">
     <g
        id="g7265"
        transform="translate(3.6947116)">
