@@ -1,15 +1,13 @@
-from time import time
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
-import ray
-from ray import ObjectRef
 
 from valuation.utils import Utility, maybe_progress
 from valuation.utils.config import ParallelConfig
 
 from ..utils.logging import logger
 from ..utils.parallel.actor import Coordinator, RayActorWrapper, Worker
+from ..utils.parallel.backend import init_parallel_backend
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -21,24 +19,26 @@ __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
 def get_shapley_coordinator(
     *args, config: ParallelConfig = ParallelConfig(), **kwargs
 ) -> "ShapleyCoordinator":
+    parallel_backend = init_parallel_backend(config)
     if config.backend == "ray":
-        remote_cls = ray.remote(ShapleyCoordinator)
+        remote_cls = parallel_backend.wrap(ShapleyCoordinator)
         coordinator_handle = remote_cls.remote(*args, **kwargs)
-        coordinator = RayActorWrapper(coordinator_handle)
+        coordinator = RayActorWrapper(coordinator_handle, parallel_backend)
     else:
-        raise ValueError(f"Unexpected parallel type {config.backend}")
+        raise NotImplementedError(f"Unexpected parallel type {config.backend}")
     return coordinator  # type: ignore
 
 
 def get_shapley_worker(
     *args, config: ParallelConfig = ParallelConfig(), **kwargs
 ) -> "ShapleyWorker":
+    parallel_backend = init_parallel_backend(config)
     if config.backend == "ray":
-        remote_cls = ray.remote(ShapleyWorker)
+        remote_cls = parallel_backend.wrap(ShapleyWorker)
         worker_handle = remote_cls.remote(*args, **kwargs)
-        worker = RayActorWrapper(worker_handle)
+        worker = RayActorWrapper(worker_handle, parallel_backend)
     else:
-        raise ValueError(f"Unexpected parallel type {config.backend}")
+        raise NotImplementedError(f"Unexpected parallel type {config.backend}")
     return worker  # type: ignore
 
 

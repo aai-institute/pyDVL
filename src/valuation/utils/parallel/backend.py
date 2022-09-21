@@ -84,7 +84,10 @@ def init_parallel_backend(config: ParallelConfig) -> "RayParallelBackend":
     """
     global _PARALLEL_BACKED
     if _PARALLEL_BACKED is None:
-        _PARALLEL_BACKED = RayParallelBackend(config)
+        if config.backend == "ray":
+            _PARALLEL_BACKED = RayParallelBackend(config)
+        else:
+            raise NotImplementedError(f"Unexpected parallel type {config.backend}")
     return _PARALLEL_BACKED
 
 

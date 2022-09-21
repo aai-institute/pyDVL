@@ -1,13 +1,16 @@
 import abc
 import inspect
+import weakref
 from time import time
 from typing import TYPE_CHECKING, Dict, Optional, Union
 
 import numpy as np
 import ray
+from ray import ObjectRef
 
 from ..logging import logger
 from ..numeric import get_running_avg_variance
+from .backend import RayParallelBackend
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -19,17 +22,41 @@ __all__ = ["RayActorWrapper", "Coordinator", "Worker"]
 class RayActorWrapper:
     """Taken almost verbatim from:
     https://github.com/JaneliaSciComp/ray-janelia/blob/main/remote_as_local_wrapper.py
+
+    :Example:
+
+    >>> from valuation.utils.parallel import init_parallel_backend
+    >>> from valuation.utils.config import ParallelConfig
+    >>> from valuation.utils.parallel.actor import RayActorWrapper
+    >>> class Actor:
+    ...     def __init__(self, x):
+    ...         self.x = x
+    ...
+    ...     def get(self):
+    ...         return self.x
+    ...
+    >>> config = ParallelConfig()
+    >>> parallel_backend = init_parallel_backend(config)
+    >>> actor_handle = parallel_backend.wrap(Actor).remote(5)
+    >>> parallel_backend.get(actor_handle.get.remote())
+    5
+    >>> wrapped_actor = RayActorWrapper(actor_handle, parallel_backend)
+    >>> wrapped_actor.get()
+    5
     """
 
-    def __init__(self, actor):
-        self.actor = actor
+    def __init__(self, actor_handle: ObjectRef, parallel_backend: RayParallelBackend):
+        self.actor_handle = actor_handle
+        self._parallel_backend_ref = weakref.ref(parallel_backend)
 
         def remote_caller(method_name: str):
             # Wrapper for remote class's methods to mimic local calls
             def wrapper(*args, block: bool = True, **kwargs):
-                obj_ref = getattr(self.actor, method_name).remote(*args, **kwargs)
+                obj_ref = getattr(self.actor_handle, method_name).remote(
+                    *args, **kwargs
+                )
                 if block:
-                    return ray.get(
+                    return self.parallel_backend.get(
                         obj_ref, timeout=300
                     )  # Block until called method returns.
                 else:
@@ -37,11 +64,18 @@ class RayActorWrapper:
 
             return wrapper
 
-        for member in inspect.getmembers(self.actor):
+        for member in inspect.getmembers(self.actor_handle):
             name = member[0]
             if not name.startswith("__"):
                 # Wrap public methods for remote-as-local calls.
                 setattr(self, name, remote_caller(name))
+
+    @property
+    def parallel_backend(self):
+        parallel_backend = self._parallel_backend_ref()
+        if parallel_backend is None:
+            raise RuntimeError(f"Could not get reference to parallel backend instance")
+        return parallel_backend
 
 
 class Coordinator(abc.ABC):
