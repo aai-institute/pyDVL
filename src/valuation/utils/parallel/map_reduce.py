@@ -63,10 +63,42 @@ class MapReduceJob(Generic[T, R]):
 
     Results are aggregated per run using reduce_func(), but not across runs.
 
-    :param fun: Create with `MapReduceJob.from_fun(fun, reducer, ...)`
-    :param data: values to split across jobs
-    :param n_jobs: number of parallel jobs to run. Does not accept -1
-    :param n_runs: number of times to run fun on the whole data.
+    :param map_func: Function that will be applied to the input chunks in each job.
+    :param reduce_func: Function that will be applied to the results of `map_func` to reduce them.
+    :param map_kwargs: keyword arguments that will be passed to `map_func` in each job.
+    :param reduce_kwargs: keyword arguments that will be passed to `reduce_func` in each job.
+    :param config: Instance of :class:`~valuation.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+    :param n_jobs: number of parallel jobs to run. Does not accept 0
+    :param n_runs: number of times to run the functions on the whole data.
+
+    :Examples:
+
+    A simple usage example with 2 jobs and 3 runs:
+
+    >>> from valuation.utils.parallel import MapReduceJob
+    >>> import numpy as np
+    >>> map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
+    ...     map_func=np.sum,
+    ...     reduce_func=np.sum,
+    ...     n_jobs=2,
+    ...     n_runs=3,
+    ... )
+    >>> map_reduce_job(np.arange(5))
+    [10, 10, 10]
+
+    If we set `chunkify_inputs` to `False` the input is not split across jobs but instead repeated:
+
+    >>> from valuation.utils.parallel import MapReduceJob
+    >>> import numpy as np
+    >>> map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
+    ...     map_func=np.sum,
+    ...     reduce_func=np.sum,
+    ...     chunkify_inputs=False,
+    ...     n_jobs=2,
+    ...     n_runs=3,
+    ... )
+    >>> map_reduce_job(np.arange(5))
+    [20, 20, 20]
     """
 
     def __init__(
