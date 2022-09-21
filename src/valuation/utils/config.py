@@ -7,12 +7,18 @@ from .types import unpackable
 
 PICKLE_VERSION = 5  # python >= 3.8
 
-__all__ = ["MemcachedClientConfig", "MemcachedConfig"]
+__all__ = ["ParallelConfig", "MemcachedClientConfig", "MemcachedConfig"]
 
 
-@unpackable
 @dataclass
 class ParallelConfig:
+    """Configuration for parallel computation backend.
+
+    :param backend: Type of backend to use. For now only 'ray' is supported.
+    :param address: Address of existing remote or local cluster to use.
+    :param num_workers: Number of workers (CPUs) to use.
+    """
+
     backend: str = "ray"
     address: Optional[Union[str, Tuple[str, int]]] = None
     num_workers: Optional[int] = None
