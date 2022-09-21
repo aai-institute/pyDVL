@@ -151,7 +151,6 @@ def test_memcached_faster_with_repeated_training(memcached_client):
 @pytest.mark.parametrize(
     "n, atol",
     [
-        (5, 3),
         (10, 4),
         (20, 10),
     ],
