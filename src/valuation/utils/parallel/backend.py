@@ -1,9 +1,10 @@
 import os
 from dataclasses import asdict
-from typing import Any, Iterable, Optional, TypeVar, Union
+from typing import Any, Iterable, List, Optional, Tuple, TypeVar, Union
 
 import ray
 from ray import ObjectRef
+from ray.remote_function import RemoteFunction
 
 from ..config import ParallelConfig
 
@@ -51,8 +52,23 @@ class RayParallelBackend:
     def put(self, x: Any, **kwargs) -> ObjectRef:
         return ray.put(x, **kwargs)  # type: ignore
 
-    def wrap(self, x):
-        return ray.remote(x)
+    def wrap(self, *args, **kwargs) -> RemoteFunction:
+        return ray.remote(*args, **kwargs)
+
+    def wait(
+        self,
+        object_refs: List["ray.ObjectRef"],
+        *,
+        num_returns: int = 1,
+        timeout: Optional[float] = None,
+        fetch_local: bool = True,
+    ) -> Tuple[List[ObjectRef], List[ObjectRef]]:
+        return ray.wait(
+            object_refs,
+            num_returns=num_returns,
+            timeout=timeout,
+            fetch_local=fetch_local,
+        )
 
     def effective_n_jobs(self, n_jobs: Optional[int]) -> int:
         if n_jobs == 0:

@@ -65,11 +65,13 @@ class MapReduceJob(Generic[T, R]):
 
     :param map_func: Function that will be applied to the input chunks in each job.
     :param reduce_func: Function that will be applied to the results of `map_func` to reduce them.
-    :param map_kwargs: keyword arguments that will be passed to `map_func` in each job.
-    :param reduce_kwargs: keyword arguments that will be passed to `reduce_func` in each job.
+    :param map_kwargs: Keyword arguments that will be passed to `map_func` in each job.
+    :param reduce_kwargs: Keyword arguments that will be passed to `reduce_func` in each job.
     :param config: Instance of :class:`~valuation.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
-    :param n_jobs: number of parallel jobs to run. Does not accept 0
-    :param n_runs: number of times to run the functions on the whole data.
+    :param n_jobs: Number of parallel jobs to run. Does not accept 0
+    :param n_runs: Number of times to run the functions on the whole data.
+    :param timeout: Amount of time in seconds to wait for remote results.
+    :param max_parallel_tasks: Maximum number of jobs to start in parallel.
 
     :Examples:
 
@@ -112,15 +114,25 @@ class MapReduceJob(Generic[T, R]):
         chunkify_inputs: bool = True,
         n_jobs: int = 1,
         n_runs: int = 1,
+        timeout: int = 300,
+        max_parallel_tasks: Optional[int] = None,
     ):
         self.config = config
         parallel_backend = init_parallel_backend(self.config)
         self._parallel_backend_ref = weakref.ref(parallel_backend)
 
+        self.timeout = timeout
+        self.chunkify_inputs = chunkify_inputs
+        self.n_runs = n_runs
+
         self._n_jobs = 1
         self.n_jobs = n_jobs
-        self.n_runs = n_runs
-        self.chunkify_inputs = chunkify_inputs
+
+        if max_parallel_tasks is None:
+            # TODO: Find a better default value?
+            self.max_parallel_tasks = 2 * (self.n_jobs + self.n_runs)
+        else:
+            self.max_parallel_tasks = max_parallel_tasks
 
         if reduce_func is None:
             reduce_func = Identity
@@ -161,33 +173,56 @@ class MapReduceJob(Generic[T, R]):
 
         map_func = self._wrap_function(self._map_func)
 
+        total_n_jobs = 0
+
         for _ in range(self.n_runs):
             if self.chunkify_inputs and self.n_jobs > 1:
                 chunks = self._chunkify(inputs, num_chunks=self.n_jobs)
             else:
                 chunks = repeat(inputs, times=self.n_jobs)
 
-            map_result = [
-                map_func(next_chunk, **self.map_kwargs) for next_chunk in chunks
-            ]
+            map_result = []
+            for j, next_chunk in enumerate(chunks):
+                result = map_func(next_chunk, **self.map_kwargs)
+                map_result.append(result)
+                total_n_jobs += 1
+
+                # Backpressure
+                if total_n_jobs > self.max_parallel_tasks:
+                    wait_for_num_jobs = max(1, self.max_parallel_tasks // 2)
+                    self.parallel_backend.wait(
+                        map_result, num_returns=wait_for_num_jobs, timeout=self.timeout
+                    )
 
             map_results.append(map_result)
 
         return map_results
 
     def reduce(self, chunks: List[List[R]]) -> List[R]:
-        futures = []
-
         reduce_func = self._wrap_function(self._reduce_func)
 
+        total_n_jobs = 0
+        reduce_results = []
+
         for i in range(self.n_runs):
-            future = reduce_func(chunks[i], **self.reduce_kwargs)
-            futures.append(future)
-        results = self.parallel_backend.get(futures, timeout=300)
+            result = reduce_func(chunks[i], **self.reduce_kwargs)
+            reduce_results.append(result)
+            total_n_jobs += 1
+
+            # Backpressure
+            if total_n_jobs > self.max_parallel_tasks:
+                wait_for_num_jobs = max(1, self.max_parallel_tasks // 2)
+                self.parallel_backend.wait(
+                    reduce_results, num_returns=wait_for_num_jobs, timeout=self.timeout
+                )
+
+        results = self.parallel_backend.get(reduce_results, timeout=self.timeout)
         return results  # type: ignore
 
     def _wrap_function(self, func):
-        remote_func = self.parallel_backend.wrap(wrap_func_with_remote_args(func))
+        remote_func = self.parallel_backend.wrap(
+            wrap_func_with_remote_args(func, timeout=self.timeout)
+        )
         return remote_func.remote
 
     @staticmethod
