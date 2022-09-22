@@ -1,7 +1,7 @@
 import os
 from collections import OrderedDict
 from copy import copy
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Sized, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -21,11 +21,11 @@ class Dataset:
         y_train: Union[np.ndarray, pd.DataFrame],
         x_test: Union[np.ndarray, pd.DataFrame],
         y_test: Union[np.ndarray, pd.DataFrame],
-        feature_names: Optional[Sized] = None,
-        target_names: Optional[Sized] = None,
-        data_names: Optional[Sized] = None,
-        description: str = None,
-        is_multi_output=False,
+        feature_names: Optional[Sequence[str]] = None,
+        target_names: Optional[Sequence[str]] = None,
+        data_names: Optional[Sequence[str]] = None,
+        description: Optional[str] = None,
+        is_multi_output: bool = False,
     ):
         """It holds a dataset, split into train and test data, together
         with several labels on feature names, data point names and description
