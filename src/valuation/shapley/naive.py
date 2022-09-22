@@ -1,4 +1,5 @@
 import math
+import warnings
 from collections import OrderedDict
 from itertools import permutations
 
@@ -24,7 +25,10 @@ def permutation_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
     # Note that the cache in utility saves most of the refitting because we
     # use frozenset for the input.
     if n > 10:
-        raise ValueError(f"Large dataset! Computation requires {n}! calls to utility()")
+        warnings.warn(
+            f"Large dataset! Computation requires {n}! calls to utility()",
+            RuntimeWarning,
+        )
 
     values = np.zeros(n)
     for p in maybe_progress(
@@ -53,12 +57,10 @@ def combinatorial_exact_shapley(u: Utility, progress: bool = True) -> OrderedDic
     """
 
     n = len(u.data)
-    from valuation.utils.logging import logger
 
-    if n > 20:  # Arbitrary choice, will depend on time required, caching, etc.
-        logger.warning(
-            f"Large dataset! Computation requires 2^{n} calls to model.fit()"
-        )
+    # Arbitrary choice, will depend on time required, caching, etc.
+    if n > 20:
+        warnings.warn(f"Large dataset! Computation requires 2^{n} calls to model.fit()")
 
     values = np.zeros(n)
     for i in u.data.indices:
