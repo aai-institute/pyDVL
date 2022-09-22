@@ -1,5 +1,5 @@
 import weakref
-from itertools import repeat
+from itertools import chain, repeat
 from typing import (
     Any,
     Callable,
@@ -174,6 +174,7 @@ class MapReduceJob(Generic[T, R]):
         map_func = self._wrap_function(self._map_func)
 
         total_n_jobs = 0
+        total_n_finished = 0
 
         for _ in range(self.n_runs):
             if self.chunkify_inputs and self.n_jobs > 1:
@@ -187,12 +188,11 @@ class MapReduceJob(Generic[T, R]):
                 map_result.append(result)
                 total_n_jobs += 1
 
-                # Backpressure
-                if total_n_jobs > self.max_parallel_tasks:
-                    wait_for_num_jobs = max(1, self.max_parallel_tasks // 2)
-                    self.parallel_backend.wait(
-                        map_result, num_returns=wait_for_num_jobs, timeout=self.timeout
-                    )
+                total_n_finished = self._backpressure(
+                    chain.from_iterable([*map_results, map_result]),
+                    n_dispatched=total_n_jobs,
+                    n_finished=total_n_finished,
+                )
 
             map_results.append(map_result)
 
@@ -202,19 +202,16 @@ class MapReduceJob(Generic[T, R]):
         reduce_func = self._wrap_function(self._reduce_func)
 
         total_n_jobs = 0
+        total_n_finished = 0
         reduce_results = []
 
         for i in range(self.n_runs):
             result = reduce_func(chunks[i], **self.reduce_kwargs)
             reduce_results.append(result)
             total_n_jobs += 1
-
-            # Backpressure
-            if total_n_jobs > self.max_parallel_tasks:
-                wait_for_num_jobs = max(1, self.max_parallel_tasks // 2)
-                self.parallel_backend.wait(
-                    reduce_results, num_returns=wait_for_num_jobs, timeout=self.timeout
-                )
+            total_n_finished = self._backpressure(
+                reduce_results, n_dispatched=total_n_jobs, n_finished=total_n_finished
+            )
 
         results = self.parallel_backend.get(reduce_results, timeout=self.timeout)
         return results  # type: ignore
@@ -224,6 +221,19 @@ class MapReduceJob(Generic[T, R]):
             wrap_func_with_remote_args(func, timeout=self.timeout)
         )
         return remote_func.remote
+
+    def _backpressure(
+        self, jobs: Iterable[ObjectRef], n_dispatched: int, n_finished: int
+    ) -> int:
+        if (n_in_flight := n_dispatched - n_finished) > self.max_parallel_tasks:
+            wait_for_num_jobs = max(1, self.max_parallel_tasks // 2)
+            # num_returns cannot be bigger than length of provided list
+            wait_for_num_jobs = min(wait_for_num_jobs, n_in_flight)
+            self.parallel_backend.wait(
+                jobs, num_returns=wait_for_num_jobs, timeout=self.timeout
+            )
+            n_finished += wait_for_num_jobs
+        return n_finished
 
     @staticmethod
     def _chunkify(data: Sequence[T], num_chunks: int) -> Iterator[Sequence[T]]:
