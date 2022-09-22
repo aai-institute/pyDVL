@@ -9,7 +9,9 @@ from valuation.reporting.scores import sort_values
 from valuation.utils import Utility, maybe_progress, powerset
 
 
-def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> OrderedDict:
+def permutation_exact_shapley(
+    u: Utility, *, progress: bool = True
+) -> "OrderedDict[str, float]":
     """Computes the exact Shapley value using permutations.
     When the length of the training set is > 10 it prints a warning since the
     computation becomes too expensive.
@@ -46,7 +48,7 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> OrderedDi
 
 def combinatorial_exact_shapley(
     u: Utility, *, progress: bool = True
-) -> OrderedDict[str, float]:
+) -> "OrderedDict[str, float]":
     """Computes the exact Shapley value using the combinatorial definition.
     When the length of the training set is > 20 it prints a warning since the
     computation becomes too expensive.
