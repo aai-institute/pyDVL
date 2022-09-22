@@ -168,8 +168,8 @@ class MapReduceJob(Generic[T, R]):
         reduce_results = self.reduce(map_results)
         return reduce_results
 
-    def map(self, inputs: Union[Sequence[T], Any]) -> List[List[R]]:
-        map_results = []
+    def map(self, inputs: Union[Sequence[T], Any]) -> List[List["ObjectRef[R]"]]:
+        map_results: List[List["ObjectRef[R]"]] = []
 
         map_func = self._wrap_function(self._map_func)
 
@@ -198,7 +198,7 @@ class MapReduceJob(Generic[T, R]):
 
         return map_results
 
-    def reduce(self, chunks: List[List[R]]) -> List[R]:
+    def reduce(self, chunks: List[List["ObjectRef[R]"]]) -> List[R]:
         reduce_func = self._wrap_function(self._reduce_func)
 
         total_n_jobs = 0
