@@ -82,10 +82,10 @@ def get_shapley_values(
             **kwargs,
         )
     elif mode == ShapleyMode.ExactCombinatorial:
-        dval = combinatorial_exact_shapley(u, progress)
+        dval = combinatorial_exact_shapley(u, progress=progress)
         dval_std = dict()
     elif mode == ShapleyMode.ExactPermutation:
-        dval = permutation_exact_shapley(u, progress)
+        dval = permutation_exact_shapley(u, progress=progress)
         dval_std = dict()
     elif mode == ShapleyMode.CombinatorialMontecarlo:
         dval, dval_std = combinatorial_montecarlo_shapley(

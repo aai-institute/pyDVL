@@ -53,7 +53,7 @@ class RayParallelBackend:
         return ray.put(x, **kwargs)  # type: ignore
 
     def wrap(self, *args, **kwargs) -> RemoteFunction:
-        return ray.remote(*args, **kwargs)
+        return ray.remote(*args, **kwargs)  # type: ignore
 
     def wait(
         self,
@@ -63,7 +63,7 @@ class RayParallelBackend:
         timeout: Optional[float] = None,
         fetch_local: bool = True,
     ) -> Tuple[List[ObjectRef], List[ObjectRef]]:
-        return ray.wait(
+        return ray.wait(  # type: ignore
             object_refs,
             num_returns=num_returns,
             timeout=timeout,

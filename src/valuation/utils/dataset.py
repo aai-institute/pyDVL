@@ -67,24 +67,22 @@ class Dataset:
                 f"{x_test.shape[-1]} and {y_test.shape[-1]}"
             )
 
-        def make_names(s: str, a: np.ndarray) -> np.ndarray:
+        def make_names(s: str, a: np.ndarray) -> List[str]:
             n = a.shape[1] if len(a.shape) > 1 else 1
-            return np.array(
-                [f"{s}{i:0{1 + int(np.log10(n))}d}" for i in range(1, n + 1)]
-            )
+            return [f"{s}{i:0{1 + int(np.log10(n))}d}" for i in range(1, n + 1)]
 
         self.feature_names = feature_names
         self.target_names = target_names
 
         if self.feature_names is None:
             if isinstance(x_train, pd.DataFrame):
-                self.feature_names = np.asarray(x_train.columns)
+                self.feature_names = x_train.columns.tolist()
             else:
                 self.feature_names = make_names("x", x_train)
 
         if self.target_names is None:
             if isinstance(y_train, pd.DataFrame):
-                self.target_names = np.asarray(y_train.columns)
+                self.target_names = y_train.columns.tolist()
             else:
                 self.target_names = make_names("y", y_train)
 
@@ -208,8 +206,8 @@ class GroupedDataset(Dataset):
         x_test: np.ndarray,
         y_test: np.ndarray,
         data_groups: Sequence,
-        feature_names: Optional[Sized] = None,
-        target_names: Optional[Sized] = None,
+        feature_names: Optional[Sequence[str]] = None,
+        target_names: Optional[Sequence[str]] = None,
         description: Optional[str] = None,
     ):
         """Class for grouping datasets.
