@@ -189,7 +189,7 @@ class MapReduceJob(Generic[T, R]):
                 total_n_jobs += 1
 
                 total_n_finished = self._backpressure(
-                    chain.from_iterable([*map_results, map_result]),
+                    list(chain.from_iterable([*map_results, map_result])),
                     n_dispatched=total_n_jobs,
                     n_finished=total_n_finished,
                 )
@@ -223,7 +223,7 @@ class MapReduceJob(Generic[T, R]):
         return remote_func.remote
 
     def _backpressure(
-        self, jobs: Iterable[ObjectRef], n_dispatched: int, n_finished: int
+        self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int
     ) -> int:
         if (n_in_flight := n_dispatched - n_finished) > self.max_parallel_tasks:
             wait_for_num_jobs = max(1, self.max_parallel_tasks // 2)
