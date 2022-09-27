@@ -199,7 +199,9 @@ def test_linear_regression_model_d_x_d_theta(
     mvp_model = TorchTwiceDifferentiable(model=model, loss=loss)
 
     test_derivative = 2 * linear_regression_analytical_derivative_d_x_d_theta(
-        (A, b), train_x, train_y
+        (A, b),
+        train_x,
+        train_y,
     )
     estimated_derivative = np.stack(
         [
