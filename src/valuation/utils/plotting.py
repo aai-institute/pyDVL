@@ -56,6 +56,7 @@ def plot_dataset(
     line: Optional["NDArray"] = None,
     suptitle: Optional[str] = None,
     s: Optional[float] = None,
+    figsize: Tuple[int, int] = (20, 10),
 ):
     """
     Plots a train and test data in two separate plots, with also the optimal decision boundary as passed to the
@@ -69,7 +70,7 @@ def plot_dataset(
     :param s: The thickness of the points to plot.
     """
 
-    fig = plt.figure(figsize=(6 * 2, 4), constrained_layout=True)
+    fig = plt.figure(figsize=figsize, constrained_layout=True)
     spec = fig.add_gridspec(20, 2)
     ax = [fig.add_subplot(spec[:-1, i]) for i in range(2)]
     ax.append(fig.add_subplot(spec[-1, :]))
@@ -135,6 +136,7 @@ def plot_influences(
     line: Optional["NDArray"] = None,
     suptitle: Optional[str] = None,
     colorbar_limits: Optional[Tuple] = None,
+    figsize: Tuple[int, int] = (18, 10),
 ):
     """
     Plots the influence values of the train data with a color map.
@@ -143,6 +145,7 @@ def plot_influences(
     :param train_influences: an array with influence values for each data point. Must have size N.
     :param line: Optional, line of shape [Mx2], where each row is a point of the 2-dimensional line.
     """
+    plt.figure(figsize=figsize)
     sc = plt.scatter(x[:, 0], x[:, 1], c=influences)
     if line is not None:
         plt.plot(line[:, 0], line[:, 1], color="black")
@@ -176,6 +179,7 @@ def plot_iris(
     legend_title: str = None,
     legend_labels: str = None,
     colorbar_limits: Optional[Tuple] = None,
+    figsize: Tuple[int, int] = (20, 8),
 ):
     """Scatter plots for the iris dataset.
     :param data: split Dataset.
@@ -209,7 +213,7 @@ def plot_iris(
                 title=legend_title,
             )
 
-    plt.figure(figsize=(16, 6))
+    plt.figure(figsize=figsize)
     plt.suptitle(suptitle)
     plt.subplot(1, 2, 1)
     xmin, xmax = (
