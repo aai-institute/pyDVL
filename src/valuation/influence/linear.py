@@ -32,7 +32,7 @@ def linear_influences(
     """
     Calculate the linear influences of the training set onto the validation set assuming a linear model Ax+b=y.
     :param data: a dataset
-    :param influence_type: Which algorithm to use to calculate influences.
+    :param influence_type: Which algorithm to use to calculate influences. \
         Currently supported options: 'up' or 'perturbation'.
     :returns: A np.ndarray of shape [BxC] with the influences of the training points on the test points.
     """

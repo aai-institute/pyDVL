@@ -60,7 +60,7 @@ def plot_dataset(
     """
     Plots a train and test data in two separate plots, with also the optimal decision boundary as passed to the
     line argument.
-    :param train_ds: A 2-elements tuple with train input and labels. Note that the features have size [Nx2] and
+    :param train_ds: A 2-elements tuple with train input and labels. Note that the features have size [Nx2] and \
         the target_variable [N].
     :param test_ds:  A 2-elements tuple with test input and labels. Same format as train_ds.
     :param x_min: Set to define the minimum boundaries of the plot.
@@ -128,49 +128,59 @@ def plot_dataset(
 def plot_influences(
     x: "NDArray",
     influences: "NDArray",
+    corrupted_indices: Optional[List[int]] = None,
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     legend_title: Optional[str] = None,
     line: Optional["NDArray"] = None,
     suptitle: Optional[str] = None,
-    s: Optional[float] = None,
+    colorbar_limits: Optional[Tuple] = None,
 ):
     """
     Plots the influence values of the train data with a color map.
-    :param x_train: Input to the model. Note that the it must have size [Nx2], with N being the total
+    :param x_train: Input to the model. Note that the it must have size [Nx2], with N being the total \
         number of points.
     :param train_influences: an array with influence values for each data point. Must have size N.
     :param line: Optional, line of shape [Mx2], where each row is a point of the 2-dimensional line.
-    :param s: The thickness of the points to plot.
     """
-    ax = plt.subplot()
-    sc = ax.scatter(x[:, 0], x[:, 1], c=influences)
+    sc = plt.scatter(x[:, 0], x[:, 1], c=influences)
     if line is not None:
-        ax.plot(line[:, 0], line[:, 1], color="black")
+        plt.plot(line[:, 0], line[:, 1], color="black")
     if xlabel is not None:
-        ax.set_xlabel(xlabel)
+        plt.xlabel(xlabel)
     if ylabel is not None:
-        ax.set_ylabel(ylabel)
+        plt.ylabel(ylabel)
     if suptitle is not None:
         plt.suptitle(suptitle)
 
     plt.colorbar(sc, label=legend_title)
+    if colorbar_limits is not None:
+        plt.clim(*colorbar_limits)
+    if corrupted_indices is not None:
+        plt.scatter(
+            x[:, 0][corrupted_indices],
+            x[:, 1][corrupted_indices],
+            facecolors="none",
+            edgecolors="r",
+            s=80,
+        )
     plt.show()
 
 
 def plot_iris(
     data: Dataset,
     indices: List[int] = None,
+    corrupted_indices: Optional[List[int]] = None,
     suptitle: str = None,
     colors: Iterable = None,
-    colorbal_label: str = None,
-    plot_test: bool = False,
+    legend_title: str = None,
+    legend_labels: str = None,
+    colorbar_limits: Optional[Tuple] = None,
 ):
     """Scatter plots for the iris dataset.
     :param data: split Dataset.
     :param indices: subset of data.indices
     :param colors: use with indices to set the color (e.g. to values)
-    :param plot_test: plots the points from the test set too.
     """
     if indices is not None:
         x_train = data.x_train[indices]
@@ -187,6 +197,18 @@ def plot_iris(
     if colors is None:
         colors = y_train
 
+    def _handle_legend(scatter):
+        if len(np.unique(colors)) > 10:
+            plt.colorbar(label=legend_title)
+            if colorbar_limits is not None:
+                plt.clim(*colorbar_limits)
+        else:
+            plt.legend(
+                handles=scatter.legend_elements()[0],
+                labels=legend_labels,
+                title=legend_title,
+            )
+
     plt.figure(figsize=(16, 6))
     plt.suptitle(suptitle)
     plt.subplot(1, 2, 1)
@@ -200,26 +222,26 @@ def plot_iris(
     )
     xmargin = 0.1 * (xmax - xmin)
     ymargin = 0.1 * (ymax - ymin)
-    plt.scatter(
+    scatter = plt.scatter(
         x_train[sepal_length_indices],
         x_train[sepal_width_indices],
         c=colors,
-        marker="1",
+        marker="o",
+        alpha=0.8,
     )
-    if plot_test:
-        plt.scatter(
-            data.x_test[sepal_length_indices],
-            data.x_test[sepal_width_indices],
-            c=data.y_test,
-            marker="o",
-            alpha=0.4,
-        )
     plt.xlim(xmin - xmargin, xmax + xmargin)
     plt.ylim(ymin - ymargin, ymax + ymargin)
     plt.xlabel("Sepal length")
     plt.ylabel("Sepal width")
-    if colors is not None:
-        plt.colorbar(label=colorbal_label)
+    _handle_legend(scatter)
+    if corrupted_indices is not None:
+        scatter = plt.scatter(
+            x_train[sepal_length_indices][corrupted_indices],
+            x_train[sepal_width_indices][corrupted_indices],
+            facecolors="none",
+            edgecolors="r",
+            s=80,
+        )
 
     plt.subplot(1, 2, 2)
     xmin, xmax = (
@@ -232,23 +254,23 @@ def plot_iris(
     )
     xmargin = 0.1 * (xmax - xmin)
     ymargin = 0.1 * (ymax - ymin)
-    plt.scatter(
+    scatter = plt.scatter(
         x_train[petal_length_indices],
         x_train[petal_width_indices],
         c=colors,
-        marker="1",
+        marker="o",
+        alpha=0.8,
     )
-    if plot_test:
-        plt.scatter(
-            data.x_test[petal_length_indices],
-            data.x_test[petal_width_indices],
-            c=data.y_test,
-            marker="o",
-            alpha=0.4,
-        )
     plt.xlim(xmin - xmargin, xmax + xmargin)
     plt.ylim(ymin - ymargin, ymax + ymargin)
     plt.xlabel("Petal length")
     plt.ylabel("Petal width")
-    if colors is not None:
-        plt.colorbar(label=colorbal_label)
+    _handle_legend(scatter)
+    if corrupted_indices is not None:
+        scatter = plt.scatter(
+            x_train[petal_length_indices][corrupted_indices],
+            x_train[petal_width_indices][corrupted_indices],
+            facecolors="none",
+            edgecolors="r",
+            s=80,
+        )
