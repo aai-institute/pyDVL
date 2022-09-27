@@ -83,14 +83,8 @@ a Dataset object is available, this is as simple as calling
 .. code-block:: python
 
    >>> from valuation.influence.linear import linear_influences
-   >>> from valuation.influence.types import InfluenceTypes
 
-   >>> linear_influences(
-   ...    x_train,
-   ...    y_train,
-   ...    x_test,
-   ...    y_test
-   ... )
+   >>> linear_influences(dataset)
 
 
 the linear influence functions. Internally these method fit a linear regression model and use this
@@ -107,14 +101,10 @@ loss and data samples.
 .. code-block:: python
 
    >>> from valuation.influence.general import influences
-   >>> from valuation.influence.types import InfluenceTypes
    >>>
    >>> influences(
    ...    model,
-   ...    x_train,
-   ...    y_train,
-   ...    x_test,
-   ...    y_test
+   ...    dataset,
    ... )
 
 
@@ -130,14 +120,10 @@ by adding ``inversion_method`` parameter to the influences function call.
 .. code-block:: python
 
    >>> from valuation.influence.general import influences
-   >>> from valuation.influence.types import InfluenceTypes
 
    >>> influences(
    ...     model,
-   ...     x_train,
-   ...     y_train,
-   ...     x_test,
-   ...     y_test,
+   ...     dataset,
    ...     inversion_method="cg"
    ... )
 
@@ -151,13 +137,9 @@ to the influences function call.
 .. code-block:: python
 
    >>> from valuation.influence.general import influences
-   >>> from valuation.influence.types import InfluenceTypes
    >>>
    >>> influences(
-   ... model,
-   ...     x_train,
-   ...     y_train,
-   ...     x_test,
-   ...     y_test,
-   ...     influence_type=InfluenceTypes.Perturbation
+   ...     model,
+   ...     dataset,
+   ...     influence_type='perturbation'
    ... )

@@ -1,5 +1,0 @@
-pytorch\_model
-==============
-.. automodule:: valuation.models.pytorch_model
-   :members:
-   :undoc-members:

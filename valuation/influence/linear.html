@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>linear &mdash; pyDVL 0.1.0.dev16 documentation</title>
+  <title>linear &mdash; pyDVL 0.1.0.dev17 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -20,7 +20,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="types" href="types.html" />
+    <link rel="next" title="model_wrappers" href="model_wrappers.html" />
     <link rel="prev" title="general" href="general.html" /> 
 </head>
 
@@ -53,16 +53,17 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">valuation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../cli.html">cli</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../influence.html">influence</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="cg.html">cg</a></li>
+<li class="toctree-l3"><a class="reference internal" href="frameworks.html">frameworks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="general.html">general</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">linear</a></li>
+<li class="toctree-l3"><a class="reference internal" href="model_wrappers.html">model_wrappers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="types.html">types</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../loo.html">loo</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../models.html">models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reporting.html">reporting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../shapley.html">shapley</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../solve.html">solve</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../utils.html">utils</a></li>
 </ul>
 </li>
@@ -123,28 +124,23 @@
 <p>Contains all functions for closed form solution of influences for standard linear regression.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="valuation.influence.linear.linear_influences">
-<span class="sig-name descname"><span class="pre">linear_influences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">influence_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#valuation.influence.types.InfluenceTypes" title="valuation.influence.types.InfluenceTypes"><span class="pre">InfluenceTypes</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">InfluenceTypes.Up</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/linear.py#L25"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.linear.linear_influences" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">linear_influences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">influence_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">InfluenceType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">InfluenceType.Up</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/linear.py#L25"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.linear.linear_influences" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate the linear influences of the training set onto the validation set assuming a linear model Ax+b=y.
-:param x_train: A np.ndarray of shape [MxK] containing the features of the train set of data points.
-:param y_train: A np.ndarray of shape [MxL] containing the targets of the train set of data points.
-:param x_test: A np.ndarray of shape [NxK] containing the features of the test set of data points.
-:param y_test: A np.ndarray of shape [NxL] containing the targets of the test set of data points.
-:param influence_type: Either up-weighting InfluenceTypes.Up or perturbation influences InfluenceTypes.Up.
+Points with low (or negative) influences are less valuable for model training than higher influence points.
+:param data: a dataset
+:param influence_type: Which algorithm to use to calculate influences.         Currently supported options: ‘up’ or ‘perturbation’.
 :returns: A np.ndarray of shape [BxC] with the influences of the training points on the test points.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="valuation.influence.linear.influences_up_linear_regression_analytical">
-<span class="sig-name descname"><span class="pre">influences_up_linear_regression_analytical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">linear_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/linear.py#L66"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.linear.influences_up_linear_regression_analytical" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">influences_up_linear_regression_analytical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">linear_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/linear.py#L68"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.linear.influences_up_linear_regression_analytical" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate the influences of the training set onto the validation set for a linear model Ax+b=y.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>linear_model</strong> – A tuple of np.ndarray’ of shape [NxM] and [N] representing A and b respectively.</p></li>
-<li><p><strong>x_train</strong> – A np.ndarray of shape [MxK] containing the features of the train set of data points.</p></li>
-<li><p><strong>y_train</strong> – A np.ndarray of shape [MxL] containing the targets of the train set of data points.</p></li>
-<li><p><strong>x_test</strong> – A np.ndarray of shape [NxK] containing the features of the test set of data points.</p></li>
-<li><p><strong>y_test</strong> – A np.ndarray of shape [NxL] containing the targets of the test set of data points.</p></li>
+<li><p><strong>data</strong> – a dataset</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -155,16 +151,13 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="valuation.influence.linear.influences_perturbation_linear_regression_analytical">
-<span class="sig-name descname"><span class="pre">influences_perturbation_linear_regression_analytical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">linear_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/linear.py#L102"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.linear.influences_perturbation_linear_regression_analytical" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">influences_perturbation_linear_regression_analytical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">linear_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/linear.py#L96"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.linear.influences_perturbation_linear_regression_analytical" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate the influences of each feature of the training set onto the validation set for a linear model Ax+b=y.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>linear_model</strong> – A tuple of np.ndarray’ of shape [NxM] and [N] representing A and b respectively.</p></li>
-<li><p><strong>x_train</strong> – A np.ndarray of shape [MxK] containing the features of the train set of data points.</p></li>
-<li><p><strong>y_train</strong> – A np.ndarray of shape [MxL] containing the targets of the train set of data points.</p></li>
-<li><p><strong>x_test</strong> – A np.ndarray of shape [NxK] containing the features of the test set of data points.</p></li>
-<li><p><strong>y_test</strong> – A np.ndarray of shape [NxL] containing the targets of the test set of data points.</p></li>
+<li><p><strong>data</strong> – a dataset</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -180,7 +173,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="general.html" class="btn btn-neutral float-left" title="general" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="types.html" class="btn btn-neutral float-right" title="types" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="model_wrappers.html" class="btn btn-neutral float-right" title="model_wrappers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

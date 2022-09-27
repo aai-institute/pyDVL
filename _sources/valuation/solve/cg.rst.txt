@@ -1,5 +1,0 @@
-cg
-==
-.. automodule:: valuation.solve.cg
-   :members:
-   :undoc-members:

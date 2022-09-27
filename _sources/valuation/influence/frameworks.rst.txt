@@ -1,0 +1,10 @@
+frameworks
+==========
+.. automodule:: valuation.influence.frameworks
+   :members:
+   :undoc-members:
+
+.. toctree::
+   :glob:
+
+   frameworks/*

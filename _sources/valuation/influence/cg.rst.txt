@@ -1,0 +1,5 @@
+cg
+==
+.. automodule:: valuation.influence.cg
+   :members:
+   :undoc-members:

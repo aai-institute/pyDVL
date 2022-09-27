@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting started &mdash; pyDVL 0.1.0.dev16 documentation</title>
+  <title>Getting started &mdash; pyDVL 0.1.0.dev17 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -179,14 +179,8 @@ the choice of one ot them by pinning an enumeration in the parameters. Furthermo
 <p>These can only applied to a regression problem where x and y are from the real numbers. When
 a Dataset object is available, this is as simple as calling</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.linear</span> <span class="kn">import</span> <span class="n">linear_influences</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.types</span> <span class="kn">import</span> <span class="n">InfluenceTypes</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">linear_influences</span><span class="p">(</span>
-<span class="gp">... </span>   <span class="n">x_train</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">y_train</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">x_test</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">y_test</span>
-<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">linear_influences</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>the linear influence functions. Internally these method fit a linear regression model and use this
@@ -199,14 +193,10 @@ in calculation or optimize the calculation for your specific application.</p>
 capable of calculating second derivative matrix vector products and gradients with respect to the
 loss and data samples.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.general</span> <span class="kn">import</span> <span class="n">influences</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.types</span> <span class="kn">import</span> <span class="n">InfluenceTypes</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">influences</span><span class="p">(</span>
 <span class="gp">... </span>   <span class="n">model</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">x_train</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">y_train</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">x_test</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">y_test</span>
+<span class="gp">... </span>   <span class="n">dataset</span><span class="p">,</span>
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -218,14 +208,10 @@ In that case one can use conjugate gradient as a space-efficient
 approximation to inverting the full matrix. In pyDVL this can be done
 by adding <code class="docutils literal notranslate"><span class="pre">inversion_method</span></code> parameter to the influences function call.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.general</span> <span class="kn">import</span> <span class="n">influences</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.types</span> <span class="kn">import</span> <span class="n">InfluenceTypes</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">influences</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">model</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">x_train</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">y_train</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">x_test</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">y_test</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">dataset</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span>
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
@@ -236,15 +222,11 @@ by adding <code class="docutils literal notranslate"><span class="pre">inversion
 <p>All previous mentioned influences can be calculated feature-wise by adding <code class="docutils literal notranslate"><span class="pre">influence_type</span></code> parameter
 to the influences function call.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.general</span> <span class="kn">import</span> <span class="n">influences</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.types</span> <span class="kn">import</span> <span class="n">InfluenceTypes</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">influences</span><span class="p">(</span>
-<span class="gp">... </span><span class="n">model</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">x_train</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">y_train</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">x_test</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">y_test</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">influence_type</span><span class="o">=</span><span class="n">InfluenceTypes</span><span class="o">.</span><span class="n">Perturbation</span>
+<span class="gp">... </span>    <span class="n">model</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">dataset</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">influence_type</span><span class="o">=</span><span class="s1">&#39;perturbation&#39;</span>
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
