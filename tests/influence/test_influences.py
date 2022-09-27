@@ -85,7 +85,7 @@ def test_upweighting_influences_lr_analytical_cg(
     model = TorchLinearRegression(A.shape[0], A.shape[1], init=linear_model)
     loss = F.mse_loss
 
-    influence_values_analytical = -2 * influences_up_linear_regression_analytical(
+    influence_values_analytical = 2 * influences_up_linear_regression_analytical(
         linear_model,
         *train_data,
         *test_data,
@@ -132,7 +132,7 @@ def test_upweighting_influences_lr_analytical(
     model = TorchLinearRegression(A.shape[0], A.shape[1], init=linear_model)
     loss = F.mse_loss
 
-    influence_values_analytical = -2 * influences_up_linear_regression_analytical(
+    influence_values_analytical = 2 * influences_up_linear_regression_analytical(
         linear_model,
         *train_data,
         *test_data,
@@ -179,7 +179,7 @@ def test_perturbation_influences_lr_analytical_cg(
     loss = F.mse_loss
 
     influence_values_analytical = (
-        -2
+        2
         * influences_perturbation_linear_regression_analytical(
             linear_model,
             *train_data,
@@ -232,7 +232,7 @@ def test_perturbation_influences_lr_analytical(
     loss = F.mse_loss
 
     influence_values_analytical = (
-        -2
+        2
         * influences_perturbation_linear_regression_analytical(
             linear_model,
             *train_data,
