@@ -137,9 +137,10 @@ def influences(
     inversion_method_kwargs: Dict = {},
 ) -> np.ndarray:
     """
-    Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
-    calculating the influence factors for all test points, with respect to the training points. Subsequently,
-    all influence get calculated over the complete train set.
+    Calculates the influence of the training points j on the test points i. First it calculates
+    the influence factors for all test points with respect to the training points, and then uses them to
+    get the influences over the complete training set. Points with low influence values are (on average)
+    less important for model training than points with high influences.
 
     :param model: A supervised model from a supported framework. Currently, only pytorch nn.Module is supported.
     :param data: a dataset
@@ -175,6 +176,9 @@ def influences(
     )
     influence_function = influence_type_function_dict[influence_type]
 
+    # The -1 here is to have increasing influence for better quality points.
+    # It could be simplified with the -1 in the influence factors definition,
+    # but to keep definition consistent with the original paper we flip sign here.
     return -1 * influence_function(
         differentiable_model,
         x_train,
