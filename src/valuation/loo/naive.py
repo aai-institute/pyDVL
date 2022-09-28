@@ -6,6 +6,8 @@ from valuation.reporting.scores import sort_values
 from valuation.utils import Dataset, SupervisedModel, maybe_progress
 from valuation.utils.utility import Utility
 
+__all__ = ["naive_loo"]
+
 
 def naive_loo(
     model: SupervisedModel, data: Dataset, progress: bool = True, **kwargs

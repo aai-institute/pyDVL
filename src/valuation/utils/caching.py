@@ -1,6 +1,7 @@
 """
 Distributed caching of functions, using memcached.
 """
+import logging
 import socket
 import uuid
 from dataclasses import dataclass
@@ -14,12 +15,13 @@ from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
 from pymemcache.client import Client, RetryingClient
 
-from valuation.utils.logging import logger
 from valuation.utils.numeric import get_running_avg_variance
 
 from .config import MemcachedClientConfig
 
 PICKLE_VERSION = 5  # python >= 3.8
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass

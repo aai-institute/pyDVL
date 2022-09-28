@@ -1,12 +1,12 @@
 import abc
 import inspect
+import logging
 from time import time
 from typing import TYPE_CHECKING, Dict, Optional, Union
 
 import numpy as np
 from ray import ObjectRef
 
-from ..logging import logger
 from ..numeric import get_running_avg_variance
 from .backend import RayParallelBackend
 
@@ -15,6 +15,9 @@ if TYPE_CHECKING:
 
 
 __all__ = ["RayActorWrapper", "Coordinator", "Worker"]
+
+
+logger = logging.getLogger(__name__)
 
 
 class RayActorWrapper:

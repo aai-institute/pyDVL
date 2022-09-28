@@ -1,3 +1,4 @@
+import logging
 from typing import Iterable, Optional
 
 from sklearn.metrics import check_scoring
@@ -5,10 +6,11 @@ from sklearn.metrics import check_scoring
 from .caching import memcached, serialize
 from .config import MemcachedConfig
 from .dataset import Dataset
-from .logging import logger
 from .types import Scorer, SupervisedModel
 
 __all__ = ["Utility"]
+
+logger = logging.getLogger(__name__)
 
 
 class Utility:

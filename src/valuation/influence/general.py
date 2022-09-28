@@ -18,7 +18,6 @@ from valuation.influence.types import (
     MatrixVectorProductInversionAlgorithm,
     TwiceDifferentiable,
 )
-from valuation.utils import Dataset
 
 __all__ = ["influences", "InfluenceType", "InversionMethod"]
 
