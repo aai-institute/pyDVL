@@ -6,7 +6,7 @@ __all__ = [
     "TorchTwiceDifferentiable",
 ]
 
-from typing import Any, Callable, Union
+from typing import Callable, Union
 
 import numpy as np
 import torch
@@ -16,20 +16,6 @@ from torch.autograd import Variable
 
 from valuation.influence.types import TwiceDifferentiable
 from valuation.utils import maybe_progress
-
-
-def tt(v: Union[np.ndarray, torch.Tensor], dtype: str = "float") -> torch.Tensor:
-    """
-    Shorthand for torch.Tensor with specific dtype.
-    :param v: The tensor to represent as torch.Tensor.
-    :param dtype: The dtype to cast the torch.Tensor to.
-    :returns: Tensor in torch format.
-    """
-    if isinstance(v, np.ndarray):
-        te = torch.tensor(v)
-        return te.type({"float": torch.float32, "long": torch.long}[dtype])
-    else:
-        return v.clone().detach()
 
 
 def flatten_gradient(grad):
@@ -77,8 +63,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         :param progress: True, iff progress shall be printed.
         :returns: A np.ndarray [NxP] representing the gradients with respect to all parameters of the model.
         """
-        x = tt(x)
-        y = tt(y)
+        x = torch.as_tensor(x).clone().detach()
+        y = torch.as_tensor(y).clone().detach()
 
         grads = [
             flatten_gradient(
@@ -112,7 +98,9 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         :returns: A np.ndarray [NxP] representing the gradients with respect to all parameters of the model.
         """
 
-        x, y, v = tt(x), tt(y), tt(v)
+        x = torch.as_tensor(x).clone().detach()
+        y = torch.as_tensor(y).clone().detach()
+        v = torch.as_tensor(v).clone().detach()
 
         if "num_samples" in kwargs:
             num_samples = kwargs["num_samples"]
