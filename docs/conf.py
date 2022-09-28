@@ -38,6 +38,7 @@ extensions = [
     "sphinx.ext.linkcode",
     "sphinx.ext.todo",
     "sphinx_rtd_theme",
+    "sphinx_design",
     "nbsphinx",
     # see https://github.com/spatialaudio/nbsphinx/issues/24 for an explanation why this extension is necessary
     "IPython.sphinxext.ipython_console_highlighting",
