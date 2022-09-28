@@ -45,7 +45,7 @@ T = TypeVar("T")
 
 
 def is_linear_function(
-    A: Callable[[np.ndarray], np.ndarray], v: np.ndarray, verify_samples: int = 1000
+    A: Callable[[np.ndarray], np.ndarray], v: np.ndarray, verify_samples: int = 100
 ):
     """Assumes nothing. Stochastically checks for property sum_i a_i * f(v_i) == f(sum_i a_i v_i)."""
 
@@ -61,7 +61,7 @@ def is_linear_function(
 
 
 def is_positive_definite(
-    A: Callable[[np.ndarray], np.ndarray], v: np.ndarray, verify_samples: int = 1000
+    A: Callable[[np.ndarray], np.ndarray], v: np.ndarray, verify_samples: int = 100
 ):
     """Assumes linear function. Stochastically checks for property v.T @ f(v) >= 0"""
 
