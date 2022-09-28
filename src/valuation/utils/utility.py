@@ -1,4 +1,5 @@
 import logging
+import warnings
 from typing import Iterable, Optional
 
 from sklearn.metrics import check_scoring
@@ -98,7 +99,7 @@ class Utility:
         except Exception as e:
             if self.catch_errors:
                 if self.show_warnings:
-                    logger.warning(str(e))  # type: ignore
+                    warnings.warn(str(e), RuntimeWarning)
                 return self.default_score
             else:
                 raise e

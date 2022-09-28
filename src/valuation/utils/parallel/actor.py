@@ -1,6 +1,7 @@
 import abc
 import inspect
 import logging
+import warnings
 from time import time
 from typing import TYPE_CHECKING, Dict, Optional, Union
 
@@ -182,8 +183,9 @@ class Worker(abc.ABC):
             while (time() - start_time) < self.update_frequency:
                 values = self._compute_values()
                 if np.any(np.isnan(values)):
-                    logger.warning(
-                        "Nan values found in model scoring. Ignoring current permutation."
+                    warnings.warn(
+                        "Nan values found in model scoring. Ignoring current permutation.",
+                        RuntimeWarning,
                     )
                     continue
                 if self._avg_values is None:

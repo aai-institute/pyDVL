@@ -1,5 +1,6 @@
 import logging
 import math
+import warnings
 from collections import OrderedDict
 from time import sleep, time
 from typing import TYPE_CHECKING, Dict, Optional, Tuple
@@ -167,8 +168,9 @@ def permutation_montecarlo_shapley(
 
     # Careful: for some models there might be nans, e.g. for i=0 or i=1!
     if np.any(np.isnan(full_results)):
-        logger.warning(
-            f"Calculation returned {np.sum(np.isnan(full_results))} nan values out of {full_results.size}"
+        warnings.warn(
+            f"Calculation returned {np.sum(np.isnan(full_results))} nan values out of {full_results.size}",
+            RuntimeWarning,
         )
     acc = np.nanmean(full_results, axis=0)
     acc_std = np.nanstd(full_results, axis=0) / np.sqrt(full_results.shape[0])
@@ -266,8 +268,9 @@ def combinatorial_montecarlo_shapley(
     full_results = map_reduce_job(u_id, chunkify_inputs=False, n_jobs=n_jobs)[0]
 
     if np.any(np.isnan(full_results)):
-        logger.warning(
-            f"Calculation returned {np.sum(np.isnan(full_results))} nan values out of {full_results.size}"
+        warnings.warn(
+            f"Calculation returned {np.sum(np.isnan(full_results))} nan values out of {full_results.size}",
+            RuntimeWarning,
         )
     acc = np.nanmean(full_results, axis=0)
     acc_std = np.nanstd(full_results, axis=0) / np.sqrt(full_results.shape[0])

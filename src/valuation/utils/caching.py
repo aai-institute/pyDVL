@@ -4,6 +4,7 @@ Distributed caching of functions, using memcached.
 import logging
 import socket
 import uuid
+import warnings
 from dataclasses import dataclass
 from functools import wraps
 from hashlib import blake2b
@@ -195,15 +196,15 @@ def memcached(
                     result = self.client.get(key)
                 except socket.timeout as e:
                     self.cache_info.timeouts += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")  # type: ignore
+                    warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
                 except OSError as e:
                     self.cache_info.errors += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")  # type: ignore
+                    warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
                 except AttributeError as e:
                     # FIXME: this depends on _recv() failing on invalid sockets
                     # See pymemcache.base.py,
                     self.cache_info.reconnects += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")  # type: ignore
+                    warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
                     self.client = connect(self.config)
                 return result
 
