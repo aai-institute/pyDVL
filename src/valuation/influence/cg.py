@@ -24,7 +24,7 @@ def batched_preconditioned_conjugate_gradient(
     x0: Optional["NDArray"] = None,
     M: Optional[Union["NDArray", Callable[["NDArray"], "NDArray"]]] = None,
     rtol: float = 1e-10,
-    max_iterations: int = 50,
+    max_iterations: int = 1000,
     max_step_size: float = 10.0,
     verify_assumptions: bool = False,
     raise_exception: bool = False,

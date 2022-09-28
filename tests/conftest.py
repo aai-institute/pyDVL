@@ -674,4 +674,4 @@ def create_mock_dataset(
     dataset.y_train = scaler_y.fit_transform(dataset.y_train)
     dataset.x_test = scaler_x.transform(dataset.x_test)
     dataset.y_test = scaler_y.transform(dataset.y_test)
-    return dataset
+    return (x_train, y_train), (x_test, y_test)

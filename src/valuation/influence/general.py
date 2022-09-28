@@ -43,10 +43,11 @@ class InversionMethod(str, Enum):
 
 def calculate_influence_factors(
     model: TwiceDifferentiable,
-    data: Dataset,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    x_test: np.ndarray,
+    y_test: np.ndarray,
     inversion_func: MatrixVectorProductInversionAlgorithm,
-    train_indices: Optional[np.ndarray] = None,
-    test_indices: Optional[np.ndarray] = None,
     progress: bool = False,
 ) -> np.ndarray:
     """
@@ -56,12 +57,10 @@ def calculate_influence_factors(
     :param data: a dataset
     :param train_indices: which train indices to calculate the influence factors of
     :param test_indices: which test indices to use to calculate the influence factors
-    :param inversion_func: function to use to invert the the product of hvp (hessian vector product) and the gradient
+    :param inversion_func: function to use to invert the product of hvp (hessian vector product) and the gradient
         of the loss (s_test in the paper).
     :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
     """
-    x_train, y_train = data.get_train_data(train_indices)
-    x_test, y_test = data.get_test_data(test_indices)
 
     hvp = lambda v, **kwargs: model.mvp(
         x_train, y_train, v, progress=progress, **kwargs
@@ -72,9 +71,9 @@ def calculate_influence_factors(
 
 def _calculate_influences_up(
     model: TwiceDifferentiable,
-    data: Dataset,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
     influence_factors: np.ndarray,
-    train_indices: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """
     Calculates the influence from the influence factors and the scores of the training points.
@@ -86,16 +85,15 @@ def _calculate_influences_up(
     :param influence_factors: np.ndarray containing influence factors
     :returns: A np.ndarray of size [NxM], where N is number of test points and M number of train points.
     """
-    x_train, y_train = data.get_train_data(train_indices)
     train_grads = model.grad(x_train, y_train)
     return np.einsum("ta,va->tv", influence_factors, train_grads)  # type: ignore
 
 
 def _calculate_influences_pert(
     model: TwiceDifferentiable,
-    data: Dataset,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
     influence_factors: np.ndarray,
-    train_indices: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """
     Calculates the influence from the influence factors and the scores of the training points.
@@ -108,7 +106,6 @@ def _calculate_influences_pert(
     :returns: A np.ndarray of size [NxM], where N is number of test points and M number of train points.
     """
     all_pert_influences = []
-    x_train, y_train = data.get_train_data(train_indices)
     for i in np.arange(len(x_train)):
         perturbation_influences = model.mvp(
             x_train[i],
@@ -130,16 +127,20 @@ influence_type_function_dict = {
 def influences(
     model: nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-    data: Dataset,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    x_test: np.ndarray,
+    y_test: np.ndarray,
     progress: bool = False,
     inversion_method: InversionMethod = InversionMethod.Direct,
     influence_type: InfluenceType = InfluenceType.Up,
-    train_points_idxs: Optional[np.ndarray] = None,
+    inversion_method_kwargs: Dict = {},
 ) -> np.ndarray:
     """
-    Calculates the influence of the training points j on the test points i, with matrix I_(ij). It does so by
-    calculating the influence factors for all test points, with respect to the training points. Subsequently,
-    all influence get calculated over the complete train set.
+    Calculates the influence of the training points j on the test points i. First it calculates
+    the influence factors for all test points with respect to the training points, and then uses them to
+    get the influences over the complete training set. Points with low influence values are (on average)
+    less important for model training than points with high influences.
 
     :param model: A supervised model from a supported framework. Currently, only pytorch nn.Module is supported.
     :param data: a dataset
@@ -149,8 +150,6 @@ def influences(
         (and explicit construction of the Hessian) or 'cg' for conjugate gradient.
     :param influence_type: Which algorithm to use to calculate influences.
         Currently supported options: 'up' or 'perturbation'
-    :param train_points_idxs: It indicates which train data points to calculate the influence score of.
-        If None, it calculates influences for all training data points.
     :returns: A np.ndarray specifying the influences. Shape is [NxM], where N is number of test points and
         M number of train points.
     """
@@ -159,17 +158,30 @@ def influences(
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
         "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,  # type: ignore
         "cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(  # type: ignore
-            hvp, x, M=hvp_to_inv_diag_conditioner(hvp, d=x.shape[1])
+            hvp,
+            x,
+            M=hvp_to_inv_diag_conditioner(hvp, d=x.shape[1]),
+            **inversion_method_kwargs
         )[0],
     }
 
     influence_factors = calculate_influence_factors(
         differentiable_model,
-        data,
+        x_train,
+        y_train,
+        x_test,
+        y_test,
         dict_fact_algos[inversion_method],
-        train_indices=train_points_idxs,
         progress=progress,
     )
     influence_function = influence_type_function_dict[influence_type]
 
-    return influence_function(differentiable_model, data, influence_factors)
+    # The -1 here is to have increasing influence for better quality points.
+    # It could be simplified with the -1 in the influence factors definition,
+    # but to keep definition consistent with the original paper we flip sign here.
+    return -1 * influence_function(
+        differentiable_model,
+        x_train,
+        y_train,
+        influence_factors,
+    )

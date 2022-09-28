@@ -259,47 +259,6 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     return full_derivative / N  # type: ignore
 
 
-def sample_classification_dataset_using_gaussians(
-    mus: "NDArray", sigma: float, num_samples: int
-) -> Tuple["NDArray", "NDArray"]:
-    """
-    Sample from a uniform Gaussian mixture model.
-    :param mus: 2d-matrix [CxD] with the means of the components in the rows.
-    :param sigma: Standard deviation of each dimension of each component.
-    :param num_samples: The number of samples to generate.
-    :returns: A tuple of matrix x of shape [NxD] and target vector y of shape [N].
-    """
-    num_features = mus.shape[1]
-    num_classes = mus.shape[0]
-    gaussian_cov = sigma * np.eye(num_features)
-    gaussian_chol = np.linalg.cholesky(gaussian_cov)
-    y = np.random.randint(num_classes, size=num_samples)
-    x = (
-        np.einsum(
-            "ij,kj->ki",
-            gaussian_chol,
-            np.random.normal(size=[num_samples, num_features]),
-        )
-        + mus[y]
-    )
-    return x, y
-
-
-def decision_boundary_fixed_variance_2d(
-    mu_1: "NDArray", mu_2: "NDArray"
-) -> Callable[["NDArray"], "NDArray"]:
-    """
-    Closed-form solution for decision boundary dot(a, b) + b = 0 with fixed variance.
-    :param mu_1: First mean.
-    :param mu_2: Second mean.
-    :returns: A callable which converts a continuous line (-infty, infty) to the decision boundary in feature space.
-    """
-    a = np.asarray([[0, 1], [-1, 0]]) @ (mu_2 - mu_1)
-    b = (mu_1 + mu_2) / 2
-    a = a.reshape([1, -1])
-    return lambda z: z.reshape([-1, 1]) * a + b  # type: ignore
-
-
 def min_distance_points_to_line_2d(
     p: "NDArray", a: "NDArray", b: "NDArray"
 ) -> Tuple["NDArray", "NDArray"]:
