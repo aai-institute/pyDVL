@@ -1,11 +1,6 @@
 """
 Contains all parts of pyTorch based machine learning model.
 """
-
-__all__ = [
-    "TorchTwiceDifferentiable",
-]
-
 from typing import Callable, Union
 
 import numpy as np
@@ -16,6 +11,10 @@ from torch.autograd import Variable
 
 from valuation.influence.types import TwiceDifferentiable
 from valuation.utils import maybe_progress
+
+__all__ = [
+    "TorchTwiceDifferentiable",
+]
 
 
 def flatten_gradient(grad):

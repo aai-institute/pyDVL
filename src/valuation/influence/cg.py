@@ -4,8 +4,6 @@ Contains
 - batched conjugate gradient.
 - error bound for conjugate gradient.
 """
-
-from types import LambdaType
 from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import numpy as np
@@ -15,10 +13,10 @@ from valuation.utils import is_linear_function, is_positive_definite
 from valuation.utils.logging import raise_or_log
 
 if TYPE_CHECKING:
-    try:
-        from numpy.typing import NDArray
-    except ImportError:
-        from numpy import ndarray as NDArray
+    from numpy.typing import NDArray
+
+
+__all__ = ["batched_preconditioned_conjugate_gradient"]
 
 
 def batched_preconditioned_conjugate_gradient(

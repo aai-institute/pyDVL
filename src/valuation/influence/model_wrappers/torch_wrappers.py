@@ -2,13 +2,6 @@
 Contains all models used in test and demonstration. Note that they could be written as one module, but for clarity all
  three are defined explicitly.
 """
-
-__all__ = [
-    "TorchLinearRegression",
-    "TorchBinaryLogisticRegression",
-    "TorchNeuralNetwork",
-]
-
 from abc import ABC
 from typing import Any, Callable, List, Optional, Tuple, Union
 
@@ -21,6 +14,12 @@ from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader, Dataset
 
 from valuation.utils.logging import logger
+
+__all__ = [
+    "TorchLinearRegression",
+    "TorchBinaryLogisticRegression",
+    "TorchNeuralNetwork",
+]
 
 
 class InternalDataset(Dataset):
