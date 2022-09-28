@@ -2,10 +2,8 @@
 Contains parallelized influence calculation functions for general models.
 """
 
-__all__ = ["influences"]
-
 from enum import Enum
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Dict, Optional
 
 import numpy as np
 import torch
@@ -21,6 +19,8 @@ from valuation.influence.types import (
     TwiceDifferentiable,
 )
 from valuation.utils import Dataset
+
+__all__ = ["influences", "InfluenceType", "InversionMethod"]
 
 
 class InfluenceType(str, Enum):

@@ -1,3 +1,5 @@
+from enum import Enum
+
 import pandas as pd
 
 from valuation.shapley.knn import knn_shapley
@@ -22,11 +24,23 @@ __all__ = [
 ]
 
 
+class ShapleyMode(str, Enum):
+    """
+    Different shapley modes.
+    """
+
+    ExactCombinatorial = "exact_combinatorial"
+    ExactPermutation = "exact_permutation"
+    CombinatorialMontecarlo = "combinatorial_montecarlo"
+    PermutationMontecarlo = "permutation_montecarlo"
+    TruncatedMontecarlo = "truncated_montecarlo"
+
+
 def get_shapley_values(
     u: Utility,
     max_iterations: int,
-    num_workers: int = 1,
-    mode="truncated_montecarlo",
+    n_jobs: int = 1,
+    mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     **kwargs,
 ):
     """
@@ -45,7 +59,7 @@ def get_shapley_values(
 
     :param u: Utility object with model, data, and scoring function
     :param max_iterations: total number of iterations, used for montecarlo methods
-    :param num_workers: Number of parallel workers. Defaults to 1
+    :param n_jobs: Number of parallel jobs. Defaults to 1
     :param mode: Choose which shapley algorithm to use. Options are
         'truncated_montecarlo', 'exact_combinatorial', 'exact_permutation',
         'combinatorial_montecarlo', 'permutation_montecarlo'. Defaults to 'truncated_montecarlo'
@@ -55,25 +69,31 @@ def get_shapley_values(
     """
     # TODO fix progress showing and maybe_progress
     progress = False
-    if mode == "truncated_montecarlo":
+
+    if mode not in ShapleyMode:
+        raise ValueError(f"Invalid value encountered in {mode=}")
+
+    if mode == ShapleyMode.TruncatedMontecarlo:
         dval, dval_std = truncated_montecarlo_shapley(
             u=u,
             max_iterations=max_iterations,
-            num_workers=num_workers,
+            n_jobs=n_jobs,
             progress=progress,
             **kwargs,
         )
-    elif mode == "combinatorial_exact":
-        dval, dval_std = combinatorial_exact_shapley(u, progress)
-    elif mode == "permutation_exact":
-        dval, dval_std = permutation_exact_shapley(u, progress)
-    elif mode == "combinatorial_montecarlo":
+    elif mode == ShapleyMode.ExactCombinatorial:
+        dval = combinatorial_exact_shapley(u, progress=progress)
+        dval_std = dict()
+    elif mode == ShapleyMode.ExactPermutation:
+        dval = permutation_exact_shapley(u, progress=progress)
+        dval_std = dict()
+    elif mode == ShapleyMode.CombinatorialMontecarlo:
         dval, dval_std = combinatorial_montecarlo_shapley(
-            u, max_iterations, num_workers, progress
+            u, max_iterations, n_jobs=n_jobs, progress=progress
         )
-    elif mode == "permutation_montecarlo":
+    elif mode == ShapleyMode.PermutationMontecarlo:
         dval, dval_std = permutation_montecarlo_shapley(
-            u, max_iterations, num_workers, progress
+            u, max_iterations, n_jobs=n_jobs, progress=progress
         )
     else:
         raise ValueError(f"Invalid value encountered in {mode=}")

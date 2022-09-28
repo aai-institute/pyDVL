@@ -1,4 +1,5 @@
 import math
+import warnings
 from collections import OrderedDict
 from itertools import permutations
 
@@ -8,9 +9,11 @@ from valuation.reporting.scores import sort_values
 from valuation.utils import Utility, maybe_progress, powerset
 
 
-def permutation_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
+def permutation_exact_shapley(
+    u: Utility, *, progress: bool = True
+) -> "OrderedDict[str, float]":
     """Computes the exact Shapley value using permutations.
-    When the length of the training set is > 10 it returns an error since the
+    When the length of the training set is > 10 it prints a warning since the
     computation becomes too expensive.
     Used mostly for internal testing and simple use cases. Please refer to the
     montecarlo methods for all other cases.
@@ -24,7 +27,10 @@ def permutation_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
     # Note that the cache in utility saves most of the refitting because we
     # use frozenset for the input.
     if n > 10:
-        raise ValueError(f"Large dataset! Computation requires {n}! calls to utility()")
+        warnings.warn(
+            f"Large dataset! Computation requires {n}! calls to utility()",
+            RuntimeWarning,
+        )
 
     values = np.zeros(n)
     for p in maybe_progress(
@@ -40,9 +46,11 @@ def permutation_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
     return sort_values({u.data.data_names[i]: v for i, v in enumerate(values)})
 
 
-def combinatorial_exact_shapley(u: Utility, progress: bool = True) -> OrderedDict:
+def combinatorial_exact_shapley(
+    u: Utility, *, progress: bool = True
+) -> "OrderedDict[str, float]":
     """Computes the exact Shapley value using the combinatorial definition.
-    When the length of the training set is > 20 it returns an error since the
+    When the length of the training set is > 20 it prints a warning since the
     computation becomes too expensive.
     Used mostly for internal testing and simple use cases. Please refer to the
     montecarlo methods for all other cases.
@@ -53,12 +61,10 @@ def combinatorial_exact_shapley(u: Utility, progress: bool = True) -> OrderedDic
     """
 
     n = len(u.data)
-    from valuation.utils.logging import logger
 
-    if n > 20:  # Arbitrary choice, will depend on time required, caching, etc.
-        logger.warning(
-            f"Large dataset! Computation requires 2^{n} calls to model.fit()"
-        )
+    # Arbitrary choice, will depend on time required, caching, etc.
+    if n > 20:
+        warnings.warn(f"Large dataset! Computation requires 2^{n} calls to model.fit()")
 
     values = np.zeros(n)
     for i in u.data.indices:
