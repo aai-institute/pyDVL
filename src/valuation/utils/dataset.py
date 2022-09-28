@@ -1,16 +1,6 @@
 import os
 from collections import OrderedDict
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Sized,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -31,11 +21,11 @@ class Dataset:
         y_train: Union[np.ndarray, pd.DataFrame],
         x_test: Union[np.ndarray, pd.DataFrame],
         y_test: Union[np.ndarray, pd.DataFrame],
-        feature_names: Optional[Sized] = None,
-        target_names: Optional[Sized] = None,
-        data_names: Optional[Sized] = None,
-        description: str = None,
-        is_multi_output=False,
+        feature_names: Optional[Sequence[str]] = None,
+        target_names: Optional[Sequence[str]] = None,
+        data_names: Optional[Sequence[str]] = None,
+        description: Optional[str] = None,
+        is_multi_output: bool = False,
     ):
         """It holds a dataset, split into train and test data, together
         with several labels on feature names, data point names and description
@@ -77,24 +67,22 @@ class Dataset:
                 f"{x_test.shape[-1]} and {y_test.shape[-1]}"
             )
 
-        def make_names(s: str, a: np.ndarray) -> np.ndarray:
+        def make_names(s: str, a: np.ndarray) -> List[str]:
             n = a.shape[1] if len(a.shape) > 1 else 1
-            return np.array(
-                [f"{s}{i:0{1 + int(np.log10(n))}d}" for i in range(1, n + 1)]
-            )
+            return [f"{s}{i:0{1 + int(np.log10(n))}d}" for i in range(1, n + 1)]
 
         self.feature_names = feature_names
         self.target_names = target_names
 
         if self.feature_names is None:
             if isinstance(x_train, pd.DataFrame):
-                self.feature_names = np.asarray(x_train.columns)
+                self.feature_names = x_train.columns.tolist()
             else:
                 self.feature_names = make_names("x", x_train)
 
         if self.target_names is None:
             if isinstance(y_train, pd.DataFrame):
-                self.target_names = np.asarray(y_train.columns)
+                self.target_names = y_train.columns.tolist()
             else:
                 self.target_names = make_names("y", y_train)
 
@@ -117,6 +105,9 @@ class Dataset:
 
     def __iter__(self):
         return self.x_train, self.y_train, self.x_test, self.y_test
+
+    def __getitem__(self, idx: Union[int, slice, Iterable]) -> Tuple:
+        return self.x_train[idx], self.y_train[idx]
 
     def feature(self, name: str) -> Tuple[slice, int]:
         try:
@@ -215,8 +206,8 @@ class GroupedDataset(Dataset):
         x_test: np.ndarray,
         y_test: np.ndarray,
         data_groups: Sequence,
-        feature_names: Optional[Sized] = None,
-        target_names: Optional[Sized] = None,
+        feature_names: Optional[Sequence[str]] = None,
+        target_names: Optional[Sequence[str]] = None,
         description: Optional[str] = None,
     ):
         """Class for grouping datasets.
@@ -368,7 +359,12 @@ def load_spotify_dataset(
 
 
 def load_wine_dataset(train_size, test_size, random_seed=None):
-    import torch
+    try:
+        import torch
+    except ImportError as e:
+        raise RuntimeError(
+            "PyTorch is required in order to load the Wine Dataset"
+        ) from e
 
     wine_bunch = load_wine(as_frame=True)
     x, x_test, y, y_test = train_test_split(

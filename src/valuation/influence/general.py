@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-__all__ = ["influences"]
+__all__ = ["influences", "InfluenceType", "InversionMethod"]
 
 
 class InfluenceType(str, Enum):
