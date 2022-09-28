@@ -1,11 +1,12 @@
 from typing import Iterable, Optional
 
-import numpy as np
 from sklearn.metrics import check_scoring
 
-from valuation.utils import Dataset, MemcachedConfig, Scorer, SupervisedModel, memcached
-from valuation.utils.caching import serialize
-from valuation.utils.logging import logger
+from .caching import memcached, serialize
+from .config import MemcachedConfig
+from .dataset import Dataset
+from .logging import logger
+from .types import Scorer, SupervisedModel
 
 __all__ = ["Utility"]
 

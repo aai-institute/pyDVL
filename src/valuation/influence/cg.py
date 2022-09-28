@@ -4,21 +4,18 @@ Contains
 - batched conjugate gradient.
 - error bound for conjugate gradient.
 """
-
-from types import LambdaType
+import logging
 from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import numpy as np
 
 from valuation.influence.types import MatrixVectorProduct
 from valuation.utils import is_linear_function, is_positive_definite
-from valuation.utils.logging import raise_or_log
 
 if TYPE_CHECKING:
-    try:
-        from numpy.typing import NDArray
-    except ImportError:
-        from numpy import ndarray as NDArray
+    from numpy.typing import NDArray
+
+logger = logging.getLogger(__name__)
 
 
 def batched_preconditioned_conjugate_gradient(
@@ -37,17 +34,19 @@ def batched_preconditioned_conjugate_gradient(
     See https://en.wikipedia.org/wiki/Conjugate_gradient_method for more details of the algorithm. See also
     https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351 and
     https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf. On top, it constrains the maximum step size.
-    :param A: A linear function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix.
-    It has to be positive-definite v.T @ f(v) >= 0.
+
+    :param A: A linear function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix. \
+        It has to be positive-definite v.T @ f(v) >= 0.
     :param b: A NDArray of shape [K] representing the targeted result of the matrix multiplication Ax.
-    :param M: A function f : R[k] -> R[k] which approximates inv(A) or a matrix of shape [K, K]. The underlying matrix
-    has to be symmetric and positive definite.
+    :param M: A function f : R[k] -> R[k] which approximates inv(A) or a matrix of shape [K, K]. The underlying matrix \
+        has to be symmetric and positive definite.
     :param max_iterations: Maximum number of iterations to use in conjugate gradient. Default is 10 times K.
     :param rtol: Relative tolerance of the residual with respect to the 2-norm of b.
-    :param max_step_size: Maximum step size along a gradient direction. Might be necessary for numerical stability.
-    See also max_iterations. Default is 10.0.
+    :param max_step_size: Maximum step size along a gradient direction. Might be necessary for numerical stability. \
+        See also max_iterations. Default is 10.0.
     :param verify_assumptions: True, iff the matrix should be checked for positive-definiteness by a stochastic rule.
     :param raise_exception: True, iff an assumption should be raised, instead of a warning only.
+
     :return: A NDArray of shape [K] representing the solution of Ax=b.
     """
     # wrap A into a function.
@@ -65,14 +64,18 @@ def batched_preconditioned_conjugate_gradient(
 
     if verify_assumptions:
         if not is_linear_function(A, b):
-            raise_or_log(
-                "The function seems to not be linear.", raise_exception=raise_exception
-            )
+            msg = "The function seems to not be linear."
+            if raise_exception:
+                raise Exception(msg)
+            else:
+                logger.warning(msg)
 
         if not is_positive_definite(A, b):
-            raise_or_log(
-                "The function seems to not be linear.", raise_exception=raise_exception
-            )
+            msg = "The function seems to not be linear."
+            if raise_exception:
+                raise Exception(msg)
+            else:
+                logger.warning(msg)
 
     if b.ndim == 1:
         b = b.reshape([1, -1])
@@ -151,11 +154,14 @@ def batched_preconditioned_conjugate_gradient(
 
     if not np.all(converged):
         percentage_converged = int(converged.sum() / len(converged)) * 100
-        raise_or_log(
+        msg = (
             f"Conjugate gradient could solve the equation system for {percentage_converged}% of {len(converged)} random"
-            f" chosen vectors. Please check condition number and eigenvalues of",
-            raise_exception=raise_exception,
+            " chosen vectors. Please check condition number and eigenvalues."
         )
+        if raise_exception:
+            raise Exception(msg)
+        else:
+            logger.warning(msg)
 
     return x, iteration
 

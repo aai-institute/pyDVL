@@ -1,61 +1,90 @@
 import operator
 from functools import reduce
+from itertools import zip_longest
 
 import numpy as np
 import pytest
 
-from valuation.utils.parallel import MapReduceJob, map_reduce
+from valuation.utils.parallel import MapReduceJob
 
-np_fun = MapReduceJob.from_fun(np.sum, np.sum)
-list_fun = MapReduceJob.from_fun(lambda x: x, lambda r: reduce(operator.add, r, []))
-range_fun = MapReduceJob.from_fun(
-    lambda x: list(x), lambda r: reduce(operator.add, list(r), [])
-)
-# dict_fun = MapReduceJob.from_fun(
-#         lambda x: x, lambda r: reduce(lambda x, y: dict(x, **y), r, {}))
 
-run_parallel_test_data = []
-# 'multiprocessing' not supported because pickle cannot serialize lambdas
-# Could be fixed, but is it worth it?
-for backend in ("loky", "sequential", "threading"):
-    run_parallel_test_data.extend(
-        [
-            (list_fun, [], 1, 1, backend, [[]]),
-            (range_fun, range(10), 1, 1, backend, [list(range(10))]),
-            (range_fun, range(10), 4, 2, backend, [list(range(10))]),
-            (np_fun, np.arange(10), 1, 1, backend, [45]),
-            (np_fun, np.arange(10), 2, 2, backend, [45] * 2),
-            (np_fun, np.arange(10), 4, 2, backend, [45] * 2),
-            (np_fun, np.arange(10), 2, 4, backend, [45] * 4),
-            (np_fun, np.arange(10), 10, 4, backend, [45] * 4),
-            (np_fun, np.arange(10), 3, 7, backend, [45] * 7),
-            (np_fun, np.arange(10), 12, 1, backend, [45]),
-        ]
-    )
+@pytest.fixture()
+def map_reduce_job(request):
+    kind = request.param
+    if kind == "numpy":
+        return MapReduceJob(map_func=np.sum, reduce_func=np.sum)
+    elif kind == "list":
+        return MapReduceJob(
+            map_func=lambda x: x, reduce_func=lambda r: reduce(operator.add, r, [])
+        )
+    elif kind == "range":
+        return MapReduceJob(
+            map_func=lambda x: list(x),
+            reduce_func=lambda r: reduce(operator.add, list(r), []),
+        )
+    else:
+        return MapReduceJob(map_func=lambda x: x * x, reduce_func=lambda r: r)
 
 
 @pytest.mark.parametrize(
-    "fun, indices, num_jobs, num_runs, backend, expected", run_parallel_test_data
+    "map_reduce_job, indices, expected",
+    [
+        ("list", [], [[]]),
+        ("list", [1, 2, 3], [[1, 2, 3]]),
+        ("range", range(10), [list(range(10))]),
+        ("numpy", list(range(10)), [45]),
+    ],
+    indirect=["map_reduce_job"],
 )
-def test_run_parallel(fun, indices, num_jobs, num_runs, backend, expected):
-
-    if isinstance(expected, Exception):
-        with pytest.raises(expected):
-            map_reduce(
-                fun, indices, num_jobs=num_jobs, num_runs=num_runs, backend=backend
-            )
-    else:
-        result = map_reduce(
-            fun, indices, num_jobs=num_jobs, num_runs=num_runs, backend=backend
-        )
-        for exp, ret in zip(expected, result):
-            if not isinstance(ret, np.ndarray):
-                assert ret == exp
-            else:
-                assert (ret == exp).all()
+@pytest.mark.parametrize("n_jobs", [1])
+@pytest.mark.parametrize("n_runs", [1, 2])
+def test_map_reduce_job(map_reduce_job, indices, n_jobs, n_runs, expected):
+    result = map_reduce_job(
+        indices,
+        n_jobs=n_jobs,
+        n_runs=n_runs,
+    )
+    for exp, ret in zip_longest(expected * n_runs, result, fillvalue=None):
+        if not isinstance(ret, np.ndarray):
+            assert ret == exp
+        else:
+            assert (ret == exp).all()
 
 
-@pytest.mark.skip("To do")
-def test_chunkify():
-    # TODO: test generation of job and run ids
-    pass
+@pytest.mark.parametrize(
+    "map_reduce_job, indices, expected",
+    [
+        ("list", [], [[]]),
+        ("list", [1, 2, 3, 4], [[1, 2, 3, 4]]),
+        ("range", range(10), [list(range(10))]),
+        ("numpy", list(range(10)), [45]),
+    ],
+    indirect=["map_reduce_job"],
+)
+@pytest.mark.parametrize("n_jobs", [2])
+@pytest.mark.parametrize("n_runs", [1, 2])
+def test_map_reduce_job_chunkified_inputs(
+    map_reduce_job, indices, n_jobs, n_runs, expected
+):
+    result = map_reduce_job(indices, n_jobs=n_jobs, n_runs=n_runs, chunkify_inputs=True)
+    for exp, ret in zip_longest(expected * n_runs, result, fillvalue=None):
+        if not isinstance(ret, np.ndarray):
+            assert ret == exp
+        else:
+            assert (ret == exp).all()
+
+
+# TODO: figure out test cases for this test
+@pytest.mark.skip
+@pytest.mark.parametrize(
+    "map_reduce_job, indices, n_jobs, n_runs, expected",
+    [
+        ("other", [], 1, 1, [[]]),
+    ],
+    indirect=["map_reduce_job"],
+)
+def test_map_reduce_job_expected_failures(
+    map_reduce_job, indices, n_jobs, n_runs, expected
+):
+    with pytest.raises(expected):
+        map_reduce_job(indices, n_jobs=n_jobs, n_runs=n_runs)
