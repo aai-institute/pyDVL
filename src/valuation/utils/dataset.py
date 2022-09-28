@@ -180,7 +180,6 @@ class Dataset:
         data: Bunch,
         train_size: float = 0.8,
         random_state: Optional[int] = None,
-        **kwargs,
     ) -> "Dataset":
         """Constructs a Dataset object from an sklearn bunch as returned
         by the load_* functions in `sklearn.datasets`.
@@ -324,7 +323,7 @@ def load_spotify_dataset(
     target_column: str = "popularity",
     random_state: int = 24,
 ):
-    """Downloads (if not already cached) and loads spotify music dataset.
+    """Loads (and downloads if not already cached) the spotify music dataset.
     More info on the dataset can be found
     at https://www.kaggle.com/datasets/mrmorj/dataset-of-songs-in-spotify.
 
@@ -368,6 +367,17 @@ def load_spotify_dataset(
 
 
 def load_wine_dataset(train_size, test_size, random_seed=None):
+    """
+    Loads the sklearn wine dataset. More info can be found at 
+    https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset
+    :param train_size: fraction of points used for training dataset
+    :param test_size: fraction of points used for test dataset
+    :param random_seed: fix random seed. If None, no random seed is set.
+    :returns: A tuple of four elements with the first three being \
+        input and target values in the form of matrices of shape [NxD] the first and [N] the second. \
+        The fourth element is a list containing names of features of the model.
+    """
+
     import torch
 
     wine_bunch = load_wine(as_frame=True)
@@ -398,6 +408,7 @@ def load_wine_dataset(train_size, test_size, random_seed=None):
         (transformed_x_train, transformed_y_train),
         (transformed_x_val, transformed_y_val),
         (transformed_x_test, transformed_y_test),
+        wine_bunch.feature_names,
     )
 
 
@@ -414,6 +425,9 @@ def synthetic_classification_dataset(
     :param mus: 2d-matrix [CxD] with the means of the components in the rows.
     :param sigma: Standard deviation of each dimension of each component.
     :param num_samples: The number of samples to generate.
+    :param train_size: fraction of points used for training dataset
+    :param test_size: fraction of points used for test dataset
+    :param random_seed: fix random seed. If None, no random seed is set.
     :returns: A tuple of matrix x of shape [NxD] and target vector y of shape [N].
     """
     num_features = mus.shape[1]

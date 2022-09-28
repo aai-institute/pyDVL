@@ -150,8 +150,16 @@ def influences(
         (and explicit construction of the Hessian) or 'cg' for conjugate gradient.
     :param influence_type: Which algorithm to use to calculate influences.
         Currently supported options: 'up' or 'perturbation'
-    :returns: A np.ndarray specifying the influences. Shape is [NxM], where N is number of test points and
-        M number of train points.
+    :param inversion_method_kwargs: kwargs for the inversion method selected.
+        If using the direct method no kwargs are needed. If inversion_method='cg', the following kwargs can be passed:
+        - rtol: relative tolerance to be achieved before terminating computation
+        - max_iterations: maximum conjugate gradient iterations
+        - max_step_size: step size of conjugate gradient
+        - verify_assumptions: True to run tests on convexity of the model.
+        - raise_exception: True for raising error if assumptions are not met. If false, warning will be logged.
+    :returns: A np.ndarray specifying the influences. Shape is [NxM] if influence_type is'up', where N is number of test points and
+        M number of train points. If instead influence_type is 'perturbation', output shape is [NxMxP], with P the number of input
+        features.
     """
     differentiable_model = TorchTwiceDifferentiable(model, loss)
     n_params = differentiable_model.num_params()
