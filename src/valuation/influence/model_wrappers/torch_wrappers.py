@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -47,8 +47,10 @@ class TorchModel(ABC):
 
     def fit(
         self,
-        x: torch.Tensor,
-        y: torch.Tensor,
+        x_train: Union[np.ndarray, torch.tensor],
+        y_train: Union[np.ndarray, torch.tensor],
+        x_val: Union[np.ndarray, torch.tensor],
+        y_val: Union[np.ndarray, torch.tensor],
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         optimizer: Optimizer,
         scheduler: Optional[_LRScheduler] = None,
@@ -68,15 +70,23 @@ class TorchModel(ABC):
         :param batch_size: Batch size to use in training.
         :param tensor_type: accuracy of tensors. Typically 'float' or 'long'
         """
+        x_train = torch.as_tensor(x_train).clone()
+        y_train = torch.as_tensor(y_train).clone()
+        x_val = torch.as_tensor(x_val).clone()
+        y_val = torch.as_tensor(y_val).clone()
 
-        dataset = InternalDataset(x, y)
+        dataset = InternalDataset(x_train, y_train)
         dataloader = DataLoader(dataset, batch_size=batch_size)
+        train_loss = []
+        val_loss = []
 
         for epoch in range(num_epochs):
+            batch_loss = []
             for train_batch in dataloader:
                 batch_x, batch_y = train_batch
                 pred_y = self.forward(batch_x)
                 loss_value = loss(torch.squeeze(pred_y), torch.squeeze(batch_y))
+                batch_loss.append(loss_value.item())
 
                 logger.debug(f"Epoch: {epoch} ---> Training loss: {loss_value.item()}")
                 loss_value.backward()
@@ -85,6 +95,10 @@ class TorchModel(ABC):
 
                 if scheduler:
                     scheduler.step()
+            pred_val = self.forward(x_val)
+            val_loss.append(loss(torch.squeeze(pred_val), torch.squeeze(y_val)).item())
+            train_loss.append(np.mean(batch_loss))
+        return train_loss, val_loss
 
     def predict(self, x: torch.Tensor) -> np.ndarray:
         """
@@ -133,10 +147,10 @@ class TorchLinearRegression(nn.Module, TorchModel):
             init = (init_A, init_b)
 
         self.A = nn.Parameter(
-            torch.tensor(init[0], dtype=torch.float32), requires_grad=True
+            torch.tensor(init[0], dtype=torch.float64), requires_grad=True
         )
         self.b = nn.Parameter(
-            torch.tensor(init[1], dtype=torch.float32), requires_grad=True
+            torch.tensor(init[1], dtype=torch.float64), requires_grad=True
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -166,19 +180,16 @@ class TorchBinaryLogisticRegression(nn.Module, TorchModel):
             init_b = np.random.normal(0, 0.02, size=(1))
             init = (init_A, init_b)
 
-        self.A = nn.Parameter(
-            torch.tensor(init[0], dtype=torch.float32), requires_grad=True
-        )
-        self.b = nn.Parameter(
-            torch.tensor(init[1], dtype=torch.float32), requires_grad=True
-        )
+        self.A = nn.Parameter(torch.tensor(init[0]), requires_grad=True)
+        self.b = nn.Parameter(torch.tensor(init[1]), requires_grad=True)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
         """
         Calculate sigmoid(dot(a, x) + b) using RAM-optimized calculation layout.
         :param x: Tensor [NxD] representing the features x_i.
         :returns: A tensor [N] representing the probabilities for p(y_i).
         """
+        x = torch.as_tensor(x)
         return torch.sigmoid(x @ self.A.T + self.b)
 
 

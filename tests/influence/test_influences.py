@@ -1,17 +1,12 @@
 import itertools
-from copy import copy
 from typing import List, Tuple
 
 import numpy as np
 import pytest
-from sklearn.datasets import load_wine
-from sklearn.preprocessing import MinMaxScaler
 
 from tests.conftest import create_mock_dataset
-from valuation.utils import Dataset
 
 try:
-    import torch
     import torch.nn.functional as F
     from torch.optim import Adam, lr_scheduler
 
@@ -25,6 +20,7 @@ try:
         TorchLinearRegression,
         TorchNeuralNetwork,
     )
+    from valuation.utils.dataset import load_wine_dataset
 except ImportError:
     pass
 
@@ -82,26 +78,30 @@ def test_upweighting_influences_lr_analytical_cg(
     n_jobs: int,
 ):
     A, _ = linear_model
-    dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
+    train_data, test_data = create_mock_dataset(
+        linear_model, train_set_size, test_set_size
+    )
 
     model = TorchLinearRegression(A.shape[0], A.shape[1], init=linear_model)
     loss = F.mse_loss
 
     influence_values_analytical = 2 * influences_up_linear_regression_analytical(
         linear_model,
-        dataset,
+        *train_data,
+        *test_data,
     )
 
     influence_values = influences(
         model,
         loss,
-        dataset,
+        *train_data,
+        *test_data,
         progress=True,
         influence_type="up",
         inversion_method="cg",
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
-    assert influence_values.shape == (len(dataset.x_test), len(dataset.x_train))
+    assert influence_values.shape == (len(test_data[0]), len(train_data[0]))
     influences_max_abs_diff = np.max(
         np.abs(influence_values - influence_values_analytical)
     )
@@ -125,25 +125,29 @@ def test_upweighting_influences_lr_analytical(
 ):
 
     A, _ = tuple(linear_model)
-    dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
+    train_data, test_data = create_mock_dataset(
+        linear_model, train_set_size, test_set_size
+    )
 
     model = TorchLinearRegression(A.shape[0], A.shape[1], init=linear_model)
     loss = F.mse_loss
 
     influence_values_analytical = 2 * influences_up_linear_regression_analytical(
         linear_model,
-        dataset,
+        *train_data,
+        *test_data,
     )
 
     influence_values = influences(
         model,
         loss,
-        dataset,
+        *train_data,
+        *test_data,
         progress=True,
         influence_type="up",
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
-    assert influence_values.shape == (len(dataset.x_test), len(dataset.x_train))
+    assert influence_values.shape == (len(test_data[0]), len(train_data[0]))
     influences_max_abs_diff = np.max(
         np.abs(influence_values - influence_values_analytical)
     )
@@ -166,7 +170,9 @@ def test_perturbation_influences_lr_analytical_cg(
     linear_model: Tuple[np.ndarray, np.ndarray],
     n_jobs: int,
 ):
-    dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
+    train_data, test_data = create_mock_dataset(
+        linear_model, train_set_size, test_set_size
+    )
     A, _ = linear_model
 
     model = TorchLinearRegression(A.shape[0], A.shape[1], init=linear_model)
@@ -176,21 +182,23 @@ def test_perturbation_influences_lr_analytical_cg(
         2
         * influences_perturbation_linear_regression_analytical(
             linear_model,
-            dataset,
+            *train_data,
+            *test_data,
         )
     )
     influence_values = influences(
         model,
         loss,
-        dataset,
+        *train_data,
+        *test_data,
         progress=True,
         influence_type="perturbation",
         inversion_method="cg",
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
     assert influence_values.shape == (
-        len(dataset.x_test),
-        len(dataset.x_train),
+        len(test_data[0]),
+        len(train_data[0]),
         A.shape[1],
     )
     influences_max_abs_diff = np.max(
@@ -215,7 +223,9 @@ def test_perturbation_influences_lr_analytical(
     linear_model: Tuple[np.ndarray, np.ndarray],
     n_jobs: int,
 ):
-    dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
+    train_data, test_data = create_mock_dataset(
+        linear_model, train_set_size, test_set_size
+    )
     A, _ = linear_model
 
     model = TorchLinearRegression(A.shape[0], A.shape[1], init=linear_model)
@@ -225,20 +235,22 @@ def test_perturbation_influences_lr_analytical(
         2
         * influences_perturbation_linear_regression_analytical(
             linear_model,
-            dataset,
+            *train_data,
+            *test_data,
         )
     )
     influence_values = influences(
         model,
         loss,
-        dataset,
+        *train_data,
+        *test_data,
         progress=True,
         influence_type="perturbation",
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
     assert influence_values.shape == (
-        len(dataset.x_test),
-        len(dataset.x_train),
+        len(test_data[0]),
+        len(train_data[0]),
         A.shape[1],
     )
     influences_max_abs_diff = np.max(
@@ -266,45 +278,35 @@ def test_linear_influences_up_perturbations_analytical(
     condition_number: float,
     linear_model: Tuple[np.ndarray, np.ndarray],
 ):
-    dataset = create_mock_dataset(linear_model, train_set_size, test_set_size)
+    train_data, test_data = create_mock_dataset(
+        linear_model, train_set_size, test_set_size
+    )
     up_influences = linear_influences(
-        dataset,
+        *train_data,
+        *test_data,
         influence_type="up",
     )
     assert np.logical_not(np.any(np.isnan(up_influences)))
-    assert up_influences.shape == (len(dataset.x_test), len(dataset.x_train))
+    assert up_influences.shape == (len(test_data[0]), len(train_data[0]))
 
     pert_influences = linear_influences(
-        dataset,
+        *train_data,
+        *test_data,
         influence_type="perturbation",
     )
     assert np.logical_not(np.any(np.isnan(pert_influences)))
     assert pert_influences.shape == (
-        len(dataset.x_test),
-        len(dataset.x_train),
-        dataset.x_train.shape[1],
+        len(test_data[0]),
+        len(train_data[0]),
+        train_data[0].shape[1],
     )
 
 
 @pytest.mark.torch
 def test_influences_with_neural_network_explicit_hessian():
-    dataset = Dataset.from_sklearn(load_wine())
-    x_transformer = MinMaxScaler()
-    transformed_dataset = copy(dataset)
-    transformed_dataset.x_train = torch.tensor(
-        x_transformer.fit_transform(transformed_dataset.x_train), dtype=torch.float
-    )
-    transformed_dataset.y_train = torch.tensor(
-        transformed_dataset.y_train, dtype=torch.long
-    )
-    transformed_dataset.x_test = torch.tensor(
-        x_transformer.transform(transformed_dataset.x_test), dtype=torch.float
-    )
-    transformed_dataset.y_test = torch.tensor(
-        transformed_dataset.y_test, dtype=torch.long
-    )
-    feature_dimension = dataset.x_train.shape[1]
-    unique_classes = np.unique(np.concatenate((dataset.y_train, dataset.y_test)))
+    train_ds, val_ds, test_ds = load_wine_dataset(train_size=0.3, test_size=0.6)
+    feature_dimension = train_ds[0].shape[1]
+    unique_classes = np.unique(np.concatenate((train_ds[1], test_ds[1])))
     num_classes = len(unique_classes)
     num_epochs = 300
     network_size = [16, 16]
@@ -312,8 +314,8 @@ def test_influences_with_neural_network_explicit_hessian():
     optimizer = Adam(params=nn.parameters(), lr=0.001, weight_decay=0.001)
     loss = F.cross_entropy
     nn.fit(
-        x=transformed_dataset.x_train,
-        y=transformed_dataset.y_train,
+        *train_ds,
+        *test_ds,
         num_epochs=num_epochs,
         batch_size=32,
         loss=loss,
@@ -327,7 +329,8 @@ def test_influences_with_neural_network_explicit_hessian():
     train_influences = influences(
         model,
         loss,
-        transformed_dataset,
+        *train_ds,
+        *test_ds,
         inversion_method="direct",
     )
 
