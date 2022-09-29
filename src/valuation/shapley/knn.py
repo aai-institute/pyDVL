@@ -6,6 +6,8 @@ from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from valuation.reporting.scores import sort_values
 from valuation.utils import Dataset, maybe_progress
 
+__all__ = ["knn_shapley"]
+
 
 def knn_shapley(
     data: Dataset, model: KNeighborsClassifier, progress: bool = True

@@ -5,6 +5,7 @@ Contains
 - error bound for conjugate gradient.
 """
 import logging
+import warnings
 from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import numpy as np
@@ -68,14 +69,14 @@ def batched_preconditioned_conjugate_gradient(
             if raise_exception:
                 raise Exception(msg)
             else:
-                logger.warning(msg)
+                warnings.warn(msg, RuntimeWarning)
 
         if not is_positive_definite(A, b):
             msg = "The function seems to not be linear."
             if raise_exception:
                 raise Exception(msg)
             else:
-                logger.warning(msg)
+                warnings.warn(msg, RuntimeWarning)
 
     if b.ndim == 1:
         b = b.reshape([1, -1])
@@ -161,7 +162,7 @@ def batched_preconditioned_conjugate_gradient(
         if raise_exception:
             raise Exception(msg)
         else:
-            logger.warning(msg)
+            warnings.warn(msg, RuntimeWarning)
 
     return x, iteration
 

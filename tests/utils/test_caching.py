@@ -1,15 +1,14 @@
 import logging
-import os
 from time import sleep, time
 from typing import Iterable
 
 import numpy as np
 import pytest
 
-from valuation.utils import MapReduceJob, map_reduce, memcached
+from valuation.utils import MapReduceJob, memcached
 from valuation.utils.caching import get_running_avg_variance
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
@@ -60,7 +59,6 @@ def test_memcached_parallel_jobs(memcached_client):
         ignore_args=["job_id", "run_id"],
     )
     def foo(indices: Iterable[int], *args, **kwargs) -> float:
-        # from valuation.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
         return float(np.sum(indices))
 
