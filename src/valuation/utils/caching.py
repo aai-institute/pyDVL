@@ -1,71 +1,38 @@
 """
 Distributed caching of functions, using memcached.
 """
+import logging
 import socket
 import uuid
-from dataclasses import dataclass, field, make_dataclass
+import warnings
+from dataclasses import dataclass
 from functools import wraps
 from hashlib import blake2b
 from io import BytesIO
 from time import time
-from typing import Callable, Dict, Iterable, Optional, Tuple, Union
+from typing import Callable, Dict, Iterable, Optional
 
 from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
 from pymemcache.client import Client, RetryingClient
-from pymemcache.serde import PickleSerde
 
-from valuation.utils.logging import logger
 from valuation.utils.numeric import get_running_avg_variance
-from valuation.utils.types import unpackable
+
+from .config import MemcachedClientConfig
 
 PICKLE_VERSION = 5  # python >= 3.8
 
+logger = logging.getLogger(__name__)
 
-@unpackable
+
 @dataclass
-class ClientConfig:
-    server: Union[str, Tuple[str, Union[str, int]]] = ("localhost", 11211)
-    connect_timeout: float = 1.0
-    timeout: float = 1.0
-    no_delay: bool = True
-    serde: PickleSerde = PickleSerde(pickle_version=PICKLE_VERSION)
-
-
-@unpackable
-@dataclass
-class MemcachedConfig:
-    """Configuration for memcache
-
-    :param cache_threshold: determines the minimum number of seconds a model training needs
-        to take to cache its scores. If a model is super fast to train, you may just want
-        to re-train it every time without saving the score. In most cases, caching the model,
-        even when it takes very little to train, is preferable.
-        The default to cache_threshold is 0.3 seconds.
-    :param allow_repeated_training: if set to true, instead of storing just a single score of a model,
-        the cache will store a running average of its score until a certain relative tolerance
-        (set by the rtol_threshold argument) is achieved. More precisely, since most machine learning
-        model-trainings are non-deterministic, depending on the starting weights or on randomness in
-        the training process, the trained model can have very different scores.
-        In your workflow, if you observe that the training process is very noisy even relative to the
-        same training set, then we recommend to set allow_repeated_training to True.
-        If instead the score is not impacted too much by non-deterministic training, setting allow_repeated_training
-        to false will speed up the shapley_dval calculation substantially.
-    :param rtol_threshold argument: as mentioned above, it regulates the relative tolerance for returning the running
-        average of a model instead of re-training it. If allow_repeated_training is True, set rtol_threshold to
-        small values and the shapley coefficients will have higher precision.
-    :param min_repetitions: similarly to rtol_threshold, it regulates repeated trainings by setting the minimum number of
-        repeated training a model has to go through before the cache can return its average score.
-        If the model training is very noisy, set min_repetitions to higher values and the scores will be more
-        reflective of the real average performance of the trained models.
-    """
-
-    client_config: ClientConfig = field(default_factory=ClientConfig)
-    cache_threshold: float = 0.3
-    allow_repeated_training: bool = True
-    rtol_threshold: float = 0.1
-    min_repetitions: int = 3
-    ignore_args: Optional[Iterable[str]] = None
+class CacheInfo:
+    sets: int = 0
+    misses: int = 0
+    hits: int = 0
+    timeouts: int = 0
+    errors: int = 0
+    reconnects: int = 0
 
 
 def serialize(x):
@@ -76,7 +43,7 @@ def serialize(x):
 
 
 def memcached(
-    client_config: Optional[ClientConfig] = None,
+    client_config: Optional[MemcachedClientConfig] = None,
     cache_threshold: float = 0.3,
     allow_repeated_training: bool = False,
     rtol_threshold: float = 0.1,
@@ -123,7 +90,7 @@ def memcached(
         ignore_args = []
 
     # Do I really need this?
-    def connect(config: ClientConfig):
+    def connect(config: MemcachedClientConfig):
         """First tries to establish a connection, then tries setting and
         getting a value."""
         try:
@@ -160,12 +127,9 @@ def memcached(
 
         @wraps(fun, updated=[])  # don't try to use update() for a class
         class Wrapped:
-            def __init__(self, config: ClientConfig):
+            def __init__(self, config: MemcachedClientConfig):
                 self.config = config
-                self.cache_info = make_dataclass(
-                    "CacheInfo",
-                    ["sets", "misses", "hits", "timeouts", "errors", "reconnects"],
-                )(0, 0, 0, 0, 0, 0)
+                self.cache_info = CacheInfo()
                 self.client = connect(self.config)
                 self._signature = signature
 
@@ -232,15 +196,15 @@ def memcached(
                     result = self.client.get(key)
                 except socket.timeout as e:
                     self.cache_info.timeouts += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")  # type: ignore
+                    warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
                 except OSError as e:
                     self.cache_info.errors += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")  # type: ignore
+                    warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
                 except AttributeError as e:
                     # FIXME: this depends on _recv() failing on invalid sockets
                     # See pymemcache.base.py,
                     self.cache_info.reconnects += 1
-                    logger.warning(f"{type(self).__name__}: {str(e)}")  # type: ignore
+                    warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
                     self.client = connect(self.config)
                 return result
 
@@ -254,7 +218,7 @@ def memcached(
         Wrapped.__qualname__ = ".".join(reversed(patched))
 
         # TODO: pick from some config file or something
-        config = ClientConfig()
+        config = MemcachedClientConfig()
         if client_config is not None:
             config.update(client_config)  # type: ignore
         return Wrapped(config)

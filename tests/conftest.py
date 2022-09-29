@@ -2,27 +2,29 @@ import functools
 from collections import OrderedDict, defaultdict
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
 
-if TYPE_CHECKING:
-    from _pytest.terminal import TerminalReporter
-    from _pytest.config import Config
-
 import numpy as np
 import pytest
+import ray
 from pymemcache.client import Client
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 
-from valuation.utils import ClientConfig, Dataset, Utility
-from valuation.utils.logging import start_logging_server
+from valuation.utils import Dataset, MemcachedClientConfig, Utility
 from valuation.utils.numeric import random_matrix_with_condition_number, spearman
 from valuation.utils.parallel import available_cpus
+
+if TYPE_CHECKING:
+    from _pytest.config import Config
+    from _pytest.terminal import TerminalReporter
 
 EXCEPTIONS_TYPE = Optional[Sequence[Type[BaseException]]]
 
 
-def pytest_sessionstart():
-    start_logging_server()
+@pytest.fixture(scope="session", autouse=True)
+def ray_shutdown():
+    yield
+    ray.shutdown()
 
 
 def is_memcache_responsive(hostname, port):
@@ -126,7 +128,7 @@ def memcached_service(docker_ip, docker_services, do_not_start_memcache):
 @pytest.fixture(scope="function")
 def memcache_client_config(memcached_service):
 
-    client_config = ClientConfig(
+    client_config = MemcachedClientConfig(
         server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
     )
     Client(**client_config).flush_all()
@@ -213,6 +215,11 @@ def seed_numpy(seed=42):
 @pytest.fixture
 def num_workers():
     return min(8, available_cpus())
+
+
+@pytest.fixture
+def n_jobs(num_workers):
+    return num_workers
 
 
 @pytest.fixture(scope="function")
@@ -368,7 +375,7 @@ def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e
     v = np.array(list(values.values()))
     ev = np.array(list(exact_values.values()))
 
-    assert np.allclose(v, ev, atol=atol)
+    assert np.allclose(v, ev, atol=atol), f"{v} != {ev}"
 
 
 def check_values(
@@ -418,7 +425,8 @@ def check_rank_correlation(
     ranks = np.array(list(values.keys())[:k])
     ranks_exact = np.array(list(exact_values.keys())[:k])
 
-    assert spearman(ranks, ranks_exact) >= threshold
+    correlation = spearman(ranks, ranks_exact)
+    assert correlation >= threshold, f"{correlation} < {threshold}"
 
 
 # start_logging_server()
@@ -561,7 +569,7 @@ class TolerateErrorFixture:
         if self.session.has_exceeded_max_failures(self.name):
             self.session.increment_num_skipped(self.name)
             pytest.skip(
-                f"Maximum number of allowed failures, {self.session.get_max_failures(self.name)}, was already reached"
+                f"Maximum number of allowed failures, {self.session.get_max_failures(self.name)}, was already exceeded"
             )
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
@@ -573,7 +581,7 @@ class TolerateErrorFixture:
                 self.session.increment_num_failures(self.name)
         if self.session.has_exceeded_max_failures(self.name):
             pytest.fail(
-                f"Maximum number of allowed failures, {self.session.get_max_failures(self.name)}, reached"
+                f"Maximum number of allowed failures, {self.session.get_max_failures(self.name)}, was exceeded"
             )
         return True
 
@@ -636,26 +644,24 @@ def pytest_terminal_summary(
 def create_mock_dataset(
     linear_model: Tuple[np.ndarray, np.ndarray],
     train_set_size: int,
-    test_set_size: int = None,
+    test_set_size: int,
     noise: float = 0.01,
 ) -> Dataset:
     A, b = linear_model
     o_d, i_d = tuple(A.shape)
     data_model = lambda x: np.random.normal(x @ A.T + b, noise)
 
-    class WrappedDataset(object):
-        x_train: np.ndarray
-        y_train: np.ndarray
-        x_test: Optional[np.ndarray]
-        y_test: Optional[np.ndarray]
-
-    dataset = WrappedDataset()
-    dataset.x_train = np.random.uniform(size=[train_set_size, i_d])
-    dataset.y_train = data_model(dataset.x_train)
-
-    if test_set_size is not None:
-        dataset.x_test = np.random.uniform(size=[test_set_size, i_d])
-        dataset.y_test = data_model(dataset.x_test)
+    x_train = np.random.uniform(size=[train_set_size, i_d])
+    y_train = data_model(x_train)
+    x_test = np.random.uniform(size=[test_set_size, i_d])
+    y_test = data_model(x_test)
+    dataset = Dataset(
+        x_train=x_train,
+        y_train=y_train,
+        x_test=x_test,
+        y_test=y_test,
+        is_multi_output=True,
+    )
 
     scaler_x = MinMaxScaler()
     scaler_y = MinMaxScaler()
@@ -663,4 +669,4 @@ def create_mock_dataset(
     dataset.y_train = scaler_y.fit_transform(dataset.y_train)
     dataset.x_test = scaler_x.transform(dataset.x_test)
     dataset.y_test = scaler_y.transform(dataset.y_test)
-    return dataset
+    return (x_train, y_train), (x_test, y_test)

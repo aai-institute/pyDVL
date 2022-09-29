@@ -1,9 +1,7 @@
 from collections import OrderedDict
 from functools import partial
 from itertools import chain
-from typing import List, Mapping
-from typing import OrderedDict as OrderedDictType
-from typing import Sequence
+from typing import List, Mapping, Sequence, TypeVar
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -11,20 +9,31 @@ from tqdm import tqdm, trange
 
 from valuation.utils import Dataset, SupervisedModel
 
+__all__ = [
+    "sort_values",
+    "sort_values_array",
+    "sort_values_history",
+    "backward_elimination",
+    "compute_fb_scores",
+]
 
-def sort_values_array(values: np.ndarray) -> OrderedDictType[int, np.ndarray]:
+KT = TypeVar("KT")
+VT = TypeVar("VT")
+
+
+def sort_values_array(values: np.ndarray) -> "OrderedDict[int, np.ndarray]":
     vals = np.mean(values, axis=1)
     return OrderedDict(sorted(enumerate(vals), key=lambda x: x[1]))  # type: ignore
 
 
 def sort_values_history(
-    values: Mapping[int, Sequence[float]]
-) -> OrderedDictType[int, Sequence[float]]:
+    values: Mapping[KT, Sequence[VT]]
+) -> "OrderedDict[KT, Sequence[VT]]":
     """Sorts a dict of sample_id: [values] by the last item in each list."""
     return OrderedDict(sorted(values.items(), key=lambda x: x[1][-1]))  # type: ignore
 
 
-def sort_values(values: Mapping[int, float]) -> OrderedDictType[int, float]:
+def sort_values(values: Mapping[KT, VT]) -> "OrderedDict[KT, VT]":
     """Sorts a dict of sample_id: value_float by value."""
     return OrderedDict(sorted(values.items(), key=lambda x: x[1]))  # type: ignore
 
@@ -37,8 +46,7 @@ def backward_elimination(
 
     :param model: duh
     :param data: split Dataset
-    :param indices: data points to remove in sequence. Retraining happens
-                    after each removal.
+    :param indices: data points to remove in sequence. Retraining happens after each removal.
     :param job_id: for progress bar positioning in parallel execution
     :return: List of scores
     """
@@ -65,8 +73,7 @@ def forward_selection(
 
     :param model: duh
     :param data: split Dataset
-    :param indices: data points to add in sequence. Retraining happens
-                    after each addition
+    :param indices: data points to add in sequence. Retraining happens after each addition
     :param job_id: for progress bar positioning in parallel execution
     :return: List of scores
     """
@@ -91,8 +98,7 @@ def compute_fb_scores(
     """Compute scores during forward selection and backward elimination of
     points, in parallel.
 
-    :param values: OrderedDict of Shapley values, with keys sorted by
-                   increasing value of the last item of the lists
+    :param values: OrderedDict of Shapley values, with keys sorted by increasing value of the last item of the lists
     :param model: sklearn model implementing fit()
     :param data: split Dataset
     """

@@ -4,7 +4,7 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 
-from valuation.solve.cg import (
+from valuation.influence.cg import (
     batched_preconditioned_conjugate_gradient,
     conjugate_gradient_condition_number_based_error_bound,
 )
@@ -92,14 +92,10 @@ def test_conjugate_gradients_singular_matrix(
 ):
     A, b = singular_quadratic_linear_equation_system
     x0 = np.zeros_like(b)
-    try:
-        xn, n = batched_preconditioned_conjugate_gradient(
+    with pytest.raises(Exception):
+        batched_preconditioned_conjugate_gradient(
             A, b, x0=x0, verify_assumptions=True, raise_exception=True
         )
-        pytest.fail("Should throw an excepction.")
-
-    except:
-        pass
 
 
 def check_solution(A, b, n, x0, xn):

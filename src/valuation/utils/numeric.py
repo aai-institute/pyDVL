@@ -18,24 +18,23 @@ from typing import (
     Generator,
     Iterator,
     List,
+    Optional,
     Tuple,
     TypeVar,
-    Union,
 )
 
 import numpy as np
 
 if TYPE_CHECKING:
-    try:
-        from numpy.typing import NDArray
-    except ImportError:
-        from numpy import ndarray as NDArray
+    from numpy.typing import NDArray
+
+    FloatOrArray = TypeVar("FloatOrArray", float, "NDArray")
 
 __all__ = [
     "powerset",
     "random_powerset",
-    "mcmc_is_linear_function",
-    "mcmc_is_linear_function_positive_definite",
+    "is_linear_function",
+    "is_positive_definite",
     "linear_regression_analytical_derivative_d2_theta",
     "linear_regression_analytical_derivative_d_theta",
     "linear_regression_analytical_derivative_d_x_d_theta",
@@ -45,8 +44,8 @@ __all__ = [
 T = TypeVar("T")
 
 
-def mcmc_is_linear_function(
-    A: Callable[[np.ndarray], np.ndarray], v: np.ndarray, verify_samples: int = 1000
+def is_linear_function(
+    A: Callable[["NDArray"], "NDArray"], v: "NDArray", verify_samples: int = 1000
 ):
     """Assumes nothing. Stochastically checks for property sum_i a_i * f(v_i) == f(sum_i a_i v_i)."""
 
@@ -61,8 +60,8 @@ def mcmc_is_linear_function(
     return np.max(diff_value) <= 1e-10
 
 
-def mcmc_is_linear_function_positive_definite(
-    A: Callable[[np.ndarray], np.ndarray], v: np.ndarray, verify_samples: int = 1000
+def is_positive_definite(
+    A: Callable[["NDArray"], "NDArray"], v: "NDArray", verify_samples: int = 1000
 ):
     """Assumes linear function. Stochastically checks for property v.T @ f(v) >= 0"""
 
@@ -74,7 +73,7 @@ def mcmc_is_linear_function_positive_definite(
     return is_positive_definite
 
 
-def powerset(it: np.ndarray) -> Iterator[Collection[T]]:
+def powerset(it: "NDArray") -> Iterator[Collection[T]]:
     """Returns an iterator for the power set of the argument.
 
     Subsets are generated in sequence by growing size. See `random_powerset()`
@@ -104,10 +103,10 @@ class PowerSetDistribution(Enum):
 
 
 def random_powerset(
-    s: np.ndarray,
-    max_subsets: int = None,
+    s: "NDArray",
+    max_subsets: Optional[int] = None,
     dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
-) -> Generator[np.ndarray, None, None]:
+) -> Generator["NDArray", None, None]:
     """Uniformly samples a subset from the power set of the argument, without
     pre-generating all subsets and in no order.
 
@@ -146,7 +145,7 @@ def random_powerset(
         total += 1
 
 
-def spearman(x: np.ndarray, y: np.ndarray) -> float:
+def spearman(x: "NDArray", y: "NDArray") -> float:
     """Spearman correlation for integer, distinct ranks.
 
     :return: A float in [-1,1]: -1 for reversed ranks, 1 for perfect match, 0
@@ -172,7 +171,7 @@ def spearman(x: np.ndarray, y: np.ndarray) -> float:
 
 def random_matrix_with_condition_number(
     n: int, condition_number: float, positive_definite: bool = False
-) -> np.ndarray:
+) -> "NDArray":
     """
     https://gist.github.com/bstellato/23322fe5d87bb71da922fbc41d658079#file-random_mat_condition_number-py
     https://math.stackexchange.com/questions/1351616/condition-number-of-ata
@@ -195,8 +194,8 @@ def random_matrix_with_condition_number(
 
 
 def linear_regression_analytical_derivative_d_theta(
-    linear_model: Tuple[np.ndarray, np.ndarray], x: np.ndarray, y: np.ndarray
-) -> np.ndarray:
+    linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
+) -> "NDArray":
     """
     :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
     :param x: A np.ndarray of shape [BxM].
@@ -214,8 +213,8 @@ def linear_regression_analytical_derivative_d_theta(
 
 
 def linear_regression_analytical_derivative_d2_theta(
-    linear_model: Tuple[np.ndarray, np.ndarray], x: np.ndarray, y: np.ndarray
-) -> np.ndarray:
+    linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
+) -> "NDArray":
     """
     :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
     :param x: A np.ndarray of shape [BxM],
@@ -237,8 +236,8 @@ def linear_regression_analytical_derivative_d2_theta(
 
 
 def linear_regression_analytical_derivative_d_x_d_theta(
-    linear_model: Tuple[np.ndarray, np.ndarray], x: np.ndarray, y: np.ndarray
-) -> np.ndarray:
+    linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
+) -> "NDArray":
     """
     :param linear_model: A tuple of np.ndarray of shape [NxM] and [N] representing A and b respectively.
     :param x: A np.ndarray of shape [BxM].
@@ -261,50 +260,9 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     return full_derivative / N  # type: ignore
 
 
-def sample_classification_dataset_using_gaussians(
-    mus: np.ndarray, sigma: float, num_samples: int
-) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Sample from a uniform Gaussian mixture model.
-    :param mus: 2d-matrix [CxD] with the means of the components in the rows.
-    :param sigma: Standard deviation of each dimension of each component.
-    :param num_samples: The number of samples to generate.
-    :returns: A tuple of matrix x of shape [NxD] and target vector y of shape [N].
-    """
-    num_features = mus.shape[1]
-    num_classes = mus.shape[0]
-    gaussian_cov = sigma * np.eye(num_features)
-    gaussian_chol = np.linalg.cholesky(gaussian_cov)
-    y = np.random.randint(num_classes, size=num_samples)
-    x = (
-        np.einsum(
-            "ij,kj->ki",
-            gaussian_chol,
-            np.random.normal(size=[num_samples, num_features]),
-        )
-        + mus[y]
-    )
-    return x, y
-
-
-def decision_boundary_fixed_variance_2d(
-    mu_1: np.ndarray, mu_2: np.ndarray
-) -> Callable[[np.ndarray], np.ndarray]:
-    """
-    Closed-form solution for decision boundary dot(a, b) + b = 0 with fixed variance.
-    :param mu_1: First mean.
-    :param mu_2: Second mean.
-    :returns: A callable which converts a continuous line (-infty, infty) to the decision boundary in feature space.
-    """
-    a = np.asarray([[0, 1], [-1, 0]]) @ (mu_2 - mu_1)
-    b = (mu_1 + mu_2) / 2
-    a = a.reshape([1, -1])
-    return lambda z: z.reshape([-1, 1]) * a + b  # type: ignore
-
-
 def min_distance_points_to_line_2d(
-    p: np.ndarray, a: np.ndarray, b: np.ndarray
-) -> np.ndarray:
+    p: "NDArray", a: "NDArray", b: "NDArray"
+) -> Tuple["NDArray", "NDArray"]:
     """
     Closed-form solution for minimum distance of point to line specified by dot(a, x) + b = 0.
     :param p: A 2-dimensional matrix [NxD] representing the points.
@@ -318,11 +276,11 @@ def min_distance_points_to_line_2d(
 
 
 def get_running_avg_variance(
-    previous_avg: Union[float, np.ndarray],
-    previous_variance: Union[float, np.ndarray],
-    new_value: Union[float, np.ndarray],
+    previous_avg: "FloatOrArray",
+    previous_variance: "FloatOrArray",
+    new_value: "FloatOrArray",
     count: int,
-):
+) -> Tuple["FloatOrArray", "FloatOrArray"]:
     """The method uses Welford's algorithm to calculate the running average and variance of
     a set of numbers.
 

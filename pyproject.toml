@@ -16,6 +16,7 @@ addopts = "--cov --cov-append --cov-report=term-missing --durations=10"
 testpaths = [
     "tests"
 ]
+timeout = 300
 log_format = "%(asctime)s %(levelname)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
 log_cli = true

@@ -1,16 +1,21 @@
+import logging
+import warnings
 from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, List, Optional, Tuple
 
 import numpy as np
 from sklearn.metrics import check_scoring
 
-from valuation.utils import Dataset, MemcachedConfig, Scorer, SupervisedModel, memcached
-from valuation.utils.caching import serialize
-from valuation.utils.logging import logger
+from .caching import memcached, serialize
+from .config import MemcachedConfig
+from .dataset import Dataset
+from .types import Scorer, SupervisedModel
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = ["Utility", "DataUtilityLearning"]
+
+logger = logging.getLogger(__name__)
 
 
 class Utility:
@@ -116,7 +121,7 @@ class Utility:
         except Exception as e:
             if self.catch_errors:
                 if self.show_warnings:
-                    logger.warning(str(e))  # type: ignore
+                    warnings.warn(str(e), RuntimeWarning)
                 return self.default_score
             else:
                 raise e
