@@ -99,6 +99,7 @@ def test_upweighting_influences_lr_analytical_cg(
         progress=True,
         influence_type="up",
         inversion_method="cg",
+        inversion_method_kwargs={"rtol": 10e-7},
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
     assert influence_values.shape == (len(test_data[0]), len(train_data[0]))
@@ -194,6 +195,7 @@ def test_perturbation_influences_lr_analytical_cg(
         progress=True,
         influence_type="perturbation",
         inversion_method="cg",
+        inversion_method_kwargs={"rtol": 10e-7},
     )
     assert np.logical_not(np.any(np.isnan(influence_values)))
     assert influence_values.shape == (
@@ -304,7 +306,9 @@ def test_linear_influences_up_perturbations_analytical(
 
 @pytest.mark.torch
 def test_influences_with_neural_network_explicit_hessian():
-    train_ds, val_ds, test_ds = load_wine_dataset(train_size=0.3, test_size=0.6)
+    train_ds, val_ds, test_ds, feature_names = load_wine_dataset(
+        train_size=0.3, test_size=0.6
+    )
     feature_dimension = train_ds[0].shape[1]
     unique_classes = np.unique(np.concatenate((train_ds[1], test_ds[1])))
     num_classes = len(unique_classes)

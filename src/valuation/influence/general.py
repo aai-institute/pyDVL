@@ -9,16 +9,15 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from valuation.influence.cg import (
+from valuation.influence.conjugate_gradient import (
     batched_preconditioned_conjugate_gradient,
-    hvp_to_inv_diag_conditioner,
+    conjugate_gradient,
 )
 from valuation.influence.frameworks import TorchTwiceDifferentiable
 from valuation.influence.types import (
     MatrixVectorProductInversionAlgorithm,
     TwiceDifferentiable,
 )
-from valuation.utils import Dataset
 
 __all__ = ["influences", "InfluenceType", "InversionMethod"]
 
@@ -39,35 +38,36 @@ class InversionMethod(str, Enum):
 
     Direct = "direct"
     Cg = "cg"
+    BatchedCg = "batched_cg"
 
 
 def calculate_influence_factors(
     model: TwiceDifferentiable,
-    x_train: np.ndarray,
-    y_train: np.ndarray,
+    x: np.ndarray,
+    y: np.ndarray,
     x_test: np.ndarray,
     y_test: np.ndarray,
     inversion_func: MatrixVectorProductInversionAlgorithm,
+    lam=0,
     progress: bool = False,
 ) -> np.ndarray:
     """
     Calculates the influence factors. For more info, see https://arxiv.org/pdf/1703.04730.pdf, paragraph 3.
 
     :param model: A model which has to implement the TwiceDifferentiable interface.
-    :param data: a dataset
-    :param train_indices: which train indices to calculate the influence factors of
-    :param test_indices: which test indices to use to calculate the influence factors
-    :param inversion_func: function to use to invert the product of hvp (hessian vector product) and the gradient
+    :param x: model input for training
+    :param y: input labels
+    :param x_test: model input for testing
+    :param y_test: test labels
+    :param inversion_func: function to use to invert the hvp (hessian vector product) and the gradient
         of the loss (s_test in the paper).
     :param progress: True for plotting the progress bar, False otherwise.
     :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
     """
 
-    hvp = lambda v, **kwargs: model.mvp(
-        x_train, y_train, v, progress=progress, **kwargs
-    )
+    hvp = lambda v, **kwargs: model.mvp(x, y, v, progress=progress, **kwargs) + lam * v
     test_grads = model.grad(x_test, y_test, progress=progress)
-    return -1 * inversion_func(hvp, test_grads)
+    return inversion_func(hvp, test_grads)
 
 
 def _calculate_influences_up(
@@ -129,14 +129,15 @@ influence_type_function_dict = {
 def influences(
     model: nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-    x_train: np.ndarray,
-    y_train: np.ndarray,
+    x: np.ndarray,
+    y: np.ndarray,
     x_test: np.ndarray,
     y_test: np.ndarray,
     progress: bool = False,
     inversion_method: InversionMethod = InversionMethod.Direct,
     influence_type: InfluenceType = InfluenceType.Up,
-    inversion_method_kwargs: Dict = {},
+    inversion_method_kwargs: Optional[Dict] = None,
+    lam=0,
 ) -> np.ndarray:
     """
     Calculates the influence of the training points j on the test points i. First it calculates
@@ -147,8 +148,8 @@ def influences(
     :param model: A supervised model from a supported framework. Currently, only pytorch nn.Module is supported.
     :param loss: loss of the model, a callable that, given prediction of the model and real labels, returns a
         tensor with the loss value.
-    :param x_train: model input for training
-    :param y_train: train labels
+    :param x: model input for training
+    :param y: input labels
     :param x_test: model input for testing
     :param y_test: test labels
     :param progress: whether to display progress bars.
@@ -162,40 +163,39 @@ def influences(
         - max_iterations: maximum conjugate gradient iterations
         - max_step_size: step size of conjugate gradient
         - verify_assumptions: True to run tests on convexity of the model.
-        - raise_exception: True for raising error if assumptions are not met. If false, warning will be logged.
     :returns: A np.ndarray specifying the influences. Shape is [NxM] if influence_type is'up', where N is number of test points and
         M number of train points. If instead influence_type is 'perturbation', output shape is [NxMxP], with P the number of input
         features.
     """
+    if inversion_method_kwargs is None:
+        inversion_method_kwargs = {}
     differentiable_model = TorchTwiceDifferentiable(model, loss)
     n_params = differentiable_model.num_params()
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
         "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,  # type: ignore
-        "cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(  # type: ignore
-            hvp,
-            x,
-            M=hvp_to_inv_diag_conditioner(hvp, d=x.shape[1]),
-            **inversion_method_kwargs
-        )[0],
+        "cg": lambda hvp, x: conjugate_gradient(hvp(np.eye(n_params)), x),
+        "batched_cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(  # type: ignore
+            hvp, x, **inversion_method_kwargs
+        )[
+            0
+        ],
     }
 
     influence_factors = calculate_influence_factors(
         differentiable_model,
-        x_train,
-        y_train,
+        x,
+        y,
         x_test,
         y_test,
         dict_fact_algos[inversion_method],
+        lam=lam,
         progress=progress,
     )
     influence_function = influence_type_function_dict[influence_type]
 
-    # The -1 here is to have increasing influence for better quality points.
-    # It could be simplified with the -1 in the influence factors definition,
-    # but to keep definition consistent with the original paper we flip sign here.
-    return -1 * influence_function(
+    return influence_function(
         differentiable_model,
-        x_train,
-        y_train,
+        x,
+        y,
         influence_factors,
     )

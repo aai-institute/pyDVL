@@ -4,7 +4,7 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 
-from valuation.influence.cg import (
+from valuation.influence.conjugate_gradient import (
     batched_preconditioned_conjugate_gradient,
     conjugate_gradient_condition_number_based_error_bound,
 )
@@ -48,7 +48,7 @@ test_case_ids = list(map(lmb_test_case_to_str, zip(range(len(test_cases)), test_
 def test_conjugate_gradients_mvp(quadratic_linear_equation_system):
     A, b = quadratic_linear_equation_system
     x0 = np.zeros_like(b)
-    xn, n = batched_preconditioned_conjugate_gradient(A, b, x0=x0)
+    xn, n = batched_preconditioned_conjugate_gradient(A, b, x0=x0, rtol=10e-7)
     check_solution(A, b, n, x0, xn)
 
 
@@ -63,7 +63,7 @@ def test_conjugate_gradients_fn(quadratic_linear_equation_system):
     new_A = np.copy(A)
     A = lambda v: v @ new_A.T
     x0 = np.zeros_like(b)
-    xn, n = batched_preconditioned_conjugate_gradient(A, b, x0=x0)
+    xn, n = batched_preconditioned_conjugate_gradient(A, b, x0=x0, rtol=10e-7)
     check_solution(new_A, b, n, x0, xn)
 
 
@@ -75,27 +75,9 @@ def test_conjugate_gradients_fn(quadratic_linear_equation_system):
 )
 def test_conjugate_gradients_mvp_preconditioned(quadratic_linear_equation_system):
     A, b = quadratic_linear_equation_system
-    M = np.diag(1 / np.diag(A))
     x0 = np.zeros_like(b)
-    xn, n = batched_preconditioned_conjugate_gradient(A, b, M=M, x0=x0)
+    xn, n = batched_preconditioned_conjugate_gradient(A, b, x0=x0, rtol=10e-7)
     check_solution(A, b, n, x0, xn)
-
-
-@pytest.mark.parametrize(
-    "problem_dimension,batch_size,condition_number",
-    test_cases,
-    ids=test_case_ids,
-    indirect=True,
-)
-def test_conjugate_gradients_singular_matrix(
-    singular_quadratic_linear_equation_system: Tuple[np.ndarray, np.ndarray]
-):
-    A, b = singular_quadratic_linear_equation_system
-    x0 = np.zeros_like(b)
-    with pytest.raises(Exception):
-        batched_preconditioned_conjugate_gradient(
-            A, b, x0=x0, verify_assumptions=True, raise_exception=True
-        )
 
 
 def check_solution(A, b, n, x0, xn):

@@ -36,7 +36,7 @@ class ShapleyMode(str, Enum):
     TruncatedMontecarlo = "truncated_montecarlo"
 
 
-def get_shapley_values(
+def shapley_values(
     u: Utility,
     max_iterations: int,
     n_jobs: int = 1,

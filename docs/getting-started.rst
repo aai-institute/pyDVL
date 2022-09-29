@@ -124,7 +124,7 @@ by adding ``inversion_method`` parameter to the influences function call.
    >>> influences(
    ...     model,
    ...     dataset,
-   ...     inversion_method="cg"
+   ...     inversion_method="direct"
    ... )
 
 

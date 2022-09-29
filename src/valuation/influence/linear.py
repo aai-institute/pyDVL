@@ -23,8 +23,8 @@ from valuation.utils.numeric import (
 
 
 def linear_influences(
-    x_train: np.ndarray,
-    y_train: np.ndarray,
+    x: np.ndarray,
+    y: np.ndarray,
     x_test: np.ndarray,
     y_test: np.ndarray,
     influence_type: InfluenceType = InfluenceType.Up,
@@ -39,23 +39,23 @@ def linear_influences(
     """
 
     lr = LinearRegression()
-    lr.fit(x_train, y_train)
+    lr.fit(x, y)
     A = lr.coef_
     b = lr.intercept_
 
     if influence_type == "up":
         return influences_up_linear_regression_analytical(
             (A, b),
-            x_train,
-            y_train,
+            x,
+            y,
             x_test,
             y_test,
         )
     elif influence_type == "perturbation":
         return influences_perturbation_linear_regression_analytical(
             (A, b),
-            x_train,
-            y_train,
+            x,
+            y,
             x_test,
             y_test,
         )
@@ -67,8 +67,8 @@ def linear_influences(
 
 def influences_up_linear_regression_analytical(
     linear_model: Tuple[np.ndarray, np.ndarray],
-    x_train: np.ndarray,
-    y_train: np.ndarray,
+    x: np.ndarray,
+    y: np.ndarray,
     x_test: np.ndarray,
     y_test: np.ndarray,
 ):
@@ -81,13 +81,19 @@ def influences_up_linear_regression_analytical(
     """
 
     test_grads_analytical = linear_regression_analytical_derivative_d_theta(
-        linear_model, x_test, y_test
+        linear_model,
+        x_test,
+        y_test,
     )
     train_grads_analytical = linear_regression_analytical_derivative_d_theta(
-        linear_model, x_train, y_train
+        linear_model,
+        x,
+        y,
     )
     hessian_analytical = linear_regression_analytical_derivative_d2_theta(
-        linear_model, x_train, y_train
+        linear_model,
+        x,
+        y,
     )
     s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
     return np.einsum("ia,ja->ij", s_test_analytical, train_grads_analytical)
@@ -95,8 +101,8 @@ def influences_up_linear_regression_analytical(
 
 def influences_perturbation_linear_regression_analytical(
     linear_model: Tuple[np.ndarray, np.ndarray],
-    x_train: np.ndarray,
-    y_train: np.ndarray,
+    x: np.ndarray,
+    y: np.ndarray,
     x_test: np.ndarray,
     y_test: np.ndarray,
 ):
@@ -109,14 +115,20 @@ def influences_perturbation_linear_regression_analytical(
     """
 
     test_grads_analytical = linear_regression_analytical_derivative_d_theta(
-        linear_model, x_test, y_test
+        linear_model,
+        x_test,
+        y_test,
     )
     train_second_deriv_analytical = linear_regression_analytical_derivative_d_x_d_theta(
-        linear_model, x_train, y_train
+        linear_model,
+        x,
+        y,
     )
 
     hessian_analytical = linear_regression_analytical_derivative_d2_theta(
-        linear_model, x_train, y_train
+        linear_model,
+        x,
+        y,
     )
     s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
     return np.einsum("ia,jab->ijb", s_test_analytical, train_second_deriv_analytical)
