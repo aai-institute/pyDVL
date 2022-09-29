@@ -28,8 +28,10 @@ class RayParallelBackend:
 
     >>> from valuation.utils.parallel.backend import RayParallelBackend
     >>> from valuation.utils.config import ParallelConfig
-    >>> config = ParallelConfig(backend="ray", num_workers=8)
+    >>> config = ParallelConfig(backend="ray")
     >>> parallel_backend = RayParallelBackend(config)
+    >>> parallel_backend
+    <RayParallelBackend: {'address': None, 'num_cpus': None}>
     """
 
     def __init__(self, config: ParallelConfig):
@@ -93,10 +95,10 @@ def init_parallel_backend(config: ParallelConfig) -> "RayParallelBackend":
 
     >>> from valuation.utils.parallel.backend import init_parallel_backend
     >>> from valuation.utils.config import ParallelConfig
-    >>> config = ParallelConfig(backend="ray", num_workers=8)
+    >>> config = ParallelConfig(backend="ray")
     >>> parallel_backend = init_parallel_backend(config)
     >>> parallel_backend
-    <RayParallelBackend: {'address': None, 'num_cpus': 8}>
+    <RayParallelBackend: {'address': None, 'num_cpus': None}>
     """
     global _PARALLEL_BACKED
     if _PARALLEL_BACKED is None:

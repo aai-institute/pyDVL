@@ -4,13 +4,19 @@ Contains all parts of pyTorch based machine learning model.
 from typing import Callable, Union
 
 import numpy as np
-import torch
-import torch.nn as nn
-from torch import autograd
-from torch.autograd import Variable
 
 from valuation.influence.types import TwiceDifferentiable
 from valuation.utils import maybe_progress
+
+try:
+    import torch
+    import torch.nn as nn
+    from torch import autograd
+    from torch.autograd import Variable
+
+    _TORCH_INSTALLED = True
+except ImportError:
+    _TORCH_INSTALLED = False
 
 __all__ = [
     "TorchTwiceDifferentiable",
@@ -38,6 +44,9 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         :param model: A torch.nn.Module representing a (differentiable) function f(x).
         :param loss: Loss function L(f(x), y) maps a prediction and a target to a single value.
         """
+        if not _TORCH_INSTALLED:
+            raise RuntimeWarning("This function requires PyTorch.")
+
         self.model = model
         self.loss = loss
 
