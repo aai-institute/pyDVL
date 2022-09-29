@@ -1,5 +1,10 @@
+.. _getting started:
+
+===============
 Getting started
 ===============
+
+Make sure you have :ref:`installed pyDVL <pyDVL Installation>` before proceeding further.
 
 In order to use the library, you need to use `Memcached <https://memcached.org/>`_,
 an in-memory key-value store for small chunks of arbitrary data (strings, objects),
@@ -22,7 +27,10 @@ Or you can run it inside a container:
 Caching is enabled by default but can be disabled if not needed or desired.
 
 Creating Dataset
-----------------
+================
+
+The :class:`~valuation.utils.dataset.Dataset` class is a convenient wrapper
+for the train and test splits that is used throughout the codebase. It can be used as follows:
 
 .. code-block:: python
 
@@ -38,7 +46,11 @@ Creating Dataset
 
 
 Creating Utility
-----------------
+================
+
+The :class:`~valuation.utils.utility.Utility` class is a convenient wrapper
+for the dataset, model and scoring function. It is used in the Leave-One-Out and Shapley methods.
+It can be used as follows:
 
 .. code-block:: python
 
@@ -49,24 +61,37 @@ Creating Utility
    >>> utility = Utility(model, dataset)
 
 
-Computing Shapley values
-------------------------
+Computing Leave-One-Out values
+==============================
+
+The Leave-One-Out method is a naive approach that should only be used for testing purposes.
 
 .. code-block:: python
 
-   >>> from valuation.utils import map_reduce, Utility
-   >>> from valuation.shapley.montecarlo import combinatorial_montecarlo_shapley
-   >>> from valuation.reporting.scores import compute_fb_scores
+   >>> from valuation.loo.naive import naive_loo
+   >>> utility = Utility(...)
+   >>> values = naive_loo(utility)
+
+
+Computing Shapley values
+========================
+
+The Shapley method is a game-theoretic approach to compute data valuation.
+Here we use Truncated Montecarlo Shapley because it is the most efficient.
+
+.. code-block:: python
+
+   >>> from valuation.utils import Utility
+   >>> from valuation.shapley.montecarlo import truncated_montecarlo_shapley
    >>> from valuation.reporting.plots import shapley_results
    >>> utility = Utility(...)
-   >>> fun = partial(truncated_montecarlo_shapley, utility=utility, progress=True)
-   >>> values_nmcs, hist_nmcs = map_reduce(fun, num_runs=10, num_jobs=160)
-   >>> scores_nmcs = compute_fb_scores(model=model, data=data, values=values_nmcs)
-   >>> shapley_results(scores_nmcs)
+   >>> values, errors = truncated_montecarlo_shapley(u=utility, max_iterations=100)
+   >>> scores = compute_fb_scores(model=utility.model, data=utility.data, values=values)
+   >>> shapley_results(scores)
 
 
-Computing Influence functions
------------------------------
+Computing Influence values
+==========================
 
 There are two possibilities to calculate influences. For linear regression the influences can be calculated via the
 direct analytical function (this is used in testing as well). For more general models or loss functions
@@ -75,7 +100,7 @@ In general there are two types of influences, namely Up-weighting and Perturbati
 the choice of one ot them by pinning an enumeration in the parameters. Furthermore, we distinguish between the following types of calculations.
 
 Direct linear influences
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 These can only applied to a regression problem where x and y are from the real numbers. When
 a Dataset object is available, this is as simple as calling
@@ -83,7 +108,6 @@ a Dataset object is available, this is as simple as calling
 .. code-block:: python
 
    >>> from valuation.influence.linear import linear_influences
-
    >>> linear_influences(dataset)
 
 
@@ -92,7 +116,7 @@ to subsequently calculate the influences. Take a closer look at their inner defi
 in calculation or optimize the calculation for your specific application.
 
 Exact influences using TwiceDifferentiable protocol
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------------------------
 
 If you create a model, which supports the ``TwiceDifferentiable`` protocol. This means that it is
 capable of calculating second derivative matrix vector products and gradients with respect to the
@@ -109,7 +133,7 @@ loss and data samples.
 
 
 Influences using TwiceDifferentiable protocol and approximate matrix inversion
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------------------------------------------
 
 Sometimes it is not possible to construct the complete Hessian in RAM.
 In that case one can use conjugate gradient as a space-efficient
@@ -129,7 +153,7 @@ by adding ``inversion_method`` parameter to the influences function call.
 
 
 Perturbation influences
-^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 All previous mentioned influences can be calculated feature-wise by adding ``influence_type`` parameter
 to the influences function call.
@@ -143,3 +167,9 @@ to the influences function call.
    ...     dataset,
    ...     influence_type='perturbation'
    ... )
+
+What's next
+===========
+
+You should go to the :ref:`Examples <examples>` section of the documentation
+to see more detailed usage of the library.

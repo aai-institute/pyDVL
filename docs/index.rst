@@ -1,7 +1,25 @@
+===================
 pyDVL Documentation
 ===================
 
 Welcome to the pyDVL library for data valuation!
+
+If you're a first time user of pyDVL, we recommend you to go through the
+:ref:`Installation <pyDVL Installation>` and :ref:`Getting Started <getting started>` guides.
+
+.. toctree::
+   :caption: Table of Contents
+   :glob:
+
+   *
+   examples/index
+
+
+.. toctree::
+   :caption: Reference
+   :hidden:
+
+   valuation/index
 
 .. grid:: 2
     :gutter: 4
@@ -19,7 +37,8 @@ Welcome to the pyDVL library for data valuation!
 
         .. button-ref:: install
             :expand:
-            :color: secondary
+            :color: primary
+            :outline:
             :click-parent:
 
             To the installation guide.
@@ -36,27 +55,29 @@ Welcome to the pyDVL library for data valuation!
 
         .. button-link:: https://github.com/appliedAI-Initiative/pyDVL
             :expand:
-            :color: secondary
+            :color: primary
+            :outline:
             :click-parent:
 
             To the source repository.
 
-    .. grid-item-card:: API Documentation
+    .. grid-item-card:: API Reference
         :class-item: sd-text-center
 
         :material-regular:`description;12em`
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-        This link will take you to pyDVL's API documentation.
+        This link will take you to pyDVL's API reference.
 
         +++
 
         .. button-ref:: valuation
             :expand:
-            :color: secondary
+            :color: primary
+            :outline:
             :click-parent:
 
-            To the API documentation.
+            To the API reference.
 
     .. grid-item-card:: Examples
         :class-item: sd-text-center
@@ -70,26 +91,11 @@ Welcome to the pyDVL library for data valuation!
 
         .. button-link:: examples
             :expand:
-            :color: secondary
+            :color: primary
+            :outline:
             :click-parent:
 
             To the examples.
-
-.. toctree::
-   :caption: Examples, Guides and Tutorials
-   :glob:
-
-   *
-   examples/index
-
-
-.. toctree::
-   :caption: Modules
-   :hidden:
-
-   valuation/index
-
-
 
 
 Indices and tables

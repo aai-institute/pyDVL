@@ -36,10 +36,15 @@ To use all features of influence functions execute:
 
     pip install pyDVL[influence]
 
-This includes a heavy autograd framework and thus is left out by default.
+This includes a PyTorch and thus is left out by default.
 
 In order to check the installation you can use:
 
 .. code-block:: shell
 
     python -c "import valuation; print(valuation.__version__)"
+
+What's next
+===========
+
+You should go to the :ref:`Getting Started <getting started>` section of the documentation.
