@@ -58,7 +58,7 @@ def calculate_influence_factors(
     inversion_func: MatrixVectorProductInversionAlgorithm,
     *,
     progress: bool = False,
-) -> np.ndarray:
+) -> "NDArray":
     """
     Calculates the influence factors. For more info, see https://arxiv.org/pdf/1703.04730.pdf, paragraph 3.
 
@@ -87,7 +87,7 @@ def _calculate_influences_up(
     x_train: "NDArray",
     y_train: "NDArray",
     influence_factors: "NDArray",
-) -> np.ndarray:
+) -> "NDArray":
     """
     Calculates the influence from the influence factors and the scores of the training points.
     Uses the upweighting method, as described in section 2.1 of https://arxiv.org/pdf/1703.04730.pdf
@@ -138,8 +138,8 @@ influence_type_function_dict = {
 
 
 def influences(
-    model: nn.Module,
-    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    model: "nn.Module",
+    loss: Callable[["torch.Tensor", "torch.Tensor"], "torch.Tensor"],
     x_train: "NDArray",
     y_train: "NDArray",
     x_test: "NDArray",
