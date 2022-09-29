@@ -93,25 +93,31 @@ Here we use Truncated Montecarlo Shapley because it is the most efficient.
 Computing Influence values
 ==========================
 
-There are two possibilities to calculate influences. For linear regression the influences can be calculated via the
-direct analytical function (this is used in testing as well). For more general models or loss functions
-one can use the ``TwiceDifferentiable`` protocol, which provides the required methods for calculating the influences.
-In general there are two types of influences, namely Up-weighting and Perturbation influences. Each method supports
-the choice of one ot them by pinning an enumeration in the parameters. Furthermore, we distinguish between the following types of calculations.
+There are two ways to compute influences. For linear regressions, the influences can be computed
+analytically (this is used in testing as well). For more general models or loss functions,
+we can use the ``TwiceDifferentiable`` protocol, which provides the required methods for computing the influences.
+
+In general there are two types of influences, namely Up-weighting and Perturbation influences.
+Each method supports the choice of one ot them by pinning an enumeration in the parameters.
+Furthermore, we distinguish between the following types of calculations:
 
 Direct linear influences
 ------------------------
 
-These can only applied to a regression problem where x and y are from the real numbers. When
-a Dataset object is available, this is as simple as calling
+These can only be applied to a regression problem where x and y are real numbers.
 
 .. code-block:: python
 
    >>> from valuation.influence.linear import linear_influences
-   >>> linear_influences(dataset)
+   >>> linear_influences(
+   ...    x_train,
+   ...    y_train,
+   ...    x_test,
+   ...    y_test
+   ... )
 
 
-the linear influence functions. Internally these method fit a linear regression model and use this
+Internally this method fits a linear regression model and uses it
 to subsequently calculate the influences. Take a closer look at their inner definition, to reuse a model
 in calculation or optimize the calculation for your specific application.
 
@@ -124,18 +130,20 @@ loss and data samples.
 
 .. code-block:: python
 
-   >>> from valuation.influence.general import influences
-   >>>
+   >>> from valuation.influence import influences
    >>> influences(
    ...    model,
-   ...    dataset,
+   ...    x_train,
+   ...    y_train,
+   ...    x_test,
+   ...    y_test,,
    ... )
 
 
 Influences using TwiceDifferentiable protocol and approximate matrix inversion
 ------------------------------------------------------------------------------
 
-Sometimes it is not possible to construct the complete Hessian in RAM.
+Sometimes it is not possible to construct the complete Hessian in memory.
 In that case one can use conjugate gradient as a space-efficient
 approximation to inverting the full matrix. In pyDVL this can be done
 by adding ``inversion_method`` parameter to the influences function call.
@@ -143,12 +151,15 @@ by adding ``inversion_method`` parameter to the influences function call.
 
 .. code-block:: python
 
-   >>> from valuation.influence.general import influences
+   >>> from valuation.influence import influences
 
    >>> influences(
-   ...     model,
-   ...     dataset,
-   ...     inversion_method="cg"
+   ...    model,
+   ...    x_train,
+   ...    y_train,
+   ...    x_test,
+   ...    y_test,
+   ...    inversion_method="cg"
    ... )
 
 
@@ -160,12 +171,15 @@ to the influences function call.
 
 .. code-block:: python
 
-   >>> from valuation.influence.general import influences
+   >>> from valuation.influence import influences
    >>>
    >>> influences(
-   ...     model,
-   ...     dataset,
-   ...     influence_type='perturbation'
+   ...    model,
+   ...    x_train,
+   ...    y_train,
+   ...    x_test,
+   ...    y_test,
+   ...    influence_type="perturbation"
    ... )
 
 What's next
