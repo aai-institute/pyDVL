@@ -70,7 +70,7 @@ def get_shapley_values(
     # TODO fix progress showing and maybe_progress
     progress = False
 
-    if mode not in ShapleyMode:
+    if mode not in list(ShapleyMode):
         raise ValueError(f"Invalid value encountered in {mode=}")
 
     if mode == ShapleyMode.TruncatedMontecarlo:

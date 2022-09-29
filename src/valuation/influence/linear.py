@@ -47,7 +47,7 @@ def linear_influences(
     A = lr.coef_
     b = lr.intercept_
 
-    if influence_type not in InfluenceType:
+    if influence_type not in list(InfluenceType):
         raise NotImplementedError(
             f"Only upweighting and perturbation influences are supported, but got {influence_type=}"
         )

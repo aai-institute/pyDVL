@@ -5,8 +5,6 @@ from enum import Enum
 from typing import TYPE_CHECKING, Callable, Dict, Optional
 
 import numpy as np
-import torch
-import torch.nn as nn
 
 from valuation.influence.cg import (
     batched_preconditioned_conjugate_gradient,
@@ -17,6 +15,14 @@ from valuation.influence.types import (
     MatrixVectorProductInversionAlgorithm,
     TwiceDifferentiable,
 )
+
+try:
+    import torch
+    import torch.nn as nn
+
+    _TORCH_INSTALLED = True
+except ImportError:
+    _TORCH_INSTALLED = False
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -66,6 +72,8 @@ def calculate_influence_factors(
     :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
     :param progress: If True, display progress bars.
     """
+    if not _TORCH_INSTALLED:
+        raise RuntimeWarning("This function requires PyTorch.")
 
     hvp = lambda v, **kwargs: model.mvp(
         x_train, y_train, v, progress=progress, **kwargs
@@ -163,6 +171,9 @@ def influences(
         M number of train points.
     :param progress: If True, display progress bars.
     """
+    if not _TORCH_INSTALLED:
+        raise RuntimeWarning("This function requires PyTorch.")
+
     if inversion_method_kwargs is None:
         inversion_method_kwargs = dict()
 
