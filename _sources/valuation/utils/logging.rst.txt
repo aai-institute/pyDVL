@@ -1,5 +1,0 @@
-logging
-=======
-.. automodule:: valuation.utils.logging
-   :members:
-   :undoc-members:

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>knn &mdash; pyDVL 0.1.0.dev18 documentation</title>
+  <title>knn &mdash; pyDVL 0.1.0.dev19 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -21,7 +21,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="montecarlo" href="montecarlo.html" />
-    <link rel="prev" title="shapley" href="../shapley.html" /> 
+    <link rel="prev" title="actor" href="actor.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -55,6 +55,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../loo.html">loo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reporting.html">reporting</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../shapley.html">shapley</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="actor.html">actor</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">knn</a></li>
 <li class="toctree-l3"><a class="reference internal" href="montecarlo.html">montecarlo</a></li>
 <li class="toctree-l3"><a class="reference internal" href="naive.html">naive</a></li>
@@ -119,7 +120,7 @@
 <span id="knn"></span><h1>knn<a class="headerlink" href="#module-valuation.shapley.knn" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="valuation.shapley.knn.knn_shapley">
-<span class="sig-name descname"><span class="pre">knn_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/dataset.html#valuation.utils.dataset.Dataset" title="valuation.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">KNeighborsClassifier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OrderedDict</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/shapley/knn.py#L10"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.shapley.knn.knn_shapley" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">knn_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/dataset.html#valuation.utils.dataset.Dataset" title="valuation.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">KNeighborsClassifier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OrderedDict</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/shapley/knn.py#L12"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.shapley.knn.knn_shapley" title="Permalink to this definition"></a></dt>
 <dd><p>Computes exact Shapley values for a KNN classifier</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -139,7 +140,7 @@ modified nor used other than to call get_params()</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../shapley.html" class="btn btn-neutral float-left" title="shapley" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="actor.html" class="btn btn-neutral float-left" title="actor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="montecarlo.html" class="btn btn-neutral float-right" title="montecarlo" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

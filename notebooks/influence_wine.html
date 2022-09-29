@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clean dataset using influence functions and neural networks &mdash; pyDVL 0.1.0.dev18 documentation</title>
+  <title>Clean dataset using influence functions and neural networks &mdash; pyDVL 0.1.0.dev19 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -467,7 +467,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay at 0x7f7298aa8f70&gt;
+&lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay at 0x7f1c75a78490&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -492,7 +492,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.9813280865715691
+0.9717868208513523
 </pre></div></div>
 </div>
 <p>Let’s now move to calculating influences of each point on the total score.</p>
@@ -558,7 +558,7 @@ Text(0, 0.5, &#39;number of points&#39;)
 <section id="Conjugate-Gradient-and-beyond-in-PyDVL">
 <h1>Conjugate Gradient and beyond in PyDVL<a class="headerlink" href="#Conjugate-Gradient-and-beyond-in-PyDVL" title="Permalink to this heading"></a></h1>
 <p>This was a quick introduction to influence functions and how they could help you in your projects. Give it a try! For example you can try with a bigger neural network and using conjugate gradient for the calculation of influence functions. This can me done in the following way</p>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
@@ -572,6 +572,15 @@ Text(0, 0.5, &#39;number of points&#39;)
 <span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/runner/work/pyDVL/pyDVL/src/valuation/influence/cg.py:165: RuntimeWarning: Conjugate gradient could solve the equation system for 0% of 107 random chosen vectors. Please check condition number and eigenvalues.
+  warnings.warn(msg, RuntimeWarning)
+</pre></div></div>
 </div>
 <p>where max_iterations and max_step_size and yet another set of hyperparameters that need to be tuned to obtain a good estimate.</p>
 <p>Finally, despite their speed and simplicity, influence functions are known to be a very noisy estimator of data quality, as pointed out in the paper <a class="reference external" href="https://arxiv.org/abs/2006.14651">“Influence functions in deep learning are fragile”</a>. The size of the network, the weight decay, the inversion method used for calculating influences, the size of the test set: they all add up to the total amount of noise in the influence values. Experiments may therefore give quantitative and qualitative

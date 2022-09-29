@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>parallel &mdash; pyDVL 0.1.0.dev18 documentation</title>
+  <title>parallel &mdash; pyDVL 0.1.0.dev19 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -20,7 +20,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="plotting" href="plotting.html" />
+    <link rel="next" title="actor" href="parallel/actor.html" />
     <link rel="prev" title="numeric" href="numeric.html" /> 
 </head>
 
@@ -57,10 +57,15 @@
 <li class="toctree-l2"><a class="reference internal" href="../shapley.html">shapley</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../utils.html">utils</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="caching.html">caching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="config.html">config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="dataset.html">dataset</a></li>
-<li class="toctree-l3"><a class="reference internal" href="logging.html">logging</a></li>
 <li class="toctree-l3"><a class="reference internal" href="numeric.html">numeric</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">parallel</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">parallel</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="parallel/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="parallel/backend.html">backend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="parallel/map_reduce.html">map_reduce</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="plotting.html">plotting</a></li>
 <li class="toctree-l3"><a class="reference internal" href="progress.html">progress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="types.html">types</a></li>
@@ -123,154 +128,13 @@
 </style>
 <section id="module-valuation.utils.parallel">
 <span id="parallel"></span><h1>parallel<a class="headerlink" href="#module-valuation.utils.parallel" title="Permalink to this heading"></a></h1>
-<p>FIXME this part of the code has become obsolete after switching to ray parallelization.
-Documentation and methods are not thoroughly tested.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="valuation.utils.parallel.MapReduceJob">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MapReduceJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/parallel.py#L50"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.parallel.MapReduceJob" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T</span></code>]</p>
-<p>There are probably 77 libraries to do just this</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="valuation.utils.parallel.MapReduceJob.reduce">
-<span class="sig-name descname"><span class="pre">reduce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">R</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">R</span></span></span><a class="headerlink" href="#valuation.utils.parallel.MapReduceJob.reduce" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="valuation.utils.parallel.MapReduceJob.from_fun">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_fun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">fun:</span> <span class="pre">~typing.Callable[[...],</span> <span class="pre">~valuation.utils.parallel.R],</span> <span class="pre">reducer:</span> <span class="pre">~typing.Callable[[~typing.List[~valuation.utils.parallel.R]],</span> <span class="pre">~valuation.utils.parallel.R]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">job_id_arg:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">run_id_arg:</span> <span class="pre">~typing.Optional[str]</span> <span class="pre">=</span> <span class="pre">None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#valuation.utils.parallel.MapReduceJob" title="valuation.utils.parallel.MapReduceJob"><span class="pre">MapReduceJob</span></a></span></span><a class="headerlink" href="#valuation.utils.parallel.MapReduceJob.from_fun" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>fun</strong> – </p></li>
-<li><p><strong>reducer</strong> – <p>Not actually a reduce() operation but the reduction
-itself. E.g. to join lists of results:</p>
-<blockquote>
-<div><p>reducer = lambda x: functools.reduce(operator.add, x, [])</p>
-</div></blockquote>
-<p>Or to average returned values:</p>
-<blockquote>
-<div><p>reducer = np.mean</p>
-</div></blockquote>
-</p></li>
-<li><p><strong>job_id_arg</strong> – argument name to pass the job id for display
-purposes (e.g. progress bar position). The value passed will be
-job_id + 1 (to allow for a global bar at position=0). Set to None if
-not supported by the function.</p></li>
-<li><p><strong>run_id_arg</strong> – argument name to pass the run id, for display and
-caching purposes. A run id will be passed to fun, and used to</p></li>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="parallel/actor.html">actor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parallel/backend.html">backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parallel/map_reduce.html">map_reduce</a></li>
 </ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="valuation.utils.parallel.Coordinator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Coordinator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">processor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/parallel.py#L282"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.parallel.Coordinator" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Meh…</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="valuation.utils.parallel.Coordinator.instantiate">
-<span class="sig-name descname"><span class="pre">instantiate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#valuation.utils.parallel.InterruptibleWorker" title="valuation.utils.parallel.InterruptibleWorker"><span class="pre">InterruptibleWorker</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#valuation.utils.parallel.Coordinator.instantiate" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="valuation.utils.parallel.Coordinator.put">
-<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#valuation.utils.parallel.Coordinator.put" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="valuation.utils.parallel.Coordinator.get_and_process">
-<span class="sig-name descname"><span class="pre">get_and_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#valuation.utils.parallel.Coordinator.get_and_process" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="valuation.utils.parallel.Coordinator.clear_tasks">
-<span class="sig-name descname"><span class="pre">clear_tasks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#valuation.utils.parallel.Coordinator.clear_tasks" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="valuation.utils.parallel.Coordinator.clear_results">
-<span class="sig-name descname"><span class="pre">clear_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pbar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">tqdm</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MockProgress</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#valuation.utils.parallel.Coordinator.clear_results" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="valuation.utils.parallel.Coordinator.start">
-<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#valuation.utils.parallel.Coordinator.start" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="valuation.utils.parallel.Coordinator.end">
-<span class="sig-name descname"><span class="pre">end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pbar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">tqdm</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MockProgress</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#valuation.utils.parallel.Coordinator.end" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="valuation.utils.parallel.InterruptibleWorker">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InterruptibleWorker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">worker_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ValueProxy</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/parallel.py#L220"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.parallel.InterruptibleWorker" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></p>
-<p>A simple consumer worker using two queues.</p>
-<p>To use, subclass and implement <cite>_run(self, task) -&gt; result</cite>. See e.g.
-<cite>ShapleyWorker</cite>, then instantiate using <cite>Coordinator</cite> and the methods
-therein.</p>
-<p>TODO: use shared memory to avoid copying data
-FIXME: I don’t need both the abort flag and the None task</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="valuation.utils.parallel.InterruptibleWorker.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#valuation.utils.parallel.InterruptibleWorker.run" title="Permalink to this definition"></a></dt>
-<dd><p>Method to be run in sub-process; can be overridden in sub-class</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="valuation.utils.parallel.InterruptibleWorker.aborted">
-<span class="sig-name descname"><span class="pre">aborted</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#valuation.utils.parallel.InterruptibleWorker.aborted" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="valuation.utils.parallel.map_reduce">
-<span class="sig-name descname"><span class="pre">map_reduce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fun</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#valuation.utils.parallel.MapReduceJob" title="valuation.utils.parallel.MapReduceJob"><span class="pre">MapReduceJob</span></a><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Collection</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_runs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'loky'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/parallel.py#L153"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.parallel.map_reduce" title="Permalink to this definition"></a></dt>
-<dd><p>Takes an embarrassingly parallel fun and runs ot in num_jobs parallel
-jobs, splitting arg into the same number of chunks, one for each job.</p>
-<p>It repeats the process num_runs times, allocating jobs across runs. E.g.
-if num_jobs = 90 and num_runs=10, each whole execution of fun uses 9 jobs,
-with the data split evenly among them. If num_jobs=2 and num_runs=10, two
-cores are used, five times in succession, and each job receives all data.</p>
-<p>Results are aggregated per run using fun.reduce(), but not across runs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>fun</strong> – Create with <cite>MapReduceJob.from_fun(fun, reducer, …)</cite></p></li>
-<li><p><strong>data</strong> – values to split across jobs</p></li>
-<li><p><strong>num_jobs</strong> – number of parallel jobs to run. Does not accept -1</p></li>
-<li><p><strong>num_runs</strong> – <p>number of times to run fun on the whole data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">param backend</dt>
-<dd class="field-odd"><p>’loky’, ‘threading’, ‘multiprocessing’, etc.</p>
-</dd>
-</dl>
-</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="valuation.utils.parallel.chunkify">
-<span class="sig-name descname"><span class="pre">chunkify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">njobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/parallel.py#L144"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.parallel.chunkify" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="valuation.utils.parallel.available_cpus">
-<span class="sig-name descname"><span class="pre">available_cpus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/parallel.py#L42"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.parallel.available_cpus" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
+</div>
 </section>
 
 
@@ -278,7 +142,7 @@ cores are used, five times in succession, and each job receives all data.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="numeric.html" class="btn btn-neutral float-left" title="numeric" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="plotting.html" class="btn btn-neutral float-right" title="plotting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="parallel/actor.html" class="btn btn-neutral float-right" title="actor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

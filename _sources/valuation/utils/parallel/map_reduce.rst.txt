@@ -1,0 +1,5 @@
+map\_reduce
+===========
+.. automodule:: valuation.utils.parallel.map_reduce
+   :members:
+   :undoc-members:
