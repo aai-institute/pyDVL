@@ -70,7 +70,7 @@ values, errors = truncated_montecarlo_shapley(u=utility, max_iterations=100)
 For more instructions and information refer to the [Getting Started section](https://appliedAI-Initiative.github.io/valuation/getting-started.html) 
 of the documentation 
 
-Refer to the [Examples](https://appliedAI-Initiative.github.io/valuation/examples/index.html) section of the documentation for more detailed examples.
+Refer to the [Examples section](https://appliedAI-Initiative.github.io/valuation/examples/index.html) of the documentation for more detailed examples.
 
 # Contributing
 
