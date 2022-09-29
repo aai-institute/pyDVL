@@ -22,6 +22,12 @@ To install the latest release use:
 $ pip install pyDVL
 ```
 
+You can also install the latest development version from [TestPyPI](https://test.pypi.org/project/pyDVL/):
+
+```shell
+pip install pyDVL --index-url https://test.pypi.org/simple/
+```
+
 For more instructions and information refer to the [Installing pyDVL section](https://appliedAI-Initiative.github.io/valuation/install.html)
 of the documentation.
 

@@ -30,6 +30,12 @@ To install the latest release use:
 
     pip install pyDVL
 
+You can also install the latest development version from `TestPyPI <https://test.pypi.org/project/pyDVL/>`_:
+
+.. code-block:: shell
+
+    pip install pyDVL --index-url https://test.pypi.org/simple/
+
 To use all features of influence functions execute:
 
 .. code-block:: shell
