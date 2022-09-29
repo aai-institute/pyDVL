@@ -1,7 +1,7 @@
 """
 Contains all parts of pyTorch based machine learning model.
 """
-from typing import Callable, Union
+from typing import TYPE_CHECKING, Callable, Union
 
 import numpy as np
 
@@ -17,6 +17,9 @@ try:
     _TORCH_INSTALLED = True
 except ImportError:
     _TORCH_INSTALLED = False
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 __all__ = [
     "TorchTwiceDifferentiable",
@@ -37,8 +40,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
     def __init__(
         self,
-        model: nn.Module,
-        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        model: "nn.Module",
+        loss: Callable[["torch.Tensor", "torch.Tensor"], "torch.Tensor"],
     ):
         """
         :param model: A torch.nn.Module representing a (differentiable) function f(x).
@@ -60,10 +63,10 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
     def grad(
         self,
-        x: Union[np.ndarray, torch.Tensor],
-        y: Union[np.ndarray, torch.Tensor],
+        x: Union["NDArray", "torch.Tensor"],
+        y: Union["NDArray", "torch.Tensor"],
         progress: bool = False,
-    ) -> np.ndarray:
+    ) -> "NDArray":
         """
         Calculates gradient of loss function for tuples (x_i, y_i).
         :param x: A np.ndarray [NxD] representing the features x_i.
@@ -89,13 +92,13 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
     def mvp(
         self,
-        x: Union[np.ndarray, torch.Tensor],
-        y: Union[np.ndarray, torch.Tensor],
-        v: Union[np.ndarray, torch.Tensor],
+        x: Union["NDArray", "torch.Tensor"],
+        y: Union["NDArray", "torch.Tensor"],
+        v: Union["NDArray", "torch.Tensor"],
         progress: bool = False,
         second_x: bool = False,
         **kwargs,
-    ) -> np.ndarray:
+    ) -> "NDArray":
         """
         Calculates matrix vector product of vector v.
         :param x: A np.ndarray [NxD] representing the features x_i.
