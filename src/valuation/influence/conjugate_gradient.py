@@ -19,11 +19,20 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def conjugate_gradient(hvp, batch_x):
+def conjugate_gradient(A: "NDArray", batch_y: "NDArray"):
+    """
+    Given a matrix and a batch of vectors, it uses conjugate gradient to calculate the solution
+    to Ax = y for each y in batch_y.
+
+    :param A:
+    :param batch_y:
+
+    :return: A NDArray representing the solution of Ax=b.
+    """
     batch_cg = []
-    for x in batch_x:
-        x_cg, _ = cg(hvp.T, x)
-        batch_cg.append(x_cg)
+    for y in batch_y:
+        y_cg, _ = cg(A.T, y)
+        batch_cg.append(y_cg)
     return np.asarray(batch_cg)
 
 

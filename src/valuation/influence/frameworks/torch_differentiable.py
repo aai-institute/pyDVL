@@ -2,9 +2,7 @@
 Contains all parts of pyTorch based machine learning model.
 """
 
-__all__ = [
-    "TorchTwiceDifferentiable",
-]
+__all__ = ["TorchTwiceDifferentiable"]
 
 from typing import Callable, Optional, Tuple, Union
 
@@ -95,10 +93,10 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         :param x: A np.ndarray [NxD] representing the features x_i.
         :param y: A np.ndarray [NxK] representing the predicted target values y_i.
         :param progress: True, iff progress shall be printed.
-        :returns: A tuple where 
-            - first element is a np.ndarray [P] with the gradients of the model.
+        :returns: A tuple where: \
+            - first element is a np.ndarray [P] with the gradients of the model. \
             - second element is the input to the model as a grad parameters. \
-                This can be used for further differentiation.
+                This can be used for further differentiation. 
         """
         x = torch.as_tensor(x).requires_grad_(True)
         y = torch.as_tensor(y)
