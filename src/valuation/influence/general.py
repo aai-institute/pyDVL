@@ -48,7 +48,7 @@ def calculate_influence_factors(
     x_test: np.ndarray,
     y_test: np.ndarray,
     inversion_func: MatrixVectorProductInversionAlgorithm,
-    lam=0,
+    lam: float = 0,
     progress: bool = False,
 ) -> np.ndarray:
     """
@@ -61,6 +61,7 @@ def calculate_influence_factors(
     :param y_test: test labels
     :param inversion_func: function to use to invert the hvp (hessian vector product) and the gradient
         of the loss (s_test in the paper).
+    :param lam: regularization of the hessian
     :param progress: True for plotting the progress bar, False otherwise.
     :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
     """
@@ -137,7 +138,7 @@ def influences(
     inversion_method: InversionMethod = InversionMethod.Direct,
     influence_type: InfluenceType = InfluenceType.Up,
     inversion_method_kwargs: Optional[Dict] = None,
-    lam=0,
+    hessian_regularisation=0,
 ) -> np.ndarray:
     """
     Calculates the influence of the training points j on the test points i. First it calculates
@@ -163,6 +164,9 @@ def influences(
         - max_iterations: maximum conjugate gradient iterations
         - max_step_size: step size of conjugate gradient
         - verify_assumptions: True to run tests on convexity of the model.
+    :param hessian_regularisation: lambda to use in Hessian regularization, i.e. H_reg = H + lambda * 1, with 1 the identity matrix \
+        and H the (simple and regularized) Hessian. Typically used with more complex models to make sure the Hessian \
+        is positive definite.
     :returns: A np.ndarray specifying the influences. Shape is [NxM] if influence_type is'up', where N is number of test points and
         M number of train points. If instead influence_type is 'perturbation', output shape is [NxMxP], with P the number of input
         features.
@@ -188,7 +192,7 @@ def influences(
         x_test,
         y_test,
         dict_fact_algos[inversion_method],
-        lam=lam,
+        lam=hessian_regularisation,
         progress=progress,
     )
     influence_function = influence_type_function_dict[influence_type]

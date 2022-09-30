@@ -96,10 +96,9 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
             - second element is the input to the model as a grad parameters. \
                 This can be used for further differentiation.
         """
-        x = torch.as_tensor(x)
+        x = torch.as_tensor(x).requires_grad_(True)
         y = torch.as_tensor(y)
 
-        x = nn.Parameter(x, requires_grad=True)
         loss_value = self.loss(torch.squeeze(self.model(x)), torch.squeeze(y))
         grad_f = torch.autograd.grad(
             loss_value, self.model.parameters(), create_graph=True
@@ -126,8 +125,6 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
             via grad_xy). If None, the model parameters are used.
         :returns: A np.ndarray representing the implicit matrix vector product of the model along the given directions.\
             Output shape is [DxP] if backprop_on is None, otherwise [DxM], with M the number of elements of backprop_on.
-
-            
         """
         v = torch.as_tensor(v)
 
