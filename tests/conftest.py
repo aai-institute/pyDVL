@@ -11,7 +11,6 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 
 from valuation.utils import Dataset, MemcachedClientConfig, Utility
-from valuation.utils.logging import start_logging_server
 from valuation.utils.numeric import random_matrix_with_condition_number, spearman
 from valuation.utils.parallel import available_cpus
 
@@ -26,10 +25,6 @@ EXCEPTIONS_TYPE = Optional[Sequence[Type[BaseException]]]
 def ray_shutdown():
     yield
     ray.shutdown()
-
-
-def pytest_sessionstart():
-    start_logging_server()
 
 
 def is_memcache_responsive(hostname, port):

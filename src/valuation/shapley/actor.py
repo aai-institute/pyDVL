@@ -1,3 +1,4 @@
+import logging
 from typing import TYPE_CHECKING, Optional
 
 import numpy as np
@@ -5,7 +6,6 @@ import numpy as np
 from valuation.utils import Utility, maybe_progress
 from valuation.utils.config import ParallelConfig
 
-from ..utils.logging import logger
 from ..utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from ..utils.parallel.backend import init_parallel_backend
 
@@ -14,6 +14,9 @@ if TYPE_CHECKING:
 
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_shapley_coordinator(

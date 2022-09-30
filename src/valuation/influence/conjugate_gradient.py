@@ -5,6 +5,7 @@ Contains
 - error bound for conjugate gradient.
 """
 import logging
+import warnings
 from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import numpy as np
@@ -144,7 +145,7 @@ def batched_preconditioned_conjugate_gradient(
             "and make sure that A is positive definite"
             " (e.g. through regularization)."
         )
-        logger.warning(msg)
+        warnings.warn(msg, RuntimeWarning)
     return x, iteration
 
 

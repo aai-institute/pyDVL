@@ -17,6 +17,10 @@ from torch.autograd import Variable
 from valuation.influence.types import TwiceDifferentiable
 from valuation.utils import maybe_progress
 
+__all__ = [
+    "TorchTwiceDifferentiable",
+]
+
 
 def flatten_gradient(grad):
     """

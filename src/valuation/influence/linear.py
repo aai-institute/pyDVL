@@ -1,25 +1,23 @@
 """
 Contains all functions for closed form solution of influences for standard linear regression.
 """
-
-__all__ = [
-    "linear_influences",
-    "influences_up_linear_regression_analytical",
-    "influences_perturbation_linear_regression_analytical",
-]
-
 from typing import Tuple
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
 from valuation.influence.general import InfluenceType
-from valuation.utils import Dataset
 from valuation.utils.numeric import (
     linear_regression_analytical_derivative_d2_theta,
     linear_regression_analytical_derivative_d_theta,
     linear_regression_analytical_derivative_d_x_d_theta,
 )
+
+__all__ = [
+    "linear_influences",
+    "influences_up_linear_regression_analytical",
+    "influences_perturbation_linear_regression_analytical",
+]
 
 
 def linear_influences(
