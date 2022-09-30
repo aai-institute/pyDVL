@@ -6,7 +6,7 @@ __all__ = [
     "TorchTwiceDifferentiable",
 ]
 
-from typing import Callable, Optional, Union
+from typing import Callable, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -89,7 +89,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         self,
         x: Union[np.ndarray, torch.Tensor],
         y: Union[np.ndarray, torch.Tensor],
-    ) -> np.ndarray:
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Calculates gradient of model parameters wrt x and y.
         :param x: A np.ndarray [NxD] representing the features x_i.

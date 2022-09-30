@@ -177,7 +177,7 @@ def influences(
     n_params = differentiable_model.num_params()
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
         "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,  # type: ignore
-        "cg": lambda hvp, x: conjugate_gradient(hvp(np.eye(n_params)), x),
+        "cg": lambda hvp, x: conjugate_gradient(hvp(np.eye(n_params)), x),  # type: ignore
         "batched_cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(  # type: ignore
             hvp, x, **inversion_method_kwargs
         )[
