@@ -64,9 +64,9 @@ def calculate_influence_factors(
     :param progress: True for plotting the progress bar, False otherwise.
     :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
     """
-
-    hvp = lambda v, **kwargs: model.mvp(x, y, v, progress=progress, **kwargs) + lam * v
-    test_grads = model.grad(x_test, y_test, progress=progress)
+    grad_xy, _ = model.grad(x, y)
+    hvp = lambda v: model.mvp(grad_xy, v, progress=progress) + lam * v
+    test_grads = model.split_grad(x_test, y_test, progress=progress)
     return inversion_func(hvp, test_grads)
 
 
@@ -86,7 +86,7 @@ def _calculate_influences_up(
     :param influence_factors: np.ndarray containing influence factors
     :returns: A np.ndarray of size [NxM], where N is number of test points and M number of train points.
     """
-    train_grads = model.grad(x, y)
+    train_grads = model.split_grad(x, y)
     return np.einsum("ta,va->tv", influence_factors, train_grads)  # type: ignore
 
 
@@ -109,11 +109,11 @@ def _calculate_influences_pert(
     """
     all_pert_influences = []
     for i in np.arange(len(x)):
+        grad_xy, tensor_x = model.grad(x[i], y[i])
         perturbation_influences = model.mvp(
-            x[i],
-            y[i],
+            grad_xy,
             influence_factors,
-            second_x=True,
+            backprop_on=[tensor_x],
         )
         all_pert_influences.append(perturbation_influences)
 

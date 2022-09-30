@@ -14,9 +14,17 @@ class TwiceDifferentiable(ABC):
     def num_params(self) -> int:
         pass
 
+    def split_grad(self, x: ndarray, y: ndarray, progress: bool = False) -> ndarray:
+        """
+        Calculate the gradient of the model wrt each input x and labels y.
+        The output is therefore of size [Nxp], with N the amout of points (the length of x and y) and
+        P the number of parameters.
+        """
+        pass
+
     def grad(self, x: ndarray, y: ndarray, progress: bool = False) -> ndarray:
         """
-        Calculate the gradient with respect to the parameters of the module with input parameters x[i] and y[i].
+        It calculates the gradient of model parameters with respect to input x and labels y.
         """
         pass
 
