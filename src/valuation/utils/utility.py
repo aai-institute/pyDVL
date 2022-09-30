@@ -81,16 +81,16 @@ class Utility:
         # self.__call__.__doc__ = self._utility_wrapper.__doc__
 
     def _initialize_utility_wrapper(self):
-        if not self.enable_cache:
-            self._utility_wrapper = self._utility
-
-        if self.cache_options is None:
-            cache_options = dict()  # type: ignore
+        if self.enable_cache:
+            if self.cache_options is None:
+                cache_options = dict()  # type: ignore
+            else:
+                cache_options = self.cache_options
+            self._utility_wrapper = memcached(**cache_options)(  # type: ignore
+                self._utility, signature=self._signature
+            )
         else:
-            cache_options = self.cache_options
-        self._utility_wrapper = memcached(**cache_options)(  # type: ignore
-            self._utility, signature=self._signature
-        )
+            self._utility_wrapper = self._utility
 
     def __call__(self, indices: Iterable[int]) -> float:
         utility: float = self._utility_wrapper(frozenset(indices))
