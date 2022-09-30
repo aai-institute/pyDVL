@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>linear &mdash; pyDVL 0.1.0.dev19 documentation</title>
+  <title>linear &mdash; pyDVL 0.1.0.dev20 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,6 +17,7 @@
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -29,7 +31,8 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> pyDVL
+            <a href="../../index.html">
+            <img src="../../_static/logo.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
                 0.1
@@ -42,13 +45,13 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Guides and Tutorials</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing pyDVL</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../notebooks/index.html">Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">valuation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../influence.html">influence</a><ul class="current">
@@ -78,7 +81,7 @@
       </nav>
 
       <div class="wy-nav-content">
-        <div class="rst-content">
+        <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
@@ -123,23 +126,37 @@
 <p>Contains all functions for closed form solution of influences for standard linear regression.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="valuation.influence.linear.linear_influences">
-<span class="sig-name descname"><span class="pre">linear_influences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">influence_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="general.html#valuation.influence.general.InfluenceType" title="valuation.influence.general.InfluenceType"><span class="pre">InfluenceType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">InfluenceType.Up</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/linear.py#L23"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.linear.linear_influences" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">linear_influences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">influence_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="general.html#valuation.influence.general.InfluenceType" title="valuation.influence.general.InfluenceType"><span class="pre">InfluenceType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">InfluenceType.Up</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/linear.py#L26"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.linear.linear_influences" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate the linear influences of the training set onto the validation set assuming a linear model Ax+b=y.
-Points with low (or negative) influences are less valuable for model training than higher influence points.
-:param data: a dataset
-:param influence_type: Which algorithm to use to calculate influences.         Currently supported options: ‘up’ or ‘perturbation’.
-:returns: A np.ndarray of shape [BxC] with the influences of the training points on the test points.</p>
+Points with low (or negative) influences are less valuable for model training than higher influence points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_train</strong> – A np.ndarray of shape [MxK] containing the features of the train set of data points.</p></li>
+<li><p><strong>y_train</strong> – A np.ndarray of shape [MxL] containing the targets of the train set of data points.</p></li>
+<li><p><strong>x_test</strong> – A np.ndarray of shape [NxK] containing the features of the test set of data points.</p></li>
+<li><p><strong>y_test</strong> – A np.ndarray of shape [NxL] containing the targets of the test set of data points.</p></li>
+<li><p><strong>influence_type</strong> – Which algorithm to use to calculate influences. Currently supported options: ‘up’ or ‘perturbation’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A np.ndarray of shape [BxC] with the influences of the training points on the test points.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="valuation.influence.linear.influences_up_linear_regression_analytical">
-<span class="sig-name descname"><span class="pre">influences_up_linear_regression_analytical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">linear_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/linear.py#L66"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.linear.influences_up_linear_regression_analytical" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">influences_up_linear_regression_analytical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">linear_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">NDArray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">NDArray</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/linear.py#L73"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.linear.influences_up_linear_regression_analytical" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate the influences of the training set onto the validation set for a linear model Ax+b=y.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>linear_model</strong> – A tuple of np.ndarray’ of shape [NxM] and [N] representing A and b respectively.</p></li>
-<li><p><strong>data</strong> – a dataset</p></li>
+<li><p><strong>x_train</strong> – A np.ndarray of shape [MxK] containing the features of the train set of data points.</p></li>
+<li><p><strong>y_train</strong> – A np.ndarray of shape [MxL] containing the targets of the train set of data points.</p></li>
+<li><p><strong>x_test</strong> – A np.ndarray of shape [NxK] containing the features of the test set of data points.</p></li>
+<li><p><strong>y_test</strong> – A np.ndarray of shape [NxL] containing the targets of the test set of data points.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -150,13 +167,16 @@ Points with low (or negative) influences are less valuable for model training th
 
 <dl class="py function">
 <dt class="sig sig-object py" id="valuation.influence.linear.influences_perturbation_linear_regression_analytical">
-<span class="sig-name descname"><span class="pre">influences_perturbation_linear_regression_analytical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">linear_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/linear.py#L94"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.linear.influences_perturbation_linear_regression_analytical" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">influences_perturbation_linear_regression_analytical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">linear_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">NDArray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">NDArray</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/linear.py#L107"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.linear.influences_perturbation_linear_regression_analytical" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate the influences of each feature of the training set onto the validation set for a linear model Ax+b=y.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>linear_model</strong> – A tuple of np.ndarray’ of shape [NxM] and [N] representing A and b respectively.</p></li>
-<li><p><strong>data</strong> – a dataset</p></li>
+<li><p><strong>x_train</strong> – A np.ndarray of shape [MxK] containing the features of the train set of data points.</p></li>
+<li><p><strong>y_train</strong> – A np.ndarray of shape [MxL] containing the targets of the train set of data points.</p></li>
+<li><p><strong>x_test</strong> – A np.ndarray of shape [NxK] containing the features of the test set of data points.</p></li>
+<li><p><strong>y_test</strong> – A np.ndarray of shape [NxL] containing the targets of the test set of data points.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

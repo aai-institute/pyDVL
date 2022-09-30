@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Influence functions for data mislabeling &mdash; pyDVL 0.1.0.dev19 documentation</title>
+  <title>Influence functions for data mislabeling &mdash; pyDVL 0.1.0.dev20 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,6 +17,7 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
         <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -23,7 +25,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Clean dataset using influence functions and neural networks" href="influence_wine.html" />
-    <link rel="prev" title="Notebooks" href="index.html" /> 
+    <link rel="prev" title="Examples" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -31,7 +33,8 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> pyDVL
+            <a href="../index.html">
+            <img src="../_static/logo.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
                 0.1
@@ -44,27 +47,25 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Guides and Tutorials</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installing pyDVL</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Notebooks</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Influence functions for data mislabeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Plotting-the-dataset">Plotting the dataset</a><ul>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Influence functions for data mislabeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Plotting-the-dataset">Plotting the dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Training-the-model">Training the model</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#Calculating-influences">Calculating influences</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Calculating-influences">Calculating influences</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Appendix:-Calculating-the-decision-boundary">Appendix: Calculating the decision boundary</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Clean dataset using influence functions and neural networks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_wine.html#Conjugate-Gradient-and-beyond-in-PyDVL">Conjugate Gradient and beyond in PyDVL</a></li>
 <li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html">KNN Shapley</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html">PyDVL - Shapley for data valuation</a></li>
 </ul>
 </li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../valuation/index.html">valuation</a></li>
 </ul>
@@ -79,14 +80,14 @@
       </nav>
 
       <div class="wy-nav-content">
-        <div class="rst-content">
+        <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Notebooks</a> &raquo;</li>
+          <li><a href="index.html">Examples</a> &raquo;</li>
       <li>Influence functions for data mislabeling</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/notebooks/influence_synthetic.ipynb.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/examples/influence_synthetic.ipynb.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -390,7 +391,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <p>with fixed means and diagonal covariance. Implementing the sampling scheme in python is straightforward and can be achieved by first sampling <span class="math notranslate nohighlight">\(y\)</span> and afterward <span class="math notranslate nohighlight">\(x\)</span>.</p>
 <p>The following code snippet generates the aforementioned dataset.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -418,7 +419,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 <p>Given the simplicity of the dataset, we can calculate exactly the optimal decision boundary(that which maximizes our accuracy). The following code maps a continuous line of z values to a 2-dimensional vector in feature space (More details are in the appendix to this notebook.)</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.utils.dataset</span> <span class="kn">import</span> <span class="n">decision_boundary_fixed_variance_2d</span>
@@ -428,12 +429,11 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </pre></div>
 </div>
 </div>
-</section>
 <section id="Plotting-the-dataset">
-<h1>Plotting the dataset<a class="headerlink" href="#Plotting-the-dataset" title="Permalink to this heading"></a></h1>
+<h2>Plotting the dataset<a class="headerlink" href="#Plotting-the-dataset" title="Permalink to this heading"></a></h2>
 <p>Let’s plot the dataset is plotted with their respective labels and the optimal decision line</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">datasets</span> <span class="o">=</span> <span class="p">{</span>
@@ -459,15 +459,16 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_influence_synthetic_6_0.png" src="../_images/notebooks_influence_synthetic_6_0.png" />
+<img alt="../_images/examples_influence_synthetic_6_0.png" src="../_images/examples_influence_synthetic_6_0.png" />
 </div>
 </div>
 <p>Note that there are samples which go across the optimal decision boundary and will be wrongly labelled. The optimal decision boundary can not discriminate these as the mislabelling is a consequence of the presence of random noise.</p>
+</section>
 <section id="Training-the-model">
 <h2>Training the model<a class="headerlink" href="#Training-the-model" title="Permalink to this heading"></a></h2>
 <p>We will now train a logistic regression model on the train data. This can be done with the following</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">TorchBinaryLogisticRegression</span><span class="p">(</span><span class="n">num_features</span><span class="p">)</span>
@@ -497,7 +498,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 <p>And let’s check that the model is not overfitting</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
@@ -512,12 +513,12 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_influence_synthetic_11_0.png" src="../_images/notebooks_influence_synthetic_11_0.png" />
+<img alt="../_images/examples_influence_synthetic_11_0.png" src="../_images/examples_influence_synthetic_11_0.png" />
 </div>
 </div>
 <p>A look at the confusion matrix also shows good results</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pred_probabilities</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">test_ds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
@@ -530,25 +531,24 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay at 0x7fe980ef3640&gt;
+&lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay at 0x7f8e5d2e56f0&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_influence_synthetic_13_1.png" src="../_images/notebooks_influence_synthetic_13_1.png" />
+<img alt="../_images/examples_influence_synthetic_13_1.png" src="../_images/examples_influence_synthetic_13_1.png" />
 </div>
 </div>
-</section>
 </section>
 <section id="Calculating-influences">
-<h1>Calculating influences<a class="headerlink" href="#Calculating-influences" title="Permalink to this heading"></a></h1>
+<h2>Calculating influences<a class="headerlink" href="#Calculating-influences" title="Permalink to this heading"></a></h2>
 <p>It is important that the model converges to a point near the optimum, since the influence values assume that we are at a minimum (or close) in the loss landscape. The function</p>
 <div class="math notranslate nohighlight">
 \[I(x_1, y_1, x_2, y_2) \colon \mathbb{R}^d \times \mathbb{R}^d \to \mathbb{R}\]</div>
@@ -558,7 +558,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <p>See <a class="reference external" href="https://arxiv.org/pdf/1703.04730.pdf">“Understanding Black-box Predictions via Influence Functions”</a> for a detailed derivation of this formula</p>
 <p>Let’s take a subset of the training data points, which we will calculate the influence values of.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">train_ds</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="mi">100</span><span class="p">]</span>
@@ -568,7 +568,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 <p>In pyDVL, the influence of the training points on the test points can be calculated with the following</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.influence.general</span> <span class="kn">import</span> <span class="n">influences</span>
@@ -590,7 +590,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <p>With the influence type ‘up’, train influences have shape [NxM] where N is the number of test samples and M is the number of training samples. They therefore associate to each training sample its influence on each test sample. Influence type ‘perturbation’, instead, return an array of shape [NxMxF], where F is the number of features in input, ie. the length of x.</p>
 <p>In our case, in order to have a value of the total average influence of a point we can just average across training samples.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mean_train_influences</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">influence_values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -599,7 +599,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 <p>Let’s plot the results</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_influences</span><span class="p">(</span>
@@ -619,13 +619,13 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_influence_synthetic_23_0.png" src="../_images/notebooks_influence_synthetic_23_0.png" />
+<img alt="../_images/examples_influence_synthetic_23_0.png" src="../_images/examples_influence_synthetic_23_0.png" />
 </div>
 </div>
 <p>We can see that, as we approach the separation line, the influences tend to move away from zero, i.e. the points become more decisive for model training, some in a positive way, some negative.</p>
 <p>As a further test, let’s introduce some labelling errors into <span class="math notranslate nohighlight">\(y\)</span> and see how the distribution of the influences changes. Let’s flip the first 10 labels and calculate influences</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">y_corrupted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
@@ -646,7 +646,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Average mislabelled data influence:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mean_train_influences</span><span class="p">[:</span><span class="mi">10</span><span class="p">]))</span>
@@ -659,12 +659,12 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Average mislabelled data influence: -0.6397693088751719
-Average correct data influence: 0.007660876803082179
+Average mislabelled data influence: -0.4771455733701123
+Average correct data influence: 0.004410349344254106
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_influences</span><span class="p">(</span>
@@ -685,10 +685,11 @@ Average correct data influence: 0.007660876803082179
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_influence_synthetic_28_0.png" src="../_images/notebooks_influence_synthetic_28_0.png" />
+<img alt="../_images/examples_influence_synthetic_28_0.png" src="../_images/examples_influence_synthetic_28_0.png" />
 </div>
 </div>
 <p>Red circles indicate the points which have been corrupted. We can see that the mislabelled data have a more negative average influence on the model, especially those that are farther away from the decision boundary.</p>
+</section>
 <section id="Appendix:-Calculating-the-decision-boundary">
 <h2>Appendix: Calculating the decision boundary<a class="headerlink" href="#Appendix:-Calculating-the-decision-boundary" title="Permalink to this heading"></a></h2>
 <p>For obtaining the optimal discriminator one has to solve the equation</p>
@@ -721,7 +722,7 @@ p(x|y=1)&amp;=\mathcal{N}\left (\mu_2, \sigma^2 I \right)
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="Notebooks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="influence_wine.html" class="btn btn-neutral float-right" title="Clean dataset using influence functions and neural networks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

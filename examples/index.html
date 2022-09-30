@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Notebooks &mdash; pyDVL 0.1.0.dev19 documentation</title>
+  <title>Examples &mdash; pyDVL 0.1.0.dev20 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -16,6 +17,7 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -29,7 +31,8 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> pyDVL
+            <a href="../index.html">
+            <img src="../_static/logo.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
                 0.1
@@ -42,21 +45,19 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Guides and Tutorials</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installing pyDVL</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Notebooks</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Plotting-the-dataset">Plotting the dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Calculating-influences">Calculating influences</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Clean dataset using influence functions and neural networks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_wine.html#Conjugate-Gradient-and-beyond-in-PyDVL">Conjugate Gradient and beyond in PyDVL</a></li>
 <li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html">KNN Shapley</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html">PyDVL - Shapley for data valuation</a></li>
 </ul>
 </li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Modules</span></p>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../valuation/index.html">valuation</a></li>
 </ul>
@@ -71,13 +72,13 @@
       </nav>
 
       <div class="wy-nav-content">
-        <div class="rst-content">
+        <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Notebooks</li>
+      <li>Examples</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/notebooks/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/examples/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -109,27 +110,29 @@
     text-align: unset;
 }
 </style>
-<section id="notebooks">
-<h1>Notebooks<a class="headerlink" href="#notebooks" title="Permalink to this heading"></a></h1>
+<section id="examples">
+<span id="id1"></span><h1>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="influence_synthetic.html#Plotting-the-dataset">Plotting the dataset</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Plotting-the-dataset">Plotting the dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Training-the-model">Training the model</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="influence_synthetic.html#Calculating-influences">Calculating influences</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Calculating-influences">Calculating influences</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Appendix:-Calculating-the-decision-boundary">Appendix: Calculating the decision boundary</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="influence_wine.html">Clean dataset using influence functions and neural networks</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="influence_wine.html#Fit-a-neural-network-to-the-data">Fit a neural network to the data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_wine.html#Calculating-influences-for-small-neural-networks">Calculating influences for small neural networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_wine.html#Conjugate-Gradient-and-beyond-in-PyDVL">Conjugate Gradient and beyond in PyDVL</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="influence_wine.html#Conjugate-Gradient-and-beyond-in-PyDVL">Conjugate Gradient and beyond in PyDVL</a></li>
 <li class="toctree-l1"><a class="reference internal" href="knn_shapley_flowers.html">KNN Shapley</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html#Corrupting-labels">Corrupting labels</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="shapley_spotify.html">PyDVL - Shapley for data valuation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html#Evaluation-on-anomalous-data">Evaluation on anomalous data</a></li>
 </ul>
 </li>
 </ul>
