@@ -1,6 +1,9 @@
+"""
+This module contains the :class:`Utility` and the :class:`DataUtilityLearning` classes.
+"""
 import logging
 import warnings
-from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, Optional, Tuple
 
 import numpy as np
 from sklearn.metrics import check_scoring
@@ -54,6 +57,7 @@ class Utility:
         model: SupervisedModel,
         data: Dataset,
         scoring: Optional[Scorer] = None,
+        *,
         catch_errors: bool = True,
         show_warnings: bool = False,
         default_score: float = 0.0,
@@ -70,31 +74,23 @@ class Utility:
         self.cache_options = cache_options
         self._signature = serialize((hash(model), hash(data), hash(scoring)))
 
-        if self.enable_cache:
-            if cache_options is None:
-                self.cache_options = dict()  # type: ignore
-            self._signature = serialize((hash(model), hash(data), hash(scoring)))
-            self._utility_wrapper = memcached(**self.cache_options)(  # type: ignore
-                self._utility, signature=self._signature
-            )
-        else:
-            self._utility_wrapper = self._utility
+        self._initialize_utility_wrapper()
 
         # FIXME: can't modify docstring of methods. Instead, I could use a
         #  factory which creates the class on the fly with the right doc.
         # self.__call__.__doc__ = self._utility_wrapper.__doc__
 
     def _initialize_utility_wrapper(self):
-        if self.enable_cache:
-            if self.cache_options is None:
-                cache_options = dict()  # type: ignore
-            else:
-                cache_options = self.cache_options
-            self._utility_wrapper = memcached(**cache_options)(  # type: ignore
-                self._utility, signature=self._signature
-            )
-        else:
+        if not self.enable_cache:
             self._utility_wrapper = self._utility
+
+        if self.cache_options is None:
+            cache_options = dict()  # type: ignore
+        else:
+            cache_options = self.cache_options
+        self._utility_wrapper = memcached(**cache_options)(  # type: ignore
+            self._utility, signature=self._signature
+        )
 
     def __call__(self, indices: Iterable[int]) -> float:
         utility: float = self._utility_wrapper(frozenset(indices))
@@ -112,7 +108,7 @@ class Utility:
         on the test data.
         """
         if not indices:
-            return 0
+            return self.default_score
         scorer = check_scoring(self.model, self.scoring)
         x, y = self.data.get_train_data(list(indices))
         try:
@@ -123,8 +119,7 @@ class Utility:
                 if self.show_warnings:
                     warnings.warn(str(e), RuntimeWarning)
                 return self.default_score
-            else:
-                raise e
+            raise e
 
     @property
     def signature(self):
@@ -183,7 +178,7 @@ class DataUtilityLearning:
         self.model = model
         self._current_iteration = 0
         self._is_model_fit = False
-        self._utility_samples: Dict[FrozenSet, Tuple["NDArray", float]] = dict()
+        self._utility_samples: Dict[FrozenSet, Tuple["NDArray", float]] = {}
 
     def _convert_indices_to_boolean_vector(self, x: Iterable[int]) -> "NDArray":
         boolean_vector = np.zeros((1, len(self.utility.data)), dtype=bool)
@@ -213,4 +208,5 @@ class DataUtilityLearning:
 
     @property
     def data(self) -> Dataset:
+        """Return the wrapped utility's dataset"""
         return self.utility.data
