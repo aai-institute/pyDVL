@@ -1,5 +1,7 @@
 from enum import Enum
+from typing import Optional
 
+import numpy as np
 import pandas as pd
 
 from valuation.shapley.knn import knn_shapley
@@ -29,8 +31,8 @@ class ShapleyMode(str, Enum):
     Different shapley modes.
     """
 
-    ExactCombinatorial = "exact_combinatorial"
-    ExactPermutation = "exact_permutation"
+    ExactCombinatorial = "combinatorial_exact"
+    ExactPermutation = "permutation_exact"
     CombinatorialMontecarlo = "combinatorial_montecarlo"
     PermutationMontecarlo = "permutation_montecarlo"
     TruncatedMontecarlo = "truncated_montecarlo"
@@ -38,8 +40,8 @@ class ShapleyMode(str, Enum):
 
 def get_shapley_values(
     u: Utility,
-    max_iterations: int,
     n_jobs: int = 1,
+    max_iterations: Optional[int] = None,
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     **kwargs,
 ):
@@ -73,6 +75,8 @@ def get_shapley_values(
     if mode not in list(ShapleyMode):
         raise ValueError(f"Invalid value encountered in {mode=}")
 
+    dval_std: Optional[dict] = None
+
     if mode == ShapleyMode.TruncatedMontecarlo:
         dval, dval_std = truncated_montecarlo_shapley(
             u=u,
@@ -83,17 +87,15 @@ def get_shapley_values(
         )
     elif mode == ShapleyMode.ExactCombinatorial:
         dval = combinatorial_exact_shapley(u, progress=progress)
-        dval_std = dict()
     elif mode == ShapleyMode.ExactPermutation:
         dval = permutation_exact_shapley(u, progress=progress)
-        dval_std = dict()
     elif mode == ShapleyMode.CombinatorialMontecarlo:
         dval, dval_std = combinatorial_montecarlo_shapley(
-            u, max_iterations, n_jobs=n_jobs, progress=progress
+            u, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.PermutationMontecarlo:
         dval, dval_std = permutation_montecarlo_shapley(
-            u, max_iterations, n_jobs=n_jobs, progress=progress
+            u, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
         )
     else:
         raise ValueError(f"Invalid value encountered in {mode=}")
@@ -103,7 +105,9 @@ def get_shapley_values(
         columns=["data_key", "shapley_dval"],
     )
 
-    if dval_std is not None:
+    if dval_std is None:
+        df["dval_std"] = np.nan
+    else:
         df["dval_std"] = dval_std
 
     return df

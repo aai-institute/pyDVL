@@ -55,7 +55,7 @@ class Utility:
         data: Dataset,
         scoring: Optional[Scorer] = None,
         catch_errors: bool = True,
-        show_warnings: bool = True,
+        show_warnings: bool = False,
         default_score: float = 0.0,
         enable_cache: bool = True,
         cache_options: Optional[MemcachedConfig] = None,
