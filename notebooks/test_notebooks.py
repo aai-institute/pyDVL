@@ -8,12 +8,11 @@ from nbconvert.preprocessors import ExecutePreprocessor
 
 ROOT_DIR = Path(".").parent.parent
 NOTEBOOKS_DIR = os.fspath(ROOT_DIR / "notebooks")
-DOCS_NOTEBOOKS_DIR = os.fspath(ROOT_DIR / "docs" / "notebooks")
 resources = {"metadata": {"path": NOTEBOOKS_DIR}}
 
 OMITTED_NOTEBOOKS = []
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
@@ -26,7 +25,7 @@ log = logging.getLogger(__name__)
 )
 def test_notebook(notebook):
     notebook_path = os.path.join(NOTEBOOKS_DIR, notebook)
-    log.info(f"Reading jupyter notebook from {notebook_path}")
+    logger.info(f"Reading jupyter notebook from {notebook_path}")
     with open(notebook_path) as f:
         nb = nbformat.read(f, as_version=4)
     ep = ExecutePreprocessor(timeout=600, resource=resources)
@@ -36,11 +35,5 @@ def test_notebook(notebook):
     #   If not then we could just simply call the `execute` method and get rid of the loop
     with ep.setup_kernel():
         for i, cell in enumerate(nb["cells"]):
-            log.info(f"processing cell {i} from {notebook}")
+            logger.info(f"processing cell {i} from {notebook}")
             ep.preprocess_cell(cell, resources=resources, index=i)
-
-    # saving the executed notebook to docs
-    output_path = os.path.join(DOCS_NOTEBOOKS_DIR, notebook)
-    log.info(f"Saving executed notebook to {output_path} for documentation purposes")
-    with open(output_path, "w", encoding="utf-8") as f:
-        nbformat.write(nb, f)

@@ -7,12 +7,18 @@ from abc import ABC
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 import numpy as np
-import torch
-import torch.nn as nn
-from torch.nn import Softmax, Tanh
-from torch.optim import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
-from torch.utils.data import DataLoader, Dataset
+
+try:
+    import torch
+    import torch.nn as nn
+    from torch.nn import Softmax, Tanh
+    from torch.optim import Optimizer
+    from torch.optim.lr_scheduler import _LRScheduler
+    from torch.utils.data import DataLoader, Dataset
+
+    _TORCH_INSTALLED = True
+except ImportError:
+    _TORCH_INSTALLED = False
 
 __all__ = [
     "TorchLinearRegression",
@@ -42,6 +48,10 @@ class InternalDataset(Dataset):
 
 
 class TorchModel(ABC):
+    def __init__(self):
+        if not _TORCH_INSTALLED:
+            raise RuntimeWarning("This function requires PyTorch.")
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         pass
 

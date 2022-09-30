@@ -16,6 +16,8 @@ from valuation.utils import is_linear_function, is_positive_definite
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
+__all__ = ["batched_preconditioned_conjugate_gradient"]
+
 logger = logging.getLogger(__name__)
 
 

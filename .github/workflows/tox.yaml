@@ -77,18 +77,15 @@ jobs:
         run: pip install -r requirements-dev.txt
       - name: Install Pandoc
         run: sudo apt-get install --no-install-recommends --yes pandoc
-      - name: Download resulting notebook artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: notebooks
-          path: docs/notebooks/
       - name: Cache Tox Directory for Docs
         uses: actions/cache@v3
         with:
           key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini') }}
           path: .tox
       - name: Build Docs
-        run: tox -e docs
+        run: | 
+          cp notebooks/*.ipynb docs/examples/
+          tox -e docs
       - name: Deploy Docs
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/develop' }}
