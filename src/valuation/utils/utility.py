@@ -101,14 +101,15 @@ class Utility:
         test data. If the object is constructed with cache_size > 0, results are
         memoized to avoid duplicate computation. This is useful in particular
         when computing utilities of permutations of indices.
+
         :param indices: a subset of indices from data.x_train.index. The type
          must be hashable for the caching to work, e.g. wrap the argument with
          `frozenset` (rather than `tuple` since order should not matter)
-        :return: 0 if no indices are passed, otherwise the value the scorer
-        on the test data.
+        :return: 0 if no indices are passed, `default_score` if we fail to fit the model,
+         otherwise the value the scorer on the test data.
         """
         if not indices:
-            return self.default_score
+            return 0.0
         scorer = check_scoring(self.model, self.scoring)
         x, y = self.data.get_train_data(list(indices))
         try:
