@@ -44,7 +44,7 @@ def get_shapley_values(
     max_iterations: Optional[int] = None,
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     **kwargs,
-):
+) -> pd.DataFrame:
     """
     Given a utility, a max number of iterations and the number of workers, it calculates
     the Shapley values. Depending on the algorithm used, it also takes additional optional arguments.
@@ -85,18 +85,26 @@ def get_shapley_values(
             progress=progress,
             **kwargs,
         )
-    elif mode == ShapleyMode.ExactCombinatorial:
-        dval = combinatorial_exact_shapley(u, progress=progress)
-    elif mode == ShapleyMode.ExactPermutation:
-        dval = permutation_exact_shapley(u, progress=progress)
     elif mode == ShapleyMode.CombinatorialMontecarlo:
+        if max_iterations is None:
+            raise ValueError(
+                "max_iterations cannot be None for Combinatorial Montecarlo Shapley"
+            )
         dval, dval_std = combinatorial_montecarlo_shapley(
             u, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.PermutationMontecarlo:
+        if max_iterations is None:
+            raise ValueError(
+                "max_iterations cannot be None for Permutation Montecarlo Shapley"
+            )
         dval, dval_std = permutation_montecarlo_shapley(
             u, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
         )
+    elif mode == ShapleyMode.ExactCombinatorial:
+        dval = combinatorial_exact_shapley(u, progress=progress)
+    elif mode == ShapleyMode.ExactPermutation:
+        dval = permutation_exact_shapley(u, progress=progress)
     else:
         raise ValueError(f"Invalid value encountered in {mode=}")
 
