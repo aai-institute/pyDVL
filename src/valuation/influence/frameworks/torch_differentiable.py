@@ -97,9 +97,9 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
     def grad(
         self,
-        x: Union[np.ndarray, torch.Tensor],
-        y: Union[np.ndarray, torch.Tensor],
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        x: Union["NDArray", "torch.Tensor"],
+        y: Union["NDArray", "torch.Tensor"],
+    ) -> Tuple["NDArray", "torch.Tensor"]:
         """
         Calculates gradient of model parameters wrt x and y.
         :param x: A np.ndarray [NxD] representing the features x_i.
@@ -121,11 +121,11 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
     def mvp(
         self,
-        grad_xy: Union[np.ndarray, torch.Tensor],
-        v: Union[np.ndarray, torch.Tensor],
+        grad_xy: Union["NDArray", "torch.Tensor"],
+        v: Union["NDArray", "torch.Tensor"],
         progress: bool = False,
-        backprop_on: Optional[torch.Tensor] = None,
-    ) -> np.ndarray:
+        backprop_on: Optional["torch.Tensor"] = None,
+    ) -> "NDArray":
         """
         Calculates second order derivative of the model along directions v.
         This second order derivative can be on the model parameters or on another input parameter, 
