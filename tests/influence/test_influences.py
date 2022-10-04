@@ -10,11 +10,11 @@ try:
     import torch.nn.functional as F
     from torch.optim import Adam, lr_scheduler
 
-    from valuation.influence.general import influences
+    from valuation.influence.general import compute_influences
     from valuation.influence.linear import (
+        compute_linear_influences,
         influences_perturbation_linear_regression_analytical,
         influences_up_linear_regression_analytical,
-        linear_influences,
     )
     from valuation.influence.model_wrappers import (
         TorchLinearRegression,
@@ -91,7 +91,7 @@ def test_upweighting_influences_lr_analytical_cg(
         *test_data,
     )
 
-    influence_values = influences(
+    influence_values = compute_influences(
         model,
         loss,
         *train_data,
@@ -139,7 +139,7 @@ def test_upweighting_influences_lr_analytical(
         *test_data,
     )
 
-    influence_values = influences(
+    influence_values = compute_influences(
         model,
         loss,
         *train_data,
@@ -187,7 +187,7 @@ def test_perturbation_influences_lr_analytical_cg(
             *test_data,
         )
     )
-    influence_values = influences(
+    influence_values = compute_influences(
         model,
         loss,
         *train_data,
@@ -241,7 +241,7 @@ def test_perturbation_influences_lr_analytical(
             *test_data,
         )
     )
-    influence_values = influences(
+    influence_values = compute_influences(
         model,
         loss,
         *train_data,
@@ -283,7 +283,7 @@ def test_linear_influences_up_perturbations_analytical(
     train_data, test_data = create_mock_dataset(
         linear_model, train_set_size, test_set_size
     )
-    up_influences = linear_influences(
+    up_influences = compute_linear_influences(
         *train_data,
         *test_data,
         influence_type="up",
@@ -291,7 +291,7 @@ def test_linear_influences_up_perturbations_analytical(
     assert np.logical_not(np.any(np.isnan(up_influences)))
     assert up_influences.shape == (len(test_data[0]), len(train_data[0]))
 
-    pert_influences = linear_influences(
+    pert_influences = compute_linear_influences(
         *train_data,
         *test_data,
         influence_type="perturbation",
@@ -330,7 +330,7 @@ def test_influences_with_neural_network_explicit_hessian():
     model = nn
     loss = loss
 
-    train_influences = influences(
+    train_influences = compute_influences(
         model,
         loss,
         *train_ds,

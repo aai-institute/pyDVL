@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-__all__ = ["influences", "InfluenceType", "InversionMethod"]
+__all__ = ["compute_influences", "InfluenceType", "InversionMethod"]
 
 
 class InfluenceType(str, Enum):
@@ -139,7 +139,7 @@ influence_type_function_dict = {
 }
 
 
-def influences(
+def compute_influences(
     model: "nn.Module",
     loss: Callable[["torch.Tensor", "torch.Tensor"], "torch.Tensor"],
     x: "NDArray",

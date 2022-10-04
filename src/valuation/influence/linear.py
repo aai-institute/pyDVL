@@ -17,13 +17,13 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 __all__ = [
-    "linear_influences",
+    "compute_linear_influences",
     "influences_up_linear_regression_analytical",
     "influences_perturbation_linear_regression_analytical",
 ]
 
 
-def linear_influences(
+def compute_linear_influences(
     x: "NDArray",
     y: "NDArray",
     x_test: "NDArray",

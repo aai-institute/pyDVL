@@ -5,7 +5,7 @@ from sklearn import datasets
 from sklearn.metrics import make_scorer
 from sklearn.neighbors import KNeighborsClassifier
 
-from valuation.shapley import knn_shapley, permutation_montecarlo_shapley
+from valuation.shapley import compute_knn_shapley, permutation_montecarlo_shapley
 from valuation.utils import Dataset, Utility
 
 log = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ def test_knn_montecarlo_match(seed):
 
     knn = KNeighborsClassifier(n_neighbors=5)
 
-    knn_values = knn_shapley(data, knn, False)
+    knn_values = compute_knn_shapley(data, knn, False)
     knn_keys = list(knn_values.keys())
 
     def knn_loss_function(labels, predictions, n_classes=3):
