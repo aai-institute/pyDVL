@@ -16,6 +16,8 @@ from valuation.influence.types import MatrixVectorProduct
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
+__all__ = ["batched_preconditioned_conjugate_gradient"]
+
 logger = logging.getLogger(__name__)
 
 

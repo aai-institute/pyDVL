@@ -4,16 +4,25 @@ Contains all parts of pyTorch based machine learning model.
 
 __all__ = ["TorchTwiceDifferentiable"]
 
-from typing import Callable, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Optional, Tuple, Union
 
 import numpy as np
-import torch
-import torch.nn as nn
-from torch import autograd
-from torch.autograd import Variable
 
 from valuation.influence.types import TwiceDifferentiable
 from valuation.utils import maybe_progress
+
+try:
+    import torch
+    import torch.nn as nn
+    from torch import autograd
+    from torch.autograd import Variable
+
+    _TORCH_INSTALLED = True
+except ImportError:
+    _TORCH_INSTALLED = False
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 __all__ = [
     "TorchTwiceDifferentiable",
@@ -34,13 +43,16 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
     def __init__(
         self,
-        model: nn.Module,
-        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        model: "nn.Module",
+        loss: Callable[["torch.Tensor", "torch.Tensor"], "torch.Tensor"],
     ):
         """
         :param model: A torch.nn.Module representing a (differentiable) function f(x).
         :param loss: Loss function L(f(x), y) maps a prediction and a target to a single value.
         """
+        if not _TORCH_INSTALLED:
+            raise RuntimeWarning("This function requires PyTorch.")
+
         self.model = model
         self.loss = loss
 
@@ -54,10 +66,10 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
     def split_grad(
         self,
-        x: Union[np.ndarray, torch.Tensor],
-        y: Union[np.ndarray, torch.Tensor],
+        x: Union["NDArray", "torch.Tensor"],
+        y: Union["NDArray", "torch.Tensor"],
         progress: bool = False,
-    ) -> np.ndarray:
+    ) -> "NDArray":
         """
         Calculates gradient of model parameters wrt each x[i] and y[i] and then
         returns a array of size [N, P] with N number of points (length of x and y) and P

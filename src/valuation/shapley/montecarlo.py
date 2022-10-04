@@ -44,7 +44,7 @@ def truncated_montecarlo_shapley(
     Instead of naively implementing the expectation, we sequentially add points
     to a dataset from a permutation. We keep sampling permutations and updating
     all shapley values until the std/value score in
-    the moving average falls below a given threshold (score_tolerance) or
+    the moving average falls below a given threshold (score_tolerance)
     or when the number of iterations exceeds a certain number (max_iterations).
 
     :param u: Utility object with model, data, and scoring function

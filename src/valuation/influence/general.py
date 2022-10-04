@@ -1,13 +1,10 @@
 """
 Contains parallelized influence calculation functions for general models.
 """
-
 from enum import Enum
-from typing import Callable, Dict, Optional
+from typing import TYPE_CHECKING, Callable, Dict, Optional
 
 import numpy as np
-import torch
-import torch.nn as nn
 
 from valuation.influence.conjugate_gradient import (
     batched_preconditioned_conjugate_gradient,
@@ -18,6 +15,18 @@ from valuation.influence.types import (
     MatrixVectorProductInversionAlgorithm,
     TwiceDifferentiable,
 )
+
+try:
+    import torch
+    import torch.nn as nn
+
+    _TORCH_INSTALLED = True
+except ImportError:
+    _TORCH_INSTALLED = False
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
 
 __all__ = ["influences", "InfluenceType", "InversionMethod"]
 
@@ -43,28 +52,31 @@ class InversionMethod(str, Enum):
 
 def calculate_influence_factors(
     model: TwiceDifferentiable,
-    x: np.ndarray,
-    y: np.ndarray,
-    x_test: np.ndarray,
-    y_test: np.ndarray,
+    x: "NDArray",
+    y: "NDArray",
+    x_test: "NDArray",
+    y_test: "NDArray",
     inversion_func: MatrixVectorProductInversionAlgorithm,
     lam: float = 0,
     progress: bool = False,
-) -> np.ndarray:
+) -> "NDArray":
     """
     Calculates the influence factors. For more info, see https://arxiv.org/pdf/1703.04730.pdf, paragraph 3.
 
     :param model: A model which has to implement the TwiceDifferentiable interface.
-    :param x: model input for training
-    :param y: input labels
-    :param x_test: model input for testing
-    :param y_test: test labels
-    :param inversion_func: function to use to invert the hvp (hessian vector product) and the gradient
+    :param x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
+    :param y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
+    :param x_test: A np.ndarray of shape [NxK] containing the features of the test set of data points.
+    :param y_test: A np.ndarray of shape [NxL] containing the targets of the test set of data points.
+    :param inversion_func: function to use to invert the product of hvp (hessian vector product) and the gradient
         of the loss (s_test in the paper).
     :param lam: regularization of the hessian
     :param progress: True for plotting the progress bar, False otherwise.
     :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
+    :param progress: If True, display progress bars.
     """
+    if not _TORCH_INSTALLED:
+        raise RuntimeWarning("This function requires PyTorch.")
     grad_xy, _ = model.grad(x, y)
     hvp = lambda v: model.mvp(grad_xy, v, progress=progress) + lam * v
     test_grads = model.split_grad(x_test, y_test, progress=progress)
@@ -73,17 +85,17 @@ def calculate_influence_factors(
 
 def _calculate_influences_up(
     model: TwiceDifferentiable,
-    x: np.ndarray,
-    y: np.ndarray,
-    influence_factors: np.ndarray,
-) -> np.ndarray:
+    x: "NDArray",
+    y: "NDArray",
+    influence_factors: "NDArray",
+) -> "NDArray":
     """
     Calculates the influence from the influence factors and the scores of the training points.
     Uses the upweighting method, as described in section 2.1 of https://arxiv.org/pdf/1703.04730.pdf
 
     :param model: A model which has to implement the TwiceDifferentiable interface.
-    :param x: input of the model
-    :param y: labels
+    :param x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
+    :param y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
     :param influence_factors: np.ndarray containing influence factors
     :returns: A np.ndarray of size [NxM], where N is number of test points and M number of train points.
     """
@@ -93,17 +105,17 @@ def _calculate_influences_up(
 
 def _calculate_influences_pert(
     model: TwiceDifferentiable,
-    x: np.ndarray,
-    y: np.ndarray,
-    influence_factors: np.ndarray,
-) -> np.ndarray:
+    x: "NDArray",
+    y: "NDArray",
+    influence_factors: "NDArray",
+) -> "NDArray":
     """
     Calculates the influence from the influence factors and the scores of the training points.
     Uses the perturbation method, as described in section 2.2 of https://arxiv.org/pdf/1703.04730.pdf
 
     :param model: A model which has to implement the TwiceDifferentiable interface.
-    :param x: input of the model
-    :param y: labels
+    :param x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
+    :param y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
     :param influence_factors: np.ndarray containing influence factors
     :returns: A np.ndarray of size [NxMxP], where N is number of test points, M number of train points,
         and P the number of features.
@@ -128,18 +140,18 @@ influence_type_function_dict = {
 
 
 def influences(
-    model: nn.Module,
-    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-    x: np.ndarray,
-    y: np.ndarray,
-    x_test: np.ndarray,
-    y_test: np.ndarray,
+    model: "nn.Module",
+    loss: Callable[["torch.Tensor", "torch.Tensor"], "torch.Tensor"],
+    x: "NDArray",
+    y: "NDArray",
+    x_test: "NDArray",
+    y_test: "NDArray",
     progress: bool = False,
     inversion_method: InversionMethod = InversionMethod.Direct,
     influence_type: InfluenceType = InfluenceType.Up,
     inversion_method_kwargs: Optional[Dict] = None,
     hessian_regularisation=0,
-) -> np.ndarray:
+) -> "NDArray":
     """
     Calculates the influence of the training points j on the test points i. First it calculates
     the influence factors for all test points with respect to the training points, and then uses them to
@@ -171,8 +183,11 @@ def influences(
         M number of train points. If instead influence_type is 'perturbation', output shape is [NxMxP], with P the number of input
         features.
     """
+    if not _TORCH_INSTALLED:
+        raise RuntimeWarning("This function requires PyTorch.")
+
     if inversion_method_kwargs is None:
-        inversion_method_kwargs = {}
+        inversion_method_kwargs = dict()
     differentiable_model = TorchTwiceDifferentiable(model, loss)
     n_params = differentiable_model.num_params()
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
