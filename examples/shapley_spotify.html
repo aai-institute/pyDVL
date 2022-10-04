@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PyDVL - Shapley for data valuation &mdash; pyDVL 0.1.0.dev20 documentation</title>
+  <title>PyDVL - Shapley for data valuation &mdash; pyDVL 0.1.0.dev21 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
@@ -53,7 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installing pyDVL</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Clean dataset using influence functions and neural networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Influence functions and neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html">KNN Shapley</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">PyDVL - Shapley for data valuation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#Evaluation-on-anomalous-data">Evaluation on anomalous data</a></li>
@@ -598,7 +598,7 @@ reference.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.shapley</span> <span class="kn">import</span> <span class="n">get_shapley_values</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.shapley</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
 <span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">Utility</span>
 <span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="kn">import</span> <span class="n">GradientBoostingRegressor</span>
 
@@ -608,11 +608,11 @@ reference.</p>
     <span class="n">scoring</span><span class="o">=</span><span class="s2">&quot;neg_mean_absolute_error&quot;</span><span class="p">,</span>
     <span class="n">enable_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">dvl_df</span> <span class="o">=</span> <span class="n">get_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">dvl_df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<p>The first object that was have defined (utility) holds all the information on the dataset, the model and the scoring. The second method, get_shapley_values, calculates the actual Shapley values and manages parallelization. Let’s take a look at the returned dataframe.</p>
+<p>The first object that was have defined (utility) holds all the information on the dataset, the model and the scoring. The second method, shapley_values, calculates the actual Shapley values and manages parallelization. Let’s take a look at the returned dataframe.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
@@ -829,7 +829,7 @@ reference.</p>
     <span class="n">scoring</span><span class="o">=</span><span class="s2">&quot;neg_mean_absolute_error&quot;</span><span class="p">,</span>
     <span class="n">enable_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">dvl_df</span> <span class="o">=</span> <span class="n">get_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">dvl_df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

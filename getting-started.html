@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting started &mdash; pyDVL 0.1.0.dev20 documentation</title>
+  <title>Getting started &mdash; pyDVL 0.1.0.dev21 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
@@ -198,8 +198,8 @@ Furthermore, we distinguish between the following types of calculations:</p>
 <section id="direct-linear-influences">
 <h3>Direct linear influences<a class="headerlink" href="#direct-linear-influences" title="Permalink to this heading"></a></h3>
 <p>These can only be applied to a regression problem where x and y are real numbers.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.linear</span> <span class="kn">import</span> <span class="n">linear_influences</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">linear_influences</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence.linear</span> <span class="kn">import</span> <span class="n">compute_linear_influences</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">compute_linear_influences</span><span class="p">(</span>
 <span class="gp">... </span>   <span class="n">x_train</span><span class="p">,</span>
 <span class="gp">... </span>   <span class="n">y_train</span><span class="p">,</span>
 <span class="gp">... </span>   <span class="n">x_test</span><span class="p">,</span>
@@ -217,7 +217,7 @@ in calculation or optimize the calculation for your specific application.</p>
 capable of calculating second derivative matrix vector products and gradients with respect to the
 loss and data samples.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence</span> <span class="kn">import</span> <span class="n">influences</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">influences</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">compute_influences</span><span class="p">(</span>
 <span class="gp">... </span>   <span class="n">model</span><span class="p">,</span>
 <span class="gp">... </span>   <span class="n">x_train</span><span class="p">,</span>
 <span class="gp">... </span>   <span class="n">y_train</span><span class="p">,</span>
@@ -233,9 +233,9 @@ loss and data samples.</p>
 In that case one can use conjugate gradient as a space-efficient
 approximation to inverting the full matrix. In pyDVL this can be done
 by adding <code class="docutils literal notranslate"><span class="pre">inversion_method</span></code> parameter to the influences function call.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence</span> <span class="kn">import</span> <span class="n">influences</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">influences</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">compute_influences</span><span class="p">(</span>
 <span class="gp">... </span>   <span class="n">model</span><span class="p">,</span>
 <span class="gp">... </span>   <span class="n">x_train</span><span class="p">,</span>
 <span class="gp">... </span>   <span class="n">y_train</span><span class="p">,</span>
@@ -250,9 +250,9 @@ by adding <code class="docutils literal notranslate"><span class="pre">inversion
 <h3>Perturbation influences<a class="headerlink" href="#perturbation-influences" title="Permalink to this heading"></a></h3>
 <p>All previous mentioned influences can be calculated feature-wise by adding <code class="docutils literal notranslate"><span class="pre">influence_type</span></code> parameter
 to the influences function call.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence</span> <span class="kn">import</span> <span class="n">influences</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>
 <span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">influences</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">compute_influences</span><span class="p">(</span>
 <span class="gp">... </span>   <span class="n">model</span><span class="p">,</span>
 <span class="gp">... </span>   <span class="n">x_train</span><span class="p">,</span>
 <span class="gp">... </span>   <span class="n">y_train</span><span class="p">,</span>

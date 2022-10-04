@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>general &mdash; pyDVL 0.1.0.dev20 documentation</title>
+  <title>general &mdash; pyDVL 0.1.0.dev21 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
@@ -55,7 +55,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">valuation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../influence.html">influence</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="cg.html">cg</a></li>
+<li class="toctree-l3"><a class="reference internal" href="conjugate_gradient.html">conjugate_gradient</a></li>
 <li class="toctree-l3"><a class="reference internal" href="frameworks.html">frameworks</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">general</a></li>
 <li class="toctree-l3"><a class="reference internal" href="linear.html">linear</a></li>
@@ -125,8 +125,8 @@
 <span id="general"></span><h1>general<a class="headerlink" href="#module-valuation.influence.general" title="Permalink to this heading"></a></h1>
 <p>Contains parallelized influence calculation functions for general models.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="valuation.influence.general.influences">
-<span class="sig-name descname"><span class="pre">influences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">nn.Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inversion_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#valuation.influence.general.InversionMethod" title="valuation.influence.general.InversionMethod"><span class="pre">InversionMethod</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">InversionMethod.Direct</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">influence_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#valuation.influence.general.InfluenceType" title="valuation.influence.general.InfluenceType"><span class="pre">InfluenceType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">InfluenceType.Up</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inversion_method_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">NDArray</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/general.py#L140"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.general.influences" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="valuation.influence.general.compute_influences">
+<span class="sig-name descname"><span class="pre">compute_influences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">nn.Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inversion_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#valuation.influence.general.InversionMethod" title="valuation.influence.general.InversionMethod"><span class="pre">InversionMethod</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">InversionMethod.Direct</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">influence_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#valuation.influence.general.InfluenceType" title="valuation.influence.general.InfluenceType"><span class="pre">InfluenceType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">InfluenceType.Up</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inversion_method_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian_regularization</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">NDArray</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/general.py#L142"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.general.compute_influences" title="Permalink to this definition"></a></dt>
 <dd><p>Calculates the influence of the training points j on the test points i. First it calculates
 the influence factors for all test points with respect to the training points, and then uses them to
 get the influences over the complete training set. Points with low influence values are (on average)
@@ -135,19 +135,30 @@ less important for model training than points with high influences.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> – A supervised model from a supported framework. Currently, only pytorch nn.Module is supported.</p></li>
-<li><p><strong>loss</strong> – Loss function.</p></li>
-<li><p><strong>x_train</strong> – A np.ndarray of shape [MxK] containing the features of the train set of data points.</p></li>
-<li><p><strong>y_train</strong> – A np.ndarray of shape [MxL] containing the targets of the train set of data points.</p></li>
-<li><p><strong>x_test</strong> – A np.ndarray of shape [NxK] containing the features of the test set of data points.</p></li>
-<li><p><strong>y_test</strong> – A np.ndarray of shape [NxL] containing the targets of the test set of data points.</p></li>
-<li><p><strong>inversion_method</strong> – Set the inversion method to a specific one, can be ‘direct’ for direct inversion         (and explicit construction of the Hessian) or ‘cg’ for conjugate gradient.</p></li>
-<li><p><strong>influence_type</strong> – Which algorithm to use to calculate influences.         Currently supported options: ‘up’ or ‘perturbation’</p></li>
-<li><p><strong>inversion_method_kwargs</strong> – Keyword arguments for the influence method.</p></li>
-<li><p><strong>progress</strong> – If True, display progress bars.</p></li>
+<li><p><strong>loss</strong> – loss of the model, a callable that, given prediction of the model and real labels, returns a
+tensor with the loss value.</p></li>
+<li><p><strong>x</strong> – model input for training</p></li>
+<li><p><strong>y</strong> – input labels</p></li>
+<li><p><strong>x_test</strong> – model input for testing</p></li>
+<li><p><strong>y_test</strong> – test labels</p></li>
+<li><p><strong>progress</strong> – whether to display progress bars.</p></li>
+<li><p><strong>inversion_method</strong> – Set the inversion method to a specific one, can be ‘direct’ for direct inversion
+(and explicit construction of the Hessian) or ‘cg’ for conjugate gradient.</p></li>
+<li><p><strong>influence_type</strong> – Which algorithm to use to calculate influences.
+Currently supported options: ‘up’ or ‘perturbation’. For details refer to <a class="reference external" href="https://arxiv.org/pdf/1703.04730.pdf">https://arxiv.org/pdf/1703.04730.pdf</a></p></li>
+<li><p><strong>inversion_method_kwargs</strong> – kwargs for the inversion method selected.
+If using the direct method no kwargs are needed. If inversion_method=’cg’, the following kwargs can be passed:
+- rtol: relative tolerance to be achieved before terminating computation
+- max_iterations: maximum conjugate gradient iterations
+- max_step_size: step size of conjugate gradient
+- verify_assumptions: True to run tests on convexity of the model.</p></li>
+<li><p><strong>hessian_regularization</strong> – lambda to use in Hessian regularization, i.e. H_reg = H + lambda * 1, with 1 the identity matrix         and H the (simple and regularized) Hessian. Typically used with more complex models to make sure the Hessian         is positive definite.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A np.ndarray specifying the influences. Shape is [NxM], where N is number of test points and         M number of train points.</p>
+<dd class="field-even"><p>A np.ndarray specifying the influences. Shape is [NxM] if influence_type is’up’, where N is number of test points and
+M number of train points. If instead influence_type is ‘perturbation’, output shape is [NxMxP], with P the number of input
+features.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -182,6 +193,11 @@ less important for model training than points with high influences.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="valuation.influence.general.InversionMethod.Cg">
 <span class="sig-name descname"><span class="pre">Cg</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cg'</span></em><a class="headerlink" href="#valuation.influence.general.InversionMethod.Cg" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="valuation.influence.general.InversionMethod.BatchedCg">
+<span class="sig-name descname"><span class="pre">BatchedCg</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'batched_cg'</span></em><a class="headerlink" href="#valuation.influence.general.InversionMethod.BatchedCg" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Influence functions for data mislabeling &mdash; pyDVL 0.1.0.dev20 documentation</title>
+  <title>Influence functions for data mislabeling &mdash; pyDVL 0.1.0.dev21 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
@@ -24,7 +24,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Clean dataset using influence functions and neural networks" href="influence_wine.html" />
+    <link rel="next" title="Influence functions and neural networks" href="influence_wine.html" />
     <link rel="prev" title="Examples" href="index.html" /> 
 </head>
 
@@ -56,10 +56,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#Plotting-the-dataset">Plotting the dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Training-the-model">Training the model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Calculating-influences">Calculating influences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Inversion-through-conjugate-gradient">Inversion through conjugate gradient</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Appendix:-Calculating-the-decision-boundary">Appendix: Calculating the decision boundary</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Clean dataset using influence functions and neural networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Influence functions and neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html">KNN Shapley</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html">PyDVL - Shapley for data valuation</a></li>
 </ul>
@@ -391,7 +392,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <p>with fixed means and diagonal covariance. Implementing the sampling scheme in python is straightforward and can be achieved by first sampling <span class="math notranslate nohighlight">\(y\)</span> and afterward <span class="math notranslate nohighlight">\(x\)</span>.</p>
 <p>The following code snippet generates the aforementioned dataset.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -419,7 +420,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 <p>Given the simplicity of the dataset, we can calculate exactly the optimal decision boundary(that which maximizes our accuracy). The following code maps a continuous line of z values to a 2-dimensional vector in feature space (More details are in the appendix to this notebook.)</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.utils.dataset</span> <span class="kn">import</span> <span class="n">decision_boundary_fixed_variance_2d</span>
@@ -433,7 +434,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <h2>Plotting the dataset<a class="headerlink" href="#Plotting-the-dataset" title="Permalink to this heading"></a></h2>
 <p>Let’s plot the dataset is plotted with their respective labels and the optimal decision line</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">datasets</span> <span class="o">=</span> <span class="p">{</span>
@@ -468,7 +469,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <h2>Training the model<a class="headerlink" href="#Training-the-model" title="Permalink to this heading"></a></h2>
 <p>We will now train a logistic regression model on the train data. This can be done with the following</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">TorchBinaryLogisticRegression</span><span class="p">(</span><span class="n">num_features</span><span class="p">)</span>
@@ -498,7 +499,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 <p>And let’s check that the model is not overfitting</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
@@ -518,7 +519,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 <p>A look at the confusion matrix also shows good results</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pred_probabilities</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">test_ds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
@@ -531,12 +532,12 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay at 0x7f8e5d2e56f0&gt;
+&lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay at 0x7f93524e5390&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -558,7 +559,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <p>See <a class="reference external" href="https://arxiv.org/pdf/1703.04730.pdf">“Understanding Black-box Predictions via Influence Functions”</a> for a detailed derivation of this formula</p>
 <p>Let’s take a subset of the training data points, which we will calculate the influence values of.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">train_ds</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="mi">100</span><span class="p">]</span>
@@ -568,16 +569,16 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 <p>In pyDVL, the influence of the training points on the test points can be calculated with the following</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.influence.general</span> <span class="kn">import</span> <span class="n">influences</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.influence.general</span> <span class="kn">import</span> <span class="n">compute_influences</span>
 
-<span class="n">influence_values</span> <span class="o">=</span> <span class="n">influences</span><span class="p">(</span>
+<span class="n">influence_values</span> <span class="o">=</span> <span class="n">compute_influences</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
     <span class="n">loss</span><span class="o">=</span><span class="n">F</span><span class="o">.</span><span class="n">binary_cross_entropy</span><span class="p">,</span>
-    <span class="n">x_train</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
-    <span class="n">y_train</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
     <span class="n">x_test</span><span class="o">=</span><span class="n">test_ds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
     <span class="n">y_test</span><span class="o">=</span><span class="n">test_ds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
     <span class="n">influence_type</span><span class="o">=</span><span class="s2">&quot;up&quot;</span><span class="p">,</span>
@@ -590,16 +591,16 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <p>With the influence type ‘up’, train influences have shape [NxM] where N is the number of test samples and M is the number of training samples. They therefore associate to each training sample its influence on each test sample. Influence type ‘perturbation’, instead, return an array of shape [NxMxF], where F is the number of features in input, ie. the length of x.</p>
 <p>In our case, in order to have a value of the total average influence of a point we can just average across training samples.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mean_train_influences</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">influence_values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<p>Let’s plot the results</p>
+<p>Let’s plot the results (adjust colorbar_limits for better color gradient)</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_influences</span><span class="p">(</span>
@@ -610,7 +611,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
     <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;$x_1$&quot;</span><span class="p">,</span>
     <span class="n">suptitle</span><span class="o">=</span><span class="s2">&quot;Influences of input points&quot;</span><span class="p">,</span>
     <span class="n">legend_title</span><span class="o">=</span><span class="s2">&quot;influence values&quot;</span><span class="p">,</span>
-    <span class="n">colorbar_limits</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,),</span>
+    <span class="c1"># colorbar_limits=(-0.3,),</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -625,28 +626,29 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <p>We can see that, as we approach the separation line, the influences tend to move away from zero, i.e. the points become more decisive for model training, some in a positive way, some negative.</p>
 <p>As a further test, let’s introduce some labelling errors into <span class="math notranslate nohighlight">\(y\)</span> and see how the distribution of the influences changes. Let’s flip the first 10 labels and calculate influences</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">y_corrupted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
 <span class="n">y_corrupted</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="o">-</span> <span class="n">yi</span> <span class="k">for</span> <span class="n">yi</span> <span class="ow">in</span> <span class="n">y</span><span class="p">[:</span><span class="mi">10</span><span class="p">]]</span>
 
-<span class="n">influence_values</span> <span class="o">=</span> <span class="n">influences</span><span class="p">(</span>
+<span class="n">influence_values</span> <span class="o">=</span> <span class="n">compute_influences</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
     <span class="n">loss</span><span class="o">=</span><span class="n">F</span><span class="o">.</span><span class="n">binary_cross_entropy</span><span class="p">,</span>
-    <span class="n">x_train</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
-    <span class="n">y_train</span><span class="o">=</span><span class="n">y_corrupted</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">y_corrupted</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
     <span class="n">x_test</span><span class="o">=</span><span class="n">test_ds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
     <span class="n">y_test</span><span class="o">=</span><span class="n">test_ds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
     <span class="n">influence_type</span><span class="o">=</span><span class="s2">&quot;up&quot;</span><span class="p">,</span>
-    <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;direct&quot;</span><span class="p">,</span>  <span class="c1"># use &#39;cg&#39; for big models</span>
+    <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;direct&quot;</span><span class="p">,</span>
 <span class="p">)</span>
+
 <span class="n">mean_train_influences</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">influence_values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Average mislabelled data influence:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mean_train_influences</span><span class="p">[:</span><span class="mi">10</span><span class="p">]))</span>
@@ -659,12 +661,12 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Average mislabelled data influence: -0.4771455733701123
-Average correct data influence: 0.004410349344254106
+Average mislabelled data influence: -0.9636368268108108
+Average correct data influence: 0.015261022581455445
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_influences</span><span class="p">(</span>
@@ -676,7 +678,7 @@ Average correct data influence: 0.004410349344254106
     <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;$x_1$&quot;</span><span class="p">,</span>
     <span class="n">suptitle</span><span class="o">=</span><span class="s2">&quot;Influences of input points with corrupted data&quot;</span><span class="p">,</span>
     <span class="n">legend_title</span><span class="o">=</span><span class="s2">&quot;influence values&quot;</span><span class="p">,</span>
-    <span class="n">colorbar_limits</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,),</span>
+    <span class="c1"># colorbar_limits=(-0.3,),</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -689,6 +691,68 @@ Average correct data influence: 0.004410349344254106
 </div>
 </div>
 <p>Red circles indicate the points which have been corrupted. We can see that the mislabelled data have a more negative average influence on the model, especially those that are farther away from the decision boundary.</p>
+</section>
+<section id="Inversion-through-conjugate-gradient">
+<h2>Inversion through conjugate gradient<a class="headerlink" href="#Inversion-through-conjugate-gradient" title="Permalink to this heading"></a></h2>
+<p>The “direct” method that we have used above involves the inversion of the Hessian matrix of the model. If a model has <span class="math notranslate nohighlight">\(n\)</span> training points and <span class="math notranslate nohighlight">\(\theta \in \mathbb{R}^p\)</span> parameters, this requires <span class="math notranslate nohighlight">\(O(n \ p^2 + p^3)\)</span> operations, which for larger models, like neural networks, becomes quickly unfeasible. Conjugate gradient avoids the explicit computation of the Hessian via a technique called implicit Hessian-vector products (HVPs), which typically takes <span class="math notranslate nohighlight">\(O(n \ p)\)</span> operations.</p>
+<p>In the next cell we will use conjugate gradient to compute the influence factors. Since logistic regression is a very simple model, “cg” actually slows computation with respect to the direct method, which in this case is a much better choice. Nevertheless, we are able to verify that the influences calculated with “cg” are the same (to a minor error) as those calculated directly.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">influence_values</span> <span class="o">=</span> <span class="n">compute_influences</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">F</span><span class="o">.</span><span class="n">binary_cross_entropy</span><span class="p">,</span>
+    <span class="n">x_train</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+    <span class="n">y_train</span><span class="o">=</span><span class="n">y_corrupted</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
+    <span class="n">x_test</span><span class="o">=</span><span class="n">test_ds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">y_test</span><span class="o">=</span><span class="n">test_ds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
+    <span class="n">influence_type</span><span class="o">=</span><span class="s2">&quot;up&quot;</span><span class="p">,</span>
+    <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span><span class="p">,</span>
+    <span class="n">inversion_method_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;max_iterations&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;max_step_size&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">mean_train_influences</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">influence_values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Average mislabelled data influence:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mean_train_influences</span><span class="p">[:</span><span class="mi">10</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Average correct data influence:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mean_train_influences</span><span class="p">[</span><span class="mi">10</span><span class="p">:]))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Average mislabelled data influence: -0.9105535060320019
+Average correct data influence: 0.014264478299049959
+</pre></div></div>
+</div>
+<p>Averages are very similar to the ones calculated through direct method. Same is true for the plot</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_influences</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">,</span>
+    <span class="n">mean_train_influences</span><span class="p">,</span>
+    <span class="n">corrupted_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)),</span>
+    <span class="n">line</span><span class="o">=</span><span class="n">decision_boundary</span><span class="p">,</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;$x_0$&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;$x_1$&quot;</span><span class="p">,</span>
+    <span class="n">suptitle</span><span class="o">=</span><span class="s2">&quot;Influences of input points with corrupted data&quot;</span><span class="p">,</span>
+    <span class="n">legend_title</span><span class="o">=</span><span class="s2">&quot;influence values&quot;</span><span class="p">,</span>
+    <span class="c1"># colorbar_limits=(-0.1, 0.1),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_influence_synthetic_34_0.png" src="../_images/examples_influence_synthetic_34_0.png" />
+</div>
+</div>
 </section>
 <section id="Appendix:-Calculating-the-decision-boundary">
 <h2>Appendix: Calculating the decision boundary<a class="headerlink" href="#Appendix:-Calculating-the-decision-boundary" title="Permalink to this heading"></a></h2>
@@ -723,7 +787,7 @@ p(x|y=1)&amp;=\mathcal{N}\left (\mu_2, \sigma^2 I \right)
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="index.html" class="btn btn-neutral float-left" title="Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="influence_wine.html" class="btn btn-neutral float-right" title="Clean dataset using influence functions and neural networks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="influence_wine.html" class="btn btn-neutral float-right" title="Influence functions and neural networks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

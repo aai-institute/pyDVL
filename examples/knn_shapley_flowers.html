@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KNN Shapley &mdash; pyDVL 0.1.0.dev20 documentation</title>
+  <title>KNN Shapley &mdash; pyDVL 0.1.0.dev21 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
@@ -25,7 +25,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="PyDVL - Shapley for data valuation" href="shapley_spotify.html" />
-    <link rel="prev" title="Clean dataset using influence functions and neural networks" href="influence_wine.html" /> 
+    <link rel="prev" title="Influence functions and neural networks" href="influence_wine.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -53,7 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installing pyDVL</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Clean dataset using influence functions and neural networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Influence functions and neural networks</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">KNN Shapley</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#Corrupting-labels">Corrupting labels</a></li>
 </ul>
@@ -387,7 +387,7 @@ div.rendered_html tbody tr:hover {
 <span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">datasets</span>
 <span class="kn">from</span> <span class="nn">valuation.utils.plotting</span> <span class="kn">import</span> <span class="n">plot_iris</span>
 
-<span class="kn">from</span> <span class="nn">valuation.shapley.knn</span> <span class="kn">import</span> <span class="n">knn_shapley</span>
+<span class="kn">from</span> <span class="nn">valuation.shapley.knn</span> <span class="kn">import</span> <span class="n">compute_knn_shapley</span>
 <span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">Dataset</span>
 </pre></div>
 </div>
@@ -417,7 +417,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">knn</span> <span class="o">=</span> <span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="n">shapley_values</span> <span class="o">=</span> <span class="n">knn_shapley</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">knn</span><span class="p">)</span>
+<span class="n">shapley_values</span> <span class="o">=</span> <span class="n">compute_knn_shapley</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">knn</span><span class="p">)</span>
 <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">shapley_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">shapley_values</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -507,7 +507,7 @@ div.rendered_html tbody tr:hover {
     <span class="p">(</span><span class="n">value</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">3</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">corrupted_dataset</span><span class="o">.</span><span class="n">y_train</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
 <span class="p">]</span>
 <span class="n">knn</span> <span class="o">=</span> <span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="n">contaminated_shapley</span> <span class="o">=</span> <span class="n">knn_shapley</span><span class="p">(</span><span class="n">corrupted_dataset</span><span class="p">,</span> <span class="n">knn</span><span class="p">)</span>
+<span class="n">contaminated_shapley</span> <span class="o">=</span> <span class="n">compute_knn_shapley</span><span class="p">(</span><span class="n">corrupted_dataset</span><span class="p">,</span> <span class="n">knn</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -588,7 +588,7 @@ Mean shapley value of regular points: 0.011729071554292213
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="influence_wine.html" class="btn btn-neutral float-left" title="Clean dataset using influence functions and neural networks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="influence_wine.html" class="btn btn-neutral float-left" title="Influence functions and neural networks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="shapley_spotify.html" class="btn btn-neutral float-right" title="PyDVL - Shapley for data valuation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; pyDVL 0.1.0.dev20 documentation</title>
+  <title>Index &mdash; pyDVL 0.1.0.dev21 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
@@ -123,11 +123,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/utils/config.html#valuation.utils.config.ParallelConfig.backend">backend (ParallelConfig attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/reporting/scores.html#valuation.reporting.scores.backward_elimination">backward_elimination() (in module valuation.reporting.scores)</a>
 </li>
-      <li><a href="valuation/influence/cg.html#valuation.influence.cg.batched_preconditioned_conjugate_gradient">batched_preconditioned_conjugate_gradient() (in module valuation.influence.cg)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="valuation/influence/conjugate_gradient.html#valuation.influence.conjugate_gradient.batched_preconditioned_conjugate_gradient">batched_preconditioned_conjugate_gradient() (in module valuation.influence.conjugate_gradient)</a>
+</li>
+      <li><a href="valuation/influence/general.html#valuation.influence.general.InversionMethod.BatchedCg">BatchedCg (InversionMethod attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -151,15 +153,25 @@
         <li><a href="valuation/shapley/naive.html#valuation.shapley.naive.combinatorial_exact_shapley">(in module valuation.shapley.naive)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/shapley.html#valuation.shapley.combinatorial_montecarlo_shapley">combinatorial_montecarlo_shapley() (in module valuation.shapley)</a>
 
       <ul>
         <li><a href="valuation/shapley/montecarlo.html#valuation.shapley.montecarlo.combinatorial_montecarlo_shapley">(in module valuation.shapley.montecarlo)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/reporting/scores.html#valuation.reporting.scores.compute_fb_scores">compute_fb_scores() (in module valuation.reporting.scores)</a>
+</li>
+      <li><a href="valuation/influence/general.html#valuation.influence.general.compute_influences">compute_influences() (in module valuation.influence.general)</a>
+</li>
+      <li><a href="valuation/shapley.html#valuation.shapley.compute_knn_shapley">compute_knn_shapley() (in module valuation.shapley)</a>
+
+      <ul>
+        <li><a href="valuation/shapley/knn.html#valuation.shapley.knn.compute_knn_shapley">(in module valuation.shapley.knn)</a>
+</li>
+      </ul></li>
+      <li><a href="valuation/influence/linear.html#valuation.influence.linear.compute_linear_influences">compute_linear_influences() (in module valuation.influence.linear)</a>
 </li>
       <li><a href="valuation/utils/config.html#valuation.utils.config.MemcachedClientConfig.connect_timeout">connect_timeout (MemcachedClientConfig attribute)</a>
 </li>
@@ -275,25 +287,19 @@
         <li><a href="valuation/utils/dataset.html#valuation.utils.dataset.GroupedDataset.indices">(GroupedDataset property)</a>
 </li>
       </ul></li>
-      <li><a href="valuation/influence/general.html#valuation.influence.general.influences">influences() (in module valuation.influence.general)</a>
-</li>
       <li><a href="valuation/influence/linear.html#valuation.influence.linear.influences_perturbation_linear_regression_analytical">influences_perturbation_linear_regression_analytical() (in module valuation.influence.linear)</a>
 </li>
       <li><a href="valuation/influence/linear.html#valuation.influence.linear.influences_up_linear_regression_analytical">influences_up_linear_regression_analytical() (in module valuation.influence.linear)</a>
 </li>
-      <li><a href="valuation/influence/general.html#valuation.influence.general.InfluenceType">InfluenceType (class in valuation.influence.general)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="valuation/influence/general.html#valuation.influence.general.InfluenceType">InfluenceType (class in valuation.influence.general)</a>
+</li>
       <li><a href="valuation/utils/parallel/backend.html#valuation.utils.parallel.backend.init_parallel_backend">init_parallel_backend() (in module valuation.utils.parallel.backend)</a>
 </li>
       <li><a href="valuation/influence/general.html#valuation.influence.general.InversionMethod">InversionMethod (class in valuation.influence.general)</a>
 </li>
       <li><a href="valuation/utils/parallel/actor.html#valuation.utils.parallel.actor.Coordinator.is_done">is_done() (Coordinator method)</a>
-</li>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.is_linear_function">is_linear_function() (in module valuation.utils.numeric)</a>
-</li>
-      <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.is_positive_definite">is_positive_definite() (in module valuation.utils.numeric)</a>
 </li>
       <li><a href="valuation/utils/config.html#valuation.utils.config.MemcachedClientConfig.items">items() (MemcachedClientConfig method)</a>
 
@@ -314,21 +320,11 @@
 </li>
       </ul></li>
   </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="valuation/shapley.html#valuation.shapley.knn_shapley">knn_shapley() (in module valuation.shapley)</a>
-
-      <ul>
-        <li><a href="valuation/shapley/knn.html#valuation.shapley.knn.knn_shapley">(in module valuation.shapley.knn)</a>
-</li>
-      </ul></li>
-  </ul></td>
 </tr></table>
 
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="valuation/influence/linear.html#valuation.influence.linear.linear_influences">linear_influences() (in module valuation.influence.linear)</a>
-</li>
       <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.linear_regression_analytical_derivative_d2_theta">linear_regression_analytical_derivative_d2_theta() (in module valuation.utils.numeric)</a>
 </li>
       <li><a href="valuation/utils/numeric.html#valuation.utils.numeric.linear_regression_analytical_derivative_d_theta">linear_regression_analytical_derivative_d_theta() (in module valuation.utils.numeric)</a>
@@ -373,7 +369,7 @@
 </li>
         <li><a href="valuation/influence.html#module-valuation.influence">valuation.influence</a>
 </li>
-        <li><a href="valuation/influence/cg.html#module-valuation.influence.cg">valuation.influence.cg</a>
+        <li><a href="valuation/influence/conjugate_gradient.html#module-valuation.influence.conjugate_gradient">valuation.influence.conjugate_gradient</a>
 </li>
         <li><a href="valuation/influence/frameworks.html#module-valuation.influence.frameworks">valuation.influence.frameworks</a>
 </li>
@@ -544,10 +540,10 @@
 </li>
       <li><a href="valuation/reporting/plots.html#valuation.reporting.plots.shaded_mean_std">shaded_mean_std() (in module valuation.reporting.plots)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/reporting/plots.html#valuation.reporting.plots.shapley_results">shapley_results() (in module valuation.reporting.plots)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="valuation/utils/utility.html#valuation.utils.utility.Utility.signature">signature (Utility property)</a>
 </li>
       <li><a href="valuation/reporting/scores.html#valuation.reporting.scores.sort_values">sort_values() (in module valuation.reporting.scores)</a>
@@ -558,6 +554,12 @@
 </li>
       <li><a href="valuation/reporting/plots.html#valuation.reporting.plots.spearman_correlation">spearman_correlation() (in module valuation.reporting.plots)</a>
 </li>
+      <li><a href="valuation/influence/frameworks.html#valuation.influence.frameworks.TorchTwiceDifferentiable.split_grad">split_grad() (TorchTwiceDifferentiable method)</a>, <a href="valuation/influence/frameworks/torch_differentiable.html#valuation.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable.split_grad">[1]</a>
+
+      <ul>
+        <li><a href="valuation/influence/types.html#valuation.influence.types.TwiceDifferentiable.split_grad">(TwiceDifferentiable method)</a>
+</li>
+      </ul></li>
       <li><a href="valuation/utils/types.html#valuation.utils.types.SupervisedModel">SupervisedModel (class in valuation.utils.types)</a>
 </li>
   </ul></td>
@@ -653,10 +655,10 @@
 </li>
       </ul></li>
       <li>
-    valuation.influence.cg
+    valuation.influence.conjugate_gradient
 
       <ul>
-        <li><a href="valuation/influence/cg.html#module-valuation.influence.cg">module</a>
+        <li><a href="valuation/influence/conjugate_gradient.html#module-valuation.influence.conjugate_gradient">module</a>
 </li>
       </ul></li>
       <li>
