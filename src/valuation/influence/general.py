@@ -150,7 +150,7 @@ def compute_influences(
     inversion_method: InversionMethod = InversionMethod.Direct,
     influence_type: InfluenceType = InfluenceType.Up,
     inversion_method_kwargs: Optional[Dict] = None,
-    hessian_regularisation=0,
+    hessian_regularization: float = 0,
 ) -> "NDArray":
     """
     Calculates the influence of the training points j on the test points i. First it calculates
@@ -176,7 +176,7 @@ def compute_influences(
         - max_iterations: maximum conjugate gradient iterations
         - max_step_size: step size of conjugate gradient
         - verify_assumptions: True to run tests on convexity of the model.
-    :param hessian_regularisation: lambda to use in Hessian regularization, i.e. H_reg = H + lambda * 1, with 1 the identity matrix \
+    :param hessian_regularization: lambda to use in Hessian regularization, i.e. H_reg = H + lambda * 1, with 1 the identity matrix \
         and H the (simple and regularized) Hessian. Typically used with more complex models to make sure the Hessian \
         is positive definite.
     :returns: A np.ndarray specifying the influences. Shape is [NxM] if influence_type is'up', where N is number of test points and
@@ -207,7 +207,7 @@ def compute_influences(
         x_test,
         y_test,
         dict_fact_algos[inversion_method],
-        lam=hessian_regularisation,
+        lam=hessian_regularization,
         progress=progress,
     )
     influence_function = influence_type_function_dict[influence_type]

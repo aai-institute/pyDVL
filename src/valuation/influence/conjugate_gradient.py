@@ -71,7 +71,7 @@ def batched_preconditioned_conjugate_gradient(
 
     k = A(b).shape[0]
     if A(b).size == 0:
-        return b
+        return b, 0
 
     if b.ndim == 1:
         b = b.reshape([1, -1])
