@@ -6,10 +6,10 @@ from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from valuation.reporting.scores import sort_values
 from valuation.utils import Dataset, maybe_progress
 
-__all__ = ["knn_shapley"]
+__all__ = ["compute_knn_shapley"]
 
 
-def knn_shapley(
+def compute_knn_shapley(
     data: Dataset, model: KNeighborsClassifier, progress: bool = True
 ) -> OrderedDict:
     """Computes exact Shapley values for a KNN classifier

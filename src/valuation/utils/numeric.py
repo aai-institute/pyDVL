@@ -33,43 +33,12 @@ if TYPE_CHECKING:
 __all__ = [
     "powerset",
     "random_powerset",
-    "is_linear_function",
-    "is_positive_definite",
     "linear_regression_analytical_derivative_d2_theta",
     "linear_regression_analytical_derivative_d_theta",
     "linear_regression_analytical_derivative_d_x_d_theta",
 ]
 
 T = TypeVar("T")
-
-
-def is_linear_function(
-    A: Callable[["NDArray"], "NDArray"], v: "NDArray", verify_samples: int = 1000
-):
-    """Assumes nothing. Stochastically checks for property sum_i a_i * f(v_i) == f(sum_i a_i v_i)."""
-
-    dim = v.shape[1]
-    weights = np.random.uniform(size=[verify_samples, 1, dim])
-    sample_vectors = [np.random.uniform(size=[verify_samples, dim]) for _ in range(dim)]
-    lin_sample_vectors = [A(v) for v in sample_vectors]
-    x = (weights * np.stack(sample_vectors, axis=-1)).sum(-1)
-    A_x = A(x)
-    sum_A_v = (weights * np.stack(lin_sample_vectors, axis=-1)).sum(-1)
-    diff_value = np.max(np.abs(sum_A_v - A_x), axis=1)
-    return np.max(diff_value) <= 1e-10
-
-
-def is_positive_definite(
-    A: Callable[["NDArray"], "NDArray"], v: "NDArray", verify_samples: int = 1000
-):
-    """Assumes linear function. Stochastically checks for property v.T @ f(v) >= 0"""
-
-    dim = v.shape[1]
-    add_v = np.random.uniform(size=[verify_samples, dim])
-    v = np.concatenate((v, add_v), axis=0)
-    product = np.einsum("ia,ia->i", v, A(v))
-    is_positive_definite = np.sum(product <= 1e-7) == 0
-    return is_positive_definite
 
 
 def powerset(it: "NDArray") -> Iterator[Collection[T]]:

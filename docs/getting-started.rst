@@ -108,8 +108,8 @@ These can only be applied to a regression problem where x and y are real numbers
 
 .. code-block:: python
 
-   >>> from valuation.influence.linear import linear_influences
-   >>> linear_influences(
+   >>> from valuation.influence.linear import compute_linear_influences
+   >>> compute_linear_influences(
    ...    x_train,
    ...    y_train,
    ...    x_test,
@@ -131,7 +131,7 @@ loss and data samples.
 .. code-block:: python
 
    >>> from valuation.influence import influences
-   >>> influences(
+   >>> compute_influences(
    ...    model,
    ...    x_train,
    ...    y_train,
@@ -151,9 +151,9 @@ by adding ``inversion_method`` parameter to the influences function call.
 
 .. code-block:: python
 
-   >>> from valuation.influence import influences
+   >>> from valuation.influence import compute_influences
 
-   >>> influences(
+   >>> compute_influences(
    ...    model,
    ...    x_train,
    ...    y_train,
@@ -171,9 +171,9 @@ to the influences function call.
 
 .. code-block:: python
 
-   >>> from valuation.influence import influences
+   >>> from valuation.influence import compute_influences
    >>>
-   >>> influences(
+   >>> compute_influences(
    ...    model,
    ...    x_train,
    ...    y_train,

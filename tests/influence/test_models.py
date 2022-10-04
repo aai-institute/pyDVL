@@ -129,7 +129,7 @@ def test_linear_regression_model_grad(
     train_grads_analytical = 2 * linear_regression_analytical_derivative_d_theta(
         (A, b), train_x, train_y
     )
-    train_grads_autograd = mvp_model.grad(train_x, train_y)
+    train_grads_autograd = mvp_model.split_grad(train_x, train_y)
     train_grads_max_diff = np.max(np.abs(train_grads_analytical - train_grads_autograd))
     assert (
         train_grads_max_diff < ModelTestSettings.ACCEPTABLE_ABS_TOL_DERIVATIVE
@@ -164,8 +164,9 @@ def test_linear_regression_model_hessian(
     test_hessian_analytical = 2 * linear_regression_analytical_derivative_d2_theta(
         (A, b), train_x, train_y
     )
+    grad_xy, _ = mvp_model.grad(train_x, train_y)
     estimated_hessian = mvp_model.mvp(
-        train_x, train_y, np.eye((input_dimension + 1) * output_dimension)
+        grad_xy, np.eye((input_dimension + 1) * output_dimension)
     )
     test_hessian_max_diff = np.max(np.abs(test_hessian_analytical - estimated_hessian))
     assert (
@@ -203,18 +204,17 @@ def test_linear_regression_model_d_x_d_theta(
         train_x,
         train_y,
     )
-    estimated_derivative = np.stack(
-        [
+    model_mvp = []
+    for i in range(len(train_x)):
+        grad_xy, tensor_x = mvp_model.grad(train_x[i], train_y[i])
+        model_mvp.append(
             mvp_model.mvp(
-                train_x[i],
-                train_y[i],
+                grad_xy,
                 np.eye((input_dimension + 1) * output_dimension),
-                second_x=True,
+                backprop_on=tensor_x,
             )
-            for i in range(len(train_x))
-        ],
-        axis=0,
-    )
+        )
+    estimated_derivative = np.stack(model_mvp, axis=0)
     test_hessian_max_diff = np.max(np.abs(test_derivative - estimated_derivative))
     assert (
         test_hessian_max_diff < ModelTestSettings.ACCEPTABLE_ABS_TOL_DERIVATIVE
