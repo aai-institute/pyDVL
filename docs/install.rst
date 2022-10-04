@@ -1,3 +1,5 @@
+.. _pyDVL Installation:
+
 ================
 Installing pyDVL
 ================
@@ -10,7 +12,7 @@ pyDVL requires the following dependencies:
 - Python (>=3.8)
 - Scikit-Learn
 - Numpy
-- Joblib
+- Ray
 - PyMemcached
 - Tqdm
 - Matplotlib
@@ -28,16 +30,27 @@ To install the latest release use:
 
     pip install pyDVL
 
+You can also install the latest development version from `TestPyPI <https://test.pypi.org/project/pyDVL/>`_:
+
+.. code-block:: shell
+
+    pip install pyDVL --index-url https://test.pypi.org/simple/
+
 To use all features of influence functions execute:
 
 .. code-block:: shell
 
     pip install pyDVL[influence]
 
-This includes a heavy autograd framework and thus is left out by default.
+This includes a PyTorch and thus is left out by default.
 
 In order to check the installation you can use:
 
 .. code-block:: shell
 
     python -c "import valuation; print(valuation.__version__)"
+
+What's next
+===========
+
+You should go to the :ref:`Getting Started <getting started>` section of the documentation.

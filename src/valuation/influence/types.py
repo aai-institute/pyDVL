@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Callable
+from typing import Callable, Iterable, Optional, Tuple
 
 from numpy import ndarray
 
@@ -14,20 +14,26 @@ class TwiceDifferentiable(ABC):
     def num_params(self) -> int:
         pass
 
-    def grad(self, x: ndarray, y: ndarray, progress: bool = False) -> ndarray:
+    def split_grad(self, x: ndarray, y: ndarray, progress: bool = False) -> ndarray:
         """
-        Calculate the gradient with respect to the parameters of the module with input parameters x[i] and y[i].
+        Calculate the gradient of the model wrt each input x and labels y.
+        The output is therefore of size [Nxp], with N the amout of points (the length of x and y) and
+        P the number of parameters.
+        """
+        pass
+
+    def grad(self, x: ndarray, y: ndarray) -> Tuple[ndarray, ndarray]:
+        """
+        It calculates the gradient of model parameters with respect to input x and labels y.
         """
         pass
 
     def mvp(
         self,
-        x: ndarray,
-        y: ndarray,
+        grad_xy: ndarray,
         v: ndarray,
         progress: bool = False,
-        second_x: bool = False,
-        **kwargs
+        backprop_on: Optional[Iterable] = None,
     ) -> ndarray:
         """
         Calculate the hessian vector product over the loss with all input parameters x and y with the vector v.

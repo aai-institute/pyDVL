@@ -10,22 +10,17 @@ __all__ = ["naive_loo"]
 
 
 def naive_loo(
-    model: SupervisedModel, data: Dataset, progress: bool = True, **kwargs
+    u: Utility, *, progress: bool = True, **kwargs
 ) -> OrderedDict[int, float]:
     """Computes leave one out score. No caching nor parallelization is implemented.
 
-    :param model: Any supervised model.
-    :param data: a split Dataset
-    :param progress: whether to display a progress bar
+    :param u: Utility object with model, data, and scoring function
+    :param progress: If True, display a progress bar
     """
-    u = Utility(model, data, **kwargs)
 
-    def compute_utility(x: np.ndarray) -> float:
-        return u(frozenset(x))
-
-    values = {i: 0.0 for i in data.indices}
+    values = {i: 0.0 for i in u.data.indices}
     for i in maybe_progress(data.indices, progress):  # type: ignore
-        subset = np.setxor1d(data.indices, [i], assume_unique=True)
-        values[i] = compute_utility(data.indices) - compute_utility(subset)
+        subset = np.setxor1d(u.data.indices, [i], assume_unique=True)
+        values[i] = u(u.data.indices) - u(subset)
 
     return sort_values(values)

@@ -22,7 +22,7 @@ def plot_shapley(
     xlabel: str = None,
     ylabel: str = None,
 ):
-    """Plots the shapley values, as returned from shapley.get_shapley_values.
+    """Plots the shapley values, as returned from shapley.compute_shapley_values.
 
     :param dval_df: dataframe with the shapley values
     :param figsize: tuple with figure size

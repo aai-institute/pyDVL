@@ -6,30 +6,46 @@ Contains
 """
 import logging
 import warnings
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable, Optional, Tuple, Union
 
 import numpy as np
+from scipy.sparse.linalg import cg
 
 from valuation.influence.types import MatrixVectorProduct
-from valuation.utils import is_linear_function, is_positive_definite
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
+__all__ = ["batched_preconditioned_conjugate_gradient"]
+
 logger = logging.getLogger(__name__)
+
+
+def conjugate_gradient(A: "NDArray", batch_y: "NDArray") -> "NDArray":
+    """
+    Given a matrix and a batch of vectors, it uses conjugate gradient to calculate the solution
+    to Ax = y for each y in batch_y.
+
+    :param A: a real, symmetric and positive-definite matrix of shape [NxN]
+    :param batch_y: a matrix of shape [NxP], with P the size of the batch.
+
+    :return: A NDArray of shape [NxP] representing x, the solution of Ax=b.
+    """
+    batch_cg = []
+    for y in batch_y:
+        y_cg, _ = cg(A.T, y)
+        batch_cg.append(y_cg)
+    return np.asarray(batch_cg)
 
 
 def batched_preconditioned_conjugate_gradient(
     A: Union["NDArray", Callable[["NDArray"], "NDArray"]],
     b: "NDArray",
     x0: Optional["NDArray"] = None,
-    M: Optional[Union["NDArray", Callable[["NDArray"], "NDArray"]]] = None,
-    rtol: float = 1e-10,
-    max_iterations: int = 1000,
-    max_step_size: float = 10.0,
-    verify_assumptions: bool = False,
-    raise_exception: bool = False,
-):
+    rtol: float = 1e-3,
+    max_iterations: int = 100,
+    max_step_size: Optional[float] = None,
+) -> Tuple["NDArray", int]:
     """
     Implementation of a batched conjugate gradient algorithm. It uses vector matrix products for efficient calculation.
     See https://en.wikipedia.org/wiki/Conjugate_gradient_method for more details of the algorithm. See also
@@ -39,14 +55,11 @@ def batched_preconditioned_conjugate_gradient(
     :param A: A linear function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix. \
         It has to be positive-definite v.T @ f(v) >= 0.
     :param b: A NDArray of shape [K] representing the targeted result of the matrix multiplication Ax.
-    :param M: A function f : R[k] -> R[k] which approximates inv(A) or a matrix of shape [K, K]. The underlying matrix \
-        has to be symmetric and positive definite.
     :param max_iterations: Maximum number of iterations to use in conjugate gradient. Default is 10 times K.
     :param rtol: Relative tolerance of the residual with respect to the 2-norm of b.
     :param max_step_size: Maximum step size along a gradient direction. Might be necessary for numerical stability. \
         See also max_iterations. Default is 10.0.
     :param verify_assumptions: True, iff the matrix should be checked for positive-definiteness by a stochastic rule.
-    :param raise_exception: True, iff an assumption should be raised, instead of a warning only.
 
     :return: A NDArray of shape [K] representing the solution of Ax=b.
     """
@@ -54,29 +67,11 @@ def batched_preconditioned_conjugate_gradient(
     if not callable(A):
         new_A = np.copy(A)
         A = lambda v: v @ new_A.T  # type: ignore
-    if M is not None:
-        if not callable(M):
-            new_M = np.copy(M)
-            M = lambda v: v @ new_M.T  # type: ignore
+    M = hvp_to_inv_diag_conditioner(A, d=b.shape[1])
 
     k = A(b).shape[0]
     if A(b).size == 0:
-        return b
-
-    if verify_assumptions:
-        if not is_linear_function(A, b):
-            msg = "The function seems to not be linear."
-            if raise_exception:
-                raise Exception(msg)
-            else:
-                warnings.warn(msg, RuntimeWarning)
-
-        if not is_positive_definite(A, b):
-            msg = "The function seems to not be linear."
-            if raise_exception:
-                raise Exception(msg)
-            else:
-                warnings.warn(msg, RuntimeWarning)
+        return b, 0
 
     if b.ndim == 1:
         b = b.reshape([1, -1])
@@ -118,9 +113,9 @@ def batched_preconditioned_conjugate_gradient(
         r_dot_u = np.einsum(
             "ia,ia->i", r[not_yet_converged_indices], u[not_yet_converged_indices]
         )
-        pre_alpha = r_dot_u / p_dot_mvp
+        alpha = r_dot_u / p_dot_mvp
         if max_step_size is not None:
-            alpha = np.minimum(max_step_size, pre_alpha)
+            alpha = np.minimum(max_step_size, alpha)
 
         # update x and r
         reshaped_alpha = alpha.reshape([-1, 1])
@@ -156,14 +151,12 @@ def batched_preconditioned_conjugate_gradient(
     if not np.all(converged):
         percentage_converged = int(converged.sum() / len(converged)) * 100
         msg = (
-            f"Conjugate gradient could solve the equation system for {percentage_converged}% of {len(converged)} random"
-            " chosen vectors. Please check condition number and eigenvalues."
+            f"Converged vectors are only {percentage_converged}%. "
+            "Please increase max_iterations, decrease max_step_size "
+            "and make sure that A is positive definite"
+            " (e.g. through regularization)."
         )
-        if raise_exception:
-            raise Exception(msg)
-        else:
-            warnings.warn(msg, RuntimeWarning)
-
+        warnings.warn(msg, RuntimeWarning)
     return x, iteration
 
 
