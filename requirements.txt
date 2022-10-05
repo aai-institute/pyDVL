@@ -1,12 +1,9 @@
-requests~=2.24
 numpy
 pandas
-joblib
-tqdm
 sklearn
-matplotlib
-wheel
+ray
+joblib
 pymemcache
 cloudpickle
-typing-protocol-intersection
-ray
+tqdm
+matplotlib
