@@ -52,6 +52,11 @@ def batched_preconditioned_conjugate_gradient(
     https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351 and
     https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf. On top, it constrains the maximum step size.
 
+    .. warning::
+
+        This function is unstable, and it is not recommended to use it.
+        Prefer using the simpler 'cg' method instead.
+
     :param A: A linear function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix. \
         It has to be positive-definite v.T @ f(v) >= 0.
     :param b: A NDArray of shape [K] representing the targeted result of the matrix multiplication Ax.
@@ -63,6 +68,11 @@ def batched_preconditioned_conjugate_gradient(
 
     :return: A NDArray of shape [K] representing the solution of Ax=b.
     """
+    warnings.warn(
+        "This function is unstable, and it is not recommended to use it. "
+        "Prefer using the simpler 'cg' method instead.",
+        UserWarning,
+    )
     # wrap A into a function.
     if not callable(A):
         new_A = np.copy(A)
