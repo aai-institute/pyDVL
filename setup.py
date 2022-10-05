@@ -27,7 +27,7 @@ setup(
     author="appliedAI",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    license_files=("LICENSE", "LICENSE.LESSER"),
+    license_files=("LICENSE", "COPYING.LESSER"),
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
