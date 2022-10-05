@@ -40,9 +40,32 @@ extensions = [
     "sphinx_rtd_theme",
     "sphinx_design",
     "nbsphinx",
+    "sphinx_gallery.load_style",
     # see https://github.com/spatialaudio/nbsphinx/issues/24 for an explanation why this extension is necessary
     "IPython.sphinxext.ipython_console_highlighting",
 ]
+
+# NBSphinx
+
+# This is processed by Jinja2 and inserted before each notebook
+nbsphinx_prolog = r"""
+{% set docname = env.doc2path(env.docname, base=False).replace('examples', 'notebooks') %}
+
+.. raw:: html
+
+    <div class="admonition note">
+        This page was generated from
+        <a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/{{ docname|e }}">{{ docname|e }}</a>
+        <br>
+        Interactive online version:
+        <span style="white-space: nowrap;">
+            <a href="https://mybinder.org/v2/gh/appliedAI-Initiative/pyDVL/develop?filepath={{ docname|e }}">
+                <img alt="Binder badge" src="https://mybinder.org/badge_logo.svg" style="vertical-align:text-bottom">
+            </a>
+        </span>
+    </div>
+
+"""
 
 # Display todos by setting to True
 todo_include_todos = True
