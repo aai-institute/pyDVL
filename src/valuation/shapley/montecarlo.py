@@ -38,7 +38,7 @@ def truncated_montecarlo_shapley(
     progress: bool = False,
     coordinator_update_frequency: int = 10,
     worker_update_frequency: int = 5,
-) -> Tuple[OrderedDict, Dict]:
+) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
     """MonteCarlo approximation to the Shapley value of data points.
 
     Instead of naively implementing the expectation, we sequentially add points
@@ -140,7 +140,7 @@ def permutation_montecarlo_shapley(
     config: ParallelConfig = ParallelConfig(),
     *,
     progress: bool = False,
-) -> Tuple[OrderedDict, Dict]:
+) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
     """Computes an approximate Shapley value using independent permutations of the indices.
 
     :param u: Utility object with model, data, and scoring function
@@ -189,7 +189,7 @@ def _combinatorial_montecarlo_shapley(
     progress: bool = False,
     job_id: int = 1,
     **kwargs,
-):
+) -> "NDArray":
     """It calculates the difference between the score of a model with and without
     each training datapoint. This is repeated a number max_iterations of times and
     with different random combinations.
@@ -226,7 +226,8 @@ def _combinatorial_montecarlo_shapley(
         ):
             values[s_idx, idx] = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
 
-    return correction * values
+    result: "NDArray" = correction * values
+    return result
 
 
 def combinatorial_montecarlo_shapley(
@@ -237,7 +238,7 @@ def combinatorial_montecarlo_shapley(
     *,
     dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
     progress: bool = False,
-) -> Tuple[OrderedDict, Dict]:
+) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
     """Computes an approximate Shapley value using the combinatorial definition.
 
     :param u: utility

@@ -36,6 +36,7 @@ __all__ = [
     "linear_regression_analytical_derivative_d2_theta",
     "linear_regression_analytical_derivative_d_theta",
     "linear_regression_analytical_derivative_d_x_d_theta",
+    "top_k_value_accuracy",
 ]
 
 T = TypeVar("T")
@@ -263,3 +264,16 @@ def get_running_avg_variance(
         (new_value - previous_avg) * (new_value - new_average) - previous_variance
     ) / (count + 1)
     return new_average, new_variance
+
+
+def top_k_value_accuracy(y_true: "NDArray", y_pred: "NDArray", k: int = 3) -> float:
+    """Computes the top-k accuracy for the estimated values by comparing indices of the highest k values
+
+    :param y_true: Exact/true value
+    :param y_pred: Predicted/estimated value
+    :param k: Number of the highest values used to compute accuracy
+    """
+    top_k_exact_values = np.argsort(y_true)[-k:]
+    top_k_pred_values = np.argsort(y_pred)[-k:]
+    top_k_accuracy = len(np.intersect1d(top_k_exact_values, top_k_pred_values)) / k
+    return top_k_accuracy
