@@ -76,3 +76,10 @@ Refer to the [Examples section](https://appliedAI-Initiative.github.io/valuation
 
 Please open new issues for bugs, feature requests and extensions. See more details about the structure and
 workflow in the [developer's readme](README-dev.md).
+
+# License
+
+pyDVL is distributed under [LGPL 3.0](https://www.gnu.org/licenses/lgpl-3.0.html). 
+A complete version can be found [here](LICENSE.md).
+
+All contributions will be distributed under this license.
