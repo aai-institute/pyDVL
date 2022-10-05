@@ -63,13 +63,11 @@ class RayParallelBackend:
         *,
         num_returns: int = 1,
         timeout: Optional[float] = None,
-        fetch_local: bool = True,
     ) -> Tuple[List[ObjectRef], List[ObjectRef]]:
         return ray.wait(  # type: ignore
             object_refs,
             num_returns=num_returns,
             timeout=timeout,
-            fetch_local=fetch_local,
         )
 
     def effective_n_jobs(self, n_jobs: Optional[int]) -> int:

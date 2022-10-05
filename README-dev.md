@@ -78,11 +78,17 @@ You can run the build by installing tox into your virtual environment (e.g. with
 
 You can pass optional command line arguments to pytest, for example to run only certain tests using patterns (-k) or marker (-m).
 
-`tox -e py38 -- <optional arguments>`
+`tox -e base -- <optional arguments>`
 
 One important argument that you can use is `--do-not-start-memcache`. This prevents
 the test fixture from starting a new memcache server for testing and instead expects
 an already running local server listening on port 11211 ( memcache's default port ).
+
+To test modules that rely on PyTorch, you should use:
+
+```shell
+tox -e torch
+```
 
 To test notebooks, you should use:
 

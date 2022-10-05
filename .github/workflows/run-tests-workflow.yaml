@@ -30,13 +30,13 @@ jobs:
       with:
         key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini', 'requirements.txt') }}
         path: .tox
-    - name: Run Tox
+    - name: Test Base Modules
       run: tox
       if: inputs.tests_to_run == 'default'
-    - name: Test Torch Modules
+    - name: Test Modules that rely on PyTorch
       run: tox -e torch
       if: inputs.tests_to_run == 'torch'
     - name: Test Notebooks
-      run: tox -e test-notebooks
+      run: tox -e notebooks
       if: inputs.tests_to_run == 'notebooks'
       continue-on-error: true
