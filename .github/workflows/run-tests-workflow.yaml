@@ -34,7 +34,7 @@ jobs:
       run: tox
       if: inputs.tests_to_run == 'default'
     - name: Test Modules that rely on PyTorch
-      run: tox -e py38-torch
+      run: tox -e torch
       if: inputs.tests_to_run == 'torch'
     - name: Test Notebooks
       run: tox -e notebooks
