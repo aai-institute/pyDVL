@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Data Utility Learning &mdash; pyDVL 0.1.0.dev23 documentation</title>
+  <title>Data Utility Learning &mdash; pyDVL 0.1.0.dev24 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
@@ -376,7 +376,17 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<section id="Data-Utility-Learning">
+<div class="admonition note">
+    This page was generated from
+    <a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/notebooks/data_utility_learning.ipynb">notebooks/data_utility_learning.ipynb</a>
+    <br>
+    Interactive online version:
+    <span style="white-space: nowrap;">
+        <a href="https://mybinder.org/v2/gh/appliedAI-Initiative/pyDVL/develop?filepath=notebooks/data_utility_learning.ipynb">
+            <img alt="Binder badge" src="https://mybinder.org/badge_logo.svg" style="vertical-align:text-bottom">
+        </a>
+    </span>
+</div><section id="Data-Utility-Learning">
 <h1>Data Utility Learning<a class="headerlink" href="#Data-Utility-Learning" title="Permalink to this heading"></a></h1>
 <p>This notebooks introduces Data Utility Learning a method for improving the efficiency in computing Data Shapley values by learning to estimate the performance of a learning algorithm on unseen data combinations (i.e. subsets of the dataset). The method was described in the paper <a class="reference external" href="https://arxiv.org/pdf/2107.06336v2.pdf">Improving Cooperative Game Theory-Based Data Valuation Via Data Utility Learning</a>.</p>
 <p>The Shapley value <span class="math notranslate nohighlight">\(\phi_i(v)\)</span> for data point <span class="math notranslate nohighlight">\(i\)</span> is defined as:</p>

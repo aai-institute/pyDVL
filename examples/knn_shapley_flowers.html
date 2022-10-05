@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KNN Shapley &mdash; pyDVL 0.1.0.dev23 documentation</title>
+  <title>KNN Shapley &mdash; pyDVL 0.1.0.dev24 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
@@ -371,7 +371,17 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<section id="KNN-Shapley">
+<div class="admonition note">
+    This page was generated from
+    <a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/notebooks/knn_shapley_flowers.ipynb">notebooks/knn_shapley_flowers.ipynb</a>
+    <br>
+    Interactive online version:
+    <span style="white-space: nowrap;">
+        <a href="https://mybinder.org/v2/gh/appliedAI-Initiative/pyDVL/develop?filepath=notebooks/knn_shapley_flowers.ipynb">
+            <img alt="Binder badge" src="https://mybinder.org/badge_logo.svg" style="vertical-align:text-bottom">
+        </a>
+    </span>
+</div><section id="KNN-Shapley">
 <h1>KNN Shapley<a class="headerlink" href="#KNN-Shapley" title="Permalink to this heading"></a></h1>
 <p>This notebook shows how to calculate Shapley values of the KNN algorithm. Compared to the general Shapley implementation, which has an exponential computation complexity, KNN-Shapley can be computed in linear time, as explained in <a class="reference external" href="http://www.vldb.org/pvldb/vol12/p1610-jia.pdf">this paper</a>. Let’s start from importing the main libraries.</p>
 <div class="nbinput docutils container">
