@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>utility &mdash; pyDVL 0.1.0.dev21 documentation</title>
+  <title>utility &mdash; pyDVL 0.1.0.dev22 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
@@ -125,11 +125,39 @@
 </style>
 <section id="module-valuation.utils.utility">
 <span id="utility"></span><h1>utility<a class="headerlink" href="#module-valuation.utils.utility" title="Permalink to this heading"></a></h1>
+<p>This module contains the <a class="reference internal" href="#valuation.utils.utility.Utility" title="valuation.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> and the <a class="reference internal" href="#valuation.utils.utility.DataUtilityLearning" title="valuation.utils.utility.DataUtilityLearning"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataUtilityLearning</span></code></a> classes.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="valuation.utils.utility.Utility">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Utility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#valuation.utils.types.SupervisedModel" title="valuation.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="dataset.html#valuation.utils.dataset.Dataset" title="valuation.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scoring</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="types.html#valuation.utils.types.SupervisedModel" title="valuation.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catch_errors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_warnings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="config.html#valuation.utils.config.MemcachedConfig" title="valuation.utils.config.MemcachedConfig"><span class="pre">MemcachedConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/utility.py#L17"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.utility.Utility" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Utility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#valuation.utils.types.SupervisedModel" title="valuation.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="dataset.html#valuation.utils.dataset.Dataset" title="valuation.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scoring</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="types.html#valuation.utils.types.SupervisedModel" title="valuation.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catch_errors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_warnings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="config.html#valuation.utils.config.MemcachedConfig" title="valuation.utils.config.MemcachedConfig"><span class="pre">MemcachedConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/utility.py#L24"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.utility.Utility" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A convenience wrapper with configurable memoization</p>
+<p>It holds all the most important elements of the Shapley values calculation,
+namely the model, the data and the scoring.
+It can also cache the training results, which speeds up
+the overall calculation for big models that take a long time to train.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – Any supervised model. Typical choices can be found at
+<a class="reference external" href="https://scikit-learn.org/stable/supervised_learning.html">https://scikit-learn.org/stable/supervised_learning.html</a></p></li>
+<li><p><strong>data</strong> – <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedDataset</span></code>.</p></li>
+<li><p><strong>scoring</strong> – Same as in sklearn’s <cite>cross_validate()</cite>: a string,
+a scorer callable or None for the default <cite>model.score()</cite>. Greater
+values must be better. If they are not, a negated version can be
+used (see <cite>make_scorer</cite>)</p></li>
+<li><p><strong>catch_errors</strong> – set to True to catch the errors when fit() fails. This
+could happen in several steps of the pipeline, e.g. when too little
+training data is passed, which happens often during the Shapley value calculations.
+When this happens, the default_score is returned as a score and Shapley value
+calculation continues.</p></li>
+<li><p><strong>show_warnings</strong> – True for printing warnings fit fails.
+Used only when catch_errors is True</p></li>
+<li><p><strong>default_score</strong> – score in the case of models that have not been fit,
+e.g. when too little data is passed, or errors arise.</p></li>
+<li><p><strong>enable_cache</strong> – whether to use memcached for memoization.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="valuation.utils.utility.Utility.model">
 <span class="sig-name descname"><span class="pre">model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="types.html#valuation.utils.types.SupervisedModel" title="valuation.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></em><a class="headerlink" href="#valuation.utils.utility.Utility.model" title="Permalink to this definition"></a></dt>
@@ -149,6 +177,56 @@
 <dt class="sig sig-object py" id="valuation.utils.utility.Utility.signature">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#valuation.utils.utility.Utility.signature" title="Permalink to this definition"></a></dt>
 <dd><p>Signature used for caching model results</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="valuation.utils.utility.DataUtilityLearning">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataUtilityLearning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#valuation.utils.utility.Utility" title="valuation.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_budget</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#valuation.utils.types.SupervisedModel" title="valuation.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/utils/utility.py#L142"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.utils.utility.DataUtilityLearning" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implementation of Data Utility Learning algorithm <a class="footnote-reference brackets" href="#id2" id="id1">1</a>.
+It is a wrapper for other utilities with a given budget (i.e. number of iterations)
+that will, once the budget is exhausted, fit a given model to predict the utility
+instead of computing it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – an instance of a <a class="reference internal" href="#valuation.utils.utility.Utility" title="valuation.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a></p></li>
+<li><p><strong>training_budget</strong> – Number of utility samples to use for fitting the given model</p></li>
+<li><p><strong>model</strong> – A supervised regression model</p></li>
+</ul>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">Utility</span><span class="p">,</span> <span class="n">DataUtilityLearning</span><span class="p">,</span> <span class="n">Dataset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span><span class="p">,</span> <span class="n">LogisticRegression</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_iris</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">from_sklearn</span><span class="p">(</span><span class="n">load_iris</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">LogisticRegression</span><span class="p">(),</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">enable_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrapped_u</span> <span class="o">=</span> <span class="n">DataUtilityLearning</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">LinearRegression</span><span class="p">())</span>
+<span class="gp">... </span><span class="c1"># First 3 calls will be computed normally</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">_</span> <span class="o">=</span> <span class="n">wrapped_u</span><span class="p">((</span><span class="n">i</span><span class="p">,))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrapped_u</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> <span class="c1"># Subsequent calls will be computed using the fit model for DUL</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p><a class="reference external" href="https://arxiv.org/abs/2107.06336v2">Tianhao Wang, Yu Yang, Ruoxi Jia.
+“Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning.”
+arXiv, 2021</a>.</p>
+</dd>
+</dl>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="valuation.utils.utility.DataUtilityLearning.data">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dataset.html#valuation.utils.dataset.Dataset" title="valuation.utils.dataset.Dataset"><span class="pre">Dataset</span></a></em><a class="headerlink" href="#valuation.utils.utility.DataUtilityLearning.data" title="Permalink to this definition"></a></dt>
+<dd><p>Return the wrapped utility’s dataset</p>
 </dd></dl>
 
 </dd></dl>
