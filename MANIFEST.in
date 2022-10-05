@@ -1,1 +1,3 @@
 include requirements.*
+include LICENSE.md
+include logo.svg
