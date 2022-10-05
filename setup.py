@@ -28,4 +28,15 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     license_files=("LICENSE.md",),
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Programming Language :: Python :: 3.8",
+        "Typing :: Typed",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: POSIX",
+        "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+    ],
 )
