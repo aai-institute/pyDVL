@@ -42,7 +42,38 @@ jobs:
       continue-on-error: true
     - name: Check Type Hints
       run: tox -e type-checking
-  non-torch-tests:
+  docs:
+    name: Build Docs
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.8
+        cache: 'pip'
+    - name: Install Dev Requirements
+      run: pip install -r requirements-dev.txt
+    - name: Install Pandoc
+      run: sudo apt-get install --no-install-recommends --yes pandoc
+    - name: Cache Tox Directory for Docs
+      uses: actions/cache@v3
+      with:
+        key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini') }}
+        path: .tox
+    - name: Build Docs
+      run: |
+        cp notebooks/*.ipynb docs/examples/
+        tox -e docs
+    - name: Save built docs
+      uses: actions/upload-artifact@v3
+      with:
+        name: docs
+        path: ./docs/_build/html
+        retention-days: 1
+  base-tests:
     name: Run tests that do not use PyTorch
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
@@ -63,7 +94,7 @@ jobs:
   build:
     name: Build & Push Docs and maybe release Package to TestPyPI
     runs-on: ubuntu-latest
-    needs: [non-torch-tests, torch-tests, notebook-tests]
+    needs: [docs, non-torch-tests, torch-tests, notebook-tests]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -82,10 +113,10 @@ jobs:
         with:
           key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini') }}
           path: .tox
-      - name: Build Docs
-        run: | 
-          cp notebooks/*.ipynb docs/examples/
-          tox -e docs
+      - name: Download built docs
+        uses: actions/download-artifact@v3
+        with:
+          name: docs
       - name: Deploy Docs
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/develop' }}
