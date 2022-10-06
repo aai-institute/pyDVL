@@ -1,2 +1,6 @@
 _build
 *.ipynb
+
+# Generated Documentation from Code
+pydvl/*
+!pydvl/index.rst

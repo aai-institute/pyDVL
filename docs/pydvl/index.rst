@@ -1,7 +1,7 @@
 API Reference
 =============
 
-.. automodule:: valuation
+.. automodule:: pydvl
    :members:
    :undoc-members:
 
