@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from valuation.utils import available_cpus
-from valuation.utils.numeric import powerset, random_powerset, spearman
+from pydvl.utils import available_cpus
+from pydvl.utils.numeric import powerset, random_powerset, spearman
 
 
 def test_powerset():

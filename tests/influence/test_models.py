@@ -10,7 +10,7 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 
-from valuation.utils import (
+from pydvl.utils import (
     linear_regression_analytical_derivative_d2_theta,
     linear_regression_analytical_derivative_d_theta,
     linear_regression_analytical_derivative_d_x_d_theta,
@@ -19,8 +19,8 @@ from valuation.utils import (
 try:
     import torch.nn.functional as F
 
-    from valuation.influence.frameworks import TorchTwiceDifferentiable
-    from valuation.influence.model_wrappers import TorchLinearRegression
+    from pydvl.influence.frameworks import TorchTwiceDifferentiable
+    from pydvl.influence.model_wrappers import TorchLinearRegression
 except ImportError:
     pass
 

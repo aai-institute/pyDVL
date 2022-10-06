@@ -5,7 +5,7 @@ from itertools import zip_longest
 import numpy as np
 import pytest
 
-from valuation.utils.parallel import MapReduceJob
+from pydvl.utils.parallel import MapReduceJob
 
 
 @pytest.fixture()

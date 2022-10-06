@@ -6,15 +6,15 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 
-from tests.conftest import check_rank_correlation, check_total_value, check_values
-from valuation.shapley import (
+from pydvl.shapley import (
     combinatorial_exact_shapley,
     combinatorial_montecarlo_shapley,
     permutation_montecarlo_shapley,
     truncated_montecarlo_shapley,
 )
-from valuation.utils import GroupedDataset, MemcachedConfig, Utility
-from valuation.utils.numeric import lower_bound_hoeffding
+from pydvl.utils import GroupedDataset, MemcachedConfig, Utility
+from pydvl.utils.numeric import lower_bound_hoeffding
+from tests.conftest import check_rank_correlation, check_total_value, check_values
 
 log = logging.getLogger(__name__)
 

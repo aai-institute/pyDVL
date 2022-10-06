@@ -5,8 +5,8 @@ from typing import Iterable
 import numpy as np
 import pytest
 
-from valuation.utils import MapReduceJob, memcached
-from valuation.utils.caching import get_running_avg_variance
+from pydvl.utils import MapReduceJob, memcached
+from pydvl.utils.caching import get_running_avg_variance
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +88,7 @@ def test_memcached_repeated_training(memcached_client):
         ignore_args=["job_id", "run_id"],
     )
     def foo(indices: Iterable[int]) -> float:
-        # from valuation.utils.logging import logger
+        # from pydvl.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
         return float(np.sum(indices)) + np.random.normal(scale=10)
 
@@ -113,13 +113,13 @@ def test_memcached_faster_with_repeated_training(memcached_client):
         ignore_args=["job_id", "run_id"],
     )
     def foo_cache(indices: Iterable[int]) -> float:
-        # from valuation.utils.logging import logger
+        # from pydvl.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
         sleep(0.01)
         return float(np.sum(indices)) + np.random.normal(scale=1)
 
     def foo_no_cache(indices: Iterable[int]) -> float:
-        # from valuation.utils.logging import logger
+        # from pydvl.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
         sleep(0.01)
         return float(np.sum(indices)) + np.random.normal(scale=1)
@@ -170,7 +170,7 @@ def test_memcached_parallel_repeated_training(
         ignore_args=["job_id", "run_id"],
     )
     def map_func(indices: Iterable[int]) -> float:
-        # from valuation.utils.logging import logger
+        # from pydvl.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
         return np.sum(indices).item() + np.random.normal(scale=10)
 

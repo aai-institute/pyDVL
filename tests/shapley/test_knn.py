@@ -5,8 +5,8 @@ from sklearn import datasets
 from sklearn.metrics import make_scorer
 from sklearn.neighbors import KNeighborsClassifier
 
-from valuation.shapley import compute_knn_shapley, permutation_montecarlo_shapley
-from valuation.utils import Dataset, Utility
+from pydvl.shapley import compute_knn_shapley, permutation_montecarlo_shapley
+from pydvl.utils import Dataset, Utility
 
 log = logging.getLogger(__name__)
 

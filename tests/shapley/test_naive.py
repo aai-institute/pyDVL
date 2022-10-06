@@ -4,9 +4,9 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
+from pydvl.shapley import combinatorial_exact_shapley, permutation_exact_shapley
+from pydvl.utils import GroupedDataset, MemcachedConfig, Utility
 from tests.conftest import check_total_value, check_values
-from valuation.shapley import combinatorial_exact_shapley, permutation_exact_shapley
-from valuation.utils import GroupedDataset, MemcachedConfig, Utility
 
 log = logging.getLogger(__name__)
 
