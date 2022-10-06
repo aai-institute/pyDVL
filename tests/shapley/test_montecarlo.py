@@ -185,10 +185,10 @@ def test_linear_montecarlo_with_outlier(
             permutation_montecarlo_shapley,
             "r2",
             0.2,
-            10000,
+            5000,
         ),
         (2, 0, 200, 5, truncated_montecarlo_shapley, "explained_variance", 0.2, 1000),
-        (2, 0, 200, 5, truncated_montecarlo_shapley, "r2", 0.2, 10000),
+        (2, 0, 200, 5, truncated_montecarlo_shapley, "r2", 0.2, 1000),
     ],
 )
 def test_grouped_linear_montecarlo_shapley(
