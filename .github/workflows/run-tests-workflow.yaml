@@ -32,7 +32,7 @@ jobs:
         path: .tox
     - name: Test Base Modules
       run: tox
-      if: inputs.tests_to_run == 'default'
+      if: inputs.tests_to_run == 'base'
     - name: Test Modules that rely on PyTorch
       run: tox -e torch
       if: inputs.tests_to_run == 'torch'

@@ -77,7 +77,7 @@ jobs:
     name: Run base tests
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
-      tests_to_run: default
+      tests_to_run: base
     needs: [lint]
   torch-tests:
     name: Run tests that use PyTorch
@@ -117,9 +117,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: docs
-          path: ./docs
-      - name: Display structure of downloaded files
-        run: ls -R
+          path: ./docs/_build
       - name: Deploy Docs
         uses: peaceiris/actions-gh-pages@v3
         # if: ${{ github.ref == 'refs/heads/develop' }}
