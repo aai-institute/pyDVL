@@ -38,7 +38,7 @@ def test_knn_montecarlo_match(seed):
     )
     shapley_values, _ = permutation_montecarlo_shapley(
         utility,
-        max_iterations=500,
+        max_iterations=200,
         progress=False,
         n_jobs=8,
     )
