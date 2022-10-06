@@ -28,14 +28,17 @@ Scorer = Union[str, Callable[[SupervisedModel, ndarray, ndarray], float]]
 
 def unpackable(cls: Type) -> Type:
     """A class decorator that allows unpacking of all attributes of an object
-    with the double asterisk operator. E.g.::
-       @unpackable
-       @dataclass
-       class Schtuff:
-           a: int
-           b: str
-       x = Schtuff(a=1, b='meh')
-       d = dict(**x)
+    with the double asterisk operator.
+
+    :Example:
+
+    >>> @unpackable
+    ... @dataclass
+    ... class Schtuff:
+    ...    a: int
+    ...    b: str
+    >>> x = Schtuff(a=1, b='meh')
+    >>> d = dict(**x)
     """
 
     def keys(self):

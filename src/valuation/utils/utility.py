@@ -149,7 +149,6 @@ class DataUtilityLearning:
     :param training_budget: Number of utility samples to use for fitting the given model
     :param model: A supervised regression model
 
-
     :Example:
 
     >>> from valuation.utils import Utility, DataUtilityLearning, Dataset
@@ -167,8 +166,7 @@ class DataUtilityLearning:
     .. note::
         .. [1] `Tianhao Wang, Yu Yang, Ruoxi Jia.
            "Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning."
-           arXiv, 2021
-           <https://arxiv.org/abs/2107.06336v2>`_.
+           arXiv, 2021 <https://arxiv.org/abs/2107.06336v2>`_.
     """
 
     def __init__(
