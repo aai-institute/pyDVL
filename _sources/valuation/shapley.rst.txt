@@ -1,5 +1,6 @@
 shapley
 =======
+
 .. automodule:: valuation.shapley
    :members:
    :undoc-members:

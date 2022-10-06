@@ -1,5 +1,6 @@
 knn
 ===
+
 .. automodule:: valuation.shapley.knn
    :members:
    :undoc-members:

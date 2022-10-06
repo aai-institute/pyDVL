@@ -53,7 +53,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../index.html">valuation</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../influence.html">influence</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">conjugate_gradient</a></li>
 <li class="toctree-l3"><a class="reference internal" href="frameworks.html">frameworks</a></li>
@@ -85,7 +85,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">valuation</a> &raquo;</li>
+          <li><a href="../index.html">API Reference</a> &raquo;</li>
           <li><a href="../influence.html">influence</a> &raquo;</li>
       <li>conjugate_gradient</li>
       <li class="wy-breadcrumbs-aside">
@@ -132,9 +132,13 @@
 <dt class="sig sig-object py" id="valuation.influence.conjugate_gradient.batched_preconditioned_conjugate_gradient">
 <span class="sig-name descname"><span class="pre">batched_preconditioned_conjugate_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">NDArray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">NDArray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">NDArray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_step_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">NDArray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/valuation/influence/conjugate_gradient.py#L41"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#valuation.influence.conjugate_gradient.batched_preconditioned_conjugate_gradient" title="Permalink to this definition"></a></dt>
 <dd><p>Implementation of a batched conjugate gradient algorithm. It uses vector matrix products for efficient calculation.
-See <a class="reference external" href="https://en.wikipedia.org/wiki/Conjugate_gradient_method">https://en.wikipedia.org/wiki/Conjugate_gradient_method</a> for more details of the algorithm. See also
-<a class="reference external" href="https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351">https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351</a> and
-<a class="reference external" href="https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf">https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf</a>. On top, it constrains the maximum step size.</p>
+On top of that, it constrains the maximum step size.</p>
+<p>See <a class="footnote-reference brackets" href="#id4" id="id1">1</a> for more details on the algorithm.</p>
+<p>See also <a class="footnote-reference brackets" href="#id5" id="id2">2</a> and <a class="footnote-reference brackets" href="#id6" id="id3">3</a>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This function is experimental and unstable. Prefer using inversion_method=’cg’</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -150,6 +154,20 @@ See <a class="reference external" href="https://en.wikipedia.org/wiki/Conjugate_
 <dd class="field-even"><p>A NDArray of shape [K] representing the solution of Ax=b.</p>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<dl class="footnote brackets">
+<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p><a class="reference external" href="https://en.wikipedia.org/wiki/Conjugate_gradient_method">Conjugate Gradient Method - Wikipedia</a>.</p>
+</dd>
+<dt class="label" id="id5"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><p><a class="reference external" href="https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351">SciPy’s implementation of Conjugate Gradient</a>.</p>
+</dd>
+<dt class="label" id="id6"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
+<dd><p><a class="reference external" href="https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf">Prof. Mert Pilanci., “Conjugate Gradient Method”, Stanford University, 2022</a>.</p>
+</dd>
+</dl>
+</div>
 </dd></dl>
 
 </section>

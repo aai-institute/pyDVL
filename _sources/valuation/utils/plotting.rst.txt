@@ -1,5 +1,6 @@
 plotting
 ========
+
 .. automodule:: valuation.utils.plotting
    :members:
    :undoc-members:
