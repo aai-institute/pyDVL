@@ -48,14 +48,15 @@ def batched_preconditioned_conjugate_gradient(
 ) -> Tuple["NDArray", int]:
     """
     Implementation of a batched conjugate gradient algorithm. It uses vector matrix products for efficient calculation.
-    See https://en.wikipedia.org/wiki/Conjugate_gradient_method for more details of the algorithm. See also
-    https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351 and
-    https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf. On top, it constrains the maximum step size.
+    On top of that, it constrains the maximum step size.
+
+    See [1]_ for more details on the algorithm.
+
+    See also [2]_ and [3]_.
 
     .. warning::
 
-        This function is unstable, and it is not recommended to use it.
-        Prefer using the simpler 'cg' method instead.
+        This function is experimental and unstable. Prefer using inversion_method='cg'
 
     :param A: A linear function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix. \
         It has to be positive-definite v.T @ f(v) >= 0.
@@ -67,10 +68,14 @@ def batched_preconditioned_conjugate_gradient(
     :param verify_assumptions: True, iff the matrix should be checked for positive-definiteness by a stochastic rule.
 
     :return: A NDArray of shape [K] representing the solution of Ax=b.
+
+    .. note::
+        .. [1] `Conjugate Gradient Method - Wikipedia <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_.
+        .. [2] `SciPy's implementation of Conjugate Gradient <https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351>`_.
+        .. [3] `Prof. Mert Pilanci., "Conjugate Gradient Method", Stanford University, 2022 <https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf>`_.
     """
     warnings.warn(
-        "This function is unstable, and it is not recommended to use it. "
-        "Prefer using the simpler 'cg' method instead.",
+        "This function is experimental and unstable. Prefer using inversion_method='cg'",
         UserWarning,
     )
     # wrap A into a function.

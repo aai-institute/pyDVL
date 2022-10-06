@@ -9,6 +9,7 @@ a repo containing multiple packages src/<package_1>, ...,  src/<package_n>.
 import logging
 import os
 import shutil
+from typing import Optional
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ def module_template(module_qualname: str):
     title = module_name.replace("_", r"\_")
     template = f"""{title}
 {"="*len(title)}
+
 .. automodule:: {module_qualname}
    :members:
    :undoc-members:
@@ -30,6 +32,7 @@ def package_template(package_qualname: str, *, add_toctree: bool = True):
     title = package_name.replace("_", r"\_")
     template = f"""{title}
 {"="*len(title)}
+
 .. automodule:: {package_qualname}
    :members:
    :undoc-members:
@@ -44,10 +47,12 @@ def package_template(package_qualname: str, *, add_toctree: bool = True):
     return template
 
 
-def index_template(package_name):
-    title = package_name.replace("_", r"\_")
+def index_template(package_name: str, title: Optional[str] = None) -> str:
+    if title is None:
+        title = package_name.replace("_", r"\_")
     template = f"""{title}
 {"="*len(title)}
+
 .. automodule:: {package_name}
    :members:
    :undoc-members:
@@ -93,7 +98,9 @@ def make_rst(src_root="src", docs_root="docs", clean=False, overwrite=False):
         ):
             continue
 
-        log.info(f"Generating docu for top-level package {top_level_package_name}")
+        log.info(
+            f"Generating documentation for top-level package {top_level_package_name}"
+        )
         top_level_package_docs_dir = os.path.join(docs_root, top_level_package_name)
         if clean and os.path.isdir(top_level_package_docs_dir):
             log.info(f"Deleting {top_level_package_docs_dir} since clean=True")
@@ -101,7 +108,9 @@ def make_rst(src_root="src", docs_root="docs", clean=False, overwrite=False):
 
         index_rst_path = os.path.join(docs_root, top_level_package_name, "index.rst")
         log.info(f"Creating {index_rst_path}")
-        write_to_file(index_template(top_level_package_name), index_rst_path)
+        write_to_file(
+            index_template(top_level_package_name, "API Reference"), index_rst_path
+        )
 
         for root, dirnames, filenames in os.walk(top_level_package_dir):
             if os.path.basename(root).startswith("_"):
