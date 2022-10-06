@@ -95,6 +95,8 @@ jobs:
     name: Build & Push Docs and maybe release Package to TestPyPI
     runs-on: ubuntu-latest
     needs: [docs, non-torch-tests, torch-tests, notebook-tests]
+    concurrency:
+      group: build
     steps:
       - uses: actions/checkout@v3
         with:
@@ -106,9 +108,7 @@ jobs:
           cache: 'pip'
       - name: Install Dev Requirements
         run: pip install -r requirements-dev.txt
-      - name: Install Pandoc
-        run: sudo apt-get install --no-install-recommends --yes pandoc
-      - name: Cache Tox Directory for Docs
+      - name: Cache Tox Directory
         uses: actions/cache@v3
         with:
           key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini') }}
