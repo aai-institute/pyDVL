@@ -1,5 +1,0 @@
-numeric
-=======
-.. automodule:: valuation.utils.numeric
-   :members:
-   :undoc-members:

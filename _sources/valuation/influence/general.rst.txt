@@ -1,5 +1,0 @@
-general
-=======
-.. automodule:: valuation.influence.general
-   :members:
-   :undoc-members:

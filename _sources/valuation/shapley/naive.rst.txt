@@ -1,5 +1,0 @@
-naive
-=====
-.. automodule:: valuation.shapley.naive
-   :members:
-   :undoc-members:

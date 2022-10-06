@@ -1,5 +1,0 @@
-actor
-=====
-.. automodule:: valuation.shapley.actor
-   :members:
-   :undoc-members:

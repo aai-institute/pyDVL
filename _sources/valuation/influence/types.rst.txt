@@ -1,5 +1,0 @@
-types
-=====
-.. automodule:: valuation.influence.types
-   :members:
-   :undoc-members:

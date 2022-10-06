@@ -1,5 +1,0 @@
-naive
-=====
-.. automodule:: valuation.loo.naive
-   :members:
-   :undoc-members:

@@ -1,5 +1,0 @@
-montecarlo
-==========
-.. automodule:: valuation.shapley.montecarlo
-   :members:
-   :undoc-members:

@@ -1,5 +1,0 @@
-conjugate\_gradient
-===================
-.. automodule:: valuation.influence.conjugate_gradient
-   :members:
-   :undoc-members:
