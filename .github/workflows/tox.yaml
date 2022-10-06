@@ -92,7 +92,7 @@ jobs:
       tests_to_run: notebooks
     needs: [lint]
   build:
-    name: Build & Push Docs and maybe release Package to TestPyPI
+    name: Push Docs and maybe release Package to TestPyPI
     runs-on: ubuntu-latest
     needs: [docs, base-tests, torch-tests, notebook-tests]
     concurrency:
