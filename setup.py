@@ -24,7 +24,7 @@ setup(
     extras_require={
         "influence": ["torch"],
     },
-    author="appliedAI Initiative GmbH",
+    author="appliedAI Institute gGmbH",
     long_description=long_description,
     long_description_content_type="text/markdown",
     license_files=("LICENSE", "COPYING.LESSER"),
