@@ -71,7 +71,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: docs
-        path: ./docs/_build/html
+        path: ./docs/_build
         retention-days: 1
   base-tests:
     name: Run base tests
@@ -117,6 +117,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: docs
+          path: ./docs
       - name: Deploy Docs
         uses: peaceiris/actions-gh-pages@v3
         # if: ${{ github.ref == 'refs/heads/develop' }}
