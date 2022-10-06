@@ -1,0 +1,10 @@
+parallel
+========
+.. automodule:: valuation.utils.parallel
+   :members:
+   :undoc-members:
+
+.. toctree::
+   :glob:
+
+   parallel/*

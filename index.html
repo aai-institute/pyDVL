@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyDVL Documentation &mdash; pyDVL 0.1.0.dev28 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/design-tabs.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting started" href="getting-started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#">
+            <img src="_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="valuation/index.html">valuation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">pyDVL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+      <li>pyDVL Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="pydvl-documentation">
+<h1>pyDVL Documentation<a class="headerlink" href="#pydvl-documentation" title="Permalink to this heading"></a></h1>
+<p>Welcome to the pyDVL library for data valuation!</p>
+<p>If you’re a first time user of pyDVL, we recommend you to go through the
+<a class="reference internal" href="install.html#pydvl-installation"><span class="std std-ref">Installation</span></a> and <a class="reference internal" href="getting-started.html#getting-started"><span class="std std-ref">Getting Started</span></a> guides.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#creating-dataset">Creating Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#creating-utility">Creating Utility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#computing-leave-one-out-values">Computing Leave-One-Out values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#computing-shapley-values">Computing Shapley values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#computing-influence-values">Computing Influence values</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#direct-linear-influences">Direct linear influences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#exact-influences-using-twicedifferentiable-protocol">Exact influences using TwiceDifferentiable protocol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#influences-using-twicedifferentiable-protocol-and-approximate-matrix-inversion">Influences using TwiceDifferentiable protocol and approximate matrix inversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#perturbation-influences">Perturbation influences</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#what-s-next">What’s next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing pyDVL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#what-s-next">What’s next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/data_utility_learning.html">Data Utility Learning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/data_utility_learning.html#Imports">Imports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/data_utility_learning.html#Constants">Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/data_utility_learning.html#Dataset">Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/data_utility_learning.html#Model">Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/data_utility_learning.html#Data-Shapley">Data Shapley</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/data_utility_learning.html#Evaluation-on-anomalous-data">Evaluation on anomalous data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples/influence_synthetic.html">Influence functions for data mislabeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Plotting-the-dataset">Plotting the dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Training-the-model">Training the model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Calculating-influences">Calculating influences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Inversion-through-conjugate-gradient">Inversion through conjugate gradient</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Appendix:-Calculating-the-decision-boundary">Appendix: Calculating the decision boundary</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples/influence_wine.html">Influence functions and neural networks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Fit-a-neural-network-to-the-data">Fit a neural network to the data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Calculating-influences-for-small-neural-networks">Calculating influences for small neural networks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Influence-of-training-features">Influence of training features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Speeding-up-influences-for-big-models">Speeding up influences for big models</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples/knn_shapley_flowers.html">KNN Shapley</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/knn_shapley_flowers.html#Corrupting-labels">Corrupting labels</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples/shapley_spotify.html">PyDVL - Shapley for data valuation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_spotify.html#Evaluation-on-anomalous-data">Evaluation on anomalous data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 sd-p-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 sd-g-4 sd-g-xs-4 sd-g-sm-4 sd-g-md-4 sd-g-lg-4 docutils">
+<div class="sd-col sd-d-flex-row sd-text-center docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
+<div class="sd-card-header docutils">
+<p class="sd-card-text"><svg version="4.0.0.63c5cb3" width="12.0em" height="12.0em" class="sd-material-icon sd-material-icon-home_repair_service" viewBox="0 0 24 24" aria-hidden="true"><g><rect fill="none" height="24" width="24"></rect></g><g><g><polygon points="18,16 16,16 16,15 8,15 8,16 6,16 6,15 2,15 2,20 22,20 22,15 18,15"></polygon><path d="M20,8h-3V6c0-1.1-0.9-2-2-2H9C7.9,4,7,4.9,7,6v2H4c-1.1,0-2,0.9-2,2v4h4v-2h2v2h8v-2h2v2h4v-4C22,8.9,21.1,8,20,8z M15,8 H9V6h6V8z"></path></g></g></svg></p>
+</div>
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Installation</div>
+<p class="sd-card-text">This link will take you to pyDVL’s installation guide.</p>
+</div>
+<div class="sd-card-footer docutils">
+<p class="sd-card-text"><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-primary sd-stretched-link reference internal" href="install.html"><span class="doc">To the installation guide.</span></a></span></p>
+</div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-row sd-text-center docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
+<div class="sd-card-header docutils">
+<p class="sd-card-text"><svg version="4.0.0.63c5cb3" width="12.0em" height="12.0em" class="sd-material-icon sd-material-icon-code" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"></path></svg></p>
+</div>
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Source Repository</div>
+<p class="sd-card-text">This link will take you to pyDVL’s source repository.</p>
+</div>
+<div class="sd-card-footer docutils">
+<p class="sd-card-text"><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-primary sd-stretched-link reference external" href="https://github.com/appliedAI-Initiative/pyDVL"><span>To the source repository.</span></a></span></p>
+</div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-row sd-text-center docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
+<div class="sd-card-header docutils">
+<p class="sd-card-text"><svg version="4.0.0.63c5cb3" width="12.0em" height="12.0em" class="sd-material-icon sd-material-icon-description" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"></path></svg></p>
+</div>
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+API Reference</div>
+<p class="sd-card-text">This link will take you to pyDVL’s API reference.</p>
+</div>
+<div class="sd-card-footer docutils">
+<p class="sd-card-text"><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-primary sd-stretched-link reference internal" href="valuation/index.html#module-valuation" title="valuation"><span>To the API reference.</span></a></span></p>
+</div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-row sd-text-center docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
+<div class="sd-card-header docutils">
+<p class="sd-card-text"><svg version="4.0.0.63c5cb3" width="12.0em" height="12.0em" class="sd-material-icon sd-material-icon-computer" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"></path></svg></p>
+</div>
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Examples</div>
+<p class="sd-card-text">This link will take you to pyDVL’s examples.</p>
+</div>
+<div class="sd-card-footer docutils">
+<p class="sd-card-text"><span class="sd-d-grid"><a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-primary sd-stretched-link reference external" href="examples"><span>To the examples.</span></a></span></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting-started.html" class="btn btn-neutral float-right" title="Getting started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

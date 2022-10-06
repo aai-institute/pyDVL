@@ -1,0 +1,5 @@
+torch\_wrappers
+===============
+.. automodule:: valuation.influence.model_wrappers.torch_wrappers
+   :members:
+   :undoc-members:
