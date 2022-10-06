@@ -118,6 +118,8 @@ jobs:
         with:
           name: docs
           path: ./docs
+      - name: Display structure of downloaded files
+        run: ls -R
       - name: Deploy Docs
         uses: peaceiris/actions-gh-pages@v3
         # if: ${{ github.ref == 'refs/heads/develop' }}
