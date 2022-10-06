@@ -1,18 +1,14 @@
 from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple
 
-import matplotlib as mpl
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from valuation.utils.dataset import Dataset
+from .dataset import Dataset
 
 if TYPE_CHECKING:
-    try:
-        from numpy.typing import NDArray
-    except ImportError:
-        from numpy import ndarray as NDArray
+    from numpy.typing import NDArray
 
 
 def plot_shapley(

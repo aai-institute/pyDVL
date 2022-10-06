@@ -7,7 +7,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from tqdm import tqdm, trange
 
-from valuation.utils import Dataset, SupervisedModel
+from pydvl.utils import Dataset, SupervisedModel
 
 __all__ = [
     "sort_values",

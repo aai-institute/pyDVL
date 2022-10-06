@@ -4,17 +4,14 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from valuation.shapley.knn import compute_knn_shapley
-from valuation.shapley.montecarlo import (
+from pydvl.shapley.knn import compute_knn_shapley
+from pydvl.shapley.montecarlo import (
     combinatorial_montecarlo_shapley,
     permutation_montecarlo_shapley,
     truncated_montecarlo_shapley,
 )
-from valuation.shapley.naive import (
-    combinatorial_exact_shapley,
-    permutation_exact_shapley,
-)
-from valuation.utils import Utility
+from pydvl.shapley.naive import combinatorial_exact_shapley, permutation_exact_shapley
+from pydvl.utils import Utility
 
 __all__ = [
     "truncated_montecarlo_shapley",

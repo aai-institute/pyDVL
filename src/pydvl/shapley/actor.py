@@ -3,9 +3,8 @@ from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 
-from valuation.utils import Utility, maybe_progress
-from valuation.utils.config import ParallelConfig
-
+from ..utils import Utility, maybe_progress
+from ..utils.config import ParallelConfig
 from ..utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from ..utils.parallel.backend import init_parallel_backend
 

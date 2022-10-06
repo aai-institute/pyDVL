@@ -7,13 +7,11 @@ from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
 import numpy as np
 
-from valuation.reporting.scores import sort_values
-from valuation.utils import Utility
-from valuation.utils.config import ParallelConfig
-from valuation.utils.numeric import PowerSetDistribution, random_powerset
-from valuation.utils.parallel import MapReduceJob, init_parallel_backend
-from valuation.utils.progress import maybe_progress
-
+from ..reporting.scores import sort_values
+from ..utils import Utility, maybe_progress
+from ..utils.config import ParallelConfig
+from ..utils.numeric import PowerSetDistribution, random_powerset
+from ..utils.parallel import MapReduceJob, init_parallel_backend
 from .actor import get_shapley_coordinator, get_shapley_worker
 
 if TYPE_CHECKING:

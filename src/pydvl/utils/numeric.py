@@ -13,7 +13,6 @@ from enum import Enum
 from itertools import chain, combinations
 from typing import (
     TYPE_CHECKING,
-    Callable,
     Collection,
     Generator,
     Iterator,
@@ -48,7 +47,7 @@ def powerset(it: "NDArray") -> Iterator[Collection[T]]:
     Subsets are generated in sequence by growing size. See `random_powerset()`
     for random sampling.
 
-    >>> from valuation.utils.numeric import powerset
+    >>> from pydvl.utils.numeric import powerset
     >>> list(powerset([1,2]))
     [(), (1,), (2,), (1, 2)]
     """

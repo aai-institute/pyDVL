@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING, Tuple
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-from valuation.influence.general import InfluenceType
-from valuation.utils.numeric import (
+from ..utils.numeric import (
     linear_regression_analytical_derivative_d2_theta,
     linear_regression_analytical_derivative_d_theta,
     linear_regression_analytical_derivative_d_x_d_theta,
 )
+from .general import InfluenceType
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray

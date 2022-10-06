@@ -5,8 +5,8 @@ from itertools import permutations
 
 import numpy as np
 
-from valuation.reporting.scores import sort_values
-from valuation.utils import Utility, maybe_progress, powerset
+from ..reporting.scores import sort_values
+from ..utils import Utility, maybe_progress, powerset
 
 __all__ = ["permutation_exact_shapley", "combinatorial_exact_shapley"]
 

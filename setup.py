@@ -13,7 +13,7 @@ setup(
     packages=find_packages(where="src"),
     include_package_data=True,
     version="0.1.0-dev29",
-    description="The python Data Valuation Library",
+    description="The Python Data Valuation Library",
     install_requires=[
         line
         for line in open("requirements.txt").readlines()
@@ -24,7 +24,7 @@ setup(
     extras_require={
         "influence": ["torch"],
     },
-    author="appliedAI",
+    author="appliedAI Initiative GmbH",
     long_description=long_description,
     long_description_content_type="text/markdown",
     license_files=("LICENSE", "COPYING.LESSER"),
