@@ -12,7 +12,7 @@ build-backend = "setuptools.build_meta"
 profile = "black"
 
 [tool.pytest.ini_options]
-addopts = "--cov --cov-append --cov-report=term-missing --durations=10"
+addopts = "--cov-append --cov-report=term-missing --durations=10"
 testpaths = [
     "tests"
 ]
@@ -26,7 +26,29 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/pydvl"]
+branch = true
+parallel = true
+
+[tool.coverage.paths]
+source = [
+    "src/pydvl",
+    "*/.tox/*/lib/python*/site-packages/pydvl",
+    "*/.tox/pypy*/site-packages/pydvl",
+    "*/.tox\\*\\Lib\\site-packages\tpydvl",
+    "*/src/pydvl",
+    "*\\src\\pydvl",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "\\#\\s*pragma: no cover",
+    "^\\s*raise AssertionError\b",
+    "^\\s*raise NotImplementedError\b",
+    "^\\s*return NotImplemented\b",
+    "^\\s*raise$",
+    "^if __name__ == ['\"]__main__['\"]:$",
+]
 
 [tool.pylint.messages_control]
 disable = [
