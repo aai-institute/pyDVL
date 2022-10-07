@@ -1,4 +1,4 @@
-name: Merge develop, run tests and build documentation
+name: Run tests, build docs, release to TestPyPI
 
 on:
   push:
