@@ -1,17 +1,21 @@
-<p align="center">
-    <img alt="pyDVL" src="logo.svg" width="200"/>
+<p style="text-align:center;">
+    <img alt="pyDVL Logo" src="https://raw.githubusercontent.com/appliedAI-Initiative/pyDVL/develop/logo.svg" width="200"/>
 </p>
 
-<p align="center">
+<p style="text-align:center;">
     A library for data valuation.
 </p>
 
-<p align="center">
-    <a href="https://github.com/appliedAI-Initiative/valuation/actions/workflows/tox.yaml"><img src="https://github.com/appliedAI-Initiative/valuation/actions/workflows/tox.yaml/badge.svg" alt="Build Status" /></a>
+<p style="text-align:center;">
+    <a href="https://github.com/appliedAI-Initiative/pyDVL/actions/workflows/tox.yaml">
+        <img src="https://github.com/appliedAI-Initiative/pyDVL/actions/workflows/tox.yaml/badge.svg" alt="Build Status"/>
+    </a>
 </p>
 
-<p align="center">
-    <a href="https://appliedAI-Initiative.github.io/valuation">Docs</a>
+<p style="text-align:center;">
+    <strong>
+    <a href="https://appliedAI-Initiative.github.io/pyDVL">Docs</a>
+    </strong>
 </p>
 
 # Installation
@@ -28,7 +32,7 @@ You can also install the latest development version from [TestPyPI](https://test
 pip install pyDVL --index-url https://test.pypi.org/simple/
 ```
 
-For more instructions and information refer to the [Installing pyDVL section](https://appliedAI-Initiative.github.io/valuation/install.html)
+For more instructions and information refer to the [Installing pyDVL section](https://appliedAI-Initiative.github.io/pyDVL/install.html)
 of the documentation.
 
 # Usage
@@ -67,10 +71,10 @@ utility = Utility(model, dataset)
 values, errors = truncated_montecarlo_shapley(u=utility, max_iterations=100)
 ```
 
-For more instructions and information refer to the [Getting Started section](https://appliedAI-Initiative.github.io/valuation/getting-started.html) 
+For more instructions and information refer to the [Getting Started section](https://appliedAI-Initiative.github.io/pyDVL/getting-started.html) 
 of the documentation 
 
-Refer to the [Examples section](https://appliedAI-Initiative.github.io/valuation/examples/index.html) of the documentation for more detailed examples.
+Refer to the [Examples section](https://appliedAI-Initiative.github.io/pyDVL/examples/index.html) of the documentation for more detailed examples.
 
 # Contributing
 
