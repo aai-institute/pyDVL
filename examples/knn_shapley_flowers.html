@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KNN Shapley &mdash; pyDVL 0.1.0.dev29 documentation</title>
+  <title>KNN Shapley &mdash; pyDVL 0.1.0.dev30 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
@@ -24,7 +24,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="PyDVL - Shapley for data valuation" href="shapley_spotify.html" />
+    <link rel="next" title="Shapley for data valuation" href="shapley_spotify.html" />
     <link rel="prev" title="Influence functions and neural networks" href="influence_wine.html" /> 
 </head>
 
@@ -56,16 +56,19 @@
 <li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Influence functions and neural networks</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">KNN Shapley</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Imports">Imports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Constants">Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Dataset">Dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Corrupting-labels">Corrupting labels</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html">PyDVL - Shapley for data valuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html">Shapley for data valuation</a></li>
 </ul>
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../valuation/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pydvl/index.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -384,37 +387,77 @@ div.rendered_html tbody tr:hover {
 </div><section id="KNN-Shapley">
 <h1>KNN Shapley<a class="headerlink" href="#KNN-Shapley" title="Permalink to this heading"></a></h1>
 <p>This notebook shows how to calculate Shapley values of the KNN algorithm. Compared to the general Shapley implementation, which has an exponential computation complexity, KNN-Shapley can be computed in linear time, as explained in <a class="reference external" href="http://www.vldb.org/pvldb/vol12/p1610-jia.pdf">this paper</a>. Let’s start from importing the main libraries.</p>
-<div class="nbinput docutils container">
+<section id="Imports">
+<h2>Imports<a class="headerlink" href="#Imports" title="Permalink to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">load_ext</span> autoreload
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">autoreload</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">KNeighborsClassifier</span>
 <span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">datasets</span>
-<span class="kn">from</span> <span class="nn">valuation.utils.plotting</span> <span class="kn">import</span> <span class="n">plot_iris</span>
 
-<span class="kn">from</span> <span class="nn">valuation.shapley.knn</span> <span class="kn">import</span> <span class="n">compute_knn_shapley</span>
-<span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span> <span class="nn">pydvl.utils.plotting</span> <span class="kn">import</span> <span class="n">plot_iris</span>
+<span class="kn">from</span> <span class="nn">pydvl.shapley.knn</span> <span class="kn">import</span> <span class="n">compute_knn_shapley</span>
+<span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
 </div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/Users/fabio/miniconda3/envs/data_shapley/lib/python3.10/site-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-  from .autonotebook import tqdm as notebook_tqdm
-</pre></div></div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;figure.figsize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;font.size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;xtick.labelsize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;ytick.labelsize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+</pre></div>
 </div>
+</div>
+</section>
+<section id="Constants">
+<h2>Constants<a class="headerlink" href="#Constants" title="Permalink to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">random_state</span> <span class="o">=</span> <span class="mi">24</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Dataset">
+<h2>Dataset<a class="headerlink" href="#Dataset" title="Permalink to this heading"></a></h2>
 <p>Through the Dataset class we can load the iris sklearn dataset. For more info on the data see <a class="reference external" href="https://scikit-learn.org/stable/auto_examples/datasets/plot_iris_dataset.html">the dedicated sklearn page</a></p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sklearn_dataset</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">load_iris</span><span class="p">()</span>
@@ -424,7 +467,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <p>The next cell shows how to calculate the Shapley values using the pyDVL knn_shapley method</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">knn</span> <span class="o">=</span> <span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
@@ -436,14 +479,12 @@ div.rendered_html tbody tr:hover {
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-30it [00:00, 3708.27it/s]
-</pre></div></div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "c3adb93390784869bbee26ae980fd7fc", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <p>Let’s now plot the labeles distribution as a function of petal and sepal length</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_iris</span><span class="p">(</span>
@@ -460,12 +501,12 @@ div.rendered_html tbody tr:hover {
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_knn_shapley_flowers_8_0.png" src="../_images/examples_knn_shapley_flowers_8_0.png" />
+<img alt="../_images/examples_knn_shapley_flowers_15_0.png" src="../_images/examples_knn_shapley_flowers_15_0.png" />
 </div>
 </div>
 <p>If we now plot the distribution of Shapley values for each class, we see that each has both high score and low score samples. This is expected, because for training an accurate model we need information on all of the classes.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">class_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">y_train</span><span class="p">)</span>
@@ -487,33 +528,32 @@ div.rendered_html tbody tr:hover {
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_knn_shapley_flowers_10_0.png" src="../_images/examples_knn_shapley_flowers_10_0.png" />
+<img alt="../_images/examples_knn_shapley_flowers_17_0.png" src="../_images/examples_knn_shapley_flowers_17_0.png" />
 </div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_knn_shapley_flowers_10_1.png" src="../_images/examples_knn_shapley_flowers_10_1.png" />
+<img alt="../_images/examples_knn_shapley_flowers_17_1.png" src="../_images/examples_knn_shapley_flowers_17_1.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_knn_shapley_flowers_10_2.png" src="../_images/examples_knn_shapley_flowers_10_2.png" />
+<img alt="../_images/examples_knn_shapley_flowers_17_2.png" src="../_images/examples_knn_shapley_flowers_17_2.png" />
 </div>
 </div>
+</section>
 <section id="Corrupting-labels">
 <h2>Corrupting labels<a class="headerlink" href="#Corrupting-labels" title="Permalink to this heading"></a></h2>
 <p>As done in the notebook for general Shapley, we can corrupt some of the train labels and see how their Shapley values change with respect to the non-corrupted points.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-
-<span class="n">corrupted_dataset</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">corrupted_dataset</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="n">corrupted_dataset</span><span class="o">.</span><span class="n">y_train</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">(</span><span class="n">value</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">3</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">corrupted_dataset</span><span class="o">.</span><span class="n">y_train</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
 <span class="p">]</span>
@@ -525,14 +565,12 @@ div.rendered_html tbody tr:hover {
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-30it [00:00, 4361.49it/s]
-</pre></div></div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "9605bc892b2d487898ab72c2c6baeaa8", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <p>Taking the average corrupted value and comparing it to non-corrupted ones, we notice that on average anomalous points have a much lower score, i.e. they tend to be much less valuable to the model.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">corrupted_shapley_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">contaminated_shapley</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>
@@ -545,11 +583,11 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Mean shapley value of corrupted points: -0.0060392220185388045
+Mean shapley value of corrupted points: -0.0009310771818577552
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">correct_shapley_values</span> <span class="o">=</span> <span class="p">[</span>
@@ -564,12 +602,12 @@ Mean shapley value of corrupted points: -0.0060392220185388045
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Mean shapley value of regular points: 0.011729071554292213
+Mean shapley value of regular points: 0.010219281303966559
 </pre></div></div>
 </div>
 <p>This is confirmed if we plot the Shapley values distribution</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">contaminated_shapley</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">contaminated_shapley</span><span class="p">])</span>
@@ -588,7 +626,7 @@ Mean shapley value of regular points: 0.011729071554292213
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_knn_shapley_flowers_18_0.png" src="../_images/examples_knn_shapley_flowers_18_0.png" />
+<img alt="../_images/examples_knn_shapley_flowers_25_0.png" src="../_images/examples_knn_shapley_flowers_25_0.png" />
 </div>
 </div>
 <p>In the above plot, corrupted points are circled in red. They all tend to have low Shapley scores, regardless of their position in space and assigned label.</p>
@@ -600,7 +638,7 @@ Mean shapley value of regular points: 0.011729071554292213
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="influence_wine.html" class="btn btn-neutral float-left" title="Influence functions and neural networks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="shapley_spotify.html" class="btn btn-neutral float-right" title="PyDVL - Shapley for data valuation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="shapley_spotify.html" class="btn btn-neutral float-right" title="Shapley for data valuation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

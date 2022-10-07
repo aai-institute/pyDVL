@@ -1,0 +1,11 @@
+influence
+=========
+
+.. automodule:: pydvl.influence
+   :members:
+   :undoc-members:
+
+.. toctree::
+   :glob:
+
+   influence/*

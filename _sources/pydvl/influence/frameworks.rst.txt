@@ -1,0 +1,11 @@
+frameworks
+==========
+
+.. automodule:: pydvl.influence.frameworks
+   :members:
+   :undoc-members:
+
+.. toctree::
+   :glob:
+
+   frameworks/*

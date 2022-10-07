@@ -1,0 +1,6 @@
+actor
+=====
+
+.. automodule:: pydvl.utils.parallel.actor
+   :members:
+   :undoc-members:

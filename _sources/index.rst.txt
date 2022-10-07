@@ -19,7 +19,7 @@ If you're a first time user of pyDVL, we recommend you to go through the
    :caption: Reference
    :hidden:
 
-   valuation/index
+   pydvl/index
 
 .. grid:: 2
     :gutter: 4
@@ -71,7 +71,7 @@ If you're a first time user of pyDVL, we recommend you to go through the
 
         +++
 
-        .. button-ref:: valuation
+        .. button-ref:: pydvl
             :expand:
             :color: primary
             :outline:

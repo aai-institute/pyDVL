@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PyDVL - Shapley for data valuation &mdash; pyDVL 0.1.0.dev29 documentation</title>
+  <title>Shapley for data valuation &mdash; pyDVL 0.1.0.dev30 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
@@ -24,7 +24,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="API Reference" href="../valuation/index.html" />
+    <link rel="next" title="API Reference" href="../pydvl/index.html" />
     <link rel="prev" title="KNN Shapley" href="knn_shapley_flowers.html" /> 
 </head>
 
@@ -56,7 +56,10 @@
 <li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Influence functions and neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html">KNN Shapley</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">PyDVL - Shapley for data valuation</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Shapley for data valuation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Imports">Imports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Constants">Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Dataset">Dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Evaluation-on-anomalous-data">Evaluation on anomalous data</a></li>
 </ul>
 </li>
@@ -65,7 +68,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../valuation/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pydvl/index.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -83,7 +86,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="index.html">Examples</a> &raquo;</li>
-      <li>PyDVL - Shapley for data valuation</li>
+      <li>Shapley for data valuation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/examples/shapley_spotify.ipynb.txt" rel="nofollow"> View page source</a>
       </li>
@@ -381,44 +384,100 @@ div.rendered_html tbody tr:hover {
             <img alt="Binder badge" src="https://mybinder.org/badge_logo.svg" style="vertical-align:text-bottom">
         </a>
     </span>
-</div><section id="PyDVL---Shapley-for-data-valuation">
-<h1>PyDVL - Shapley for data valuation<a class="headerlink" href="#PyDVL---Shapley-for-data-valuation" title="Permalink to this heading"></a></h1>
+</div><section id="Shapley-for-data-valuation">
+<h1>Shapley for data valuation<a class="headerlink" href="#Shapley-for-data-valuation" title="Permalink to this heading"></a></h1>
 <p>This notebook introduces Shapley methods for the computation of data value using pyDVL.</p>
 <p>In order to show the practical advantages of shapley pydvl implementation, we will predict the popularity of songs in the “Top Hits Spotify from 2000-2019” dataset. While doing so, we will highlight how data valuation can help boost the performance of your models.</p>
 <p>Here, all the library main entry-points will be briefly described. Let’s start with some imports</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
+<section id="Imports">
+<h2>Imports<a class="headerlink" href="#Imports" title="Permalink to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">load_ext</span> autoreload
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-The autoreload extension is already loaded. To reload it, use:
-  %reload_ext autoreload
-</pre></div></div>
-</div>
-<p>To load the dataset, we will use the load_spotify_dataset method. Internally, the method loads data on songs published after 2014, use 30% of data for test, and another 30% of the remaining data for validation. Then, the method will return train, validation and test data as lists like [X_input, Y_label]</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">load_spotify_dataset</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">autoreload</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
 
-<span class="n">train_data</span><span class="p">,</span> <span class="n">val_data</span><span class="p">,</span> <span class="n">test_data</span> <span class="o">=</span> <span class="n">load_spotify_dataset</span><span class="p">(</span>
-    <span class="n">val_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">target_column</span><span class="o">=</span><span class="s2">&quot;popularity&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="kn">import</span> <span class="n">GradientBoostingRegressor</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_absolute_error</span>
+
+<span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">load_spotify_dataset</span><span class="p">,</span>
+    <span class="n">Dataset</span><span class="p">,</span>
+    <span class="n">GroupedDataset</span><span class="p">,</span>
+    <span class="n">Utility</span><span class="p">,</span>
+    <span class="n">plot_shapley</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pydvl.shapley</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;figure.figsize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;font.size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;xtick.labelsize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;ytick.labelsize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Constants">
+<h2>Constants<a class="headerlink" href="#Constants" title="Permalink to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">random_state</span> <span class="o">=</span> <span class="mi">24</span>
+<span class="n">is_CI</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CI&quot;</span><span class="p">)</span>
+<span class="n">enable_cache</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">is_CI</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">random_state</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Dataset">
+<h2>Dataset<a class="headerlink" href="#Dataset" title="Permalink to this heading"></a></h2>
+<p>To load the dataset, we will use the load_spotify_dataset method. Internally, the method loads data on songs published after 2014, use 30% of data for test, and another 30% of the remaining data for validation. Then, the method will return train, validation and test data as lists like [X_input, Y_label]</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">train_data</span><span class="p">,</span> <span class="n">val_data</span><span class="p">,</span> <span class="n">test_data</span> <span class="o">=</span> <span class="n">load_spotify_dataset</span><span class="p">(</span>
+    <span class="n">val_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">target_column</span><span class="o">=</span><span class="s2">&quot;popularity&quot;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+<span class="p">)</span>
+<span class="c1"># In CI we only use a subset of the training set</span>
+<span class="k">if</span> <span class="n">is_CI</span><span class="p">:</span>
+    <span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span>
+    <span class="n">train_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span>
+
 <span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -567,7 +626,7 @@ The autoreload extension is already loaded. To reload it, use:
 <p>The dataset has many high level features, some quite intuitive (‘duration_ms’ or ‘tempo’), and other a bit more cryptic (‘valence’?). For information on each feature,visit <a class="reference external" href="https://www.kaggle.com/datasets/paradisejoy/top-hits-spotify-from-20002019?resource=download">this webpage</a>. In our analysis, we will use all the columns, excluding ‘artist’ and ‘song’, to predict the ‘popularity’ of each song. We will nonetheless keep the information on song and artist in a separate object for future
 reference.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">song_name</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;song&quot;</span><span class="p">]</span>
@@ -580,24 +639,20 @@ reference.</p>
 </div>
 <p>Input and label data need to be stored in a Dataset object, a pyDVL specific class.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">Dataset</span>
-
-<span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">*</span><span class="n">train_data</span><span class="p">,</span> <span class="o">*</span><span class="n">val_data</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">*</span><span class="n">train_data</span><span class="p">,</span> <span class="o">*</span><span class="n">val_data</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <p>The calculation of Shapley coefficients is very computationally expensive because it needs to go through several subsets of the original dataset before converging. For this reason, the PyDVL library implements techniques to speed up the calculation, such as caching intermediate results and grouping data to calculate group Shapley values instead of single-datapoints.</p>
 <p>In our case, we will group each single song by artist and calculate the Shapley value for each of them. Given the artist pandas Series, to create a grouped dataset you can just do the following</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">GroupedDataset</span>
-
-<span class="n">grouped_dataset</span> <span class="o">=</span> <span class="n">GroupedDataset</span><span class="o">.</span><span class="n">from_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">data_groups</span><span class="o">=</span><span class="n">artist</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">grouped_dataset</span> <span class="o">=</span> <span class="n">GroupedDataset</span><span class="o">.</span><span class="n">from_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">data_groups</span><span class="o">=</span><span class="n">artist</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -605,27 +660,31 @@ reference.</p>
 <p>As model, we will use a GradientBoostingRegressor, but any model from sklearn, xgboost and lightgbm works. More precisely, any model that has a fit and predict method should run without issues.</p>
 <p>To give a score to our model, we will pass a string which refers to the standard sklearn scoring methods. You can find all other available options in the <a class="reference external" href="https://scikit-learn.org/stable/modules/model_evaluation.html">sklearn documentation</a>. There you can also find how to define your own scoring function if needed.</p>
 <p>If you plan to use the cache (enable_cache = True), make sure to restart (or simply start if it is not already running) your memcache. See our <a class="reference external" href="https://appliedai-initiative.github.io/valuation/install.html">documentation</a> for details.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.shapley</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
-<span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">Utility</span>
-<span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="kn">import</span> <span class="n">GradientBoostingRegressor</span>
-
-<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">GradientBoostingRegressor</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
     <span class="n">data</span><span class="o">=</span><span class="n">grouped_dataset</span><span class="p">,</span>
     <span class="n">scoring</span><span class="o">=</span><span class="s2">&quot;neg_mean_absolute_error&quot;</span><span class="p">,</span>
-    <span class="n">enable_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">enable_cache</span><span class="o">=</span><span class="n">enable_cache</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">dvl_df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">dvl_df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2022-10-06 15:55:28,116 INFO worker.py:1518 -- Started a local Ray instance.
+</pre></div></div>
+</div>
 <p>The first object that was have defined (utility) holds all the information on the dataset, the model and the scoring. The second method, shapley_values, calculates the actual Shapley values and manages parallelization. Let’s take a look at the returned dataframe.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dvl_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
@@ -633,7 +692,7 @@ reference.</p>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -655,41 +714,35 @@ reference.</p>
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>data_key</th>
-      <th>shapley_dval</th>
-      <th>dval_std</th>
+      <th>data_value</th>
+      <th>data_value_std</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>0</th>
-      <td>Liam Payne</td>
-      <td>-1.426819</td>
-      <td>0.171583</td>
+      <th>CNCO</th>
+      <td>-1.915079</td>
+      <td>0.824878</td>
     </tr>
     <tr>
-      <th>1</th>
-      <td>BLACKPINK</td>
-      <td>-1.330279</td>
-      <td>0.147117</td>
+      <th>AlunaGeorge</th>
+      <td>-1.860582</td>
+      <td>0.759359</td>
     </tr>
     <tr>
-      <th>2</th>
-      <td>5 Seconds of Summer</td>
-      <td>-1.226239</td>
-      <td>0.123429</td>
+      <th>Rich Homie Quan</th>
+      <td>-1.782366</td>
+      <td>0.746033</td>
     </tr>
     <tr>
-      <th>3</th>
-      <td>Ava Max</td>
-      <td>-1.211838</td>
-      <td>0.148645</td>
+      <th>Ariana Grande</th>
+      <td>-1.476541</td>
+      <td>0.573938</td>
     </tr>
     <tr>
-      <th>4</th>
-      <td>Silentó</td>
-      <td>-1.187947</td>
-      <td>0.069981</td>
+      <th>Kendrick Lamar</th>
+      <td>-1.408348</td>
+      <td>0.450465</td>
     </tr>
   </tbody>
 </table>
@@ -698,45 +751,35 @@ reference.</p>
 <p>The first thing to notice is that the dvl_df dataframe is sorted in ascending order of shapley values. The data_key columns holds the labels for each data group: in this case, since the groups correspond to artists, it coincides with artist names. The second column corresponds to the shapley data valuation score, and the third to its (approximate) standard deviation.</p>
 <p>Let’s plot the results. In the next cell we will take the 30 datapoints with lowest score and plot them with (approximate) errorbars. Keep in mind that montecarlo Shapley is typically very noisy, so it may take several steps before arriving at a non-noisy, non-biased estimate.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">plot_shapley</span>
-
-<span class="n">low_dvl</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span>
-<span class="n">fig</span> <span class="o">=</span> <span class="n">plot_shapley</span><span class="p">(</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">plot_shapley</span><span class="p">(</span>
     <span class="n">low_dvl</span><span class="p">,</span>
-    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
     <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Artists with low data valuation scores&quot;</span><span class="p">,</span>
-    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;artist&quot;</span><span class="p">,</span>
-    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;shapley_pydvl&quot;</span><span class="p">,</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Artist&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Shapley Value&quot;</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/var/folders/kj/nzr59d991gj0y17m_d24hfyr0000gn/T/ipykernel_4182/1298377207.py:4: UserWarning: Matplotlib is currently using module://matplotlib_inline.backend_inline, which is a non-GUI backend, so cannot show the figure.
-  fig.show()
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_shapley_spotify_16_1.png" src="../_images/examples_shapley_spotify_16_1.png" />
+<img alt="../_images/examples_shapley_spotify_23_0.png" src="../_images/examples_shapley_spotify_23_0.png" />
 </div>
 </div>
 <p>As you can see, there are a lot of points which give negative shapley score, meaning that they tend to decrease the total score of the model when present in the training set! What happens if we remove them? In the next cell we will create a new training set which excludes the 30 points with lowest scores.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl_artists</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span><span class="o">.</span><span class="n">data_key</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl_artists</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
 <span class="n">artist_filter</span> <span class="o">=</span> <span class="o">~</span><span class="n">artist</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">low_dvl_artists</span><span class="p">)</span>
 <span class="n">X_train_good_dvl</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">artist_filter</span><span class="p">]</span>
 <span class="n">y_train_good_dvl</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">artist_filter</span><span class="p">]</span>
@@ -745,12 +788,10 @@ reference.</p>
 </div>
 <p>Now we will use this cleaned dataset to train a full GradientBoostingRegressor and compare its mean absolute error to the model which uses the full dataset. Notice that the score now is calculated using the test set, while in the calculation of the shapley values we were using the validation set.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_absolute_error</span>
-
-<span class="n">full_model</span> <span class="o">=</span> <span class="n">GradientBoostingRegressor</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">full_model</span> <span class="o">=</span> <span class="n">GradientBoostingRegressor</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
     <span class="n">X_train_good_dvl</span><span class="p">,</span> <span class="n">y_train_good_dvl</span>
 <span class="p">)</span>
 <span class="n">mean_absolute_error</span><span class="p">(</span><span class="n">full_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">test_data</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -758,16 +799,16 @@ reference.</p>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-16.917794810679457
+16.94998610601937
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">full_model</span> <span class="o">=</span> <span class="n">GradientBoostingRegressor</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">train_data</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -776,7 +817,7 @@ reference.</p>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -785,44 +826,38 @@ reference.</p>
 </pre></div></div>
 </div>
 <p>The score has improved by more than 15%! This is quite an important result, as it shows a self-consistent process to improve the performance of a model by excluding datapoints from its training set.</p>
+</section>
 <section id="Evaluation-on-anomalous-data">
 <h2>Evaluation on anomalous data<a class="headerlink" href="#Evaluation-on-anomalous-data" title="Permalink to this heading"></a></h2>
 <p>Another interesting test is to corrupt some of the data and monitor how their valuation score changes. To do this, we will take one of the authors with the highest score and set all its popularity to 0.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">high_dvl</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">30</span><span class="p">:]</span>
-<span class="n">fig</span> <span class="o">=</span> <span class="n">plot_shapley</span><span class="p">(</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">plot_shapley</span><span class="p">(</span>
     <span class="n">high_dvl</span><span class="p">,</span>
-    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
     <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Artists with high data valuation scores&quot;</span><span class="p">,</span>
-    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;artist&quot;</span><span class="p">,</span>
-    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;shapley values&quot;</span><span class="p">,</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Artist&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Shapley Value&quot;</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">()[</span><span class="n">high_dvl</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="s2">&quot;Rihanna&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/var/folders/kj/nzr59d991gj0y17m_d24hfyr0000gn/T/ipykernel_4182/3974558511.py:3: UserWarning: Matplotlib is currently using module://matplotlib_inline.backend_inline, which is a non-GUI backend, so cannot show the figure.
-  fig.show()
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_shapley_spotify_25_1.png" src="../_images/examples_shapley_spotify_25_1.png" />
+<img alt="../_images/examples_shapley_spotify_32_0.png" src="../_images/examples_shapley_spotify_32_0.png" />
 </div>
 </div>
 <p>From the plot above, we can see that Rihanna has one of the highest scores. Let’s now take all the train labels related to her, set the score to 0 and re-calculate the data valuation scores. Notice that I must use a new name for the dataset, because I need to create another cache. Reusing the old one would be a mistake since modifying even just one label changes all the shapley values.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">y_train_anomalous</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -840,41 +875,34 @@ reference.</p>
     <span class="n">scoring</span><span class="o">=</span><span class="s2">&quot;neg_mean_absolute_error&quot;</span><span class="p">,</span>
     <span class="n">enable_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">dvl_df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">dvl_df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <p>Let’s now take the low scoring artists and plot the results</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span>
-<span class="n">fig</span> <span class="o">=</span> <span class="n">plot_shapley</span><span class="p">(</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_shapley</span><span class="p">(</span>
     <span class="n">low_dvl</span><span class="p">,</span>
-    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
     <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Artists with low data valuation scores&quot;</span><span class="p">,</span>
-    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;artist&quot;</span><span class="p">,</span>
-    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;shapley values&quot;</span><span class="p">,</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Artist&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Shapley Value&quot;</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">()[</span><span class="n">low_dvl</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="s2">&quot;Rihanna&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/var/folders/kj/nzr59d991gj0y17m_d24hfyr0000gn/T/ipykernel_4182/1035400712.py:3: UserWarning: Matplotlib is currently using module://matplotlib_inline.backend_inline, which is a non-GUI backend, so cannot show the figure.
-  fig.show()
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_shapley_spotify_29_1.png" src="../_images/examples_shapley_spotify_29_1.png" />
+<img alt="../_images/examples_shapley_spotify_36_0.png" src="../_images/examples_shapley_spotify_36_0.png" />
 </div>
 </div>
 <p>And Rihanna (our anomalous data group) has moved from top contributor to having negative impact on the performance of the model, as expected!</p>
@@ -886,7 +914,7 @@ reference.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="knn_shapley_flowers.html" class="btn btn-neutral float-left" title="KNN Shapley" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../valuation/index.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../pydvl/index.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

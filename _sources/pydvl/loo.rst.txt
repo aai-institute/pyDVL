@@ -1,0 +1,11 @@
+loo
+===
+
+.. automodule:: pydvl.loo
+   :members:
+   :undoc-members:
+
+.. toctree::
+   :glob:
+
+   loo/*

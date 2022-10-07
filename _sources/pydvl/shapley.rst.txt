@@ -1,0 +1,11 @@
+shapley
+=======
+
+.. automodule:: pydvl.shapley
+   :members:
+   :undoc-members:
+
+.. toctree::
+   :glob:
+
+   shapley/*

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>plots &mdash; pyDVL 0.1.0.dev30 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/design-tabs.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="scores" href="scores.html" />
+    <link rel="prev" title="reporting" href="../reporting.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html">
+            <img src="../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../influence.html">influence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../loo.html">loo</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../reporting.html">reporting</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scores.html">scores</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../shapley.html">shapley</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils.html">utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyDVL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">API Reference</a> &raquo;</li>
+          <li><a href="../reporting.html">reporting</a> &raquo;</li>
+      <li>plots</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/pydvl/reporting/plots.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="module-pydvl.reporting.plots">
+<span id="plots"></span><h1>plots<a class="headerlink" href="#module-pydvl.reporting.plots" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="pydvl.reporting.plots.shaded_mean_std">
+<span class="sig-name descname"><span class="pre">shaded_mean_std</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_std</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/reporting/plots.py#L8"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.reporting.plots.shaded_mean_std" title="Permalink to this definition"></a></dt>
+<dd><p>The usual mean +- x std deviations plot to aggregate runs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – axis 0 is to be aggregated on (i.e. runs) and axis 1 is the data for each run</p></li>
+<li><p><strong>color</strong> – for matplotlib</p></li>
+<li><p><strong>num_std</strong> – number of standard deviations to shade around the mean</p></li>
+<li><p><strong>kwargs</strong> – these are forwarded to the plt.plot() call for the mean</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pydvl.reporting.plots.shapley_results">
+<span class="sig-name descname"><span class="pre">shapley_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/reporting/plots.py#L26"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.reporting.plots.shapley_results" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results</strong> – dict</p></li>
+<li><p><strong>filename</strong> – For plt.savefig(). Set to None to disable saving.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Here’s an example results dictionary:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;all_values&quot;</span><span class="p">:</span> <span class="n">num_runs</span> <span class="n">x</span> <span class="n">num_points</span>
+    <span class="s2">&quot;backward_scores&quot;</span><span class="p">:</span> <span class="n">num_runs</span> <span class="n">x</span> <span class="n">num_points</span><span class="p">,</span>
+    <span class="s2">&quot;backward_scores_reversed&quot;</span><span class="p">:</span> <span class="n">num_runs</span> <span class="n">x</span> <span class="n">num_points</span><span class="p">,</span>
+    <span class="s2">&quot;backward_random_scores&quot;</span><span class="p">:</span> <span class="n">num_runs</span> <span class="n">x</span> <span class="n">num_points</span><span class="p">,</span>
+    <span class="s2">&quot;forward_scores&quot;</span><span class="p">:</span> <span class="n">num_runs</span> <span class="n">x</span> <span class="n">num_points</span><span class="p">,</span>
+    <span class="s2">&quot;forward_scores_reversed&quot;</span><span class="p">:</span> <span class="n">num_runs</span> <span class="n">x</span> <span class="n">num_points</span><span class="p">,</span>
+    <span class="s2">&quot;forward_random_scores&quot;</span><span class="p">:</span> <span class="n">num_runs</span> <span class="n">x</span> <span class="n">num_points</span><span class="p">,</span>
+    <span class="s2">&quot;max_iterations&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="s2">&quot;score_name&quot;</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="s2">&quot;num_points&quot;</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pydvl.reporting.plots.spearman_correlation">
+<span class="sig-name descname"><span class="pre">spearman_correlation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">OrderedDict</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pvalue</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/reporting/plots.py#L94"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.reporting.plots.spearman_correlation" title="Permalink to this definition"></a></dt>
+<dd><p>Simple matrix plots with spearman correlation for each pair in vv.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vv</strong> – list of OrderedDicts with index: value. Spearman correlation
+is computed for the keys.</p></li>
+<li><p><strong>num_values</strong> – Use only these many values from the data (from the start
+of the OrderedDicts)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../reporting.html" class="btn btn-neutral float-left" title="reporting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="scores.html" class="btn btn-neutral float-right" title="scores" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

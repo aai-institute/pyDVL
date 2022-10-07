@@ -1,6 +1,0 @@
-actor
-=====
-
-.. automodule:: valuation.utils.parallel.actor
-   :members:
-   :undoc-members:

@@ -1,0 +1,11 @@
+reporting
+=========
+
+.. automodule:: pydvl.reporting
+   :members:
+   :undoc-members:
+
+.. toctree::
+   :glob:
+
+   reporting/*

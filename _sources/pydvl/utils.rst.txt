@@ -1,0 +1,11 @@
+utils
+=====
+
+.. automodule:: pydvl.utils
+   :members:
+   :undoc-members:
+
+.. toctree::
+   :glob:
+
+   utils/*

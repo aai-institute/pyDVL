@@ -1,6 +1,0 @@
-backend
-=======
-
-.. automodule:: valuation.utils.parallel.backend
-   :members:
-   :undoc-members:

@@ -1,0 +1,6 @@
+plotting
+========
+
+.. automodule:: pydvl.utils.plotting
+   :members:
+   :undoc-members:

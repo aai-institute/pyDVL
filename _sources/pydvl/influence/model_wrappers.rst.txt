@@ -1,0 +1,11 @@
+model\_wrappers
+===============
+
+.. automodule:: pydvl.influence.model_wrappers
+   :members:
+   :undoc-members:
+
+.. toctree::
+   :glob:
+
+   model_wrappers/*

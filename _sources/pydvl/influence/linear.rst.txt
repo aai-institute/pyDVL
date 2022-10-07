@@ -1,0 +1,6 @@
+linear
+======
+
+.. automodule:: pydvl.influence.linear
+   :members:
+   :undoc-members:

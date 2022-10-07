@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Data Utility Learning &mdash; pyDVL 0.1.0.dev29 documentation</title>
+  <title>Data Utility Learning &mdash; pyDVL 0.1.0.dev30 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
@@ -64,13 +64,13 @@
 <li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Influence functions and neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html">KNN Shapley</a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html">PyDVL - Shapley for data valuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html">Shapley for data valuation</a></li>
 </ul>
 </li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../valuation/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pydvl/index.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -436,8 +436,8 @@ div.rendered_html tbody tr:hover {
 <span class="kn">from</span> <span class="nn">sklearn.exceptions</span> <span class="kn">import</span> <span class="n">ConvergenceWarning</span>
 <span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
-<span class="kn">from</span> <span class="nn">valuation.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span><span class="p">,</span> <span class="n">DataUtilityLearning</span><span class="p">,</span> <span class="n">top_k_value_accuracy</span>
-<span class="kn">from</span> <span class="nn">valuation.shapley</span> <span class="kn">import</span> <span class="n">get_shapley_values</span>
+<span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span><span class="p">,</span> <span class="n">DataUtilityLearning</span><span class="p">,</span> <span class="n">top_k_value_accuracy</span>
+<span class="kn">from</span> <span class="nn">pydvl.shapley</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
 
 <span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">ConvergenceWarning</span><span class="p">)</span>
 </pre></div>
@@ -463,7 +463,10 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">random_state</span> <span class="o">=</span> <span class="mi">24</span>
 
-<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CI&quot;</span><span class="p">):</span>
+<span class="n">is_CI</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CI&quot;</span><span class="p">)</span>
+<span class="n">enable_cache</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">is_CI</span>
+
+<span class="k">if</span> <span class="n">is_CI</span><span class="p">:</span>
     <span class="n">train_size</span> <span class="o">=</span> <span class="mi">5</span>
     <span class="n">training_budget_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
     <span class="n">n_iterations</span> <span class="o">=</span> <span class="mi">1</span>
@@ -544,24 +547,113 @@ div.rendered_html tbody tr:hover {
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">LinearSVC</span><span class="p">(),</span>
     <span class="n">data</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
-    <span class="n">enable_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">enable_cache</span><span class="o">=</span><span class="n">enable_cache</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">get_shapley_values</span><span class="p">(</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
     <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
     <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;combinatorial_exact&quot;</span><span class="p">,</span>
-    <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;data_key&quot;</span><span class="p">)</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;shapley_dval&quot;</span><span class="p">:</span> <span class="s2">&quot;exact&quot;</span><span class="p">})</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data_value&quot;</span><span class="p">:</span> <span class="s2">&quot;exact&quot;</span><span class="p">})</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "7bef54ca9bc74fff9a735958e14c95a6", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "86e30f55c937464394598e6f47249559", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "f3f10dfd5b2e4171923854c671bc6506", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "2bdaee64373740dd90a45f7bcf8837ac", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "3fa24a06dd7e4f678e007eaedda4d17e", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "4bd0555661a14460850fe13f1016fb7f", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "a407f1194e66480fb999a0d1bf78ed9c", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "aa2fb7f7c9284f06ad91d16112e74d16", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "e6c1e219fa8a455fa773a9d21c7d1ae3", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "fb486a6c8d6a4a99b5de96f1e7b39f43", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "c418cabba089457e99d836436c85e7aa", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "3c6efe2079984a52914e60d8e5a9a5af", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "a540d0a78a0a4eeb9902a8414a4cf917", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "ee217ebdb80143418ec8b6f3bafac846", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "85b73121bb1548b183085fdd46988edc", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <p>Then we compute the estimates of the Data Shapley values using the DataUtilityLearning wrapper which fits, just like in the paper, a Multi-Layer Perceptron (or Fully Connected Network) on a certain number, determined by <code class="docutils literal notranslate"><span class="pre">training_budget</span></code>, of utility samples (pairs of subset of training dataset and the corresponding utility).</p>
 <div class="nbinput docutils container">
@@ -570,24 +662,23 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">training_budget</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">training_budget_values</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">:</span> <span class="n">Utility</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="n">utility</span> <span class="o">=</span> <span class="n">DataUtilityLearning</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">compute_shapley_values_for_training_budget</span><span class="p">(</span><span class="n">utility</span><span class="p">:</span> <span class="n">Utility</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">dul_utility</span> <span class="o">=</span> <span class="n">DataUtilityLearning</span><span class="p">(</span>
             <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">training_budget</span><span class="o">=</span><span class="n">training_budget</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">MLPRegressor</span><span class="p">(</span><span class="o">**</span><span class="n">mlp_kwargs</span><span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="n">dul_df</span> <span class="o">=</span> <span class="n">get_shapley_values</span><span class="p">(</span>
-            <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+        <span class="n">dul_df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
+            <span class="n">u</span><span class="o">=</span><span class="n">dul_utility</span><span class="p">,</span>
             <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;combinatorial_exact&quot;</span><span class="p">,</span>
             <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">dul_df</span> <span class="o">=</span> <span class="n">dul_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;data_key&quot;</span><span class="p">)</span>
-        <span class="n">dul_df</span> <span class="o">=</span> <span class="n">dul_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;shapley_dval&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">training_budget</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">})</span>
+        <span class="n">dul_df</span> <span class="o">=</span> <span class="n">dul_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data_value&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">training_budget</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">dul_df</span>
 
     <span class="k">with</span> <span class="n">ProcessPoolExecutor</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
         <span class="n">futures</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">compute_shapley_values</span><span class="p">,</span> <span class="n">utility</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_iterations</span><span class="p">)</span>
+            <span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">compute_shapley_values_for_training_budget</span><span class="p">,</span> <span class="n">utility</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_iterations</span><span class="p">)</span>
         <span class="p">]</span>
         <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">as_completed</span><span class="p">(</span><span class="n">futures</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">8</span> <span class="o">*</span> <span class="mi">60</span><span class="p">):</span>
             <span class="n">dul_df</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
@@ -599,7 +690,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "422847febabf499b8a133d2811106768", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "a7f55d9c09e0440289f80f919e981587", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <p>After, we compute the mean, minimum and maximum <span class="math notranslate nohighlight">\(L_1\)</span> error for the different training budget values and plots the results</p>
 <div class="nbinput nblast docutils container">
@@ -627,20 +718,22 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">training_budget_values</span><span class="p">,</span> <span class="n">errors</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Estimated values&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span>
-    <span class="n">error_from_mean</span><span class="p">,</span>
-    <span class="n">training_budget_values</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
-    <span class="n">training_budget_values</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
-    <span class="s2">&quot;g&quot;</span><span class="p">,</span>
-    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Mean of Exact values&quot;</span><span class="p">,</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">training_budget_values</span><span class="p">,</span> <span class="n">errors</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;dodgerblue&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Estimated values&quot;</span>
 <span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
     <span class="n">training_budget_values</span><span class="p">,</span>
     <span class="n">errors</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
     <span class="n">errors</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
-    <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span>
+    <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;lightblue&quot;</span><span class="p">,</span>
     <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span>
+    <span class="n">error_from_mean</span><span class="p">,</span>
+    <span class="n">training_budget_values</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
+    <span class="n">training_budget_values</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+    <span class="s2">&quot;indianred&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Mean of Exact values&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;$m_</span><span class="si">{train}</span><span class="s2">$&quot;</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$L_2$ Error&quot;</span><span class="p">)</span>
@@ -663,16 +756,21 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">training_budget_values</span><span class="p">,</span> <span class="n">accuracies</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Estimated values&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">training_budget_values</span><span class="p">,</span>
+    <span class="n">accuracies</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+    <span class="s2">&quot;dodgerblue&quot;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Estimated values&quot;</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
     <span class="n">training_budget_values</span><span class="p">,</span>
     <span class="n">accuracies</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
     <span class="n">accuracies</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
-    <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span>
+    <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;lightblue&quot;</span><span class="p">,</span>
     <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;$m_</span><span class="si">{train}</span><span class="s2">$&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Average Top-K Accuracy&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Average Top-3 Accuracy&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -697,7 +795,12 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
-<span class="n">df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;exact&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">best_training_budget</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;exact&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">best_training_budget</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+    <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;dodgerblue&quot;</span><span class="p">,</span> <span class="s2">&quot;indianred&quot;</span><span class="p">],</span>
+<span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Index&quot;</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Data Shapley value&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s2">&quot;Exact&quot;</span><span class="p">,</span> <span class="s2">&quot;Estimated&quot;</span><span class="p">])</span>
@@ -720,7 +823,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">highest_value_index</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;exact&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">argmax</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">highest_value_index</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;exact&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">argmax</span><span class="p">()]</span>
 <span class="n">y_train_corrupted</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y_train</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 <span class="n">y_train_corrupted</span><span class="p">[</span><span class="n">highest_value_index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">y_train_corrupted</span><span class="p">[</span><span class="n">highest_value_index</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
@@ -767,25 +870,23 @@ div.rendered_html tbody tr:hover {
     <span class="n">enable_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="n">df_corrupted</span> <span class="o">=</span> <span class="n">get_shapley_values</span><span class="p">(</span>
+<span class="n">df_corrupted</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
     <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
     <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;combinatorial_exact&quot;</span><span class="p">,</span>
     <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">df_corrupted</span> <span class="o">=</span> <span class="n">df_corrupted</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;data_key&quot;</span><span class="p">)</span>
-<span class="n">df_corrupted</span> <span class="o">=</span> <span class="n">df_corrupted</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;shapley_dval&quot;</span><span class="p">:</span> <span class="s2">&quot;exact&quot;</span><span class="p">})</span>
+<span class="n">df_corrupted</span> <span class="o">=</span> <span class="n">df_corrupted</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data_value&quot;</span><span class="p">:</span> <span class="s2">&quot;exact&quot;</span><span class="p">})</span>
 
-<span class="n">utility</span> <span class="o">=</span> <span class="n">DataUtilityLearning</span><span class="p">(</span>
+<span class="n">dul_utility</span> <span class="o">=</span> <span class="n">DataUtilityLearning</span><span class="p">(</span>
     <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">training_budget</span><span class="o">=</span><span class="n">best_training_budget</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">MLPRegressor</span><span class="p">(</span><span class="o">**</span><span class="n">mlp_kwargs</span><span class="p">)</span>
 <span class="p">)</span>
 
-<span class="n">dul_df</span> <span class="o">=</span> <span class="n">get_shapley_values</span><span class="p">(</span>
-    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+<span class="n">dul_df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
+    <span class="n">u</span><span class="o">=</span><span class="n">dul_utility</span><span class="p">,</span>
     <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;combinatorial_exact&quot;</span><span class="p">,</span>
     <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">dul_df</span> <span class="o">=</span> <span class="n">dul_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;data_key&quot;</span><span class="p">)</span>
-<span class="n">dul_df</span> <span class="o">=</span> <span class="n">dul_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;shapley_dval&quot;</span><span class="p">:</span> <span class="s2">&quot;estimated&quot;</span><span class="p">})</span>
+<span class="n">dul_df</span> <span class="o">=</span> <span class="n">dul_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data_value&quot;</span><span class="p">:</span> <span class="s2">&quot;estimated&quot;</span><span class="p">})</span>
 <span class="n">df_corrupted</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_corrupted</span><span class="p">,</span> <span class="n">dul_df</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -795,7 +896,9 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-<span class="n">df_corrupted</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;exact&quot;</span><span class="p">,</span> <span class="s2">&quot;estimated&quot;</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<span class="n">df_corrupted</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;exact&quot;</span><span class="p">,</span> <span class="s2">&quot;estimated&quot;</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;dodgerblue&quot;</span><span class="p">,</span> <span class="s2">&quot;indianred&quot;</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Index&quot;</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Data Shapley value&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s2">&quot;Exact&quot;</span><span class="p">,</span> <span class="s2">&quot;Estimated&quot;</span><span class="p">])</span>

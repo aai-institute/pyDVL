@@ -1,0 +1,6 @@
+torch\_differentiable
+=====================
+
+.. automodule:: pydvl.influence.frameworks.torch_differentiable
+   :members:
+   :undoc-members:

@@ -1,0 +1,11 @@
+parallel
+========
+
+.. automodule:: pydvl.utils.parallel
+   :members:
+   :undoc-members:
+
+.. toctree::
+   :glob:
+
+   parallel/*

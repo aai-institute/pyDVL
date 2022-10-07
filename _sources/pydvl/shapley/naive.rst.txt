@@ -1,0 +1,6 @@
+naive
+=====
+
+.. automodule:: pydvl.shapley.naive
+   :members:
+   :undoc-members:
