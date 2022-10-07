@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Iterable, Optional, Tuple, Type, Union
+from typing import Iterable, Optional, Tuple, Union
 
 from pymemcache.serde import PickleSerde
 

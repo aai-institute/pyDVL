@@ -29,14 +29,14 @@ python-library-template, it will already include a venv)
 
 ```shell script
 python -m venv ./venv
-. venv/bin/activate  # `venv\Scripts\activate` in windoze
+. venv/bin/activate  # `venv\Scripts\activate` in windows
 ```
 
 or conda:
 
 ```shell script
-conda create -n valuation python=3.8
-conda activate valuation
+conda create -n pydvl python=3.8
+conda activate pydvl
 ```
 
 A very convenient way of working with your library during development is to

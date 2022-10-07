@@ -3,7 +3,7 @@
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from valuation.utils import DataUtilityLearning, MemcachedConfig, Utility, powerset
+from pydvl.utils import DataUtilityLearning, MemcachedConfig, Utility, powerset
 
 
 # noinspection PyUnresolvedReferences

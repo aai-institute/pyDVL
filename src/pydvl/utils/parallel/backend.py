@@ -26,8 +26,8 @@ class RayParallelBackend:
 
     :Example:
 
-    >>> from valuation.utils.parallel.backend import RayParallelBackend
-    >>> from valuation.utils.config import ParallelConfig
+    >>> from pydvl.utils.parallel.backend import RayParallelBackend
+    >>> from pydvl.utils.config import ParallelConfig
     >>> config = ParallelConfig(backend="ray")
     >>> parallel_backend = RayParallelBackend(config)
     >>> parallel_backend
@@ -91,8 +91,8 @@ def init_parallel_backend(config: ParallelConfig) -> "RayParallelBackend":
 
     :Example:
 
-    >>> from valuation.utils.parallel.backend import init_parallel_backend
-    >>> from valuation.utils.config import ParallelConfig
+    >>> from pydvl.utils.parallel.backend import init_parallel_backend
+    >>> from pydvl.utils.config import ParallelConfig
     >>> config = ParallelConfig(backend="ray")
     >>> parallel_backend = init_parallel_backend(config)
     >>> parallel_backend

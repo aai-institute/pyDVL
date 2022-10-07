@@ -1,10 +1,20 @@
 # Changelog
 
-## 0.1.0 - Initial Release
+## 0.1.0 - 🎉 first release
 
-### Features:
+This is very first release of pyDVL.
 
-### Development:
+It contains:
 
-- Initial setup by python-library-template
+- Data Valuation Methods:
 
+  - Leave-One-Out
+  - Influence Functions
+  - Shapley:
+    - Exact Permutation and Combinatorial
+    - Montecarlo Permutation and Combinatorial
+    - Truncated Montecarlo Permutation
+- Caching of results with Memcached
+- Parallelization of computations with Ray
+- Documentation
+- Notebooks containing examples of different use cases

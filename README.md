@@ -50,13 +50,13 @@ the data valuation. Here we use Truncated Montecarlo Shapley because it is the m
 
 Put all together:
 
-
 ```python
 import numpy as np
-from valuation.utils import Dataset, Utility
+from pydvl.utils import Dataset, Utility
+from pydvl.shapley.montecarlo import truncated_montecarlo_shapley
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-from valuation.shapley.montecarlo import truncated_montecarlo_shapley
+
 X, y = np.arange(100).reshape((50, 2)), np.arange(50)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.5, random_state=16

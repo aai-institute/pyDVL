@@ -6,15 +6,12 @@ from typing import TYPE_CHECKING, Callable, Dict, Optional
 
 import numpy as np
 
-from valuation.influence.conjugate_gradient import (
+from .conjugate_gradient import (
     batched_preconditioned_conjugate_gradient,
     conjugate_gradient,
 )
-from valuation.influence.frameworks import TorchTwiceDifferentiable
-from valuation.influence.types import (
-    MatrixVectorProductInversionAlgorithm,
-    TwiceDifferentiable,
-)
+from .frameworks import TorchTwiceDifferentiable
+from .types import MatrixVectorProductInversionAlgorithm, TwiceDifferentiable
 
 try:
     import torch

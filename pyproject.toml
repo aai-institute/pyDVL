@@ -12,7 +12,7 @@ build-backend = "setuptools.build_meta"
 profile = "black"
 
 [tool.pytest.ini_options]
-addopts = "--cov --cov-append --cov-report=term-missing --durations=10"
+addopts = "--cov-report=term-missing --durations=10"
 testpaths = [
     "tests"
 ]
@@ -26,7 +26,30 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/valuation"]
+branch = true
+parallel = true
+
+[tool.coverage.paths]
+source = [
+    "src/pydvl",
+    "*/.tox/*/lib/python*/site-packages/pydvl",
+    "*/.tox/pypy*/site-packages/pydvl",
+    "*/.tox\\*\\Lib\\site-packages\tpydvl",
+    "*/src/pydvl",
+    "*\\src\\pydvl",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+exclude_lines = [
+    "\\#\\s*pragma: no cover",
+    "^\\s*raise AssertionError\b",
+    "^\\s*raise NotImplementedError\b",
+    "^\\s*return NotImplemented\b",
+    "^\\s*raise$",
+    "^if __name__ == ['\"]__main__['\"]:$",
+]
 
 [tool.pylint.messages_control]
 disable = [
@@ -41,7 +64,7 @@ output-format = "jsonextended"
 
 [tool.mypy]
 python_version = "3.8"
-mypy_path = './src/valuation'
+mypy_path = './src/'
 ignore_missing_imports = true
 warn_return_any = true
 warn_unused_configs = true

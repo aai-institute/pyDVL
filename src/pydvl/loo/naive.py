@@ -2,9 +2,8 @@ from typing import OrderedDict
 
 import numpy as np
 
-from valuation.reporting.scores import sort_values
-from valuation.utils import Dataset, SupervisedModel, maybe_progress
-from valuation.utils.utility import Utility
+from pydvl.reporting.scores import sort_values
+from pydvl.utils import Utility, maybe_progress
 
 __all__ = ["naive_loo"]
 

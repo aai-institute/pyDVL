@@ -21,14 +21,14 @@ from ray import ObjectRef
 from ..config import ParallelConfig
 from .backend import init_parallel_backend
 
+__all__ = ["MapReduceJob"]
+
 T = TypeVar("T")
 R = TypeVar("R")
 Identity = lambda x, *args, **kwargs: x
 
 MapFunction = Callable[..., R]
 ReduceFunction = Callable[[Iterable[R]], R]
-
-__all__ = ["MapReduceJob"]
 
 
 def wrap_func_with_remote_args(func, *, timeout: int = 300):
@@ -77,7 +77,7 @@ class MapReduceJob(Generic[T, R]):
 
     A simple usage example with 2 jobs and 3 runs:
 
-    >>> from valuation.utils.parallel import MapReduceJob
+    >>> from pydvl.utils.parallel import MapReduceJob
     >>> import numpy as np
     >>> map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
     ...     map_func=np.sum,
@@ -90,7 +90,7 @@ class MapReduceJob(Generic[T, R]):
 
     If we set `chunkify_inputs` to `False` the input is not split across jobs but instead repeated:
 
-    >>> from valuation.utils.parallel import MapReduceJob
+    >>> from pydvl.utils.parallel import MapReduceJob
     >>> import numpy as np
     >>> map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
     ...     map_func=np.sum,

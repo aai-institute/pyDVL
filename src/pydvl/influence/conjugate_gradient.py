@@ -11,12 +11,12 @@ from typing import TYPE_CHECKING, Callable, Optional, Tuple, Union
 import numpy as np
 from scipy.sparse.linalg import cg
 
-from valuation.influence.types import MatrixVectorProduct
+from .types import MatrixVectorProduct
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
-__all__ = ["batched_preconditioned_conjugate_gradient"]
+__all__ = ["conjugate_gradient", "batched_preconditioned_conjugate_gradient"]
 
 logger = logging.getLogger(__name__)
 

@@ -10,17 +10,14 @@ try:
     import torch.nn.functional as F
     from torch.optim import Adam, lr_scheduler
 
-    from valuation.influence.general import compute_influences
-    from valuation.influence.linear import (
+    from pydvl.influence.general import compute_influences
+    from pydvl.influence.linear import (
         compute_linear_influences,
         influences_perturbation_linear_regression_analytical,
         influences_up_linear_regression_analytical,
     )
-    from valuation.influence.model_wrappers import (
-        TorchLinearRegression,
-        TorchNeuralNetwork,
-    )
-    from valuation.utils.dataset import load_wine_dataset
+    from pydvl.influence.model_wrappers import TorchLinearRegression, TorchNeuralNetwork
+    from pydvl.utils.dataset import load_wine_dataset
 except ImportError:
     pass
 

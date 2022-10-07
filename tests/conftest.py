@@ -10,9 +10,9 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 
-from valuation.utils import Dataset, MemcachedClientConfig, Utility
-from valuation.utils.numeric import random_matrix_with_condition_number, spearman
-from valuation.utils.parallel import available_cpus
+from pydvl.utils import Dataset, MemcachedClientConfig, Utility
+from pydvl.utils.numeric import random_matrix_with_condition_number, spearman
+from pydvl.utils.parallel import available_cpus
 
 if TYPE_CHECKING:
     from _pytest.config import Config
@@ -290,7 +290,7 @@ def polynomial_pipeline(coefficients):
 def dummy_utility(num_samples: int = 10):
     from numpy import ndarray
 
-    from valuation.utils import SupervisedModel
+    from pydvl.utils import SupervisedModel
 
     # Indices match values
     x = np.arange(0, num_samples, 1).reshape(-1, 1)

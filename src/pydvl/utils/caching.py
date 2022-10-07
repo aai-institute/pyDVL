@@ -16,9 +16,8 @@ from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
 from pymemcache.client import Client, RetryingClient
 
-from valuation.utils.numeric import get_running_avg_variance
-
 from .config import MemcachedClientConfig
+from .numeric import get_running_avg_variance
 
 PICKLE_VERSION = 5  # python >= 3.8
 

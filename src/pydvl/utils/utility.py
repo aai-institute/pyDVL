@@ -151,7 +151,7 @@ class DataUtilityLearning:
 
     :Example:
 
-    >>> from valuation.utils import Utility, DataUtilityLearning, Dataset
+    >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
     >>> from sklearn.linear_model import LinearRegression, LogisticRegression
     >>> from sklearn.datasets import load_iris
     >>> dataset = Dataset.from_sklearn(load_iris())

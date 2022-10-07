@@ -27,9 +27,9 @@ class RayActorWrapper:
 
     :Example:
 
-    >>> from valuation.utils.parallel import init_parallel_backend
-    >>> from valuation.utils.config import ParallelConfig
-    >>> from valuation.utils.parallel.actor import RayActorWrapper
+    >>> from pydvl.utils.parallel import init_parallel_backend
+    >>> from pydvl.utils.config import ParallelConfig
+    >>> from pydvl.utils.parallel.actor import RayActorWrapper
     >>> class Actor:
     ...     def __init__(self, x):
     ...         self.x = x

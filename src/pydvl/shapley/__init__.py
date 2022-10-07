@@ -4,17 +4,14 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from valuation.shapley.knn import compute_knn_shapley
-from valuation.shapley.montecarlo import (
+from pydvl.shapley.knn import compute_knn_shapley
+from pydvl.shapley.montecarlo import (
     combinatorial_montecarlo_shapley,
     permutation_montecarlo_shapley,
     truncated_montecarlo_shapley,
 )
-from valuation.shapley.naive import (
-    combinatorial_exact_shapley,
-    permutation_exact_shapley,
-)
-from valuation.utils import Utility
+from pydvl.shapley.naive import combinatorial_exact_shapley, permutation_exact_shapley
+from pydvl.utils import Utility
 
 __all__ = [
     "truncated_montecarlo_shapley",
@@ -46,7 +43,7 @@ def compute_shapley_values(
     **kwargs,
 ) -> pd.DataFrame:
     """
-    Given a utility, a max number of iterations and the number of workers, it calculates
+    Given a utility, a max number of iterations and the number of jobs, it calculates
     the Shapley values. Depending on the algorithm used, it also takes additional optional arguments.
 
     Options for the algorithms are:
@@ -69,16 +66,17 @@ def compute_shapley_values(
         (calculated shapley values) and dval_std, being the montecarlo standard deviation of
         shapley_dval
     """
-    # TODO fix progress showing and maybe_progress
-    progress = False
+    progress: bool = kwargs.pop("progress", False)
 
     if mode not in list(ShapleyMode):
         raise ValueError(f"Invalid value encountered in {mode=}")
 
-    dval_std: Optional[dict] = None
+    val_std: Optional[dict]
 
     if mode == ShapleyMode.TruncatedMontecarlo:
-        dval, dval_std = truncated_montecarlo_shapley(
+        # TODO fix progress showing and maybe_progress in remote case
+        progress = False
+        val, val_std = truncated_montecarlo_shapley(
             u=u,
             max_iterations=max_iterations,
             n_jobs=n_jobs,
@@ -90,7 +88,7 @@ def compute_shapley_values(
             raise ValueError(
                 "max_iterations cannot be None for Combinatorial Montecarlo Shapley"
             )
-        dval, dval_std = combinatorial_montecarlo_shapley(
+        val, val_std = combinatorial_montecarlo_shapley(
             u, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.PermutationMontecarlo:
@@ -98,24 +96,25 @@ def compute_shapley_values(
             raise ValueError(
                 "max_iterations cannot be None for Permutation Montecarlo Shapley"
             )
-        dval, dval_std = permutation_montecarlo_shapley(
+        val, val_std = permutation_montecarlo_shapley(
             u, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.ExactCombinatorial:
-        dval = combinatorial_exact_shapley(u, progress=progress)
+        val = combinatorial_exact_shapley(u, progress=progress)
+        val_std = None
     elif mode == ShapleyMode.ExactPermutation:
-        dval = permutation_exact_shapley(u, progress=progress)
+        val = permutation_exact_shapley(u, progress=progress)
+        val_std = None
     else:
         raise ValueError(f"Invalid value encountered in {mode=}")
 
     df = pd.DataFrame(
-        list(zip(dval.keys(), dval.values())),
-        columns=["data_key", "shapley_dval"],
+        list(val.values()), index=list(val.keys()), columns=["data_value"]
     )
 
-    if dval_std is None:
-        df["dval_std"] = np.nan
+    if val_std is None:
+        df["data_value_std"] = np.nan
     else:
-        df["dval_std"] = dval_std
+        df["data_value_std"] = pd.Series(val_std)
 
     return df

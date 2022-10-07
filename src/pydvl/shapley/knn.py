@@ -3,14 +3,14 @@ from typing import Dict, Union
 
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
-from valuation.reporting.scores import sort_values
-from valuation.utils import Dataset, maybe_progress
+from ..reporting.scores import sort_values
+from ..utils import Dataset, maybe_progress
 
 __all__ = ["compute_knn_shapley"]
 
 
 def compute_knn_shapley(
-    data: Dataset, model: KNeighborsClassifier, progress: bool = True
+    data: Dataset, model: KNeighborsClassifier, *, progress: bool = True
 ) -> "OrderedDict[int, float]":
     """Computes exact Shapley values for a KNN classifier
 
