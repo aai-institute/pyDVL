@@ -26,7 +26,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/valuation"]
+source = ["src/pydvl"]
 
 [tool.pylint.messages_control]
 disable = [
@@ -41,7 +41,7 @@ output-format = "jsonextended"
 
 [tool.mypy]
 python_version = "3.8"
-mypy_path = './src/valuation'
+mypy_path = './src/'
 ignore_missing_imports = true
 warn_return_any = true
 warn_unused_configs = true
