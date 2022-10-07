@@ -22,7 +22,7 @@ class RayParallelBackend:
     """Class used to wrap ray to make it transparent to algorithms. It shouldn't be initialized directly.
     You should instead call `init_parallel_backend`.
 
-    :param config: instance of :class:`~valuation.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
 
     :Example:
 
@@ -87,7 +87,7 @@ class RayParallelBackend:
 def init_parallel_backend(config: ParallelConfig) -> "RayParallelBackend":
     """Initializes the parallel backend and returns an instance of it.
 
-    :param config: instance of :class:`~valuation.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
 
     :Example:
 

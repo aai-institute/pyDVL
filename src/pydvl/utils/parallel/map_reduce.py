@@ -67,7 +67,7 @@ class MapReduceJob(Generic[T, R]):
     :param reduce_func: Function that will be applied to the results of `map_func` to reduce them.
     :param map_kwargs: Keyword arguments that will be passed to `map_func` in each job.
     :param reduce_kwargs: Keyword arguments that will be passed to `reduce_func` in each job.
-    :param config: Instance of :class:`~valuation.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+    :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
     :param n_jobs: Number of parallel jobs to run. Does not accept 0
     :param n_runs: Number of times to run the functions on the whole data.
     :param timeout: Amount of time in seconds to wait for remote results.
