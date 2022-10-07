@@ -41,6 +41,7 @@ source = [
 
 [tool.coverage.report]
 show_missing = true
+skip_empty = true
 exclude_lines = [
     "\\#\\s*pragma: no cover",
     "^\\s*raise AssertionError\b",
