@@ -10,7 +10,7 @@ __all__ = ["compute_knn_shapley"]
 
 
 def compute_knn_shapley(
-    data: Dataset, model: KNeighborsClassifier, progress: bool = True
+    data: Dataset, model: KNeighborsClassifier, *, progress: bool = True
 ) -> "OrderedDict[int, float]":
     """Computes exact Shapley values for a KNN classifier
 

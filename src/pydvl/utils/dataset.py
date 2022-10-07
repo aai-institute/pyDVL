@@ -1,5 +1,6 @@
 import os
 from collections import OrderedDict
+from pathlib import Path
 from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
@@ -327,24 +328,16 @@ def load_spotify_dataset(
     :param random_state: fixes sklearn random seed
     :return: Tuple with 3 elements, each being a list sith [input_data, related_labels]
     """
-    file_dir_path = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(
-        file_dir_path, "../../../data/top_hits_spotify_dataset.csv"
-    )
-    if os.path.exists(file_path):
+    root_dir_path = Path(__file__).parent.parent.parent.parent
+    file_path = root_dir_path / "data/top_hits_spotify_dataset.csv"
+    if file_path.exists():
         data = pd.read_csv(file_path)
     else:
-        url = "https://github.com/appliedAI-Initiative/valuation/blob/notebook_and_shapley_interface/data/top_hits_spotify_dataset.csv"
+        url = "https://github.com/appliedAI-Initiative/pyDVL/blob/develop/data/top_hits_spotify_dataset.csv"
         data = pd.read_csv(url)
         data.to_csv(file_path, index=False)
 
     data = data[data["year"] > min_year]
-    # TODO reading off an env variable within the method is dirty. Look into other solutions
-    # to switching to reduced dataset when testing
-    CI = os.environ.get("CI") in ("True", "true")
-    if CI:
-        data = data.iloc[:3]
-
     data["genre"] = data["genre"].astype("category").cat.codes
     y = data[target_column]
     X = data.drop(target_column, axis=1)
@@ -357,7 +350,9 @@ def load_spotify_dataset(
     return [X_train, y_train], [X_val, y_val], [X_test, y_test]
 
 
-def load_wine_dataset(train_size, test_size, random_seed=None):
+def load_wine_dataset(
+    train_size: float, test_size: float, random_state: Optional[int] = None
+):
     """
     Loads the sklearn wine dataset. More info can be found at 
     https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset
@@ -380,10 +375,10 @@ def load_wine_dataset(train_size, test_size, random_seed=None):
         wine_bunch.data,
         wine_bunch.target,
         train_size=1 - test_size,
-        random_state=random_seed,
+        random_state=random_state,
     )
     x_train, x_val, y_train, y_val = train_test_split(
-        x, y, train_size=train_size / (1 - test_size), random_state=random_seed
+        x, y, train_size=train_size / (1 - test_size), random_state=random_state
     )
     x_transformer = MinMaxScaler()
 

@@ -10,14 +10,17 @@ from .dataset import Dataset
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
+__all__ = ["plot_shapley", "plot_iris"]
+
 
 def plot_shapley(
-    dval_df: pd.DataFrame,
-    figsize: Tuple[int, int] = None,
+    df: pd.DataFrame,
+    *,
+    ax: Optional[plt.Axes] = None,
     title: str = None,
     xlabel: str = None,
     ylabel: str = None,
-):
+) -> plt.Axes:
     """Plots the shapley values, as returned from shapley.compute_shapley_values.
 
     :param dval_df: dataframe with the shapley values
@@ -26,18 +29,19 @@ def plot_shapley(
     :param xlabel: string, x label of the plot
     :param ylabel: string, y label of the plot
     """
-    fig = plt.figure(figsize=figsize)
-    plt.errorbar(
-        x=dval_df["data_key"],
-        y=dval_df["shapley_dval"],
-        yerr=dval_df["dval_std"],
+    if ax is None:
+        _, ax = plt.subplots()
+    ax.errorbar(
+        x=df.index,
+        y=df["data_value"],
+        yerr=df["data_value_std"],
         fmt="o",
     )
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.xticks(rotation=45)
-    return fig
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    plt.xticks(rotation=60)
+    return ax
 
 
 def plot_dataset(
@@ -45,6 +49,7 @@ def plot_dataset(
     test_ds: Tuple["NDArray", "NDArray"],
     x_min: Optional["NDArray"] = None,
     x_max: Optional["NDArray"] = None,
+    *,
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     legend_title: Optional[str] = None,
@@ -82,7 +87,6 @@ def plot_dataset(
     if 0 < len(discrete_keys) < len(datasets):
         "You can only plot either discrete or only continuous plots."
 
-    num_classes = None
     cmap = plt.get_cmap("Set1")
     all_y = np.concatenate(tuple([v[1] for _, v in datasets.items()]), axis=0)
     unique_y = np.sort(np.unique(all_y))
@@ -126,14 +130,15 @@ def plot_influences(
     x: "NDArray",
     influences: "NDArray",
     corrupted_indices: Optional[List[int]] = None,
+    *,
+    ax: Optional[plt.Axes] = None,
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     legend_title: Optional[str] = None,
     line: Optional["NDArray"] = None,
     suptitle: Optional[str] = None,
     colorbar_limits: Optional[Tuple] = None,
-    figsize: Tuple[int, int] = (18, 10),
-):
+) -> plt.Axes:
     """
     Plots the influence values of the train data with a color map.
     :param x_train: Input to the model. Note that the it must have size [Nx2], with N being the total \
@@ -141,14 +146,15 @@ def plot_influences(
     :param train_influences: an array with influence values for each data point. Must have size N.
     :param line: Optional, line of shape [Mx2], where each row is a point of the 2-dimensional line.
     """
-    plt.figure(figsize=figsize)
-    sc = plt.scatter(x[:, 0], x[:, 1], c=influences)
+    if ax is None:
+        _, ax = plt.subplots()
+    sc = ax.scatter(x[:, 0], x[:, 1], c=influences)
     if line is not None:
-        plt.plot(line[:, 0], line[:, 1], color="black")
+        ax.plot(line[:, 0], line[:, 1], color="black")
     if xlabel is not None:
-        plt.xlabel(xlabel)
+        ax.set_xlabel(xlabel)
     if ylabel is not None:
-        plt.ylabel(ylabel)
+        ax.set_ylabel(ylabel)
     if suptitle is not None:
         plt.suptitle(suptitle)
 
@@ -156,14 +162,14 @@ def plot_influences(
     if colorbar_limits is not None:
         plt.clim(*colorbar_limits)
     if corrupted_indices is not None:
-        plt.scatter(
+        ax.scatter(
             x[:, 0][corrupted_indices],
             x[:, 1][corrupted_indices],
             facecolors="none",
             edgecolors="r",
             s=80,
         )
-    plt.show()
+    return ax
 
 
 def plot_iris(
