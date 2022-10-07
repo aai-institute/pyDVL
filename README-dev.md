@@ -62,14 +62,12 @@ sudo apt-get update -yq && apt-get install -yq pandoc
 The library is built with tox which will build and install the package, run the
 test suite and build the documentation. Running tox will also generate coverage
 and pylint reports in html and badges. You can configure pytest, coverage and
-pylint by adjusting [pytest.ini](pytest.ini), [.coveragerc](.coveragerc) and
-[.pylintrc](.pylintrc) respectively.
+pylint by adjusting [pyproject.toml](pyproject.toml).
 
 Concerning notebooks: all notebooks in the [notebooks](notebooks) directory should
-be executed during test run, the results will be added to the documentation in the
-_Guides and Tutorials_ section. Thus, notebooks can be conveniently used as integration tests and documentation at the same time.
-
-Unfortunately that is not currently the case as they need to be fixed and updated.
+be executed during test run, with smaller datasets if the run time is too long. 
+They will be added to the documentation in CI the _Examples_ section. 
+Thus, notebooks can be conveniently used as integration tests and documentation at the same time.
 
 #### Testing
 
