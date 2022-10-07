@@ -1,17 +1,21 @@
-<p align="center">
-    <img alt="pyDVL" src="https://raw.githubusercontent.com/appliedAI-Initiative/pyDVL/develop/logo.svg" width="200"/>
+<p style="text-align:center;">
+    <img alt="pyDVL Logo" src="https://raw.githubusercontent.com/appliedAI-Initiative/pyDVL/develop/logo.svg" width="200"/>
 </p>
 
-<p align="center">
+<p style="text-align:center;">
     A library for data valuation.
 </p>
 
-<p align="center">
-    <a href="https://github.com/appliedAI-Initiative/pyDVL/actions/workflows/tox.yaml"><img src="https://github.com/appliedAI-Initiative/pyDVL/actions/workflows/tox.yaml/badge.svg" alt="Build Status" /></a>
+<p style="text-align:center;">
+    <a href="https://github.com/appliedAI-Initiative/pyDVL/actions/workflows/tox.yaml">
+        <img src="https://github.com/appliedAI-Initiative/pyDVL/actions/workflows/tox.yaml/badge.svg" alt="Build Status"/>
+    </a>
 </p>
 
-<p align="center">
+<p style="text-align:center;">
+    <strong>
     <a href="https://appliedAI-Initiative.github.io/pyDVL">Docs</a>
+    </strong>
 </p>
 
 # Installation
