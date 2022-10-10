@@ -134,6 +134,6 @@ jobs:
         run: |
           set -x
           export CURRENT_VERSION=$(python setup.py --version)
-          export BUILD_NUMBER=${{ env.GITHUB_RUN_NUMBER }}
+          export BUILD_NUMBER=$GITHUB_RUN_NUMBER
           tox -e bump-dev-version
           tox -e publish-test-package
