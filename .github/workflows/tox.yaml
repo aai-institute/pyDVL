@@ -132,9 +132,8 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
         run: |
-          git config user.name "${{ env.GITHUB_BOT_USERNAME }}"
-          git config user.email "${{ env.GITHUB_BOT_EMAIL }}"
-          tox -e bump-dev-version-and-create-tag
-          git push
-          git push --tags
+          set -x
+          export CURRENT_VERSION=$(python setup.py --version)
+          export BUILD_NUMBER=${{ env.GITHUB_RUN_NUMBER }}
+          tox -e bump-dev-version
           tox -e publish-test-package
