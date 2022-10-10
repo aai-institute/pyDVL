@@ -1,16 +1,15 @@
 import os
 import shutil
 from pathlib import Path
-from typing import List
 
 from sphinx.application import Sphinx
-from sphinx.environment import BuildEnvironment
+from sphinx.config import Config
 from sphinx.util import logging
 
 logger = logging.getLogger(__name__)
 
 
-def copy_notebooks(app: Sphinx, env: BuildEnvironment, docnames: List[str]) -> None:
+def copy_notebooks(app: Sphinx, config: Config) -> None:
     logger.info("Copying notebooks to examples directory")
     root_dir = Path(app.confdir).parent
     notebooks_dir = root_dir / "notebooks"
@@ -22,9 +21,9 @@ def copy_notebooks(app: Sphinx, env: BuildEnvironment, docnames: List[str]) -> N
         logger.info(
             f"Copying '{os.fspath(notebook)}' to '{os.fspath(target_filepath)}'"
         )
-        shutil.copy(src=notebook, dst=target_filepath)
+        shutil.copyfile(src=notebook, dst=target_filepath)
     logger.info("Finished copying notebooks to examples directory")
 
 
 def setup(app):
-    app.connect("env-before-read-docs", copy_notebooks)
+    app.connect("config-inited", copy_notebooks)
