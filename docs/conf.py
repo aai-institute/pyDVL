@@ -24,6 +24,9 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.fspath(ROOT_DIR / "src"))
 
+# For custom extensions
+sys.path.append(os.path.abspath("_ext"))
+
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -42,6 +45,8 @@ extensions = [
     "nbsphinx",
     # see https://github.com/spatialaudio/nbsphinx/issues/24 for an explanation why this extension is necessary
     "IPython.sphinxext.ipython_console_highlighting",
+    # Custom extensions
+    "copy_notebooks",
 ]
 
 # NBSphinx
