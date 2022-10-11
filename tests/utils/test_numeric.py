@@ -1,8 +1,12 @@
 import numpy as np
 import pytest
 
-from pydvl.utils import available_cpus
-from pydvl.utils.numeric import powerset, random_powerset, spearman
+from pydvl.utils.numeric import (
+    powerset,
+    random_matrix_with_condition_number,
+    random_powerset,
+    spearman,
+)
 
 
 def test_powerset():
@@ -79,3 +83,29 @@ def test_spearman(x, y, expected):
     else:
         with pytest.raises(expected):
             spearman(x, y)
+
+
+@pytest.mark.parametrize(
+    "n, cond, exception",
+    [
+        (1, 2, ValueError),
+        (0, 2, ValueError),
+        (4, -2, ValueError),
+        (10, 1, ValueError),
+        (2, 10, None),
+        (7, 23, None),
+        (10, 2, None),
+    ],
+)
+def test_random_matrix_with_condition_number(n, cond, exception):
+    if exception is not None:
+        with pytest.raises(exception):
+            random_matrix_with_condition_number(n, cond)
+    else:
+        mat = random_matrix_with_condition_number(n, cond)
+        assert np.isclose(np.linalg.cond(mat), cond), "Condition number does not match"
+        assert np.array_equal(mat, mat.T), "Matrix is not symmetric"
+        try:
+            np.linalg.cholesky(mat)
+        except np.linalg.LinAlgError:
+            pytest.fail("Matrix is not positive definite")

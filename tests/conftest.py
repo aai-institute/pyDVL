@@ -232,9 +232,7 @@ def quadratic_linear_equation_system(quadratic_matrix: np.ndarray, batch_size: i
 
 @pytest.fixture(scope="function")
 def quadratic_matrix(problem_dimension: int, condition_number: float):
-    return random_matrix_with_condition_number(
-        problem_dimension, condition_number, positive_definite=True
-    )
+    return random_matrix_with_condition_number(problem_dimension, condition_number)
 
 
 @pytest.fixture(scope="function")
@@ -257,7 +255,7 @@ def singular_quadratic_linear_equation_system(
 def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
     output_dimension, input_dimension = problem_dimension
     A = random_matrix_with_condition_number(
-        max(input_dimension, output_dimension), condition_number, positive_definite=True
+        max(input_dimension, output_dimension), condition_number
     )
     A = A[:output_dimension, :input_dimension]
     b = np.random.uniform(size=[output_dimension])

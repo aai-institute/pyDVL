@@ -30,6 +30,8 @@ __all__ = [
     "linear_regression_analytical_derivative_d2_theta",
     "linear_regression_analytical_derivative_d_theta",
     "linear_regression_analytical_derivative_d_x_d_theta",
+    "random_matrix_with_condition_number",
+    "spearman",
     "top_k_value_accuracy",
     "get_running_avg_variance",
 ]
@@ -133,28 +135,39 @@ def spearman(x: "NDArray", y: "NDArray") -> float:
     return 1 - 6 * float(np.sum((x - y) ** 2)) / (lx**3 - lx)
 
 
-def random_matrix_with_condition_number(
-    n: int, condition_number: float, positive_definite: bool = False
-) -> "NDArray":
-    """
-    https://gist.github.com/bstellato/23322fe5d87bb71da922fbc41d658079#file-random_mat_condition_number-py
-    https://math.stackexchange.com/questions/1351616/condition-number-of-ata
-    """
+def random_matrix_with_condition_number(n: int, condition_number: float) -> "NDArray":
+    """Constructs a square matrix with a given condition number.
 
-    if positive_definite:
-        condition_number = np.sqrt(condition_number)
+    Taken from:
+    https://gist.github.com/bstellato/23322fe5d87bb71da922fbc41d658079#file-random_mat_condition_number-py
+
+    Also see:
+    https://math.stackexchange.com/questions/1351616/condition-number-of-ata.
+
+    :param n: size of the matrix
+    :param condition_number: duh
+    :return: An (n,n) matrix with the requested condition number.
+    """
+    if n < 2:
+        raise ValueError("Matrix size must be at least 2")
+
+    if condition_number <= 1:
+        raise ValueError("Condition number must be greater than 1")
 
     log_condition_number = np.log(condition_number)
-    exp_vec = np.linspace(
-        -log_condition_number / 4.0, log_condition_number * (n + 1) / (4 * (n - 1)), n
+    exp_vec = np.arange(
+        -log_condition_number / 4.0,
+        log_condition_number * (n + 1) / (4 * (n - 1)),
+        log_condition_number / (2.0 * (n - 1)),
     )
+    exp_vec = exp_vec[:n]
     s = np.exp(exp_vec)
     S = np.diag(s)
     U, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
     V, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
     P = U.dot(S).dot(V.T)
-    # cond(P @ P.T) = cond(P) ** 2
-    return P if not positive_definite else P @ P.T  # type: ignore
+    P = P.dot(P.T)
+    return P
 
 
 def linear_regression_analytical_derivative_d_theta(
