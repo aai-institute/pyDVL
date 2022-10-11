@@ -24,12 +24,10 @@ __all__ = [
 
 
 class ShapleyMode(str, Enum):
-    """
-    Different shapley modes.
-    """
+    """Supported modes of computation of Shapley values."""
 
-    ExactCombinatorial = "combinatorial_exact"
-    ExactPermutation = "permutation_exact"
+    CombinatorialExact = "combinatorial_exact"
+    PermutationExact = "permutation_exact"
     CombinatorialMontecarlo = "combinatorial_montecarlo"
     PermutationMontecarlo = "permutation_montecarlo"
     TruncatedMontecarlo = "truncated_montecarlo"
@@ -42,29 +40,31 @@ def compute_shapley_values(
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     **kwargs,
 ) -> pd.DataFrame:
-    """
-    Given a utility, a max number of iterations and the number of jobs, it calculates
-    the Shapley values. Depending on the algorithm used, it also takes additional optional arguments.
+    """Given a utility, a max number of iterations and the number of jobs, it
+    calculates the Shapley values. Depending on the algorithm used, it also
+    takes additional optional arguments.
 
     Options for the algorithms are:
-    - 'exact_combinatorial': uses combinatorial implementation of data Shapley
-    - 'exact_permutation': uses permutation based implementation of data Shapley
-    - 'permutation_montecarlo': uses the approximate montecarlo implementation of permutation data Shapley.
-        It parallelizes computation only within the local machine
-    - 'combinatorial_montecarlo':  uses montecarlo implementation of combinatorial data Shapley.
-        It parallelizes computation only within the local machine
-    - 'truncated_montecarlo': default option, uses permutation_montecarlo implementation but stops the
-        computation whenever a certain accuracy is reached. It runs also on a cluster if the address is passed.
+    - 'exact_combinatorial': uses the combinatorial implementation of data
+      Shapley
+    - 'exact_permutation': uses the permutation-based implementation of data
+      Shapley. Computation is **not parallelized**.
+    - 'permutation_montecarlo': uses the approximate Monte Carlo implementation
+      of permutation data Shapley.
+    - 'combinatorial_montecarlo':  uses the approximate Monte Carlo
+       implementation of combinatorial data Shapley.
+    - 'truncated_montecarlo': default option, same as permutation_montecarlo but
+      stops the computation whenever a certain accuracy is reached.
 
     :param u: Utility object with model, data, and scoring function
     :param max_iterations: total number of iterations, used for montecarlo methods
-    :param n_jobs: Number of parallel jobs. Defaults to 1
-    :param mode: Choose which shapley algorithm to use. Options are
-        'truncated_montecarlo', 'exact_combinatorial', 'exact_permutation',
-        'combinatorial_montecarlo', 'permutation_montecarlo'. Defaults to 'truncated_montecarlo'
-    :return: dataframe with columns being data keys (group names or data indices), shapley_dval
-        (calculated shapley values) and dval_std, being the montecarlo standard deviation of
-        shapley_dval
+    :param n_jobs: Number of parallel jobs
+    :param mode: Choose which shapley algorithm to use. See
+        :obj:`pydvl.shapley.ShapleyMode` for a list of allowed values.
+    :return: pandas DataFrame with index being group names or data indices, and
+        columns: `data_value` (calculated shapley values) and `data_value_std`
+        (standard deviation of `data_value` for Monte Carlo estimators)
+
     """
     progress: bool = kwargs.pop("progress", False)
 
@@ -99,10 +99,10 @@ def compute_shapley_values(
         val, val_std = permutation_montecarlo_shapley(
             u, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
         )
-    elif mode == ShapleyMode.ExactCombinatorial:
-        val = combinatorial_exact_shapley(u, progress=progress)
+    elif mode == ShapleyMode.CombinatorialExact:
+        val = combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)
         val_std = None
-    elif mode == ShapleyMode.ExactPermutation:
+    elif mode == ShapleyMode.PermutationExact:
         val = permutation_exact_shapley(u, progress=progress)
         val_std = None
     else:

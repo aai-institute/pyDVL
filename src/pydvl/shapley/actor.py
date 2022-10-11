@@ -51,19 +51,19 @@ class ShapleyCoordinator(Coordinator):
         max_iterations: Optional[int] = None,
         progress: Optional[bool] = True,
     ):
-        """
-         The coordinator has two main tasks: aggregating the results of the workers
-         and terminating the process once a certain accuracy or total number of
-         iterations is reached.
+        """The coordinator has two main tasks: aggregating the results of the
+        workers and terminating the process once a certain accuracy or total
+        number of iterations is reached.
 
         :param score_tolerance: During calculation of shapley values, the
-             coordinator will check if the median standard deviation over average
-             score for each point's has dropped below score_tolerance.
+             coordinator will check if the median standard deviation over
+             average score for each point's has dropped below score_tolerance.
              If so, the computation will be terminated.
-         :param max_iterations: a sum of the total number of permutation is calculated
-             If the current number of permutations has exceeded max_iterations, computation
-             will stop.
+        :param max_iterations: a sum of the total number of permutation is
+            calculated If the current number of permutations has exceeded
+            `max_iterations`, computation will stop.
          :param progress: True to plot progress, False otherwise.
+
         """
         super().__init__(progress=progress)
         if score_tolerance is None and max_iterations is None:
@@ -75,10 +75,10 @@ class ShapleyCoordinator(Coordinator):
         self.max_iterations = max_iterations
 
     def get_results(self):
-        """
-        It aggregates the results of the different workers and returns
-        the average and std of the values. If no worker has reported yet,
-        it returns two empty arrays
+        """Aggregates the results of the different workers and returns the
+        average and standard deviation of the values.
+
+        If no worker has reported yet, this returns two empty arrays.
         """
         values = []
         stds = []
@@ -108,10 +108,11 @@ class ShapleyCoordinator(Coordinator):
         return value, std
 
     def check_status(self):
-        """
-        It checks whether the accuracy of the calculation or the total number of iterations have crossed
-        the set thresholds.
-        If so, it sets the is_done label as True.
+        """Checks whether the accuracy of the calculation or the total number
+        of iterations have crossed the set thresholds.
+
+        If the threshold has been exceeded, sets the flag
+        :attr:`~ShapleyCoordinator.is_done` to `True`.
         """
         if len(self.workers_results) == 0:
             logger.info("No worker has updated its status yet.")
@@ -133,7 +134,11 @@ class ShapleyCoordinator(Coordinator):
 
 
 class ShapleyWorker(Worker):
-    """A worker. It should work."""
+    """A worker.
+
+    It should work.
+
+    """
 
     def __init__(
         self,
@@ -144,16 +149,16 @@ class ShapleyWorker(Worker):
         update_frequency: int = 30,
         progress: bool = False,
     ):
-        """
-        The workers calculate the Shapley values using the permutation
+        """The workers calculate the Shapley values using the permutation
         definition and report the results to the coordinator.
 
         :param u: Utility object with model, data, and scoring function
         :param coordinator: worker results will be pushed to this coordinator
         :param worker_id: id used for reporting through maybe_progress
         :param progress: set to True to report progress, else False
-        :param update_frequency: interval in seconds among different updates to
+        :param update_frequency: interval in seconds between different updates to
             and from the coordinator
+
         """
         super().__init__(
             coordinator=coordinator,

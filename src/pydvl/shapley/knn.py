@@ -12,12 +12,22 @@ __all__ = ["compute_knn_shapley"]
 def compute_knn_shapley(
     data: Dataset, model: KNeighborsClassifier, *, progress: bool = True
 ) -> "OrderedDict[int, float]":
-    """Computes exact Shapley values for a KNN classifier
+    """Computes exact Shapley values for a KNN classifier.
+
+    This implements the method described in:
+
+    Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nezihe Merve Gurel,
+    Bo Li, Ce Zhang, Costas Spanos, and Dawn Song. ‘Efficient Task-Specific Data
+    Valuation for Nearest Neighbor Algorithms’. Proceedings of the VLDB
+    Endowment 12, no. 11 (1 July 2019): 1610–23.
+    https://doi.org/10.14778/3342263.3342637.
+
 
     :param data: split Dataset
     :param model: model to extract parameters from. The object will not be
         modified nor used other than to call get_params()
     :param progress: whether to display a progress bar
+
     """
     defaults: Dict[str, Union[int, str]] = {
         "algorithm": "ball_tree" if data.dim >= 20 else "kd_tree",

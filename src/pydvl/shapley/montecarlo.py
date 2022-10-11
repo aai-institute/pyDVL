@@ -39,6 +39,12 @@ def truncated_montecarlo_shapley(
 ) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
     """MonteCarlo approximation to the Shapley value of data points.
 
+    This implements the method described in:
+
+    Ghorbani, Amirata, and James Zou. ‘Data Shapley: Equitable Valuation of Data
+    for Machine Learning’. In International Conference on Machine Learning,
+    2242–51. PMLR, 2019. http://proceedings.mlr.press/v97/ghorbani19c.html.
+
     Instead of naively implementing the expectation, we sequentially add points
     to a dataset from a permutation. We keep sampling permutations and updating
     all shapley values until the std/value score in
@@ -51,19 +57,20 @@ def truncated_montecarlo_shapley(
         score for each point's has dropped below score_tolerance.
         If so, the computation will be terminated.
     :param max_iterations: a sum of the total number of permutation is calculated
-        If the current number of permutations has exceeded max_iterations, computation
-        will stop.
-    :param n_jobs: number of jobs processing permutations. If None, it will be set
-        to available_cpus().
-    :param address: if None, shapley calculation will run only on local machine.
-        If "auto", it will use a local cluster if already started.
-        If "ray://{ip address}", it will run the process on the cluster
-        found at the IP address passed, e.g. "ray://123.45.67.89:10001" will run the process
-        on the cluster at 123.45.67.89:10001.
-    :param progress: set to True to use tqdm progress bars.
-    :return: Tuple, with the first element being an ordered
-        Dict of approximated Shapley values for the indices, the second being the
-        montecarlo error related to each dvl value.
+        If the current number of permutations has exceeded max_iterations,
+        computation will stop.
+    :param n_jobs: number of jobs processing permutations. If None, it will be
+        set to :func:`available_cpus`.
+    :param config: Object configuring parallel computation, with cluster address,
+        number of cpus, etc.
+    :param progress: set to `True` to use tqdm progress bars.
+    :param coordinator_update_frequency: in seconds. Check status with the job
+        coordinator every so often.
+    :param worker_update_frequency: interval in seconds between different updates to
+        and from the coordinator
+    :return: Tuple with the first element being an :obj:`collections.OrderedDict`
+        of approximate Shapley values for the indices, and the second being the
+        estimated standard error of each value.
     """
     parallel_backend = init_parallel_backend(config)
 
@@ -105,12 +112,13 @@ def truncated_montecarlo_shapley(
 def _permutation_montecarlo_shapley(
     u: Utility, max_permutations: int, progress: bool = False, job_id: int = 1, **kwargs
 ) -> "NDArray":
-    """It calculates the difference between the score of a model with and without
-    each training datapoint. This is repeated a number max_permutations of times and
-    with different permutations.
+    """Helper function for :func:`permutation_montecarlo_shapley`.
+
+    Computes the marginal utility of each training sample in
+    :obj:`pydvl.utils.utility.Utility.data`
 
     :param u: Utility object with model, data, and scoring function
-    :param max_iterations: total number of iterations (permutations) to use
+    :param max_permutations: total number of permutations to try
     :param progress: true to plot progress bar
     :param job_id: id to use for reporting progress
     :return: a matrix with each row being a different permutation
@@ -122,7 +130,7 @@ def _permutation_montecarlo_shapley(
     for iter_idx, _ in enumerate(pbar):
         prev_score = 0.0
         permutation = np.random.permutation(u.data.indices)
-        marginals = np.zeros(shape=(n))
+        marginals = np.zeros(shape=n)
         for i, idx in enumerate(permutation):
             score = u(permutation[: i + 1])
             marginals[idx] = score - prev_score
@@ -139,15 +147,16 @@ def permutation_montecarlo_shapley(
     *,
     progress: bool = False,
 ) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
-    """Computes an approximate Shapley value using independent permutations of the indices.
+    """Computes an approximate Shapley value using independent index permutations.
 
     :param u: Utility object with model, data, and scoring function
     :param max_iterations: total number of iterations (permutations) to use
-    :param n_jobs: number of jobs across which to distribute the computation
-    :param progress: true to plot progress bar
-    :return: Tuple, with the first element being an ordered
-        Dict of approximated Shapley values for the indices, the second being the
-        montecarlo error related to each of them.
+    :param n_jobs: number of jobs across which to distribute the computation.
+    :param config: Object configuring parallel computation, with cluster address,
+        number of cpus, etc.
+    :param progress: Set to True to print a progress bar.
+    :return: Tuple with the first element being an ordered Dict of approximate
+        Shapley values for the indices, the second being their standard error
     """
     parallel_backend = init_parallel_backend(config)
 
@@ -167,7 +176,8 @@ def permutation_montecarlo_shapley(
     # Careful: for some models there might be nans, e.g. for i=0 or i=1!
     if np.any(np.isnan(full_results)):
         warnings.warn(
-            f"Calculation returned {np.sum(np.isnan(full_results))} nan values out of {full_results.size}",
+            f"Calculation returned {np.sum(np.isnan(full_results))} nan values "
+            f"out of {full_results.size}",
             RuntimeWarning,
         )
     acc = np.nanmean(full_results, axis=0)
@@ -188,12 +198,14 @@ def _combinatorial_montecarlo_shapley(
     job_id: int = 1,
     **kwargs,
 ) -> "NDArray":
-    """It calculates the difference between the score of a model with and without
-    each training datapoint. This is repeated a number max_iterations of times and
-    with different random combinations.
+    """Helper function for :func:`combinatorial_montecarlo_shapley`.
+
+    This is the code that is sent to workers to compute values using the
+    combinatorial definition.
 
     :param u: Utility object with model, data, and scoring function
     :param max_iterations: total number of iterations (permutations) to use
+    :param dist: Distribution to use of sets over the power set.
     :param progress: true to plot progress bar
     :param job_id: id to use for reporting progress
     :return: a matrix with each row being a different permutation
@@ -237,15 +249,19 @@ def combinatorial_montecarlo_shapley(
     dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
     progress: bool = False,
 ) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
-    """Computes an approximate Shapley value using the combinatorial definition.
+    """Computes an approximate Shapley value using the combinatorial
+    definition.
 
     :param u: utility
     :param max_iterations: total number of iterations (permutations) to use
     :param n_jobs: number of jobs across which to distribute the computation
+    :param config: Object configuring parallel computation, with cluster
+    address,
+        number of cpus, etc.
+    :param dist: Distribution to use of sets over the power set.
     :param progress: true to plot progress bar
-    :return: Tuple, with the first element being an ordered
-        Dict of approximated Shapley values for the indices, the second being the
-        montecarlo error related to each of them.
+    :return: Tuple with the first element being an ordered Dict of approximate
+        Shapley values for the indices, the second being their standard error
     """
     parallel_backend = init_parallel_backend(config)
 

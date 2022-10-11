@@ -1,5 +1,13 @@
 """
-This module contains the :class:`Utility` and the :class:`DataUtilityLearning` classes.
+This module contains classes to manage and learn utility functions for the
+computation of values.
+
+:class:`Utility` holds information about model, data and scoring function (the
+*utility* function itself for Shapley value). It is automatically cached across
+machines.
+
+:class:`DataUtilityLearning` adds support for learning the scoring function
+to avoid repeated re-training of the model.
 """
 import logging
 import warnings
@@ -22,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class Utility:
-    """A convenience wrapper with configurable memoization
+    """A convenience wrapper with configurable memoization.
 
     It holds all the most important elements of the Shapley values calculation,
     namely the model, the data and the scoring.
@@ -46,6 +54,7 @@ class Utility:
     :param default_score: score in the case of models that have not been fit,
         e.g. when too little data is passed, or errors arise.
     :param enable_cache: whether to use memcached for memoization.
+    :param cache_options:
     """
 
     model: SupervisedModel
@@ -111,7 +120,7 @@ class Utility:
         if not indices:
             return 0.0
         scorer = check_scoring(self.model, self.scoring)
-        x, y = self.data.get_train_data(list(indices))
+        x, y = self.data.get_training_data(list(indices))
         try:
             self.model.fit(x, y)
             return float(scorer(self.model, self.data.x_test, self.data.y_test))
@@ -124,7 +133,7 @@ class Utility:
 
     @property
     def signature(self):
-        """Signature used for caching model results"""
+        """Signature used for caching model results."""
         return self._signature
 
     def __getstate__(self):
@@ -140,9 +149,9 @@ class Utility:
 
 
 class DataUtilityLearning:
-    """Implementation of Data Utility Learning algorithm [1]_.
-    It is a wrapper for other utilities with a given budget (i.e. number of iterations)
-    that will, once the budget is exhausted, fit a given model to predict the utility
+    """Implementation of Data Utility Learning algorithm [1]_. It is a wrapper
+    for other utilities with a given budget (i.e. number of iterations) that
+    will, once the budget is exhausted, fit a given model to predict the utility
     instead of computing it.
 
     :param u: an instance of a :class:`Utility`
@@ -207,5 +216,5 @@ class DataUtilityLearning:
 
     @property
     def data(self) -> Dataset:
-        """Return the wrapped utility's dataset"""
+        """Return the wrapped utility's dataset."""
         return self.utility.data

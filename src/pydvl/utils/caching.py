@@ -1,6 +1,17 @@
+""" Distributed caching of functions, using memcached.
+
+pyDVL uses [Memcached](https://memcached.org/) to cache utility values.
+You can run it either locally or, using [Docker](https://www.docker.com/):
+
+```shell
+docker container run --rm -p 11211:11211 --name pydvl-cache -d memcached:latest
+```
+
+Caching is enabled by default but can be disabled if not needed or desired. It
+happens transparently within :class:`pydvl.utils.utility.Utility`. Just pass any
+configuration options when constructing it, using `
 """
-Distributed caching of functions, using memcached.
-"""
+
 import logging
 import socket
 import uuid
@@ -49,21 +60,21 @@ def memcached(
     min_repetitions: int = 3,
     ignore_args: Optional[Iterable[str]] = None,
 ):
-    """Wrap a callable with this in order to have transparent caching.
-    Given a function and a signature, memcached creates a distributed cache
-    that, for each set of inputs, keeps track of the average returned value,
-    with variance and number of times it was calculated.
-    If the function is deterministic, i.e. same input corresponds to the same
-    exact output, set allow_repeated_training to False.
-    If instead the function is noisy, memcache allows to set the minimum number
-    of repetitions and the relative tolerance on the average output after which
-    the cache will not be updated anymore. In other words, the function computation will
-    be repeated until the average has stabilized.
+    """Wrap a callable with this in order to have transparent caching. Given a
+    function and a signature, memcached creates a distributed cache that, for
+    each set of inputs, keeps track of the average returned value, with variance
+    and number of times it was calculated. If the function is deterministic,
+    i.e. same input corresponds to the same exact output, set
+    allow_repeated_training to False. If instead the function is noisy, memcache
+    allows to set the minimum number of repetitions and the relative tolerance
+    on the average output after which the cache will not be updated anymore. In
+    other words, the function computation will be repeated until the average has
+    stabilized.
 
     :param client_config: config for pymemcache.client.Client().
         Will be merged on top of the default configuration.
-    :param cache_threshold: computations taking below this value (in seconds) are not
-        cached
+    :param cache_threshold: computations taking below this value (in seconds)
+        are not cached.
     :param allow_repeated_training: If True, models with same data are re-trained and
         results cached until rtol_threshold precision is reached
     :para rtol_threshold: relative tolerance for repeated training. More precisely,
@@ -176,8 +187,8 @@ def memcached(
 
             def __getstate__(self):
                 """Enables pickling after a socket has been opened to the
-                memacached server, by removing the client from the stored data.
-                """
+                memcached server, by removing the client from the stored
+                data."""
                 odict = self.__dict__.copy()
                 del odict["client"]
                 return odict

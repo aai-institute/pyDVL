@@ -1,12 +1,7 @@
 """
-Contains
-
-- shapley related stuff.
-- analytical derivatives for MSE and Linear Regression.
-- methods for sampling datasets.
-- code for calculating decision boundary in BinaryLogisticRegression.
+This module contains routines for numerical computations used across the
+library.
 """
-
 
 import math
 from enum import Enum
@@ -36,6 +31,7 @@ __all__ = [
     "linear_regression_analytical_derivative_d_theta",
     "linear_regression_analytical_derivative_d_x_d_theta",
     "top_k_value_accuracy",
+    "get_running_avg_variance",
 ]
 
 T = TypeVar("T")
@@ -44,8 +40,8 @@ T = TypeVar("T")
 def powerset(it: "NDArray") -> Iterator[Collection[T]]:
     """Returns an iterator for the power set of the argument.
 
-    Subsets are generated in sequence by growing size. See `random_powerset()`
-    for random sampling.
+    Subsets are generated in sequence by growing size. See
+    :func:`random_powerset` for random sampling.
 
     >>> from pydvl.utils.numeric import powerset
     >>> list(powerset([1,2]))
@@ -228,29 +224,16 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     return full_derivative / N  # type: ignore
 
 
-def min_distance_points_to_line_2d(
-    p: "NDArray", a: "NDArray", b: "NDArray"
-) -> Tuple["NDArray", "NDArray"]:
-    """
-    Closed-form solution for minimum distance of point to line specified by dot(a, x) + b = 0.
-    :param p: A 2-dimensional matrix [NxD] representing the points.
-    :param a: A 1-dimensional vector [D] representing the slope.
-    :param b: The offset of the line.
-    :returns: A 1-dimensional vector [N] with the shortest distance for each point to the line.
-    """
-    a = np.reshape(a, [2, 1])
-    r = np.abs(p @ a + b) / np.sqrt(np.sum(a**2))
-    return r[:, 0]  # type: ignore
-
-
 def get_running_avg_variance(
     previous_avg: "FloatOrArray",
     previous_variance: "FloatOrArray",
     new_value: "FloatOrArray",
     count: int,
 ) -> Tuple["FloatOrArray", "FloatOrArray"]:
-    """The method uses Welford's algorithm to calculate the running average and variance of
-    a set of numbers.
+    """Uses Welford's algorithm to calculate the running average and variance of
+     a set of numbers.
+
+    See [Welford's algorithm in wikipedia](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm)
 
     :param previous_avg: average value at previous step
     :param previous_variance: variance at previous step
@@ -266,7 +249,8 @@ def get_running_avg_variance(
 
 
 def top_k_value_accuracy(y_true: "NDArray", y_pred: "NDArray", k: int = 3) -> float:
-    """Computes the top-k accuracy for the estimated values by comparing indices of the highest k values
+    """Computes the top-k accuracy for the estimated values by comparing indices
+    of the highest k values.
 
     :param y_true: Exact/true value
     :param y_pred: Predicted/estimated value
