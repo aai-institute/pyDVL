@@ -15,7 +15,11 @@ def copy_notebooks(app: Sphinx, config: Config) -> None:
     notebooks_dir = root_dir / "notebooks"
     docs_examples_dir = root_dir / "docs" / "examples"
     notebook_filepaths = list(notebooks_dir.glob("*.ipynb"))
-    logger.info(f"Found following notebooks: {notebook_filepaths}")
+    sep = "\n\t"
+    logger.info(
+        f"Found the following notebooks: "
+        f"{sep.join([str(p) for p in notebook_filepaths])}"
+    )
     for notebook in notebook_filepaths:
         target_filepath = docs_examples_dir / notebook.name
         logger.info(
