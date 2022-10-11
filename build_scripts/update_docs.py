@@ -73,16 +73,21 @@ def write_to_file(content: str, path: str):
 
 
 def make_rst(src_root="src", docs_root="docs", clean=False, overwrite=False):
-    """
-    Creates/updates documentation in form of rst files for modules and packages.
-    Does not delete any existing rst files if clean and overwrite are False.
-    This method should be executed from the project's top-level directory
-    :param src_root: path to project's src directory that contains all packages, usually src. Most projects will
-        only need one top-level package, then your layout typically should be src/<library_name>.
-    :param docs_root: path to the project's docs directory containing the conf.py and the top level index.rst
-    :param clean: whether to completely clean the docs target directories beforehand, removing any existing files
-    :param overwrite: whether to overwrite existing rst files. This should be used with caution as it will delete
-        all manual changes to documentation files
+    """Creates / updates documentation in form of rst files for modules and
+    packages. Does not delete any existing rst files if clean and overwrite are
+    False. This method should be executed from the project's top-level
+    directory.
+
+    :param src_root: path to project's src directory that contains all packages,
+        usually src. Most projects will only need one top-level package, then
+        your layout typically should be src/<library_name>.
+    :param docs_root: path to the project's docs directory containing the
+        `conf.py` and the top level `index.rst`.
+    :param clean: whether to completely clean the docs target directories
+        beforehand, removing any existing files.
+    :param overwrite: whether to overwrite existing rst files. This should be
+        used with caution as it will delete all manual changes to documentation
+        files.
     :return:
     """
     docs_root = os.path.abspath(docs_root)
@@ -114,7 +119,7 @@ def make_rst(src_root="src", docs_root="docs", clean=False, overwrite=False):
 
         for root, dirnames, filenames in os.walk(top_level_package_dir):
             if os.path.basename(root).startswith("_"):
-                log.debug(f"Skipping docu generation in {root}")
+                log.debug(f"Skipping doc generation in {root}")
                 continue
 
             base_package_relpath = os.path.relpath(root, start=top_level_package_dir)
