@@ -15,16 +15,21 @@ Start by browsing our worked-out examples illustrating pyDVL's capabilities
 either:
 
 - :ref:`In this documentation<examples>`.
-- Using binder notebooks, deployed from each example.
-- Locally, by starting a jupyter server at the root of the project.
+- Using `binder <https://mybinder.org/>`_ notebooks, deployed from each
+  example's page.
+- Locally, by starting a jupyter server at the root of the project. You will
+  have to install jupyter first manually since it's not a dependency of the
+  library.
 
 Using the library
 =================
 
 pyDVL offers algorithms for data valuation and computation of influence
-functions.
+functions. You can read more about each here:
 
-For influence functions, the relevant module is :mod:`~pydvl.influence`
+- :ref:`data values`.
+- :ref:`influence`.
+
 
 What's next
 ===========
