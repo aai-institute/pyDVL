@@ -64,9 +64,7 @@ jobs:
         key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini') }}
         path: .tox
     - name: Build Docs
-      run: |
-        cp notebooks/*.ipynb docs/examples/
-        tox -e docs
+      run: tox -e docs
     - name: Save built docs
       uses: actions/upload-artifact@v3
       with:
