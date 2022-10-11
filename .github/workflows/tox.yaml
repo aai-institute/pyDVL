@@ -127,10 +127,10 @@ jobs:
           user_name: ${{ env.GITHUB_BOT_USERNAME }}
           user_email: ${{ env.GITHUB_BOT_EMAIL }}
       - name: Build and publish to TestPyPI
-        # if: ${{ github.ref == 'refs/heads/develop' }}
+        if: ${{ github.ref == 'refs/heads/develop' }}
         env:
           TWINE_USERNAME: __token__
-          # TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
         run: |
           set -x
           export CURRENT_VERSION=$(python setup.py --version)
