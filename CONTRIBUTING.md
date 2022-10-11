@@ -1,38 +1,47 @@
-# pyDVL development guide
+# Contributing to pyDVL
 
-This repository contains the pyDVL python library together with utilities
-for building, testing, documentation and configuration management.
+The goal of pyDVL is to be a repository of successful algorithms for the
+valuation of data, in a broader sense. Contributions are welcome from anyone in
+the form of pull requests, bug reports and feature requests.
 
-## Local Development
+We will consider for inclusion any (tested) implementation of an algorithm
+appearing in a peer-reviewed journal (even if the method does not improve the
+state of the art, for benchmarking and comparison purposes). We are also open to
+improvements to the currently implemented methods and other ideas. Please open a
+ticket with yours.
 
-This project uses the [black](https://github.com/psf/black) source code formatter
-and [pre-commit](https://pre-commit.com/) to invoke it as a Git prme-commit hook.
+## Local development
 
-When first cloning the repository, run the following command (after
-setting up your virtualenv with dev dependencies installed, see below) to set up
-the local Git hook:
+This project uses the [black](https://github.com/psf/black) source code
+formatter and [pre-commit](https://pre-commit.com/) to invoke it as a Git
+pre-commit hook.
+
+When first cloning the repository, run the following command (after setting up
+your virtualenv with dev dependencies installed, see below) to set up the local
+git hook:
 
 ```shell script
 pre-commit install
 ```
 
-Automated builds, tests, generation of docu and publishing are handled by CI/CD
-pipelines. You will find an initial version of the pipeline in this repo. Below
-are further details on testing and documentation.
+Automated builds, tests, generation of documentation and publishing are handled
+by CI/CD pipelines. You will find an initial version of the pipeline in this
+repo. Below are further details on testing and documentation.
 
 Before pushing your changes to the remote it is often useful to execute `tox`
 locally in order to detect mistakes early on.
 
 We strongly suggest using some form of virtual environment for working with the
-library. E.g. with venv (if you have created the project locally with the
-python-library-template, it will already include a venv)
+library. E.g. with venv (if you have created the project locally with
+[pymetrius](https://github.com/appliedAI-Initiative/pymetrius), it will already
+include a venv):
 
 ```shell script
 python -m venv ./venv
 . venv/bin/activate  # `venv\Scripts\activate` in windows
 ```
 
-or conda:
+With conda:
 
 ```shell script
 conda create -n pydvl python=3.8
@@ -51,7 +60,8 @@ pip install -e .
 
 The main requirements for developing the library locally are in
 `requirements-dev.txt`. For building documentation locally (which is done as
-part of the tox suite) you will need pandoc. It can be installed e.g. via
+part of the tox suite) you will need pandoc. Under Ubuntu it can be installed
+e.g. via
 
 ```shell script
 sudo apt-get update -yq && apt-get install -yq pandoc
@@ -59,28 +69,41 @@ sudo apt-get update -yq && apt-get install -yq pandoc
 
 ### Testing and packaging
 
-The library is built with tox which will build and install the package, run the
+The library is built with tox. It will build and install the package, run the
 test suite and build the documentation. Running tox will also generate coverage
 and pylint reports in html and badges. You can configure pytest, coverage and
 pylint by adjusting [pyproject.toml](pyproject.toml).
 
-Concerning notebooks: all notebooks in the [notebooks](notebooks) directory should
-be executed during test run, with smaller datasets if the run time is too long. 
-They will be added to the documentation in CI the _Examples_ section. 
-Thus, notebooks can be conveniently used as integration tests and documentation at the same time.
+All notebooks in the [notebooks](notebooks) directory should be executed during
+the test run, with smaller datasets if the run time is too long. Because this is
+typically the case, we commit notebooks with their outputs with full datasets to
+the repo and these are added to the documentation in CI to the
+[Examples](https://appliedAI-Initiative.github.io/pyDVL/examples.html) section
+of the documentation. Thus, notebooks can be conveniently used as integration
+tests and documentation at the same time.
+
+Inside a notebook you can access the `CI` environment variable to switch between
+datasets or select subsets:
+
+```python
+# In CI we only use a subset of the training set
+if os.environ.get('CI'):
+    train_data = (train_data[0][:10], train_data[1][:10])
+```
 
 #### Testing
 
-You can run the build by installing tox into your virtual environment (e.g. with
-`pip install tox`) and executing `tox`.
+You can build pyDVL by executing `tox`.
 
-You can pass optional command line arguments to pytest, for example to run only certain tests using patterns (-k) or marker (-m).
+It is possible to pass optional command line arguments to pytest, for example to
+run only certain tests using patterns (`-k`) or marker (`-m`).
 
 `tox -e base -- <optional arguments>`
 
-One important argument that you can use is `--do-not-start-memcache`. This prevents
-the test fixture from starting a new memcache server for testing and instead expects
-an already running local server listening on port 11211 ( memcache's default port ).
+One important argument that you can use is `--do-not-start-memcache`. This
+prevents the test fixture from starting a new memcache server for testing and
+instead expects an already running local server listening on port 11211 (
+memcache's default port ).
 
 To test modules that rely on PyTorch, you should use:
 
@@ -103,16 +126,19 @@ python setup.py sdist bdist_wheel
 
 ### Documentation
 
-Documentation is built with sphinx every time tox is executed, doctests are run
-during that step. There is a helper script for updating documentation files
-automatically. It is called by tox on build and can be invoked manually as
+Documentation is built with [sphinx](https://www.sphinx-doc.org/) by tox.
+Doctests are run during that step. tox calls a helper script to  build `.rst`
+files which can be invoked manually with:
 
 ```bash
 python build_scripts/update_docs.py
 ```
-See the code documentation in the script for more details on that.
 
-Notebooks also form part of the documentation, see the explanation above.
+See the documentation inside the script for more details.
+
+Notebooks also form part of the documentation and are used as-is as examples,
+see the explanation above. This requires [pandoc](https://pandoc.org/) installed
+in your system.
 
 
 ## CI/CD and Release Process
@@ -133,13 +159,14 @@ PYPI_PASSWORD
 The first 2 are used after tests run on the develop branch's CI workflow 
 to automatically publish packages to [TestPyPI](https://test.pypi.org/).
 
-The last 2 are used in the [publish.yaml](.github/workflows/publish.yaml) CI workflow
-to publish packages to [PyPI](https://pypi.org/) from the develop after a Github release creation.
+The last 2 are used in the [publish.yaml](.github/workflows/publish.yaml) CI
+workflow to publish packages to [PyPI](https://pypi.org/) from the develop after
+a GitHub release creation.
 
 #### Release to TestPyPI
 
-We use bump2version to bump the build part of the version number, 
-create a tag and push it from CI.
+We use [bump2version](https://pypi.org/project/bump2version/) to bump the build
+part of the version number, create a tag and push it from CI.
 
 To do that, we use 2 different tox environments:
 
@@ -212,15 +239,15 @@ create a new release manually by following these steps:
     git merge --no-ff release/${RELEASE_VERSION}
     git push origin develop
     ```
-6. Delete the release branch if necessary: 
+7. Delete the release branch if necessary: 
    `git branch -d release/${RELEASE_VERSION}`
-7. Pour yourself a cup of coffee, you earned it! :coffee: :sparkles:
+8. Pour yourself a cup of coffee, you earned it! :coffee: :sparkles:
 
-## Useful information
+## Other useful information
 
 Mark all autogenerated directories as excluded in your IDE. In particular
-docs/_build and .tox should be marked as excluded in order to get a significant
-speedup in searches and refactorings.
+`docs/_build` and `.tox` should be marked as excluded in order to get a
+significant speedup in searches and refactorings.
 
-If using remote execution, don't forget to exclude data paths from deployment
-(unless you really want to sync them)
+If you use remote execution, don't forget to exclude data paths from deployment
+(unless you really want to sync them).
