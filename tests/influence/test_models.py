@@ -133,7 +133,7 @@ def test_linear_regression_model_grad(
     train_grads_max_diff = np.max(np.abs(train_grads_analytical - train_grads_autograd))
     assert (
         train_grads_max_diff < ModelTestSettings.ACCEPTABLE_ABS_TOL_DERIVATIVE
-    ), "Train set produces wrong gradients."
+    ), "training set produces wrong gradients."
 
 
 @pytest.mark.torch

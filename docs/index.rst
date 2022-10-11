@@ -35,7 +35,7 @@ If you're a first time user of pyDVL, we recommend you to go through the
 
         +++
 
-        .. button-ref:: install
+        .. button-ref:: 20-install
             :expand:
             :color: primary
             :outline:
