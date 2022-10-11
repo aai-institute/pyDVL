@@ -249,15 +249,13 @@ def combinatorial_montecarlo_shapley(
     dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
     progress: bool = False,
 ) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
-    """Computes an approximate Shapley value using the combinatorial
-    definition.
+    """Computes an approximate Shapley value using the combinatorial definition.
 
     :param u: utility
     :param max_iterations: total number of iterations (permutations) to use
     :param n_jobs: number of jobs across which to distribute the computation
     :param config: Object configuring parallel computation, with cluster
-    address,
-        number of cpus, etc.
+        address, number of cpus, etc.
     :param dist: Distribution to use of sets over the power set.
     :param progress: true to plot progress bar
     :return: Tuple with the first element being an ordered Dict of approximate
