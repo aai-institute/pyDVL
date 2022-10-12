@@ -10,6 +10,14 @@
     <a href="https://github.com/appliedAI-Initiative/pyDVL/actions/workflows/tox.yaml">
         <img src="https://github.com/appliedAI-Initiative/pyDVL/actions/workflows/tox.yaml/badge.svg" alt="Build Status"/>
     </a>
+    <br>
+    <a href="https://pypi.org/project/pydvl/">
+        <img src="https://img.shields.io/pypi/v/pydvl.svg"/>
+    </a>
+    <a href="https://pypi.org/project/pydvl/">
+        <img src="https://img.shields.io/pypi/pyversions/pydvl.svg"/>
+    </a>
+    <img alt="PyPI - License" src="https://img.shields.io/pypi/l/pydvl"/>
 </p>
 
 <p align="center" style="text-align:center;">
