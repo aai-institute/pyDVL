@@ -20,6 +20,7 @@ __all__ = [
     "combinatorial_exact_shapley",
     "permutation_exact_shapley",
     "compute_knn_shapley",
+    "compute_shapley_values",
 ]
 
 
