@@ -75,11 +75,13 @@ class RayActorWrapper:
 
 
 class Coordinator(abc.ABC):
-    def __init__(self, *, progress: Optional[bool] = True):
-        """The coordinator has two main tasks: aggregating the results of the
-        workers and terminating the process once a certain accuracy or total
-        number of iterations is reached.
+    """The coordinator has two main tasks: aggregating the results of the
+    workers and terminating the process once a certain accuracy or total
+    number of iterations is reached.
+    """
 
+    def __init__(self, *, progress: Optional[bool] = True):
+        """
         :param score_tolerance: During calculation of shapley values, the
              coordinator will check if the median standard deviation over average
              score for each point's has dropped below score_tolerance.

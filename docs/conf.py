@@ -39,6 +39,8 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.doctest",
     "sphinx.ext.linkcode",
+    "sphinx.ext.mathjax",
+    "sphinx_math_dollar",
     "sphinx.ext.todo",
     "sphinx_rtd_theme",
     "sphinx_design",
@@ -48,6 +50,14 @@ extensions = [
     # Custom extensions
     "copy_notebooks",
 ]
+
+# sphinx_math_dollar
+mathjax3_config = {
+    "tex": {
+        "inlineMath": [["\\(", "\\)"]],
+        "displayMath": [["\\[", "\\]"]],
+    }
+}
 
 # NBSphinx
 

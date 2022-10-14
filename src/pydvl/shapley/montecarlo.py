@@ -1,3 +1,36 @@
+r"""
+Monte Carlo approximations to Shapley Data values.
+
+**Note:** You probably want to use the common interface provided by
+:func:`~pydvl.shapley.compute_shapley_values` instead of using the functions in
+this module.
+
+Exact computation of Shapley value requires $\mathcal{O}(2^n)$ retrainings of
+the model. Recall the definition of the value of sample $i$:
+
+$$v_i = \frac{1}{N}  \sum_{S \subseteq D_{\backslash \{ i \}}}
+\frac{1}{\binom{N - 1}{ | S | }} [U (S_{\cup \{ i \}}) - U (S)] ,$$
+
+where $D$ is the set of indices in the training set, which we identify with the
+data itself.
+
+To overcome this limitation, it is possible to only sample some subsets of the
+training set (or permutations thereof) to obtain a Monte Carlo approximation to
+the true value. This is done in
+:func:`~pydvl.shapley.montecarlo.combinatorial_montecarlo_shapley`. Alternatively,
+employing the reformulation of the expression above as a sum over permutations,
+one has the implementation in
+:func:`~pydvl.shapley.montecarlo.permutation_montecarlo_shapley`.
+
+Additionally, one can implement an early stopping strategy to
+adapt computation time. This is done in
+:func:`~pydvl.shapley.montecarlo.truncated_montecarlo_shapley`.
+
+Finally, you can consider grouping your data points using
+:class:`~pydvl.utils.dataset.GroupedDataset` and computing the values of the
+groups instead.
+"""
+
 import logging
 import math
 import warnings

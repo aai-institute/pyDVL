@@ -1,4 +1,4 @@
-.. _data values:
+.. _data valuation:
 
 =====================
 Computing data values

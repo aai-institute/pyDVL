@@ -27,7 +27,7 @@ Using the library
 pyDVL offers algorithms for data valuation and computation of influence
 functions. You can read more about each here:
 
-- :ref:`data values`.
+- :ref:`data valuation`.
 - :ref:`influence`.
 
 

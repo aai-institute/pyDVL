@@ -1,3 +1,9 @@
+"""
+This internal module contains methods and classes to distribute Shapley jobs
+in a cluster. You probably aren't interested in any of this unless you are
+developing new methods for pyDVL that use parallelization.
+"""
+
 import logging
 from typing import TYPE_CHECKING, Optional
 
