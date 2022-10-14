@@ -25,7 +25,7 @@ __all__ = [
 
 
 class ShapleyMode(str, Enum):
-    """Supported modes of computation of Shapley values."""
+    """Supported algorithms for the computation of Shapley values."""
 
     CombinatorialExact = "combinatorial_exact"
     PermutationExact = "permutation_exact"
@@ -41,24 +41,37 @@ def compute_shapley_values(
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     **kwargs,
 ) -> pd.DataFrame:
-    """Given a utility, a max number of iterations and the number of jobs, it
-    calculates the Shapley values. Depending on the algorithm used, it also
-    takes additional optional arguments.
+    """Umbrella method to compute Shapley values with any of the available
+    algorithms.
 
-    Options for the algorithms are:
-    - 'exact_combinatorial': uses the combinatorial implementation of data
-        Shapley
-    - 'exact_permutation': uses the permutation-based implementation of data
-        Shapley. Computation is **not parallelized**.
+    See :ref:`data valuation` for an overview.
+
+    Some algorithms also accept additional arguments, please refer to the
+    documentation of each particular method: :ref:`~`
+
+    The following algorithms are available. Note that the exact methods can only
+    work with very small datasets and are thus intended only for testing.
+
+    - 'combinatorial_exact': uses the combinatorial implementation of data
+        Shapley. Implemented in
+        :ref:`~pydvl.shapley.naive.combinatorial_exact_shapley`.
+    - 'permutation_exact': uses the permutation-based implementation of data
+        Shapley. Computation is **not parallelized**. Implemented in
+        :ref:`~pydvl.shapley.naive.permutation_exact_shapley`.
     - 'permutation_montecarlo': uses the approximate Monte Carlo implementation
-        of permutation data Shapley.
+        of permutation data Shapley. Implemented in
+        :ref:`~pydvl.shapley.montecarlo.permutation_montecarlo_shapley`.
     - 'combinatorial_montecarlo':  uses the approximate Monte Carlo
-        implementation of combinatorial data Shapley.
+        implementation of combinatorial data Shapley. Implemented in
+        :ref:`~pydvl.shapley.montecarlo.combinatorial_montecarlo_shapley`.
     - 'truncated_montecarlo': default option, same as permutation_montecarlo but
         stops the computation whenever a certain accuracy is reached.
+        Implemented in
+        :ref:`~pydvl.shapley.montecarlo.truncated_montecarlo_shapley`.
 
-    :param u: Utility object with model, data, and scoring function
-    :param max_iterations: total number of iterations, used for montecarlo methods
+    :param u: :ref:`~pydvl.utils.utility.Utility` object with model, data, and
+        scoring function.
+    :param max_iterations: total number of iterations, used for Monte Carlo methods
     :param n_jobs: Number of parallel jobs
     :param mode: Choose which shapley algorithm to use. See
         :obj:`pydvl.shapley.ShapleyMode` for a list of allowed values.

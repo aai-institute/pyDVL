@@ -41,7 +41,7 @@ class Utility:
     Since evaluating the scoring function requires retraining the model, this
     class wraps it and caches the results of each execution. Caching is
     available both locally and across nodes, but must always be enabled for your
-    project first, see :ref:`caching setup<how to set up the cache>`.
+    project first, see :ref:`how to set up the cache<caching setup>`.
 
     :param model: Any supervised model. Typical choices can be found at
             https://scikit-learn.org/stable/supervised_learning.html

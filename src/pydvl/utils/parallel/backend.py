@@ -111,6 +111,11 @@ def init_parallel_backend(config: ParallelConfig) -> "RayParallelBackend":
 
 
 def available_cpus() -> int:
+    """Platform-independent count of available cores.
+
+    FIXME: do we really need this or is `os.cpu_count` enough? Is this portable?
+    :return: Number of cores, or 1 if it is not possible to determine.
+    """
     from platform import system
 
     if system() != "Linux":
