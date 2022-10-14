@@ -164,7 +164,7 @@ def permutation_montecarlo_shapley(
 
     iterations_per_job = max_iterations // n_jobs
 
-    map_reduce_job: MapReduceJob["Utility", "NDArray"] = MapReduceJob(
+    map_reduce_job: MapReduceJob["NDArray", "NDArray"] = MapReduceJob(
         map_func=_permutation_montecarlo_shapley,
         reduce_func=np.concatenate,  # type: ignore
         map_kwargs=dict(max_permutations=iterations_per_job, progress=progress),
@@ -267,7 +267,7 @@ def combinatorial_montecarlo_shapley(
 
     iterations_per_job = max_iterations // n_jobs
 
-    map_reduce_job: MapReduceJob["Utility", "NDArray"] = MapReduceJob(
+    map_reduce_job: MapReduceJob["NDArray", "NDArray"] = MapReduceJob(
         map_func=_combinatorial_montecarlo_shapley,
         reduce_func=np.concatenate,  # type: ignore
         map_kwargs=dict(

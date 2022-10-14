@@ -63,6 +63,9 @@ class MapReduceJob(Generic[T, R]):
 
     Results are aggregated per run using reduce_func(), but not across runs.
 
+    Typing information for objects of this class requires the type of the inputs
+    that are split for `map_func` and the type of its output.
+
     :param map_func: Function that will be applied to the input chunks in each
         job.
     :param reduce_func: Function that will be applied to the results of
@@ -112,8 +115,8 @@ class MapReduceJob(Generic[T, R]):
 
     def __init__(
         self,
-        map_func: MapFunction,
-        reduce_func: Optional[ReduceFunction] = None,
+        map_func: MapFunction[R],
+        reduce_func: Optional[ReduceFunction[R]] = None,
         map_kwargs: Optional[Dict] = None,
         reduce_kwargs: Optional[Dict] = None,
         config: ParallelConfig = ParallelConfig(),

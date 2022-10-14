@@ -114,5 +114,5 @@ def available_cpus() -> int:
     from platform import system
 
     if system() != "Linux":
-        return os.cpu_count()
+        return os.cpu_count() or 1
     return len(os.sched_getaffinity(0))

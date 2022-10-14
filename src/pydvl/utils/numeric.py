@@ -161,11 +161,11 @@ def random_matrix_with_condition_number(n: int, condition_number: float) -> "NDA
         log_condition_number / (2.0 * (n - 1)),
     )
     exp_vec = exp_vec[:n]
-    s = np.exp(exp_vec)
+    s: np.ndarray = np.exp(exp_vec)
     S = np.diag(s)
     U, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
     V, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
-    P = U.dot(S).dot(V.T)
+    P: np.ndarray = U.dot(S).dot(V.T)
     P = P.dot(P.T)
     return P
 
