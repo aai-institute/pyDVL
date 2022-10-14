@@ -37,6 +37,11 @@ pyDVL requires Python >= 3.8, `Memcached <https://memcached.org/>`_ for caching
 and `ray <https://ray.io>`_ for parallelization. Additionally, if you want to
 use :mod:`Influence functions<pydvl.influence>` it also requires pytorch.
 
+.. _caching setup:
+
+Caching
+=======
+
 memcached is an in-memory key-value store accessible over the network. pyDVL
 uses it to cache certain results and speed-up the computations. You can either
 install it as a package or run it inside a docker container (the simplest).For

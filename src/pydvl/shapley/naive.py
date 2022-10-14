@@ -89,7 +89,7 @@ def combinatorial_exact_shapley(
     def reduce_fun(results):
         return np.array(results).sum(axis=0)
 
-    map_reduce_job = MapReduceJob(
+    map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
         map_func=map_fun, reduce_func=reduce_fun, chunkify_inputs=True, n_jobs=n_jobs
     )
     values = map_reduce_job(u.data.indices)[0]

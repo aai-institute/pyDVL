@@ -1,13 +1,15 @@
 """
 This module contains classes to manage and learn utility functions for the
-computation of values.
+computation of values. Please see the documentation on :ref:`data valuation` for
+more information.
 
-:class:`Utility` holds information about model, data and scoring function (the
-*utility* function itself for Shapley value). It is automatically cached across
-machines.
+:class:`Utility` holds information about model, data and scoring function (which
+is the utility* function itself for Shapley value). It is automatically cached
+across machines.
 
 :class:`DataUtilityLearning` adds support for learning the scoring function
 to avoid repeated re-training of the model.
+
 """
 import logging
 import warnings
@@ -30,12 +32,16 @@ logger = logging.getLogger(__name__)
 
 
 class Utility:
-    """A convenience wrapper with configurable memoization.
+    """Convenience wrapper with configurable memoization of the scoring function.
 
-    It holds all the most important elements of the Shapley values calculation,
-    namely the model, the data and the scoring.
-    It can also cache the training results, which speeds up
-    the overall calculation for big models that take a long time to train.
+    An instance of `Utility` holds the triple of model, dataset and scoring
+    function which determines the value of data points. This is mostly used for
+    the computation of :ref:`Shapley values<data valuation>`.
+
+    Since evaluating the scoring function requires retraining the model, this
+    class wraps it and caches the results of each execution. Caching is
+    available both locally and across nodes, but must always be enabled for your
+    project first, see :ref:`caching setup<how to set up the cache>`.
 
     :param model: Any supervised model. Typical choices can be found at
             https://scikit-learn.org/stable/supervised_learning.html

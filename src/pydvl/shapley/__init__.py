@@ -47,15 +47,15 @@ def compute_shapley_values(
 
     Options for the algorithms are:
     - 'exact_combinatorial': uses the combinatorial implementation of data
-      Shapley
+        Shapley
     - 'exact_permutation': uses the permutation-based implementation of data
-      Shapley. Computation is **not parallelized**.
+        Shapley. Computation is **not parallelized**.
     - 'permutation_montecarlo': uses the approximate Monte Carlo implementation
-      of permutation data Shapley.
+        of permutation data Shapley.
     - 'combinatorial_montecarlo':  uses the approximate Monte Carlo
-       implementation of combinatorial data Shapley.
+        implementation of combinatorial data Shapley.
     - 'truncated_montecarlo': default option, same as permutation_montecarlo but
-      stops the computation whenever a certain accuracy is reached.
+        stops the computation whenever a certain accuracy is reached.
 
     :param u: Utility object with model, data, and scoring function
     :param max_iterations: total number of iterations, used for montecarlo methods
