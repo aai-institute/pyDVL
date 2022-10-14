@@ -224,7 +224,7 @@ def _combinatorial_montecarlo_shapley(
             max_subsets=max_iterations,
         )
         # Normalization accounts for a uniform dist. on powerset (i.e. not
-        # weighted by set size) and the montecarlo sampling
+        # weighted by set size) and the Monte Carlo sampling
         for s_idx, s in enumerate(
             maybe_progress(
                 power_set,

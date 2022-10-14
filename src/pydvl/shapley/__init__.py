@@ -71,10 +71,12 @@ def compute_shapley_values(
 
     :param u: :ref:`~pydvl.utils.utility.Utility` object with model, data, and
         scoring function.
-    :param max_iterations: total number of iterations, used for Monte Carlo methods
-    :param n_jobs: Number of parallel jobs
+    :param max_iterations: total number of iterations, used for Monte Carlo
+        methods.
+    :param n_jobs: Number of parallel jobs (available only to some methods)
     :param mode: Choose which shapley algorithm to use. See
         :obj:`pydvl.shapley.ShapleyMode` for a list of allowed values.
+
     :return: pandas DataFrame with index being group names or data indices, and
         columns: `data_value` (calculated shapley values) and `data_value_std`
         (standard deviation of `data_value` for Monte Carlo estimators)

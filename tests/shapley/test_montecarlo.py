@@ -241,7 +241,7 @@ def test_random_forest(
 ):
     """This test checks that random forest can be trained in our library.
     Originally, it would also check that the returned values match between
-    permutation and combinatorial montecarlo, but this was taking too long in the
+    permutation and combinatorial Monte Carlo, but this was taking too long in the
     pipeline and was removed."""
     rf_utility = Utility(
         regressor,
