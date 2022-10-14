@@ -15,7 +15,7 @@ __all__ = [
 
 T = TypeVar("T")
 
-_PARALLEL_BACKED: Optional["RayParallelBackend"] = None
+_PARALLEL_BACKEND: Optional["RayParallelBackend"] = None
 
 
 class RayParallelBackend:
@@ -101,13 +101,13 @@ def init_parallel_backend(config: ParallelConfig) -> "RayParallelBackend":
     <RayParallelBackend: {'address': None, 'num_cpus': None}>
 
     """
-    global _PARALLEL_BACKED
-    if _PARALLEL_BACKED is None:
+    global _PARALLEL_BACKEND
+    if _PARALLEL_BACKEND is None:
         if config.backend == "ray":
-            _PARALLEL_BACKED = RayParallelBackend(config)
+            _PARALLEL_BACKEND = RayParallelBackend(config)
         else:
             raise NotImplementedError(f"Unexpected parallel type {config.backend}")
-    return _PARALLEL_BACKED
+    return _PARALLEL_BACKEND
 
 
 def available_cpus() -> int:
