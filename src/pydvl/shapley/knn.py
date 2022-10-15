@@ -1,3 +1,9 @@
+"""
+This module contains Shapley computations for K-Nearest Neighbours.
+
+(to do: implement approximate KNN computation for sublinear complexity)
+"""
+
 from collections import OrderedDict
 from typing import Dict, Union
 
@@ -6,10 +12,10 @@ from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from ..reporting.scores import sort_values
 from ..utils import Dataset, maybe_progress
 
-__all__ = ["compute_knn_shapley"]
+__all__ = ["knn_shapley"]
 
 
-def compute_knn_shapley(
+def knn_shapley(
     data: Dataset, model: KNeighborsClassifier, *, progress: bool = True
 ) -> "OrderedDict[int, float]":
     """Computes exact Shapley values for a KNN classifier.
@@ -22,12 +28,15 @@ def compute_knn_shapley(
     Endowment 12, no. 11 (1 July 2019): 1610–23.
     https://doi.org/10.14778/3342263.3342637.
 
-
-    :param data: split Dataset
+    :param data: split :class:`pydvl.utils.dataset.Dataset`.
     :param model: model to extract parameters from. The object will not be
-        modified nor used other than to call get_params()
-    :param progress: whether to display a progress bar
+        modified nor used other than to call
+        `get_params() <https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params>`_
+    :param progress: whether to display a progress bar.
 
+    :return: An
+        `OrderedDict <https://docs.python.org/3/library/collections.html#collections.OrderedDict>`_
+        of data indices and their values.
     """
     defaults: Dict[str, Union[int, str]] = {
         "algorithm": "ball_tree" if data.dim >= 20 else "kd_tree",

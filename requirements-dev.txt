@@ -10,3 +10,4 @@ jupyter
 nbconvert
 mypy
 types-tqdm
+sphinx-math-dollar

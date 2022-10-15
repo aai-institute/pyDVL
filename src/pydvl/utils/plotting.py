@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple
+from typing import Sequence, TYPE_CHECKING, Iterable, List, Optional, Tuple
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -179,18 +179,26 @@ def plot_influences(
 def plot_iris(
     data: Dataset,
     indices: List[int] = None,
-    corrupted_indices: Optional[List[int]] = None,
+    highlight_indices: Optional[Sequence[int]] = None,
     suptitle: str = None,
-    colors: Iterable = None,
     legend_title: str = None,
-    legend_labels: str = None,
+    legend_labels: Sequence[str] = None,
+    colors: Iterable = None,
     colorbar_limits: Optional[Tuple] = None,
     figsize: Tuple[int, int] = (20, 8),
 ):
     """Scatter plots for the iris dataset.
-    :param data: split Dataset.
-    :param indices: subset of data.indices
-    :param colors: use with indices to set the color (e.g. to values)
+
+    :param data: a Dataset with a valid train / test split
+    :param indices: subset of `data.indices`.
+    :param highlight_indices: circle these indices in red
+    :param suptitle: centered title for the figure
+    :param legend_title: A title for the legend
+    :param legend_labels: Labels for the legend entries
+    :param colors: use with indices to set the color (e.g. to values).
+    :param colorbar_limits: Range of values to display in the colorbar. A
+        colorbar will only be displayed if there are more than 10 colors.
+    :param figsize: Size of figure for matplotlib
     """
     if indices is not None:
         x_train = data.x_train[indices]
@@ -244,10 +252,10 @@ def plot_iris(
     plt.xlabel("Sepal length")
     plt.ylabel("Sepal width")
     _handle_legend(scatter)
-    if corrupted_indices is not None:
+    if highlight_indices is not None:
         scatter = plt.scatter(
-            x_train[sepal_length_indices][corrupted_indices],
-            x_train[sepal_width_indices][corrupted_indices],
+            x_train[sepal_length_indices][highlight_indices],
+            x_train[sepal_width_indices][highlight_indices],
             facecolors="none",
             edgecolors="r",
             s=80,
@@ -276,10 +284,10 @@ def plot_iris(
     plt.xlabel("Petal length")
     plt.ylabel("Petal width")
     _handle_legend(scatter)
-    if corrupted_indices is not None:
+    if highlight_indices is not None:
         scatter = plt.scatter(
-            x_train[petal_length_indices][corrupted_indices],
-            x_train[petal_width_indices][corrupted_indices],
+            x_train[petal_length_indices][highlight_indices],
+            x_train[petal_width_indices][highlight_indices],
             facecolors="none",
             edgecolors="r",
             s=80,

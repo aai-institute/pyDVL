@@ -1,10 +1,18 @@
+"""
+This package holds all routines for the computation of Shapley Data value. Users
+will want to use :func:`~pydvl.shapley.compute_shapley_values` as single
+interface to all methods defined in the modules.
+
+Please refer to :ref:`data valuation` for an overview of Shapley Data value.
+"""
 from enum import Enum
-from typing import Optional
+from typing import Optional, cast
 
 import numpy as np
 import pandas as pd
+import sklearn.neighbors as skn
 
-from pydvl.shapley.knn import compute_knn_shapley
+from pydvl.shapley.knn import knn_shapley
 from pydvl.shapley.montecarlo import (
     combinatorial_montecarlo_shapley,
     permutation_montecarlo_shapley,
@@ -13,15 +21,7 @@ from pydvl.shapley.montecarlo import (
 from pydvl.shapley.naive import combinatorial_exact_shapley, permutation_exact_shapley
 from pydvl.utils import Utility
 
-__all__ = [
-    "truncated_montecarlo_shapley",
-    "permutation_montecarlo_shapley",
-    "combinatorial_montecarlo_shapley",
-    "combinatorial_exact_shapley",
-    "permutation_exact_shapley",
-    "compute_knn_shapley",
-    "compute_shapley_values",
-]
+__all__ = ["compute_shapley_values"]
 
 
 class ShapleyMode(str, Enum):
@@ -32,6 +32,7 @@ class ShapleyMode(str, Enum):
     CombinatorialMontecarlo = "combinatorial_montecarlo"
     PermutationMontecarlo = "permutation_montecarlo"
     TruncatedMontecarlo = "truncated_montecarlo"
+    KNN = "knn"
 
 
 def compute_shapley_values(
@@ -46,36 +47,40 @@ def compute_shapley_values(
 
     See :ref:`data valuation` for an overview.
 
-    Some algorithms also accept additional arguments, please refer to the
-    documentation of each particular method: :ref:`~`
-
     The following algorithms are available. Note that the exact methods can only
-    work with very small datasets and are thus intended only for testing.
+    work with very small datasets and are thus intended only for testing. Some
+    algorithms also accept additional arguments, please refer to the
+    documentation of each particular method.
 
     - 'combinatorial_exact': uses the combinatorial implementation of data
-        Shapley. Implemented in
-        :ref:`~pydvl.shapley.naive.combinatorial_exact_shapley`.
+      Shapley. Implemented in
+      :func:`~pydvl.shapley.naive.combinatorial_exact_shapley`.
     - 'permutation_exact': uses the permutation-based implementation of data
-        Shapley. Computation is **not parallelized**. Implemented in
-        :ref:`~pydvl.shapley.naive.permutation_exact_shapley`.
+      Shapley. Computation is **not parallelized**. Implemented in
+      :func:`~pydvl.shapley.naive.permutation_exact_shapley`.
     - 'permutation_montecarlo': uses the approximate Monte Carlo implementation
-        of permutation data Shapley. Implemented in
-        :ref:`~pydvl.shapley.montecarlo.permutation_montecarlo_shapley`.
+      of permutation data Shapley. Implemented in
+      :func:`~pydvl.shapley.montecarlo.permutation_montecarlo_shapley`.
     - 'combinatorial_montecarlo':  uses the approximate Monte Carlo
-        implementation of combinatorial data Shapley. Implemented in
-        :ref:`~pydvl.shapley.montecarlo.combinatorial_montecarlo_shapley`.
+      implementation of combinatorial data Shapley. Implemented in
+      :func:`~pydvl.shapley.montecarlo.combinatorial_montecarlo_shapley`.
     - 'truncated_montecarlo': default option, same as permutation_montecarlo but
-        stops the computation whenever a certain accuracy is reached.
-        Implemented in
-        :ref:`~pydvl.shapley.montecarlo.truncated_montecarlo_shapley`.
+      stops the computation whenever a certain accuracy is reached.
+      Implemented in
+      :func:`~pydvl.shapley.montecarlo.truncated_montecarlo_shapley`.
 
-    :param u: :ref:`~pydvl.utils.utility.Utility` object with model, data, and
+    Additionally, one can use model-specific methods:
+
+    - 'knn': use only with K-Nearest neighbour models. Implemented in
+      :func:`~pydvl.shapley.knn.knn_shapley`.
+
+    :param u: :class:`~pydvl.utils.utility.Utility` object with model, data, and
         scoring function.
     :param max_iterations: total number of iterations, used for Monte Carlo
         methods.
     :param n_jobs: Number of parallel jobs (available only to some methods)
     :param mode: Choose which shapley algorithm to use. See
-        :obj:`pydvl.shapley.ShapleyMode` for a list of allowed values.
+        :class:`pydvl.shapley.ShapleyMode` for a list of allowed values.
 
     :return: pandas DataFrame with index being group names or data indices, and
         columns: `data_value` (calculated shapley values) and `data_value_std`
@@ -121,6 +126,13 @@ def compute_shapley_values(
     elif mode == ShapleyMode.PermutationExact:
         val = permutation_exact_shapley(u, progress=progress)
         val_std = None
+    elif mode == ShapleyMode.KNN:
+        if not isinstance(u.model, skn.KNeighborsClassifier):
+            raise TypeError("KNN Shapley requires a K-Nearest Neighbours model")
+        val = knn_shapley(
+            u.data, cast(skn.KNeighborsClassifier, u.model), progress=progress
+        )
+        val_std = None
     else:
         raise ValueError(f"Invalid value encountered in {mode=}")
 
@@ -129,7 +141,7 @@ def compute_shapley_values(
     )
 
     if val_std is None:
-        df["data_value_std"] = np.nan
+        df["data_value_std"] = np.nan  # FIXME: why NaN? stddev of a constant RV is 0
     else:
         df["data_value_std"] = pd.Series(val_std)
 
