@@ -79,6 +79,12 @@ nbsphinx_prolog = r"""
         </span>
     </div>
 
+    <style>
+        .nbinput .prompt,
+        .nboutput .prompt {
+            display: none;
+        }
+    </style>
 """
 
 # Display todos by setting to True
@@ -88,7 +94,7 @@ todo_include_todos = True
 # adding links to source files (this works for gitlab and github like hosts and might need to be adjusted for others)
 # see https://www.sphinx-doc.org/en/master/usage/extensions/linkcode.html#module-sphinx.ext.linkcode
 def linkcode_resolve(domain, info):
-    link_prefix = "https://github.com/appliedAI-Initiative/valuation/blob/develop"
+    link_prefix = "https://github.com/appliedAI-Initiative/pyDVL/blob/develop"
     if domain != "py":
         return None
     if not info["module"]:
