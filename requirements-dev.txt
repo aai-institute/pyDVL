@@ -2,12 +2,14 @@ tox
 tox-wheel
 pytest
 pytest-timeout
-pre-commit
+pre-commit == 2.20.0
 bump2version
 twine
-black
+isort == 5.10.1
+black == 22.10.0
 jupyter
 nbconvert
-mypy
+nbstripout == 0.6.1
+mypy == 0.982
 types-tqdm
 sphinx-math-dollar
