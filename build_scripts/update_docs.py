@@ -4,8 +4,7 @@ This script walks through the python source files and creates documentation in .
 then be compiled with Sphinx. It is suitable for a standard repository layout src/<library_name> as well as for
 a repo containing multiple packages src/<package_1>, ...,  src/<package_n>.
 """
-
-
+import argparse
 import logging
 import os
 import shutil
@@ -39,10 +38,13 @@ def package_template(package_qualname: str, *, add_toctree: bool = True):
 """
     if add_toctree:
         template += f"""
+.. rubric:: Modules in this package
+
 .. toctree::
    :glob:
 
    {package_name}/*
+
 """
     return template
 
@@ -72,7 +74,13 @@ def write_to_file(content: str, path: str):
     os.chmod(path, 0o666)
 
 
-def make_rst(src_root="src", docs_root="docs", clean=False, overwrite=False):
+def make_rst(
+    src_root: str = "src",
+    docs_root: str = "docs",
+    clean: bool = False,
+    overwrite: bool = False,
+    only_update: bool = True,
+):
     """Creates / updates documentation in form of rst files for modules and
     packages. Does not delete any existing rst files if clean and overwrite are
     False. This method should be executed from the project's top-level
@@ -88,6 +96,8 @@ def make_rst(src_root="src", docs_root="docs", clean=False, overwrite=False):
     :param overwrite: whether to overwrite existing rst files. This should be
         used with caution as it will delete all manual changes to documentation
         files.
+    :param only_update: set to True if rst files should only be recreated if
+        their modification date is earlier than that of the modules.
     :return:
     """
     docs_root = os.path.abspath(docs_root)
@@ -144,6 +154,19 @@ def make_rst(src_root="src", docs_root="docs", clean=False, overwrite=False):
                     )
                     if package_dir_content == ["__init__.py"]:
                         add_toctree = False
+
+                    try:
+                        dir_path = os.path.join(root, dirname)
+                        if only_update and os.path.getmtime(
+                            dir_path
+                        ) <= os.path.getmtime(package_rst_path):
+                            log.info(
+                                f"Package {dir_path} hasn't been modified, skipping."
+                            )
+                            continue
+                    except FileNotFoundError:
+                        pass
+
                     log.info(f"Writing package documentation to {package_rst_path}")
                     write_to_file(
                         package_template(package_qualname, add_toctree=add_toctree),
@@ -164,10 +187,50 @@ def make_rst(src_root="src", docs_root="docs", clean=False, overwrite=False):
                     if os.path.exists(module_rst_path) and not overwrite:
                         log.debug(f"{module_rst_path} already exists, skipping it")
 
+                    try:
+                        file_path = os.path.join(root, filename)
+                        if only_update and os.path.getmtime(
+                            file_path
+                        ) <= os.path.getmtime(module_rst_path):
+                            log.info(
+                                f"Module {file_path} hasn't been modified, skipping."
+                            )
+                            continue
+                    except FileNotFoundError:
+                        pass
+
                     log.info(f"Writing module documentation to {module_rst_path}")
                     write_to_file(module_template(module_qualname), module_rst_path)
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="A tool to create RST files for all source files in the library",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "-s", "--source", help="Root of the sources", type=str, default="src"
+    )
+
+    parser.add_argument(
+        "-d", "--doc", help="Root of the documentation", type=str, default="docs"
+    )
+
+    parser.add_argument(
+        "-u",
+        "--update",
+        help="Whether to only update rst files if sources are newer",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-c", "--clean", help="Wipe docs before starting", action="store_true"
+    )
+    args = parser.parse_args()
+
     logging.basicConfig(level=logging.INFO)
-    make_rst(clean=True)
+    make_rst(
+        src_root=args.source,
+        docs_root=args.doc,
+        clean=args.clean,
+        only_update=args.update,
+    )
