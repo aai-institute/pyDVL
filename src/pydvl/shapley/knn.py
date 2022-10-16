@@ -4,8 +4,7 @@ This module contains Shapley computations for K-Nearest Neighbours.
 (to do: implement approximate KNN computation for sublinear complexity)
 """
 
-from collections import OrderedDict
-from typing import Dict, Union
+from typing import Dict, OrderedDict, Union
 
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
