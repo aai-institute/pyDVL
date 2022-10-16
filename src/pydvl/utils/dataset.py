@@ -223,7 +223,7 @@ class Dataset:
             data.target,
             train_size=train_size,
             random_state=random_state,
-            stratify=data.target,
+            stratify=data.target if stratify else None,
         )
         return Dataset(
             x_train,
