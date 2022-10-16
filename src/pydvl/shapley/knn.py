@@ -17,7 +17,7 @@ __all__ = ["knn_shapley"]
 
 def knn_shapley(
     data: Dataset, model: KNeighborsClassifier, *, progress: bool = True
-) -> "OrderedDict[int, float]":
+) -> OrderedDict[str, float]:
     """Computes exact Shapley values for a KNN classifier.
 
     This implements the method described in:
@@ -75,4 +75,4 @@ def knn_shapley(
             )
             values[ii[i]] += (value_at_x - values[ii[i]]) / j
 
-    return sort_values(values)
+    return sort_values({data.data_names[i]: v for i, v in enumerate(values)})
