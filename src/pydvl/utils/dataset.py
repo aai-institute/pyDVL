@@ -202,6 +202,7 @@ class Dataset:
         data: Bunch,
         train_size: float = 0.8,
         random_state: Optional[int] = None,
+        stratify: bool = False,
     ) -> "Dataset":
         """Constructs a Dataset object from an sklearn bunch as returned by the
         `load_*` functions in `sklearn toy datasets
@@ -211,10 +212,18 @@ class Dataset:
         :param train_size: size of the training dataset. Used in
             `train_test_split`
         :param random_state: seed for train / test split
+        :param stratify: If `True`, data is split in a stratified fashion, using
+            the target variable as labels. Read more in
+            `sklearn's user guide <https://scikit-learn.org/stable/modules/cross_validation.html#stratification>`.
+
         :return: Dataset with the selected sklearn data
         """
         x_train, x_test, y_train, y_test = train_test_split(
-            data.data, data.target, train_size=train_size, random_state=random_state
+            data.data,
+            data.target,
+            train_size=train_size,
+            random_state=random_state,
+            stratify=data.target,
         )
         return Dataset(
             x_train,
@@ -306,7 +315,8 @@ class GroupedDataset(Dataset):
         data: Bunch,
         train_size: float = 0.8,
         random_state: Optional[int] = None,
-        **kwargs,
+        stratify: bool = False,
+        data_groups: Optional[List] = None,
     ) -> "GroupedDataset":
         """Constructs a Dataset object from an sklearn bunch as returned by the
         `load_*` functions in `sklearn toy datasets
@@ -317,14 +327,16 @@ class GroupedDataset(Dataset):
         :param train_size: size of the training dataset. Used in
             `train_test_split`.
         :param random_state: seed for train / test split.
+        :param stratify: If `True`, data is split in a stratified fashion, using
+            the target variable as labels. Read more in
+            `sklearn's user guide <https://scikit-learn.org/stable/modules/cross_validation.html#stratification>`.
         :param data_groups: for each element in the training set, it associates
             a group index or name.
         :return: Dataset with the selected sklearn data
         """
-        data_groups: Optional[List] = kwargs.get("data_groups")
         if data_groups is None:
             raise ValueError("data_groups argument is missing")
-        dataset = super().from_sklearn(data, train_size, random_state)
+        dataset = super().from_sklearn(data, train_size, random_state, stratify)
         return cls.from_dataset(dataset, data_groups)
 
     @classmethod
