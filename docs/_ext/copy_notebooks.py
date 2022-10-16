@@ -17,11 +17,14 @@ def copy_notebooks(app: Sphinx, config: Config) -> None:
     notebook_filepaths = list(notebooks_dir.glob("*.ipynb"))
     for notebook in notebook_filepaths:
         target_filepath = docs_examples_dir / notebook.name
-        if os.path.getmtime(notebook) <= os.path.getmtime(target_filepath):
-            logger.info(
-                f"Notebook '{os.fspath(notebook)}' hasn't been updated, skipping."
-            )
-            continue
+        try:
+            if os.path.getmtime(notebook) <= os.path.getmtime(target_filepath):
+                logger.info(
+                    f"Notebook '{os.fspath(notebook)}' hasn't been updated, skipping."
+                )
+                continue
+        except FileNotFoundError:
+            pass
         logger.info(
             f"Copying '{os.fspath(notebook)}' to '{os.fspath(target_filepath)}'"
         )
