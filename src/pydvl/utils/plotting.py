@@ -1,4 +1,4 @@
-from typing import Sequence, TYPE_CHECKING, Iterable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Iterable, List, Optional, Sequence, Tuple
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -36,6 +36,7 @@ def plot_shapley(
         y=df["data_value"],
         yerr=df["data_value_std"],
         fmt="o",
+        capsize=6,
     )
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
