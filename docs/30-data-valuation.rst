@@ -101,13 +101,13 @@ training samples within the training set:
 
 $$v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}} \binom{n-1}{ | S | }^{-1} [u(S \cup \{x_i\}) − u(S)] ,$$
 
-Because the number of subsets $\subseteq D \setminus \{x_i\}$ is
-$2^{ | D | - 1 }$, one typically must resort to approximations. The immediate
-one is done via Monte Carlo sampling of subsets. In an equivalent formulation of
-the expression above using permutations over indices, one can instead do Monte
-Carlo sampling of permutations. If one adds early stopping, one ends with
-so-called *Truncated Monte Carlo Shapley*, which is efficient and has proven
-useful in some applications:
+Because the number of subsets $S \subseteq D \setminus \{x_i\}$ is
+$2^{ | D | - 1 }$, one typically must resort to approximations. The simplest
+one is done via Monte Carlo sampling of the powerset $\mathcal{P}(D)$. In an
+equivalent formulation of the expression above using permutations over indices,
+one can instead do Monte Carlo sampling of permutations. By adding early
+stopping, one ends with so-called *Truncated Monte Carlo Shapley*, which is
+efficient and has proven useful in some applications:
 
 .. code-block:: python
 
@@ -118,14 +118,14 @@ useful in some applications:
            u=utility, mode="truncated_montecarlo", max_iterations=100
        )
 
-Running the code above will provide a DataFrame with values and estimated
-standard errors.
-
-Please refer to the documentation in :mod:`pydvl.shapley` for more information.
+The code above will generate a
+`pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_
+with values and estimated standard errors. Please refer to the documentation in
+:mod:`pydvl.shapley` for more information.
 
 Other methods
 =============
 
 Other game-theoretic concepts in pyDVL's roadmap are the **Least Core**, and
 **Banzhaf indices** (the latter is just a different weighting scheme with better
-numerical stability properties).
+numerical stability properties). Contributions are welcome!

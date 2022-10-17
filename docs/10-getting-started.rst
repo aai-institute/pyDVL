@@ -7,6 +7,12 @@ Getting started
 Make sure you have :ref:`installed pyDVL <pyDVL Installation>` before proceeding
 further.
 
+.. note::
+   We provide minimal overviews of key concepts in :ref:`data valuation` and
+   :ref:`influence`. For an in-depth survey of the field, we refer to the review on
+   the topic at the :tfl:`TransferLab website <>`.
+
+
 
 Running the examples
 ====================

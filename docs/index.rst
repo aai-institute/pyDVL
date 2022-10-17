@@ -1,11 +1,18 @@
+.. _home:
+
 ===================
 pyDVL Documentation
 ===================
 
 Welcome to the pyDVL library for data valuation!
 
+pyDVL collects algorithms for data valuation and influence function computation.
+It runs most of them in parallel either locally or in a cluster and supports
+distributed caching of results.
+
 If you're a first time user of pyDVL, we recommend you to go through the
-:ref:`Installation <pyDVL Installation>` and :ref:`Getting Started <getting started>` guides.
+:ref:`Getting Started <getting started>` and
+:ref:`Installation <pyDVL Installation>` guides.
 
 .. grid:: 2
     :gutter: 4
@@ -65,6 +72,7 @@ If you're a first time user of pyDVL, we recommend you to go through the
 
 .. toctree::
    :caption: Table of Contents
+   :titlesonly:
    :glob:
 
    *

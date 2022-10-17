@@ -40,6 +40,7 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.linkcode",
     "sphinx.ext.mathjax",
+    "sphinx.ext.extlinks",
     "sphinx_math_dollar",
     "sphinx.ext.todo",
     "sphinx_rtd_theme",
@@ -58,6 +59,14 @@ mathjax3_config = {
         "displayMath": [["\\[", "\\]"]],
     }
 }
+
+extlinks_detect_hardcoded_links = True
+extlinks = {
+    "gh": ("https://github.com/appliedAI-Initiative/pyDVL/%s", "GitHub %s"),
+    "issue": ("https://github.com/appliedAI-Initiative/pyDVL/issues/%s", "issue %s"),
+    "tfl": ("https://transferlab.appliedai.de/%s", "%s"),
+}
+
 
 # NBSphinx
 
