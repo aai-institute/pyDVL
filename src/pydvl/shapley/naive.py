@@ -56,7 +56,9 @@ def permutation_exact_shapley(
     return sort_values({u.data.data_names[i]: v for i, v in enumerate(values)})
 
 
-def _combinatorial_exact_shapley(u: Utility, progress: bool) -> np.ndarray:
+def _combinatorial_exact_shapley(
+    indices: np.ndarray, u: Utility, progress: bool
+) -> np.ndarray:
     n = len(u.data)
 
     # Arbitrary choice, will depend on time required, caching, etc.
@@ -64,7 +66,7 @@ def _combinatorial_exact_shapley(u: Utility, progress: bool) -> np.ndarray:
         warnings.warn(f"Large dataset! Computation requires 2^{n} calls to model.fit()")
 
     local_values = np.zeros(n)
-    for i in u.data.indices:
+    for i in indices:
         subset = np.setxor1d(u.data.indices, [i], assume_unique=True)
         for s in maybe_progress(
             powerset(subset),
@@ -100,7 +102,6 @@ def combinatorial_exact_shapley(
 
     """
     parallel_backend = init_parallel_backend(config)
-    n_jobs = parallel_backend.effective_n_jobs(n_jobs)
     u_id = parallel_backend.put(u)
 
     def reduce_fun(results):
@@ -108,10 +109,10 @@ def combinatorial_exact_shapley(
 
     map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
         map_func=_combinatorial_exact_shapley,
-        map_kwargs=dict(progress=progress),
+        map_kwargs=dict(u=u_id, progress=progress),
         reduce_func=reduce_fun,
         chunkify_inputs=True,
         n_jobs=n_jobs,
     )
-    values = map_reduce_job(u_id)[0]
+    values = map_reduce_job(u.data.indices)[0]
     return sort_values({u.data.data_names[i]: v for i, v in enumerate(values)})
