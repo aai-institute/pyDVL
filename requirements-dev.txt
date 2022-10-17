@@ -14,3 +14,4 @@ nbstripout == 0.6.1
 mypy == 0.982
 types-tqdm
 sphinx-math-dollar
+ray[default] >= 0.8
