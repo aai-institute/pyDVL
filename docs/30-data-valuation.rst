@@ -10,9 +10,9 @@ model trained on it. This value is not an intrinsic property of the element of
 interest, but a function of three factors:
 
 1. The dataset $D$, or more generally, the distribution it was sampled
-   from (with this we mean that ``value'' would ideally be the
-   (expected) contribution of a data point to any random set $D$ sampled from
-   the same distribution).
+   from (with this we mean that *value* would ideally be the (expected)
+   contribution of a data point to any random set $D$ sampled from the same
+   distribution).
 
 2. The algorithm $\mathcal{A}$ mapping the data $D$ to some estimator $f$
    in a model class $\mathcal{F}$. E.g. MSE minimization to find the parameters
@@ -99,15 +99,15 @@ The value $v$ of the $i$-th sample in dataset $D$ wrt. utility $u$ is computed
 as a weighted sum of its marginal utility wrt. every possible coalition of
 training samples within the training set:
 
-$$v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}} \binom{n-1}{|S|}^{-1} [u(S \cup \{x_i\}) − u(S)] ,$$
+$$v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}} \binom{n-1}{ | S | }^{-1} [u(S \cup \{x_i\}) − u(S)] ,$$
 
-Because the number of subsets $\subseteq D \setminus \{x_i\}$ is $2^{|D|-1}$,
-one typically must resort to approximations. The immediate one is done via Monte
-Carlo sampling of subsets. In an equivalent formulation of the expression above
-using permutations over indices, one can instead do Monte Carlo sampling of
-permutations. If one adds early stopping, one ends with so-called *Truncated
-Monte Carlo Shapley*, which is efficient and has proven useful in some
-applications:
+Because the number of subsets $\subseteq D \setminus \{x_i\}$ is
+$2^{ | D | - 1 }$, one typically must resort to approximations. The immediate
+one is done via Monte Carlo sampling of subsets. In an equivalent formulation of
+the expression above using permutations over indices, one can instead do Monte
+Carlo sampling of permutations. If one adds early stopping, one ends with
+so-called *Truncated Monte Carlo Shapley*, which is efficient and has proven
+useful in some applications:
 
 .. code-block:: python
 
@@ -128,4 +128,4 @@ Other methods
 
 Other game-theoretic concepts in pyDVL's roadmap are the **Least Core**, and
 **Banzhaf indices** (the latter is just a different weighting scheme with better
-*numerical stability properties).
+numerical stability properties).
