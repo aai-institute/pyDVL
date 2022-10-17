@@ -74,4 +74,4 @@ def knn_shapley(
             )
             values[ii[i]] += (value_at_x - values[ii[i]]) / j
 
-    return sort_values({data.data_names[i]: v for i, v in enumerate(values)})
+    return sort_values({data.data_names[i]: v for i, v in values.items()})
