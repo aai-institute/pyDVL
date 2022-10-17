@@ -4,19 +4,36 @@
 Computing data values
 =====================
 
-Data value is a 
+**Data valuation** is the task of assigning a number to each element of a
+training set which reflects its contribution to the final performance of a
+model trained on it. This value is not an intrinsic property of the element of
+interest, but a function of three factors:
 
+1. The dataset $D$, or more generally, the distribution it was sampled
+   from (with this we mean that ``value'' would ideally be the
+   (expected) contribution of a data point to any random set $D$ sampled from
+   the same distribution).
 
-For data valuation, one uses the functions in modules
-:mod:`~pydvl.shapley` and :mod:`~pydvl.loo`, supported by
+2. The algorithm $\mathcal{A}$ mapping the data $D$ to some estimator $f$
+   in a model class $\mathcal{F}$. E.g. MSE minimization to find the parameters
+   of a linear model.
+
+3. The performance metric of interest $u$ for the problem. E.g. the $R^2$
+   score or the negative MSE over a test set.
+
+pyDVL collects algorithms for the computation of data values in this sense,
+mostly those derived from cooperative game theory. The methods can be found in
+the modules :mod:`~pydvl.shapley` and :mod:`~pydvl.loo`, supported by
 :mod:`pydvl.utils.dataset` and :mod:`~pydvl.utils.utility`, as detailed below.
 
 Creating a Dataset
 ==================
 
-The class :class:`~pydvl.utils.dataset.Dataset` is a simple convenience wrapper
-for the train and test splits that is used throughout pyDVL. It can be used as
-follows:
+The first item in the tuple $(D, \mathcal{A}, u)$ characterising data value is
+the dataset. The class :class:`~pydvl.utils.dataset.Dataset` is a simple
+convenience wrapper for the train and test splits that is used throughout pyDVL.
+
+It can be used as follows:
 
 .. code-block:: python
 
@@ -30,14 +47,15 @@ follows:
    ...
    >>> dataset = Dataset(X_train, X_test, y_train, y_test)
 
-It is also possible to construct Datasets from sklearn datasets for illustrative
-purposes using :meth:`~pydvl.utils.dataset.Dataset.from_sklearn`.
+It is also possible to construct Datasets from sklearn toy datasets for
+illustrative purposes using :meth:`~pydvl.utils.dataset.Dataset.from_sklearn`.
 
 Creating a Utility
 ==================
 
-The :class:`~pydvl.utils.utility.Utility` class is a convenient wrapper for the
-dataset, model and scoring function which is used for valuation methods like
+In order to keep track of all three items in $(D, \mathcal{A}, u)$ we use the
+class :class:`~pydvl.utils.utility.Utility`. This is a convenient wrapper for
+the dataset, model and scoring function which is used for valuation methods like
 :mod:`Leave-One-Out<pydvl.loo>` and :mod:`Shapley<pydvl.shapley>`.
 
 It can be used as follows:
@@ -54,7 +72,13 @@ It can be used as follows:
 Computing Leave-One-Out values
 ==============================
 
-The Leave-One-Out method is a naive approach that should only be used for testing purposes.
+The Leave-One-Out method is a naive approach that should only be used for
+testing purposes. One particular weakness is that it does not necessarily
+correlate with an intrinsic value of a sample: since it is only marginal utility,
+it can happen that the training set is large enough for a single sample not to
+have any significant effect on training performance, despite any qualities it
+may possess. Whether this is indicative of low value or not depends on each
+one's goals and definitions.
 
 .. code-block:: python
 
@@ -66,17 +90,42 @@ The Leave-One-Out method is a naive approach that should only be used for testin
 Computing Shapley values
 ========================
 
-The Shapley method is a game-theoretic approach to compute data values.
-Here we use Truncated Montecarlo Shapley because it is the most efficient.
+The Shapley method is an approach to compute data values originating in
+cooperative game theory. Shapley values are a common way of assigning payoffs to
+each participant in a cooperative game (i.e. one in which players can form
+coalitions) in a way that ensures that certain axioms are fulfilled.
+
+The value $v$ of the $i$-th sample in dataset $D$ wrt. utility $u$ is computed
+as a weighted sum of its marginal utility wrt. every possible coalition of
+training samples within the training set:
+
+$$v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}} \binom{n-1}{|S|}^{-1} [u(S \cup \{x_i\}) − u(S)] ,$$
+
+Because the number of subsets $\subseteq D \setminus \{x_i\}$ is $2^{|D|-1}$,
+one typically must resort to approximations. The immediate one is done via Monte
+Carlo sampling of subsets. In an equivalent formulation of the expression above
+using permutations over indices, one can instead do Monte Carlo sampling of
+permutations. If one adds early stopping, one ends with so-called *Truncated
+Monte Carlo Shapley*, which is efficient and has proven useful in some
+applications:
 
 .. code-block:: python
 
    >>> from pydvl.utils import Utility
-   >>> from pydvl.shapley.montecarlo import truncated_montecarlo_shapley
-   >>> from pydvl.reporting.plots import shapley_results
+   >>> from pydvl.shapley import compute_shapley_values
    >>> utility = Utility(...)
-   >>> values, errors = truncated_montecarlo_shapley(u=utility, max_iterations=100)
-   >>> scores = compute_fb_scores(model=utility.model, data=utility.data, values=values)
-   >>> shapley_results(scores)
+   >>> df = compute_shapley_values(
+           u=utility, mode="truncated_montecarlo", max_iterations=100
+       )
 
+Running the code above will provide a DataFrame with values and estimated
+standard errors.
 
+Please refer to the documentation in :mod:`pydvl.shapley` for more information.
+
+Other methods
+=============
+
+Other game-theoretic concepts in pyDVL's roadmap are the **Least Core**, and
+**Banzhaf indices** (the latter is just a different weighting scheme with better
+*numerical stability properties).
