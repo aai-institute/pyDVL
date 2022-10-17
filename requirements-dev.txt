@@ -1,12 +1,13 @@
 tox
 tox-wheel
 pytest
+pytest-cov
 pytest-timeout
 pre-commit == 2.20.0
 bump2version
 twine
 isort == 5.10.1
-black == 22.10.0
+black[jupyter] == 22.10.0
 jupyter
 nbconvert
 nbstripout == 0.6.1
