@@ -55,7 +55,6 @@ install it in editable mode into your environment by running
 pip install -e .
 ```
 
-
 ### Additional requirements
 
 The main requirements for developing the library locally are in
@@ -74,26 +73,13 @@ test suite and build the documentation. Running tox will also generate coverage
 and pylint reports in html and badges. You can configure pytest, coverage and
 pylint by adjusting [pyproject.toml](pyproject.toml).
 
-All notebooks in the [notebooks](notebooks) directory should be executed during
-the test run, with smaller datasets if the run time is too long. Because this is
-typically the case, we commit notebooks with their outputs with full datasets to
-the repo and these are added to the documentation in CI to the
-[Examples](https://appliedAI-Initiative.github.io/pyDVL/examples.html) section
-of the documentation. Thus, notebooks can be conveniently used as integration
-tests and documentation at the same time.
+Many tests run in parallel and use ray.
 
-Inside a notebook you can access the `CI` environment variable to switch between
-datasets or select subsets:
-
-```python
-# In CI we only use a subset of the training set
-if os.environ.get('CI'):
-    train_data = (train_data[0][:10], train_data[1][:10])
-```
+**TODO:** document the testing ray setup and how to use / debug it.
 
 #### Testing
 
-You can build pyDVL by executing `tox`.
+You can run all tests and build pyDVL by executing `tox`.
 
 It is possible to pass optional command line arguments to pytest, for example to
 run only certain tests using patterns (`-k`) or marker (`-m`).
@@ -115,6 +101,27 @@ To test notebooks, you should use:
 
 ```shell
 tox -e notebooks
+```
+
+See below for details.
+
+#### Notebooks
+
+All notebooks in the [notebooks](notebooks) directory should be executed during
+the test run, with smaller datasets if the run time is too long. Because this is
+typically the case, we commit notebooks with their outputs with full datasets to
+the repo and these are added to the documentation in CI to the
+[Examples](https://appliedAI-Initiative.github.io/pyDVL/examples.html) section
+of the documentation. Thus, notebooks can be conveniently used as integration
+tests and documentation at the same time.
+
+Inside a notebook you can access the `CI` environment variable to switch between
+datasets or select subsets:
+
+```python
+# In CI we only use a subset of the training set
+if os.environ.get('CI'):
+    training_data = training_data[:10]
 ```
 
 #### Packaging
