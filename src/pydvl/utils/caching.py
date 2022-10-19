@@ -100,25 +100,24 @@ def memcached(
                 retry_delay=0.1,
                 retry_for=[MemcacheUnexpectedCloseError],
             )
-        except Exception as e:
+
+            temp_key = str(uuid.uuid4())
+            client.set(temp_key, 7)
+            assert client.get(temp_key) == 7
+            client.delete(temp_key, 0)
+            return client
+        except ConnectionRefusedError as e:
             logger.error(  # type: ignore
                 f"@memcached: Timeout connecting "
                 f"to {config.server} after "
-                f"{config.connect_timeout} seconds: {str(e)}"
+                f"{config.connect_timeout} seconds: {str(e)}. Did you start memcached?"
             )
             raise e
-        else:
-            try:
-                temp_key = str(uuid.uuid4())
-                client.set(temp_key, 7)
-                assert client.get(temp_key) == 7
-                client.delete(temp_key, 0)
-                return client
-            except AssertionError as e:
-                logger.error(  # type: ignore
-                    f"@memcached: Failure saving dummy value "
-                    f"to {config.server}: {str(e)}"
-                )
+        except AssertionError as e:
+            logger.error(  # type: ignore
+                f"@memcached: Failure saving dummy value "
+                f"to {config.server}: {str(e)}"
+            )
 
     def wrapper(fun: Callable[..., float], signature: Optional[bytes] = None):
         if signature is None:
