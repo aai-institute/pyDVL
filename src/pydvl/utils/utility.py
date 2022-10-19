@@ -155,13 +155,18 @@ class Utility:
 
 
 class DataUtilityLearning:
-    """Implementation of Data Utility Learning algorithm [1]_. It is a wrapper
-    for other utilities with a given budget (i.e. number of iterations) that
-    will, once the budget is exhausted, fit a given model to predict the utility
-    instead of computing it.
+    """Implementation of Data Utility Learning algorithm [1]_.
 
-    :param u: an instance of a :class:`Utility`
-    :param training_budget: Number of utility samples to use for fitting the given model
+    This object wraps a :class:`~pydvl.utils.utility.Utility` and delegates
+    calls to it, up until a given budget (number of iterations). Every tuple
+    of input and output (a so-called *utility sample*) is stored. Once the
+    budget is exhausted, `DataUtilityLearning` fits the given model to the
+    utility samples. Subsequent calls will use the learned model to predict the
+    utility instead of delegating.
+
+    :param u: The :class:`~pydvl.utils.utility.Utility` to learn.
+    :param training_budget: Number of utility samples to collect before fitting
+        the given model
     :param model: A supervised regression model
 
     :Example:
@@ -196,7 +201,7 @@ class DataUtilityLearning:
 
     def _convert_indices_to_boolean_vector(self, x: Iterable[int]) -> "NDArray":
         boolean_vector = np.zeros((1, len(self.utility.data)), dtype=bool)
-        if x:
+        if x is not None:
             boolean_vector[:, tuple(x)] = True
         return boolean_vector
 
@@ -222,5 +227,5 @@ class DataUtilityLearning:
 
     @property
     def data(self) -> Dataset:
-        """Return the wrapped utility's dataset."""
+        """Returns the wrapped utility's :class:`~pydvl.utils.dataset.Dataset`."""
         return self.utility.data
