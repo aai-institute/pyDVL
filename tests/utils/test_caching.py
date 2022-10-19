@@ -44,7 +44,7 @@ def test_memcached_single_job(memcached_client):
     client, config = memcached_client
 
     # TODO: maybe this should be a fixture too...
-    @memcached(client_config=config, cache_threshold=0)  # Always cache results
+    @memcached(client_config=config, time_threshold=0)  # Always cache results
     def foo(indices: Iterable[int]) -> float:
         return float(np.sum(indices))
 
@@ -62,7 +62,7 @@ def test_memcached_parallel_jobs(memcached_client):
 
     @memcached(
         client_config=config,
-        cache_threshold=0,  # Always cache results
+        time_threshold=0,  # Always cache results
         # Note that we typically do NOT want to ignore run_id
         ignore_args=["job_id", "run_id"],
     )
@@ -89,10 +89,10 @@ def test_memcached_repeated_training(memcached_client):
 
     @memcached(
         client_config=config,
-        cache_threshold=0,  # Always cache results
+        time_threshold=0,  # Always cache results
         # Note that we typically do NOT want to ignore run_id
-        allow_repeated_training=True,
-        rtol_threshold=0.01,
+        allow_repeated_evaluations=True,
+        rtol_stderr=0.01,
         ignore_args=["job_id", "run_id"],
     )
     def foo(indices: Iterable[int]) -> float:
@@ -114,10 +114,10 @@ def test_memcached_faster_with_repeated_training(memcached_client):
 
     @memcached(
         client_config=config,
-        cache_threshold=0,  # Always cache results
+        time_threshold=0,  # Always cache results
         # Note that we typically do NOT want to ignore run_id
-        allow_repeated_training=True,
-        rtol_threshold=0.1,
+        allow_repeated_evaluations=True,
+        rtol_stderr=0.1,
         ignore_args=["job_id", "run_id"],
     )
     def foo_cache(indices: Iterable[int]) -> float:
@@ -171,10 +171,10 @@ def test_memcached_parallel_repeated_training(
 
     @memcached(
         client_config=config,
-        cache_threshold=0,  # Always cache results
+        time_threshold=0,  # Always cache results
         # Note that we typically do NOT want to ignore run_id
-        allow_repeated_training=True,
-        rtol_threshold=0.01,
+        allow_repeated_evaluations=True,
+        rtol_stderr=0.01,
         ignore_args=["job_id", "run_id"],
     )
     def map_func(indices: Iterable[int]) -> float:

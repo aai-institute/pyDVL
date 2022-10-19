@@ -61,7 +61,7 @@ __all__ = [
 
 def truncated_montecarlo_shapley(
     u: Utility,
-    score_tolerance: Optional[float] = None,
+    value_tolerance: Optional[float] = None,
     max_iterations: Optional[int] = None,
     n_jobs: Optional[int] = None,
     config: ParallelConfig = ParallelConfig(),
@@ -81,17 +81,14 @@ def truncated_montecarlo_shapley(
     Instead of naively implementing the expectation, we sequentially add points
     to a dataset from a permutation. We keep sampling permutations and updating
     all shapley values until the std/value score in
-    the moving average falls below a given threshold (score_tolerance)
+    the moving average falls below a given threshold (value_tolerance)
     or when the number of iterations exceeds a certain number (max_iterations).
 
     :param u: Utility object with model, data, and scoring function
-    :param score_tolerance: During calculation of shapley values, the
-        coordinator will check if the median standard deviation over average
-        score for each point's has dropped below score_tolerance.
-        If so, the computation will be terminated.
-    :param max_iterations: a sum of the total number of permutation is calculated
-        If the current number of permutations has exceeded max_iterations,
-        computation will stop.
+    :param value_tolerance: Terminate if the standard deviation of the
+        average value for every sample has dropped below this value
+    :param max_iterations: Terminate if the total number of permutations exceeds
+        this number.
     :param n_jobs: number of jobs processing permutations. If None, it will be
         set to :func:`available_cpus`.
     :param config: Object configuring parallel computation, with cluster address,
@@ -112,7 +109,7 @@ def truncated_montecarlo_shapley(
     u_id = parallel_backend.put(u)
 
     coordinator = get_shapley_coordinator(  # type: ignore
-        score_tolerance, max_iterations, progress, config=config
+        value_tolerance, max_iterations, progress, config=config
     )
     workers = [
         get_shapley_worker(  # type: ignore
@@ -132,7 +129,7 @@ def truncated_montecarlo_shapley(
     while not is_done:
         sleep(0.01)
         if time() - last_update_time > coordinator_update_frequency:
-            is_done = coordinator.check_status()
+            is_done = coordinator.check_done()
             last_update_time = time()
     dvl_values, dvl_std = coordinator.get_results()
     sorted_shapley_values = sort_values(

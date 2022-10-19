@@ -54,39 +54,34 @@ def serialize(x):
 
 def memcached(
     client_config: Optional[MemcachedClientConfig] = None,
-    cache_threshold: float = 0.3,
-    allow_repeated_training: bool = False,
-    rtol_threshold: float = 0.1,
+    time_threshold: float = 0.3,
+    allow_repeated_evaluations: bool = False,
+    rtol_stderr: float = 0.1,
     min_repetitions: int = 3,
     ignore_args: Optional[Iterable[str]] = None,
 ):
-    """Wrap a callable with this in order to have transparent caching. Given a
-    function and a signature, memcached creates a distributed cache that, for
-    each set of inputs, keeps track of the average returned value, with variance
-    and number of times it was calculated. If the function is deterministic,
-    i.e. same input corresponds to the same exact output, set
-    allow_repeated_training to False. If instead the function is noisy, memcache
-    allows to set the minimum number of repetitions and the relative tolerance
-    on the average output after which the cache will not be updated anymore. In
-    other words, the function computation will be repeated until the average has
-    stabilized.
+    """Transparent, distributed memoization of function calls.
 
-    :param client_config: config for pymemcache.client.Client().
-        Will be merged on top of the default configuration.
-    :param cache_threshold: computations taking below this value (in seconds)
-        are not cached.
-    :param allow_repeated_training: If True, models with same data are re-trained and
-        results cached until rtol_threshold precision is reached
-    :para rtol_threshold: relative tolerance for repeated training. More precisely,
-        memcache will stop retraining the models once std/mean of the scores is smaller than
-        the given rtol_threshold
-    :param min_repetitions: minimum number of repetitions
-    :param ignore_args: Do not take these keyword arguments into account when
-        hashing the wrapped function for usage as key in memcached
-    :return: A wrapped function
+    Given a function and its signature, memcached creates a distributed cache
+    that, for each set of inputs, keeps track of the average returned value,
+    with variance and number of times it was calculated.
 
-    The default configuration is::
+    If the function is deterministic, i.e. same input corresponds to the same
+    exact output, set `allow_repeated_evaluations` to `False`. If instead the
+    function is stochastic (like the training of a model depending on random
+    initializations), memcached allows to set a minimum number of evaluations
+    to compute a running average, and a tolerance after which the function will
+    not be called anymore. In other words, the function will be recomputed
+    until the value has stabilized with a standard error smaller than
+    `rtol_stderr * running average`.
 
+    :param client_config: configuration for
+        `pymemcache's Client()
+        <https://pymemcache.readthedocs.io/en/stable/apidoc/pymemcache.client
+        .base.html>`_.
+        Will be merged on top of the default configuration, which is:
+
+        ```
         default_config = dict(
             server=('localhost', 11211),
             connect_timeout=1.0,
@@ -95,6 +90,25 @@ def memcached(
             no_delay=True,
             serde=serde.PickleSerde(pickle_version=PICKLE_VERSION)
         )
+        ```
+    :param time_threshold: computations taking less time than this many seconds
+        are not cached.
+    :param allow_repeated_evaluations: If `True`, repeated calls to a function
+        with the same arguments will be allowed and outputs averaged until the
+        running standard deviation of the mean stabilises below
+        `rtol_stderr * mean`.
+    :param rtol_stderr: relative tolerance for repeated evaluations. More
+        precisely, :func:`memcached` will stop evaluating the function once the
+        standard deviation of the mean is smaller than `rtol_stderr * mean`.
+    :param min_repetitions: minimum number of times that a function evaluation
+        on the same arguments is repeated before returning cached values. Useful
+        for stochastic functions only. If the model training is very noisy, set
+        this number to higher values to reduce variance.
+    :param ignore_args: Do not take these keyword arguments into account when
+        hashing the wrapped function for usage as key in memcached
+
+    :return: A wrapped function
+
     """
     if ignore_args is None:
         ignore_args = []
@@ -155,20 +169,20 @@ def memcached(
                     value = fun(*args, **kwargs)
                     end = time()
                     result_dict["value"] = value
-                    if end - start >= cache_threshold or allow_repeated_training:
+                    if end - start >= time_threshold or allow_repeated_evaluations:
                         result_dict["count"] = 1
                         result_dict["variance"] = 0
                         self.client.set(key, result_dict, noreply=True)
                         self.cache_info.sets += 1
                     self.cache_info.misses += 1
-                elif allow_repeated_training:
+                elif allow_repeated_evaluations:
                     self.cache_info.hits += 1
                     value = result_dict["value"]
                     count = result_dict["count"]
                     variance = result_dict["variance"]
                     error_on_average = (variance / count) ** (1 / 2)
                     if (
-                        error_on_average > rtol_threshold * value
+                        error_on_average > rtol_stderr * value
                         or count <= min_repetitions
                     ):
                         new_value = fun(*args, **kwargs)

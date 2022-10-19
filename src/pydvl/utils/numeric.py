@@ -89,7 +89,7 @@ def random_powerset(
         set to be as likely as any other
     """
     if not isinstance(s, np.ndarray):
-        raise TypeError
+        raise TypeError("Set must be an NDArray")
 
     n = len(s)
     total = 1

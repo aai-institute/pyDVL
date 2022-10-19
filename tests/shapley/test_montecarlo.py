@@ -251,7 +251,7 @@ def test_random_forest(
         cache_options=MemcachedConfig(
             client_config=memcache_client_config,
             allow_repeated_training=True,
-            rtol_threshold=1,
+            rtol_stderr=1,
             cache_threshold=0,
         ),
     )
