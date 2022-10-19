@@ -14,7 +14,10 @@ log = logging.getLogger(__name__)
 
 def test_knn_montecarlo_match(seed):
     data = Dataset.from_sklearn(
-        datasets.load_iris(), train_size=0.05, random_state=seed, stratify=True
+        datasets.load_iris(),
+        train_size=0.05,
+        random_state=seed,
+        stratify_by_target=True,
     )
     model = KNeighborsClassifier(n_neighbors=5)
 
