@@ -11,6 +11,14 @@ from pydvl.utils.caching import get_running_avg_variance
 logger = logging.getLogger(__name__)
 
 
+def test_failed_connection():
+    from pydvl.utils import MemcachedClientConfig
+
+    client_config = MemcachedClientConfig(server=("localhost", 0), connect_timeout=0.1)
+    with pytest.raises(ConnectionRefusedError):
+        memcached(client_config)(lambda x: x)
+
+
 @pytest.mark.parametrize(
     "numbers_series",
     [
