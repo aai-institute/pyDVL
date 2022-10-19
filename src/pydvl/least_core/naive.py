@@ -32,11 +32,11 @@ def naive_lc(u: Utility, *, progress: bool = True, **kwargs):
 
     powerset_size = 2**n
 
-    c = np.zeros(n + 1, dtype=np.int)
+    c = np.zeros(n + 1, dtype=np.int32)
     c[-1] = 1
-    A_eq = np.ones((1, n + 1), dtype=np.int)
+    A_eq = np.ones((1, n + 1), dtype=np.int32)
     A_eq[:, -1] = 0
-    A_ub = np.zeros((powerset_size - 1, n + 1), dtype=np.int)
+    A_ub = np.zeros((powerset_size, n + 1), dtype=np.int32)
     A_ub[:, -1] = -1
 
     utility_values = np.zeros(powerset_size)
@@ -50,14 +50,11 @@ def naive_lc(u: Utility, *, progress: bool = True, **kwargs):
     ):
         indices = np.zeros(n + 1, dtype=np.bool)
         indices[list(subset)] = True
-        try:
-            A_ub[i, indices] = -1
-        except IndexError:
-            # This is an expected error on the last iteration.
-            pass
+        A_ub[i, indices] = -1
         utility_values[i] = u(subset)
-    b_ub = -utility_values[:-1]
-    b_eq = utility_values[-1]
+
+    b_ub = -utility_values
+    b_eq = utility_values[-1:]
     result = scipy.optimize.linprog(
         c,
         A_ub=A_ub,
@@ -72,5 +69,6 @@ def naive_lc(u: Utility, *, progress: bool = True, **kwargs):
         warnings.warn("Could not find optimal solution", RuntimeWarning)
 
     values = result.x[:-1]
+    sorted_values = sort_values({u.data.data_names[i]: v for i, v in enumerate(values)})
 
-    return sort_values({u.data.data_names[i]: v for i, v in enumerate(values)})
+    return sorted_values
