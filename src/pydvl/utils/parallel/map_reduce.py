@@ -238,12 +238,23 @@ class MapReduceJob(Generic[T, R]):
     @staticmethod
     def _chunkify(data: Sequence[T], num_chunks: int) -> Iterator[Sequence[T]]:
         # Splits a list of values into chunks for each job
+        if num_chunks == 0:
+            raise ValueError("Number of chunks should be greater than 0")
+
         n = len(data)
-        chunk_size = n // num_chunks
-        remainder = n % num_chunks
+        if num_chunks > n:
+            chunk_size = 1
+            remainder = 0
+        else:
+            remainder = n % num_chunks
+            if remainder > 0:
+                num_chunks -= 1
+            chunk_size = (n - remainder) // num_chunks
         for i in range(num_chunks):
             start_index = i * chunk_size
             end_index = min(start_index + chunk_size, n)
+            if start_index >= end_index:
+                return
             yield data[start_index:end_index]
         if remainder > 0:
             yield data[n - remainder :]
