@@ -1,5 +1,11 @@
 # Changelog
 
+## Development
+
+### Bug fixes
+
+- Fixed bugs in MapReduceJob's `_chunkify` and `_backpressure` methods [PR #176](https://github.com/appliedAI-Initiative/pyDVL/pull/176)
+
 ## 0.1.0 - 🎉 first release
 
 This is very first release of pyDVL.
