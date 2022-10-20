@@ -32,11 +32,11 @@ def naive_lc(u: Utility, *, progress: bool = True, **kwargs):
 
     powerset_size = 2**n
 
-    c = np.zeros(n + 1, dtype=np.int32)
+    c = np.zeros(n + 1, dtype=np.int8)
     c[-1] = 1
-    A_eq = np.ones((1, n + 1), dtype=np.int32)
+    A_eq = np.ones((1, n + 1), dtype=np.int8)
     A_eq[:, -1] = 0
-    A_ub = np.zeros((powerset_size, n + 1), dtype=np.int32)
+    A_ub = np.zeros((powerset_size, n + 1), dtype=np.int8)
     A_ub[:, -1] = -1
 
     utility_values = np.zeros(powerset_size)
@@ -48,7 +48,7 @@ def naive_lc(u: Utility, *, progress: bool = True, **kwargs):
             position=0,
         )
     ):
-        indices = np.zeros(n + 1, dtype=np.bool)
+        indices = np.zeros(n + 1, dtype=bool)
         indices[list(subset)] = True
         A_ub[i, indices] = -1
         utility_values[i] = u(subset)

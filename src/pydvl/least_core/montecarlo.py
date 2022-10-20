@@ -4,7 +4,7 @@
 import logging
 import warnings
 from collections import OrderedDict
-from typing import TYPE_CHECKING, Dict, Iterable, Tuple
+from typing import TYPE_CHECKING, Iterable, Tuple
 
 import numpy as np
 import scipy
@@ -55,7 +55,7 @@ def _montecarlo_least_core(
         max_subsets=max_iterations,
     )
 
-    A_ub = np.zeros((max_iterations, n + 1), dtype=np.int32)
+    A_ub = np.zeros((max_iterations, n + 1), dtype=np.int8)
     A_ub[:, -1] = -1
 
     for i, subset in enumerate(
@@ -66,7 +66,7 @@ def _montecarlo_least_core(
             position=job_id,
         )
     ):
-        indices = np.zeros(n + 1, dtype=np.bool)
+        indices = np.zeros(n + 1, dtype=bool)
         indices[list(subset)] = True
         A_ub[i, indices] = -1
         utility_values[i] = u(subset)
@@ -130,9 +130,9 @@ def montecarlo_least_core(
             RuntimeWarning,
         )
 
-    c = np.zeros(n + 1, dtype=np.int32)
+    c = np.zeros(n + 1, dtype=np.int8)
     c[-1] = 1
-    A_eq = np.ones((1, n + 1), dtype=np.int32)
+    A_eq = np.ones((1, n + 1), dtype=np.int8)
     A_eq[:, -1] = 0
     b_ub = -utility_values
     b_eq = np.array([u(u.data.indices)])
