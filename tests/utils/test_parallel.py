@@ -5,6 +5,7 @@ from itertools import zip_longest
 import numpy as np
 import pytest
 
+import pydvl.utils.parallel
 from pydvl.utils.parallel import MapReduceJob
 
 
@@ -99,6 +100,30 @@ def test_map_reduce_job_chunkified_inputs(
 def test_chunkification(data, n_chunks, expected_chunks):
     chunks = list(MapReduceJob._chunkify(data, n_chunks))
     assert chunks == expected_chunks
+
+
+@pytest.mark.parametrize(
+    "max_parallel_tasks, n_finished, n_dispatched, expected_n_finished",
+    [
+        (1, 3, 6, 5),
+        (3, 3, 3, 3),
+        (10, 1, 15, 5),
+        (20, 1, 3, 1),
+    ],
+)
+def test_backpressure(
+    mocker, max_parallel_tasks, n_finished, n_dispatched, expected_n_finished
+):
+    mocker.patch.object(pydvl.utils.parallel.backend, "RayParallelBackend")
+    map_reduce_job = MapReduceJob(
+        map_func=lambda x: x,
+        reduce_func=lambda x: x,
+        max_parallel_tasks=max_parallel_tasks,
+    )
+    n_finished = map_reduce_job._backpressure(
+        [None] * n_dispatched, n_finished=n_finished, n_dispatched=n_dispatched
+    )
+    assert n_finished == expected_n_finished
 
 
 # TODO: figure out test cases for this test
