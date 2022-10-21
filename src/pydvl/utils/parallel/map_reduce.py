@@ -1,5 +1,5 @@
 import weakref
-from itertools import chain, repeat
+from itertools import accumulate, chain, repeat
 from typing import (
     Any,
     Callable,
@@ -240,22 +240,22 @@ class MapReduceJob(Generic[T, R]):
             raise ValueError("Number of chunks should be greater than 0")
 
         n = len(data)
-        if num_chunks > n:
-            chunk_size = 1
-            remainder = 0
-        else:
-            remainder = n % num_chunks
-            if remainder > 0:
-                num_chunks -= 1
-            chunk_size = (n - remainder) // num_chunks
-        for i in range(num_chunks):
-            start_index = i * chunk_size
-            end_index = min(start_index + chunk_size, n)
+
+        # This is very much inspired by numpy's array_split function
+        # The difference is that it only uses built-in functions
+        # and does not convert the input data to an array
+        chunk_size, remainder = divmod(n, num_chunks)
+        chunk_indices = tuple(
+            accumulate(
+                [0]
+                + remainder * [chunk_size + 1]
+                + (num_chunks - remainder) * [chunk_size]
+            )
+        )
+        for start_index, end_index in zip(chunk_indices[:-1], chunk_indices[1:]):
             if start_index >= end_index:
                 return
             yield data[start_index:end_index]
-        if remainder > 0:
-            yield data[n - remainder :]
 
     @property
     def parallel_backend(self):
