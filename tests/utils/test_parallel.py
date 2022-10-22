@@ -112,18 +112,25 @@ def test_chunkification(data, n_chunks, expected_chunks):
     ],
 )
 def test_backpressure(
-    mocker, max_parallel_tasks, n_finished, n_dispatched, expected_n_finished
+    max_parallel_tasks, n_finished, n_dispatched, expected_n_finished
 ):
+    def map_func(x):
+        import time
+
+        time.sleep(1)
+        return x
+
     map_reduce_job = MapReduceJob(
-        map_func=lambda x: x,
-        reduce_func=lambda x: x,
+        map_func=map_func,
         max_parallel_tasks=max_parallel_tasks,
+        timeout=10,
     )
-    with mocker.patch.object(map_reduce_job, "_parallel_backend_ref"):
-        n_finished = map_reduce_job._backpressure(
-            [None] * n_dispatched, n_finished=n_finished, n_dispatched=n_dispatched
-        )
-        assert n_finished == expected_n_finished
+    map_func = map_reduce_job._wrap_function(map_func)
+    jobs = [map_func(x) for x in range(n_dispatched)]
+    n_finished = map_reduce_job._backpressure(
+        jobs, n_finished=n_finished, n_dispatched=n_dispatched
+    )
+    assert n_finished == expected_n_finished
 
 
 # TODO: figure out test cases for this test
