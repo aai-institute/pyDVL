@@ -226,7 +226,7 @@ class MapReduceJob(Generic[T, R]):
         self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int
     ) -> int:
         if (n_in_flight := n_dispatched - n_finished) > self.max_parallel_tasks:
-            wait_for_num_jobs = max(1, n_in_flight - self.max_parallel_tasks)
+            wait_for_num_jobs = n_in_flight - self.max_parallel_tasks
             self.parallel_backend.wait(
                 jobs, num_returns=wait_for_num_jobs, timeout=self.timeout
             )
