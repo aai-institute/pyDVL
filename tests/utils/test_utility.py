@@ -44,7 +44,7 @@ def test_cache(linear_dataset, memcache_client_config):
         scoring="r2",
         enable_cache=True,
         cache_options=MemcachedConfig(
-            client_config=memcache_client_config, cache_threshold=0
+            client_config=memcache_client_config, time_threshold=0
         ),
     )
     subsets = list(powerset(u.data.indices))
@@ -71,7 +71,7 @@ def test_different_cache(linear_dataset, memcache_client_config):
         scoring="r2",
         enable_cache=True,
         cache_options=MemcachedConfig(
-            client_config=memcache_client_config, cache_threshold=0
+            client_config=memcache_client_config, time_threshold=0
         ),
     )
     u2 = Utility(
@@ -80,7 +80,7 @@ def test_different_cache(linear_dataset, memcache_client_config):
         scoring="r2",
         enable_cache=True,
         cache_options=MemcachedConfig(
-            client_config=memcache_client_config, cache_threshold=0
+            client_config=memcache_client_config, time_threshold=0
         ),
     )
 

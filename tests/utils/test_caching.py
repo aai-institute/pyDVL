@@ -90,9 +90,9 @@ def test_memcached_repeated_training(memcached_client):
     @memcached(
         client_config=config,
         time_threshold=0,  # Always cache results
-        # Note that we typically do NOT want to ignore run_id
         allow_repeated_evaluations=True,
         rtol_stderr=0.01,
+        # Note that we typically do NOT want to ignore run_id
         ignore_args=["job_id", "run_id"],
     )
     def foo(indices: Iterable[int]) -> float:
@@ -115,9 +115,9 @@ def test_memcached_faster_with_repeated_training(memcached_client):
     @memcached(
         client_config=config,
         time_threshold=0,  # Always cache results
-        # Note that we typically do NOT want to ignore run_id
         allow_repeated_evaluations=True,
         rtol_stderr=0.1,
+        # Note that we typically do NOT want to ignore run_id
         ignore_args=["job_id", "run_id"],
     )
     def foo_cache(indices: Iterable[int]) -> float:
@@ -172,9 +172,9 @@ def test_memcached_parallel_repeated_training(
     @memcached(
         client_config=config,
         time_threshold=0,  # Always cache results
-        # Note that we typically do NOT want to ignore run_id
         allow_repeated_evaluations=True,
         rtol_stderr=0.01,
+        # Note that we typically do NOT want to ignore run_id
         ignore_args=["job_id", "run_id"],
     )
     def map_func(indices: Iterable[int]) -> float:
