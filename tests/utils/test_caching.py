@@ -22,22 +22,22 @@ def test_failed_connection():
 @pytest.mark.parametrize(
     "numbers_series",
     [
-        ([3, 4, 5, 6]),
-        (list(range(10))),
+        (np.arange(-4, 12)),
+        (np.arange(10)),
         (np.linspace(1, 4, 10)),
     ],
 )
 def test_get_running_avg_variance(numbers_series):
-    true_avg = np.mean(numbers_series)
-    true_var = np.var(numbers_series)
+    avg, var = 0.0, 0.0
+    for i, n in enumerate(numbers_series[:-1]):
+        true_avg = np.mean(numbers_series[: i + 1])
+        true_var = np.var(numbers_series[: i + 1])
 
-    prev_avg = np.mean(numbers_series[:-1])
-    prev_var = np.var(numbers_series[:-1])
-    new_value = numbers_series[-1]
-    count = len(numbers_series) - 1
-    new_avg, new_var = get_running_avg_variance(prev_avg, prev_var, new_value, count)
-    assert new_avg == true_avg
-    assert new_var == true_var
+        new_avg, new_var = get_running_avg_variance(avg, var, n, i)
+        avg, var = new_avg, new_var
+
+        assert np.isclose(new_avg, true_avg)
+        assert np.isclose(new_var, true_var)
 
 
 def test_memcached_single_job(memcached_client):
