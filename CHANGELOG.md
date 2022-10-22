@@ -4,6 +4,7 @@
 
 ### Added
 
+In [PR #161](https://github.com/appliedAI-Initiative/pyDVL/pull/161):
 - Support for $$ math in sphinx docs.
 - Usage of sphinx extension for external links (introducing new directives like
   `:gh:`, `:issue:` and `:tfl:` to construct standardised links to external
@@ -15,6 +16,7 @@
 
 ### Changed
 
+In [PR #161](https://github.com/appliedAI-Initiative/pyDVL/pull/161):
 - Improved main docs and Shapley notebooks. Added or fixed many docstrings,
   readme and documentation for contributors. Typos, grammar and style in code,
   documentation and notebooks.
@@ -23,6 +25,9 @@
 ### Fixed
 
 - Bug in random matrix generation
+  [PR #161](https://github.com/appliedAI-Initiative/pyDVL/pull/161).
+- Bugs in MapReduceJob's `_chunkify` and `_backpressure` methods
+  [PR #176](https://github.com/appliedAI-Initiative/pyDVL/pull/176).
 
 
 ## 0.1.0 - 🎉 first release

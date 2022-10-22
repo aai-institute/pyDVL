@@ -1,5 +1,6 @@
+import warnings
 import weakref
-from itertools import chain, repeat
+from itertools import accumulate, chain, repeat
 from typing import (
     Any,
     Callable,
@@ -235,28 +236,38 @@ class MapReduceJob(Generic[T, R]):
     def _backpressure(
         self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int
     ) -> int:
-        if (n_in_flight := n_dispatched - n_finished) > self.max_parallel_tasks:
-            wait_for_num_jobs = max(1, self.max_parallel_tasks // 2)
-            # num_returns cannot be bigger than length of provided list
-            wait_for_num_jobs = min(wait_for_num_jobs, n_in_flight)
-            self.parallel_backend.wait(
+        while (n_in_flight := n_dispatched - n_finished) > self.max_parallel_tasks:
+            previous_n_finished = n_finished
+            wait_for_num_jobs = n_in_flight - self.max_parallel_tasks
+            finished_jobs, _ = self.parallel_backend.wait(
                 jobs, num_returns=wait_for_num_jobs, timeout=self.timeout
             )
-            n_finished += wait_for_num_jobs
+            n_finished += len(finished_jobs)
         return n_finished
 
     @staticmethod
     def _chunkify(data: Sequence[T], num_chunks: int) -> Iterator[Sequence[T]]:
         # Splits a list of values into chunks for each job
+        if num_chunks == 0:
+            raise ValueError("Number of chunks should be greater than 0")
+
         n = len(data)
-        chunk_size = n // num_chunks
-        remainder = n % num_chunks
-        for i in range(num_chunks):
-            start_index = i * chunk_size
-            end_index = min(start_index + chunk_size, n)
+
+        # This is very much inspired by numpy's array_split function
+        # The difference is that it only uses built-in functions
+        # and does not convert the input data to an array
+        chunk_size, remainder = divmod(n, num_chunks)
+        chunk_indices = tuple(
+            accumulate(
+                [0]
+                + remainder * [chunk_size + 1]
+                + (num_chunks - remainder) * [chunk_size]
+            )
+        )
+        for start_index, end_index in zip(chunk_indices[:-1], chunk_indices[1:]):
+            if start_index >= end_index:
+                return
             yield data[start_index:end_index]
-        if remainder > 0:
-            yield data[n - remainder :]
 
     @property
     def parallel_backend(self):
