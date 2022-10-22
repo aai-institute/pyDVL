@@ -2,6 +2,7 @@ tox
 tox-wheel
 pytest
 pytest-timeout
+pytest-mock
 pre-commit
 bump2version
 twine
