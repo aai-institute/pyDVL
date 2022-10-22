@@ -76,6 +76,8 @@ PICKLE_VERSION = 5  # python >= 3.8
 
 logger = logging.getLogger(__name__)
 
+T = TypeVar("T")
+
 
 @dataclass
 class CacheInfo:
@@ -191,7 +193,7 @@ def memcached(
                 f"to {config.server}: {str(e)}"
             )
 
-    def wrapper(fun: Callable[..., float], signature: Optional[bytes] = None):
+    def wrapper(fun: Callable[..., T], signature: Optional[bytes] = None):
         if signature is None:
             signature = serialize((fun.__code__.co_code, fun.__code__.co_consts))
 
@@ -203,7 +205,7 @@ def memcached(
                 self.client = connect(self.config)
                 self._signature = signature
 
-            def __call__(self, *args, **kwargs) -> float:
+            def __call__(self, *args, **kwargs) -> T:
                 key_kwargs = {k: v for k, v in kwargs.items() if k not in ignore_args}  # type: ignore
                 arg_signature: bytes = serialize((args, list(key_kwargs.items())))
 
