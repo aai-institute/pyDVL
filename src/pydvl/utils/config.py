@@ -27,6 +27,21 @@ class ParallelConfig:
 @unpackable
 @dataclass
 class MemcachedClientConfig:
+    """Configuration for the connection to the memcached server.
+
+    :param server: tuple of (server, port).
+    :param connect_timeout: seconds to wait for a connection to memcached.
+    :param timeout: seconds to wait for send or recv calls on the socket
+        connected to memcached.
+    :param no_delay: set the `TCP_NODELAY` flag, which may help with performance
+        in some cases.
+    :param serde: a serializer / deserializer ("serde"). The default
+        `PickleSerde` should work in most cases. See `pymemcached's
+        documentation
+        <https://pymemcache.readthedocs.io/en/latest/apidoc/pymemcache.client.base.html#pymemcache.client.base.Client>`_
+        for details.
+    """
+
     server: Tuple[str, int] = ("localhost", 11211)
     connect_timeout: float = 1.0
     timeout: float = 1.0
@@ -40,6 +55,8 @@ class MemcachedConfig:
     """Configuration for :func:`~pydvl.utils.caching.memcached`, providing
     memoization of function calls.
 
+    :param client_config: Configuration for the connection to the memcached
+        server.
     :param time_threshold: computations taking less time than this many seconds
         are not cached.
     :param allow_repeated_evaluations: If `True`, repeated calls to a function

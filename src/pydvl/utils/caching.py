@@ -1,15 +1,57 @@
-""" Distributed caching of functions, using memcached.
+""" Distributed caching of functions.
 
-pyDVL uses [Memcached](https://memcached.org/) to cache utility values.
-You can run it either locally or, using [Docker](https://www.docker.com/):
+pyDVL uses `memcached <https://memcached.org>`_ to cache utility values, through
+`pymemcache <https://pypi.org/project/pymemcache>`_. This allows sharing
+evaluations across processes and nodes in a cluster. You can run memcached as a
+service, locally or remotely, see :ref:`caching setup`.
 
-```shell
-docker container run --rm -p 11211:11211 --name pydvl-cache -d memcached:latest
-```
+.. warning::
 
-Caching is enabled by default but can be disabled if not needed or desired. It
-happens transparently within :class:`pydvl.utils.utility.Utility`. Just pass any
-configuration options when constructing it, using `
+   Function evaluations are cached with a key based on the function's signature
+   and code. This can lead to undesired cache reuse, see `Cache reuse`.
+
+Configuration
+-------------
+
+Memoization is added by default to any callable used to construct a
+:class:`pydvl.utils.utility.Utility` (done with the decorator :func:`memcached`),
+but it can be disabled. Depending on the nature of the utility you might want to
+enable the computation of a running average of function values, see below. You
+can see all configuration options under
+:class:`~pydvl.utils.config.MemcachedConfig`.
+
+Usage with stochastic functions
+-------------------------------
+
+In addition to standard memoization, the decorator :func:`memcached` can compute
+running average and standard error of repeated evaluations for the same input.
+This can be useful for stochastic functions with high variance (e.g. model
+training for small sample sizes), but drastically reduces the speed benefits of
+memoization.
+
+This behaviour can be activated with
+:attr:`~pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations`.
+
+Cache reuse
+-----------
+
+When a function is wrapped with :func:`memcached` for memoization, its signature
+(input and output names) and code are used as a key for the cache. If you are
+running experiments with the same utility but different datasets, this can lead
+to evaluations of the utility on new data returning old values because utilities
+typically only use sample indices as arguments (so there is no way to tell the
+difference between '1' for dataset A and '1' for dataset 2 from the point of
+view of the cache). One solution is to add dummy arguments with the dataset
+name. Another is to empty the cache between runs. And yet another is to simply
+use a different function name for the utility to be computed on the new dataset.
+
+If a function is going to run across multiple processes and some reporting
+arguments are added (like a `job_id` for logging purposes), these will be part
+of the signature and make the functions distinct to the eyes of the cache. This
+can be avoided with the use of
+:attr:`~pydvl.utils.config.MemcachedConfig.ignore_args` in the configuration.
+
+
 """
 
 import logging
@@ -21,7 +63,7 @@ from functools import wraps
 from hashlib import blake2b
 from io import BytesIO
 from time import time
-from typing import Callable, Dict, Iterable, Optional
+from typing import Callable, Dict, Iterable, Optional, TypeVar
 
 from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
@@ -37,6 +79,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CacheInfo:
+    """Statistics gathered by cached functions."""
+
     sets: int = 0
     misses: int = 0
     hits: int = 0
@@ -60,7 +104,8 @@ def memcached(
     min_repetitions: int = 3,
     ignore_args: Optional[Iterable[str]] = None,
 ):
-    """Transparent, distributed memoization of function calls.
+    """
+    Transparent, distributed memoization of function calls.
 
     Given a function and its signature, memcached creates a distributed cache
     that, for each set of inputs, keeps track of the average returned value,
@@ -75,22 +120,9 @@ def memcached(
     until the value has stabilized with a standard error smaller than
     `rtol_stderr * running average`.
 
-    :param client_config: configuration for
-        `pymemcache's Client()
-        <https://pymemcache.readthedocs.io/en/stable/apidoc/pymemcache.client
-        .base.html>`_.
-        Will be merged on top of the default configuration, which is:
-
-        ```
-        default_config = dict(
-            server=('localhost', 11211),
-            connect_timeout=1.0,
-            timeout=0.1,
-            # IMPORTANT! Disable small packet consolidation:
-            no_delay=True,
-            serde=serde.PickleSerde(pickle_version=PICKLE_VERSION)
-        )
-        ```
+    :param client_config: configuration for `pymemcache's Client()
+        <https://pymemcache.readthedocs.io/en/stable/apidoc/pymemcache.client.base.html>`_.
+        Will be merged on top of the default configuration (see below).
     :param time_threshold: computations taking less time than this many seconds
         are not cached.
     :param allow_repeated_evaluations: If `True`, repeated calls to a function
@@ -105,10 +137,25 @@ def memcached(
         for stochastic functions only. If the model training is very noisy, set
         this number to higher values to reduce variance.
     :param ignore_args: Do not take these keyword arguments into account when
-        hashing the wrapped function for usage as key in memcached
-
+        hashing the wrapped function for usage as key in memcached. This allows
+        sharing the cache among different jobs for the same experiment run if
+        the callable happens to have "nuisance" parameters like "job_id" which
+        do not affect the result of the computation.
     :return: A wrapped function
 
+    **Default configuration:**
+
+    .. code-block:: python
+       :caption: Default configuration
+
+       default_config = dict(
+           server=('localhost', 11211),
+           connect_timeout=1.0,
+           timeout=0.1,
+           # IMPORTANT! Disable small packet consolidation:
+           no_delay=True,
+           serde=serde.PickleSerde(pickle_version=PICKLE_VERSION)
+       )
     """
     if ignore_args is None:
         ignore_args = []
