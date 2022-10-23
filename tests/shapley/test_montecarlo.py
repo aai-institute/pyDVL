@@ -1,4 +1,5 @@
 import logging
+from typing import List, cast
 
 import numpy as np
 import pytest
@@ -122,7 +123,8 @@ def test_linear_montecarlo_shapley(
     exact_values = combinatorial_exact_shapley(linear_utility, progress=False)
     log.debug(f"These are the exact values: {exact_values}")
     log.debug(f"These are the predicted values: {values}")
-    exact_values_list = list(exact_values.values())
+    # PyCharm seems to believe that the dictview converts to List[str], so we cast
+    exact_values_list = cast(list(exact_values.values()), List[float])
     atol = (exact_values_list[-1] - exact_values_list[0]) / 10
     check_values(values, exact_values, rtol=rtol, atol=atol)
     check_total_value(linear_utility, values, atol=total_atol)
@@ -219,7 +221,8 @@ def test_grouped_linear_montecarlo_shapley(
     exact_values = combinatorial_exact_shapley(grouped_linear_utility, progress=False)
     log.debug(f"These are the exact values: {exact_values}")
     log.debug(f"These are the predicted values: {values}")
-    exact_values_list = list(exact_values.values())
+    # PyCharm seems to believe that the dictview converts to List[str], so we cast
+    exact_values_list = cast(list(exact_values.values()), List[float])
     atol = (exact_values_list[-1] - exact_values_list[0]) / 30
     check_values(values, exact_values, rtol=rtol, atol=atol)
 
