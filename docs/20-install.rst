@@ -72,5 +72,6 @@ To run memcached inside a container in daemon mode instead, do:
 What's next
 ===========
 
-You should go to the :ref:`Getting Started <getting started>` section of the
-documentation.
+- Read on :ref:`data valuation`.
+- Read on :ref:`influence functions <influence>`.
+- Browse the :ref:`examples`.

@@ -12,13 +12,11 @@ further.
    :ref:`influence`. For an in-depth survey of the field, we refer to the review on
    the topic at the :tfl:`TransferLab website <>`.
 
-
-
 Running the examples
 ====================
 
-Start by browsing our worked-out examples illustrating pyDVL's capabilities
-either:
+If you are somewhat familiar with the concepts of data valuation, you can start
+by browsing our worked-out examples illustrating pyDVL's capabilities either:
 
 - :ref:`In this documentation<examples>`.
 - Using `binder <https://mybinder.org/>`_ notebooks, deployed from each
@@ -27,18 +25,11 @@ either:
   have to install jupyter first manually since it's not a dependency of the
   library.
 
-Using the library
-=================
+Methods covered
+===============
 
 pyDVL offers algorithms for data valuation and computation of influence
-functions. You can read more about each here:
+functions. You can read more about each family of methods here:
 
 - :ref:`data valuation`.
 - :ref:`influence`.
-
-
-What's next
-===========
-
-You should go to the :ref:`Examples <examples>` section of the documentation
-to see more detailed usage of the library.
