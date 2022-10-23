@@ -170,6 +170,31 @@ any rst files which are not manually created), you can use a file watcher.
 This is not part of the development setup of pyDVL (yet! PRs welcome), but
 modern IDEs provide functionality for this.
 
+### Writing mathematics
+
+In sphinx one can write mathematics with the directives `:math:` (inline) or
+`.. math::` (block). Additionally, we use the extension 
+[sphinx-math-dollar](https://github.com/sympy/sphinx-math-dollar) to allow for
+the more common `$` (inline) and `$$` (block) delimiters in RST files.
+
+**Warning: backslashes must be escaped in docstrings!** (although there are
+exceptions). For simplicity, declare the string as "raw" with the prefix `r`:
+
+```python
+# This will work
+def f(x: float) -> float:
+    r""" Computes 
+    $$ f(x) = \frac{1}{x^2} $
+    """
+    return 1/(x*x)
+
+# This throws an obscure sphinx error
+def f(x: float) -> float:
+    """ Computes 
+    $$ \frac{1}{x^2} $$
+    """
+    return 1/(x*x)
+```
 
 ## CI/CD and Release Process
 
