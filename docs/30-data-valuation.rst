@@ -103,10 +103,19 @@ $$v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}} \binom{n-1}{ | S
 
 Because the number of subsets $S \subseteq D \setminus \{x_i\}$ is
 $2^{ | D | - 1 }$, one typically must resort to approximations. The simplest
-one is done via Monte Carlo sampling of the powerset $\mathcal{P}(D)$. In an
-equivalent formulation of the expression above using permutations over indices,
-one can instead do Monte Carlo sampling of permutations. By adding early
-stopping, one ends with so-called *Truncated Monte Carlo Shapley*, which is
+one is done via Monte Carlo sampling of the powerset $\mathcal{P}(D)$.
+
+However, an equivalent formulation of the expression above is typically used
+which uses permutations over indices instead of subsets:
+
+$$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)} [u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})],$$
+
+where $\sigma_i$ denotes the set of indices in permutation sigma up until the
+position of index $i$. There exist variations and different sampling strategies
+for both formulations in the literature.
+
+Then one does Monte Carlo sampling of permutations. By adding early
+stopping, the result is the so-called *Truncated Monte Carlo Shapley*, which is
 efficient and has proven useful in some applications:
 
 .. code-block:: python
