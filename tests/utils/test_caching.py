@@ -22,29 +22,29 @@ def test_failed_connection():
 @pytest.mark.parametrize(
     "numbers_series",
     [
-        ([3, 4, 5, 6]),
-        (list(range(10))),
+        (np.arange(-4, 12)),
+        (np.arange(10)),
         (np.linspace(1, 4, 10)),
     ],
 )
 def test_get_running_avg_variance(numbers_series):
-    true_avg = np.mean(numbers_series)
-    true_var = np.var(numbers_series)
+    avg, var = 0.0, 0.0
+    for i, n in enumerate(numbers_series[:-1]):
+        true_avg = np.mean(numbers_series[: i + 1])
+        true_var = np.var(numbers_series[: i + 1])
 
-    prev_avg = np.mean(numbers_series[:-1])
-    prev_var = np.var(numbers_series[:-1])
-    new_value = numbers_series[-1]
-    count = len(numbers_series) - 1
-    new_avg, new_var = get_running_avg_variance(prev_avg, prev_var, new_value, count)
-    assert new_avg == true_avg
-    assert new_var == true_var
+        new_avg, new_var = get_running_avg_variance(avg, var, n, i)
+        avg, var = new_avg, new_var
+
+        assert np.isclose(new_avg, true_avg)
+        assert np.isclose(new_var, true_var)
 
 
 def test_memcached_single_job(memcached_client):
     client, config = memcached_client
 
     # TODO: maybe this should be a fixture too...
-    @memcached(client_config=config, cache_threshold=0)  # Always cache results
+    @memcached(client_config=config, time_threshold=0)  # Always cache results
     def foo(indices: Iterable[int]) -> float:
         return float(np.sum(indices))
 
@@ -62,7 +62,7 @@ def test_memcached_parallel_jobs(memcached_client):
 
     @memcached(
         client_config=config,
-        cache_threshold=0,  # Always cache results
+        time_threshold=0,  # Always cache results
         # Note that we typically do NOT want to ignore run_id
         ignore_args=["job_id", "run_id"],
     )
@@ -89,10 +89,10 @@ def test_memcached_repeated_training(memcached_client):
 
     @memcached(
         client_config=config,
-        cache_threshold=0,  # Always cache results
+        time_threshold=0,  # Always cache results
+        allow_repeated_evaluations=True,
+        rtol_stderr=0.01,
         # Note that we typically do NOT want to ignore run_id
-        allow_repeated_training=True,
-        rtol_threshold=0.01,
         ignore_args=["job_id", "run_id"],
     )
     def foo(indices: Iterable[int]) -> float:
@@ -114,10 +114,10 @@ def test_memcached_faster_with_repeated_training(memcached_client):
 
     @memcached(
         client_config=config,
-        cache_threshold=0,  # Always cache results
+        time_threshold=0,  # Always cache results
+        allow_repeated_evaluations=True,
+        rtol_stderr=0.1,
         # Note that we typically do NOT want to ignore run_id
-        allow_repeated_training=True,
-        rtol_threshold=0.1,
         ignore_args=["job_id", "run_id"],
     )
     def foo_cache(indices: Iterable[int]) -> float:
@@ -171,10 +171,10 @@ def test_memcached_parallel_repeated_training(
 
     @memcached(
         client_config=config,
-        cache_threshold=0,  # Always cache results
+        time_threshold=0,  # Always cache results
+        allow_repeated_evaluations=True,
+        rtol_stderr=0.01,
         # Note that we typically do NOT want to ignore run_id
-        allow_repeated_training=True,
-        rtol_threshold=0.01,
         ignore_args=["job_id", "run_id"],
     )
     def map_func(indices: Iterable[int]) -> float:

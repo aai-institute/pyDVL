@@ -39,6 +39,9 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.doctest",
     "sphinx.ext.linkcode",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.extlinks",
+    "sphinx_math_dollar",
     "sphinx.ext.todo",
     "sphinx_rtd_theme",
     "sphinx_design",
@@ -48,6 +51,22 @@ extensions = [
     # Custom extensions
     "copy_notebooks",
 ]
+
+# sphinx_math_dollar
+mathjax3_config = {
+    "tex": {
+        "inlineMath": [["\\(", "\\)"]],
+        "displayMath": [["\\[", "\\]"]],
+    }
+}
+
+extlinks_detect_hardcoded_links = True
+extlinks = {
+    "gh": ("https://github.com/appliedAI-Initiative/pyDVL/%s", "GitHub %s"),
+    "issue": ("https://github.com/appliedAI-Initiative/pyDVL/issues/%s", "issue %s"),
+    "tfl": ("https://transferlab.appliedai.de/%s", "%s"),
+}
+
 
 # NBSphinx
 
@@ -69,6 +88,12 @@ nbsphinx_prolog = r"""
         </span>
     </div>
 
+    <style>
+        .nbinput .prompt,
+        .nboutput .prompt {
+            display: none;
+        }
+    </style>
 """
 
 # Display todos by setting to True
@@ -78,7 +103,7 @@ todo_include_todos = True
 # adding links to source files (this works for gitlab and github like hosts and might need to be adjusted for others)
 # see https://www.sphinx-doc.org/en/master/usage/extensions/linkcode.html#module-sphinx.ext.linkcode
 def linkcode_resolve(domain, info):
-    link_prefix = "https://github.com/appliedAI-Initiative/valuation/blob/develop"
+    link_prefix = "https://github.com/appliedAI-Initiative/pyDVL/blob/develop"
     if domain != "py":
         return None
     if not info["module"]:
@@ -276,7 +301,8 @@ html_static_path = []
 # html_show_sphinx = True
 
 # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
-# html_show_copyright = True
+html_show_copyright = True
+copyright = "2022 AppliedAI Institute gGmbH"
 
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the

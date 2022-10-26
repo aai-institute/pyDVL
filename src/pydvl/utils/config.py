@@ -27,7 +27,22 @@ class ParallelConfig:
 @unpackable
 @dataclass
 class MemcachedClientConfig:
-    server: Union[str, Tuple[str, Union[str, int]]] = ("localhost", 11211)
+    """Configuration for the connection to the memcached server.
+
+    :param server: tuple of (server, port).
+    :param connect_timeout: seconds to wait for a connection to memcached.
+    :param timeout: seconds to wait for send or recv calls on the socket
+        connected to memcached.
+    :param no_delay: set the `TCP_NODELAY` flag, which may help with performance
+        in some cases.
+    :param serde: a serializer / deserializer ("serde"). The default
+        `PickleSerde` should work in most cases. See `pymemcached's
+        documentation
+        <https://pymemcache.readthedocs.io/en/latest/apidoc/pymemcache.client.base.html#pymemcache.client.base.Client>`_
+        for details.
+    """
+
+    server: Tuple[str, int] = ("localhost", 11211)
     connect_timeout: float = 1.0
     timeout: float = 1.0
     no_delay: bool = True
@@ -37,34 +52,32 @@ class MemcachedClientConfig:
 @unpackable
 @dataclass
 class MemcachedConfig:
-    """Configuration for memcache
+    """Configuration for :func:`~pydvl.utils.caching.memcached`, providing
+    memoization of function calls.
 
-    :param cache_threshold: determines the minimum number of seconds a model training needs
-        to take to cache its scores. If a model is super fast to train, you may just want
-        to re-train it every time without saving the score. In most cases, caching the model,
-        even when it takes very little to train, is preferable.
-        The default to cache_threshold is 0.3 seconds.
-    :param allow_repeated_training: if set to true, instead of storing just a single score of a model,
-        the cache will store a running average of its score until a certain relative tolerance
-        (set by the rtol_threshold argument) is achieved. More precisely, since most machine learning
-        model-trainings are non-deterministic, depending on the starting weights or on randomness in
-        the training process, the trained model can have very different scores.
-        In your workflow, if you observe that the training process is very noisy even relative to the
-        same training set, then we recommend to set allow_repeated_training to True.
-        If instead the score is not impacted too much by non-deterministic training, setting allow_repeated_training
-        to false will speed up the shapley_dval calculation substantially.
-    :param rtol_threshold argument: as mentioned above, it regulates the relative tolerance for returning the running
-        average of a model instead of re-training it. If allow_repeated_training is True, set rtol_threshold to
-        small values and the shapley coefficients will have higher precision.
-    :param min_repetitions: similarly to rtol_threshold, it regulates repeated trainings by setting the minimum number of
-        repeated training a model has to go through before the cache can return its average score.
-        If the model training is very noisy, set min_repetitions to higher values and the scores will be more
-        reflective of the real average performance of the trained models.
+    :param client_config: Configuration for the connection to the memcached
+        server.
+    :param time_threshold: computations taking less time than this many seconds
+        are not cached.
+    :param allow_repeated_evaluations: If `True`, repeated calls to a function
+        with the same arguments will be allowed and outputs averaged until the
+        running standard deviation of the mean stabilises below
+        `rtol_stderr * mean`.
+    :param rtol_stderr: relative tolerance for repeated evaluations. More
+        precisely, :func:`~pydvl.utils.caching.memcached` will stop evaluating
+        the function once the standard deviation of the mean is smaller than
+        `rtol_stderr * mean`.
+    :param min_repetitions: minimum number of times that a function evaluation
+        on the same arguments is repeated before returning cached values. Useful
+        for stochastic functions only. If the model training is very noisy, set
+        this number to higher values to reduce variance.
+    :param ignore_args: Do not take these keyword arguments into account when
+        hashing the wrapped function for usage as key in memcached.
     """
 
     client_config: MemcachedClientConfig = field(default_factory=MemcachedClientConfig)
-    cache_threshold: float = 0.3
-    allow_repeated_training: bool = True
-    rtol_threshold: float = 0.1
+    time_threshold: float = 0.3
+    allow_repeated_evaluations: bool = True
+    rtol_stderr: float = 0.1
     min_repetitions: int = 3
     ignore_args: Optional[Iterable[str]] = None

@@ -64,11 +64,19 @@ class MapReduceJob(Generic[T, R]):
 
     Results are aggregated per run using reduce_func(), but not across runs.
 
-    :param map_func: Function that will be applied to the input chunks in each job.
-    :param reduce_func: Function that will be applied to the results of `map_func` to reduce them.
-    :param map_kwargs: Keyword arguments that will be passed to `map_func` in each job.
-    :param reduce_kwargs: Keyword arguments that will be passed to `reduce_func` in each job.
-    :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+    Typing information for objects of this class requires the type of the inputs
+    that are split for `map_func` and the type of its output.
+
+    :param map_func: Function that will be applied to the input chunks in each
+        job.
+    :param reduce_func: Function that will be applied to the results of
+        `map_func` to reduce them.
+    :param map_kwargs: Keyword arguments that will be passed to `map_func` in
+        each job.
+    :param reduce_kwargs: Keyword arguments that will be passed to `reduce_func`
+        in each job.
+    :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig`
+        with cluster address, number of cpus, etc.
     :param n_jobs: Number of parallel jobs to run. Does not accept 0
     :param n_runs: Number of times to run the functions on the whole data.
     :param timeout: Amount of time in seconds to wait for remote results.
@@ -89,7 +97,8 @@ class MapReduceJob(Generic[T, R]):
     >>> map_reduce_job(np.arange(5))
     [10, 10, 10]
 
-    If we set `chunkify_inputs` to `False` the input is not split across jobs but instead repeated:
+    If we set `chunkify_inputs` to `False` the input is not split across jobs
+    but instead repeated:
 
     >>> from pydvl.utils.parallel import MapReduceJob
     >>> import numpy as np
@@ -102,12 +111,13 @@ class MapReduceJob(Generic[T, R]):
     ... )
     >>> map_reduce_job(np.arange(5))
     [20, 20, 20]
+
     """
 
     def __init__(
         self,
-        map_func: MapFunction,
-        reduce_func: Optional[ReduceFunction] = None,
+        map_func: MapFunction[R],
+        reduce_func: Optional[ReduceFunction[R]] = None,
         map_kwargs: Optional[Dict] = None,
         reduce_kwargs: Optional[Dict] = None,
         config: ParallelConfig = ParallelConfig(),

@@ -10,6 +10,7 @@ from tests.conftest import check_total_value, check_values
 
 log = logging.getLogger(__name__)
 
+
 # noinspection PyTestParametrized
 @pytest.mark.parametrize(
     "num_samples, fun, rtol, total_atol",

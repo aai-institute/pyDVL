@@ -15,14 +15,15 @@ __all__ = [
 
 T = TypeVar("T")
 
-_PARALLEL_BACKED: Optional["RayParallelBackend"] = None
+_PARALLEL_BACKEND: Optional["RayParallelBackend"] = None
 
 
 class RayParallelBackend:
-    """Class used to wrap ray to make it transparent to algorithms. It shouldn't be initialized directly.
-    You should instead call `init_parallel_backend`.
+    """Class used to wrap ray to make it transparent to algorithms. It shouldn't
+    be initialized directly. You should instead call `init_parallel_backend`.
 
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
+        cluster address, number of cpus, etc.
 
     :Example:
 
@@ -32,6 +33,7 @@ class RayParallelBackend:
     >>> parallel_backend = RayParallelBackend(config)
     >>> parallel_backend
     <RayParallelBackend: {'address': None, 'num_cpus': None}>
+
     """
 
     def __init__(self, config: ParallelConfig):
@@ -97,19 +99,25 @@ def init_parallel_backend(config: ParallelConfig) -> "RayParallelBackend":
     >>> parallel_backend = init_parallel_backend(config)
     >>> parallel_backend
     <RayParallelBackend: {'address': None, 'num_cpus': None}>
+
     """
-    global _PARALLEL_BACKED
-    if _PARALLEL_BACKED is None:
+    global _PARALLEL_BACKEND
+    if _PARALLEL_BACKEND is None:
         if config.backend == "ray":
-            _PARALLEL_BACKED = RayParallelBackend(config)
+            _PARALLEL_BACKEND = RayParallelBackend(config)
         else:
             raise NotImplementedError(f"Unexpected parallel type {config.backend}")
-    return _PARALLEL_BACKED
+    return _PARALLEL_BACKEND
 
 
-def available_cpus():
+def available_cpus() -> int:
+    """Platform-independent count of available cores.
+
+    FIXME: do we really need this or is `os.cpu_count` enough? Is this portable?
+    :return: Number of cores, or 1 if it is not possible to determine.
+    """
     from platform import system
 
     if system() != "Linux":
-        return os.cpu_count()
+        return os.cpu_count() or 1
     return len(os.sched_getaffinity(0))

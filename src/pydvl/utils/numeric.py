@@ -1,12 +1,7 @@
 """
-Contains
-
-- shapley related stuff.
-- analytical derivatives for MSE and Linear Regression.
-- methods for sampling datasets.
-- code for calculating decision boundary in BinaryLogisticRegression.
+This module contains routines for numerical computations used across the
+library.
 """
-
 
 import math
 from enum import Enum
@@ -35,7 +30,11 @@ __all__ = [
     "linear_regression_analytical_derivative_d2_theta",
     "linear_regression_analytical_derivative_d_theta",
     "linear_regression_analytical_derivative_d_x_d_theta",
+    "random_matrix_with_condition_number",
+    "spearman",
     "top_k_value_accuracy",
+    "get_running_avg_variance",
+    "PowerSetDistribution",
 ]
 
 T = TypeVar("T")
@@ -44,8 +43,8 @@ T = TypeVar("T")
 def powerset(it: "NDArray") -> Iterator[Collection[T]]:
     """Returns an iterator for the power set of the argument.
 
-    Subsets are generated in sequence by growing size. See `random_powerset()`
-    for random sampling.
+    Subsets are generated in sequence by growing size. See
+    :func:`random_powerset` for random sampling.
 
     >>> from pydvl.utils.numeric import powerset
     >>> list(powerset([1,2]))
@@ -91,7 +90,7 @@ def random_powerset(
         set to be as likely as any other
     """
     if not isinstance(s, np.ndarray):
-        raise TypeError
+        raise TypeError("Set must be an NDArray")
 
     n = len(s)
     total = 1
@@ -137,28 +136,39 @@ def spearman(x: "NDArray", y: "NDArray") -> float:
     return 1 - 6 * float(np.sum((x - y) ** 2)) / (lx**3 - lx)
 
 
-def random_matrix_with_condition_number(
-    n: int, condition_number: float, positive_definite: bool = False
-) -> "NDArray":
-    """
-    https://gist.github.com/bstellato/23322fe5d87bb71da922fbc41d658079#file-random_mat_condition_number-py
-    https://math.stackexchange.com/questions/1351616/condition-number-of-ata
-    """
+def random_matrix_with_condition_number(n: int, condition_number: float) -> "NDArray":
+    """Constructs a square matrix with a given condition number.
 
-    if positive_definite:
-        condition_number = np.sqrt(condition_number)
+    Taken from:
+    https://gist.github.com/bstellato/23322fe5d87bb71da922fbc41d658079#file-random_mat_condition_number-py
+
+    Also see:
+    https://math.stackexchange.com/questions/1351616/condition-number-of-ata.
+
+    :param n: size of the matrix
+    :param condition_number: duh
+    :return: An (n,n) matrix with the requested condition number.
+    """
+    if n < 2:
+        raise ValueError("Matrix size must be at least 2")
+
+    if condition_number <= 1:
+        raise ValueError("Condition number must be greater than 1")
 
     log_condition_number = np.log(condition_number)
-    exp_vec = np.linspace(
-        -log_condition_number / 4.0, log_condition_number * (n + 1) / (4 * (n - 1)), n
+    exp_vec = np.arange(
+        -log_condition_number / 4.0,
+        log_condition_number * (n + 1) / (4 * (n - 1)),
+        log_condition_number / (2.0 * (n - 1)),
     )
-    s = np.exp(exp_vec)
+    exp_vec = exp_vec[:n]
+    s: np.ndarray = np.exp(exp_vec)
     S = np.diag(s)
     U, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
     V, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
-    P = U.dot(S).dot(V.T)
-    # cond(P @ P.T) = cond(P) ** 2
-    return P if not positive_definite else P @ P.T  # type: ignore
+    P: np.ndarray = U.dot(S).dot(V.T)
+    P = P.dot(P.T)
+    return P
 
 
 def linear_regression_analytical_derivative_d_theta(
@@ -228,29 +238,16 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     return full_derivative / N  # type: ignore
 
 
-def min_distance_points_to_line_2d(
-    p: "NDArray", a: "NDArray", b: "NDArray"
-) -> Tuple["NDArray", "NDArray"]:
-    """
-    Closed-form solution for minimum distance of point to line specified by dot(a, x) + b = 0.
-    :param p: A 2-dimensional matrix [NxD] representing the points.
-    :param a: A 1-dimensional vector [D] representing the slope.
-    :param b: The offset of the line.
-    :returns: A 1-dimensional vector [N] with the shortest distance for each point to the line.
-    """
-    a = np.reshape(a, [2, 1])
-    r = np.abs(p @ a + b) / np.sqrt(np.sum(a**2))
-    return r[:, 0]  # type: ignore
-
-
 def get_running_avg_variance(
     previous_avg: "FloatOrArray",
     previous_variance: "FloatOrArray",
     new_value: "FloatOrArray",
     count: int,
 ) -> Tuple["FloatOrArray", "FloatOrArray"]:
-    """The method uses Welford's algorithm to calculate the running average and variance of
-    a set of numbers.
+    """Uses Welford's algorithm to calculate the running average and variance of
+     a set of numbers.
+
+    See [Welford's algorithm in wikipedia](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm)
 
     :param previous_avg: average value at previous step
     :param previous_variance: variance at previous step
@@ -266,7 +263,8 @@ def get_running_avg_variance(
 
 
 def top_k_value_accuracy(y_true: "NDArray", y_pred: "NDArray", k: int = 3) -> float:
-    """Computes the top-k accuracy for the estimated values by comparing indices of the highest k values
+    """Computes the top-k accuracy for the estimated values by comparing indices
+    of the highest k values.
 
     :param y_true: Exact/true value
     :param y_pred: Predicted/estimated value
