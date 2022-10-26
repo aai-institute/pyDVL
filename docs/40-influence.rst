@@ -82,7 +82,6 @@ inverting the full matrix. In pyDVL this can be done with the parameter
 .. code-block:: python
 
    >>> from pydvl.influence import compute_influences
-
    >>> compute_influences(
    ...    model,
    ...    x_train,

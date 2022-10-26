@@ -28,8 +28,8 @@ def compute_linear_influences(
     influence_type: InfluenceType = InfluenceType.Up,
 ):
     """Calculate the influence each training sample on the loss computed over a
-     validation set for an ordinary least squares model (Ax+b=y with quadratic
-     loss).
+    validation set for an ordinary least squares model ($y = A x + b$ with
+    quadratic loss).
 
     :param x: An array of shape (M, K) containing the features of training data.
     :param y: An array of shape (M, L) containing the targets of training data.
@@ -50,7 +50,7 @@ def compute_linear_influences(
 
     if influence_type not in list(InfluenceType):
         raise NotImplementedError(
-            f"Only upweighting and perturbation influences are supported, but got {influence_type=}"
+            f"Only up-weighting and perturbation influences are supported, but got {influence_type=}"
         )
 
     if influence_type == InfluenceType.Up:
