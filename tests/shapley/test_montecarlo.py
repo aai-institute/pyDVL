@@ -124,7 +124,7 @@ def test_linear_montecarlo_shapley(
     log.debug(f"These are the exact values: {exact_values}")
     log.debug(f"These are the predicted values: {values}")
     # PyCharm seems to believe that the dictview converts to List[str], so we cast
-    exact_values_list = cast(list(exact_values.values()), List[float])
+    exact_values_list = cast(List[float], list(exact_values.values()))
     atol = (exact_values_list[-1] - exact_values_list[0]) / 10
     check_values(values, exact_values, rtol=rtol, atol=atol)
     check_total_value(linear_utility, values, atol=total_atol)
@@ -222,7 +222,7 @@ def test_grouped_linear_montecarlo_shapley(
     log.debug(f"These are the exact values: {exact_values}")
     log.debug(f"These are the predicted values: {values}")
     # PyCharm seems to believe that the dictview converts to List[str], so we cast
-    exact_values_list = cast(list(exact_values.values()), List[float])
+    exact_values_list = cast(List[float], list(exact_values.values()))
     atol = (exact_values_list[-1] - exact_values_list[0]) / 30
     check_values(values, exact_values, rtol=rtol, atol=atol)
 

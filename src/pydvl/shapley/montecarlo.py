@@ -36,19 +36,29 @@ import math
 import warnings
 from collections import OrderedDict
 from time import sleep, time
-from typing import TYPE_CHECKING, Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple
 
 import numpy as np
 
 from ..reporting.scores import sort_values
 from ..utils import Utility, maybe_progress
 from ..utils.config import ParallelConfig
-from ..utils.numeric import PowerSetDistribution, random_powerset
+from ..utils.numeric import (
+    PowerSetDistribution,
+    get_running_avg_variance,
+    random_powerset,
+)
 from ..utils.parallel import MapReduceJob, init_parallel_backend
 from .actor import get_shapley_coordinator, get_shapley_worker
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
+
+
+class MonteCarloResults(NamedTuple):
+    values: "NDArray"
+    stderr: "NDArray"
+
 
 logger = logging.getLogger(__name__)
 
@@ -222,6 +232,7 @@ def permutation_montecarlo_shapley(
 
 
 def _combinatorial_montecarlo_shapley(
+    indices: Sequence[int],
     u: Utility,
     max_iterations: int,
     dist: PowerSetDistribution,
@@ -229,25 +240,37 @@ def _combinatorial_montecarlo_shapley(
     progress: bool = False,
     job_id: int = 1,
     **kwargs,
-) -> "NDArray":
+) -> MonteCarloResults:
     """Helper function for :func:`combinatorial_montecarlo_shapley`.
 
     This is the code that is sent to workers to compute values using the
     combinatorial definition.
 
     :param u: Utility object with model, data, and scoring function
-    :param max_iterations: total number of iterations (permutations) to use
+    :param max_iterations: total number of subsets to sample.
     :param dist: Distribution to use of sets over the power set.
     :param progress: true to plot progress bar
     :param job_id: id to use for reporting progress
-    :return: a matrix with each row being a different permutation
-        and each column being the score of a different data point
+    :return: A tuple of ndarrays with estimated values and standard errors
     """
     n = len(u.data)
-    correction = 2 ** (n - 1) / n
-    values = np.zeros(shape=(max_iterations, n))
-    pbar = maybe_progress(u.data.indices, progress, position=job_id)
-    for idx, _ in enumerate(pbar):
+
+    if len(np.unique(indices)) != len(indices):
+        raise ValueError("Repeated indices passed")
+
+    # FIXME: is this ok?
+    if dist is PowerSetDistribution.WEIGHTED:
+        correction = 2 ** (n - 1) / n
+    else:
+        raise NotImplementedError(
+            f"Correction for sampling distribution {dist=} not implemented"
+        )
+
+    values = np.zeros(n)
+    variances = np.zeros(n)
+    counts = np.zeros(n)
+    pbar = maybe_progress(indices, progress, position=job_id)
+    for idx in pbar:
         # Randomly sample subsets of full dataset without idx
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
         power_set = random_powerset(
@@ -255,21 +278,25 @@ def _combinatorial_montecarlo_shapley(
             dist=dist,
             max_subsets=max_iterations,
         )
-        # Normalization accounts for a uniform dist. on powerset (i.e. not
-        # weighted by set size) and the Monte Carlo sampling
-        for s_idx, s in enumerate(
-            maybe_progress(
-                power_set,
-                progress,
-                desc=f"Index {idx}",
-                total=max_iterations,
-                position=job_id,
-            )
+        for s in maybe_progress(
+            power_set,
+            progress,
+            desc=f"Index {idx}",
+            total=max_iterations,
+            position=job_id,
         ):
-            values[s_idx, idx] = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
+            new_marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
+            if np.isnan(new_marginal):
+                continue
+            values[idx], variances[idx] = get_running_avg_variance(
+                values[idx], variances[idx], new_marginal, counts[idx]
+            )
+            counts[idx] += 1
 
-    result: "NDArray" = correction * values
-    return result
+    return MonteCarloResults(
+        values=correction * values,
+        stderr=correction**2 * variances / np.sqrt(np.maximum(1, counts)),
+    )
 
 
 def combinatorial_montecarlo_shapley(
@@ -294,33 +321,37 @@ def combinatorial_montecarlo_shapley(
         Shapley values for the indices, the second being their standard error
     """
     parallel_backend = init_parallel_backend(config)
-
     u_id = parallel_backend.put(u)
-
     iterations_per_job = max_iterations // n_jobs
 
-    map_reduce_job: MapReduceJob["NDArray", "NDArray"] = MapReduceJob(
+    def reducer(results_it: Iterable[MonteCarloResults]) -> MonteCarloResults:
+        values = np.zeros(len(u.data))
+        stderr = np.zeros_like(values)
+
+        # non-zero indices in results are disjoint by construction, so it is ok
+        # to add them
+        for val, std in results_it:
+            values += val
+            stderr += std
+        return MonteCarloResults(values=values, stderr=stderr)
+
+    map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
         map_func=_combinatorial_montecarlo_shapley,
-        reduce_func=np.concatenate,  # type: ignore
+        reduce_func=reducer,
         map_kwargs=dict(
+            u=u_id,
             dist=dist,
             max_iterations=iterations_per_job,
             progress=progress,
         ),
-        reduce_kwargs=dict(axis=0),
+        chunkify_inputs=True,
+        n_jobs=n_jobs,
         config=config,
     )
-    full_results = map_reduce_job(u_id, chunkify_inputs=False, n_jobs=n_jobs)[0]
-
-    if np.any(np.isnan(full_results)):
-        warnings.warn(
-            f"Calculation returned {np.sum(np.isnan(full_results))} nan values out of {full_results.size}",
-            RuntimeWarning,
-        )
-    acc = np.nanmean(full_results, axis=0)
-    acc_std = np.nanstd(full_results, axis=0) / np.sqrt(full_results.shape[0])
+    results = map_reduce_job(u.data.indices)[0]
     sorted_shapley_values = sort_values(
-        {u.data.data_names[i]: v for i, v in enumerate(acc)}
+        {u.data.data_names[i]: v for i, v in enumerate(results.values)}
     )
-    montecarlo_error = {u.data.data_names[i]: v for i, v in enumerate(acc_std)}
-    return sorted_shapley_values, montecarlo_error
+    montecarlo_errors = {u.data.data_names[i]: v for i, v in enumerate(results.stderr)}
+
+    return sorted_shapley_values, montecarlo_errors
