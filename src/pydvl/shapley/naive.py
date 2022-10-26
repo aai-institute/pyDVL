@@ -59,12 +59,12 @@ def permutation_exact_shapley(
 def _combinatorial_exact_shapley(
     indices: np.ndarray, u: Utility, progress: bool
 ) -> np.ndarray:
+    """Helper function for :func:`combinatorial_exact_shapley`.
+
+    Computes the marginal utilities for the set of indices passed and returns
+    the value of the samples according to the exact combinatorial definition.
+    """
     n = len(u.data)
-
-    # Arbitrary choice, will depend on time required, caching, etc.
-    if n > 20:
-        warnings.warn(f"Large dataset! Computation requires 2^{n} calls to model.fit()")
-
     local_values = np.zeros(n)
     for i in indices:
         subset = np.setxor1d(u.data.indices, [i], assume_unique=True)
@@ -86,11 +86,13 @@ def combinatorial_exact_shapley(
     *,
     progress: bool = False,
 ) -> "OrderedDict[str, float]":
-    """Computes the exact Shapley value using the combinatorial definition.
+    r"""Computes the exact Shapley value using the combinatorial definition.
 
-    When the length of the training set is > 20 this prints a warning since the
-    computation becomes too expensive. Used mostly for internal testing and
-    simple use cases. Please refer to the Monte Carlo methods for all other
+    $$v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}} \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)]$$
+
+    If the length of the training set is > n_jobs*20 this prints a warning
+    because the computation is very expensive. Used mostly for internal testing
+    and simple use cases. Please refer to the Monte Carlo methods for all other
     cases.
 
     :param u: Utility object with model, data, and scoring function
@@ -98,9 +100,16 @@ def combinatorial_exact_shapley(
     :param config: Object configuring parallel computation, with cluster address,
         number of cpus, etc.
     :param progress: set to True to use tqdm progress bars
-    :return: OrderedDict of exact Shapley values
 
+    :return: Dictionary of {"index or label": exact_value}, sorted by decreasing
+        value.
     """
+    # Arbitrary choice, will depend on time required, caching, etc.
+    if len(u.data) // n_jobs > 20:
+        warnings.warn(
+            f"Large dataset! Computation requires 2^{len(u.data)} calls to model.fit()"
+        )
+
     parallel_backend = init_parallel_backend(config)
     u_id = parallel_backend.put(u)
 
