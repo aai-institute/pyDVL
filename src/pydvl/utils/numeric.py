@@ -34,6 +34,7 @@ __all__ = [
     "spearman",
     "top_k_value_accuracy",
     "get_running_avg_variance",
+    "PowerSetDistribution",
 ]
 
 T = TypeVar("T")
