@@ -19,13 +19,13 @@
         <script src="../_static/doctools.js"></script>
         <script src="../_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
         <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Influence functions and neural networks" href="influence_wine.html" />
-    <link rel="prev" title="Data Utility Learning" href="data_utility_learning.html" /> 
+    <link rel="prev" title="Data Utility Learning" href="shapley_utility_learning.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -49,24 +49,16 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../10-getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../20-install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../30-data-valuation.html">Computing data values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../40-influence.html">Computing influence values</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="data_utility_learning.html">Data Utility Learning</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Influence functions for data mislabeling</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#Imports">Imports</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Constants">Constants</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Dataset">Dataset</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Plotting-the-dataset">Plotting the dataset</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Training-the-model">Training the model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Calculating-influences">Calculating influences</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Inversion-through-conjugate-gradient">Inversion through conjugate gradient</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Appendix:-Calculating-the-decision-boundary">Appendix: Calculating the decision boundary</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_basic_spotify.html">Shapley for data valuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_knn_flowers.html">KNN Shapley</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_utility_learning.html">Data Utility Learning</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Influence functions for data mislabeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Influence functions and neural networks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html">KNN Shapley</a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html">Shapley for data valuation</a></li>
 </ul>
 </li>
 </ul>
@@ -388,7 +380,14 @@ div.rendered_html tbody tr:hover {
             <img alt="Binder badge" src="https://mybinder.org/badge_logo.svg" style="vertical-align:text-bottom">
         </a>
     </span>
-</div><section id="Influence-functions-for-data-mislabeling">
+</div>
+
+<style>
+    .nbinput .prompt,
+    .nboutput .prompt {
+        display: none;
+    }
+</style><section id="Influence-functions-for-data-mislabeling">
 <h1>Influence functions for data mislabeling<a class="headerlink" href="#Influence-functions-for-data-mislabeling" title="Permalink to this heading"></a></h1>
 <p>In this notebook, we will take a closer look at the theory of influence functions with the help of a synthetic dataset. Data mislabeling occurs whenever some examples from a usually big dataset are wrongly-labeled. In real-life this happens fairly often, e.g. as a consequence of human error, or noise in the data.</p>
 <p>Let’s consider a classification problem with the following notation:</p>
@@ -550,7 +549,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </section>
 <section id="Training-the-model">
 <h2>Training the model<a class="headerlink" href="#Training-the-model" title="Permalink to this heading"></a></h2>
-<p>We will now train a logistic regression model on the train data. This can be done with the following</p>
+<p>We will now train a logistic regression model on the training data. This can be done with the following</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
@@ -669,7 +668,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 </div>
 <p>The above explicitly constructs the Hessian. This can often be computationally expensive and conjugate gradient approximate calculation should be used for bigger models.</p>
-<p>With the influence type ‘up’, train influences have shape [NxM] where N is the number of test samples and M is the number of training samples. They therefore associate to each training sample its influence on each test sample. Influence type ‘perturbation’, instead, return an array of shape [NxMxF], where F is the number of features in input, ie. the length of x.</p>
+<p>With the influence type ‘up’, training influences have shape [NxM] where N is the number of test samples and M is the number of training samples. They therefore associate to each training sample its influence on each test sample. Influence type ‘perturbation’, instead, return an array of shape [NxMxF], where F is the number of features in input, ie. the length of x.</p>
 <p>In our case, in order to have a value of the total average influence of a point we can just average across training samples.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
@@ -867,14 +866,14 @@ p(x|y=1)&amp;=\mathcal{N}\left (\mu_2, \sigma^2 I \right)
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="data_utility_learning.html" class="btn btn-neutral float-left" title="Data Utility Learning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="shapley_utility_learning.html" class="btn btn-neutral float-left" title="Data Utility Learning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="influence_wine.html" class="btn btn-neutral float-right" title="Influence functions and neural networks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright .</p>
+    <p>&#169; Copyright 2022 AppliedAI Institute gGmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

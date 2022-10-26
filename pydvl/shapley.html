@@ -47,8 +47,10 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../10-getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../20-install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../30-data-valuation.html">Computing data values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../40-influence.html">Computing influence values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
@@ -120,144 +122,64 @@
 </style>
 <section id="module-pydvl.shapley">
 <span id="shapley"></span><h1>shapley<a class="headerlink" href="#module-pydvl.shapley" title="Permalink to this heading"></a></h1>
+<p>This package holds all routines for the computation of Shapley Data value. Users
+will want to use <a class="reference internal" href="#pydvl.shapley.compute_shapley_values" title="pydvl.shapley.compute_shapley_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code></a> as single
+interface to all methods defined in the modules.</p>
+<p>Please refer to <a class="reference internal" href="../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for an overview of Shapley Data value.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="pydvl.shapley.truncated_montecarlo_shapley">
-<span class="sig-name descname"><span class="pre">truncated_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_tolerance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">num_workers=None)</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinator_update_frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_update_frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">OrderedDict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/shapley/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.shapley.truncated_montecarlo_shapley" title="Permalink to this definition"></a></dt>
-<dd><p>MonteCarlo approximation to the Shapley value of data points.</p>
-<p>Instead of naively implementing the expectation, we sequentially add points
-to a dataset from a permutation. We keep sampling permutations and updating
-all shapley values until the std/value score in
-the moving average falls below a given threshold (score_tolerance)
-or when the number of iterations exceeds a certain number (max_iterations).</p>
+<dt class="sig sig-object py" id="pydvl.shapley.compute_shapley_values">
+<span class="sig-name descname"><span class="pre">compute_shapley_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ShapleyMode</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ShapleyMode.TruncatedMontecarlo</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/shapley/__init__.py#L38"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.shapley.compute_shapley_values" title="Permalink to this definition"></a></dt>
+<dd><p>Umbrella method to compute Shapley values with any of the available
+algorithms.</p>
+<p>See <a class="reference internal" href="../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for an overview.</p>
+<p>The following algorithms are available. Note that the exact methods can only
+work with very small datasets and are thus intended only for testing. Some
+algorithms also accept additional arguments, please refer to the
+documentation of each particular method.</p>
+<ul class="simple">
+<li><p>‘combinatorial_exact’: uses the combinatorial implementation of data
+Shapley. Implemented in
+<a class="reference internal" href="shapley/naive.html#pydvl.shapley.naive.combinatorial_exact_shapley" title="pydvl.shapley.naive.combinatorial_exact_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">combinatorial_exact_shapley()</span></code></a>.</p></li>
+<li><p>‘permutation_exact’: uses the permutation-based implementation of data
+Shapley. Computation is <strong>not parallelized</strong>. Implemented in
+<a class="reference internal" href="shapley/naive.html#pydvl.shapley.naive.permutation_exact_shapley" title="pydvl.shapley.naive.permutation_exact_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">permutation_exact_shapley()</span></code></a>.</p></li>
+<li><p>‘permutation_montecarlo’: uses the approximate Monte Carlo implementation
+of permutation data Shapley. Implemented in
+<a class="reference internal" href="shapley/montecarlo.html#pydvl.shapley.montecarlo.permutation_montecarlo_shapley" title="pydvl.shapley.montecarlo.permutation_montecarlo_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">permutation_montecarlo_shapley()</span></code></a>.</p></li>
+<li><p>‘combinatorial_montecarlo’:  uses the approximate Monte Carlo
+implementation of combinatorial data Shapley. Implemented in
+<a class="reference internal" href="shapley/montecarlo.html#pydvl.shapley.montecarlo.combinatorial_montecarlo_shapley" title="pydvl.shapley.montecarlo.combinatorial_montecarlo_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">combinatorial_montecarlo_shapley()</span></code></a>.</p></li>
+<li><p>‘truncated_montecarlo’: default option, same as permutation_montecarlo but
+stops the computation whenever a certain accuracy is reached.
+Implemented in
+<a class="reference internal" href="shapley/montecarlo.html#pydvl.shapley.montecarlo.truncated_montecarlo_shapley" title="pydvl.shapley.montecarlo.truncated_montecarlo_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">truncated_montecarlo_shapley()</span></code></a>.</p></li>
+</ul>
+<p>Additionally, one can use model-specific methods:</p>
+<ul class="simple">
+<li><p>‘knn’: use only with K-Nearest neighbour models. Implemented in
+<a class="reference internal" href="shapley/knn.html#pydvl.shapley.knn.knn_shapley" title="pydvl.shapley.knn.knn_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">knn_shapley()</span></code></a>.</p></li>
+</ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
-<li><p><strong>score_tolerance</strong> – During calculation of shapley values, the
-coordinator will check if the median standard deviation over average
-score for each point’s has dropped below score_tolerance.
-If so, the computation will be terminated.</p></li>
-<li><p><strong>max_iterations</strong> – a sum of the total number of permutation is calculated
-If the current number of permutations has exceeded max_iterations, computation
-will stop.</p></li>
-<li><p><strong>n_jobs</strong> – number of jobs processing permutations. If None, it will be set
-to available_cpus().</p></li>
-<li><p><strong>address</strong> – if None, shapley calculation will run only on local machine.
-If “auto”, it will use a local cluster if already started.
-If “ray://{ip address}”, it will run the process on the cluster
-found at the IP address passed, e.g. “ray://123.45.67.89:10001” will run the process
-on the cluster at 123.45.67.89:10001.</p></li>
-<li><p><strong>progress</strong> – set to True to use tqdm progress bars.</p></li>
+<li><p><strong>u</strong> – <a class="reference internal" href="utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> object with model, data, and
+scoring function.</p></li>
+<li><p><strong>max_iterations</strong> – total number of iterations, used for Monte Carlo
+methods.</p></li>
+<li><p><strong>n_jobs</strong> – Number of parallel jobs (available only to some methods)</p></li>
+<li><p><strong>mode</strong> – Choose which shapley algorithm to use. See
+<code class="xref py py-class docutils literal notranslate"><span class="pre">pydvl.shapley.ShapleyMode</span></code> for a list of allowed values.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Tuple, with the first element being an ordered
-Dict of approximated Shapley values for the indices, the second being the
-montecarlo error related to each dvl value.</p>
+<dd class="field-even"><p>pandas DataFrame with index being group names or data indices, and
+columns: <cite>data_value</cite> (calculated shapley values) and <cite>data_value_std</cite>
+(standard deviation of <cite>data_value</cite> for Monte Carlo estimators)</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="pydvl.shapley.permutation_montecarlo_shapley">
-<span class="sig-name descname"><span class="pre">permutation_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">num_workers=None)</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">OrderedDict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/shapley/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.shapley.permutation_montecarlo_shapley" title="Permalink to this definition"></a></dt>
-<dd><p>Computes an approximate Shapley value using independent permutations of the indices.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
-<li><p><strong>max_iterations</strong> – total number of iterations (permutations) to use</p></li>
-<li><p><strong>n_jobs</strong> – number of jobs across which to distribute the computation</p></li>
-<li><p><strong>progress</strong> – true to plot progress bar</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Tuple, with the first element being an ordered
-Dict of approximated Shapley values for the indices, the second being the
-montecarlo error related to each of them.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pydvl.shapley.combinatorial_montecarlo_shapley">
-<span class="sig-name descname"><span class="pre">combinatorial_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">num_workers=None)</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PowerSetDistribution</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">PowerSetDistribution.WEIGHTED</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">OrderedDict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/shapley/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.shapley.combinatorial_montecarlo_shapley" title="Permalink to this definition"></a></dt>
-<dd><p>Computes an approximate Shapley value using the combinatorial definition.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – utility</p></li>
-<li><p><strong>max_iterations</strong> – total number of iterations (permutations) to use</p></li>
-<li><p><strong>n_jobs</strong> – number of jobs across which to distribute the computation</p></li>
-<li><p><strong>progress</strong> – true to plot progress bar</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Tuple, with the first element being an ordered
-Dict of approximated Shapley values for the indices, the second being the
-montecarlo error related to each of them.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pydvl.shapley.combinatorial_exact_shapley">
-<span class="sig-name descname"><span class="pre">combinatorial_exact_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OrderedDict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/shapley/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.shapley.combinatorial_exact_shapley" title="Permalink to this definition"></a></dt>
-<dd><p>Computes the exact Shapley value using the combinatorial definition.
-When the length of the training set is &gt; 20 it prints a warning since the
-computation becomes too expensive.
-Used mostly for internal testing and simple use cases. Please refer to the
-montecarlo methods for all other cases.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
-<li><p><strong>progress</strong> – set to True to use tqdm progress bars.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>OrderedDict of exact Shapley values</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pydvl.shapley.permutation_exact_shapley">
-<span class="sig-name descname"><span class="pre">permutation_exact_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OrderedDict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/shapley/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.shapley.permutation_exact_shapley" title="Permalink to this definition"></a></dt>
-<dd><p>Computes the exact Shapley value using permutations.
-When the length of the training set is &gt; 10 it prints a warning since the
-computation becomes too expensive.
-Used mostly for internal testing and simple use cases. Please refer to the
-montecarlo methods for all other cases.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
-<li><p><strong>progress</strong> – set to True to use tqdm progress bars.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>OrderedDict of exact Shapley values</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pydvl.shapley.compute_knn_shapley">
-<span class="sig-name descname"><span class="pre">compute_knn_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="utils/dataset.html#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">KNeighborsClassifier</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OrderedDict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/shapley/__init__.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.shapley.compute_knn_shapley" title="Permalink to this definition"></a></dt>
-<dd><p>Computes exact Shapley values for a KNN classifier</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> – split Dataset</p></li>
-<li><p><strong>model</strong> – model to extract parameters from. The object will not be
-modified nor used other than to call get_params()</p></li>
-<li><p><strong>progress</strong> – whether to display a progress bar</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
+<p class="rubric">Modules in this package</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="shapley/actor.html">actor</a></li>
@@ -279,7 +201,7 @@ modified nor used other than to call get_params()</p></li>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright .</p>
+    <p>&#169; Copyright 2022 AppliedAI Institute gGmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

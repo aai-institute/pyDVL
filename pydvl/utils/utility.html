@@ -46,8 +46,10 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../getting-started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../10-getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../20-install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../30-data-valuation.html">Computing data values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../40-influence.html">Computing influence values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
@@ -125,16 +127,26 @@
 </style>
 <section id="module-pydvl.utils.utility">
 <span id="utility"></span><h1>utility<a class="headerlink" href="#module-pydvl.utils.utility" title="Permalink to this heading"></a></h1>
-<p>This module contains the <a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> and the <a class="reference internal" href="#pydvl.utils.utility.DataUtilityLearning" title="pydvl.utils.utility.DataUtilityLearning"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataUtilityLearning</span></code></a> classes.</p>
+<p>This module contains classes to manage and learn utility functions for the
+computation of values. Please see the documentation on <a class="reference internal" href="../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for
+more information.</p>
+<p><a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> holds information about model, data and scoring function (which
+is the utility* function itself for Shapley value). It is automatically cached
+across machines.</p>
+<p><a class="reference internal" href="#pydvl.utils.utility.DataUtilityLearning" title="pydvl.utils.utility.DataUtilityLearning"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataUtilityLearning</span></code></a> adds support for learning the scoring function
+to avoid repeated re-training of the model.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.utils.utility.Utility">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Utility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="dataset.html#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scoring</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catch_errors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_warnings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="config.html#pydvl.utils.config.MemcachedConfig" title="pydvl.utils.config.MemcachedConfig"><span class="pre">MemcachedConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/utils/utility.py#L24"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.Utility" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Utility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="dataset.html#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scoring</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catch_errors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_warnings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="config.html#pydvl.utils.config.MemcachedConfig" title="pydvl.utils.config.MemcachedConfig"><span class="pre">MemcachedConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/utility.py#L34"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.Utility" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>A convenience wrapper with configurable memoization</p>
-<p>It holds all the most important elements of the Shapley values calculation,
-namely the model, the data and the scoring.
-It can also cache the training results, which speeds up
-the overall calculation for big models that take a long time to train.</p>
+<p>Convenience wrapper with configurable memoization of the scoring function.</p>
+<p>An instance of <cite>Utility</cite> holds the triple of model, dataset and scoring
+function which determines the value of data points. This is mostly used for
+the computation of <a class="reference internal" href="../../30-data-valuation.html#data-valuation"><span class="std std-ref">Shapley values</span></a>.</p>
+<p>Since evaluating the scoring function requires retraining the model, this
+class wraps it and caches the results of each execution. Caching is
+available both locally and across nodes, but must always be enabled for your
+project first, see <a class="reference internal" href="../../20-install.html#caching-setup"><span class="std std-ref">how to set up the cache</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -155,6 +167,7 @@ Used only when catch_errors is True</p></li>
 <li><p><strong>default_score</strong> – score in the case of models that have not been fit,
 e.g. when too little data is passed, or errors arise.</p></li>
 <li><p><strong>enable_cache</strong> – whether to use memcached for memoization.</p></li>
+<li><p><strong>cache_options</strong> – </p></li>
 </ul>
 </dd>
 </dl>
@@ -176,24 +189,28 @@ e.g. when too little data is passed, or errors arise.</p></li>
 <dl class="py property">
 <dt class="sig sig-object py" id="pydvl.utils.utility.Utility.signature">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#pydvl.utils.utility.Utility.signature" title="Permalink to this definition"></a></dt>
-<dd><p>Signature used for caching model results</p>
+<dd><p>Signature used for caching model results.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.utils.utility.DataUtilityLearning">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataUtilityLearning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_budget</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/utils/utility.py#L142"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.DataUtilityLearning" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataUtilityLearning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_budget</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/utility.py#L157"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.DataUtilityLearning" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Implementation of Data Utility Learning algorithm <a class="footnote-reference brackets" href="#id2" id="id1">1</a>.
-It is a wrapper for other utilities with a given budget (i.e. number of iterations)
-that will, once the budget is exhausted, fit a given model to predict the utility
-instead of computing it.</p>
+<p>Implementation of Data Utility Learning algorithm <a class="footnote-reference brackets" href="#id2" id="id1">1</a>.</p>
+<p>This object wraps a <a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> and delegates
+calls to it, up until a given budget (number of iterations). Every tuple
+of input and output (a so-called <em>utility sample</em>) is stored. Once the
+budget is exhausted, <cite>DataUtilityLearning</cite> fits the given model to the
+utility samples. Subsequent calls will use the learned model to predict the
+utility instead of delegating.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – an instance of a <a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a></p></li>
-<li><p><strong>training_budget</strong> – Number of utility samples to use for fitting the given model</p></li>
+<li><p><strong>u</strong> – The <a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> to learn.</p></li>
+<li><p><strong>training_budget</strong> – Number of utility samples to collect before fitting
+the given model</p></li>
 <li><p><strong>model</strong> – A supervised regression model</p></li>
 </ul>
 </dd>
@@ -226,7 +243,7 @@ arXiv, 2021</a>.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="pydvl.utils.utility.DataUtilityLearning.data">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="dataset.html#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><span class="pre">Dataset</span></a></em><a class="headerlink" href="#pydvl.utils.utility.DataUtilityLearning.data" title="Permalink to this definition"></a></dt>
-<dd><p>Return the wrapped utility’s dataset</p>
+<dd><p>Returns the wrapped utility’s <a class="reference internal" href="dataset.html#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -243,7 +260,7 @@ arXiv, 2021</a>.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright .</p>
+    <p>&#169; Copyright 2022 AppliedAI Institute gGmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

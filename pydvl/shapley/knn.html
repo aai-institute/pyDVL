@@ -47,8 +47,10 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../getting-started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../10-getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../20-install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../30-data-valuation.html">Computing data values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../40-influence.html">Computing influence values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
@@ -121,18 +123,32 @@
 </style>
 <section id="module-pydvl.shapley.knn">
 <span id="knn"></span><h1>knn<a class="headerlink" href="#module-pydvl.shapley.knn" title="Permalink to this heading"></a></h1>
+<p>This module contains Shapley computations for K-Nearest Neighbours.</p>
+<p>(to do: implement approximate KNN computation for sublinear complexity)</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="pydvl.shapley.knn.compute_knn_shapley">
-<span class="sig-name descname"><span class="pre">compute_knn_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/dataset.html#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">KNeighborsClassifier</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OrderedDict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/shapley/knn.py#L12"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.shapley.knn.compute_knn_shapley" title="Permalink to this definition"></a></dt>
-<dd><p>Computes exact Shapley values for a KNN classifier</p>
+<dt class="sig sig-object py" id="pydvl.shapley.knn.knn_shapley">
+<span class="sig-name descname"><span class="pre">knn_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/dataset.html#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">KNeighborsClassifier</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OrderedDict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/shapley/knn.py#L17"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.shapley.knn.knn_shapley" title="Permalink to this definition"></a></dt>
+<dd><p>Computes exact Shapley values for a KNN classifier.</p>
+<p>This implements the method described in:</p>
+<p>Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nezihe Merve Gurel,
+Bo Li, Ce Zhang, Costas Spanos, and Dawn Song. ‘Efficient Task-Specific Data
+Valuation for Nearest Neighbor Algorithms’. Proceedings of the VLDB
+Endowment 12, no. 11 (1 July 2019): 1610–23.
+<a class="reference external" href="https://doi.org/10.14778/3342263.3342637">https://doi.org/10.14778/3342263.3342637</a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> – split Dataset</p></li>
+<li><p><strong>data</strong> – split <a class="reference internal" href="../utils/dataset.html#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">pydvl.utils.dataset.Dataset</span></code></a>.</p></li>
 <li><p><strong>model</strong> – model to extract parameters from. The object will not be
-modified nor used other than to call get_params()</p></li>
-<li><p><strong>progress</strong> – whether to display a progress bar</p></li>
+modified nor used other than to call
+<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params">get_params()</a></p></li>
+<li><p><strong>progress</strong> – whether to display a progress bar.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An
+<a class="reference external" href="https://docs.python.org/3/library/collections.html#collections.OrderedDict">OrderedDict</a>
+of data indices and their values.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -150,7 +166,7 @@ modified nor used other than to call get_params()</p></li>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright .</p>
+    <p>&#169; Copyright 2022 AppliedAI Institute gGmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

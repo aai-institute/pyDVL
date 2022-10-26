@@ -19,12 +19,12 @@
         <script src="../_static/doctools.js"></script>
         <script src="../_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
         <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="KNN Shapley" href="knn_shapley_flowers.html" />
+    <link rel="next" title="API Reference" href="../pydvl/index.html" />
     <link rel="prev" title="Influence functions for data mislabeling" href="influence_synthetic.html" /> 
 </head>
 
@@ -49,23 +49,16 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../10-getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../20-install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../30-data-valuation.html">Computing data values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../40-influence.html">Computing influence values</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="data_utility_learning.html">Data Utility Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_basic_spotify.html">Shapley for data valuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_knn_flowers.html">KNN Shapley</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_utility_learning.html">Data Utility Learning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Influence functions and neural networks</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#Imports">Imports</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Constants">Constants</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Dataset">Dataset</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Fit-a-neural-network-to-the-data">Fit a neural network to the data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Calculating-influences-for-small-neural-networks">Calculating influences for small neural networks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Influence-of-training-features">Influence of training features</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#Speeding-up-influences-for-big-models">Speeding up influences for big models</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html">KNN Shapley</a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html">Shapley for data valuation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Influence functions and neural networks</a></li>
 </ul>
 </li>
 </ul>
@@ -387,7 +380,14 @@ div.rendered_html tbody tr:hover {
             <img alt="Binder badge" src="https://mybinder.org/badge_logo.svg" style="vertical-align:text-bottom">
         </a>
     </span>
-</div><section id="Influence-functions-and-neural-networks">
+</div>
+
+<style>
+    .nbinput .prompt,
+    .nboutput .prompt {
+        display: none;
+    }
+</style><section id="Influence-functions-and-neural-networks">
 <h1>Influence functions and neural networks<a class="headerlink" href="#Influence-functions-and-neural-networks" title="Permalink to this heading"></a></h1>
 <p>This notebook shows how to calculate influences on a NN model using pyDVL for an arbitrary dataset, and how this can be used to find anomalous or corrupted data points.</p>
 <p>It uses the wine dataset from sklearn: given a set of 13 different input parameters regarding a particular bottle, each related to some physical property (e.g. concentration of magnesium, malic acidity, alcoholic percentage, etc), the model will need to predict to which of 3 classes the wine belongs to. For more details, please refer to the <a class="reference external" href="https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset">sklearn documentation</a>.</p>
@@ -531,7 +531,7 @@ div.rendered_html tbody tr:hover {
   return torch._C._cuda_getDeviceCount() &gt; 0
 </pre></div></div>
 </div>
-<p>Let’s check that the training has found a stable minimum by plotting the train and validation loss</p>
+<p>Let’s check that the training has found a stable minimum by plotting the training and validation loss</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
@@ -593,7 +593,7 @@ div.rendered_html tbody tr:hover {
 </section>
 <section id="Calculating-influences-for-small-neural-networks">
 <h2>Calculating influences for small neural networks<a class="headerlink" href="#Calculating-influences-for-small-neural-networks" title="Permalink to this heading"></a></h2>
-<p>The following cell calculates the influences of each training data-point on the neural network. Neural networks have typically a very bumpy parameter space, which, during training, is explored until the configuration that minimises the loss is found. There is an important assumption in influence functions that the model lays at a (at least local) minimum of such loss, and if this is not fulfilled many issues can arise. In order to avoid this scenario, a regularisation term should be used
+<p>The following cell calculates the influences of each training data point on the neural network. Neural networks have typically a very bumpy parameter space, which, during training, is explored until the configuration that minimises the loss is found. There is an important assumption in influence functions that the model lays at a (at least local) minimum of such loss, and if this is not fulfilled many issues can arise. In order to avoid this scenario, a regularisation term should be used
 whenever dealing with big and noisy models.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
@@ -762,13 +762,13 @@ therefore give quantitative and qualitatively different results if not averaged 
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="influence_synthetic.html" class="btn btn-neutral float-left" title="Influence functions for data mislabeling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="knn_shapley_flowers.html" class="btn btn-neutral float-right" title="KNN Shapley" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../pydvl/index.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright .</p>
+    <p>&#169; Copyright 2022 AppliedAI Institute gGmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

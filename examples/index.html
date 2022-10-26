@@ -22,8 +22,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Data Utility Learning" href="data_utility_learning.html" />
-    <link rel="prev" title="Installing pyDVL" href="../install.html" /> 
+    <link rel="next" title="Shapley for data valuation" href="shapley_basic_spotify.html" />
+    <link rel="prev" title="Computing influence values" href="../40-influence.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,14 +47,16 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../10-getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../20-install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../30-data-valuation.html">Computing data values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../40-influence.html">Computing influence values</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="data_utility_learning.html">Data Utility Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_basic_spotify.html">Shapley for data valuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_knn_flowers.html">KNN Shapley</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_utility_learning.html">Data Utility Learning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Influence functions and neural networks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html">KNN Shapley</a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html">Shapley for data valuation</a></li>
 </ul>
 </li>
 </ul>
@@ -113,52 +115,20 @@
 </style>
 <section id="examples">
 <span id="id1"></span><h1>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h1>
+<p>The following examples illustrate the usage of pyDVL features.</p>
 <div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Data valuation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="data_utility_learning.html">Data Utility Learning</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="data_utility_learning.html#Imports">Imports</a></li>
-<li class="toctree-l2"><a class="reference internal" href="data_utility_learning.html#Constants">Constants</a></li>
-<li class="toctree-l2"><a class="reference internal" href="data_utility_learning.html#Dataset">Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="data_utility_learning.html#Model">Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="data_utility_learning.html#Data-Shapley">Data Shapley</a></li>
-<li class="toctree-l2"><a class="reference internal" href="data_utility_learning.html#Evaluation-on-anomalous-data">Evaluation on anomalous data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shapley_basic_spotify.html">Shapley for data valuation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shapley_knn_flowers.html">KNN Shapley</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shapley_utility_learning.html">Data Utility Learning</a></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Imports">Imports</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Constants">Constants</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Dataset">Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Plotting-the-dataset">Plotting the dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Training-the-model">Training the model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Calculating-influences">Calculating influences</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Inversion-through-conjugate-gradient">Inversion through conjugate gradient</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html#Appendix:-Calculating-the-decision-boundary">Appendix: Calculating the decision boundary</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="influence_wine.html">Influence functions and neural networks</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="influence_wine.html#Imports">Imports</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_wine.html#Constants">Constants</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_wine.html#Dataset">Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_wine.html#Fit-a-neural-network-to-the-data">Fit a neural network to the data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_wine.html#Calculating-influences-for-small-neural-networks">Calculating influences for small neural networks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_wine.html#Influence-of-training-features">Influence of training features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_wine.html#Speeding-up-influences-for-big-models">Speeding up influences for big models</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="knn_shapley_flowers.html">KNN Shapley</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html#Imports">Imports</a></li>
-<li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html#Constants">Constants</a></li>
-<li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html#Dataset">Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="knn_shapley_flowers.html#Corrupting-labels">Corrupting labels</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="shapley_spotify.html">Shapley for data valuation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html#Imports">Imports</a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html#Constants">Constants</a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html#Dataset">Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html#Evaluation-on-anomalous-data">Evaluation on anomalous data</a></li>
-</ul>
-</li>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Influence function</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="influence_wine.html">Influence functions and neural networks</a></li>
 </ul>
 </div>
 </section>
@@ -167,14 +137,14 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../install.html" class="btn btn-neutral float-left" title="Installing pyDVL" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="data_utility_learning.html" class="btn btn-neutral float-right" title="Data Utility Learning" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../40-influence.html" class="btn btn-neutral float-left" title="Computing influence values" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="shapley_basic_spotify.html" class="btn btn-neutral float-right" title="Shapley for data valuation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright .</p>
+    <p>&#169; Copyright 2022 AppliedAI Institute gGmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

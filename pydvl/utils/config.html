@@ -47,8 +47,10 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../getting-started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../10-getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../20-install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../30-data-valuation.html">Computing data values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../40-influence.html">Computing influence values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
@@ -128,7 +130,7 @@
 <span id="config"></span><h1>config<a class="headerlink" href="#module-pydvl.utils.config" title="Permalink to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.utils.config.ParallelConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ParallelConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/utils/config.py#L14"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.config.ParallelConfig" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ParallelConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/config.py#L14"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.config.ParallelConfig" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Configuration for parallel computation backend.</p>
 <dl class="field-list simple">
@@ -159,11 +161,28 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.utils.config.MemcachedClientConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MemcachedClientConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server:</span> <span class="pre">Union[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tuple[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Union[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int]]]</span> <span class="pre">=</span> <span class="pre">('localhost'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">11211)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connect_timeout:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_delay:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">serde:</span> <span class="pre">pymemcache.serde.PickleSerde</span> <span class="pre">=</span> <span class="pre">&lt;pymemcache.serde.PickleSerde</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x7f1df793ba30&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/utils/config.py#L29"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.config.MemcachedClientConfig" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MemcachedClientConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server:</span> <span class="pre">~typing.Tuple[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int]</span> <span class="pre">=</span> <span class="pre">('localhost'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">11211)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connect_timeout:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_delay:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">serde:</span> <span class="pre">~pymemcache.serde.PickleSerde</span> <span class="pre">=</span> <span class="pre">&lt;pymemcache.serde.PickleSerde</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/config.py#L29"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.config.MemcachedClientConfig" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration for the connection to the memcached server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>server</strong> – tuple of (server, port).</p></li>
+<li><p><strong>connect_timeout</strong> – seconds to wait for a connection to memcached.</p></li>
+<li><p><strong>timeout</strong> – seconds to wait for send or recv calls on the socket
+connected to memcached.</p></li>
+<li><p><strong>no_delay</strong> – set the <cite>TCP_NODELAY</cite> flag, which may help with performance
+in some cases.</p></li>
+<li><p><strong>serde</strong> – a serializer / deserializer (“serde”). The default
+<cite>PickleSerde</cite> should work in most cases. See <a class="reference external" href="https://pymemcache.readthedocs.io/en/latest/apidoc/pymemcache.client.base.html#pymemcache.client.base.Client">pymemcached’s
+documentation</a>
+for details.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pydvl.utils.config.MemcachedClientConfig.server">
-<span class="sig-name descname"><span class="pre">server</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('localhost',</span> <span class="pre">11211)</span></em><a class="headerlink" href="#pydvl.utils.config.MemcachedClientConfig.server" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">server</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('localhost',</span> <span class="pre">11211)</span></em><a class="headerlink" href="#pydvl.utils.config.MemcachedClientConfig.server" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -205,33 +224,31 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.utils.config.MemcachedConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MemcachedConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_config:</span> <span class="pre">~pydvl.utils.config.MemcachedClientConfig</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_repeated_training:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol_threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_repetitions:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_args:</span> <span class="pre">~typing.Optional[~typing.Iterable[str]]</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/valuation/blob/develop/src/pydvl/utils/config.py#L39"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.config.MemcachedConfig" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MemcachedConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_config:</span> <span class="pre">~pydvl.utils.config.MemcachedClientConfig</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_repeated_evaluations:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol_stderr:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_repetitions:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_args:</span> <span class="pre">~typing.Optional[~typing.Iterable[str]]</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/config.py#L54"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.config.MemcachedConfig" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Configuration for memcache</p>
+<p>Configuration for <a class="reference internal" href="caching.html#pydvl.utils.caching.memcached" title="pydvl.utils.caching.memcached"><code class="xref py py-func docutils literal notranslate"><span class="pre">memcached()</span></code></a>, providing
+memoization of function calls.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>cache_threshold</strong> – determines the minimum number of seconds a model training needs
-to take to cache its scores. If a model is super fast to train, you may just want
-to re-train it every time without saving the score. In most cases, caching the model,
-even when it takes very little to train, is preferable.
-The default to cache_threshold is 0.3 seconds.</p></li>
-<li><p><strong>allow_repeated_training</strong> – if set to true, instead of storing just a single score of a model,
-the cache will store a running average of its score until a certain relative tolerance
-(set by the rtol_threshold argument) is achieved. More precisely, since most machine learning
-model-trainings are non-deterministic, depending on the starting weights or on randomness in
-the training process, the trained model can have very different scores.
-In your workflow, if you observe that the training process is very noisy even relative to the
-same training set, then we recommend to set allow_repeated_training to True.
-If instead the score is not impacted too much by non-deterministic training, setting allow_repeated_training
-to false will speed up the shapley_dval calculation substantially.</p></li>
-<li><p><strong>argument</strong> (<em>rtol_threshold</em>) – as mentioned above, it regulates the relative tolerance for returning the running
-average of a model instead of re-training it. If allow_repeated_training is True, set rtol_threshold to
-small values and the shapley coefficients will have higher precision.</p></li>
-<li><p><strong>min_repetitions</strong> – similarly to rtol_threshold, it regulates repeated trainings by setting the minimum number of
-repeated training a model has to go through before the cache can return its average score.
-If the model training is very noisy, set min_repetitions to higher values and the scores will be more
-reflective of the real average performance of the trained models.</p></li>
+<li><p><strong>client_config</strong> – Configuration for the connection to the memcached
+server.</p></li>
+<li><p><strong>time_threshold</strong> – computations taking less time than this many seconds
+are not cached.</p></li>
+<li><p><strong>allow_repeated_evaluations</strong> – If <cite>True</cite>, repeated calls to a function
+with the same arguments will be allowed and outputs averaged until the
+running standard deviation of the mean stabilises below
+<cite>rtol_stderr * mean</cite>.</p></li>
+<li><p><strong>rtol_stderr</strong> – relative tolerance for repeated evaluations. More
+precisely, <a class="reference internal" href="caching.html#pydvl.utils.caching.memcached" title="pydvl.utils.caching.memcached"><code class="xref py py-func docutils literal notranslate"><span class="pre">memcached()</span></code></a> will stop evaluating
+the function once the standard deviation of the mean is smaller than
+<cite>rtol_stderr * mean</cite>.</p></li>
+<li><p><strong>min_repetitions</strong> – minimum number of times that a function evaluation
+on the same arguments is repeated before returning cached values. Useful
+for stochastic functions only. If the model training is very noisy, set
+this number to higher values to reduce variance.</p></li>
+<li><p><strong>ignore_args</strong> – Do not take these keyword arguments into account when
+hashing the wrapped function for usage as key in memcached.</p></li>
 </ul>
 </dd>
 </dl>
@@ -241,18 +258,18 @@ reflective of the real average performance of the trained models.</p></li>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.utils.config.MemcachedConfig.cache_threshold">
-<span class="sig-name descname"><span class="pre">cache_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.3</span></em><a class="headerlink" href="#pydvl.utils.config.MemcachedConfig.cache_threshold" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="pydvl.utils.config.MemcachedConfig.time_threshold">
+<span class="sig-name descname"><span class="pre">time_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.3</span></em><a class="headerlink" href="#pydvl.utils.config.MemcachedConfig.time_threshold" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.utils.config.MemcachedConfig.allow_repeated_training">
-<span class="sig-name descname"><span class="pre">allow_repeated_training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#pydvl.utils.config.MemcachedConfig.allow_repeated_training" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations">
+<span class="sig-name descname"><span class="pre">allow_repeated_evaluations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.utils.config.MemcachedConfig.rtol_threshold">
-<span class="sig-name descname"><span class="pre">rtol_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></em><a class="headerlink" href="#pydvl.utils.config.MemcachedConfig.rtol_threshold" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="pydvl.utils.config.MemcachedConfig.rtol_stderr">
+<span class="sig-name descname"><span class="pre">rtol_stderr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></em><a class="headerlink" href="#pydvl.utils.config.MemcachedConfig.rtol_stderr" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -295,7 +312,7 @@ reflective of the real average performance of the trained models.</p></li>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright .</p>
+    <p>&#169; Copyright 2022 AppliedAI Institute gGmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

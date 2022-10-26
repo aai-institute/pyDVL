@@ -5,7 +5,10 @@ model\_wrappers
    :members:
    :undoc-members:
 
+.. rubric:: Modules in this package
+
 .. toctree::
    :glob:
 
    model_wrappers/*
+
