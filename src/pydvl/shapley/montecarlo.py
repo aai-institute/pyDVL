@@ -157,7 +157,7 @@ def _permutation_montecarlo_shapley(
     n = len(u.data)
     values = np.zeros(shape=(max_permutations, n))
     pbar = maybe_progress(max_permutations, progress, position=job_id)
-    for iter_idx, _ in enumerate(pbar):
+    for iter_idx in pbar:
         prev_score = 0.0
         permutation = np.random.permutation(u.data.indices)
         marginals = np.zeros(shape=n)
@@ -200,8 +200,10 @@ def permutation_montecarlo_shapley(
         map_kwargs=dict(max_permutations=iterations_per_job, progress=progress),
         reduce_kwargs=dict(axis=0),
         config=config,
+        chunkify_inputs=False,
+        n_jobs=n_jobs,
     )
-    full_results = map_reduce_job(u_id, chunkify_inputs=False, n_jobs=n_jobs)[0]
+    full_results = map_reduce_job(u_id)[0]
 
     # Careful: for some models there might be nans, e.g. for i=0 or i=1!
     if np.any(np.isnan(full_results)):
