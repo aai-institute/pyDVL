@@ -85,6 +85,9 @@ tox -e base -- <optional arguments>
 One important argument is `--do-not-start-memcache`. This prevents the test
 fixture from starting a new memcache server for testing and instead expects an
 already running local server listening on port 11211 (memcached's default port).
+If you run single tests within PyCharm, you will want to add this option to the
+run configurations.
+
 
 To test modules that rely on PyTorch, you should use:
 
