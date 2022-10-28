@@ -67,7 +67,7 @@ pip install pyDVL --index-url https://test.pypi.org/simple/
 ```
 
 For more instructions and information refer to [Installing pyDVL
-](https://appliedAI-Initiative.github.io/pyDVL/install.html) in the
+](https://appliedAI-Initiative.github.io/pyDVL/20-install.html) in the
 documentation.
 
 # Usage
@@ -113,7 +113,7 @@ values, errors = compute_shapley_values(u=utility, max_iterations=100)
 ```
 
 For more instructions and information refer to [Getting
-Started](https://appliedAI-Initiative.github.io/pyDVL/getting-started.html) in
+Started](https://appliedAI-Initiative.github.io/pyDVL/10-getting-started.html) in
 the documentation. We provide several
 [examples](https://appliedAI-Initiative.github.io/pyDVL/examples/index.html)
 with details on the algorithms and their applications.
