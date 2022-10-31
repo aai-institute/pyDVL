@@ -11,7 +11,9 @@ __all__ = ["naive_loo"]
 def naive_loo(
     u: Utility, *, progress: bool = True, **kwargs
 ) -> OrderedDict[int, float]:
-    """Computes leave one out score. No caching nor parallelization is implemented.
+    """Computes leave one out score.
+
+    No caching nor parallelization is implemented.
 
     :param u: Utility object with model, data, and scoring function
     :param progress: If True, display a progress bar

@@ -1,5 +1,6 @@
+import warnings
 import weakref
-from itertools import chain, repeat
+from itertools import accumulate, chain, repeat
 from typing import (
     Any,
     Callable,
@@ -63,11 +64,19 @@ class MapReduceJob(Generic[T, R]):
 
     Results are aggregated per run using reduce_func(), but not across runs.
 
-    :param map_func: Function that will be applied to the input chunks in each job.
-    :param reduce_func: Function that will be applied to the results of `map_func` to reduce them.
-    :param map_kwargs: Keyword arguments that will be passed to `map_func` in each job.
-    :param reduce_kwargs: Keyword arguments that will be passed to `reduce_func` in each job.
-    :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+    Typing information for objects of this class requires the type of the inputs
+    that are split for `map_func` and the type of its output.
+
+    :param map_func: Function that will be applied to the input chunks in each
+        job.
+    :param reduce_func: Function that will be applied to the results of
+        `map_func` to reduce them.
+    :param map_kwargs: Keyword arguments that will be passed to `map_func` in
+        each job.
+    :param reduce_kwargs: Keyword arguments that will be passed to `reduce_func`
+        in each job.
+    :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig`
+        with cluster address, number of cpus, etc.
     :param n_jobs: Number of parallel jobs to run. Does not accept 0
     :param n_runs: Number of times to run the functions on the whole data.
     :param timeout: Amount of time in seconds to wait for remote results.
@@ -88,7 +97,8 @@ class MapReduceJob(Generic[T, R]):
     >>> map_reduce_job(np.arange(5))
     [10, 10, 10]
 
-    If we set `chunkify_inputs` to `False` the input is not split across jobs but instead repeated:
+    If we set `chunkify_inputs` to `False` the input is not split across jobs
+    but instead repeated:
 
     >>> from pydvl.utils.parallel import MapReduceJob
     >>> import numpy as np
@@ -101,12 +111,13 @@ class MapReduceJob(Generic[T, R]):
     ... )
     >>> map_reduce_job(np.arange(5))
     [20, 20, 20]
+
     """
 
     def __init__(
         self,
-        map_func: MapFunction,
-        reduce_func: Optional[ReduceFunction] = None,
+        map_func: MapFunction[R],
+        reduce_func: Optional[ReduceFunction[R]] = None,
         map_kwargs: Optional[Dict] = None,
         reduce_kwargs: Optional[Dict] = None,
         config: ParallelConfig = ParallelConfig(),
@@ -225,28 +236,38 @@ class MapReduceJob(Generic[T, R]):
     def _backpressure(
         self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int
     ) -> int:
-        if (n_in_flight := n_dispatched - n_finished) > self.max_parallel_tasks:
-            wait_for_num_jobs = max(1, self.max_parallel_tasks // 2)
-            # num_returns cannot be bigger than length of provided list
-            wait_for_num_jobs = min(wait_for_num_jobs, n_in_flight)
-            self.parallel_backend.wait(
+        while (n_in_flight := n_dispatched - n_finished) > self.max_parallel_tasks:
+            previous_n_finished = n_finished
+            wait_for_num_jobs = n_in_flight - self.max_parallel_tasks
+            finished_jobs, _ = self.parallel_backend.wait(
                 jobs, num_returns=wait_for_num_jobs, timeout=self.timeout
             )
-            n_finished += wait_for_num_jobs
+            n_finished += len(finished_jobs)
         return n_finished
 
     @staticmethod
     def _chunkify(data: Sequence[T], num_chunks: int) -> Iterator[Sequence[T]]:
         # Splits a list of values into chunks for each job
+        if num_chunks == 0:
+            raise ValueError("Number of chunks should be greater than 0")
+
         n = len(data)
-        chunk_size = n // num_chunks
-        remainder = n % num_chunks
-        for i in range(num_chunks):
-            start_index = i * chunk_size
-            end_index = min(start_index + chunk_size, n)
+
+        # This is very much inspired by numpy's array_split function
+        # The difference is that it only uses built-in functions
+        # and does not convert the input data to an array
+        chunk_size, remainder = divmod(n, num_chunks)
+        chunk_indices = tuple(
+            accumulate(
+                [0]
+                + remainder * [chunk_size + 1]
+                + (num_chunks - remainder) * [chunk_size]
+            )
+        )
+        for start_index, end_index in zip(chunk_indices[:-1], chunk_indices[1:]):
+            if start_index >= end_index:
+                return
             yield data[start_index:end_index]
-        if remainder > 0:
-            yield data[n - remainder :]
 
     @property
     def parallel_backend(self):

@@ -1,26 +1,58 @@
-from typing import List, OrderedDict
+from typing import Any, List, Optional, OrderedDict, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
+from matplotlib.axes import Axes
 
 
-def shaded_mean_std(data: np.ndarray, color: str, num_std: float = 1.0, **kwargs):
-    """The usual mean +- x std deviations plot to aggregate runs.
+def shaded_mean_std(
+    data: np.ndarray,
+    abscissa: Optional[Sequence[Any]] = None,
+    num_std: float = 1.0,
+    mean_color: Optional[str] = "dodgerblue",
+    shade_color: Optional[str] = "lightblue",
+    title: Optional[str] = None,
+    xlabel: Optional[str] = None,
+    ylabel: Optional[str] = None,
+    ax: Optional[Axes] = None,
+    **kwargs,
+) -> Axes:
+    """The usual mean +- x std deviations plot to aggregate runs of experiments.
 
-    :param data: axis 0 is to be aggregated on (i.e. runs) and axis 1 is the data for each run
-    :param color: for matplotlib
-    :param num_std: number of standard deviations to shade around the mean
-    :param kwargs: these are forwarded to the plt.plot() call for the mean
+    :param data: axis 0 is to be aggregated on (e.g. runs) and axis 1 is the
+        data for each run.
+    :param abscissa: values for the x axis. Leave empty to use increasing
+        integers.
+    :param num_std: number of standard deviations to shade around the mean.
+    :param mean_color: color for the mean
+    :param shade_color: color for the shaded region
+    :param title:
+    :param xlabel:
+    :param ylabel:
+    :param ax: If passed, axes object into which to insert the figure. Otherwise,
+        a new figure is created and returned
+    :param kwargs: these are forwarded to the ax.plot() call for the mean.
+
+    :return: The axes used (or created)
     """
     assert len(data.shape) == 2
     mean = data.mean(axis=0)
     std = num_std * data.std(axis=0)
 
-    plt.fill_between(
-        list(range(data.shape[1])), mean - std, mean + std, alpha=0.3, color=color
-    )
-    plt.plot(mean, color=color, **kwargs)
+    if ax is None:
+        fig, ax = plt.subplots()
+    if abscissa is None:
+        abscissa = list(range(data.shape[1]))
+
+    ax.fill_between(abscissa, mean - std, mean + std, alpha=0.3, color=shade_color)
+    ax.plot(abscissa, mean, color=mean_color, **kwargs)
+
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    return ax
 
 
 def shapley_results(results: dict, filename: str = None):
@@ -103,7 +135,9 @@ def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue):
     p: np.ndarray = np.ndarray((len(vv), len(vv)))
     for i, a in enumerate(vv):
         for j, b in enumerate(vv):
-            spearman = sp.stats.spearmanr(
+            from scipy.stats._stats_py import SpearmanrResult
+
+            spearman: SpearmanrResult = sp.stats.spearmanr(
                 list(a.keys())[:num_values], list(b.keys())[:num_values]
             )
             r[i][j] = (

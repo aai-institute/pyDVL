@@ -1,6 +1,6 @@
 import functools
 from collections import OrderedDict, defaultdict
-from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
+from typing import Dict, TYPE_CHECKING, Optional, Sequence, Tuple, Type
 
 import numpy as np
 import pytest
@@ -232,9 +232,7 @@ def quadratic_linear_equation_system(quadratic_matrix: np.ndarray, batch_size: i
 
 @pytest.fixture(scope="function")
 def quadratic_matrix(problem_dimension: int, condition_number: float):
-    return random_matrix_with_condition_number(
-        problem_dimension, condition_number, positive_definite=True
-    )
+    return random_matrix_with_condition_number(problem_dimension, condition_number)
 
 
 @pytest.fixture(scope="function")
@@ -257,7 +255,7 @@ def singular_quadratic_linear_equation_system(
 def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
     output_dimension, input_dimension = problem_dimension
     A = random_matrix_with_condition_number(
-        max(input_dimension, output_dimension), condition_number, positive_definite=True
+        max(input_dimension, output_dimension), condition_number
     )
     A = A[:output_dimension, :input_dimension]
     b = np.random.uniform(size=[output_dimension])
@@ -379,20 +377,24 @@ def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e
 
 
 def check_values(
-    values: OrderedDict,
-    exact_values: OrderedDict,
+    values: Dict,
+    exact_values: Dict,
     rtol: float = 0.1,
     atol: float = 1e-5,
 ):
-    """Compares value changes,
-    without assuming keys in ordered dicts have the same order.
+    """Compares values in dictionaries.
 
-    Args:
-        values:
-        exact_values:
-        rtol: relative tolerance of elements in values with respect to
-            elements in exact values. E.g. if rtol = 0.1, we must have
-            (values - exact_values)/exact_values < 0.1
+    Note that this does not assume any ordering (despite values typically being
+    stored in an OrderedDict elsewhere.
+
+    :param values:
+    :param exact_values:
+    :param rtol: relative tolerance of elements in `values` with respect to
+        elements in `exact_values`. E.g. if rtol = 0.1, we must have
+        |value - exact_value|/|exact_value| < 0.1 for every value
+    :param atol: absolute tolerance of elements in `values` with respect to
+        elements in `exact_values`. E.g. if atol = 0.1, we must have
+        |value - exact_value| < 0.1 for every value.
     """
     for key in values:
         assert (

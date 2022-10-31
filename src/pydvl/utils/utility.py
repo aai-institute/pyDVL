@@ -1,5 +1,15 @@
 """
-This module contains the :class:`Utility` and the :class:`DataUtilityLearning` classes.
+This module contains classes to manage and learn utility functions for the
+computation of values. Please see the documentation on :ref:`data valuation` for
+more information.
+
+:class:`Utility` holds information about model, data and scoring function (which
+is the utility* function itself for Shapley value). It is automatically cached
+across machines.
+
+:class:`DataUtilityLearning` adds support for learning the scoring function
+to avoid repeated re-training of the model.
+
 """
 import logging
 import warnings
@@ -22,12 +32,16 @@ logger = logging.getLogger(__name__)
 
 
 class Utility:
-    """A convenience wrapper with configurable memoization
+    """Convenience wrapper with configurable memoization of the scoring function.
 
-    It holds all the most important elements of the Shapley values calculation,
-    namely the model, the data and the scoring.
-    It can also cache the training results, which speeds up
-    the overall calculation for big models that take a long time to train.
+    An instance of `Utility` holds the triple of model, dataset and scoring
+    function which determines the value of data points. This is mostly used for
+    the computation of :ref:`Shapley values<data valuation>`.
+
+    Since evaluating the scoring function requires retraining the model, this
+    class wraps it and caches the results of each execution. Caching is
+    available both locally and across nodes, but must always be enabled for your
+    project first, see :ref:`how to set up the cache<caching setup>`.
 
     :param model: Any supervised model. Typical choices can be found at
             https://scikit-learn.org/stable/supervised_learning.html
@@ -46,6 +60,7 @@ class Utility:
     :param default_score: score in the case of models that have not been fit,
         e.g. when too little data is passed, or errors arise.
     :param enable_cache: whether to use memcached for memoization.
+    :param cache_options:
     """
 
     model: SupervisedModel
@@ -111,7 +126,7 @@ class Utility:
         if not indices:
             return 0.0
         scorer = check_scoring(self.model, self.scoring)
-        x, y = self.data.get_train_data(list(indices))
+        x, y = self.data.get_training_data(list(indices))
         try:
             self.model.fit(x, y)
             return float(scorer(self.model, self.data.x_test, self.data.y_test))
@@ -124,7 +139,7 @@ class Utility:
 
     @property
     def signature(self):
-        """Signature used for caching model results"""
+        """Signature used for caching model results."""
         return self._signature
 
     def __getstate__(self):
@@ -141,12 +156,17 @@ class Utility:
 
 class DataUtilityLearning:
     """Implementation of Data Utility Learning algorithm [1]_.
-    It is a wrapper for other utilities with a given budget (i.e. number of iterations)
-    that will, once the budget is exhausted, fit a given model to predict the utility
-    instead of computing it.
 
-    :param u: an instance of a :class:`Utility`
-    :param training_budget: Number of utility samples to use for fitting the given model
+    This object wraps a :class:`~pydvl.utils.utility.Utility` and delegates
+    calls to it, up until a given budget (number of iterations). Every tuple
+    of input and output (a so-called *utility sample*) is stored. Once the
+    budget is exhausted, `DataUtilityLearning` fits the given model to the
+    utility samples. Subsequent calls will use the learned model to predict the
+    utility instead of delegating.
+
+    :param u: The :class:`~pydvl.utils.utility.Utility` to learn.
+    :param training_budget: Number of utility samples to collect before fitting
+        the given model
     :param model: A supervised regression model
 
     :Example:
@@ -181,7 +201,7 @@ class DataUtilityLearning:
 
     def _convert_indices_to_boolean_vector(self, x: Iterable[int]) -> "NDArray":
         boolean_vector = np.zeros((1, len(self.utility.data)), dtype=bool)
-        if x:
+        if x is not None:
             boolean_vector[:, tuple(x)] = True
         return boolean_vector
 
@@ -207,5 +227,5 @@ class DataUtilityLearning:
 
     @property
     def data(self) -> Dataset:
-        """Return the wrapped utility's dataset"""
+        """Returns the wrapped utility's :class:`~pydvl.utils.dataset.Dataset`."""
         return self.utility.data

@@ -1,6 +1,59 @@
+""" Distributed caching of functions.
+
+pyDVL uses `memcached <https://memcached.org>`_ to cache utility values, through
+`pymemcache <https://pypi.org/project/pymemcache>`_. This allows sharing
+evaluations across processes and nodes in a cluster. You can run memcached as a
+service, locally or remotely, see :ref:`caching setup`.
+
+.. warning::
+
+   Function evaluations are cached with a key based on the function's signature
+   and code. This can lead to undesired cache reuse, see `Cache reuse`.
+
+Configuration
+-------------
+
+Memoization is added by default to any callable used to construct a
+:class:`pydvl.utils.utility.Utility` (done with the decorator :func:`memcached`),
+but it can be disabled. Depending on the nature of the utility you might want to
+enable the computation of a running average of function values, see below. You
+can see all configuration options under
+:class:`~pydvl.utils.config.MemcachedConfig`.
+
+Usage with stochastic functions
+-------------------------------
+
+In addition to standard memoization, the decorator :func:`memcached` can compute
+running average and standard error of repeated evaluations for the same input.
+This can be useful for stochastic functions with high variance (e.g. model
+training for small sample sizes), but drastically reduces the speed benefits of
+memoization.
+
+This behaviour can be activated with
+:attr:`~pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations`.
+
+Cache reuse
+-----------
+
+When a function is wrapped with :func:`memcached` for memoization, its signature
+(input and output names) and code are used as a key for the cache. If you are
+running experiments with the same utility but different datasets, this can lead
+to evaluations of the utility on new data returning old values because utilities
+typically only use sample indices as arguments (so there is no way to tell the
+difference between '1' for dataset A and '1' for dataset 2 from the point of
+view of the cache). One solution is to add dummy arguments with the dataset
+name. Another is to empty the cache between runs. And yet another is to simply
+use a different function name for the utility to be computed on the new dataset.
+
+If a function is going to run across multiple processes and some reporting
+arguments are added (like a `job_id` for logging purposes), these will be part
+of the signature and make the functions distinct to the eyes of the cache. This
+can be avoided with the use of
+:attr:`~pydvl.utils.config.MemcachedConfig.ignore_args` in the configuration.
+
+
 """
-Distributed caching of functions, using memcached.
-"""
+
 import logging
 import socket
 import uuid
@@ -10,7 +63,7 @@ from functools import wraps
 from hashlib import blake2b
 from io import BytesIO
 from time import time
-from typing import Callable, Dict, Iterable, Optional
+from typing import Callable, Dict, Iterable, Optional, TypeVar
 
 from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
@@ -23,9 +76,13 @@ PICKLE_VERSION = 5  # python >= 3.8
 
 logger = logging.getLogger(__name__)
 
+T = TypeVar("T")
+
 
 @dataclass
 class CacheInfo:
+    """Statistics gathered by cached functions."""
+
     sets: int = 0
     misses: int = 0
     hits: int = 0
@@ -43,47 +100,64 @@ def serialize(x):
 
 def memcached(
     client_config: Optional[MemcachedClientConfig] = None,
-    cache_threshold: float = 0.3,
-    allow_repeated_training: bool = False,
-    rtol_threshold: float = 0.1,
+    time_threshold: float = 0.3,
+    allow_repeated_evaluations: bool = False,
+    rtol_stderr: float = 0.1,
     min_repetitions: int = 3,
     ignore_args: Optional[Iterable[str]] = None,
 ):
-    """Wrap a callable with this in order to have transparent caching.
-    Given a function and a signature, memcached creates a distributed cache
+    """
+    Transparent, distributed memoization of function calls.
+
+    Given a function and its signature, memcached creates a distributed cache
     that, for each set of inputs, keeps track of the average returned value,
     with variance and number of times it was calculated.
-    If the function is deterministic, i.e. same input corresponds to the same
-    exact output, set allow_repeated_training to False.
-    If instead the function is noisy, memcache allows to set the minimum number
-    of repetitions and the relative tolerance on the average output after which
-    the cache will not be updated anymore. In other words, the function computation will
-    be repeated until the average has stabilized.
 
-    :param client_config: config for pymemcache.client.Client().
-        Will be merged on top of the default configuration.
-    :param cache_threshold: computations taking below this value (in seconds) are not
-        cached
-    :param allow_repeated_training: If True, models with same data are re-trained and
-        results cached until rtol_threshold precision is reached
-    :para rtol_threshold: relative tolerance for repeated training. More precisely,
-        memcache will stop retraining the models once std/mean of the scores is smaller than
-        the given rtol_threshold
-    :param min_repetitions: minimum number of repetitions
+    If the function is deterministic, i.e. same input corresponds to the same
+    exact output, set `allow_repeated_evaluations` to `False`. If instead the
+    function is stochastic (like the training of a model depending on random
+    initializations), memcached allows to set a minimum number of evaluations
+    to compute a running average, and a tolerance after which the function will
+    not be called anymore. In other words, the function will be recomputed
+    until the value has stabilized with a standard error smaller than
+    `rtol_stderr * running average`.
+
+    :param client_config: configuration for `pymemcache's Client()
+        <https://pymemcache.readthedocs.io/en/stable/apidoc/pymemcache.client.base.html>`_.
+        Will be merged on top of the default configuration (see below).
+    :param time_threshold: computations taking less time than this many seconds
+        are not cached.
+    :param allow_repeated_evaluations: If `True`, repeated calls to a function
+        with the same arguments will be allowed and outputs averaged until the
+        running standard deviation of the mean stabilises below
+        `rtol_stderr * mean`.
+    :param rtol_stderr: relative tolerance for repeated evaluations. More
+        precisely, :func:`memcached` will stop evaluating the function once the
+        standard deviation of the mean is smaller than `rtol_stderr * mean`.
+    :param min_repetitions: minimum number of times that a function evaluation
+        on the same arguments is repeated before returning cached values. Useful
+        for stochastic functions only. If the model training is very noisy, set
+        this number to higher values to reduce variance.
     :param ignore_args: Do not take these keyword arguments into account when
-        hashing the wrapped function for usage as key in memcached
+        hashing the wrapped function for usage as key in memcached. This allows
+        sharing the cache among different jobs for the same experiment run if
+        the callable happens to have "nuisance" parameters like "job_id" which
+        do not affect the result of the computation.
     :return: A wrapped function
 
-    The default configuration is::
+    **Default configuration:**
 
-        default_config = dict(
-            server=('localhost', 11211),
-            connect_timeout=1.0,
-            timeout=0.1,
-            # IMPORTANT! Disable small packet consolidation:
-            no_delay=True,
-            serde=serde.PickleSerde(pickle_version=PICKLE_VERSION)
-        )
+    .. code-block:: python
+       :caption: Default configuration
+
+       default_config = dict(
+           server=('localhost', 11211),
+           connect_timeout=1.0,
+           timeout=0.1,
+           # IMPORTANT! Disable small packet consolidation:
+           no_delay=True,
+           serde=serde.PickleSerde(pickle_version=PICKLE_VERSION)
+       )
     """
     if ignore_args is None:
         ignore_args = []
@@ -100,27 +174,26 @@ def memcached(
                 retry_delay=0.1,
                 retry_for=[MemcacheUnexpectedCloseError],
             )
-        except Exception as e:
+
+            temp_key = str(uuid.uuid4())
+            client.set(temp_key, 7)
+            assert client.get(temp_key) == 7
+            client.delete(temp_key, 0)
+            return client
+        except ConnectionRefusedError as e:
             logger.error(  # type: ignore
                 f"@memcached: Timeout connecting "
                 f"to {config.server} after "
-                f"{config.connect_timeout} seconds: {str(e)}"
+                f"{config.connect_timeout} seconds: {str(e)}. Did you start memcached?"
             )
             raise e
-        else:
-            try:
-                temp_key = str(uuid.uuid4())
-                client.set(temp_key, 7)
-                assert client.get(temp_key) == 7
-                client.delete(temp_key, 0)
-                return client
-            except AssertionError as e:
-                logger.error(  # type: ignore
-                    f"@memcached: Failure saving dummy value "
-                    f"to {config.server}: {str(e)}"
-                )
+        except AssertionError as e:
+            logger.error(  # type: ignore
+                f"@memcached: Failure saving dummy value "
+                f"to {config.server}: {str(e)}"
+            )
 
-    def wrapper(fun: Callable[..., float], signature: Optional[bytes] = None):
+    def wrapper(fun: Callable[..., T], signature: Optional[bytes] = None):
         if signature is None:
             signature = serialize((fun.__code__.co_code, fun.__code__.co_consts))
 
@@ -132,7 +205,7 @@ def memcached(
                 self.client = connect(self.config)
                 self._signature = signature
 
-            def __call__(self, *args, **kwargs) -> float:
+            def __call__(self, *args, **kwargs) -> T:
                 key_kwargs = {k: v for k, v in kwargs.items() if k not in ignore_args}  # type: ignore
                 arg_signature: bytes = serialize((args, list(key_kwargs.items())))
 
@@ -145,20 +218,20 @@ def memcached(
                     value = fun(*args, **kwargs)
                     end = time()
                     result_dict["value"] = value
-                    if end - start >= cache_threshold or allow_repeated_training:
+                    if end - start >= time_threshold or allow_repeated_evaluations:
                         result_dict["count"] = 1
                         result_dict["variance"] = 0
                         self.client.set(key, result_dict, noreply=True)
                         self.cache_info.sets += 1
                     self.cache_info.misses += 1
-                elif allow_repeated_training:
+                elif allow_repeated_evaluations:
                     self.cache_info.hits += 1
                     value = result_dict["value"]
                     count = result_dict["count"]
                     variance = result_dict["variance"]
                     error_on_average = (variance / count) ** (1 / 2)
                     if (
-                        error_on_average > rtol_threshold * value
+                        error_on_average > rtol_stderr * value
                         or count <= min_repetitions
                     ):
                         new_value = fun(*args, **kwargs)
@@ -176,8 +249,8 @@ def memcached(
 
             def __getstate__(self):
                 """Enables pickling after a socket has been opened to the
-                memacached server, by removing the client from the stored data.
-                """
+                memcached server, by removing the client from the stored
+                data."""
                 odict = self.__dict__.copy()
                 del odict["client"]
                 return odict

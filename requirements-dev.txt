@@ -1,12 +1,17 @@
+black[jupyter] == 22.10.0
+isort == 5.10.1
+jupyter
+mypy == 0.982
+nbconvert
+nbstripout == 0.6.1
+bump2version
+pre-commit == 2.20.0
+pytest
+pytest-cov
+pytest-mock
+pytest-timeout
+ray[default] >= 0.8
 tox
 tox-wheel
-pytest
-pytest-timeout
-pre-commit
-bump2version
-twine
-black
-jupyter
-nbconvert
-mypy
 types-tqdm
+twine

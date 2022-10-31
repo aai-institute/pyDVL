@@ -1,9 +1,17 @@
+"""
+This internal module contains methods and classes to distribute Shapley jobs
+in a cluster. You probably aren't interested in any of this unless you are
+developing new methods for pyDVL that use parallelization.
+"""
+
 import logging
-from typing import TYPE_CHECKING, Optional
+import warnings
+from time import time
+from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 import numpy as np
 
-from ..utils import Utility, maybe_progress
+from ..utils import Utility, get_running_avg_variance, maybe_progress
 from ..utils.config import ParallelConfig
 from ..utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from ..utils.parallel.backend import init_parallel_backend
@@ -45,40 +53,37 @@ def get_shapley_worker(
 
 
 class ShapleyCoordinator(Coordinator):
+    """The coordinator has two main tasks: aggregating the results of the
+    workers and terminating processes once a certain stopping criterion is
+    satisfied.
+
+    :param value_tolerance: Terminate all workers if the ratio of median
+        standard error to median of values has dropped below this value.
+    :param max_iterations: Terminate if the current number of permutations
+        has exceeded this threshold.
+     :param progress: Whether to display a progress bar
+    """
+
     def __init__(
         self,
-        score_tolerance: Optional[float] = None,
+        value_tolerance: Optional[float] = None,
         max_iterations: Optional[int] = None,
         progress: Optional[bool] = True,
     ):
-        """
-         The coordinator has two main tasks: aggregating the results of the workers
-         and terminating the process once a certain accuracy or total number of
-         iterations is reached.
-
-        :param score_tolerance: During calculation of shapley values, the
-             coordinator will check if the median standard deviation over average
-             score for each point's has dropped below score_tolerance.
-             If so, the computation will be terminated.
-         :param max_iterations: a sum of the total number of permutation is calculated
-             If the current number of permutations has exceeded max_iterations, computation
-             will stop.
-         :param progress: True to plot progress, False otherwise.
-        """
         super().__init__(progress=progress)
-        if score_tolerance is None and max_iterations is None:
+        if value_tolerance is None and max_iterations is None:
             raise ValueError(
-                "At least one between score_tolerance and max_iterations must be passed,"
-                "or the process cannot be stopped."
+                "Either value_tolerance or max_iterations must be set as a"
+                "stopping criterion"
             )
-        self.score_tolerance = score_tolerance
+        self.value_tolerance = value_tolerance
         self.max_iterations = max_iterations
 
-    def get_results(self):
-        """
-        It aggregates the results of the different workers and returns
-        the average and std of the values. If no worker has reported yet,
-        it returns two empty arrays
+    def get_results(self) -> Tuple["NDArray", "NDArray"]:
+        """Aggregates the results of the different workers
+
+        :return: returns average and standard deviation of the values. If no
+            worker has reported yet, returns two empty arrays.
         """
         values = []
         stds = []
@@ -92,7 +97,7 @@ class ShapleyCoordinator(Coordinator):
             values.append(result["values"])
             stds.append(result["std"])
             iterations.append(result["num_iter"])
-            self._total_iterations += result["num_iter"]
+            self._total_iterations += int(result["num_iter"])
 
         num_workers = len(values)
         if num_workers > 1:
@@ -107,11 +112,14 @@ class ShapleyCoordinator(Coordinator):
             std = stds[0]
         return value, std
 
-    def check_status(self):
-        """
-        It checks whether the accuracy of the calculation or the total number of iterations have crossed
-        the set thresholds.
-        If so, it sets the is_done label as True.
+    def check_done(self) -> bool:
+        """Checks whether the accuracy of the calculation or the total number
+        of iterations have crossed the set thresholds.
+
+        If the threshold has been reached, sets the flag
+        :attr:`~ShapleyCoordinator.is_done` to `True`.
+
+        :return: value of :attr:`~ShapleyCoordinator.is_done`
         """
         if len(self.workers_results) == 0:
             logger.info("No worker has updated its status yet.")
@@ -120,8 +128,8 @@ class ShapleyCoordinator(Coordinator):
             value, std = self.get_results()
             std_to_val_ratio = np.median(std) / np.median(value)
             if (
-                self.score_tolerance is not None
-                and std_to_val_ratio < self.score_tolerance
+                self.value_tolerance is not None
+                and std_to_val_ratio < self.value_tolerance
             ):
                 self._is_done = True
             if (
@@ -133,7 +141,10 @@ class ShapleyCoordinator(Coordinator):
 
 
 class ShapleyWorker(Worker):
-    """A worker. It should work."""
+    """A worker.
+
+    It should work.
+    """
 
     def __init__(
         self,
@@ -144,16 +155,16 @@ class ShapleyWorker(Worker):
         update_frequency: int = 30,
         progress: bool = False,
     ):
-        """
-        The workers calculate the Shapley values using the permutation
-        definition and report the results to the coordinator.
+        """A worker calculates Shapley values using the permutation definition
+         and report the results to the coordinator.
 
         :param u: Utility object with model, data, and scoring function
         :param coordinator: worker results will be pushed to this coordinator
         :param worker_id: id used for reporting through maybe_progress
         :param progress: set to True to report progress, else False
-        :param update_frequency: interval in seconds among different updates to
+        :param update_frequency: interval in seconds between different updates to
             and from the coordinator
+
         """
         super().__init__(
             coordinator=coordinator,
@@ -169,9 +180,52 @@ class ShapleyWorker(Worker):
             position=worker_id,
             desc=f"Worker {worker_id}",
         )
+        self._iteration_count = 1
+        self._avg_values: Optional[Union[float, "NDArray"]] = None
+        self._var_values: Optional[Union[float, "NDArray"]] = None
 
     def _compute_values(self, *args, **kwargs) -> "NDArray":
-        # Importing it here avoids errors with circular imports
+        # Importing this here avoids errors with circular imports
         from .montecarlo import _permutation_montecarlo_shapley
 
         return _permutation_montecarlo_shapley(self.u, max_permutations=1)[0]  # type: ignore
+
+    def run(self, *args, **kwargs):
+        """Runs the worker.
+
+        This calls :meth:`_compute_values` a certain number of times and
+        calculates Shapley values on different permutations of the indices.
+        After a number of seconds equal to update_frequency has passed, it
+        reports the results to the coordinator. Before starting the next
+        iteration, it checks the is_done flag, and if true terminates.
+        """
+        while not self.coordinator.is_done():
+            start_time = time()
+            while (time() - start_time) < self.update_frequency:
+                values = self._compute_values()
+                if np.any(np.isnan(values)):
+                    warnings.warn(
+                        "NaN values found in model scoring. Ignoring current permutation.",
+                        RuntimeWarning,
+                    )
+                    continue
+                if self._avg_values is None:
+                    self._avg_values = values
+                    self._var_values = np.zeros_like(self._avg_values)
+                    self._iteration_count = 1
+                else:
+                    self._avg_values, self._var_values = get_running_avg_variance(
+                        self._avg_values,
+                        self._var_values,
+                        values,
+                        self._iteration_count,
+                    )
+                    self._iteration_count += 1
+            self.coordinator.add_results(
+                self.worker_id,
+                {
+                    "values": self._avg_values,
+                    "std": np.sqrt(self._var_values) / self._iteration_count ** (1 / 2),
+                    "num_iter": self._iteration_count,
+                },
+            )

@@ -1,4 +1,22 @@
-import os
+"""
+This module contains convenience classes to handle data and groups thereof.
+
+Shapley value computations require evaluation of a scoring function (the
+*utility*). This is typically the performance of the model on a test set (as an
+approximation to its true expected performance). It is therefore convenient to
+keep both the training data and the test data together to be passed around to
+methods in :mod:`~pydvl.shapley`. This is done with
+:class:`~pydvl.utils.dataset.Dataset`.
+
+This abstraction layer also seamlessly grouping data points together if one is
+interested in computing their value as a group, see
+:class:`~pydvl.utils.dataset.GroupedDataset`.
+
+Objects of both types are used to construct a :class:`~pydvl.utils.utility.Utility`
+object.
+
+"""
+
 from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple, Union
@@ -14,7 +32,11 @@ __all__ = ["Dataset", "GroupedDataset", "load_spotify_dataset", "load_wine_datas
 
 
 class Dataset:
-    """Class for better handling datasets"""
+    """A convenience class to handle datasets.
+
+    It holds a dataset, split into training and test data, together with several
+    labels on feature names, data point names and a description.
+    """
 
     def __init__(
         self,
@@ -28,22 +50,22 @@ class Dataset:
         description: Optional[str] = None,
         is_multi_output: bool = False,
     ):
-        """It holds a dataset, split into train and test data, together
-        with several labels on feature names, data point names and description
+        """Constructs a Dataset from data and labels.
 
-        :param x_train: train input data
-        :param y_train: labels of train data
-        :param x_test: input of test data
-        :param y_test: labels of test data
+        :param x_train: training data
+        :param y_train: labels for training data
+        :param x_test: test data
+        :param y_test: labels for test data
         :param feature_names: name of the features of input data
-        :param target_names: name of target data
-        :param data_names: name given to each data point.
-            For example, if the dataset is a time series, each row represents
-            a time step which can be referenced directly using timestamps instead
-            of the row number.
-        :param is_multi_output: set to True if y holds multiple labels for each data point.
-            False if y is a 1d array holding a single label per point.
-        :param description: description of the dataset
+        :param target_names: names of the features of target data
+        :param data_names: names assigned to data points.
+            For example, if the dataset is a time series, each entry can be a
+            timestamp which can be referenced directly instead of using a row
+            number.
+        :param description: A textual description of the dataset.
+        :param is_multi_output: set to True if y holds multiple labels for each
+            data point. False if y is a 1d array holding a single label per
+            point.
         """
         self.x_train, self.y_train = check_X_y(
             x_train, y_train, multi_output=is_multi_output
@@ -116,10 +138,13 @@ class Dataset:
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
-    def get_train_data(self, train_indices: Optional[Iterable[int]]):
-        """Given a set of indices, it returns the train data that refer to those indices.
-        This is used when calling different sub-sets of indices to calculate shapley values.
-        Notice that train_indices is not typically equal to the full indices, but only a subset of it.
+    def get_training_data(self, train_indices: Optional[Iterable[int]]):
+        """Given a set of indices, returns the training data that refer to those
+        indices.
+
+        This is used when calling different sub-sets of indices to calculate
+        shapley values. Notice that train_indices is not typically equal to the
+        full indices, but only a subset of it.
         """
         if train_indices is None:
             return self.x_train, self.y_train
@@ -129,7 +154,8 @@ class Dataset:
             return x, y
 
     def get_test_data(self, test_indices: Optional[Iterable[int]]):
-        """Given a set of indices, it returns the test data that refer to those indices."""
+        """Given a set of indices, returns the test data that refer to those
+        indices."""
         if test_indices is None:
             return self.x_test, self.y_test
         else:
@@ -145,13 +171,18 @@ class Dataset:
 
     @property
     def indices(self):
-        """Index of positions in data.x_train. Contiguous integers from 0 to
-        len(Dataset)."""
+        """Index of positions in data.x_train.
+
+        Contiguous integers from 0 to len(Dataset).
+        """
         return self._indices
 
     @property
     def data_names(self):
-        """Names of each individual datapoint. Used for reporting Shapley values."""
+        """Names of each individual datapoint.
+
+        Used for reporting Shapley values.
+        """
         return self._data_names
 
     @property
@@ -159,7 +190,6 @@ class Dataset:
         """Returns the number of dimensions of a sample."""
         return self.x_train.shape[1] if len(self.x_train.shape) > 1 else 1
 
-    # hacky 🙈
     def __str__(self):
         return self.description
 
@@ -172,17 +202,30 @@ class Dataset:
         data: Bunch,
         train_size: float = 0.8,
         random_state: Optional[int] = None,
+        stratify_by_target: bool = False,
     ) -> "Dataset":
-        """Constructs a Dataset object from an sklearn bunch as returned
-        by the load_* functions in `sklearn.datasets`.
+        """Constructs a Dataset object from an sklearn bunch as returned by the
+        `load_*` functions in `sklearn toy datasets
+        <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_.
 
         :param data: sklearn dataset
-        :param train_size: size of the training dataset. Used in train_test_split
-        :param random_state: seed for train test split
+        :param train_size: size of the training dataset. Used in
+            `train_test_split`
+        :param random_state: seed for train / test split
+        :param stratify_by_target: If `True`, data is split in a stratified
+            fashion, using the target variable as labels. Read more in
+            `sklearn's user guide
+            <https://scikit-learn.org/stable/modules/cross_validation.html
+            #stratification>`.
+
         :return: Dataset with the selected sklearn data
         """
         x_train, x_test, y_train, y_test = train_test_split(
-            data.data, data.target, train_size=train_size, random_state=random_state
+            data.data,
+            data.target,
+            train_size=train_size,
+            random_state=random_state,
+            stratify=data.target if stratify_by_target else None,
         )
         return Dataset(
             x_train,
@@ -196,8 +239,10 @@ class Dataset:
 
 
 class GroupedDataset(Dataset):
-    """Class that groups data-points.
-    Used for calculating Shapley values of coalitions."""
+    """Class that groups data points.
+
+    Used for calculating Shapley values of coalitions.
+    """
 
     def __init__(
         self,
@@ -212,13 +257,15 @@ class GroupedDataset(Dataset):
     ):
         """Class for grouping datasets.
 
-        :param x_train: train input data
-        :param y_train: labels of train data
+        :param x_train: training data
+        :param y_train: labels of training data
         :param x_test: input of test data
         :param y_test: labels of test data
-        :param data_groups: Iterable of the same length of x_train.
-            For each train data-point, it associates a group label (which could be of any type, e.g. string or int).
-            Data-points with the same label will then be grouped withing the GroupedDataset class.
+        :param data_groups: Iterable of the same length as `x_train` containing
+            a group label for each training data point. The label can be of any
+            type, e.g. `str` or `int`. Data points with the same label will then
+            be grouped by this object and considered as one for effects of
+            valuation.
         :param feature_names: name of the features of input data
         :param target_names: name of target data
         :param description: description of the dataset
@@ -228,7 +275,8 @@ class GroupedDataset(Dataset):
         )
         if len(data_groups) != len(x_train):
             raise ValueError(
-                f"data_groups and x_train must have the same length. Instead got {len(data_groups)=} and {len(x_train)=}"
+                f"data_groups and x_train must have the same length."
+                f"Instead got {len(data_groups)=} and {len(x_train)=}"
             )
 
         self.groups: OrderedDict[Any, List[int]] = OrderedDict(
@@ -245,7 +293,10 @@ class GroupedDataset(Dataset):
     @property
     def indices(self):
         """Indices of the grouped data points.
-        These are not the indices of all the dataset, but only those referencing the groups."""
+
+        These are not the indices of all the dataset, but only those referencing
+        the groups.
+        """
         return np.array(self._indices)
 
     @property
@@ -253,12 +304,12 @@ class GroupedDataset(Dataset):
         """Name given to the groups."""
         return list(self.groups.keys())
 
-    def get_train_data(self, train_indices):
+    def get_training_data(self, train_indices):
         """Given a set of indices, it returns the related groups."""
         data_indices = [
             idx for group_id in train_indices for idx in self.group_items[group_id][1]
         ]
-        return super().get_train_data(data_indices)
+        return super().get_training_data(data_indices)
 
     @classmethod
     def from_sklearn(
@@ -266,30 +317,40 @@ class GroupedDataset(Dataset):
         data: Bunch,
         train_size: float = 0.8,
         random_state: Optional[int] = None,
-        **kwargs,
+        stratify_by_target: bool = False,
+        data_groups: Optional[List] = None,
     ) -> "GroupedDataset":
-        """Constructs a Dataset object from an sklearn bunch as returned
-        by the load_* functions in `sklearn.datasets` and groups it.
+        """Constructs a Dataset object from an sklearn bunch as returned by the
+        `load_*` functions in `sklearn toy datasets
+        <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_ and groups
+        it.
 
         :param data: sklearn dataset
-        :param train_size: size of the training dataset. Used in train_test_split
-        :param random_state: seed for train test split
-        :param data_groups: for each element in the training set, it associates a group
-            index or name.
+        :param train_size: size of the training dataset. Used in
+            `train_test_split`.
+        :param random_state: seed for train / test split.
+        :param stratify_by_target: If `True`, data is split in a stratified
+            fashion, using the target variable as labels. Read more in
+            `sklearn's user guide
+            <https://scikit-learn.org/stable/modules/cross_validation.html
+            #stratification>`.
+        :param data_groups: for each element in the training set, it associates
+            a group index or name.
         :return: Dataset with the selected sklearn data
         """
-        data_groups: Optional[List] = kwargs.get("data_groups")
         if data_groups is None:
             raise ValueError("data_groups argument is missing")
-        dataset = super().from_sklearn(data, train_size, random_state)
+        dataset = super().from_sklearn(
+            data, train_size, random_state, stratify_by_target
+        )
         return cls.from_dataset(dataset, data_groups)
 
     @classmethod
     def from_dataset(
         cls, dataset: Dataset, data_groups: Sequence[Any]
     ) -> "GroupedDataset":
-        """Given a dataset, it makes it into a grouped dataset by passing a list of data
-        groups, one for each element in the training set.
+        """Given a dataset, it makes it into a grouped dataset by passing a list
+        of data groups, one for each element in the training set.
 
         :param dataset: Dataset object
         :param data_groups: for each element in the training set, it associates a group
@@ -316,11 +377,12 @@ def load_spotify_dataset(
     random_state: int = 24,
 ):
     """Loads (and downloads if not already cached) the spotify music dataset.
-    More info on the dataset can be found
-    at https://www.kaggle.com/datasets/mrmorj/dataset-of-songs-in-spotify.
+    More info on the dataset can be found at
+    https://www.kaggle.com/datasets/mrmorj/dataset-of-songs-in-spotify.
 
-    If this method is called within the CI pipeline, it will load a reduced version of the dataset
-    for test purposes.
+    If this method is called within the CI pipeline, it will load a reduced
+    version of the dataset for testing purposes.
+
     :param val_size: size of the validation set
     :param test_size: size of the test set
     :param min_year: minimum year of the returned data
@@ -353,15 +415,16 @@ def load_spotify_dataset(
 def load_wine_dataset(
     train_size: float, test_size: float, random_state: Optional[int] = None
 ):
-    """
-    Loads the sklearn wine dataset. More info can be found at 
-    https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset
+    """Loads the sklearn wine dataset. More info can be found at
+    https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset.
+
     :param train_size: fraction of points used for training dataset
     :param test_size: fraction of points used for test dataset
-    :param random_seed: fix random seed. If None, no random seed is set.
-    :returns: A tuple of four elements with the first three being \
-        input and target values in the form of matrices of shape [NxD] the first and [N] the second. \
-        The fourth element is a list containing names of features of the model.
+    :param random_state: fix random seed. If None, no random seed is set.
+    :returns: A tuple of four elements with the first three being input and
+        target values in the form of matrices of shape (N,D) the first
+        and (N,) the second. The fourth element is a list containing names of
+        features of the model. (FIXME doc)
     """
     try:
         import torch
@@ -410,8 +473,8 @@ def synthetic_classification_dataset(
     test_size: float,
     random_seed=None,
 ) -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Tuple[Any, Any]]:
-    """
-    Sample from a uniform Gaussian mixture model.
+    """Sample from a uniform Gaussian mixture model.
+
     :param mus: 2d-matrix [CxD] with the means of the components in the rows.
     :param sigma: Standard deviation of each dimension of each component.
     :param num_samples: The number of samples to generate.
