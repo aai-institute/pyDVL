@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 - 📚 Better docs
+
+Mostly API documentation and notebooks, plus some bugfixes.
 
 ### Added
 
