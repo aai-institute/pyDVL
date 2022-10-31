@@ -199,37 +199,7 @@ def f(x: float) -> float:
     return 1/(x*x)
 ```
 
-## CI/CD and Release Process
-
-### Development and Release Process
-
-In order to release new versions of the package from the development branch, the
-CI pipeline requires the following secret variables set up:
-
-```
-TEST_PYPI_USERNAME
-TEST_PYPI_PASSWORD
-PYPI_USERNAME
-PYPI_PASSWORD
-```
-
-The first 2 are used after tests run on the develop branch's CI workflow 
-to automatically publish packages to [TestPyPI](https://test.pypi.org/).
-
-The last 2 are used in the [publish.yaml](.github/workflows/publish.yaml) CI
-workflow to publish packages to [PyPI](https://pypi.org/) from `develop` after
-a GitHub release.
-
-#### Release to TestPyPI
-
-We use [bump2version](https://pypi.org/project/bump2version/) to bump the build
-part of the version number, create a tag and push it from CI.
-
-To do that, we use 2 different tox environments:
-
-- **publish-test-package**: Builds and publishes a package to TestPyPI
-- **bump-dev-version-and-create-tag**: Uses bump2version to bump the dev version, 
-  commit the new version and create a corresponding git tag.
+## CI and release processes
 
 #### Automatic release process
 
@@ -240,9 +210,9 @@ satisfied:
 - The repository needs to be on the `develop` branch
 - The repository must be clean (including no untracked files)
 
-Then, a new release can be created using the `build_scripts/release-version.sh`
-script (leave off the version parameter to have `bumpversion` automatically
-derive the next release version):
+Then, a new release can be created using the script
+`build_scripts/release-version.sh` (leave out the version parameter to have
+`bumpversion` automatically derive the next release version):
 
 ```shell script
 ./scripts/release-version.sh 0.1.6
@@ -299,6 +269,37 @@ create a new release manually by following these steps:
 7. Delete the release branch if necessary: 
    `git branch -d release/${RELEASE_VERSION}`
 8. Pour yourself a cup of coffee, you earned it! :coffee: :sparkles:
+
+### CI and requirements for releases
+
+In order to release new versions of the package from the development branch, the
+CI pipeline requires the following secret variables set up:
+
+```
+TEST_PYPI_USERNAME
+TEST_PYPI_PASSWORD
+PYPI_USERNAME
+PYPI_PASSWORD
+```
+
+The first 2 are used after tests run on the develop branch's CI workflow 
+to automatically publish packages to [TestPyPI](https://test.pypi.org/).
+
+The last 2 are used in the [publish.yaml](.github/workflows/publish.yaml) CI
+workflow to publish packages to [PyPI](https://pypi.org/) from `develop` after
+a GitHub release.
+
+#### Release to TestPyPI
+
+We use [bump2version](https://pypi.org/project/bump2version/) to bump the build
+part of the version number, create a tag and push it from CI.
+
+To do that, we use 2 different tox environments:
+
+- **publish-test-package**: Builds and publishes a package to TestPyPI
+- **bump-dev-version-and-create-tag**: Uses bump2version to bump the dev version, 
+  commit the new version and create a corresponding git tag.
+
 
 ## Other useful information
 
