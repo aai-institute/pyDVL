@@ -53,11 +53,6 @@ def test_analytic_montecarlo_shapley(
 def test_hoeffding_bound_montecarlo(
     analytic_shapley, fun, n_jobs, delta, eps, tolerate
 ):
-    """FIXME: This test passes but there are several unclear points.
-    For example, map_reduce is called with num_jobs=num_runs. Is this correct?
-    If I put num_jobs=jobs_per_run, map_reduce encounters errors since a utility
-    is passed.
-    Before coming back to this test, fix map_reduce interface."""
     u, exact_values = analytic_shapley
 
     max_iterations = lower_bound_hoeffding(delta=delta, eps=eps, score_range=1)
@@ -93,8 +88,8 @@ def test_hoeffding_bound_montecarlo(
             12,
             combinatorial_montecarlo_shapley,
             "explained_variance",
-            0.5,
-            5000,
+            0.2,
+            2**11,
         ),
     ],
 )
@@ -116,7 +111,7 @@ def test_linear_montecarlo_shapley(
     )
     values, _ = fun(
         linear_utility,
-        max_iterations=max_iterations,
+        max_iterations=int(max_iterations),
         progress=False,
         n_jobs=n_jobs,
     )

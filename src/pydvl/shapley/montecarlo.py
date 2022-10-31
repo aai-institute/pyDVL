@@ -322,7 +322,6 @@ def combinatorial_montecarlo_shapley(
     """
     parallel_backend = init_parallel_backend(config)
     u_id = parallel_backend.put(u)
-    iterations_per_job = max_iterations // n_jobs
 
     def reducer(results_it: Iterable[MonteCarloResults]) -> MonteCarloResults:
         values = np.zeros(len(u.data))
@@ -335,13 +334,14 @@ def combinatorial_montecarlo_shapley(
             stderr += std
         return MonteCarloResults(values=values, stderr=stderr)
 
+    # FIXME? max_iterations has different semantics in permutation-based methods
     map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
         map_func=_combinatorial_montecarlo_shapley,
         reduce_func=reducer,
         map_kwargs=dict(
             u=u_id,
             dist=dist,
-            max_iterations=iterations_per_job,
+            max_iterations=max_iterations,
             progress=progress,
         ),
         chunkify_inputs=True,
