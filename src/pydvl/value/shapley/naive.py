@@ -5,8 +5,8 @@ from itertools import permutations
 
 import numpy as np
 
-from ..reporting.scores import sort_values
-from ..utils import (
+from pydvl.reporting.scores import sort_values
+from pydvl.utils import (
     MapReduceJob,
     ParallelConfig,
     Utility,

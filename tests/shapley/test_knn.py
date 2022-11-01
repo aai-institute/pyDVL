@@ -5,8 +5,8 @@ from sklearn import datasets
 from sklearn.metrics import make_scorer
 from sklearn.neighbors import KNeighborsClassifier
 
-from pydvl.shapley.knn import knn_shapley
-from pydvl.shapley.naive import combinatorial_exact_shapley
+from pydvl.value.shapley import knn_shapley
+from pydvl.value.shapley.naive import combinatorial_exact_shapley
 from pydvl.utils import Dataset, Utility, available_cpus
 
 log = logging.getLogger(__name__)

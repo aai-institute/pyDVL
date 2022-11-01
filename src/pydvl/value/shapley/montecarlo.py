@@ -2,7 +2,7 @@ r"""
 Monte Carlo approximations to Shapley Data values.
 
 **Note:** You probably want to use the common interface provided by
-:func:`~pydvl.shapley.compute_shapley_values` instead of using the functions in
+:func:`~pydvl.value.shapley.compute_shapley_values` instead of using the functions in
 this module.
 
 Exact computation of Shapley value requires $\mathcal{O}(2^n)$ retrainings of
@@ -17,14 +17,14 @@ data itself.
 To overcome this limitation, it is possible to only sample some subsets of the
 training set (or permutations thereof) to obtain a Monte Carlo approximation to
 the true value. This is done in
-:func:`~pydvl.shapley.montecarlo.combinatorial_montecarlo_shapley`. Alternatively,
+:func:`~pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley`. Alternatively,
 employing the reformulation of the expression above as a sum over permutations,
 one has the implementation in
-:func:`~pydvl.shapley.montecarlo.permutation_montecarlo_shapley`.
+:func:`~pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley`.
 
 Additionally, one can implement an early stopping strategy to
 adapt computation time. This is done in
-:func:`~pydvl.shapley.montecarlo.truncated_montecarlo_shapley`.
+:func:`~pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley`.
 
 Finally, you can consider grouping your data points using
 :class:`~pydvl.utils.dataset.GroupedDataset` and computing the values of the
@@ -40,16 +40,16 @@ from typing import TYPE_CHECKING, Dict, Iterable, NamedTuple, Optional, Sequence
 
 import numpy as np
 
-from ..reporting.scores import sort_values
-from ..utils import Utility, maybe_progress
-from ..utils.config import ParallelConfig
-from ..utils.numeric import (
+from pydvl.reporting.scores import sort_values
+from pydvl.utils import Utility, maybe_progress
+from pydvl.utils.config import ParallelConfig
+from pydvl.utils.numeric import (
     PowerSetDistribution,
     get_running_avg_variance,
     random_powerset,
 )
-from ..utils.parallel import MapReduceJob, init_parallel_backend
-from .actor import get_shapley_coordinator, get_shapley_worker
+from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
+from pydvl.value.shapley.actor import get_shapley_coordinator, get_shapley_worker
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -149,20 +149,21 @@ def truncated_montecarlo_shapley(
     return sorted_shapley_values, montecarlo_error
 
 
-def _permutation_montecarlo_shapley(
+def _permutation_montecarlo_marginals(
     u: Utility, max_permutations: int, progress: bool = False, job_id: int = 1, **kwargs
 ) -> "NDArray":
     """Helper function for :func:`permutation_montecarlo_shapley`.
 
-    Computes the marginal utility of each training sample in
-    :obj:`pydvl.utils.utility.Utility.data`
+    Computes marginal utilities of each training sample in
+    :obj:`pydvl.utils.utility.Utility.data` by iterating through randomly
+    sampled permutations.
 
     :param u: Utility object with model, data, and scoring function
-    :param max_permutations: total number of permutations to try
-    :param progress: true to plot progress bar
-    :param job_id: id to use for reporting progress
-    :return: a matrix with each row being a different permutation
-        and each column being the score of a different data point
+    :param max_permutations: total number of permutations to use
+    :param progress: whether to display a progress bar
+    :param job_id: id to use for reporting progress (e.g. to place progres bars)
+    :return: a matrix with each row being a different permutation and each
+        column being the score of a different data point
     """
     n = len(u.data)
     values = np.zeros(shape=(max_permutations, n))
@@ -205,7 +206,7 @@ def permutation_montecarlo_shapley(
     iterations_per_job = max_iterations // n_jobs
 
     map_reduce_job: MapReduceJob["NDArray", "NDArray"] = MapReduceJob(
-        map_func=_permutation_montecarlo_shapley,
+        map_func=_permutation_montecarlo_marginals,
         reduce_func=np.concatenate,  # type: ignore
         map_kwargs=dict(max_permutations=iterations_per_job, progress=progress),
         reduce_kwargs=dict(axis=0),

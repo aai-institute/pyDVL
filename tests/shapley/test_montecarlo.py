@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 
-from pydvl.shapley import (
+from pydvl.value.shapley import (
     combinatorial_exact_shapley,
     combinatorial_montecarlo_shapley,
     permutation_montecarlo_shapley,

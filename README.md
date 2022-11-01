@@ -98,14 +98,14 @@ Data Shapley values:
 ```python
 import numpy as np
 from pydvl.utils import Dataset, Utility
-from pydvl.shapley import compute_shapley_values
+from pydvl.value.shapley import compute_shapley_values
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
 X, y = np.arange(100).reshape((50, 2)), np.arange(50)
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.5, random_state=16
-)
+        X, y, test_size=0.5, random_state=16
+        )
 dataset = Dataset(X_train, y_train, X_test, y_test)
 model = LinearRegression()
 utility = Utility(model, dataset)

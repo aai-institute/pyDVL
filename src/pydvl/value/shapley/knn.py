@@ -8,8 +8,8 @@ from typing import Dict, OrderedDict, Union
 
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
-from ..reporting.scores import sort_values
-from ..utils import Dataset, maybe_progress
+from pydvl.reporting.scores import sort_values
+from pydvl.utils import Dataset, maybe_progress
 
 __all__ = ["knn_shapley"]
 

@@ -23,7 +23,7 @@ interest, but a function of three factors:
 
 pyDVL collects algorithms for the computation of data values in this sense,
 mostly those derived from cooperative game theory. The methods can be found in
-the modules :mod:`~pydvl.shapley` and :mod:`~pydvl.loo`, supported by
+the modules :mod:`~pydvl.value.shapley` and :mod:`~pydvl.value.loo`, supported by
 :mod:`pydvl.utils.dataset` and :mod:`~pydvl.utils.utility`, as detailed below.
 
 Creating a Dataset
@@ -56,7 +56,7 @@ Creating a Utility
 In order to keep track of all three items in $(D, \mathcal{A}, u)$ we use the
 class :class:`~pydvl.utils.utility.Utility`. This is a convenient wrapper for
 the dataset, model and scoring function which is used for valuation methods like
-:mod:`Leave-One-Out<pydvl.loo>` and :mod:`Shapley<pydvl.shapley>`.
+:mod:`Leave-One-Out<pydvl.value.loo>` and :mod:`Shapley<pydvl.value.shapley>`.
 
 It can be used as follows:
 
@@ -82,7 +82,7 @@ one's goals and definitions.
 
 .. code-block:: python
 
-   >>> from pydvl.loo.naive import naive_loo
+   >>> from pydvl.value.loo.naive import naive_loo
    >>> utility = Utility(...)
    >>> values = naive_loo(utility)
 
@@ -121,7 +121,7 @@ efficient and has proven useful in some applications:
 .. code-block:: python
 
    >>> from pydvl.utils import Utility
-   >>> from pydvl.shapley import compute_shapley_values
+   >>> from pydvl.value.shapley import compute_shapley_values
    >>> utility = Utility(...)
    >>> df = compute_shapley_values(
            u=utility, mode="truncated_montecarlo", max_iterations=100
@@ -130,7 +130,7 @@ efficient and has proven useful in some applications:
 The code above will generate a
 `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_
 with values and estimated standard errors. Please refer to the documentation in
-:mod:`pydvl.shapley` for more information.
+:mod:`pydvl.value.shapley` for more information.
 
 Other methods
 =============

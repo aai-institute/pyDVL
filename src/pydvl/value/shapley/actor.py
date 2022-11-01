@@ -1,7 +1,8 @@
 """
-This internal module contains methods and classes to distribute Shapley jobs
-in a cluster. You probably aren't interested in any of this unless you are
-developing new methods for pyDVL that use parallelization.
+Methods and classes to distribute jobs computing Shapley values in a cluster.
+
+You probably aren't interested in any of this unless you are developing new
+methods for pyDVL that use parallelization.
 """
 
 import logging
@@ -11,10 +12,10 @@ from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 import numpy as np
 
-from ..utils import Utility, get_running_avg_variance, maybe_progress
-from ..utils.config import ParallelConfig
-from ..utils.parallel.actor import Coordinator, RayActorWrapper, Worker
-from ..utils.parallel.backend import init_parallel_backend
+from pydvl.utils import Utility, get_running_avg_variance, maybe_progress
+from pydvl.utils.config import ParallelConfig
+from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
+from pydvl.utils.parallel.backend import init_parallel_backend
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -58,7 +59,7 @@ class ShapleyCoordinator(Coordinator):
     satisfied.
 
     :param value_tolerance: Terminate all workers if the ratio of median
-        standard error to median of values has dropped below this value.
+        standard error to median of value has dropped below this value.
     :param max_iterations: Terminate if the current number of permutations
         has exceeded this threshold.
      :param progress: Whether to display a progress bar
@@ -82,7 +83,7 @@ class ShapleyCoordinator(Coordinator):
     def get_results(self) -> Tuple["NDArray", "NDArray"]:
         """Aggregates the results of the different workers
 
-        :return: returns average and standard deviation of the values. If no
+        :return: returns average and standard deviation of the value. If no
             worker has reported yet, returns two empty arrays.
         """
         values = []
@@ -185,10 +186,10 @@ class ShapleyWorker(Worker):
         self._var_values: Optional[Union[float, "NDArray"]] = None
 
     def _compute_values(self, *args, **kwargs) -> "NDArray":
-        # Importing this here avoids errors with circular imports
-        from .montecarlo import _permutation_montecarlo_shapley
+        # Import here to avoid errors with circular imports
+        from .montecarlo import _permutation_montecarlo_marginals
 
-        return _permutation_montecarlo_shapley(self.u, max_permutations=1)[0]  # type: ignore
+        return _permutation_montecarlo_marginals(self.u, max_permutations=1)[0]  # type: ignore
 
     def run(self, *args, **kwargs):
         """Runs the worker.
