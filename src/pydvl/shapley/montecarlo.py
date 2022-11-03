@@ -43,10 +43,7 @@ import numpy as np
 from ..reporting.scores import sort_values
 from ..utils import Utility, maybe_progress
 from ..utils.config import ParallelConfig
-from ..utils.numeric import (
-    get_running_avg_variance,
-    random_powerset,
-)
+from ..utils.numeric import get_running_avg_variance, random_powerset
 from ..utils.parallel import MapReduceJob, init_parallel_backend
 from .actor import get_shapley_coordinator, get_shapley_worker
 
