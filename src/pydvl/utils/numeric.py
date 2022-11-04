@@ -64,17 +64,25 @@ def lower_bound_hoeffding(delta: float, eps: float, score_range: float) -> int:
 
 
 def random_powerset(
-    s: "NDArray",
-    max_subsets: Optional[int] = None,
+    s: "NDArray", max_subsets: Optional[int] = None, q: Optional[float] = 0.5
 ) -> Generator["NDArray", None, None]:
-    """Uniformly samples a subset from the power set of the argument, without
+    """Samples subsets from the power set of the argument, without
     pre-generating all subsets and in no order.
 
     See `powerset()` if you wish to deterministically generate all subsets.
 
+    To generate subsets, `len(s)` Bernoulli draws with probability `q` are drawn.
+    The default value of `q = 0.5` provides a uniform distribution over the
+    power set of `s`. Other choices can be used e.g. to implement
+    :func:`Owen sampling <~pydvl.value.shapley.montecarlo.owen_sampling_shapley>`.
+
     :param s: set to sample from
     :param max_subsets: if set, stop the generator after this many steps.
         Defaults to `np.iinfo(np.int32).max`
+    :param q: Sampling probability for elements. The default 0.5 yields a
+        uniform distribution over the power set of s.
+
+    :return: Samples from the power set of s
     """
     if not isinstance(s, np.ndarray):
         raise TypeError("Set must be an NDArray")
@@ -83,7 +91,7 @@ def random_powerset(
     if max_subsets is None:
         max_subsets = np.iinfo(np.int32).max
     while total <= max_subsets:
-        selection = np.random.uniform(size=len(s)) > 0.5
+        selection = np.random.uniform(size=len(s)) > q
         subset = s[selection]
         yield subset
         total += 1
