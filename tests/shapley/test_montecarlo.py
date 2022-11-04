@@ -40,12 +40,7 @@ def test_analytic_montecarlo_shapley(
     check_values(values, exact_values, rtol=rtol)
 
 
-@pytest.mark.parametrize(
-    "num_samples, delta, eps",
-    [
-        (12, 1e-2, 1e-1),
-    ],
-)
+@pytest.mark.parametrize("num_samples, delta, eps", [(12, 1e-2, 1e-1)])
 @pytest.mark.parametrize("n_jobs", [4])
 @pytest.mark.parametrize(
     "fun", [permutation_montecarlo_shapley, combinatorial_montecarlo_shapley]
@@ -57,11 +52,7 @@ def test_hoeffding_bound_montecarlo(
 
     max_iterations = lower_bound_hoeffding(delta=delta, eps=eps, score_range=1)
 
-    values, _ = fun(
-        u=u,
-        max_iterations=max_iterations,
-        n_jobs=n_jobs,
-    )
+    values, _ = fun(u=u, max_iterations=max_iterations, n_jobs=n_jobs)
 
     with tolerate(max_failures=1):
         # Trivial bound on total error using triangle inequality
@@ -73,15 +64,7 @@ def test_hoeffding_bound_montecarlo(
     "a, b, num_points, fun, score_type, rtol, max_iterations",
     [
         (2, 0, 20, permutation_montecarlo_shapley, "explained_variance", 0.2, 5000),
-        (
-            2,
-            2,
-            12,
-            truncated_montecarlo_shapley,
-            "r2",
-            0.2,
-            5000,
-        ),
+        (2, 2, 12, truncated_montecarlo_shapley, "r2", 0.2, 5000),
         (
             2,
             0,
@@ -129,15 +112,7 @@ def test_linear_montecarlo_shapley(
     "a, b, num_points, fun, score_type, max_iterations, total_atol",
     [
         (2, 3, 20, permutation_montecarlo_shapley, "r2", 500, 1),
-        (
-            2,
-            3,
-            20,
-            truncated_montecarlo_shapley,
-            "neg_median_absolute_error",
-            500,
-            3,
-        ),
+        (2, 3, 20, truncated_montecarlo_shapley, "neg_median_absolute_error", 500, 3),
         (2, 3, 20, truncated_montecarlo_shapley, "r2", 500, 200),
     ],
 )
@@ -159,10 +134,7 @@ def test_linear_montecarlo_with_outlier(
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     shapley_values, sval_std = fun(
-        linear_utility,
-        max_iterations=max_iterations,
-        progress=False,
-        n_jobs=n_jobs,
+        linear_utility, max_iterations=max_iterations, progress=False, n_jobs=n_jobs
     )
     log.debug(f"{shapley_values=}")
     log.debug(f"{outlier_idx=}")
@@ -174,16 +146,7 @@ def test_linear_montecarlo_with_outlier(
 @pytest.mark.parametrize(
     "a, b, num_points, num_groups, fun, score_type, rtol, max_iterations",
     [
-        (
-            2,
-            2,
-            20,
-            4,
-            permutation_montecarlo_shapley,
-            "r2",
-            0.2,
-            5000,
-        ),
+        (2, 2, 20, 4, permutation_montecarlo_shapley, "r2", 0.2, 5000),
         (2, 0, 200, 5, truncated_montecarlo_shapley, "explained_variance", 0.2, 1000),
         (2, 0, 200, 5, truncated_montecarlo_shapley, "r2", 0.2, 1000),
     ],
@@ -255,8 +218,5 @@ def test_random_forest(
     )
 
     _, _ = truncated_montecarlo_shapley(
-        rf_utility,
-        max_iterations=max_iterations,
-        progress=False,
-        n_jobs=n_jobs,
+        rf_utility, max_iterations=max_iterations, progress=False, n_jobs=n_jobs
     )
