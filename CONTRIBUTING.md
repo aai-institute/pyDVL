@@ -262,8 +262,8 @@ If the automatic release process doesn't cover your use case, you can also
 create a new release manually by following these steps:
 
 1. (Repeat as needed) implement features on feature branches merged into
-  `develop`. Each merge into develop will publishg a new pre-release version 
-   into TestPyPI. These versions can be installed using `pip install --pre 
+  `develop`. Each merge into develop will publish a new pre-release version 
+   to TestPyPI. These versions can be installed using `pip install --pre 
    --index-url https://test.pypi.org/simple/`.
 2. When ready to release: From the develop branch create the release branch and
    perform release activities (update changelog, news, ...). For your own
