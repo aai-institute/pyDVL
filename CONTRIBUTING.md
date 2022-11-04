@@ -220,8 +220,7 @@ def f(x: float) -> float:
 You sometimes would like to skip CI for certain commits (e.g. updating the readme). 
 In order to do that you can simply prefix the commit message with `[skip ci]`.
 
-**NOTE:**
-- Other strings, like `[ci skip]`, can be used as well, but we prefer the one described above.
+- Other strings, like `[ci skip]` are allowed, but we prefer `[skip ci]`.
 - The string doesn't have to be at the beginning of the commit message, but we prefer doing it 
   that way because it makes it immediately apparent when looking at commits in a PR.
 
