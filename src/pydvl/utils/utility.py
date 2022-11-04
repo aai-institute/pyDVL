@@ -113,15 +113,19 @@ class Utility:
 
     def _utility(self, indices: FrozenSet) -> float:
         """Fits the model on a subset of the training data and scores it on the
-        test data. If the object is constructed with cache_size > 0, results are
-        memoized to avoid duplicate computation. This is useful in particular
-        when computing utilities of permutations of indices.
+        test data. If the object is constructed with `enable_cache = True`,
+        results are memoized to avoid duplicate computation. This is useful in
+        particular when computing utilities of permutations of indices or when
+        randomly sampling from the powerset of indices.
 
-        :param indices: a subset of indices from data.x_train.index. The type
-         must be hashable for the caching to work, e.g. wrap the argument with
-         `frozenset` (rather than `tuple` since order should not matter)
-        :return: 0 if no indices are passed, `default_score` if we fail to fit the model,
-         otherwise the value the scorer on the test data.
+        :param indices: a subset of valid indices for
+            :attr:`~pydvl.utils.dataset.Dataset.x_train`. The type must be
+            hashable for the caching to work, e.g. wrap the argument with
+            `frozenset <https://docs.python.org/3/library/stdtypes.html#frozenset>`_
+            (rather than `tuple` since order should not matter)
+        :return: 0 if no indices are passed, `default_score` if we fail to fit
+            the model or the scorer returns NaN, otherwise the score on the test
+            data.
         """
         if not indices:
             return 0.0
@@ -129,7 +133,9 @@ class Utility:
         x, y = self.data.get_training_data(list(indices))
         try:
             self.model.fit(x, y)
-            return float(scorer(self.model, self.data.x_test, self.data.y_test))
+            score = float(scorer(self.model, self.data.x_test, self.data.y_test))
+            # Some scorers raise exceptions if they return NaNs, some might not
+            return self.default_score if np.isnan(score) else score
         except Exception as e:
             if self.catch_errors:
                 if self.show_warnings:
