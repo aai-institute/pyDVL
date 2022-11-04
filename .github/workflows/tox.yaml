@@ -39,7 +39,6 @@ jobs:
         path: .tox
     - name: Lint Code
       run: tox -e linting
-      continue-on-error: true
     - name: Check Type Hints
       run: tox -e type-checking
   docs:
