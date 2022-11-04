@@ -135,7 +135,11 @@ class Utility:
             self.model.fit(x, y)
             score = float(scorer(self.model, self.data.x_test, self.data.y_test))
             # Some scorers raise exceptions if they return NaNs, some might not
-            return self.default_score if np.isnan(score) else score
+            if np.isnan(score):
+                if self.show_warnings:
+                    warnings.warn(f"Scorer returned NaN", RuntimeWarning)
+                return self.default_score
+            return score
         except Exception as e:
             if self.catch_errors:
                 if self.show_warnings:

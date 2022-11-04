@@ -229,15 +229,8 @@ def permutation_montecarlo_shapley(
     )
     full_results = map_reduce_job(u_id)[0]
 
-    # Careful: for some models there might be nans, e.g. for i=0 or i=1!
-    if np.any(np.isnan(full_results)):
-        warnings.warn(
-            f"Calculation returned {np.sum(np.isnan(full_results))} nan values "
-            f"out of {full_results.size}",
-            RuntimeWarning,
-        )
-    acc = np.nanmean(full_results, axis=0)
-    acc_std = np.nanstd(full_results, axis=0) / np.sqrt(full_results.shape[0])
+    acc = np.mean(full_results, axis=0)
+    acc_std = np.std(full_results, axis=0) / np.sqrt(full_results.shape[0])
     sorted_shapley_values = sort_values(
         {u.data.data_names[i]: v for i, v in enumerate(acc)}
     )
