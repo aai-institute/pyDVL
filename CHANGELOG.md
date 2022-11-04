@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Simplified and fixed publishing to PyPI from CI
+  [PR #183](https://github.com/appliedAI-Initiative/pyDVL/pull/183)
+
 ## 0.2.0 - 📚 Better docs
 
 Mostly API documentation and notebooks, plus some bugfixes.
