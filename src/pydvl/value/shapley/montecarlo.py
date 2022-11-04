@@ -54,6 +54,7 @@ if TYPE_CHECKING:
 class MonteCarloResults(NamedTuple):
     values: "NDArray"
     stderr: "NDArray"
+    n_samples: Optional["NDArray"] = None
 
 
 logger = logging.getLogger(__name__)
@@ -77,19 +78,28 @@ def truncated_montecarlo_shapley(
     coordinator_update_frequency: int = 10,
     worker_update_frequency: int = 5,
 ) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
-    """MonteCarlo approximation to the Shapley value of data points.
+    """Monte Carlo approximation to the Shapley value of data points.
 
-    This implements the method described in:
+    This implements the permutation-based method described in [1]. It is a Monte
+    Carlo estimate of the sum over all possible permutations of the index set,
+    with a double stopping criterion.
 
-    Ghorbani, Amirata, and James Zou. ‘Data Shapley: Equitable Valuation of Data
-    for Machine Learning’. In International Conference on Machine Learning,
-    2242–51. PMLR, 2019. http://proceedings.mlr.press/v97/ghorbani19c.html.
+    .. warning::
+
+       This function does not exactly reproduce the stopping criterion of [1]
+       which uses a hardcoded time delay in the sequence of values. Instead, we
+       use a moving average and the stopping criterion detailed in
+       :meth:`~pydvl.value.shapley.actor.ShapleyCoordinator.check_done`.
+
+    .. todo::
+       Implement the original stopping criterion, maybe Robin-Gelman or some
+       other more principled one.
 
     Instead of naively implementing the expectation, we sequentially add points
     to a dataset from a permutation. We keep sampling permutations and updating
-    all shapley values until the std/value score in
-    the moving average falls below a given threshold (value_tolerance)
-    or when the number of iterations exceeds a certain number (max_iterations).
+    all shapley values until the std/value score in the moving average falls
+    below a given threshold (value_tolerance) or when the number of iterations
+    exceeds a certain number (max_iterations).
 
     :param u: Utility object with model, data, and scoring function
     :param value_tolerance: Terminate if the standard deviation of the
@@ -108,6 +118,12 @@ def truncated_montecarlo_shapley(
     :return: Tuple with the first element being an :obj:`collections.OrderedDict`
         of approximate Shapley values for the indices, and the second being the
         estimated standard error of each value.
+
+    .. rubric::References
+
+    [1]: Ghorbani, Amirata, and James Zou. ‘Data Shapley: Equitable Valuation of
+    Data for Machine Learning’. In International Conference on Machine Learning,
+    2242–51. PMLR, 2019. http://proceedings.mlr.press/v97/ghorbani19c.html.
     """
     parallel_backend = init_parallel_backend(config)
 
@@ -282,7 +298,7 @@ def _combinatorial_montecarlo_shapley(
 
     return MonteCarloResults(
         values=correction * values,
-        stderr=correction**2 * variances / np.sqrt(np.maximum(1, counts)),
+        stderr=np.sqrt(correction**2 * variances / np.maximum(1, counts)),
     )
 
 
@@ -313,8 +329,8 @@ def combinatorial_montecarlo_shapley(
         stderr = np.zeros_like(values)
 
         # non-zero indices in results are disjoint by construction, so it is ok
-        # to add them
-        for val, std in results_it:
+        # to add the results
+        for val, std, _ in results_it:
             values += val
             stderr += std
         return MonteCarloResults(values=values, stderr=stderr)
@@ -349,27 +365,30 @@ def _owen_sampling_shapley(
     progress: bool = False,
     job_id: int = 1,
 ) -> MonteCarloResults:
+    """This is the algorithm as detailed in the paper: to compute the outer
+    integral over q ∈ [0,1], use uniformly distributed points for evaluation
+    of the integrand (the expectation over sets which is itself approximated
+    using Monte Carlo).
+
+    .. todo::
+        We might want to try better quadrature rules like Gauss or Rombert or
+        use Monte Carlo for the double integral.
+
+    :param q_values:
+    :param u:
+    :param max_iterations: Number of subsets to sample to estimate the integrand
+    :param progress: whether to display a progress bar
+    :param job_id: For positioning of the progress bar
+    :return: values and standard errors
+    """
     n = len(u.data)
     values = np.zeros(n)
     variances = np.zeros(n)
     counts = np.zeros(n)
+
     pbar = maybe_progress(q_values, progress, position=job_id)
-
-    # This is the algorithm as detailed in the paper: to compute the outer
-    # integral over q ∈ [0,1], use uniformly distributed points for evaluation
-    # of the integrand (the expectation over sets which is itself approximated
-    # using Monte Carlo).
-    # However, one might want to use better quadrature rules like Gauss or
-    # Rombert or use Monte Carlo for the double integral.
-
     for q in pbar:
-        # Instead of sampling from D\{idx} for each idx, we sample arbitrary
-        # subsets, then add the index of interest. This means that for every
-        # subset s, the marginal will be u(s) - u(s) for all idx in S. If the
-        # utility is deterministic, or it has been memoized, the result is 0
-        # and we move on. Otherwise, noise will be introduced which might have
-        # a positive or a negative effect.
-        power_set = random_powerset(u.data.indices, max_subsets=max_iterations)  # q=q
+        power_set = random_powerset(u.data.indices, max_subsets=max_iterations, q=q)
         for s in maybe_progress(
             power_set,
             progress,
@@ -377,25 +396,29 @@ def _owen_sampling_shapley(
             total=max_iterations,
             position=job_id,
         ):
-            counts *= 0
-            for idx in u.data.indices:
-                marginal = u({idx}.union(s)) - u(s)
-                values[idx], variances[idx] = get_running_avg_variance(
-                    values[idx], variances[idx], marginal, counts[idx]
+            for i in u.data.indices:
+                # Instead of sampling from D\{i} for each i ∈ D, above we
+                # sampled from all of D. Therefore {i}.union(s) == s for all
+                # i ∈ s, and we need to skip those indices here
+                if i in s:
+                    continue
+                marginal = u({i}.union(s)) - u(s)
+                values[i], variances[i] = get_running_avg_variance(
+                    values[i], variances[i], marginal, counts[i]
                 )
-                counts[idx] += 1
-    stderr = variances / np.sqrt(np.maximum(1, counts))
-    values /= max_iterations
+                counts[i] += 1
 
-    values /= len(q_values)
-
-    return MonteCarloResults(values=values, stderr=stderr)
+    return MonteCarloResults(
+        values=values,
+        stderr=np.sqrt(variances / np.maximum(1, counts)),
+        n_samples=counts,
+    )
 
 
 def owen_sampling_shapley(
     u: Utility,
-    max_q: int,
     max_iterations: int,
+    max_q: int = 100,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     *,
@@ -405,38 +428,54 @@ def owen_sampling_shapley(
 
     This function computes a Monte Carlo approximation to
 
-    $$ v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \})}
-       [u(S \cup {i}) - u(S)] $$
+    $$v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})} [u(S \cup {i}) - u(S)]$$
 
     as described in [1]. The approximation is
 
-    $$ \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M
-        [u(S^{(q)}_m \cup {i}) - u(S^{(q)}_m)] $$
+    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q)}_m \cup {i}) - u(S^{(q)}_m)]$$
 
-    where the sets S^{(q)} are such that a sample $x \in S^{(q)}$ if a draw
+    where the sets $S^{(q)}$ are such that a sample $x \in S^{(q)}$ if a draw
     from a $Ber(q)$ distribution is 1.
-
-    [1]: Okhrati, Ramin, and Aldo Lipani. ‘A Multilinear Sampling Algorithm to
-         Estimate Shapley Values’. In 2020 25th International Conference on
-         Pattern Recognition (ICPR), 7992–99. IEEE, 2021.
-         https://doi.org/10.1109/ICPR48806.2021.9412511.
 
     :param u: :class:`~pydvl.utils.utility.Utility` object holding data, model
         and scoring function.
-    :param max_q: Number of subdivisions for the interval [0,1] used to
-        approximate the outer integral
-    :param max_iterations:
+    :param max_iterations: Numer of sets to sample for each value of q
+    :param max_q: Number of subdivisions for q ∈ [0,1] used to approximate the
+        outer integral.
     :param n_jobs:
-    :param config:
-    :param progress:
-    :return:
+    :param config: Object configuring parallel computation, with cluster
+        address, number of cpus, etc.
+    :param progress: true to plot progress bar
+    :return: Tuple with the first element being an ordered Dict of approximate
+        Shapley values for the indices, the second being their standard error
+
+    .. rubric:: References
+
+    [1]: Okhrati, Ramin, and Aldo Lipani. ‘A Multilinear Sampling Algorithm
+    to Estimate Shapley Values’. In 2020 25th International Conference on
+    Pattern Recognition (ICPR), 7992–99. IEEE, 2021.
+    https://doi.org/10.1109/ICPR48806.2021.9412511.
+
+    .. versionadded:: 0.3.0
+
     """
 
     parallel_backend = init_parallel_backend(config)
     u_id = parallel_backend.put(u)
 
     def reducer(results_it: Iterable[MonteCarloResults]) -> MonteCarloResults:
-        pass
+        values = np.zeros(len(u.data))
+        variances = np.zeros_like(values)
+        count = 0
+        # Undo averaging and accumulate returned values
+        for val, stderr, n_samples in results_it:
+            values += val * n_samples
+            variances += stderr**2 * np.maximum(1, n_samples * (n_samples - 1))
+            count += n_samples
+        # Average all accumulated values
+        values /= count
+        variances /= count - 1  # Now they are variances
+        return MonteCarloResults(values=values, stderr=np.sqrt(variances / count))
 
     map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
         map_func=_owen_sampling_shapley,
