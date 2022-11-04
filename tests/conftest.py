@@ -294,7 +294,7 @@ def dummy_utility(num_samples: int = 10):
     x = np.arange(0, num_samples, 1).reshape(-1, 1)
     nil = np.zeros_like(x)
     data = Dataset(
-        x, nil, nil, nil, feature_names=["x"], target_names=["y"], description=["dummy"]
+        x, nil, nil, nil, feature_names=["x"], target_names=["y"], description="dummy"
     )
 
     class DummyModel(SupervisedModel):
@@ -314,7 +314,7 @@ def dummy_utility(num_samples: int = 10):
         def score(self, x: ndarray, y: ndarray) -> float:
             return self.utility
 
-    return Utility(DummyModel(data), data, scoring=None, enable_cache=False)
+    return Utility(DummyModel(data), data, enable_cache=False)
 
 
 @pytest.fixture(scope="function")
