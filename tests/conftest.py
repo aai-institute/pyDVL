@@ -214,7 +214,7 @@ def seed_numpy(seed=42):
 
 @pytest.fixture
 def num_workers():
-    return min(8, available_cpus())
+    return max(1, available_cpus() - 1)
 
 
 @pytest.fixture
