@@ -216,7 +216,7 @@ def permutation_montecarlo_shapley(
 
     u_id = parallel_backend.put(u)
 
-    iterations_per_job = max_iterations // n_jobs
+    iterations_per_job = max(1, max_iterations // n_jobs)
 
     map_reduce_job: MapReduceJob["NDArray", "NDArray"] = MapReduceJob(
         map_func=_permutation_montecarlo_marginals,
