@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
     "num_samples, fun, rtol, max_iterations",
     [
         (12, permutation_montecarlo_shapley, 0.1, 10),
-        (8, combinatorial_montecarlo_shapley, 0.15, 3e3),
+        (10, combinatorial_montecarlo_shapley, 0.1, 1e3),
     ],
 )
 def test_analytic_montecarlo_shapley(
