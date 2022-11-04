@@ -66,6 +66,7 @@ __all__ = [
     "truncated_montecarlo_shapley",
     "permutation_montecarlo_shapley",
     "combinatorial_montecarlo_shapley",
+    "owen_sampling_shapley",
 ]
 
 
@@ -287,8 +288,6 @@ def _combinatorial_montecarlo_shapley(
             position=job_id,
         ):
             new_marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
-            if np.isnan(new_marginal):
-                continue
             values[idx], variances[idx] = get_running_avg_variance(
                 values[idx], variances[idx], new_marginal, counts[idx]
             )
@@ -350,6 +349,121 @@ def combinatorial_montecarlo_shapley(
         config=config,
     )
     results = map_reduce_job(u.data.indices)[0]
+    sorted_shapley_values = sort_values(
+        {u.data.data_names[i]: v for i, v in enumerate(results.values)}
+    )
+    montecarlo_errors = {u.data.data_names[i]: v for i, v in enumerate(results.stderr)}
+
+    return sorted_shapley_values, montecarlo_errors
+
+
+def _owen_sampling_shapley(
+    q_values: Sequence[float],
+    u: Utility,
+    max_iterations: int,
+    *,
+    progress: bool = False,
+    job_id: int = 1,
+) -> MonteCarloResults:
+    n = len(u.data)
+    values = np.zeros(n)
+    variances = np.zeros(n)
+    counts = np.zeros(n)
+    pbar = maybe_progress(q_values, progress, position=job_id)
+
+    # This is the algorithm as detailed in the paper: to compute the outer
+    # integral over q ∈ [0,1], use uniformly distributed points for evaluation
+    # of the integrand (the expectation over sets which is itself approximated
+    # using Monte Carlo).
+    # However, one might want to use better quadrature rules like Gauss or
+    # Rombert or use Monte Carlo for the double integral.
+
+    for q in pbar:
+        # Instead of sampling from D\{idx} for each idx, we sample arbitrary
+        # subsets, then add the index of interest. This means that for every
+        # subset s, the marginal will be u(s) - u(s) for all idx in S. If the
+        # utility is deterministic, or it has been memoized, the result is 0
+        # and we move on. Otherwise, noise will be introduced which might have
+        # a positive or a negative effect.
+        power_set = random_powerset(u.data.indices, max_subsets=max_iterations)  # q=q
+        for s in maybe_progress(
+            power_set,
+            progress,
+            desc=f"Iterating over subsets",  # FIXME: Useless
+            total=max_iterations,
+            position=job_id,
+        ):
+            counts *= 0
+            for idx in u.data.indices:
+                marginal = u({idx}.union(s)) - u(s)
+                values[idx], variances[idx] = get_running_avg_variance(
+                    values[idx], variances[idx], marginal, counts[idx]
+                )
+                counts[idx] += 1
+        stderr = variances / np.sqrt(np.maximum(1, counts))
+    values /= max_iterations
+
+    values /= len(q_values)
+
+    return MonteCarloResults(values=values, stderr=stderr)
+
+
+def owen_sampling_shapley(
+    u: Utility,
+    max_q: int,
+    max_iterations: int,
+    n_jobs: int = 1,
+    config: ParallelConfig = ParallelConfig(),
+    *,
+    progress: bool = False,
+) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
+    r"""Owen sampling of Shapley values.
+
+    This function computes a Monte Carlo approximation to
+
+    $$ v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \})}
+       [u(S \cup {i}) - u(S)] $$
+
+    as described in [1]. The approximation is
+
+    $$ \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M
+        [u(S^{(q)}_m \cup {i}) - u(S^{(q)}_m)] $$
+
+    where the sets S^{(q)} are such that a sample $x \in S^{(q)}$ if a draw
+    from a $Ber(q)$ distribution is 1.
+
+    [1]: Okhrati, Ramin, and Aldo Lipani. ‘A Multilinear Sampling Algorithm to
+         Estimate Shapley Values’. In 2020 25th International Conference on
+         Pattern Recognition (ICPR), 7992–99. IEEE, 2021.
+         https://doi.org/10.1109/ICPR48806.2021.9412511.
+
+    :param u: :class:`~pydvl.utils.utility.Utility` object holding data, model
+        and scoring function.
+    :param max_q: Number of subdivisions for the interval [0,1] used to
+        approximate the outer integral
+    :param max_iterations:
+    :param n_jobs:
+    :param config:
+    :param progress:
+    :return:
+    """
+
+    parallel_backend = init_parallel_backend(config)
+    u_id = parallel_backend.put(u)
+
+    def reducer(results_it: Iterable[MonteCarloResults]) -> MonteCarloResults:
+        pass
+
+    map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
+        map_func=_owen_sampling_shapley,
+        reduce_func=reducer,
+        map_kwargs=dict(u=u_id, max_iterations=max_iterations, progress=progress),
+        chunkify_inputs=True,
+        n_jobs=n_jobs,
+        config=config,
+    )
+    q_values = np.linspace(start=0, stop=1, num=max_q)
+    results = map_reduce_job(q_values)[0]
     sorted_shapley_values = sort_values(
         {u.data.data_names[i]: v for i, v in enumerate(results.values)}
     )
