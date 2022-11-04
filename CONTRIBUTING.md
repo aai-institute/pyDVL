@@ -173,6 +173,20 @@ any rst files which are not manually created), you can use a file watcher.
 This is not part of the development setup of pyDVL (yet! PRs welcome), but
 modern IDEs provide functionality for this.
 
+Use the **docs** tox environment to build the documentation the same way it is done in CI:
+
+```bash
+tox -e docs
+```
+
+Locally, you can use the **docs-dev** tox environment to continuously rebuild docs on changes:
+
+```bash
+tox -e docs-dev
+```
+
+**NOTE:** This currently only rebuilds on changes to `.rst` files and notebooks.
+
 ### Writing mathematics
 
 In sphinx one can write mathematics with the directives `:math:` (inline) or
