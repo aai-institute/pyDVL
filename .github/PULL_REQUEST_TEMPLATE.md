@@ -6,7 +6,7 @@ https://github.com/appliedAI-Initiative/pyDVL/blob/develop/CONTRIBUTING.md
 
 ### Description
 
-This PR closes issue #XXX
+This PR closes #XXX
 
 ### Changes
 
