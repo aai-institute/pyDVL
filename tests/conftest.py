@@ -1,6 +1,6 @@
 import functools
 from collections import OrderedDict, defaultdict
-from typing import Dict, TYPE_CHECKING, Optional, Sequence, Tuple, Type
+from typing import TYPE_CHECKING, Dict, Optional, Sequence, Tuple, Type
 
 import numpy as np
 import pytest
