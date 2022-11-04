@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Simplified and fixed powerset sampling
+- Simplified and fixed powerset sampling and testing
   [PR #181](https://github.com/appliedAI-Initiative/pyDVL/pull/181)
 
 
