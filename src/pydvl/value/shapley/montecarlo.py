@@ -433,9 +433,10 @@ def owen_sampling_shapley(
     :param u: :class:`~pydvl.utils.utility.Utility` object holding data, model
         and scoring function.
     :param max_iterations: Numer of sets to sample for each value of q
-    :param max_q: Number of subdivisions for q ∈ [0,1] used to approximate the
-        outer integral.
-    :param n_jobs:
+    :param max_q: Number of subdivisions for q ∈ [0,1] (the element sampling
+        probability) used to approximate the outer integral.
+    :param n_jobs: Number of parallel jobs to use. Each worker receives a chunk
+        of the total of `max_q` values for q.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param progress: true to plot progress bar
@@ -478,7 +479,7 @@ def owen_sampling_shapley(
         n_jobs=n_jobs,
         config=config,
     )
-    q_values = np.linspace(start=0, stop=1, num=max_q)
+    q_values = np.linspace(start=0, stop=1, num=max_q)[1:]  # q=0 is useless
     results = map_reduce_job(q_values)[0]
     sorted_shapley_values = sort_values(
         {u.data.data_names[i]: v for i, v in enumerate(results.values)}
