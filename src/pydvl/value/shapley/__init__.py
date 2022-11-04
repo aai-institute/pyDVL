@@ -12,14 +12,18 @@ import numpy as np
 import pandas as pd
 import sklearn.neighbors as skn
 
+from pydvl.utils import Utility
 from pydvl.value.shapley.knn import knn_shapley
 from pydvl.value.shapley.montecarlo import (
     combinatorial_montecarlo_shapley,
+    owen_sampling_shapley,
     permutation_montecarlo_shapley,
     truncated_montecarlo_shapley,
 )
-from pydvl.value.shapley.naive import combinatorial_exact_shapley, permutation_exact_shapley
-from pydvl.utils import Utility
+from pydvl.value.shapley.naive import (
+    combinatorial_exact_shapley,
+    permutation_exact_shapley,
+)
 
 __all__ = ["compute_shapley_values"]
 
@@ -32,6 +36,7 @@ class ShapleyMode(str, Enum):
     CombinatorialMontecarlo = "combinatorial_montecarlo"
     PermutationMontecarlo = "permutation_montecarlo"
     TruncatedMontecarlo = "truncated_montecarlo"
+    OwenSampling = "owen_sampling"
     KNN = "knn"
 
 
@@ -77,10 +82,13 @@ def compute_shapley_values(
     :param u: :class:`~pydvl.utils.utility.Utility` object with model, data, and
         scoring function.
     :param max_iterations: total number of iterations, used for Monte Carlo
-        methods.
+        methods. **Note:** power set-based methods interpret this differently
+        to permutation-based methods. For the former, this is the number of
+        subsets to sample for each index or process, whereas for the latter it
+        is the total number of permutations to sample.
     :param n_jobs: Number of parallel jobs (available only to some methods)
     :param mode: Choose which shapley algorithm to use. See
-        :class:`pydvl.value.shapley.ShapleyMode` for a list of allowed value.
+        :class:`~pydvl.value.shapley.ShapleyMode` for a list of allowed value.
 
     :return: pandas DataFrame with index being group names or data indices, and
         columns: `data_value` (calculated shapley value) and `data_value_std`
@@ -92,12 +100,12 @@ def compute_shapley_values(
     if mode not in list(ShapleyMode):
         raise ValueError(f"Invalid value encountered in {mode=}")
 
-    val_std: Optional[dict]
+    stderr: Optional[dict]
 
     if mode == ShapleyMode.TruncatedMontecarlo:
         # TODO fix progress showing and maybe_progress in remote case
         progress = False
-        val, val_std = truncated_montecarlo_shapley(
+        values, stderr = truncated_montecarlo_shapley(
             u=u,
             max_iterations=max_iterations,
             n_jobs=n_jobs,
@@ -109,7 +117,7 @@ def compute_shapley_values(
             raise ValueError(
                 "max_iterations cannot be None for Combinatorial Montecarlo Shapley"
             )
-        val, val_std = combinatorial_montecarlo_shapley(
+        values, stderr = combinatorial_montecarlo_shapley(
             u, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.PermutationMontecarlo:
@@ -117,32 +125,39 @@ def compute_shapley_values(
             raise ValueError(
                 "max_iterations cannot be None for Permutation Montecarlo Shapley"
             )
-        val, val_std = permutation_montecarlo_shapley(
+        values, stderr = permutation_montecarlo_shapley(
             u, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.CombinatorialExact:
-        val = combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)
-        val_std = None
+        values = combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)
+        stderr = None
     elif mode == ShapleyMode.PermutationExact:
-        val = permutation_exact_shapley(u, progress=progress)
-        val_std = None
+        values = permutation_exact_shapley(u, progress=progress)
+        stderr = None
+    elif mode == ShapleyMode.OwenSampling:
+        values, stderr = owen_sampling_shapley(
+            u,
+            max_q=100,  # FIXME!!! add argument / remove max_q
+            max_iterations=max_iterations,
+            n_jobs=n_jobs,
+        )
     elif mode == ShapleyMode.KNN:
         if not isinstance(u.model, skn.KNeighborsClassifier):
             raise TypeError("KNN Shapley requires a K-Nearest Neighbours model")
-        val = knn_shapley(
+        values = knn_shapley(
             u.data, cast(skn.KNeighborsClassifier, u.model), progress=progress
         )
-        val_std = None
+        stderr = None
     else:
         raise ValueError(f"Invalid value encountered in {mode=}")
 
     df = pd.DataFrame(
-        list(val.values()), index=list(val.keys()), columns=["data_value"]
+        list(values.values()), index=list(values.keys()), columns=["data_value"]
     )
 
-    if val_std is None:
+    if stderr is None:
         df["data_value_std"] = np.nan  # FIXME: why NaN? stddev of a constant RV is 0
     else:
-        df["data_value_std"] = pd.Series(val_std)
+        df["data_value_std"] = pd.Series(stderr)
 
     return df
