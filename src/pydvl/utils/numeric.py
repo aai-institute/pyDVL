@@ -3,15 +3,12 @@ This module contains routines for numerical computations used across the
 library.
 """
 
-import math
-from enum import Enum
 from itertools import chain, combinations
 from typing import (
     TYPE_CHECKING,
     Collection,
     Generator,
     Iterator,
-    List,
     Optional,
     Tuple,
     TypeVar,
@@ -25,15 +22,16 @@ if TYPE_CHECKING:
     FloatOrArray = TypeVar("FloatOrArray", float, "NDArray")
 
 __all__ = [
-    "powerset",
-    "random_powerset",
+    "get_running_avg_variance",
     "linear_regression_analytical_derivative_d2_theta",
     "linear_regression_analytical_derivative_d_theta",
     "linear_regression_analytical_derivative_d_x_d_theta",
+    "lower_bound_hoeffding",
+    "powerset",
     "random_matrix_with_condition_number",
+    "random_powerset",
     "spearman",
     "top_k_value_accuracy",
-    "get_running_avg_variance",
 ]
 
 T = TypeVar("T")
