@@ -52,6 +52,7 @@ function _parse_opts() {
 
   DEBUG=
   EDIT_CHANGELOG=
+  DELETE_BRANCH=1
   FORCE_YES=
   HELP=
   REMOTE="origin"
@@ -99,6 +100,7 @@ function _parse_opts() {
   fi
 
   export DEBUG
+  export DELETE_BRANCH
   export EDIT_CHANGELOG
   export FORCE_YES
   export HELP
@@ -156,7 +158,7 @@ function _confirm() {
 🔍 Summary of changes:
     - Pull latest remote version of ${bold}develop${normal} (fast-forward only) from $REMOTE
     - Create branch ${bold}$RELEASE_BRANCH${normal}
-    - Bump version number: ${bold}$CURRENT_VERSION ⟶ $RELEASE_VERSION${normal}
+    - Bump version number: ${bold}$CURRENT_VERSION ⟶   $RELEASE_VERSION${normal}
 EOF
 
   if [[ -n "$EDIT_CHANGELOG" ]]; then
@@ -192,6 +194,7 @@ if [[ -n "$DEBUG" ]]; then
   echo "DEBUG:           ${DEBUG}"
   echo "EDIT_CHANGELOG:  ${EDIT_CHANGELOG}"
   echo "FORCE_YES:       ${FORCE_YES}"
+  echo "DELETE_BRANCH:   ${DELETE_BRANCH}"
   echo "RELEASE_BRANCH:  ${RELEASE_BRANCH}"
   echo "RELEASE_TAG:     ${RELEASE_TAG}"
   echo "CURRENT_VERSION: ${CURRENT_VERSION}"

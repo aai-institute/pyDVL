@@ -34,7 +34,6 @@ __all__ = [
     "spearman",
     "top_k_value_accuracy",
     "get_running_avg_variance",
-    "PowerSetDistribution",
 ]
 
 T = TypeVar("T")
@@ -64,50 +63,28 @@ def lower_bound_hoeffding(delta: float, eps: float, score_range: float) -> int:
     return int(np.ceil(np.log(2 / delta) * score_range**2 / (2 * eps**2)))
 
 
-class PowerSetDistribution(Enum):
-    UNIFORM = "uniform"
-    WEIGHTED = "weighted"
-
-
 def random_powerset(
     s: "NDArray",
     max_subsets: Optional[int] = None,
-    dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
 ) -> Generator["NDArray", None, None]:
     """Uniformly samples a subset from the power set of the argument, without
     pre-generating all subsets and in no order.
-
-    This function accepts arbitrarily large values for n. However, values
-    in the tens of thousands can take very long to compute, hence the ability
-    to run in parallel with num_jobs.
 
     See `powerset()` if you wish to deterministically generate all subsets.
 
     :param s: set to sample from
     :param max_subsets: if set, stop the generator after this many steps.
-    :param dist: whether to sample from the "true" distribution, i.e. weighted
-        by the number of sets of size k, or "uniformly", taking e.g. the empty
-        set to be as likely as any other
+        Defaults to `np.iinfo(np.int32).max`
     """
     if not isinstance(s, np.ndarray):
         raise TypeError("Set must be an NDArray")
 
-    n = len(s)
     total = 1
     if max_subsets is None:
         max_subsets = np.iinfo(np.int32).max
-
-    def subset_probabilities(n: int) -> List[float]:
-        return [math.comb(n, j) / 2**n for j in range(n + 1)]
-
-    _subset_probabilities = subset_probabilities
-
     while total <= max_subsets:
-        if dist == PowerSetDistribution.WEIGHTED:
-            k = np.random.choice(np.arange(n + 1), p=_subset_probabilities(n))
-        else:
-            k = np.random.choice(np.arange(n + 1))
-        subset = np.random.choice(s, replace=False, size=k)
+        selection = np.random.uniform(size=len(s)) > 0.5
+        subset = s[selection]
         yield subset
         total += 1
 

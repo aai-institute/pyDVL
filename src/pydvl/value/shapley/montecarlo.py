@@ -40,16 +40,12 @@ from typing import TYPE_CHECKING, Dict, Iterable, NamedTuple, Optional, Sequence
 
 import numpy as np
 
-from pydvl.reporting.scores import sort_values
-from pydvl.utils import Utility, maybe_progress
-from pydvl.utils.config import ParallelConfig
-from pydvl.utils.numeric import (
-    PowerSetDistribution,
-    get_running_avg_variance,
-    random_powerset,
-)
-from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
-from pydvl.value.shapley.actor import get_shapley_coordinator, get_shapley_worker
+from ...reporting.scores import sort_values
+from ...utils import Utility, maybe_progress
+from ...utils.config import ParallelConfig
+from ...utils.numeric import get_running_avg_variance, random_powerset
+from ...utils.parallel import MapReduceJob, init_parallel_backend
+from .actor import get_shapley_coordinator, get_shapley_worker
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -237,7 +233,6 @@ def _combinatorial_montecarlo_shapley(
     indices: Sequence[int],
     u: Utility,
     max_iterations: int,
-    dist: PowerSetDistribution,
     *,
     progress: bool = False,
     job_id: int = 1,
@@ -250,7 +245,6 @@ def _combinatorial_montecarlo_shapley(
 
     :param u: Utility object with model, data, and scoring function
     :param max_iterations: total number of subsets to sample.
-    :param dist: Distribution to use of sets over the power set.
     :param progress: true to plot progress bar
     :param job_id: id to use for reporting progress
     :return: A tuple of ndarrays with estimated values and standard errors
@@ -260,13 +254,10 @@ def _combinatorial_montecarlo_shapley(
     if len(np.unique(indices)) != len(indices):
         raise ValueError("Repeated indices passed")
 
-    # FIXME: is this ok?
-    if dist is PowerSetDistribution.WEIGHTED:
-        correction = 2 ** (n - 1) / n
-    else:
-        raise NotImplementedError(
-            f"Correction for sampling distribution {dist=} not implemented"
-        )
+    # Correction coming from Monte Carlo integration: the uniform distribution
+    # over the powerset of a set with n-1 elements has mass 2^{n-1} over each
+    # subset. The additional factor n is from the averaging.
+    correction = 2 ** (n - 1) / n
 
     values = np.zeros(n)
     variances = np.zeros(n)
@@ -275,11 +266,7 @@ def _combinatorial_montecarlo_shapley(
     for idx in pbar:
         # Randomly sample subsets of full dataset without idx
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
-        power_set = random_powerset(
-            subset,
-            dist=dist,
-            max_subsets=max_iterations,
-        )
+        power_set = random_powerset(subset, max_subsets=max_iterations)
         for s in maybe_progress(
             power_set,
             progress,
@@ -305,7 +292,6 @@ def combinatorial_montecarlo_shapley(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     *,
-    dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
     progress: bool = False,
 ) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
     """Computes an approximate Shapley value using the combinatorial definition.
@@ -315,7 +301,6 @@ def combinatorial_montecarlo_shapley(
     :param n_jobs: number of jobs across which to distribute the computation
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param dist: Distribution to use of sets over the power set.
     :param progress: true to plot progress bar
     :return: Tuple with the first element being an ordered Dict of approximate
         Shapley values for the indices, the second being their standard error
@@ -340,7 +325,6 @@ def combinatorial_montecarlo_shapley(
         reduce_func=reducer,
         map_kwargs=dict(
             u=u_id,
-            dist=dist,
             max_iterations=max_iterations,
             progress=progress,
         ),
@@ -400,7 +384,7 @@ def _owen_sampling_shapley(
                     values[idx], variances[idx], marginal, counts[idx]
                 )
                 counts[idx] += 1
-        stderr = variances / np.sqrt(np.maximum(1, counts))
+    stderr = variances / np.sqrt(np.maximum(1, counts))
     values /= max_iterations
 
     values /= len(q_values)
