@@ -215,7 +215,20 @@ def f(x: float) -> float:
 
 ## CI and release processes
 
-#### Automatic release process
+### Skipping CI run
+
+You sometimes would like to skip CI for certain commits (e.g. updating the readme). 
+In order to do that you can simply prefix the commit message with `[skip ci]`.
+
+**NOTE:**
+- Other strings, like `[ci skip]`, can be used as well, but we prefer the one described above.
+- The string doesn't have to be at the beginning of the commit message, but we prefer doing it 
+  that way because it makes it immediately apparent when looking at commits in a PR.
+
+Refer to the official [Github documentation](https://docs.github.com/en/actions/managing-workflow-runs/skipping-workflow-runs) 
+for more information.
+
+### Automatic release process
 
 In order to create an automatic release, a few prerequisites need to be
 satisfied:
@@ -244,7 +257,7 @@ actions.
 
 Once this is done, a package will be automatically created and published from CI to PyPI.
 
-#### Manual release process
+### Manual release process
 
 If the automatic release process doesn't cover your use case, you can also
 create a new release manually by following these steps:
