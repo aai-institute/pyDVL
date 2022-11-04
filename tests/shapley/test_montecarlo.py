@@ -108,7 +108,10 @@ def test_linear_montecarlo_shapley(
         progress=False,
         n_jobs=n_jobs,
     )
-    exact_values = combinatorial_exact_shapley(linear_utility, progress=False)
+    # We should probably use a fixture instead of memoization
+    exact_values = memcached(client_config=memcache_client_config)(
+        combinatorial_exact_shapley
+    )(linear_utility, progress=False)
     log.debug(f"These are the exact values: {exact_values}")
     log.debug(f"These are the predicted values: {values}")
     # PyCharm seems to believe that the dictview converts to List[str], so we cast
@@ -186,7 +189,9 @@ def test_grouped_linear_montecarlo_shapley(
         progress=False,
         n_jobs=n_jobs,
     )
-    exact_values = combinatorial_exact_shapley(grouped_linear_utility, progress=False)
+    exact_values = memcached(client_config=memcache_client_config)(
+        combinatorial_exact_shapley
+    )(grouped_linear_utility, progress=False)
     log.debug(f"These are the exact values: {exact_values}")
     log.debug(f"These are the predicted values: {values}")
     # PyCharm seems to believe that the dictview converts to List[str], so we cast
