@@ -1,10 +1,6 @@
-"""
-.. versionadded:: 0.2.0
-"""
 import logging
 import warnings
-from collections import OrderedDict
-from typing import TYPE_CHECKING, Iterable, Tuple
+from typing import TYPE_CHECKING, Dict, Iterable, Tuple
 
 import numpy as np
 import scipy
@@ -12,7 +8,7 @@ import scipy
 from ..reporting.scores import sort_values
 from ..utils import Utility, maybe_progress
 from ..utils.config import ParallelConfig
-from ..utils.numeric import PowerSetDistribution, random_powerset
+from ..utils.numeric import random_powerset
 from ..utils.parallel import MapReduceJob, init_parallel_backend
 
 if TYPE_CHECKING:
@@ -27,22 +23,18 @@ __all__ = ["montecarlo_least_core"]
 def _montecarlo_least_core(
     u: Utility,
     max_iterations: int,
-    dist: PowerSetDistribution,
     *,
     progress: bool = False,
     job_id: int = 1,
     **kwargs,
 ) -> Tuple["NDArray", "NDArray"]:
-    """It calculates the difference between the score of a model with and without
-    each training datapoint. This is repeated a number max_iterations of times and
-    with different random combinations.
+    """Computes utility values and the Least Core upper bound matrix for a given number of iterations.
 
     :param u: Utility object with model, data, and scoring function
-    :param max_iterations: total number of iterations (permutations) to use
-    :param progress: true to plot progress bar
-    :param job_id: id to use for reporting progress
-    :return: a matrix with each row being a different permutation
-        and each column being the score of a different data point
+    :param max_iterations: total number of iterations to use
+    :param progress: If True, shows a tqdm progress bar
+    :param job_id: Integer id used to determine the position of the progress bar
+    :return:
     """
     n = len(u.data)
 
@@ -51,7 +43,6 @@ def _montecarlo_least_core(
     # Randomly sample subsets of full dataset
     power_set = random_powerset(
         u.data.indices,
-        dist=dist,
         max_subsets=max_iterations,
     )
 
@@ -77,6 +68,7 @@ def _montecarlo_least_core(
 def _reduce_func(
     results: Iterable[Tuple["NDArray", "NDArray"]]
 ) -> Tuple["NDArray", "NDArray"]:
+    """Combines the results from different parallel runs of the `_montecarlo_least_core` function"""
     utility_values_list, A_ub_list = zip(*results)
     utility_values = np.concatenate(utility_values_list)
     A_ub = np.concatenate(A_ub_list)
@@ -89,18 +81,33 @@ def montecarlo_least_core(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     *,
-    dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
     progress: bool = False,
-) -> "OrderedDict[str, float]":
-    """Computes an approximate Shapley value using the combinatorial definition.
+) -> Dict[str, float]:
+    r"""Computes approximate Least Core values using a Monte Carlo approach.
 
-    :param u: utility
-    :param max_iterations: total number of iterations (permutations) to use
+    $$
+    \begin{array}{lll}
+    \text{minimize} & \displaystyle{e} & \\
+    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
+    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) & ,
+    \forall S \in \{S_1, S_2, \dots, S_m \overset{\mathrm{iid}}{\sim} U(2^N) \}
+    \end{array}
+    $$
+
+    Where:
+
+    * $U(2^N)$ is the uniform distribution over the powerset of $N$.
+    * $m$ is the number of subsets that will be sampled and whose utility will be computed
+      and used to compute the Least Core values.
+
+    :param u: Utility object with model, data, and scoring function
+    :param max_iterations: total number of iterations to use
     :param n_jobs: number of jobs across which to distribute the computation
-    :param progress: true to plot progress bar
-    :return: Tuple, with the first element being an ordered
-        Dict of approximated Shapley values for the indices, the second being the
-        montecarlo error related to each of them.
+    :param config: Object configuring parallel computation, with cluster
+        address, number of cpus, etc.
+    :param progress: If True, shows a tqdm progress bar
+    :return: Dictionary of {"index or label": exact_value}, sorted by decreasing
+        value.
     """
     n = len(u.data)
 
@@ -116,7 +123,6 @@ def montecarlo_least_core(
         map_func=_montecarlo_least_core,
         reduce_func=_reduce_func,
         map_kwargs=dict(
-            dist=dist,
             max_iterations=iterations_per_job,
             progress=progress,
         ),
@@ -148,7 +154,10 @@ def montecarlo_least_core(
     )
 
     if not result.success:
-        warnings.warn("Could not find optimal solution", RuntimeWarning)
+        warnings.warn(
+            "Could not find optimal solution. Consider increasing 'max_iterations'",
+            RuntimeWarning,
+        )
         return {}
 
     values = result.x[:-1]

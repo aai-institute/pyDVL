@@ -1,7 +1,5 @@
-"""
-.. versionadded:: 0.2.0
-"""
 import warnings
+from typing import Dict
 
 import numpy as np
 import scipy
@@ -9,20 +7,37 @@ import scipy
 from ..reporting.scores import sort_values
 from ..utils import Utility, maybe_progress, powerset
 
-__all__ = ["naive_lc"]
+__all__ = ["exact_least_core"]
 
 
-def naive_lc(u: Utility, *, progress: bool = True, **kwargs):
-    r"""
+def exact_least_core(
+    u: Utility, *, progress: bool = True, **kwargs
+) -> Dict[str, float]:
+    r"""Computes the exact Least Core values by solving the following Linear Programming problem:
 
+    $$
+    \begin{array}{lll}
+    \text{minimize} & \displaystyle{e} & \\
+    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
+    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) &, \forall S \subseteq N \\
+    \end{array}
+    $$
 
-    .. math::
+    Where $N = \{1, 2, \dots, n\}$ is the set of the training set's indices.
 
-        \begin{array}{lll}
-        \text{minimize}   & \displaystyle{e} & \\
-        \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
-                          & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) & \forall S \subseteq N \\
-        \end{array}
+    If the training set contains more than 20 instances a warning is printed
+    because the computation is very expensive.
+
+    .. note::
+
+        This method is mostly used for internal testing and simple use cases.
+        Please refer to the Monte Carlo method for all other cases.
+
+    :param u: Utility object with model, data, and scoring function
+    :param progress: If True, shows a tqdm progress bar
+
+    :return: Dictionary of {"index or label": exact_value}, sorted by decreasing
+        value.
     """
     n = len(u.data)
 
