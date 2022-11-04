@@ -6,7 +6,10 @@
   [PR #181](https://github.com/appliedAI-Initiative/pyDVL/pull/181)
 - Simplified and fixed publishing to PyPI from CI
   [PR #183](https://github.com/appliedAI-Initiative/pyDVL/pull/183)
-- Added Pull Request template [PR #185](https://github.com/appliedAI-Initiative/pyDVL/pull/185)
+- Fixed bug in release script and updated contributing docs.
+  [PR #184](https://github.com/appliedAI-Initiative/pyDVL/pull/184)
+- Added Pull Request template
+  [PR #185](https://github.com/appliedAI-Initiative/pyDVL/pull/185)
 
 
 ## 0.2.0 - 📚 Better docs
