@@ -7,14 +7,15 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 
-from pydvl.value.shapley import (
-    combinatorial_exact_shapley,
+from pydvl.utils import GroupedDataset, MemcachedConfig, Utility, memcached
+from pydvl.utils.numeric import lower_bound_hoeffding
+from pydvl.value.shapley.montecarlo import (
     combinatorial_montecarlo_shapley,
+    owen_sampling_shapley,
     permutation_montecarlo_shapley,
     truncated_montecarlo_shapley,
 )
-from pydvl.utils import GroupedDataset, MemcachedConfig, Utility
-from pydvl.utils.numeric import lower_bound_hoeffding
+from pydvl.value.shapley.naive import combinatorial_exact_shapley
 from tests.conftest import check_rank_correlation, check_total_value, check_values
 
 log = logging.getLogger(__name__)
@@ -63,28 +64,37 @@ def test_hoeffding_bound_montecarlo(
 @pytest.mark.parametrize(
     "a, b, num_points, fun, score_type, rtol, max_iterations",
     [
-        (2, 0, 20, permutation_montecarlo_shapley, "explained_variance", 0.2, 5000),
-        (2, 2, 12, truncated_montecarlo_shapley, "r2", 0.2, 5000),
+        (2, 0, 15, permutation_montecarlo_shapley, "explained_variance", 0.2, 1000),
+        (2, 0, 15, truncated_montecarlo_shapley, "r2", 0.2, 1000),
         (
             2,
             0,
-            12,
+            15,  # training set will have 0.3 * 15 = 5 samples
             combinatorial_montecarlo_shapley,
             "explained_variance",
             0.2,
-            2**11,
+            2**8,  # FIXME! it should be enough with 2**(len(data)-1)
+        ),
+        (
+            2,
+            0,
+            15,  # training set will have 0.3 * 15 = 5 samples
+            owen_sampling_shapley,
+            "explained_variance",
+            0.2,
+            2**8,
         ),
     ],
 )
 def test_linear_montecarlo_shapley(
     linear_dataset,
     fun,
-    score_type,
-    rtol,
-    max_iterations,
-    memcache_client_config,
-    n_jobs,
-    total_atol=1,
+    score_type: str,
+    rtol: float,
+    max_iterations: float,
+    memcache_client_config: "MemcachedClientConfig",
+    n_jobs: int,
+    total_atol: float = 1,
 ):
     linear_utility = Utility(
         LinearRegression(),
