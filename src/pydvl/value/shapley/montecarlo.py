@@ -33,7 +33,6 @@ groups instead.
 
 import logging
 import math
-import warnings
 from collections import OrderedDict
 from time import sleep, time
 from typing import TYPE_CHECKING, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple
@@ -71,9 +70,9 @@ def truncated_montecarlo_shapley(
     u: Utility,
     value_tolerance: Optional[float] = None,
     max_iterations: Optional[int] = None,
+    *,
     n_jobs: Optional[int] = None,
     config: ParallelConfig = ParallelConfig(),
-    *,
     progress: bool = False,
     coordinator_update_frequency: int = 10,
     worker_update_frequency: int = 5,
@@ -163,7 +162,7 @@ def truncated_montecarlo_shapley(
 
 
 def _permutation_montecarlo_marginals(
-    u: Utility, max_permutations: int, progress: bool = False, job_id: int = 1, **kwargs
+    u: Utility, max_permutations: int, progress: bool = False, job_id: int = 1
 ) -> "NDArray":
     """Helper function for :func:`permutation_montecarlo_shapley`.
 
@@ -196,9 +195,9 @@ def _permutation_montecarlo_marginals(
 def permutation_montecarlo_shapley(
     u: Utility,
     max_iterations: int,
+    *,
     n_jobs: int,
     config: ParallelConfig = ParallelConfig(),
-    *,
     progress: bool = False,
 ) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
     """Computes an approximate Shapley value using independent index permutations.
@@ -245,7 +244,6 @@ def _combinatorial_montecarlo_shapley(
     *,
     progress: bool = False,
     job_id: int = 1,
-    **kwargs,
 ) -> MonteCarloResults:
     """Helper function for :func:`combinatorial_montecarlo_shapley`.
 
@@ -298,9 +296,9 @@ def _combinatorial_montecarlo_shapley(
 def combinatorial_montecarlo_shapley(
     u: Utility,
     max_iterations: int,
+    *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
-    *,
     progress: bool = False,
 ) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
     """Computes an approximate Shapley value using the combinatorial definition.
@@ -415,9 +413,9 @@ def owen_sampling_shapley(
     u: Utility,
     max_iterations: int,
     max_q: int = 100,
+    *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
-    *,
     progress: bool = False,
 ) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
     r"""Owen sampling of Shapley values.

@@ -81,9 +81,9 @@ def _combinatorial_exact_shapley(
 
 def combinatorial_exact_shapley(
     u: Utility,
+    *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
-    *,
     progress: bool = False,
 ) -> "OrderedDict[str, float]":
     r"""Computes the exact Shapley value using the combinatorial definition.

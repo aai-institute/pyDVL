@@ -8,9 +8,7 @@ from pydvl.utils import Utility, maybe_progress
 __all__ = ["naive_loo"]
 
 
-def naive_loo(
-    u: Utility, *, progress: bool = True, **kwargs
-) -> OrderedDict[int, float]:
+def naive_loo(u: Utility, *, progress: bool = True) -> OrderedDict[int, float]:
     """Computes leave one out score.
 
     No caching nor parallelization is implemented.
