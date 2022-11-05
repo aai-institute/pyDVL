@@ -10,8 +10,10 @@ from typing import (
     Generator,
     Iterator,
     Optional,
+    Sequence,
     Tuple,
     TypeVar,
+    Union,
 )
 
 import numpy as np
@@ -19,7 +21,7 @@ import numpy as np
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
-    FloatOrArray = TypeVar("FloatOrArray", float, "NDArray")
+FloatOrArray = TypeVar("FloatOrArray", float, "NDArray")
 
 __all__ = [
     "get_running_avg_variance",
@@ -37,17 +39,19 @@ __all__ = [
 T = TypeVar("T")
 
 
-def powerset(it: "NDArray") -> Iterator[Collection[T]]:
+def powerset(s: Union[Sequence, "NDArray"]) -> Iterator[Collection[T]]:
     """Returns an iterator for the power set of the argument.
 
-    Subsets are generated in sequence by growing size. See
-    :func:`random_powerset` for random sampling.
+     Subsets are generated in sequence by growing size. See
+     :func:`random_powerset` for random sampling.
 
     >>> from pydvl.utils.numeric import powerset
     >>> list(powerset([1,2]))
     [(), (1,), (2,), (1, 2)]
+
+     :param s: The set to use
+     :return: An iterator
     """
-    s = list(it)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
 
@@ -62,7 +66,7 @@ def lower_bound_hoeffding(delta: float, eps: float, score_range: float) -> int:
 
 
 def random_powerset(
-    s: "NDArray", max_subsets: Optional[int] = None, q: Optional[float] = 0.5
+    s: "NDArray", max_subsets: Optional[int] = None, q: float = 0.5
 ) -> Generator["NDArray", None, None]:
     """Samples subsets from the power set of the argument, without
     pre-generating all subsets and in no order.
@@ -227,15 +231,16 @@ def linear_regression_analytical_derivative_d_x_d_theta(
 
 
 def get_running_avg_variance(
-    previous_avg: "FloatOrArray",
-    previous_variance: "FloatOrArray",
-    new_value: "FloatOrArray",
+    previous_avg: FloatOrArray,
+    previous_variance: FloatOrArray,
+    new_value: FloatOrArray,
     count: int,
-) -> Tuple["FloatOrArray", "FloatOrArray"]:
+) -> Tuple[FloatOrArray, FloatOrArray]:
     """Uses Welford's algorithm to calculate the running average and variance of
      a set of numbers.
 
-    See [Welford's algorithm in wikipedia](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm)
+    See `Welford's algorithm in wikipedia
+    <https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm>`_
 
     :param previous_avg: average value at previous step
     :param previous_variance: variance at previous step

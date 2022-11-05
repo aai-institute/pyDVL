@@ -43,6 +43,8 @@ def knn_shapley(
     Proceedings of the VLDB Endowment 12, no. 11 (1 July 2019): 1610–23.
     https://doi.org/10.14778/3342263.3342637.
 
+    .. versionadded:: 0.1.0
+
     """
     defaults: Dict[str, Union[int, str]] = {
         "algorithm": "ball_tree" if data.dim >= 20 else "kd_tree",

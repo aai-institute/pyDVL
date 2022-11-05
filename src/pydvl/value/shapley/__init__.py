@@ -135,10 +135,12 @@ def compute_shapley_values(
         values = permutation_exact_shapley(u, progress=progress)
         stderr = None
     elif mode == ShapleyMode.OwenSampling:
+        if max_iterations is None:
+            raise ValueError("max_iterations cannot be None for Owen sampling Shapley")
         values, stderr = owen_sampling_shapley(
             u,
-            max_q=100,  # FIXME!!! add argument / remove max_q
             max_iterations=max_iterations,
+            max_q=100,  # FIXME!!! add argument / remove max_q
             n_jobs=n_jobs,
         )
     elif mode == ShapleyMode.KNN:

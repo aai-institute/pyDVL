@@ -303,6 +303,10 @@ def combinatorial_montecarlo_shapley(
 ) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
     """Computes an approximate Shapley value using the combinatorial definition.
 
+    This consists of randomly sampling subsets of the power set of the training
+    indices in :attr:`~pydvl.utils.utility.Utility.data`, and computing their
+    marginal utilities.
+
     :param u: Utility object with model, data, and scoring function
     :param max_iterations: Number of subsets to sample from the power set for
         every index
