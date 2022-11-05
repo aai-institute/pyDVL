@@ -18,8 +18,9 @@ def naive_loo(u: Utility, *, progress: bool = True) -> OrderedDict[int, float]:
     """
 
     values = {i: 0.0 for i in u.data.indices}
+    all_indices = set(u.data.indices)
     for i in maybe_progress(data.indices, progress):  # type: ignore
-        subset = np.setxor1d(u.data.indices, [i], assume_unique=True)
+        subset = all_indices.difference({i})
         values[i] = u(u.data.indices) - u(subset)
 
     return sort_values(values)
