@@ -82,13 +82,13 @@ def random_powerset(
 
     :return: Samples from the power set of s
     :raises: TypeError: if the data `s` is not a NumPy array
-    :raises: ValueError: if the element sampling probability is not in (0,1]
+    :raises: ValueError: if the element sampling probability is not in [0,1]
 
     """
     if not isinstance(s, np.ndarray):
         raise TypeError("Set must be an NDArray")
-    if q <= 0 or q > 1:
-        raise ValueError("Bernoulli probability must be in (0,1]")
+    if q < 0 or q > 1:
+        raise ValueError("Element sampling probability must be in [0,1]")
 
     total = 1
     if max_subsets is None:
