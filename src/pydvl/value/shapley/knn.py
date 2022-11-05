@@ -19,23 +19,30 @@ def knn_shapley(
 ) -> OrderedDict[str, float]:
     """Computes exact Shapley values for a KNN classifier.
 
-    This implements the method described in:
+    This implements the method described in [1]. It exploits the local structure
+    of K-Nearest Neighbours to reduce the number of calls to the utility
+    function to a constant number per index, thus reducing computation time to
+    $O(n)$
 
-    Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nezihe Merve Gurel,
-    Bo Li, Ce Zhang, Costas Spanos, and Dawn Song. ‘Efficient Task-Specific Data
-    Valuation for Nearest Neighbor Algorithms’. Proceedings of the VLDB
-    Endowment 12, no. 11 (1 July 2019): 1610–23.
-    https://doi.org/10.14778/3342263.3342637.
-
-    :param data: split :class:`pydvl.utils.dataset.Dataset`.
-    :param model: model to extract parameters from. The object will not be
+    :param data: A :class:`pydvl.utils.dataset.Dataset` object with a training /
+        test split.
+    :param model: A KNN model to extract parameters from. The object will not be
         modified nor used other than to call
         `get_params() <https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params>`_
-    :param progress: whether to display a progress bar.
+    :param progress: Whether to display a progress bar.
 
     :return: An
         `OrderedDict <https://docs.python.org/3/library/collections.html#collections.OrderedDict>`_
         of data indices and their values.
+
+    .. rubric:: References
+
+    [1]: Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nezihe Merve
+    Gurel, Bo Li, Ce Zhang, Costas Spanos, and Dawn Song.
+    ‘Efficient Task-Specific Data Valuation for Nearest Neighbor Algorithms’.
+    Proceedings of the VLDB Endowment 12, no. 11 (1 July 2019): 1610–23.
+    https://doi.org/10.14778/3342263.3342637.
+
     """
     defaults: Dict[str, Union[int, str]] = {
         "algorithm": "ball_tree" if data.dim >= 20 else "kd_tree",
