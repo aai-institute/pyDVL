@@ -167,11 +167,12 @@ def linear_dataset(a, b, num_points):
     from sklearn.utils import Bunch
 
     step = 2 / num_points
+    stddev = 0.1
     x = np.arange(-1, 1, step)
-    y = np.random.normal(loc=a * x + b, scale=0.1)
+    y = np.random.normal(loc=a * x + b, scale=stddev)
     db = Bunch()
     db.data, db.target = x.reshape(-1, 1), y
-    db.DESCR = f"y~N({a}*x + {b}, 1)"
+    db.DESCR = f"y~N({a}*x + {b}, {stddev:0.2f})"
     db.feature_names = ["x"]
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.3)
@@ -384,17 +385,20 @@ def check_values(
 ):
     """Compares values in dictionaries.
 
+    Asserts that `|value - exact_value| < |exact_value| * rtol + atol` for
+    all pairs of `value`, `exact_value` with equal keys.
+
     Note that this does not assume any ordering (despite values typically being
     stored in an OrderedDict elsewhere.
 
     :param values:
     :param exact_values:
     :param rtol: relative tolerance of elements in `values` with respect to
-        elements in `exact_values`. E.g. if rtol = 0.1, we must have
-        |value - exact_value|/|exact_value| < 0.1 for every value
+        elements in `exact_values`. E.g. if rtol = 0.1, and atol = 0 we must
+        have |value - exact_value|/|exact_value| < 0.1 for every value
     :param atol: absolute tolerance of elements in `values` with respect to
-        elements in `exact_values`. E.g. if atol = 0.1, we must have
-        |value - exact_value| < 0.1 for every value.
+        elements in `exact_values`. E.g. if atol = 0.1, and rtol = 0 we must
+        have |value - exact_value| < 0.1 for every value.
     """
     for key in values:
         assert (
