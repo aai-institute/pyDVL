@@ -110,7 +110,7 @@ def truncated_montecarlo_shapley(
         set to :func:`available_cpus`.
     :param config: Object configuring parallel computation, with cluster address,
         number of cpus, etc.
-    :param progress: set to `True` to use tqdm progress bars.
+    :param progress: Whether to display progress bars for each job.
     :param coordinator_update_frequency: in seconds. Check status with the job
         coordinator every so often.
     :param worker_update_frequency: interval in seconds between different updates to
@@ -173,7 +173,7 @@ def _permutation_montecarlo_marginals(
 
     :param u: Utility object with model, data, and scoring function
     :param max_permutations: total number of permutations to use
-    :param progress: whether to display a progress bar
+    :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress (e.g. to place progres bars)
     :return: a matrix with each row being a different permutation and each
         column being the score of a different data point
@@ -208,7 +208,7 @@ def permutation_montecarlo_shapley(
     :param n_jobs: number of jobs across which to distribute the computation.
     :param config: Object configuring parallel computation, with cluster address,
         number of cpus, etc.
-    :param progress: Set to True to print a progress bar.
+    :param progress: Whether to display progress bars for each job.
     :return: Tuple with the first element being an ordered Dict of approximate
         Shapley values for the indices, the second being their standard error
     """
@@ -254,7 +254,7 @@ def _combinatorial_montecarlo_shapley(
 
     :param u: Utility object with model, data, and scoring function
     :param max_iterations: total number of subsets to sample.
-    :param progress: true to plot progress bar
+    :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress
     :return: A tuple of ndarrays with estimated values and standard errors
     """
@@ -305,12 +305,15 @@ def combinatorial_montecarlo_shapley(
 ) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
     """Computes an approximate Shapley value using the combinatorial definition.
 
-    :param u: utility
-    :param max_iterations: total number of iterations (permutations) to use
-    :param n_jobs: number of jobs across which to distribute the computation
+    :param u: Utility object with model, data, and scoring function
+    :param max_iterations: Number of subsets to sample from the power set for
+        every index
+    :param n_jobs: number of parallel jobs across which to distribute the
+        computation. Each worker receives a chunk of
+        :attr:`~pydvl.utils.dataset.Dataset.indices`
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param progress: true to plot progress bar
+    :param progress: Whether to display progress bars for each job.
     :return: Tuple with the first element being an ordered Dict of approximate
         Shapley values for the indices, the second being their standard error
     """
@@ -367,12 +370,12 @@ def _owen_sampling_shapley(
         We might want to try better quadrature rules like Gauss or Rombert or
         use Monte Carlo for the double integral.
 
-    :param q_values:
-    :param u:
+    :param q_values: Values for the sampling probability to evaluate
+    :param u: Utility object with model, data, and scoring function
     :param max_iterations: Number of subsets to sample to estimate the integrand
-    :param progress: whether to display a progress bar
+    :param progress: Whether to display progress bars for each job
     :param job_id: For positioning of the progress bar
-    :return: values and standard errors
+    :return: Values and standard errors
     """
     n = len(u.data)
     values = np.zeros(n)
@@ -439,7 +442,7 @@ def owen_sampling_shapley(
         of the total of `max_q` values for q.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param progress: true to plot progress bar
+    :param progress: Whether to display progress bars for each job.
     :return: Tuple with the first element being an ordered Dict of approximate
         Shapley values for the indices, the second being their standard error
 

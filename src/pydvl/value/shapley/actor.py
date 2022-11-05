@@ -62,7 +62,7 @@ class ShapleyCoordinator(Coordinator):
         standard error to median of value has dropped below this value.
     :param max_iterations: Terminate if the current number of permutations
         has exceeded this threshold.
-     :param progress: Whether to display a progress bar
+     :param progress: Whether to display progress bars for each job.
     """
 
     def __init__(
@@ -162,7 +162,7 @@ class ShapleyWorker(Worker):
         :param u: Utility object with model, data, and scoring function
         :param coordinator: worker results will be pushed to this coordinator
         :param worker_id: id used for reporting through maybe_progress
-        :param progress: set to True to report progress, else False
+        :param progress: Whether to display a progres bar
         :param update_frequency: interval in seconds between different updates to
             and from the coordinator
 

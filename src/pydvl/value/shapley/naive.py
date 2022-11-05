@@ -29,7 +29,7 @@ def permutation_exact_shapley(
     cases.
 
     :param u: Utility object with model, data, and scoring function
-    :param progress: set to True to use tqdm progress bars.
+    :param progress: Whether to display progress bars for each job.
     :return: OrderedDict of exact Shapley values
     """
 
@@ -99,7 +99,7 @@ def combinatorial_exact_shapley(
     :param n_jobs: Number of parallel jobs to use
     :param config: Object configuring parallel computation, with cluster address,
         number of cpus, etc.
-    :param progress: set to True to use tqdm progress bars
+    :param progress: Whether to display progress bars for each job.
 
     :return: Dictionary of {"index or label": exact_value}, sorted by decreasing
         value.
