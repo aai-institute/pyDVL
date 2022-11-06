@@ -29,14 +29,10 @@ log = logging.getLogger(__name__)
         (10, combinatorial_montecarlo_shapley, 0.1, 1e3),
     ],
 )
-def test_analytic_montecarlo_shapley(
-    analytic_shapley, fun, rtol, max_iterations, n_jobs
-):
+def test_analytic_montecarlo_shapley(analytic_shapley, fun, rtol, max_iterations):
     u, exact_values = analytic_shapley
 
-    values, _ = fun(
-        u, max_iterations=int(max_iterations), progress=False, n_jobs=n_jobs
-    )
+    values, _ = fun(u, max_iterations=int(max_iterations), progress=False, n_jobs=1)
 
     check_values(values, exact_values, rtol=rtol)
 
