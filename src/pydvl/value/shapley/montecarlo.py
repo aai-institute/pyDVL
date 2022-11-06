@@ -261,9 +261,10 @@ def _combinatorial_montecarlo_shapley(
     if len(np.unique(indices)) != len(indices):
         raise ValueError("Repeated indices passed")
 
-    # Correction coming from Monte Carlo integration: the uniform distribution
-    # over the powerset of a set with n-1 elements has mass 2^{n-1} over each
-    # subset. The additional factor n is from the averaging.
+    # Correction coming from Monte Carlo integration so that the mean of the
+    # marginals converges to the value: the uniform distribution over the
+    # powerset of a set with n-1 elements has mass 2^{n-1} over each subset. The
+    # additional factor n corresponds to the one in the Shapley definition
     correction = 2 ** (n - 1) / n
 
     values = np.zeros(n)
@@ -281,9 +282,9 @@ def _combinatorial_montecarlo_shapley(
             total=max_iterations,
             position=job_id,
         ):
-            new_marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
+            marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
             values[idx], variances[idx] = get_running_avg_variance(
-                values[idx], variances[idx], new_marginal, counts[idx]
+                values[idx], variances[idx], marginal, counts[idx]
             )
             counts[idx] += 1
 
@@ -337,11 +338,7 @@ def combinatorial_montecarlo_shapley(
     map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
         map_func=_combinatorial_montecarlo_shapley,
         reduce_func=reducer,
-        map_kwargs=dict(
-            u=u_id,
-            max_iterations=max_iterations,
-            progress=progress,
-        ),
+        map_kwargs=dict(u=u_id, max_iterations=max_iterations, progress=progress),
         chunkify_inputs=True,
         n_jobs=n_jobs,
         config=config,
