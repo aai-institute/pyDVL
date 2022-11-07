@@ -352,7 +352,7 @@ class TolerateErrors:
         return True
 
 
-def check_total_value(u: Utility, values: OrderedDict, atol: float = 1e-6):
+def check_total_value(u: Utility, values: Dict[str, float], atol: float = 1e-6):
     """Checks absolute distance between total and added values.
     Shapley value is supposed to fulfill the total value axiom."""
     total_utility = u(u.data.indices)

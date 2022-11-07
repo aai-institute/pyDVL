@@ -1,11 +1,9 @@
 import logging
 
-import numpy as np
 import pytest
-from sklearn.linear_model import LinearRegression
 
 from pydvl.least_core import montecarlo_least_core
-from tests.conftest import check_rank_correlation, check_total_value, check_values
+from tests.conftest import check_values
 
 logger = logging.getLogger(__name__)
 
