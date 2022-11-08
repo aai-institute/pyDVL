@@ -5,6 +5,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Callable, Dict, Optional
 
 import numpy as np
+from scipy.sparse.linalg import LinearOperator
 
 from .conjugate_gradient import (
     batched_preconditioned_conjugate_gradient,
@@ -119,13 +120,13 @@ def _calculate_influences_pert(
     """
     all_pert_influences = []
     for i in np.arange(len(x)):
-        grad_xy, tensor_x = model.grad(x[i], y[i])
+        grad_xy, tensor_x = model.grad(x[i : i + 1], y[i])
         perturbation_influences = model.mvp(
             grad_xy,
             influence_factors,
-            backprop_on=[tensor_x],
+            backprop_on=tensor_x,
         )
-        all_pert_influences.append(perturbation_influences)
+        all_pert_influences.append(perturbation_influences.reshape((-1, *x[i].shape)))
 
     return np.stack(all_pert_influences, axis=1)
 
@@ -189,7 +190,7 @@ def compute_influences(
     n_params = differentiable_model.num_params()
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
         "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,  # type: ignore
-        "cg": lambda hvp, x: conjugate_gradient(hvp(np.eye(n_params)), x),  # type: ignore
+        "cg": lambda hvp, x: conjugate_gradient(LinearOperator((n_params, n_params), matvec=hvp), x),  # type: ignore
         "batched_cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(  # type: ignore
             hvp, x, **inversion_method_kwargs
         )[

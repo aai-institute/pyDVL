@@ -3,7 +3,7 @@ Contains all models used in test and demonstration. Note that they could be writ
  three are defined explicitly.
 """
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 import numpy as np
@@ -23,7 +23,8 @@ except ImportError:
 __all__ = [
     "TorchLinearRegression",
     "TorchBinaryLogisticRegression",
-    "TorchNeuralNetwork",
+    "TorchMLP",
+    "TorchModel",
 ]
 
 logger = logging.getLogger(__name__)
@@ -47,11 +48,12 @@ class InternalDataset(Dataset):
         return self.x[idx], self.y[idx]
 
 
-class TorchModel(ABC):
+class TorchModelBase(ABC):
     def __init__(self):
         if not _TORCH_INSTALLED:
             raise RuntimeWarning("This function requires PyTorch.")
 
+    @abstractmethod
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         pass
 
@@ -106,8 +108,12 @@ class TorchModel(ABC):
                 if scheduler:
                     scheduler.step()
             pred_val = self.forward(x_val)
-            val_loss.append(loss(torch.squeeze(pred_val), torch.squeeze(y_val)).item())
-            train_loss.append(np.mean(batch_loss))
+            epoch_val_loss = loss(torch.squeeze(pred_val), torch.squeeze(y_val)).item()
+            mean_epoch_train_loss = np.mean(batch_loss)
+            val_loss.append(epoch_val_loss)
+            train_loss.append(mean_epoch_train_loss)
+            logger.info(f"Epoch: {epoch} ---> Training loss: {mean_epoch_train_loss}")
+            logger.info(f"Epoch: {epoch} ---> Validation loss: {epoch_val_loss}")
         return train_loss, val_loss
 
     def predict(self, x: torch.Tensor) -> np.ndarray:
@@ -133,7 +139,15 @@ class TorchModel(ABC):
         return score(self.forward(x), y).detach().numpy()  # type: ignore
 
 
-class TorchLinearRegression(nn.Module, TorchModel):
+class TorchModel(TorchModelBase):
+    def __init__(self, model: nn.Module):
+        self.model = model
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.model(x)
+
+
+class TorchLinearRegression(nn.Module, TorchModelBase):
     """
     A simple linear regression model (with bias) f(x)=Ax+b.
     """
@@ -172,7 +186,7 @@ class TorchLinearRegression(nn.Module, TorchModel):
         return x @ self.A.T + self.b
 
 
-class TorchBinaryLogisticRegression(nn.Module, TorchModel):
+class TorchBinaryLogisticRegression(nn.Module, TorchModelBase):
     """
     A simple binary logistic regression model p(y)=sigmoid(dot(a, x) + b).
     """
@@ -203,7 +217,7 @@ class TorchBinaryLogisticRegression(nn.Module, TorchModel):
         return torch.sigmoid(x @ self.A.T + self.b)
 
 
-class TorchNeuralNetwork(nn.Module, TorchModel):
+class TorchMLP(nn.Module, TorchModelBase):
     """
     A simple fully-connected neural network f(x) model defined by y = v_K, v_i = o(A v_(i-1) + b), v_1 = x. It contains
     K layers and K - 2 hidden layers. It holds that K >= 2, because every network contains a input and output.

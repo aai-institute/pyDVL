@@ -33,7 +33,7 @@ def conjugate_gradient(A: "NDArray", batch_y: "NDArray") -> "NDArray":
     """
     batch_cg = []
     for y in batch_y:
-        y_cg, _ = cg(A.T, y)
+        y_cg, _ = cg(A, y)
         batch_cg.append(y_cg)
     return np.asarray(batch_cg)
 

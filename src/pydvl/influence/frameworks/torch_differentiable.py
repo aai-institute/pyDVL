@@ -30,7 +30,7 @@ def flatten_gradient(grad):
     """
     Simple function to flatten a pyTorch gradient for use in subsequent calculation
     """
-    return torch.cat([el.view(-1) for el in grad])
+    return torch.cat([el.reshape(-1) for el in grad])
 
 
 class TorchTwiceDifferentiable(TwiceDifferentiable):
@@ -79,11 +79,18 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         x = torch.as_tensor(x)
         y = torch.as_tensor(y)
 
+        params = [
+            param for param in self.model.parameters() if param.requires_grad == True
+        ]
+
         grads = [
             flatten_gradient(
                 autograd.grad(
-                    self.loss(torch.squeeze(self.model(x[i])), torch.squeeze(y[i])),
-                    self.model.parameters(),
+                    self.loss(
+                        torch.squeeze(self.model(x[i].unsqueeze(0))),
+                        torch.squeeze(y[i]),
+                    ),
+                    params,
                 )
             )
             .detach()
@@ -110,10 +117,12 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         x = torch.as_tensor(x).requires_grad_(True)
         y = torch.as_tensor(y)
 
+        params = [
+            param for param in self.model.parameters() if param.requires_grad == True
+        ]
+
         loss_value = self.loss(torch.squeeze(self.model(x)), torch.squeeze(y))
-        grad_f = torch.autograd.grad(
-            loss_value, self.model.parameters(), create_graph=True
-        )
+        grad_f = torch.autograd.grad(loss_value, params, create_graph=True)
         return flatten_gradient(grad_f), x
 
     def mvp(
@@ -130,7 +139,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
         :param grad_xy: an array [P] holding the gradients of the model parameters wrt input x and labels y, \
             where P is the number of parameters of the model. It is typically obtained through self.grad.
-        :param v: A np.ndarray [DxP] which multiplies the Hessian, where D is the number of directions.
+        :param v: A np.ndarray [DxP] or a one dimensional np.array [D] which multiplies the Hessian, \
+            where D is the number of directions.
         :param progress: True, iff progress shall be printed.
         :param backprop_on: tensor used in the second backpropagation (the first one is along x and y as defined \
             via grad_xy). If None, the model parameters are used.
@@ -138,13 +148,18 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
             Output shape is [DxP] if backprop_on is None, otherwise [DxM], with M the number of elements of backprop_on.
         """
         v = torch.as_tensor(v)
+        if v.ndim == 1:
+            v = v.unsqueeze(0)
 
         z = (grad_xy * Variable(v)).sum(dim=1)
+        params = [
+            param for param in self.model.parameters() if param.requires_grad == True
+        ]
         all_flattened_grads = [
             flatten_gradient(
                 autograd.grad(
                     z[i],
-                    self.model.parameters() if backprop_on is None else backprop_on,
+                    params if backprop_on is None else backprop_on,
                     retain_graph=True,
                 )
             )
