@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "miner_utility, rtol, max_iterations",
     [
-        (8, 0.2, 50),
-        (15, 0.2, 300),
+        (8, 0.2, 100),
+        (15, 0.2, 500),
     ],
     indirect=["miner_utility"],
 )
