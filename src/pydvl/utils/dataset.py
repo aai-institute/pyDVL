@@ -497,7 +497,7 @@ def load_preprocess_imagenet(
                 processed_ds["normalized_images"].append(preprocess_rgb(item["image"]))
                 processed_ds["images"].append(item["image"])
                 processed_ds["labels"].append(item["label"])
-        return processed_ds
+        return pd.DataFrame.from_dict(processed_ds)
 
     tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="train")
     if downsample_ds_to_fraction != 1:
