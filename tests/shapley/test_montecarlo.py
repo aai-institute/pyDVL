@@ -26,7 +26,8 @@ log = logging.getLogger(__name__)
     "num_samples, fun, rtol, max_iterations",
     [
         (12, permutation_montecarlo_shapley, 0.1, 10),
-        (10, combinatorial_montecarlo_shapley, 0.1, 1e3),
+        (10, combinatorial_montecarlo_shapley, 0.1, 2**10),
+        (12, owen_sampling_shapley, 0.1, 16),
     ],
 )
 def test_analytic_montecarlo_shapley(analytic_shapley, fun, rtol, max_iterations):
@@ -158,6 +159,7 @@ def test_linear_montecarlo_with_outlier(
         (2, 2, 20, 4, permutation_montecarlo_shapley, "r2", 0.2, 5000),
         (2, 0, 200, 5, truncated_montecarlo_shapley, "explained_variance", 0.2, 1000),
         (2, 0, 200, 5, truncated_montecarlo_shapley, "r2", 0.2, 1000),
+        (2, 0, 200, 5, owen_sampling_shapley, "r2", 0.2, 2**4),
     ],
 )
 def test_grouped_linear_montecarlo_shapley(
