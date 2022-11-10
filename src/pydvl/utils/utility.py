@@ -193,10 +193,13 @@ class DataUtilityLearning:
     >>> wrapped_u((1, 2, 3)) # Subsequent calls will be computed using the fit model for DUL
     0.0
 
-    .. note::
-        .. [1] `Tianhao Wang, Yu Yang, Ruoxi Jia.
-           "Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning."
-           arXiv, 2021 <https://arxiv.org/abs/2107.06336v2>`_.
+
+    .. rubric:: References
+
+    .. [1] Tianhao Wang, Yu Yang, Ruoxi Jia.
+       `Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning.
+       <https://arxiv.org/abs/2107.06336v2>`_, arXiv, 2021 .
+
     """
 
     def __init__(

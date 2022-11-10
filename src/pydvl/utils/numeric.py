@@ -76,7 +76,7 @@ def random_powerset(
     To generate subsets, `len(s)` Bernoulli draws with probability `q` are drawn.
     The default value of `q = 0.5` provides a uniform distribution over the
     power set of `s`. Other choices can be used e.g. to implement
-    :func:`Owen sampling <~pydvl.value.shapley.montecarlo.owen_sampling_shapley>`.
+    :func:`Owen sampling <pydvl.value.shapley.montecarlo.owen_sampling_shapley>`.
 
     :param s: set to sample from
     :param max_subsets: if set, stop the generator after this many steps.

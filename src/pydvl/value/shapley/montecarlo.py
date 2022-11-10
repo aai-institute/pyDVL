@@ -360,10 +360,10 @@ def _owen_sampling_shapley(
     progress: bool = False,
     job_id: int = 1,
 ) -> MonteCarloResults:
-    """This is the algorithm as detailed in the paper: to compute the outer
+    r"""This is the algorithm as detailed in the paper: to compute the outer
     integral over q ∈ [0,1], use uniformly distributed points for evaluation
-    of the integrand (the expectation over sets which is itself approximated
-    using Monte Carlo).
+    of the integrand. For the integrand (the expected marginal utility over the
+    power set), use Monte Carlo.
 
     .. todo::
         We might want to try better quadrature rules like Gauss or Rombert or
