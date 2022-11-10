@@ -5,6 +5,7 @@ interface to all methods defined in the modules.
 
 Please refer to :ref:`data valuation` for an overview of Shapley Data value.
 """
+import warnings
 from enum import Enum
 from typing import Optional, cast
 
@@ -15,6 +16,7 @@ import sklearn.neighbors as skn
 from pydvl.utils import Utility
 from pydvl.value.shapley.knn import knn_shapley
 from pydvl.value.shapley.montecarlo import (
+    OwenAlgorithm,
     combinatorial_montecarlo_shapley,
     owen_sampling_shapley,
     permutation_montecarlo_shapley,
@@ -37,6 +39,7 @@ class ShapleyMode(str, Enum):
     PermutationMontecarlo = "permutation_montecarlo"
     TruncatedMontecarlo = "truncated_montecarlo"
     OwenSampling = "owen_sampling"
+    OwenHalved = "owen_halved"
     KNN = "knn"
 
 
@@ -73,6 +76,16 @@ def compute_shapley_values(
       stops the computation whenever a certain accuracy is reached.
       Implemented in
       :func:`~pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley`.
+    - 'owen_sampling': Uses the Owen continuous extension of the utility function
+      to the unit cube. Implemented in
+      :func:`~pydvl.value.shapley.montecarlo.owen_sampling_shapley`.
+      This method requires an additional parameter `q_max` for the number of
+      subdivisions of the unit interval to use for integration.
+    - 'owen_halved': Same as 'owen_sampling' but uses correlated samples in the
+      expectation. Implemented in
+      :func:`~pydvl.value.shapley.montecarlo.owen_sampling_shapley`.
+      This method  requires an additional parameter `q_max` for the number of
+      subdivisions of the interval [0,0.5] to use for integration.
 
     Additionally, one can use model-specific methods:
 
@@ -134,13 +147,27 @@ def compute_shapley_values(
     elif mode == ShapleyMode.PermutationExact:
         values = permutation_exact_shapley(u, progress=progress)
         stderr = None
-    elif mode == ShapleyMode.OwenSampling:
+    elif mode == ShapleyMode.OwenSampling or mode == ShapleyMode.OwenHalved:
         if max_iterations is None:
-            raise ValueError("max_iterations cannot be None for Owen sampling Shapley")
+            raise ValueError("max_iterations cannot be None for Owen methods")
+        # FIXME: would it be better to raise ValueError because of max_q as well?
+        default_max_q = 1000
+        if kwargs.get("max_q", None) is None:
+            warnings.warn(
+                f"Owen Sampling requires max_q for the outer integral. "
+                f"Using default value of {default_max_q}.",
+                RuntimeWarning,
+            )
+        method = (
+            OwenAlgorithm.Full
+            if mode == ShapleyMode.OwenSampling
+            else OwenAlgorithm.Halved
+        )
         values, stderr = owen_sampling_shapley(
             u,
             max_iterations=max_iterations,
-            max_q=100,  # FIXME!!! add argument / remove max_q
+            max_q=kwargs.get("max_q", default_max_q),
+            method=method,
             n_jobs=n_jobs,
         )
     elif mode == ShapleyMode.KNN:
