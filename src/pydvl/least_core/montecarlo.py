@@ -117,7 +117,7 @@ def montecarlo_least_core(
 
     u_id = parallel_backend.put(u)
 
-    iterations_per_job = max_iterations // n_jobs
+    iterations_per_job = max(1,max_iterations // n_jobs)
 
     map_reduce_job: MapReduceJob["Utility", Tuple["NDArray", "NDArray"]] = MapReduceJob(
         map_func=_montecarlo_least_core,
