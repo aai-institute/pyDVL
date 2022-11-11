@@ -31,7 +31,8 @@ def exact_least_core(
     .. note::
 
         This method is mostly used for internal testing and simple use cases.
-        Please refer to the Monte Carlo method for all other cases.
+        Please refer to the :func:`Monte Carlo method <pydvl.least_core.montecarlo.montecarlo_least_core>` 
+        for all other cases.
 
     :param u: Utility object with model, data, and scoring function
     :param progress: If True, shows a tqdm progress bar
