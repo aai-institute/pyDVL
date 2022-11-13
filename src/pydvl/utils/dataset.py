@@ -423,7 +423,7 @@ def load_wine_dataset(
     :param train_size: fraction of points used for training dataset
     :param test_size: fraction of points used for test dataset
     :param random_state: fix random seed. If None, no random seed is set.
-    :returns: A tuple of four elements with the first three being input and
+    :return: A tuple of four elements with the first three being input and
         target values in the form of matrices of shape (N,D) the first
         and (N,) the second. The fourth element is a list containing names of
         features of the model. (FIXME doc)
@@ -473,6 +473,7 @@ def load_preprocess_imagenet(
     downsample_ds_to_fraction: float = 1,
     keep_labels: Optional[List] = None,
     random_state: Optional[int] = None,
+    is_CI: bool = False,
 ):
     try:
         from datasets import load_dataset
