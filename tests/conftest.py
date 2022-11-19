@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 import ray
 from pymemcache.client import Client
+from scipy.stats import spearmanr
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
@@ -431,7 +432,7 @@ def check_rank_correlation(
     ranks = np.array(list(values.keys())[:k])
     ranks_exact = np.array(list(exact_values.keys())[:k])
 
-    correlation = spearman(ranks, ranks_exact)
+    correlation, pvalue = spearmanr(ranks, ranks_exact)
     assert correlation >= threshold, f"{correlation} < {threshold}"
 
 

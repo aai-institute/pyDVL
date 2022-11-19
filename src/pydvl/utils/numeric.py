@@ -32,7 +32,6 @@ __all__ = [
     "powerset",
     "random_matrix_with_condition_number",
     "random_powerset",
-    "spearman",
     "top_k_value_accuracy",
 ]
 
@@ -102,30 +101,6 @@ def random_powerset(
         subset = s[selection]
         yield subset
         total += 1
-
-
-def spearman(x: "NDArray", y: "NDArray") -> float:
-    """Spearman correlation for integer, distinct ranks.
-
-    :return: A float in [-1,1]: -1 for reversed ranks, 1 for perfect match, 0
-        for independent ranks
-    """
-    lx = len(x)
-    ly = len(y)
-    if lx == 0 or ly == 0 or lx != ly:
-        raise ValueError("Ranks must be non empty and same length")
-    if len(np.unique(x)) != lx or len(np.unique(y)) != ly:
-        raise ValueError("Ranks must be unique")
-    for a in x, y:
-        if min(a) < 0 or min(a) > 1 or max(a) - min(a) > len(a):
-            raise ValueError("Ranks must be in range [0,n-1] or [1,n]")
-    try:
-        if x.dtype != int or y.dtype != int:
-            raise ValueError("Ranks must be integers")
-    except AttributeError:
-        raise TypeError("Input must be numpy.ndarray")
-
-    return 1 - 6 * float(np.sum((x - y) ** 2)) / (lx**3 - lx)
 
 
 def random_matrix_with_condition_number(n: int, condition_number: float) -> "NDArray":

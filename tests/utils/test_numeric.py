@@ -55,36 +55,6 @@ def test_random_powerset(n, max_subsets):
 
 
 @pytest.mark.parametrize(
-    "x, y, expected",
-    [
-        ([], [], ValueError),
-        ([1], [1], TypeError),
-        ([1, 2, 3], [1, 2, 3], 1.0),
-        ([1, 2, 3], [3, 2, 1], -1.0),
-        (np.arange(1, 4), np.arange(4, 7), ValueError),
-        # FIXME: non deterministic test
-        pytest.param(
-            np.random.permutation(np.arange(100)),
-            np.random.permutation(np.arange(100)),
-            (0.0, 0.1),
-            marks=pytest.mark.skip("This test case is flaky."),
-        ),
-    ],
-)
-def test_spearman(x, y, expected):
-    if isinstance(expected, float):
-        x = np.array(x, dtype=int)
-        y = np.array(y, dtype=int)
-        assert spearman(x, y) == expected
-    elif isinstance(expected, tuple):
-        value, atol = expected
-        assert np.isclose(spearman(x, y), value, atol=atol)
-    else:
-        with pytest.raises(expected):
-            spearman(x, y)
-
-
-@pytest.mark.parametrize(
     "n, cond, exception",
     [
         (1, 2, ValueError),
