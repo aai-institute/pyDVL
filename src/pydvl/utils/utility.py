@@ -65,7 +65,7 @@ class Utility:
 
     model: SupervisedModel
     data: Dataset
-    scorer: Optional[Scorer]
+    scorer: Scorer
 
     def __init__(
         self,
@@ -157,7 +157,7 @@ class Utility:
         See :class:`~pydvl.utils.caching.CacheInfo` for all fields returned.
         """
         if self.enable_cache:
-            return self._utility_wrapper.stats
+            return self._utility_wrapper.stats  # type: ignore
         return None
 
     def __getstate__(self):
