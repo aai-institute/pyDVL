@@ -13,7 +13,7 @@ to avoid repeated re-training of the model.
 """
 import logging
 import warnings
-from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, Optional, Tuple, Union
 
 import numpy as np
 from sklearn.metrics import check_scoring
@@ -65,13 +65,13 @@ class Utility:
 
     model: SupervisedModel
     data: Dataset
-    scoring: Optional[Scorer]
+    scorer: Optional[Scorer]
 
     def __init__(
         self,
         model: SupervisedModel,
         data: Dataset,
-        scoring: Optional[Scorer] = None,
+        scoring: Optional[Union[str, Scorer]] = None,
         *,
         catch_errors: bool = True,
         show_warnings: bool = False,
@@ -81,14 +81,13 @@ class Utility:
     ):
         self.model = model
         self.data = data
-        self.scoring = scoring
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
         self.default_score = default_score
         self.enable_cache = enable_cache
         self.cache_options = cache_options
         self._signature = serialize((hash(model), hash(data), hash(scoring)))
-
+        self.scorer = check_scoring(self.model, scoring)
         self._initialize_utility_wrapper()
 
         # FIXME: can't modify docstring of methods. Instead, I could use a
@@ -129,11 +128,11 @@ class Utility:
         """
         if not indices:
             return 0.0
-        scorer = check_scoring(self.model, self.scoring)
+
         x, y = self.data.get_training_data(list(indices))
         try:
             self.model.fit(x, y)
-            score = float(scorer(self.model, self.data.x_test, self.data.y_test))
+            score = float(self.scorer(self.model, self.data.x_test, self.data.y_test))
             # Some scorers raise exceptions if they return NaNs, some might not
             if np.isnan(score):
                 if self.show_warnings:

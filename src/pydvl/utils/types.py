@@ -22,9 +22,7 @@ class SupervisedModel(Protocol):
         pass
 
 
-# ScorerNames = Literal[very long list here]
-# instead... ScorerNames = str
-Scorer = Union[str, Callable[[SupervisedModel, ndarray, ndarray], float]]
+Scorer = Callable[[SupervisedModel, ndarray, ndarray], float]
 
 
 def unpackable(cls: Type) -> Type:
