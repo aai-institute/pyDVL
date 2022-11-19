@@ -5,7 +5,6 @@ from pydvl.utils.numeric import (
     powerset,
     random_matrix_with_condition_number,
     random_powerset,
-    spearman,
 )
 
 
