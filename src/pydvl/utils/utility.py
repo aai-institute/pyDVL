@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, Optional, Tuple, Un
 import numpy as np
 from sklearn.metrics import check_scoring
 
-from .caching import memcached, serialize
+from .caching import CacheStats, memcached, serialize
 from .config import MemcachedConfig
 from .dataset import Dataset
 from .types import Scorer, SupervisedModel
@@ -150,6 +150,15 @@ class Utility:
     def signature(self):
         """Signature used for caching model results."""
         return self._signature
+
+    @property
+    def cache_stats(self) -> Optional[CacheStats]:
+        """Cache statistics are gathered when cache is enabled.
+        See :class:`~pydvl.utils.caching.CacheInfo` for all fields returned.
+        """
+        if self.enable_cache:
+            return self._utility_wrapper.stats
+        return None
 
     def __getstate__(self):
         state = self.__dict__.copy()
