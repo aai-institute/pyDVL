@@ -44,6 +44,7 @@ extensions = [
     "sphinx_math_dollar",
     "sphinx.ext.todo",
     "sphinx_rtd_theme",
+    "hoverxref.extension",  # This only works on read the docs
     "sphinx_design",
     "nbsphinx",
     # see https://github.com/spatialaudio/nbsphinx/issues/24 for an explanation why this extension is necessary
@@ -233,6 +234,13 @@ pygments_style = "sphinx"
 
 
 # -- Options for HTML output ---------------------------------------------------
+
+# Add a tooltip to all :ref: roles
+# This requires a backend server to retrieve the tooltip content. As of Nov 22,
+# sphinx-hoverxref only supports Read the Docs as backend.
+# See https://sphinx-hoverxref.readthedocs.io/en/latest/configuration.html
+# for further configuration options
+# hoverxref_auto_ref = True
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
