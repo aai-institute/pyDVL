@@ -110,7 +110,9 @@ def docker_services(
 @pytest.fixture(scope="session")
 def memcached_service(docker_ip, docker_services, do_not_start_memcache):
     """Ensure that memcached service is up and responsive.
-    If do_not_start_memcache is True then we just return the default values: 'localhost', 11211
+
+    If `do_not_start_memcache` is True then we just return the default values
+    'localhost', 11211
     """
     if do_not_start_memcache:
         return "localhost", 11211
@@ -127,7 +129,7 @@ def memcached_service(docker_ip, docker_services, do_not_start_memcache):
 
 
 @pytest.fixture(scope="function")
-def memcache_client_config(memcached_service):
+def memcache_client_config(memcached_service) -> MemcachedClientConfig:
 
     client_config = MemcachedClientConfig(
         server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
@@ -137,7 +139,7 @@ def memcache_client_config(memcached_service):
 
 
 @pytest.fixture(scope="function")
-def memcached_client(memcache_client_config):
+def memcached_client(memcache_client_config) -> Tuple[Client, MemcachedClientConfig]:
     from pymemcache.client import Client
 
     try:
@@ -153,7 +155,7 @@ def memcached_client(memcache_client_config):
 
 
 @pytest.fixture(scope="function")
-def boston_dataset(n_points, n_features):
+def boston_dataset(n_points, n_features) -> Dataset:
     from sklearn import datasets
 
     dataset = datasets.load_boston()
@@ -164,7 +166,17 @@ def boston_dataset(n_points, n_features):
 
 
 @pytest.fixture(scope="function")
-def linear_dataset(a, b, num_points):
+def linear_dataset(a: float, b: float, num_points: int):
+    """Constructs a dataset sampling from y=ax+b + eps, with eps~Gaussian and
+    x in [-1,1]
+
+    :param a: Slope
+    :param b: intercept
+    :param num_points: number of (x,y) samples to construct
+    :param train_size: fraction of points to use for training (between 0 and 1)
+
+    :return: Dataset with train/test split. call str() on it to see the parameters
+    """
     from sklearn.utils import Bunch
 
     step = 2 / num_points
@@ -173,7 +185,7 @@ def linear_dataset(a, b, num_points):
     y = np.random.normal(loc=a * x + b, scale=stddev)
     db = Bunch()
     db.data, db.target = x.reshape(-1, 1), y
-    db.DESCR = f"y~N({a}*x + {b}, {stddev:0.2f})"
+    db.DESCR = f"{{y_i~N({a}*x_i + {b}, {stddev:0.2f}): i=1, ..., {num_points}}}"
     db.feature_names = ["x"]
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.3)

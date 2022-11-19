@@ -135,6 +135,16 @@ def test_linear_montecarlo_with_outlier(
     total_atol,
     n_jobs,
 ):
+    """Tests whether valuation methods are able to detect an obvious outlier.
+
+    A point is selected at random from a linear dataset and the dependent
+    variable is set to 10 standard deviations.
+
+    Note that this implies that the whole dataset will have very low utility:
+    e.g. for R^2 it will be very negative. The larger the range of the utility,
+    the more samples are required for the Monte Carlo approximations to converge,
+    as indicated by the Hoeffding bound.
+    """
     outlier_idx = np.random.randint(len(linear_dataset.y_train))
     linear_dataset.y_train[outlier_idx] -= 100
     linear_utility = Utility(
