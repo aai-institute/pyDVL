@@ -80,7 +80,7 @@ T = TypeVar("T")
 
 
 @dataclass
-class CacheInfo:
+class CacheStats:
     """Statistics gathered by cached functions."""
 
     sets: int = 0
@@ -200,12 +200,12 @@ def memcached(
         @wraps(fun, updated=[])  # don't try to use update() for a class
         class Wrapped:
             config: MemcachedClientConfig
-            cache_info: CacheInfo
+            stats: CacheStats
             client: RetryingClient
 
             def __init__(self, config: MemcachedClientConfig):
                 self.config = config
-                self.cache_info = CacheInfo()
+                self.stats = CacheStats()
                 self.client = connect(self.config)
                 self._signature = signature
 
@@ -226,10 +226,10 @@ def memcached(
                         result_dict["count"] = 1
                         result_dict["variance"] = 0
                         self.client.set(key, result_dict, noreply=True)
-                        self.cache_info.sets += 1
-                    self.cache_info.misses += 1
+                        self.stats.sets += 1
+                    self.stats.misses += 1
                 elif allow_repeated_evaluations:
-                    self.cache_info.hits += 1
+                    self.stats.hits += 1
                     value = result_dict["value"]
                     count = result_dict["count"]
                     variance = result_dict["variance"]
@@ -246,9 +246,9 @@ def memcached(
                         result_dict["count"] = count + 1
                         result_dict["variance"] = new_var
                         self.client.set(key, result_dict, noreply=True)
-                        self.cache_info.sets += 1
+                        self.stats.sets += 1
                 else:
-                    self.cache_info.hits += 1
+                    self.stats.hits += 1
                 return result_dict["value"]  # type: ignore
 
             def __getstate__(self):
@@ -262,7 +262,7 @@ def memcached(
             def __setstate__(self, d: dict):
                 """Restores a client connection after loading from a pickle."""
                 self.config = d["config"]
-                self.cache_info = d["cache_info"]
+                self.stats = d["stats"]
                 self.client = Client(**self.config)
                 self._signature = signature
 
@@ -271,15 +271,15 @@ def memcached(
                 try:
                     result = self.client.get(key)
                 except socket.timeout as e:
-                    self.cache_info.timeouts += 1
+                    self.stats.timeouts += 1
                     warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
                 except OSError as e:
-                    self.cache_info.errors += 1
+                    self.stats.errors += 1
                     warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
                 except AttributeError as e:
                     # FIXME: this depends on _recv() failing on invalid sockets
                     # See pymemcache.base.py,
-                    self.cache_info.reconnects += 1
+                    self.stats.reconnects += 1
                     warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
                     self.client = connect(self.config)
                 return result

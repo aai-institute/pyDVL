@@ -106,7 +106,7 @@ def test_memcached_repeated_training(memcached_client):
         result = foo(np.arange(n))
 
     assert (result - np.sum(np.arange(n))) < 1
-    assert foo.cache_info.sets < foo.cache_info.hits
+    assert foo.stats.sets < foo.stats.hits
 
 
 def test_memcached_faster_with_repeated_training(memcached_client):
