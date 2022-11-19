@@ -26,6 +26,10 @@ mostly those derived from cooperative game theory. The methods can be found in
 the modules :mod:`~pydvl.value.shapley` and :mod:`~pydvl.value.loo`, supported
 by :mod:`pydvl.utils.dataset` and :mod:`~pydvl.utils.utility`, as detailed below.
 
+.. warning::
+   Be sure to read the section on
+   :ref:`the difficulties using data values <problems of data values>`.
+
 Creating a Dataset
 ==================
 
@@ -235,6 +239,60 @@ Other methods
 Other game-theoretic concepts in pyDVL's roadmap are the **Least Core**, and
 **Banzhaf indices** (the latter is just a different weighting scheme with better
 numerical stability properties). Contributions are welcome!
+
+
+.. _problems of data values:
+
+Problems of data values
+=======================
+
+There are a number of factors that affect how useful values can be for your
+project. In particular, regression can be especially tricky, but the particular
+nature of every (non-trivial) ML problem can have an effect:
+
+* **Unbounded utility**: Choosing a scorer for a classifier is simple: accuracy
+  or some F-score provides a bounded number with a clear interpretation. However,
+  in regression problems most scores, like $R^2$, are not bounded because
+  regressors can be arbitrarily bad. This leads to great variability in the
+  utility for low sample sizes, and hence unreliable Monte Carlo approximations
+  to the values. Nevertheless, in practice it is only the ranking of samples
+  that matters, and this tends to be accurate (wrt. to the true ranking) despite
+  inaccurate values.
+
+  .. todo:
+     pyDVL offers a :class:`<squashing wrapper>` for scorer
+     functions which composes the score with either a sigmoid or an exponential
+     function. This can sometimes prove useful, but can also introduce issues
+     for the low-value regime.
+
+* **High variance utility**: Classical applications of game theoretic value
+  concepts operate with deterministic utilities, but in ML we use an evaluation
+  of the model on a validation set as a proxy for the true risk. Even if the
+  utility *is* bounded, if it has high variance then values will also have high
+  variance, as will their Monte Carlo estimates. One workaround in pyDVL is to
+  configure the caching system to allow multiple evaluations of the utility for
+  every index set. A moving average is computed and returned once the standard
+  error is small, see :class:`~pydvl.utils.config.MemcachedConfig`.
+
+* **Data set size**: Computing exact Shapley values is NP-hard, and Monte Carlo
+  approximations can converge slowly. Massive datasets are thus impractical, at
+  least with current techniques. A workaround is to group samples and investigate
+  their value together. In pyDVL you can do this using
+  :class:`~pydvl.utils.dataset.GroupedDataset`. There is a fully worked-out
+  :doc:`example here <examples/shapley_basic_spotify>`. Some algorithms also
+  provide different sampling strategies to reduce the variance, but due to a
+  no-free-lunch-type theorem, no single strategy can be optimal for all
+  utilities.
+
+* **Model size**: Since every evaluation of the utility entails retraining the
+  whole model on a subset of the data, large models require great amounts of
+  computation. But also, they will effortlessly interpolate small to medium
+  datasets, leading to great variance in the evaluation of performance on the
+  dedicated validation set. One mitigation for this problem is cross-validation,
+  but this would incur massive computational cost. As of v.0.3.0 there are no
+  facilities in pyDVL for cross-validating the utility (note that this would
+  require cross-validating the whole value computation).
+
 
 References
 ==========
