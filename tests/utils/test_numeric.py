@@ -27,10 +27,24 @@ def test_powerset():
     assert all([np.math.comb(n, j) for j in range(n + 1)] == size_counts)
 
 
+# TODO: include tests for multiple values of q, including 0 and 1
 @pytest.mark.parametrize(
     "n, max_subsets", [(1, 10), (10, 2**10), (5, 2**7), (0, 1)]
 )
 def test_random_powerset(n, max_subsets):
+    """Tests frequency of items in sets and frequencies of set sizes.
+
+    By Hoeffding for a Bernoulli, we have for each item in the set:
+        P(|ΣX-mq| > mε) < 2 exp(-2mε^2)
+    where m=max_subsets
+    For m=100, q=0.5, ε=0.1 this means that the count for any item will be
+    within ±1 of 5, with probability at least ≈ 1 - 2exp(-2) ≈ 0.73 which is
+    admittedly a rather crappy bound (and vacuous for low values of max_subsets)
+
+    For the frequencies of set sizes, we divide counts by number of sets to
+    allow for larger errors at the extrema (low and high set sizes), where the
+    counts are lower.
+    """
     s = np.arange(n)
     item_counts = np.zeros_like(s, dtype=np.float)
     size_counts = np.zeros(n + 1)
@@ -38,15 +52,14 @@ def test_random_powerset(n, max_subsets):
         size_counts[len(subset)] += 1
         for item in subset:
             item_counts[item] += 1
-    item_counts /= max_subsets
+    q = 0.5
+    eps = 0.1
+    item_frequencies = item_counts / max_subsets
 
-    # Test frequency of items in sets. the rtol is a hack to allow for more error
-    # when fewer subsets are sampled
-    assert np.allclose(item_counts, 0.5, rtol=1 / (1 + np.log10(max_subsets)))
+    assert np.count_nonzero(
+        np.abs(item_frequencies - q) > eps
+    ) < max_subsets * 2 * np.exp(-2 * max_subsets * eps**2)
 
-    # Test frequencies of set sizes. We divide counts by number of sets to allow
-    # for larger errors at the extrema (low and high set sizes), where the
-    # counts are lower.
     true_size_counts = np.array([np.math.comb(n, j) for j in range(n + 1)])
     assert np.allclose(
         true_size_counts / 2**n, size_counts / max_subsets, atol=1 / (1 + n)
