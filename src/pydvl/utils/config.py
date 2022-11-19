@@ -55,6 +55,9 @@ class MemcachedConfig:
     """Configuration for :func:`~pydvl.utils.caching.memcached`, providing
     memoization of function calls.
 
+    Instances of this class are typically used as arguments for the construction
+    of a :class:`~pydvl.utils.utility.Utility`.
+
     :param client_config: Configuration for the connection to the memcached
         server.
     :param time_threshold: computations taking less time than this many seconds

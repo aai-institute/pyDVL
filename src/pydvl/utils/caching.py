@@ -199,6 +199,10 @@ def memcached(
 
         @wraps(fun, updated=[])  # don't try to use update() for a class
         class Wrapped:
+            config: MemcachedClientConfig
+            cache_info: CacheInfo
+            client: RetryingClient
+
             def __init__(self, config: MemcachedClientConfig):
                 self.config = config
                 self.cache_info = CacheInfo()
