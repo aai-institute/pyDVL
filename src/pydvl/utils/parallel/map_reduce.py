@@ -32,7 +32,7 @@ MapFunction = Callable[..., R]
 ReduceFunction = Callable[[Iterable[R]], R]
 
 
-def wrap_func_with_remote_args(func, *, timeout: int = 300):
+def wrap_func_with_remote_args(func, *, timeout: Optional[float] = None):
     def wrapper(*args, **kwargs):
         args = list(args)
         for i, v in enumerate(args[:]):
@@ -44,7 +44,9 @@ def wrap_func_with_remote_args(func, *, timeout: int = 300):
     return wrapper
 
 
-def get_value(v: Union[ObjectRef, Iterable[ObjectRef], Any], *, timeout: int = 300):
+def get_value(
+    v: Union[ObjectRef, Iterable[ObjectRef], Any], *, timeout: Optional[float] = None
+):
     if isinstance(v, ObjectRef):
         return ray.get(v, timeout=timeout)
     elif isinstance(v, Iterable):
@@ -125,7 +127,7 @@ class MapReduceJob(Generic[T, R]):
         chunkify_inputs: bool = True,
         n_jobs: int = 1,
         n_runs: int = 1,
-        timeout: int = 300,
+        timeout: Optional[float] = None,
         max_parallel_tasks: Optional[int] = None,
     ):
         self.config = config
@@ -237,10 +239,9 @@ class MapReduceJob(Generic[T, R]):
         self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int
     ) -> int:
         while (n_in_flight := n_dispatched - n_finished) > self.max_parallel_tasks:
-            previous_n_finished = n_finished
             wait_for_num_jobs = n_in_flight - self.max_parallel_tasks
             finished_jobs, _ = self.parallel_backend.wait(
-                jobs, num_returns=wait_for_num_jobs, timeout=self.timeout
+                jobs, num_returns=wait_for_num_jobs, timeout=10  # FIXME make parameter?
             )
             n_finished += len(finished_jobs)
         return n_finished

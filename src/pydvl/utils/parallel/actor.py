@@ -50,13 +50,15 @@ class RayActorWrapper:
 
         def remote_caller(method_name: str):
             # Wrapper for remote class' methods to mimic local calls
-            def wrapper(*args, block: bool = True, **kwargs):
+            def wrapper(
+                *args, block: bool = True, timeout: Optional[float] = None, **kwargs
+            ):
                 obj_ref = getattr(self.actor_handle, method_name).remote(
                     *args, **kwargs
                 )
                 if block:
                     return parallel_backend.get(
-                        obj_ref, timeout=300
+                        obj_ref, timeout=timeout
                     )  # Block until called method returns.
                 else:
                     return obj_ref  # Don't block and return a future.
