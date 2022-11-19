@@ -24,6 +24,8 @@ from .backend import init_parallel_backend
 
 __all__ = ["MapReduceJob"]
 
+from ..types import maybe_add_argument
+
 T = TypeVar("T")
 R = TypeVar("R")
 Identity = lambda x, *args, **kwargs: x
@@ -159,7 +161,7 @@ class MapReduceJob(Generic[T, R]):
         if self.reduce_kwargs is None:
             self.reduce_kwargs = dict()
 
-        self._map_func = map_func
+        self._map_func = maybe_add_argument(map_func, "job_id")
         self._reduce_func = reduce_func
 
     def __call__(
@@ -197,7 +199,7 @@ class MapReduceJob(Generic[T, R]):
 
             map_result = []
             for j, next_chunk in enumerate(chunks):
-                result = map_func(next_chunk, **self.map_kwargs)
+                result = map_func(next_chunk, job_id=j, **self.map_kwargs)
                 map_result.append(result)
                 total_n_jobs += 1
 

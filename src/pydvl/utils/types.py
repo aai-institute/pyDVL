@@ -1,3 +1,4 @@
+import inspect
 from typing import Callable, Protocol, Type, Union
 
 from numpy import ndarray
@@ -71,3 +72,19 @@ def unpackable(cls: Type) -> Type:
     setattr(cls, "items", items)
 
     return cls
+
+
+def maybe_add_argument(fun: Callable, new_arg: str):
+    """Wraps a function to accept (and ignore) the given named parameter"""
+    params = inspect.signature(fun).parameters
+    if new_arg in params.keys():
+        return fun
+
+    def wrapper(*args, **kwargs):
+        try:
+            del kwargs[new_arg]
+        except KeyError:
+            pass
+        return fun(*args, **kwargs)
+
+    return wrapper
