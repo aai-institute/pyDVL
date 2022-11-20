@@ -18,6 +18,8 @@ from typing import (
 
 import numpy as np
 
+from pydvl.utils.types import compose_score
+
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
@@ -242,3 +244,13 @@ def top_k_value_accuracy(y_true: "NDArray", y_pred: "NDArray", k: int = 3) -> fl
     top_k_pred_values = np.argsort(y_pred)[-k:]
     top_k_accuracy = len(np.intersect1d(top_k_exact_values, top_k_pred_values)) / k
     return top_k_accuracy
+
+
+def sigmoid(x: float) -> float:
+    return 1 / (1 + np.exp(-x))
+
+
+squashed_r2 = compose_score("r2", sigmoid, "squashed r2")
+squashed_variance = compose_score(
+    "explained_variance", sigmoid, "squashed explained variance"
+)

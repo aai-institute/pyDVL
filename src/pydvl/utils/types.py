@@ -2,10 +2,10 @@
 transformations. Some of it probably belongs elsewhere.
 """
 import inspect
-from sklearn.metrics import get_scorer
 from typing import Callable, Optional, Protocol, Type, Union
 
 from numpy import ndarray
+from sklearn.metrics import get_scorer
 
 __all__ = ["SupervisedModel", "Scorer", "compose_score"]
 
