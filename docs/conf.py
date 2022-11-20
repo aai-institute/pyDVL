@@ -46,6 +46,7 @@ extensions = [
     "sphinx_rtd_theme",
     "hoverxref.extension",  # This only works on read the docs
     "sphinx_design",
+    "sphinxcontrib.bibtex",
     "nbsphinx",
     # see https://github.com/spatialaudio/nbsphinx/issues/24 for an explanation why this extension is necessary
     "IPython.sphinxext.ipython_console_highlighting",
@@ -68,6 +69,7 @@ extlinks = {
     "tfl": ("https://transferlab.appliedai.de/%s", "%s"),
 }
 
+bibtex_bibfiles = ["pydvl.bib"]
 
 # NBSphinx
 
