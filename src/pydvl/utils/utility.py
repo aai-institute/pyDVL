@@ -173,7 +173,8 @@ class Utility:
 
 
 class DataUtilityLearning:
-    """Implementation of Data Utility Learning algorithm [1]_.
+    """Implementation of Data Utility Learning algorithm
+    :footcite:t:`wang_improving_2022`.
 
     This object wraps a :class:`~pydvl.utils.utility.Utility` and delegates
     calls to it, up until a given budget (number of iterations). Every tuple
@@ -201,12 +202,9 @@ class DataUtilityLearning:
     >>> wrapped_u((1, 2, 3)) # Subsequent calls will be computed using the fit model for DUL
     0.0
 
-
     .. rubric:: References
 
-    .. [1] Tianhao Wang, Yu Yang, Ruoxi Jia.
-       `Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning.
-       <https://arxiv.org/abs/2107.06336v2>`_, arXiv, 2021 .
+    .. footbibliography::
 
     """
 
