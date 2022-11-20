@@ -61,9 +61,8 @@ if TYPE_CHECKING:
 
 
 class MonteCarloResults(NamedTuple):
-    values: "NDArray"
-    stderr: "NDArray"
-    n_samples: Optional[int] = None
+    values: "NDArray[np.float_]"
+    stderr: "NDArray[np.float_]"
 
 
 logger = logging.getLogger(__name__)
@@ -374,15 +373,16 @@ def combinatorial_montecarlo_shapley(
 
 
 class OwenAlgorithm(Enum):
-    Full = "full"
-    Halved = "halved"
+    Standard = "standard"
+    Antithetic = "antithetic"
 
 
 def _owen_sampling_shapley(
-    q_values: Sequence[float],
+    indices: Sequence[int],
     u: Utility,
     method: OwenAlgorithm,
     max_iterations: int,
+    max_q: int,
     *,
     progress: bool = False,
     job_id: int = 1,
@@ -396,62 +396,38 @@ def _owen_sampling_shapley(
         We might want to try better quadrature rules like Gauss or Rombert or
         use Monte Carlo for the double integral.
 
-    :param q_values: Values for the sampling probability to evaluate
+    :param indices: Indices to compute the value for
     :param u: Utility object with model, data, and scoring function
     :param method: Either :attr:`~OwenAlgorithm.Full` for $q \in [0,1]$ or
         :attr:`~OwenAlgorithm.Halved` for $q \in [0,0.5]$ and correlated samples
     :param max_iterations: Number of subsets to sample to estimate the integrand
+    :param max_q: number of subdivisions for the integration over $q$
     :param progress: Whether to display progress bars for each job
     :param job_id: For positioning of the progress bar
     :return: Values and standard errors
     """
-    n = len(u.data)
-    values = np.zeros(n)
-    # variances = np.zeros(n)
-    # counts = np.zeros(n)
+    values = np.zeros(len(u.data))
 
-    indices = set(u.data.indices)
-    pbar = maybe_progress(q_values, progress, position=job_id)
-    for q in pbar:
-        power_set = random_powerset(u.data.indices, max_subsets=max_iterations, q=q)
-        for s in maybe_progress(
-            power_set,
-            progress,
-            desc=f"Iterating over subsets",  # FIXME: Useless
-            total=max_iterations,
-            position=job_id,
-        ):
-            # Instead of sampling from D\{i} for each i ∈ D, above we
-            # sampled from all of D. Therefore {i}.union(s) == s for all
-            # i ∈ s, and we need to skip those indices here
-            # Also, because the expectation in the integrand is over D\{i},
-            # we need to add a correction factor of 1/(1-q)
-            # FIXME: for exact u, the factor has to be q, for linear u, 2(1-q)
-            #  etc. => Something is very fishy
-            correction = max(1 / 500, 1 - q)
-            # q if method is OwenAlgorithm.Full else (2*(1 - q)))
-            for i in u.data.indices:
-                if i in s:
-                    if method == OwenAlgorithm.Full:
-                        continue
-                    # OwenHalved:
-                    # i not in s_complement => compute marginal for D\s
-                    s_complement = indices.difference(s)
-                    marginal = u({i}.union(s_complement)) - u(s_complement)
-                else:
-                    marginal = u({i}.union(s)) - u(s)
-                values[i] += marginal / correction
+    q_stop = {OwenAlgorithm.Standard: 1.0, OwenAlgorithm.Antithetic: 0.5}
+    q_steps = np.linspace(start=0, stop=q_stop[method], num=max_q)
 
-                # values[i], variances[i] = get_running_avg_variance(
-                #     values[i], variances[i], marginal, counts[i]
-                # )
-                # counts[i] += 1
+    index_set = set(indices)
+    for i in maybe_progress(indices, progress, position=job_id):
+        e = np.zeros(max_q)
+        subset = np.array(list(index_set.difference({i})))
+        for j, q in enumerate(q_steps):
+            for s in random_powerset(subset, max_subsets=max_iterations, q=q):
+                marginal = u({i}.union(s)) - u(s)
+                if method == OwenAlgorithm.Antithetic and q != 0.5:
+                    s_complement = index_set.difference(s)
+                    marginal += u({i}.union(s_complement)) - u(s_complement)
+                e[j] += marginal
+        e /= max_iterations
+        # values[i] = e.mean()
+        # Trapezoidal rule
+        values[i] = (e[:-1] + e[1:]).sum() / (2 * max_q)
 
-    return MonteCarloResults(
-        values=values,
-        stderr=np.zeros_like(values),  # np.sqrt(variances / np.maximum(1, counts)),
-        n_samples=len(q_values) * max_iterations,
-    )
+    return MonteCarloResults(values=values, stderr=np.zeros_like(values))
 
 
 def owen_sampling_shapley(
@@ -459,7 +435,7 @@ def owen_sampling_shapley(
     max_iterations: int,
     max_q: int,
     *,
-    method: OwenAlgorithm = OwenAlgorithm.Full,
+    method: OwenAlgorithm = OwenAlgorithm.Standard,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -480,9 +456,7 @@ def owen_sampling_shapley(
     second method, selected with the argument `mode = OwenAlgorithm.Halved`,
     uses correlated samples in the inner sum to reduce the variance:
 
-    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m
-    \cup {i}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup {i}) - u((S^{(
-    q_j)}_m)^c)],$$
+    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m \cup {i}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup {i}) - u((S^{(q_j)}_m)^c)],$$
 
     where now $q_j = \frac{j}{2Q} \in [0,\frac{1}{2}]$, and $S^c$ is the
     complement of $S$.
@@ -513,35 +487,27 @@ def owen_sampling_shapley(
     .. versionadded:: 0.3.0
 
     """
-
+    if n_jobs > 1:
+        raise NotImplementedError("Parallel Owen sampling not implemented yet")
     parallel_backend = init_parallel_backend(config)
     u_id = parallel_backend.put(u)
 
-    def reducer(results_it: Iterable[MonteCarloResults]) -> MonteCarloResults:
-        values = np.zeros(len(u.data))
-        n_samples = 0
-        for val, _, samples in results_it:
-            values += val
-            n_samples += cast(int, samples)  # We know samples is not None
-        values /= n_samples
-        # values /= max_q * max_iterations
-        return MonteCarloResults(values=values, stderr=np.zeros_like(values))
-
     map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
         map_func=_owen_sampling_shapley,
-        reduce_func=reducer,
         map_kwargs=dict(
-            u=u_id, method=method, max_iterations=max_iterations, progress=progress
+            u=u_id,
+            method=OwenAlgorithm(method),
+            max_iterations=max_iterations,
+            max_q=max_q,
+            progress=progress,
         ),
+        reduce_func=disjoint_reducer,
         chunkify_inputs=True,
         n_jobs=n_jobs,
         config=config,
     )
 
-    # TODO: try non-uniform steps: can one obtain e.g. Beta-Shapley?
-    q_stop = {OwenAlgorithm.Full: 1.0, OwenAlgorithm.Halved: 0.5}
-    q_steps = np.linspace(start=0, stop=q_stop[method], num=max_q)
-    results = map_reduce_job(q_steps)[0]
+    results = map_reduce_job(u.data.indices)[0]
     sorted_shapley_values = sort_values(
         {u.data.data_names[i]: v for i, v in enumerate(results.values)}
     )

@@ -38,8 +38,8 @@ class ShapleyMode(str, Enum):
     CombinatorialMontecarlo = "combinatorial_montecarlo"
     PermutationMontecarlo = "permutation_montecarlo"
     TruncatedMontecarlo = "truncated_montecarlo"
-    OwenSampling = "owen_sampling"
-    OwenHalved = "owen_halved"
+    Owen = "owen"
+    OwenAntithetic = "owen_anti"
     KNN = "knn"
 
 
@@ -147,7 +147,7 @@ def compute_shapley_values(
     elif mode == ShapleyMode.PermutationExact:
         values = permutation_exact_shapley(u, progress=progress)
         stderr = None
-    elif mode == ShapleyMode.OwenSampling or mode == ShapleyMode.OwenHalved:
+    elif mode == ShapleyMode.Owen or mode == ShapleyMode.OwenAntithetic:
         if max_iterations is None:
             raise ValueError("max_iterations cannot be None for Owen methods")
         # FIXME: would it be better to raise ValueError because of max_q as well?
@@ -159,9 +159,9 @@ def compute_shapley_values(
                 RuntimeWarning,
             )
         method = (
-            OwenAlgorithm.Full
-            if mode == ShapleyMode.OwenSampling
-            else OwenAlgorithm.Halved
+            OwenAlgorithm.Standard
+            if mode == ShapleyMode.Owen
+            else OwenAlgorithm.Antithetic
         )
         values, stderr = owen_sampling_shapley(
             u,
