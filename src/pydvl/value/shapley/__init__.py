@@ -161,7 +161,7 @@ def compute_shapley_values(
         values, stderr = owen_sampling_shapley(
             u,
             max_iterations=max_iterations,
-            max_q=kwargs.get("max_q"),
+            max_q=cast(int, kwargs.get("max_q")),
             method=method,
             n_jobs=n_jobs,
         )
