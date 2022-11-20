@@ -6,10 +6,11 @@ Getting started
 
 .. warning::
    Make sure you have read :ref:`the installation instructions
-   <pyDVL Installation>` before proceeding further, in particular those about
-   caching and parallelization, since they can require additional setup.
+   <pyDVL Installation>` before using the library. In particular read about how
+   caching and parallelization work, since they require additional setup.
 
-pyDVL focuses on data valuation and influence functions. You can read:
+pyDVL aims to be a repository of production-ready, reference implementations of
+algorithms for data valuation and influence functions. You can read:
 
 * :ref:`data valuation` for key objects and usage patterns for Shapley value
   computation and related methods.
