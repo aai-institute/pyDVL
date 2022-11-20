@@ -35,6 +35,8 @@ __all__ = [
     "random_matrix_with_condition_number",
     "random_powerset",
     "top_k_value_accuracy",
+    "squashed_r2",
+    "squashed_variance",
 ]
 
 T = TypeVar("T")

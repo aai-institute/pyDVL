@@ -105,6 +105,7 @@ def maybe_add_argument(fun: Callable, new_arg: str):
     return wrapper
 
 
+# FIXME: This probably should be somewhere else
 def compose_score(
     score: Union[str, Scorer],
     transformation: Callable[[float], float],
