@@ -113,7 +113,9 @@ X_train, X_test, y_train, y_test = train_test_split(
 dataset = Dataset(X_train, y_train, X_test, y_test)
 model = LinearRegression()
 utility = Utility(model, dataset)
-values, errors = compute_shapley_values(u=utility, max_iterations=100)
+values = compute_shapley_values(
+        u=utility, max_iterations=100, mode="truncated_montecarlo"
+    )
 ```
 
 For more instructions and information refer to [Getting

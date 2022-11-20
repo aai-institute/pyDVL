@@ -49,5 +49,5 @@ def test_knn_montecarlo_match(seed):
 
     # will check only matching top elements since the scoring functions are not exactly the same
     top_knn = knn_keys[:2]
-    top_montecarlo = exact_keys[:4]
-    assert np.all([k in top_montecarlo for k in top_knn])
+    top_exact = exact_keys[:4]
+    assert np.all([k in top_exact for k in top_knn])
