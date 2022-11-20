@@ -304,6 +304,28 @@ def _combinatorial_montecarlo_shapley(
     )
 
 
+def disjoint_reducer(results_it: Iterable[MonteCarloResults]) -> MonteCarloResults:
+    """A reducer of results that assumes non-zero indices in the result arrays
+    to be disjoint, so that it is ok to simply add everything
+
+    :raises ValueError: If the values in the argument iterable are not disjoint.
+    :raises IndexError: If the argument is an empty iterable.
+    """
+    try:
+        val, std = next((x for x in results_it))
+        values = np.zeros_like(val)
+        stderr = np.zeros_like(std)
+    except StopIteration:
+        raise IndexError("Empty results iterable cannot be reduced")
+
+    for val, std in results_it:
+        if np.abs(values[val > 0]).sum() > 0:
+            raise ValueError("Returned value sets are not disjoint")
+        values += val
+        stderr += std
+    return MonteCarloResults(values=values, stderr=stderr)
+
+
 def combinatorial_montecarlo_shapley(
     u: Utility,
     max_iterations: int,
@@ -333,21 +355,10 @@ def combinatorial_montecarlo_shapley(
     parallel_backend = init_parallel_backend(config)
     u_id = parallel_backend.put(u)
 
-    def reducer(results_it: Iterable[MonteCarloResults]) -> MonteCarloResults:
-        values = np.zeros(len(u.data))
-        stderr = np.zeros_like(values)
-
-        # non-zero indices in results are disjoint by construction, so it is ok
-        # to add the results
-        for val, std, _ in results_it:
-            values += val
-            stderr += std
-        return MonteCarloResults(values=values, stderr=stderr)
-
     # FIXME? max_iterations has different semantics in permutation-based methods
     map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
         map_func=_combinatorial_montecarlo_shapley,
-        reduce_func=reducer,
+        reduce_func=disjoint_reducer,
         map_kwargs=dict(u=u_id, max_iterations=max_iterations, progress=progress),
         chunkify_inputs=True,
         n_jobs=n_jobs,
