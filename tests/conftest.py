@@ -1,6 +1,6 @@
 import functools
 from collections import OrderedDict, defaultdict
-from typing import TYPE_CHECKING, Dict, Optional, Sequence, Tuple, Type
+from typing import TYPE_CHECKING, Dict, Optional, Sequence, Tuple, Type, Union
 
 import numpy as np
 import pytest
@@ -11,8 +11,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 
-from pydvl.utils import Dataset, MemcachedClientConfig, Utility
-from pydvl.utils.numeric import random_matrix_with_condition_number, spearman
+from pydvl.utils import Dataset, MemcachedClientConfig, MemcachedConfig, Scorer, Utility
+from pydvl.utils.numeric import random_matrix_with_condition_number
 from pydvl.utils.parallel import available_cpus
 
 if TYPE_CHECKING:
@@ -155,13 +155,13 @@ def memcached_client(memcache_client_config) -> Tuple[Client, MemcachedClientCon
 
 
 @pytest.fixture(scope="function")
-def boston_dataset(n_points, n_features) -> Dataset:
+def boston_dataset(num_points, num_features) -> Dataset:
     from sklearn import datasets
 
     dataset = datasets.load_boston()
-    dataset.data = dataset.data[:n_points, :n_features]
-    dataset.feature_names = dataset.feature_names[:n_features]
-    dataset.target = dataset.target[:n_points]
+    dataset.data = dataset.data[:num_points, :num_features]
+    dataset.feature_names = dataset.feature_names[:num_features]
+    dataset.target = dataset.target[:num_points]
     return Dataset.from_sklearn(dataset, train_size=0.5)
 
 
@@ -189,6 +189,30 @@ def linear_dataset(a: float, b: float, num_points: int):
     db.feature_names = ["x"]
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.3)
+
+
+@pytest.fixture(scope="function")
+def linear_shapley(linear_dataset, scorer: Union[str, Scorer], memcache_client_config):
+    """Returns a utility with a linear model, linear dataset and precomputed
+    exact values.
+
+    This fixture depends on linear_dataset, which itself requires fixtures `a`,
+    `b`, and `num_points`. Simply add them with mark.parametrize() to the test.
+
+    Note: we cannot change the scope to module because some tests require sets
+    with more points (e.g. the one testing GroupedDataset).
+    """
+    u = Utility(
+        LinearRegression(),
+        data=linear_dataset,
+        scoring=scorer,
+        cache_options=MemcachedConfig(client_config=memcache_client_config),
+    )
+
+    from pydvl.value.shapley import combinatorial_exact_shapley
+
+    values = combinatorial_exact_shapley(u, progress=False)
+    return u, values
 
 
 def polynomial(coefficients, x):
@@ -366,14 +390,16 @@ class TolerateErrors:
         return True
 
 
-def check_total_value(u: Utility, values: OrderedDict, atol: float = 1e-6):
+def check_total_value(
+    u: Utility, values: OrderedDict, rtol: float = 0.05, atol: float = 1e-6
+):
     """Checks absolute distance between total and added values.
     Shapley value is supposed to fulfill the total value axiom."""
     total_utility = u(u.data.indices)
     values = np.fromiter(values.values(), dtype=float, count=len(u.data))
     # We could want relative tolerances here if we didn't have the range of
     # the scorer.
-    assert np.isclose(values.sum(), total_utility, atol=atol)
+    assert np.isclose(values.sum(), total_utility, rtol=rtol, atol=atol)
 
 
 def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e-6):
