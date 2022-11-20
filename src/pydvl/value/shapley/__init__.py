@@ -150,14 +150,9 @@ def compute_shapley_values(
     elif mode == ShapleyMode.Owen or mode == ShapleyMode.OwenAntithetic:
         if max_iterations is None:
             raise ValueError("max_iterations cannot be None for Owen methods")
-        # FIXME: would it be better to raise ValueError because of max_q as well?
-        default_max_q = 1000
-        if kwargs.get("max_q", None) is None:
-            warnings.warn(
-                f"Owen Sampling requires max_q for the outer integral. "
-                f"Using default value of {default_max_q}.",
-                RuntimeWarning,
-            )
+        if kwargs.get("max_q") is None:
+            raise ValueError("Owen Sampling requires max_q for the outer integral")
+
         method = (
             OwenAlgorithm.Standard
             if mode == ShapleyMode.Owen
@@ -166,7 +161,7 @@ def compute_shapley_values(
         values, stderr = owen_sampling_shapley(
             u,
             max_iterations=max_iterations,
-            max_q=kwargs.get("max_q", default_max_q),
+            max_q=kwargs.get("max_q"),
             method=method,
             n_jobs=n_jobs,
         )

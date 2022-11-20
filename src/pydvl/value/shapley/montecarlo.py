@@ -44,8 +44,8 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    cast,
 )
+from warnings import warn
 
 import numpy as np
 
@@ -447,19 +447,25 @@ def owen_sampling_shapley(
     $$v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})} [u(S \cup {i}) - u(S)]$$
 
     as described in [1], using one of two methods. The first one, selected with
-    the argument `mode = OwenAlgorithm.Full`, approximates the integral with:
+    the argument `mode = OwenAlgorithm.Standard`, approximates the integral with:
 
     $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m \cup {i}) - u(S^{(q_j)}_m)],$$
 
     where $q_j = \frac{j}{Q} \in [0,1]$ and the sets $S^{(q_j)}$ are such that a
-    sample $x \in S^{(q_j)}$ if a draw from a $Ber(q_j)$ distribution is 1. The
-    second method, selected with the argument `mode = OwenAlgorithm.Halved`,
-    uses correlated samples in the inner sum to reduce the variance:
+    sample $x \in S^{(q_j)}$ if a draw from a $Ber(q_j)$ distribution is 1.
+
+    The second method, selected with the argument `mode =
+    OwenAlgorithm.Anthithetic`, uses correlated samples in the inner sum to
+    reduce the variance:
 
     $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m \cup {i}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup {i}) - u((S^{(q_j)}_m)^c)],$$
 
     where now $q_j = \frac{j}{2Q} \in [0,\frac{1}{2}]$, and $S^c$ is the
     complement of $S$.
+
+    .. warning::
+       Antithetic sampling is unstable and not properly tested
+
 
     :param u: :class:`~pydvl.utils.utility.Utility` object holding data, model
         and scoring function.
@@ -489,6 +495,10 @@ def owen_sampling_shapley(
     """
     if n_jobs > 1:
         raise NotImplementedError("Parallel Owen sampling not implemented yet")
+
+    if OwenAlgorithm(method) == OwenAlgorithm.Antithetic:
+        warn("Owen antithetic sampling not tested and probably bogus")
+
     parallel_backend = init_parallel_backend(config)
     u_id = parallel_backend.put(u)
 

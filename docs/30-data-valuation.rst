@@ -198,14 +198,14 @@ values in pyDVL. First construct the utility
    model = ...
    utility = Utility(data, model)
    df = compute_shapley_values(
-           u=utility, mode="owen_sampling", max_iterations=100
+           u=utility, mode="owen", max_iterations=4, max_q=200
        )
 
 The code above will generate a
 `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_
 with values and estimated standard errors. Please refer to the documentation in
 :mod:`pydvl.value.shapley` for more information. There are more details on Owen
-sampling, and its variant *Halved Owen Sampling* in the documentation for the
+sampling, and its variant *Antithetic Owen Sampling* in the documentation for the
 function doing the work behind the scenes:
 :func:`~pydvl.value.shapley.montecarlo.owen_sampling_shapley`.
 
