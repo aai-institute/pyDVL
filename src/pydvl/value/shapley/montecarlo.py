@@ -437,12 +437,15 @@ def owen_sampling_shapley(
 
     This function computes a Monte Carlo approximation to
 
-    $$v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})} [u(S \cup {i}) - u(S)]$$
+    $$v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})}
+    [u(S \cup {i}) - u(S)]$$
 
-    as described in [1], using one of two methods. The first one, selected with
-    the argument `mode = OwenAlgorithm.Standard`, approximates the integral with:
+    as described in :footcite:t:`okhrati_multilinear_2021`, using one of two
+    methods. The first one, selected with the argument
+    `mode = OwenAlgorithm.Standard`, approximates the integral with:
 
-    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m \cup {i}) - u(S^{(q_j)}_m)],$$
+    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M
+    [u(S^{(q_j)}_m \cup {i}) - u(S^{(q_j)}_m)],$$
 
     where $q_j = \frac{j}{Q} \in [0,1]$ and the sets $S^{(q_j)}$ are such that a
     sample $x \in S^{(q_j)}$ if a draw from a $Ber(q_j)$ distribution is 1.
@@ -451,7 +454,9 @@ def owen_sampling_shapley(
     OwenAlgorithm.Anthithetic`, uses correlated samples in the inner sum to
     reduce the variance:
 
-    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m \cup {i}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup {i}) - u((S^{(q_j)}_m)^c)],$$
+    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M
+    [u(S^{(q_j)}_m \cup {i}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup {i})
+    - u((S^{(q_j)}_m)^c)],$$
 
     where now $q_j = \frac{j}{2Q} \in [0,\frac{1}{2}]$, and $S^c$ is the
     complement of $S$.
@@ -478,10 +483,7 @@ def owen_sampling_shapley(
 
     .. rubric:: References
 
-    [1]: Okhrati, Ramin, and Aldo Lipani. ‘A Multilinear Sampling Algorithm
-    to Estimate Shapley Values’. In 2020 25th International Conference on
-    Pattern Recognition (ICPR), 7992–99. IEEE, 2021.
-    https://doi.org/10.1109/ICPR48806.2021.9412511.
+    .. footbibliography::
 
     .. versionadded:: 0.3.0
 
