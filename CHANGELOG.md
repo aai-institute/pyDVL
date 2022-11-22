@@ -14,7 +14,7 @@
   [PR #194](https://github.com/appliedAI-Initiative/pyDVL/pull/194)
 - Improved documentation on caching, Shapley, caveats of values, bibtex
   [PR #194](https://github.com/appliedAI-Initiative/pyDVL/pull/194)
-- **Breaking change:** Rearranging of modules to accomodate for new methods
+- **Breaking change:** Rearranging of modules to accommodate for new methods
   [PR #194](https://github.com/appliedAI-Initiative/pyDVL/pull/194)
 
 
