@@ -72,7 +72,7 @@ def test_hoeffding_bound_montecarlo(
     [
         # FIXME: Hoeffding says 400 should be enough
         (permutation_montecarlo_shapley, 600, {}),
-        (truncated_montecarlo_shapley, 500, {"coordinator_update_frequency": 1}),
+        (truncated_montecarlo_shapley, 500, {"coordinator_update_period": 1}),
         (combinatorial_montecarlo_shapley, 2**11, {}),
         (owen_sampling_shapley, 4, {"max_q": 300, "method": "standard"}),
         # FIXME: antithetic breaks for non-deterministic u
@@ -131,7 +131,7 @@ def test_linear_montecarlo_shapley(
     "fun, max_iterations, kwargs",
     [
         (permutation_montecarlo_shapley, 500, {}),
-        (truncated_montecarlo_shapley, 500, {"coordinator_update_frequency": 1}),
+        (truncated_montecarlo_shapley, 500, {"coordinator_update_period": 1}),
         (owen_sampling_shapley, 4, {"max_q": 400, "method": "standard"}),
         # FIXME: antithetic breaks for non-deterministic u
         # (owen_sampling_shapley, 4, {"max_q": 400, "method": "antithetic"}),
@@ -181,13 +181,14 @@ def test_linear_montecarlo_with_outlier(
     "a, b, num_points, num_groups", [(2, 0, 21, 2)]  # 24*0.3=6 samples in 2 groups
 )
 @pytest.mark.parametrize(
-    "scorer, rtol",  [(squashed_r2, 0.1), (squashed_variance, 0.1)],
+    "scorer, rtol",
+    [(squashed_r2, 0.1), (squashed_variance, 0.1)],
 )
 @pytest.mark.parametrize(
     "fun, max_iterations, kwargs",
     [
         (permutation_montecarlo_shapley, 600, {}),
-        (truncated_montecarlo_shapley, 500, {"coordinator_update_frequency": 1}),
+        (truncated_montecarlo_shapley, 500, {"coordinator_update_period": 1}),
         (owen_sampling_shapley, 4, {"max_q": 300, "method": "standard"}),
         # FIXME: antithetic breaks for non-deterministic u
         # (owen_sampling_shapley, 4, {"max_q": 300, "method": "antithetic"}),

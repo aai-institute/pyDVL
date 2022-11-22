@@ -75,8 +75,8 @@ def truncated_montecarlo_shapley(
     n_jobs: Optional[int] = None,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
-    coordinator_update_frequency: int = 10,
-    worker_update_frequency: int = 5,
+    coordinator_update_period: int = 10,
+    worker_update_period: int = 5,
 ) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
     """Monte Carlo approximation to the Shapley value of data points.
 
@@ -113,9 +113,9 @@ def truncated_montecarlo_shapley(
     :param config: Object configuring parallel computation, with cluster address,
         number of cpus, etc.
     :param progress: Whether to display progress bars for each job.
-    :param coordinator_update_frequency: in seconds. Check status with the job
+    :param coordinator_update_period: in seconds. Check status with the job
         coordinator every so often.
-    :param worker_update_frequency: interval in seconds between different updates to
+    :param worker_update_period: interval in seconds between different updates to
         and from the coordinator
     :return: Tuple with the first element being an :obj:`collections.OrderedDict`
         of approximate Shapley values for the indices, and the second being the
@@ -141,7 +141,7 @@ def truncated_montecarlo_shapley(
             coordinator=coordinator,
             worker_id=worker_id,
             progress=progress,
-            update_frequency=worker_update_frequency,
+            update_period=worker_update_period,
             config=config,
         )
         for worker_id in range(n_jobs)
@@ -152,7 +152,7 @@ def truncated_montecarlo_shapley(
     is_done = False
     while not is_done:
         sleep(0.01)
-        if time() - last_update_time > coordinator_update_frequency:
+        if time() - last_update_time > coordinator_update_period:
             is_done = coordinator.check_done()
             last_update_time = time()
     dvl_values, dvl_std = coordinator.get_results()

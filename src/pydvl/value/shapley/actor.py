@@ -153,7 +153,7 @@ class ShapleyWorker(Worker):
         coordinator: ShapleyCoordinator,
         worker_id: int,
         *,
-        update_frequency: int = 30,
+        update_period: int = 30,
         progress: bool = False,
     ):
         """A worker calculates Shapley values using the permutation definition
@@ -163,13 +163,13 @@ class ShapleyWorker(Worker):
         :param coordinator: worker results will be pushed to this coordinator
         :param worker_id: id used for reporting through maybe_progress
         :param progress: Whether to display a progres bar
-        :param update_frequency: interval in seconds between different updates to
+        :param update_period: interval in seconds between different updates to
             and from the coordinator
 
         """
         super().__init__(
             coordinator=coordinator,
-            update_frequency=update_frequency,
+            update_period=update_period,
             worker_id=worker_id,
             progress=progress,
         )
@@ -196,13 +196,13 @@ class ShapleyWorker(Worker):
 
         This calls :meth:`_compute_values` a certain number of times and
         calculates Shapley values on different permutations of the indices.
-        After a number of seconds equal to update_frequency has passed, it
+        After a number of seconds equal to update_period has passed, it
         reports the results to the coordinator. Before starting the next
         iteration, it checks the is_done flag, and if true terminates.
         """
         while not self.coordinator.is_done():
             start_time = time()
-            while (time() - start_time) < self.update_frequency:
+            while (time() - start_time) < self.update_period:
                 values = self._compute_values()
                 if np.any(np.isnan(values)):
                     warnings.warn(
