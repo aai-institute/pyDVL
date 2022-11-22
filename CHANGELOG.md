@@ -10,6 +10,8 @@
   [PR #184](https://github.com/appliedAI-Initiative/pyDVL/pull/184)
 - Added Pull Request template
   [PR #185](https://github.com/appliedAI-Initiative/pyDVL/pull/185)
+- Modified Pull Request template to automatically link PR to issue
+  [PR ##186](https://github.com/appliedAI-Initiative/pyDVL/pull/186)
 - First implementation of Owen Sampling, squashed scores, better testing
   [PR #194](https://github.com/appliedAI-Initiative/pyDVL/pull/194)
 - Improved documentation on caching, Shapley, caveats of values, bibtex
