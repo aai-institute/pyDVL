@@ -191,30 +191,6 @@ def linear_dataset(a: float, b: float, num_points: int):
     return Dataset.from_sklearn(data=db, train_size=0.3)
 
 
-@pytest.fixture(scope="function")
-def linear_shapley(linear_dataset, scorer: Union[str, Scorer], memcache_client_config):
-    """Returns a utility with a linear model, linear dataset and precomputed
-    exact values.
-
-    This fixture depends on linear_dataset, which itself requires fixtures `a`,
-    `b`, and `num_points`. Simply add them with mark.parametrize() to the test.
-
-    Note: we cannot change the scope to module because some tests require sets
-    with more points (e.g. the one testing GroupedDataset).
-    """
-    u = Utility(
-        LinearRegression(),
-        data=linear_dataset,
-        scoring=scorer,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
-    )
-
-    from pydvl.value.shapley import combinatorial_exact_shapley
-
-    values = combinatorial_exact_shapley(u, progress=False)
-    return u, values
-
-
 def polynomial(coefficients, x):
     powers = np.arange(len(coefficients))
     return np.power(x, np.tile(powers, (len(x), 1)).T).T @ coefficients

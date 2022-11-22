@@ -79,7 +79,8 @@ def test_hoeffding_bound_montecarlo(
     ],
 )
 def test_linear_montecarlo_shapley(
-    linear_shapley,
+    linear_dataset,
+    scorer: Scorer,
     rtol: float,
     fun,
     max_iterations: float,
@@ -103,7 +104,14 @@ def test_linear_montecarlo_shapley(
        samples
 
     """
-    u, exact_values = linear_shapley
+    u = Utility(
+        LinearRegression(),
+        data=linear_dataset,
+        scoring=scorer,
+        cache_options=MemcachedConfig(client_config=memcache_client_config),
+    )
+
+    exact_values = combinatorial_exact_shapley(u, progress=False)
     values, _ = fun(
         u, max_iterations=int(max_iterations), progress=False, n_jobs=1, **kwargs
     )
