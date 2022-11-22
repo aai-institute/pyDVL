@@ -2,28 +2,28 @@ r"""
 Monte Carlo approximations to Shapley Data values.
 
 **Note:** You probably want to use the common interface provided by
-:func:`~pydvl.value.shapley.compute_shapley_values` instead of using the functions in
-this module.
+:func:`~pydvl.value.shapley.compute_shapley_values` instead of directly using
+the functions in this module.
 
 Exact computation of Shapley value requires $\mathcal{O}(2^n)$ retrainings of
 the model. Recall the definition of the value of sample $i$:
 
-$$v_i = \frac{1}{N}  \sum_{S \subseteq D_{\backslash \{ i \}}}
-\frac{1}{\binom{N - 1}{ | S | }} [U (S_{\cup \{ i \}}) - U (S)] ,$$
+$$v_i = \frac{1}{n}  \sum_{S \subseteq D \backslash \{ i \}}
+\binom{n - 1}{ | S | }^{-1} [U (S \cup \{ i \}) - U (S)] ,$$
 
-where $D$ is the set of indices in the training set, which we identify with the
-data itself.
+where $D$ is the set of $n$ indices in the training set, which we identify with
+the data itself.
 
-To overcome this limitation, it is possible to only sample some subsets of the
-training set (or permutations thereof) to obtain a Monte Carlo approximation to
-the true value. This is done in
-:func:`~pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley`. Alternatively,
-employing the reformulation of the expression above as a sum over permutations,
-one has the implementation in
-:func:`~pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley`.
+To overcome this problem, it is possible to use various forms of sampling from
+the power set of the training data to obtain a Monte Carlo approximation to the
+true value. This is done in
+:func:`~pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley` and
+:func:`~pydvl.value.shapley.montecarlo.owen_combinatorial_shapley`.
 
-Additionally, one can implement an early stopping strategy to
-adapt computation time. This is done in
+Alternatively, employing the reformulation of the expression above as a sum
+over permutations, one has the implementation in
+:func:`~pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley`, or using
+an early stopping strategy to adapt computation time
 :func:`~pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley`.
 
 Finally, you can consider grouping your data points using
@@ -88,15 +88,17 @@ def truncated_montecarlo_shapley(
 ) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
     """Monte Carlo approximation to the Shapley value of data points.
 
-    This implements the permutation-based method described in [1]. It is a Monte
-    Carlo estimate of the sum over all possible permutations of the index set,
-    with a double stopping criterion.
+    This implements the permutation-based method described in
+    :footcite:t:`ghorbani_data_2019`. It is a Monte Carlo estimate of the sum
+    over all possible permutations of the index set, with a double stopping
+    criterion.
 
     .. warning::
 
-       This function does not exactly reproduce the stopping criterion of [1]
-       which uses a hardcoded time delay in the sequence of values. Instead, we
-       use a moving average and the stopping criterion detailed in
+       This function does not exactly reproduce the stopping criterion of
+       :footcite:t:`ghorbani_data_2019` which uses a hardcoded time delay in the
+       sequence of values. Instead, we use a moving average and the stopping
+       criterion detailed in
        :meth:`~pydvl.value.shapley.actor.ShapleyCoordinator.check_done`.
 
     .. todo::
@@ -129,9 +131,8 @@ def truncated_montecarlo_shapley(
 
     .. rubric::References
 
-    [1]: Ghorbani, Amirata, and James Zou. ‘Data Shapley: Equitable Valuation of
-    Data for Machine Learning’. In International Conference on Machine Learning,
-    2242–51. PMLR, 2019. http://proceedings.mlr.press/v97/ghorbani19c.html.
+    .. footbibliography::
+
     """
     parallel_backend = init_parallel_backend(config)
 
