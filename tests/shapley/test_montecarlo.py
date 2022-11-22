@@ -28,8 +28,8 @@ log = logging.getLogger(__name__)
         (12, permutation_montecarlo_shapley, 0.1, 10, {}),
         # FIXME! it should be enough with 2**(len(data)-1) samples
         (8, combinatorial_montecarlo_shapley, 0.2, 2**10, {}),
-        (12, owen_sampling_shapley, 0.1, 6, {"max_q": 200, "method": "antithetic"}),
-        (12, owen_sampling_shapley, 0.1, 6, {"max_q": 200, "method": "standard"}),
+        (12, owen_sampling_shapley, 0.1, 4, {"max_q": 200, "method": "antithetic"}),
+        (12, owen_sampling_shapley, 0.1, 4, {"max_q": 200, "method": "standard"}),
     ],
 )
 def test_analytic_montecarlo_shapley(
@@ -64,12 +64,13 @@ def test_hoeffding_bound_montecarlo(
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points", [(2, 3, 21)]  # training set will have 0.3 * 21 = 6 samples
+    "a, b, num_points", [(2, 0, 21)]  # training set will have 0.3 * 21 = 6 samples
 )
-@pytest.mark.parametrize("scorer, rtol", [(squashed_r2, 0.1), (squashed_variance, 0.1)])
+@pytest.mark.parametrize("scorer, rtol", [(squashed_r2, 0.2), (squashed_variance, 0.2)])
 @pytest.mark.parametrize(
     "fun, max_iterations, kwargs",
     [
+        # FIXME: Hoeffding says 400 should be enough
         (permutation_montecarlo_shapley, 600, {}),
         (truncated_montecarlo_shapley, 500, {"coordinator_update_frequency": 1}),
         (combinatorial_montecarlo_shapley, 2**11, {}),
@@ -121,10 +122,10 @@ def test_linear_montecarlo_shapley(
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points", [(2, 3, 24)]  # training set will have 0.3 * 24 ~= 7 samples
+    "a, b, num_points", [(2, 0, 21)]  # training set will have 0.3 * 21 ~= 6 samples
 )
 @pytest.mark.parametrize(
-    "scorer, total_atol", [("r2", 0.2), (squashed_r2, 0.1), (squashed_variance, 0.1)]
+    "scorer, total_atol", [(squashed_r2, 0.1), (squashed_variance, 0.1)]
 )
 @pytest.mark.parametrize(
     "fun, max_iterations, kwargs",
@@ -177,11 +178,10 @@ def test_linear_montecarlo_with_outlier(
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points, num_groups", [(2, 0, 80, 4)]  # 80*0.3=24 samples in 4 groups
+    "a, b, num_points, num_groups", [(2, 0, 21, 2)]  # 24*0.3=6 samples in 2 groups
 )
 @pytest.mark.parametrize(
-    "scorer, rtol",
-    [(squashed_r2, 0.1), (squashed_variance, 0.1), ("explained_variance", 0.2)],
+    "scorer, rtol",  [(squashed_r2, 0.1), (squashed_variance, 0.1)],
 )
 @pytest.mark.parametrize(
     "fun, max_iterations, kwargs",
