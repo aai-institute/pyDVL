@@ -36,15 +36,7 @@ import math
 from collections import OrderedDict
 from enum import Enum
 from time import sleep, time
-from typing import (
-    TYPE_CHECKING,
-    Dict,
-    Iterable,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from typing import TYPE_CHECKING, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple
 from warnings import warn
 
 import numpy as np
