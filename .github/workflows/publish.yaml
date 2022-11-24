@@ -4,6 +4,12 @@ on:
   push:
     tags:
     - "v*"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: Why did you trigger the pipeline?
+        required: False
+        default: Check if it runs again due to external changes
 
 env:
   PY_COLORS: 1
