@@ -4,9 +4,18 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>loo &mdash; pyDVL 0.2.1.dev0 documentation</title>
+  <title>value &mdash; pyDVL 0.2.1.dev0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster.custom.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster.bundle.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-shadow.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-punk.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-noir.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-light.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-borderless.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/micromodal.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/sphinx_rtd_theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
@@ -17,13 +26,18 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/js/hoverxref.js"></script>
+        <script src="../_static/js/tooltipster.bundle.min.js"></script>
+        <script src="../_static/js/micromodal.min.js"></script>
         <script src="../_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="naive" href="loo/naive.html" />
-    <link rel="prev" title="types" href="influence/types.html" /> 
+    <link rel="next" title="banzhaf" href="value/banzhaf.html" />
+    <link rel="prev" title="utility" href="utils/utility.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -57,13 +71,14 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="influence.html">influence</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">loo</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="loo/naive.html">naive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reporting.html">reporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">utils</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">value</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/banzhaf.html">banzhaf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="value/loo.html">loo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="value/shapley.html">shapley</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="reporting.html">reporting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley.html">shapley</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils.html">utils</a></li>
 </ul>
 </li>
 </ul>
@@ -81,11 +96,11 @@
         <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">API Reference</a> &raquo;</li>
-      <li>loo</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">API Reference</a></li>
+      <li class="breadcrumb-item active">value</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/pydvl/loo.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/pydvl/value.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -117,12 +132,29 @@
     text-align: unset;
 }
 </style>
-<section id="module-pydvl.loo">
-<span id="loo"></span><h1>loo<a class="headerlink" href="#module-pydvl.loo" title="Permalink to this heading"></a></h1>
+<section id="module-pydvl.value">
+<span id="value"></span><h1>value<a class="headerlink" href="#module-pydvl.value" title="Permalink to this heading"></a></h1>
+<p>Algorithms for the exact and approximate computation of value and semi-value.</p>
+<p>See <a class="reference internal" href="../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for an introduction to the concepts and methods
+implemented here.</p>
 <p class="rubric">Modules in this package</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="loo/naive.html">naive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="value/banzhaf.html">banzhaf</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="value/banzhaf/montecarlo.html">montecarlo</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="value/loo.html">loo</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="value/loo/naive.html">naive</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="value/shapley.html">shapley</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="value/shapley/actor.html">actor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/shapley/knn.html">knn</a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/shapley/montecarlo.html">montecarlo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/shapley/naive.html">naive</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
@@ -131,8 +163,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="influence/types.html" class="btn btn-neutral float-left" title="types" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="loo/naive.html" class="btn btn-neutral float-right" title="naive" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="utils/utility.html" class="btn btn-neutral float-left" title="utility" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="value/banzhaf.html" class="btn btn-neutral float-right" title="banzhaf" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

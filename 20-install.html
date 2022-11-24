@@ -7,6 +7,15 @@
   <title>Installing pyDVL &mdash; pyDVL 0.2.1.dev0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster.custom.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster.bundle.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-shadow.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-punk.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-noir.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-light.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-borderless.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/micromodal.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/sphinx_rtd_theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,8 +26,13 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/js/hoverxref.js"></script>
+        <script src="_static/js/tooltipster.bundle.min.js"></script>
+        <script src="_static/js/micromodal.min.js"></script>
         <script src="_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -48,7 +62,12 @@
               <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="10-getting-started.html">Getting started</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installing pyDVL</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installing pyDVL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-the-cache">Setting up the cache</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-s-next">What’s next</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="30-data-valuation.html">Computing data values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="40-influence.html">Computing influence values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a></li>
@@ -71,8 +90,8 @@
         <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Installing pyDVL</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Installing pyDVL</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/20-install.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -134,8 +153,9 @@ and <a class="reference external" href="https://ray.io">ray</a> for parallelizat
 <a class="reference internal" href="#pydvl-installation"><span class="std std-ref">Installing pyDVL</span></a>).</p>
 <p>ray is used to distribute workloads both locally and across nodes. Please follow
 the instructions in their documentation for installation.</p>
+</section>
 <section id="setting-up-the-cache">
-<span id="caching-setup"></span><h3>Setting up the cache<a class="headerlink" href="#setting-up-the-cache" title="Permalink to this heading"></a></h3>
+<span id="caching-setup"></span><h2>Setting up the cache<a class="headerlink" href="#setting-up-the-cache" title="Permalink to this heading"></a></h2>
 <p>memcached is an in-memory key-value store accessible over the network. pyDVL
 uses it to cache certain results and speed-up the computations. You can either
 install it as a package or run it inside a docker container (the simplest). For
@@ -154,7 +174,6 @@ wiki. Then you can run it with:</p>
 about cache reuse and its pitfalls, please the documentation for the module
 <a class="reference internal" href="pydvl/utils/caching.html#module-pydvl.utils.caching" title="pydvl.utils.caching"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.utils.caching</span></code></a>.</p>
 </div>
-</section>
 </section>
 <section id="what-s-next">
 <h2>What’s next<a class="headerlink" href="#what-s-next" title="Permalink to this heading"></a></h2>

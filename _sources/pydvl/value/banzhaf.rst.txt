@@ -1,7 +1,7 @@
-shapley
+banzhaf
 =======
 
-.. automodule:: pydvl.shapley
+.. automodule:: pydvl.value.banzhaf
    :members:
    :undoc-members:
 
@@ -10,5 +10,5 @@ shapley
 .. toctree::
    :glob:
 
-   shapley/*
+   banzhaf/*
 

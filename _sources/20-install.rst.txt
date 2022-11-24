@@ -45,7 +45,7 @@ the instructions in their documentation for installation.
 .. _caching setup:
 
 Setting up the cache
---------------------
+====================
 
 memcached is an in-memory key-value store accessible over the network. pyDVL
 uses it to cache certain results and speed-up the computations. You can either

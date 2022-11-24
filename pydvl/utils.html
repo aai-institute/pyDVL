@@ -7,6 +7,15 @@
   <title>utils &mdash; pyDVL 0.2.1.dev0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster.custom.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster.bundle.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-shadow.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-punk.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-noir.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-light.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-borderless.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/micromodal.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/sphinx_rtd_theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
@@ -17,13 +26,18 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/js/hoverxref.js"></script>
+        <script src="../_static/js/tooltipster.bundle.min.js"></script>
+        <script src="../_static/js/micromodal.min.js"></script>
         <script src="../_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="caching" href="utils/caching.html" />
-    <link rel="prev" title="naive" href="shapley/naive.html" /> 
+    <link rel="prev" title="scores" href="reporting/scores.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -57,21 +71,19 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="influence.html">influence</a></li>
-<li class="toctree-l2"><a class="reference internal" href="loo.html">loo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reporting.html">reporting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley.html">shapley</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">utils</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="utils/caching.html">caching</a></li>
 <li class="toctree-l3"><a class="reference internal" href="utils/config.html">config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="utils/dataset.html">dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="utils/numeric.html">numeric</a></li>
 <li class="toctree-l3"><a class="reference internal" href="utils/parallel.html">parallel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="utils/plotting.html">plotting</a></li>
 <li class="toctree-l3"><a class="reference internal" href="utils/progress.html">progress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="utils/types.html">types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="utils/utility.html">utility</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="value.html">value</a></li>
 </ul>
 </li>
 </ul>
@@ -89,9 +101,9 @@
         <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">API Reference</a> &raquo;</li>
-      <li>utils</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">API Reference</a></li>
+      <li class="breadcrumb-item active">utils</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/pydvl/utils.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -134,6 +146,7 @@
 <li class="toctree-l2"><a class="reference internal" href="utils/caching.html#configuration">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils/caching.html#usage-with-stochastic-functions">Usage with stochastic functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils/caching.html#cache-reuse">Cache reuse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils/caching.html#unexpected-cache-misses">Unexpected cache misses</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="utils/config.html">config</a></li>
@@ -145,7 +158,6 @@
 <li class="toctree-l2"><a class="reference internal" href="utils/parallel/map_reduce.html">map_reduce</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="utils/plotting.html">plotting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils/progress.html">progress</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils/types.html">types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils/utility.html">utility</a></li>
@@ -157,7 +169,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="shapley/naive.html" class="btn btn-neutral float-left" title="naive" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="reporting/scores.html" class="btn btn-neutral float-left" title="scores" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="utils/caching.html" class="btn btn-neutral float-right" title="caching" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

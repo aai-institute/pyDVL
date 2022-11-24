@@ -7,6 +7,15 @@
   <title>Getting started &mdash; pyDVL 0.2.1.dev0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster.custom.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster.bundle.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-shadow.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-punk.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-noir.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-light.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-borderless.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/micromodal.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/sphinx_rtd_theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,8 +26,13 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/js/hoverxref.js"></script>
+        <script src="_static/js/tooltipster.bundle.min.js"></script>
+        <script src="_static/js/micromodal.min.js"></script>
         <script src="_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -47,7 +61,10 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-examples">Running the examples</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="20-install.html">Installing pyDVL</a></li>
 <li class="toctree-l1"><a class="reference internal" href="30-data-valuation.html">Computing data values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="40-influence.html">Computing influence values</a></li>
@@ -71,8 +88,8 @@
         <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Getting started</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Getting started</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/10-getting-started.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -108,14 +125,22 @@
 </style>
 <section id="getting-started">
 <span id="id1"></span><h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h1>
-<p>Make sure you have <a class="reference internal" href="20-install.html#pydvl-installation"><span class="std std-ref">installed pyDVL</span></a> before proceeding
-further.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>We provide minimal overviews of key concepts in <a class="reference internal" href="30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> and
-<a class="reference internal" href="40-influence.html#influence"><span class="std std-ref">Computing influence values</span></a>. For an in-depth survey of the field, we refer to the review on
-the topic at the <a class="reference external" href="https://transferlab.appliedai.de/">TransferLab website</a>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Make sure you have read <a class="reference internal" href="20-install.html#pydvl-installation"><span class="std std-ref">the installation instructions</span></a> before using the library. In particular read about how
+caching and parallelization work, since they require additional setup.</p>
 </div>
+<p>pyDVL aims to be a repository of production-ready, reference implementations of
+algorithms for data valuation and influence functions. You can read:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for key objects and usage patterns for Shapley value
+computation and related methods.</p></li>
+<li><p><a class="reference internal" href="40-influence.html#influence"><span class="std std-ref">Computing influence values</span></a> for instruction on how to compute influence functions (still
+in a pre-alpha state)</p></li>
+</ul>
+<p>We only briefly introduce key concepts in the documentation. For a thorough
+introduction and survey of the field, we refer to <strong>the upcoming review</strong> at the
+<a class="reference external" href="https://transferlab.appliedai.de/">TransferLab website</a>.</p>
 <section id="running-the-examples">
 <h2>Running the examples<a class="headerlink" href="#running-the-examples" title="Permalink to this heading"></a></h2>
 <p>If you are somewhat familiar with the concepts of data valuation, you can start
@@ -127,15 +152,6 @@ example’s page.</p></li>
 <li><p>Locally, by starting a jupyter server at the root of the project. You will
 have to install jupyter first manually since it’s not a dependency of the
 library.</p></li>
-</ul>
-</section>
-<section id="methods-covered">
-<h2>Methods covered<a class="headerlink" href="#methods-covered" title="Permalink to this heading"></a></h2>
-<p>pyDVL offers algorithms for data valuation and computation of influence
-functions. You can read more about each family of methods here:</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a>.</p></li>
-<li><p><a class="reference internal" href="40-influence.html#influence"><span class="std std-ref">Computing influence values</span></a>.</p></li>
 </ul>
 </section>
 </section>

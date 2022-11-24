@@ -1,6 +1,6 @@
 montecarlo
 ==========
 
-.. automodule:: pydvl.shapley.montecarlo
+.. automodule:: pydvl.value.shapley.montecarlo
    :members:
    :undoc-members:

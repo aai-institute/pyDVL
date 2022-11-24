@@ -6,6 +6,15 @@
   <title>Python Module Index &mdash; pyDVL 0.2.1.dev0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster.custom.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster.bundle.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-shadow.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-punk.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-noir.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-light.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-borderless.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/micromodal.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/sphinx_rtd_theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -16,8 +25,13 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/js/hoverxref.js"></script>
+        <script src="_static/js/tooltipster.bundle.min.js"></script>
+        <script src="_static/js/micromodal.min.js"></script>
         <script src="_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -71,8 +85,8 @@
         <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Python Module Index</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Python Module Index</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -146,16 +160,6 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="pydvl/loo.html#module-pydvl.loo"><code class="xref">pydvl.loo</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="pydvl/loo/naive.html#module-pydvl.loo.naive"><code class="xref">pydvl.loo.naive</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
        <a href="pydvl/reporting.html#module-pydvl.reporting"><code class="xref">pydvl.reporting</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
@@ -167,31 +171,6 @@
        <td></td>
        <td>&#160;&#160;&#160;
        <a href="pydvl/reporting/scores.html#module-pydvl.reporting.scores"><code class="xref">pydvl.reporting.scores</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="pydvl/shapley.html#module-pydvl.shapley"><code class="xref">pydvl.shapley</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="pydvl/shapley/actor.html#module-pydvl.shapley.actor"><code class="xref">pydvl.shapley.actor</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="pydvl/shapley/knn.html#module-pydvl.shapley.knn"><code class="xref">pydvl.shapley.knn</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="pydvl/shapley/montecarlo.html#module-pydvl.shapley.montecarlo"><code class="xref">pydvl.shapley.montecarlo</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="pydvl/shapley/naive.html#module-pydvl.shapley.naive"><code class="xref">pydvl.shapley.naive</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -241,11 +220,6 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="pydvl/utils/plotting.html#module-pydvl.utils.plotting"><code class="xref">pydvl.utils.plotting</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
        <a href="pydvl/utils/progress.html#module-pydvl.utils.progress"><code class="xref">pydvl.utils.progress</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
@@ -257,6 +231,56 @@
        <td></td>
        <td>&#160;&#160;&#160;
        <a href="pydvl/utils/utility.html#module-pydvl.utils.utility"><code class="xref">pydvl.utils.utility</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pydvl/value.html#module-pydvl.value"><code class="xref">pydvl.value</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pydvl/value/banzhaf.html#module-pydvl.value.banzhaf"><code class="xref">pydvl.value.banzhaf</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pydvl/value/banzhaf/montecarlo.html#module-pydvl.value.banzhaf.montecarlo"><code class="xref">pydvl.value.banzhaf.montecarlo</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pydvl/value/loo.html#module-pydvl.value.loo"><code class="xref">pydvl.value.loo</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pydvl/value/loo/naive.html#module-pydvl.value.loo.naive"><code class="xref">pydvl.value.loo.naive</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pydvl/value/shapley.html#module-pydvl.value.shapley"><code class="xref">pydvl.value.shapley</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pydvl/value/shapley/actor.html#module-pydvl.value.shapley.actor"><code class="xref">pydvl.value.shapley.actor</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pydvl/value/shapley/knn.html#module-pydvl.value.shapley.knn"><code class="xref">pydvl.value.shapley.knn</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pydvl/value/shapley/montecarlo.html#module-pydvl.value.shapley.montecarlo"><code class="xref">pydvl.value.shapley.montecarlo</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pydvl/value/shapley/naive.html#module-pydvl.value.shapley.naive"><code class="xref">pydvl.value.shapley.naive</code></a></td><td>
        <em></em></td></tr>
    </table>
 

@@ -1,7 +1,7 @@
-loo
-===
+value
+=====
 
-.. automodule:: pydvl.loo
+.. automodule:: pydvl.value
    :members:
    :undoc-members:
 
@@ -10,5 +10,5 @@ loo
 .. toctree::
    :glob:
 
-   loo/*
+   value/*
 

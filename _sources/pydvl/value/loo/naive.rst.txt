@@ -1,6 +1,6 @@
 naive
 =====
 
-.. automodule:: pydvl.shapley.naive
+.. automodule:: pydvl.value.loo.naive
    :members:
    :undoc-members:

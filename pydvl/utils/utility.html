@@ -7,6 +7,15 @@
   <title>utility &mdash; pyDVL 0.2.1.dev0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster.custom.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster.bundle.min.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster-sideTip-shadow.min.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster-sideTip-punk.min.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster-sideTip-noir.min.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster-sideTip-light.min.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster-sideTip-borderless.min.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/micromodal.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/sphinx_rtd_theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -17,11 +26,17 @@
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/js/hoverxref.js"></script>
+        <script src="../../_static/js/tooltipster.bundle.min.js"></script>
+        <script src="../../_static/js/micromodal.min.js"></script>
         <script src="../../_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="value" href="../value.html" />
     <link rel="prev" title="types" href="types.html" /> 
 </head>
 
@@ -56,21 +71,19 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../influence.html">influence</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../loo.html">loo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reporting.html">reporting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../shapley.html">shapley</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../utils.html">utils</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="caching.html">caching</a></li>
 <li class="toctree-l3"><a class="reference internal" href="config.html">config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="dataset.html">dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="numeric.html">numeric</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parallel.html">parallel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plotting.html">plotting</a></li>
 <li class="toctree-l3"><a class="reference internal" href="progress.html">progress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="types.html">types</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">utility</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../value.html">value</a></li>
 </ul>
 </li>
 </ul>
@@ -88,10 +101,10 @@
         <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">API Reference</a> &raquo;</li>
-          <li><a href="../utils.html">utils</a> &raquo;</li>
-      <li>utility</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../utils.html">utils</a></li>
+      <li class="breadcrumb-item active">utility</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/pydvl/utils/utility.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -182,8 +195,8 @@ e.g. when too little data is passed, or errors arise.</p></li>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.utils.utility.Utility.scoring">
-<span class="sig-name descname"><span class="pre">scoring</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pydvl.utils.utility.Utility.scoring" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="pydvl.utils.utility.Utility.scorer">
+<span class="sig-name descname"><span class="pre">scorer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pydvl.utils.utility.Utility.scorer" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -192,13 +205,21 @@ e.g. when too little data is passed, or errors arise.</p></li>
 <dd><p>Signature used for caching model results.</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="pydvl.utils.utility.Utility.cache_stats">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cache_stats</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="caching.html#pydvl.utils.caching.CacheStats" title="pydvl.utils.caching.CacheStats"><span class="pre">CacheStats</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pydvl.utils.utility.Utility.cache_stats" title="Permalink to this definition"></a></dt>
+<dd><p>Cache statistics are gathered when cache is enabled.
+See <code class="xref py py-class docutils literal notranslate"><span class="pre">CacheInfo</span></code> for all fields returned.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.utils.utility.DataUtilityLearning">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataUtilityLearning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_budget</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/utility.py#L157"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.DataUtilityLearning" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataUtilityLearning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_budget</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/utility.py#L175"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.DataUtilityLearning" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Implementation of Data Utility Learning algorithm <a class="footnote-reference brackets" href="#id2" id="id1">1</a>.</p>
+<p>Implementation of Data Utility Learning algorithm
+Wang <em>et al.</em><a class="footnote-reference brackets" href="#footcite-wang-improving-2022" id="id1">1</a>.</p>
 <p>This object wraps a <a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> and delegates
 calls to it, up until a given budget (number of iterations). Every tuple
 of input and output (a so-called <em>utility sample</em>) is stored. Once the
@@ -230,13 +251,11 @@ the given model</p></li>
 <span class="go">0.0</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
+<p class="rubric">References</p>
+<div class="docutils container" id="id2">
 <dl class="footnote brackets">
-<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p><a class="reference external" href="https://arxiv.org/abs/2107.06336v2">Tianhao Wang, Yu Yang, Ruoxi Jia.
-“Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning.”
-arXiv, 2021</a>.</p>
+<dt class="label" id="footcite-wang-improving-2022"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Tianhao Wang, Yu Yang, and Ruoxi Jia. Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning. In <em>International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning</em>. arXiv, April 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2107.06336v2">http://arxiv.org/abs/2107.06336v2</a> (visited on 2022-05-19), <a class="reference external" href="https://arxiv.org/abs/2107.06336v2">arXiv:2107.06336v2</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2107.06336">doi:10.48550/arXiv.2107.06336</a>.</p>
 </dd>
 </dl>
 </div>
@@ -255,6 +274,7 @@ arXiv, 2021</a>.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="types.html" class="btn btn-neutral float-left" title="types" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../value.html" class="btn btn-neutral float-right" title="value" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

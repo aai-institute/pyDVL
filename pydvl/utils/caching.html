@@ -7,6 +7,15 @@
   <title>caching &mdash; pyDVL 0.2.1.dev0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster.custom.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster.bundle.min.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster-sideTip-shadow.min.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster-sideTip-punk.min.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster-sideTip-noir.min.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster-sideTip-light.min.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/tooltipster-sideTip-borderless.min.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/micromodal.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/sphinx_rtd_theme.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -17,8 +26,13 @@
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/js/hoverxref.js"></script>
+        <script src="../../_static/js/tooltipster.bundle.min.js"></script>
+        <script src="../../_static/js/micromodal.min.js"></script>
         <script src="../../_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -57,26 +71,25 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../influence.html">influence</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../loo.html">loo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reporting.html">reporting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../shapley.html">shapley</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../utils.html">utils</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">caching</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#usage-with-stochastic-functions">Usage with stochastic functions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cache-reuse">Cache reuse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#unexpected-cache-misses">Unexpected cache misses</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="config.html">config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="dataset.html">dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="numeric.html">numeric</a></li>
 <li class="toctree-l3"><a class="reference internal" href="parallel.html">parallel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plotting.html">plotting</a></li>
 <li class="toctree-l3"><a class="reference internal" href="progress.html">progress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="types.html">types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="utility.html">utility</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../value.html">value</a></li>
 </ul>
 </li>
 </ul>
@@ -94,10 +107,10 @@
         <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">API Reference</a> &raquo;</li>
-          <li><a href="../utils.html">utils</a> &raquo;</li>
-      <li>caching</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../utils.html">utils</a></li>
+      <li class="breadcrumb-item active">caching</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/pydvl/utils/caching.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -141,19 +154,31 @@ service, locally or remotely, see <a class="reference internal" href="../../20-i
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Function evaluations are cached with a key based on the function’s signature
-and code. This can lead to undesired cache reuse, see <cite>Cache reuse</cite>.</p>
+and code. This can lead to undesired cache hits, see <a class="reference internal" href="#cache-reuse"><span class="std std-ref">Cache reuse</span></a>.</p>
+<p>Remember <strong>not to reuse utility objects for different datasets</strong>.</p>
 </div>
 <section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
 <p>Memoization is added by default to any callable used to construct a
 <a class="reference internal" href="utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">pydvl.utils.utility.Utility</span></code></a> (done with the decorator <a class="reference internal" href="#pydvl.utils.caching.memcached" title="pydvl.utils.caching.memcached"><code class="xref py py-func docutils literal notranslate"><span class="pre">memcached()</span></code></a>),
 but it can be disabled. Depending on the nature of the utility you might want to
-enable the computation of a running average of function values, see below. You
-can see all configuration options under
+enable the computation of a running average of function values, see
+<a class="reference internal" href="#caching-stochastic-functions"><span class="std std-ref">Usage with stochastic functions</span></a>. You can see all configuration options under
 <a class="reference internal" href="config.html#pydvl.utils.config.MemcachedConfig" title="pydvl.utils.config.MemcachedConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">MemcachedConfig</span></code></a>.</p>
+<p class="rubric">Default configuration</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">default_config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">server</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="mi">11211</span><span class="p">),</span>
+    <span class="n">connect_timeout</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="c1"># IMPORTANT! Disable small packet consolidation:</span>
+    <span class="n">no_delay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">serde</span><span class="o">=</span><span class="n">serde</span><span class="o">.</span><span class="n">PickleSerde</span><span class="p">(</span><span class="n">pickle_version</span><span class="o">=</span><span class="n">PICKLE_VERSION</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="usage-with-stochastic-functions">
-<h2>Usage with stochastic functions<a class="headerlink" href="#usage-with-stochastic-functions" title="Permalink to this heading"></a></h2>
+<span id="caching-stochastic-functions"></span><h2>Usage with stochastic functions<a class="headerlink" href="#usage-with-stochastic-functions" title="Permalink to this heading"></a></h2>
 <p>In addition to standard memoization, the decorator <a class="reference internal" href="#pydvl.utils.caching.memcached" title="pydvl.utils.caching.memcached"><code class="xref py py-func docutils literal notranslate"><span class="pre">memcached()</span></code></a> can compute
 running average and standard error of repeated evaluations for the same input.
 This can be useful for stochastic functions with high variance (e.g. model
@@ -163,68 +188,80 @@ memoization.</p>
 <a class="reference internal" href="config.html#pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations" title="pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations"><code class="xref py py-attr docutils literal notranslate"><span class="pre">allow_repeated_evaluations</span></code></a>.</p>
 </section>
 <section id="cache-reuse">
-<h2>Cache reuse<a class="headerlink" href="#cache-reuse" title="Permalink to this heading"></a></h2>
+<span id="id1"></span><h2>Cache reuse<a class="headerlink" href="#cache-reuse" title="Permalink to this heading"></a></h2>
+<p>When working directly with <a class="reference internal" href="#pydvl.utils.caching.memcached" title="pydvl.utils.caching.memcached"><code class="xref py py-func docutils literal notranslate"><span class="pre">memcached()</span></code></a>, it is essential to only cache pure
+functions. If they have any kind of state, either internal or external (e.g. a
+closure over some data that may change), then the cache will fail to notice this
+and the same value will be returned.</p>
 <p>When a function is wrapped with <a class="reference internal" href="#pydvl.utils.caching.memcached" title="pydvl.utils.caching.memcached"><code class="xref py py-func docutils literal notranslate"><span class="pre">memcached()</span></code></a> for memoization, its signature
-(input and output names) and code are used as a key for the cache. If you are
-running experiments with the same utility but different datasets, this can lead
-to evaluations of the utility on new data returning old values because utilities
-typically only use sample indices as arguments (so there is no way to tell the
-difference between ‘1’ for dataset A and ‘1’ for dataset 2 from the point of
-view of the cache). One solution is to add dummy arguments with the dataset
-name. Another is to empty the cache between runs. And yet another is to simply
-use a different function name for the utility to be computed on the new dataset.</p>
-<p>If a function is going to run across multiple processes and some reporting
-arguments are added (like a <cite>job_id</cite> for logging purposes), these will be part
-of the signature and make the functions distinct to the eyes of the cache. This
-can be avoided with the use of
+(input and output names) and code are used as a key for the cache. Alternatively
+you can pass a custom value to be used as key with</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cached_fun</span> <span class="o">=</span> <span class="n">memcached</span><span class="p">(</span><span class="o">**</span><span class="n">cache_options</span><span class="p">)(</span><span class="n">fun</span><span class="p">,</span> <span class="n">signature</span><span class="o">=</span><span class="n">custom_signature</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you are running experiments with the same <a class="reference internal" href="utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a>
+but different datasets, this will lead to evaluations of the utility on new data
+returning old values because utilities only use sample indices as arguments (so
+there is no way to tell the difference between ‘1’ for dataset A and ‘1’ for
+dataset 2 from the point of view of the cache). One solution is to empty the
+cache between runs, but the preferred one is to <strong>use a different Utility
+object for each dataset</strong>.</p>
+</section>
+<section id="unexpected-cache-misses">
+<h2>Unexpected cache misses<a class="headerlink" href="#unexpected-cache-misses" title="Permalink to this heading"></a></h2>
+<p>Because all arguments to a function are used as part of the key for the cache,
+sometimes one must exclude some of them. For example, If a function is going to
+run across multiple processes and some reporting arguments are added (like a
+<cite>job_id</cite> for logging purposes), these will be part of the signature and make the
+functions distinct to the eyes of the cache. This can be avoided with the use of
 <a class="reference internal" href="config.html#pydvl.utils.config.MemcachedConfig.ignore_args" title="pydvl.utils.config.MemcachedConfig.ignore_args"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ignore_args</span></code></a> in the configuration.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="pydvl.utils.caching.CacheInfo">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CacheInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">misses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeouts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reconnects</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/caching.py#L83"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.caching.CacheInfo" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="pydvl.utils.caching.CacheStats">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CacheStats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">misses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeouts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reconnects</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/caching.py#L117"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.caching.CacheStats" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Statistics gathered by cached functions.</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.utils.caching.CacheInfo.sets">
-<span class="sig-name descname"><span class="pre">sets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pydvl.utils.caching.CacheInfo.sets" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="pydvl.utils.caching.CacheStats.sets">
+<span class="sig-name descname"><span class="pre">sets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pydvl.utils.caching.CacheStats.sets" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.utils.caching.CacheInfo.misses">
-<span class="sig-name descname"><span class="pre">misses</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pydvl.utils.caching.CacheInfo.misses" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="pydvl.utils.caching.CacheStats.misses">
+<span class="sig-name descname"><span class="pre">misses</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pydvl.utils.caching.CacheStats.misses" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.utils.caching.CacheInfo.hits">
-<span class="sig-name descname"><span class="pre">hits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pydvl.utils.caching.CacheInfo.hits" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="pydvl.utils.caching.CacheStats.hits">
+<span class="sig-name descname"><span class="pre">hits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pydvl.utils.caching.CacheStats.hits" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.utils.caching.CacheInfo.timeouts">
-<span class="sig-name descname"><span class="pre">timeouts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pydvl.utils.caching.CacheInfo.timeouts" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="pydvl.utils.caching.CacheStats.timeouts">
+<span class="sig-name descname"><span class="pre">timeouts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pydvl.utils.caching.CacheStats.timeouts" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.utils.caching.CacheInfo.errors">
-<span class="sig-name descname"><span class="pre">errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pydvl.utils.caching.CacheInfo.errors" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="pydvl.utils.caching.CacheStats.errors">
+<span class="sig-name descname"><span class="pre">errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pydvl.utils.caching.CacheStats.errors" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.utils.caching.CacheInfo.reconnects">
-<span class="sig-name descname"><span class="pre">reconnects</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pydvl.utils.caching.CacheInfo.reconnects" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="pydvl.utils.caching.CacheStats.reconnects">
+<span class="sig-name descname"><span class="pre">reconnects</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#pydvl.utils.caching.CacheStats.reconnects" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.utils.caching.serialize">
-<span class="sig-name descname"><span class="pre">serialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/caching.py#L94"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.caching.serialize" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">serialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/caching.py#L128"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.caching.serialize" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.utils.caching.memcached">
-<span class="sig-name descname"><span class="pre">memcached</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="config.html#pydvl.utils.config.MemcachedClientConfig" title="pydvl.utils.config.MemcachedClientConfig"><span class="pre">MemcachedClientConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_repeated_evaluations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol_stderr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_repetitions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/caching.py#L101"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.caching.memcached" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">memcached</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="config.html#pydvl.utils.config.MemcachedClientConfig" title="pydvl.utils.config.MemcachedClientConfig"><span class="pre">MemcachedClientConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_repeated_evaluations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol_stderr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_repetitions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/caching.py#L135"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.caching.memcached" title="Permalink to this definition"></a></dt>
 <dd><p>Transparent, distributed memoization of function calls.</p>
-<p>Given a function and its signature, memcached creates a distributed cache
+<p>Given a function and its signature, memcached uses a distributed cache
 that, for each set of inputs, keeps track of the average returned value,
 with variance and number of times it was calculated.</p>
 <p>If the function is deterministic, i.e. same input corresponds to the same
@@ -235,6 +272,16 @@ to compute a running average, and a tolerance after which the function will
 not be called anymore. In other words, the function will be recomputed
 until the value has stabilized with a standard error smaller than
 <cite>rtol_stderr * running average</cite>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do not cache functions with state! See <a class="reference internal" href="#cache-reuse"><span class="std std-ref">Cache reuse</span></a></p>
+</div>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">Example usage</span><a class="headerlink" href="#id2" title="Permalink to this code"></a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cached_fun</span> <span class="o">=</span> <span class="n">memcached</span><span class="p">(</span><span class="o">**</span><span class="n">cache_options</span><span class="p">)(</span><span class="n">heavy_computation</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -264,20 +311,6 @@ do not affect the result of the computation.</p></li>
 <dd class="field-even"><p>A wrapped function</p>
 </dd>
 </dl>
-<p><strong>Default configuration:</strong></p>
-<div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">Default configuration</span><a class="headerlink" href="#id1" title="Permalink to this code"></a></div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">default_config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-    <span class="n">server</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="mi">11211</span><span class="p">),</span>
-    <span class="n">connect_timeout</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">timeout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-    <span class="c1"># IMPORTANT! Disable small packet consolidation:</span>
-    <span class="n">no_delay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">serde</span><span class="o">=</span><span class="n">serde</span><span class="o">.</span><span class="n">PickleSerde</span><span class="p">(</span><span class="n">pickle_version</span><span class="o">=</span><span class="n">PICKLE_VERSION</span><span class="p">)</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</div>
 </dd></dl>
 
 </section>

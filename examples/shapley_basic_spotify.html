@@ -7,6 +7,15 @@
   <title>Shapley for data valuation &mdash; pyDVL 0.2.1.dev0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster.custom.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster.bundle.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-shadow.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-punk.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-noir.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-light.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/tooltipster-sideTip-borderless.min.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/micromodal.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/sphinx_rtd_theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
@@ -17,6 +26,9 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/js/hoverxref.js"></script>
+        <script src="../_static/js/tooltipster.bundle.min.js"></script>
+        <script src="../_static/js/micromodal.min.js"></script>
         <script src="../_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
@@ -54,7 +66,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../30-data-valuation.html">Computing data values</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../40-influence.html">Computing influence values</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Shapley for data valuation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Shapley for data valuation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Setup">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Loading-and-grouping-the-dataset">Loading and grouping the dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Creating-the-utility-and-computing-values">Creating the utility and computing values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Evaluation-on-anomalous-data">Evaluation on anomalous data</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="shapley_knn_flowers.html">KNN Shapley</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shapley_utility_learning.html">Data Utility Learning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
@@ -80,9 +98,9 @@
         <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Examples</a> &raquo;</li>
-      <li>Shapley for data valuation</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Shapley for data valuation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/examples/shapley_basic_spotify.ipynb.txt" rel="nofollow"> View page source</a>
       </li>
@@ -202,10 +220,11 @@ div.nboutput.container div.prompt > div {
     }
 }
 
-/* disable scrollbars on prompts */
+/* disable scrollbars and line breaks on prompts */
 div.nbinput.container div.prompt pre,
 div.nboutput.container div.prompt pre {
     overflow: hidden;
+    white-space: pre;
 }
 
 /* input/output area */
@@ -404,7 +423,7 @@ div.rendered_html tbody tr:hover {
 <div class="admonition note">
 <p>If you are reading this in the documentation, some boilerplate has been omitted for convenience.</p>
 </div>
-<p>We will be using the following functions from pyDVL. The main entry point is the function <a class="reference internal" href="../pydvl/shapley.html#pydvl.shapley.compute_shapley_values"><span class="std std-ref">compute_shapley_values()</span></a>, which provides a facade to all Shapley methods. In order to use it we need the classes <a class="reference internal" href="../pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset"><span class="std std-ref">Dataset</span></a> and <a class="reference internal" href="../pydvl/utils/utility.html#pydvl.utils.utility.Utility"><span class="std std-ref">Utility</span></a>.</p>
+<p>We will be using the following functions from pyDVL. The main entry point is the function <a class="reference internal" href="../pydvl/value/shapley.html#pydvl.value.shapley.compute_shapley_values"><span class="std std-ref">compute_shapley_values()</span></a>, which provides a facade to all Shapley methods. In order to use it we need the classes <a class="reference internal" href="../pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset"><span class="std std-ref">Dataset</span></a> and <a class="reference internal" href="../pydvl/utils/utility.html#pydvl.utils.utility.Utility"><span class="std std-ref">Utility</span></a>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -417,7 +436,7 @@ div.rendered_html tbody tr:hover {
     <span class="n">Utility</span><span class="p">,</span>
     <span class="n">plot_shapley</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">pydvl.shapley</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
+<span class="kn">from</span> <span class="nn">pydvl.value.shapley</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
 </pre></div>
 </div>
 </div>
@@ -613,8 +632,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>The calculation of exact Shapley values is computationally very expensive (exponentially so!) because it requires training the model on every possible subset of the training set. For this reason, PyDVL implements techniques to speed up the calculation, such as <a class="reference internal" href="../pydvl/shapley/montecarlo.html"><span class="doc">Monte Carlo approximations</span></a>, <a class="reference internal" href="../pydvl/utils/utility.html#pydvl.utils.utility.DataUtilityLearning"><span class="std std-ref">surrogate models</span></a> or <a class="reference internal" href="../pydvl/utils/caching.html"><span class="doc">caching</span></a> of intermediate results and grouping of
-data to calculate group Shapley values instead of single data points.</p>
+<p>The calculation of exact Shapley values is computationally very expensive (exponentially so!) because it requires training the model on every possible subset of the training set. For this reason, PyDVL implements techniques to speed up the calculation, such as <a class="reference internal" href="../pydvl/value/shapley/montecarlo.html"><span class="doc">Monte Carlo approximations</span></a>, <a class="reference internal" href="../pydvl/utils/utility.html#pydvl.utils.utility.DataUtilityLearning"><span class="std std-ref">surrogate models</span></a> or <a class="reference internal" href="../pydvl/utils/caching.html"><span class="doc">caching</span></a> of intermediate results and
+grouping of data to calculate group Shapley values instead of single data points.</p>
 <p>In our case, we will group songs by artist and calculate the Shapley value for the artists. Given the <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html">pandas Series</a> for ‘artist’, to group the dataset by it, one does the following:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -651,7 +670,7 @@ construct the utility.</p>
 </pre></div>
 </div>
 </div>
-<p>The function <a class="reference internal" href="../pydvl/shapley.html#pydvl.shapley.compute_shapley_values"><span class="std std-ref">compute_shapley_values()</span></a> serves as a common access point to all Shapley methods.</p>
+<p>The function <a class="reference internal" href="../pydvl/value/shapley.html#pydvl.value.shapley.compute_shapley_values"><span class="std std-ref">compute_shapley_values()</span></a> serves as a common access point to all Shapley methods.</p>
 <p>Let’s take a look at the returned dataframe:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:

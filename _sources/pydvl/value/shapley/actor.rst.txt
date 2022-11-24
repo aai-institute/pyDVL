@@ -1,6 +1,6 @@
 actor
 =====
 
-.. automodule:: pydvl.shapley.actor
+.. automodule:: pydvl.value.shapley.actor
    :members:
    :undoc-members:

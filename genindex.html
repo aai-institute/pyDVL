@@ -6,6 +6,15 @@
   <title>Index &mdash; pyDVL 0.2.1.dev0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster.custom.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster.bundle.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-shadow.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-punk.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-noir.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-light.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-borderless.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/micromodal.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/sphinx_rtd_theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -16,8 +25,13 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/js/hoverxref.js"></script>
+        <script src="_static/js/tooltipster.bundle.min.js"></script>
+        <script src="_static/js/micromodal.min.js"></script>
         <script src="_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -68,8 +82,8 @@
         <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Index</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Index</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -95,6 +109,7 @@
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
@@ -138,7 +153,9 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheInfo">CacheInfo (class in pydvl.utils.caching)</a>
+      <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility.cache_stats">cache_stats (Utility property)</a>
+</li>
+      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheStats">CacheStats (class in pydvl.utils.caching)</a>
 </li>
       <li><a href="pydvl/influence/general.html#pydvl.influence.general.InversionMethod.Cg">Cg (InversionMethod attribute)</a>
 </li>
@@ -146,19 +163,21 @@
 </li>
       <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedConfig.client_config">client_config (MemcachedConfig attribute)</a>
 </li>
-      <li><a href="pydvl/shapley/naive.html#pydvl.shapley.naive.combinatorial_exact_shapley">combinatorial_exact_shapley() (in module pydvl.shapley.naive)</a>
+      <li><a href="pydvl/value/shapley/naive.html#pydvl.value.shapley.naive.combinatorial_exact_shapley">combinatorial_exact_shapley() (in module pydvl.value.shapley.naive)</a>
 </li>
-      <li><a href="pydvl/shapley/montecarlo.html#pydvl.shapley.montecarlo.combinatorial_montecarlo_shapley">combinatorial_montecarlo_shapley() (in module pydvl.shapley.montecarlo)</a>
+      <li><a href="pydvl/value/shapley/montecarlo.html#pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley">combinatorial_montecarlo_shapley() (in module pydvl.value.shapley.montecarlo)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pydvl/utils/types.html#pydvl.utils.types.compose_score">compose_score() (in module pydvl.utils.types)</a>
+</li>
       <li><a href="pydvl/reporting/scores.html#pydvl.reporting.scores.compute_fb_scores">compute_fb_scores() (in module pydvl.reporting.scores)</a>
 </li>
       <li><a href="pydvl/influence/general.html#pydvl.influence.general.compute_influences">compute_influences() (in module pydvl.influence.general)</a>
 </li>
       <li><a href="pydvl/influence/linear.html#pydvl.influence.linear.compute_linear_influences">compute_linear_influences() (in module pydvl.influence.linear)</a>
 </li>
-      <li><a href="pydvl/shapley.html#pydvl.shapley.compute_shapley_values">compute_shapley_values() (in module pydvl.shapley)</a>
+      <li><a href="pydvl/value/shapley.html#pydvl.value.shapley.compute_shapley_values">compute_shapley_values() (in module pydvl.value.shapley)</a>
 </li>
       <li><a href="pydvl/influence/conjugate_gradient.html#pydvl.influence.conjugate_gradient.conjugate_gradient">conjugate_gradient() (in module pydvl.influence.conjugate_gradient)</a>
 </li>
@@ -200,7 +219,7 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheInfo.errors">errors (CacheInfo attribute)</a>
+      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheStats.errors">errors (CacheStats attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -240,9 +259,9 @@
 </li>
       <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.get_running_avg_variance">get_running_avg_variance() (in module pydvl.utils.numeric)</a>
 </li>
-      <li><a href="pydvl/shapley/actor.html#pydvl.shapley.actor.get_shapley_coordinator">get_shapley_coordinator() (in module pydvl.shapley.actor)</a>
+      <li><a href="pydvl/value/shapley/actor.html#pydvl.value.shapley.actor.get_shapley_coordinator">get_shapley_coordinator() (in module pydvl.value.shapley.actor)</a>
 </li>
-      <li><a href="pydvl/shapley/actor.html#pydvl.shapley.actor.get_shapley_worker">get_shapley_worker() (in module pydvl.shapley.actor)</a>
+      <li><a href="pydvl/value/shapley/actor.html#pydvl.value.shapley.actor.get_shapley_worker">get_shapley_worker() (in module pydvl.value.shapley.actor)</a>
 </li>
       <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset.get_test_data">get_test_data() (Dataset method)</a>
 </li>
@@ -268,7 +287,7 @@
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheInfo.hits">hits (CacheInfo attribute)</a>
+      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheStats.hits">hits (CacheStats attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -314,7 +333,7 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="pydvl/shapley/knn.html#pydvl.shapley.knn.knn_shapley">knn_shapley() (in module pydvl.shapley.knn)</a>
+      <li><a href="pydvl/value/shapley/knn.html#pydvl.value.shapley.knn.knn_shapley">knn_shapley() (in module pydvl.value.shapley.knn)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -326,13 +345,15 @@
 </li>
       <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.linear_regression_analytical_derivative_d_theta">linear_regression_analytical_derivative_d_theta() (in module pydvl.utils.numeric)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.linear_regression_analytical_derivative_d_x_d_theta">linear_regression_analytical_derivative_d_x_d_theta() (in module pydvl.utils.numeric)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.load_spotify_dataset">load_spotify_dataset() (in module pydvl.utils.dataset)</a>
 </li>
       <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.load_wine_dataset">load_wine_dataset() (in module pydvl.utils.dataset)</a>
+</li>
+      <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.lower_bound_hoeffding">lower_bound_hoeffding() (in module pydvl.utils.numeric)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -354,7 +375,7 @@
 </li>
       <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedConfig.min_repetitions">min_repetitions (MemcachedConfig attribute)</a>
 </li>
-      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheInfo.misses">misses (CacheInfo attribute)</a>
+      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheStats.misses">misses (CacheStats attribute)</a>
 </li>
       <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility.model">model (Utility attribute)</a>
 </li>
@@ -382,25 +403,11 @@
 </li>
         <li><a href="pydvl/influence/types.html#module-pydvl.influence.types">pydvl.influence.types</a>
 </li>
-        <li><a href="pydvl/loo.html#module-pydvl.loo">pydvl.loo</a>
-</li>
-        <li><a href="pydvl/loo/naive.html#module-pydvl.loo.naive">pydvl.loo.naive</a>
-</li>
         <li><a href="pydvl/reporting.html#module-pydvl.reporting">pydvl.reporting</a>
 </li>
         <li><a href="pydvl/reporting/plots.html#module-pydvl.reporting.plots">pydvl.reporting.plots</a>
 </li>
         <li><a href="pydvl/reporting/scores.html#module-pydvl.reporting.scores">pydvl.reporting.scores</a>
-</li>
-        <li><a href="pydvl/shapley.html#module-pydvl.shapley">pydvl.shapley</a>
-</li>
-        <li><a href="pydvl/shapley/actor.html#module-pydvl.shapley.actor">pydvl.shapley.actor</a>
-</li>
-        <li><a href="pydvl/shapley/knn.html#module-pydvl.shapley.knn">pydvl.shapley.knn</a>
-</li>
-        <li><a href="pydvl/shapley/montecarlo.html#module-pydvl.shapley.montecarlo">pydvl.shapley.montecarlo</a>
-</li>
-        <li><a href="pydvl/shapley/naive.html#module-pydvl.shapley.naive">pydvl.shapley.naive</a>
 </li>
         <li><a href="pydvl/utils.html#module-pydvl.utils">pydvl.utils</a>
 </li>
@@ -420,13 +427,31 @@
 </li>
         <li><a href="pydvl/utils/parallel/map_reduce.html#module-pydvl.utils.parallel.map_reduce">pydvl.utils.parallel.map_reduce</a>
 </li>
-        <li><a href="pydvl/utils/plotting.html#module-pydvl.utils.plotting">pydvl.utils.plotting</a>
-</li>
         <li><a href="pydvl/utils/progress.html#module-pydvl.utils.progress">pydvl.utils.progress</a>
 </li>
         <li><a href="pydvl/utils/types.html#module-pydvl.utils.types">pydvl.utils.types</a>
 </li>
         <li><a href="pydvl/utils/utility.html#module-pydvl.utils.utility">pydvl.utils.utility</a>
+</li>
+        <li><a href="pydvl/value.html#module-pydvl.value">pydvl.value</a>
+</li>
+        <li><a href="pydvl/value/banzhaf.html#module-pydvl.value.banzhaf">pydvl.value.banzhaf</a>
+</li>
+        <li><a href="pydvl/value/banzhaf/montecarlo.html#module-pydvl.value.banzhaf.montecarlo">pydvl.value.banzhaf.montecarlo</a>
+</li>
+        <li><a href="pydvl/value/loo.html#module-pydvl.value.loo">pydvl.value.loo</a>
+</li>
+        <li><a href="pydvl/value/loo/naive.html#module-pydvl.value.loo.naive">pydvl.value.loo.naive</a>
+</li>
+        <li><a href="pydvl/value/shapley.html#module-pydvl.value.shapley">pydvl.value.shapley</a>
+</li>
+        <li><a href="pydvl/value/shapley/actor.html#module-pydvl.value.shapley.actor">pydvl.value.shapley.actor</a>
+</li>
+        <li><a href="pydvl/value/shapley/knn.html#module-pydvl.value.shapley.knn">pydvl.value.shapley.knn</a>
+</li>
+        <li><a href="pydvl/value/shapley/montecarlo.html#module-pydvl.value.shapley.montecarlo">pydvl.value.shapley.montecarlo</a>
+</li>
+        <li><a href="pydvl/value/shapley/naive.html#module-pydvl.value.shapley.naive">pydvl.value.shapley.naive</a>
 </li>
       </ul></li>
   </ul></td>
@@ -445,7 +470,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pydvl/utils/parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.n_jobs">n_jobs (MapReduceJob property)</a>
 </li>
-      <li><a href="pydvl/loo/naive.html#pydvl.loo.naive.naive_loo">naive_loo() (in module pydvl.loo.naive)</a>
+      <li><a href="pydvl/value/loo/naive.html#pydvl.value.loo.naive.naive_loo">naive_loo() (in module pydvl.value.loo.naive)</a>
 </li>
       <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedClientConfig.no_delay">no_delay (MemcachedClientConfig attribute)</a>
 </li>
@@ -462,6 +487,14 @@
   </ul></td>
 </tr></table>
 
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pydvl/value/shapley/montecarlo.html#pydvl.value.shapley.montecarlo.owen_sampling_shapley">owen_sampling_shapley() (in module pydvl.value.shapley.montecarlo)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -469,15 +502,13 @@
 </li>
       <li><a href="pydvl/utils/config.html#pydvl.utils.config.ParallelConfig">ParallelConfig (class in pydvl.utils.config)</a>
 </li>
-      <li><a href="pydvl/shapley/naive.html#pydvl.shapley.naive.permutation_exact_shapley">permutation_exact_shapley() (in module pydvl.shapley.naive)</a>
+      <li><a href="pydvl/value/shapley/naive.html#pydvl.value.shapley.naive.permutation_exact_shapley">permutation_exact_shapley() (in module pydvl.value.shapley.naive)</a>
 </li>
-      <li><a href="pydvl/shapley/montecarlo.html#pydvl.shapley.montecarlo.permutation_montecarlo_shapley">permutation_montecarlo_shapley() (in module pydvl.shapley.montecarlo)</a>
+      <li><a href="pydvl/value/shapley/montecarlo.html#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley">permutation_montecarlo_shapley() (in module pydvl.value.shapley.montecarlo)</a>
 </li>
       <li><a href="pydvl/influence/general.html#pydvl.influence.general.InfluenceType.Perturbation">Perturbation (InfluenceType attribute)</a>
 </li>
-      <li><a href="pydvl/utils/plotting.html#pydvl.utils.plotting.plot_iris">plot_iris() (in module pydvl.utils.plotting)</a>
-</li>
-      <li><a href="pydvl/utils/plotting.html#pydvl.utils.plotting.plot_shapley">plot_shapley() (in module pydvl.utils.plotting)</a>
+      <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.plot_shapley">plot_shapley() (in module pydvl.reporting.plots)</a>
 </li>
       <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.powerset">powerset() (in module pydvl.utils.numeric)</a>
 </li>
@@ -554,20 +585,6 @@
 </li>
       </ul></li>
       <li>
-    pydvl.loo
-
-      <ul>
-        <li><a href="pydvl/loo.html#module-pydvl.loo">module</a>
-</li>
-      </ul></li>
-      <li>
-    pydvl.loo.naive
-
-      <ul>
-        <li><a href="pydvl/loo/naive.html#module-pydvl.loo.naive">module</a>
-</li>
-      </ul></li>
-      <li>
     pydvl.reporting
 
       <ul>
@@ -581,48 +598,11 @@
         <li><a href="pydvl/reporting/plots.html#module-pydvl.reporting.plots">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     pydvl.reporting.scores
 
       <ul>
         <li><a href="pydvl/reporting/scores.html#module-pydvl.reporting.scores">module</a>
-</li>
-      </ul></li>
-      <li>
-    pydvl.shapley
-
-      <ul>
-        <li><a href="pydvl/shapley.html#module-pydvl.shapley">module</a>
-</li>
-      </ul></li>
-      <li>
-    pydvl.shapley.actor
-
-      <ul>
-        <li><a href="pydvl/shapley/actor.html#module-pydvl.shapley.actor">module</a>
-</li>
-      </ul></li>
-      <li>
-    pydvl.shapley.knn
-
-      <ul>
-        <li><a href="pydvl/shapley/knn.html#module-pydvl.shapley.knn">module</a>
-</li>
-      </ul></li>
-      <li>
-    pydvl.shapley.montecarlo
-
-      <ul>
-        <li><a href="pydvl/shapley/montecarlo.html#module-pydvl.shapley.montecarlo">module</a>
-</li>
-      </ul></li>
-      <li>
-    pydvl.shapley.naive
-
-      <ul>
-        <li><a href="pydvl/shapley/naive.html#module-pydvl.shapley.naive">module</a>
 </li>
       </ul></li>
       <li>
@@ -646,6 +626,8 @@
         <li><a href="pydvl/utils/config.html#module-pydvl.utils.config">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     pydvl.utils.dataset
 
@@ -689,13 +671,6 @@
 </li>
       </ul></li>
       <li>
-    pydvl.utils.plotting
-
-      <ul>
-        <li><a href="pydvl/utils/plotting.html#module-pydvl.utils.plotting">module</a>
-</li>
-      </ul></li>
-      <li>
     pydvl.utils.progress
 
       <ul>
@@ -716,6 +691,76 @@
         <li><a href="pydvl/utils/utility.html#module-pydvl.utils.utility">module</a>
 </li>
       </ul></li>
+      <li>
+    pydvl.value
+
+      <ul>
+        <li><a href="pydvl/value.html#module-pydvl.value">module</a>
+</li>
+      </ul></li>
+      <li>
+    pydvl.value.banzhaf
+
+      <ul>
+        <li><a href="pydvl/value/banzhaf.html#module-pydvl.value.banzhaf">module</a>
+</li>
+      </ul></li>
+      <li>
+    pydvl.value.banzhaf.montecarlo
+
+      <ul>
+        <li><a href="pydvl/value/banzhaf/montecarlo.html#module-pydvl.value.banzhaf.montecarlo">module</a>
+</li>
+      </ul></li>
+      <li>
+    pydvl.value.loo
+
+      <ul>
+        <li><a href="pydvl/value/loo.html#module-pydvl.value.loo">module</a>
+</li>
+      </ul></li>
+      <li>
+    pydvl.value.loo.naive
+
+      <ul>
+        <li><a href="pydvl/value/loo/naive.html#module-pydvl.value.loo.naive">module</a>
+</li>
+      </ul></li>
+      <li>
+    pydvl.value.shapley
+
+      <ul>
+        <li><a href="pydvl/value/shapley.html#module-pydvl.value.shapley">module</a>
+</li>
+      </ul></li>
+      <li>
+    pydvl.value.shapley.actor
+
+      <ul>
+        <li><a href="pydvl/value/shapley/actor.html#module-pydvl.value.shapley.actor">module</a>
+</li>
+      </ul></li>
+      <li>
+    pydvl.value.shapley.knn
+
+      <ul>
+        <li><a href="pydvl/value/shapley/knn.html#module-pydvl.value.shapley.knn">module</a>
+</li>
+      </ul></li>
+      <li>
+    pydvl.value.shapley.montecarlo
+
+      <ul>
+        <li><a href="pydvl/value/shapley/montecarlo.html#module-pydvl.value.shapley.montecarlo">module</a>
+</li>
+      </ul></li>
+      <li>
+    pydvl.value.shapley.naive
+
+      <ul>
+        <li><a href="pydvl/value/shapley/naive.html#module-pydvl.value.shapley.naive">module</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -730,7 +775,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheInfo.reconnects">reconnects (CacheInfo attribute)</a>
+      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheStats.reconnects">reconnects (CacheStats attribute)</a>
 </li>
       <li><a href="pydvl/utils/parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.reduce">reduce() (MapReduceJob method)</a>
 </li>
@@ -746,7 +791,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pydvl/utils/types.html#pydvl.utils.types.SupervisedModel.score">score() (SupervisedModel method)</a>
 </li>
-      <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility.scoring">scoring (Utility attribute)</a>
+      <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility.scorer">scorer (Utility attribute)</a>
 </li>
       <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedClientConfig.serde">serde (MemcachedClientConfig attribute)</a>
 </li>
@@ -754,7 +799,7 @@
 </li>
       <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedClientConfig.server">server (MemcachedClientConfig attribute)</a>
 </li>
-      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheInfo.sets">sets (CacheInfo attribute)</a>
+      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheStats.sets">sets (CacheStats attribute)</a>
 </li>
       <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.shaded_mean_std">shaded_mean_std() (in module pydvl.reporting.plots)</a>
 </li>
@@ -769,8 +814,6 @@
       <li><a href="pydvl/reporting/scores.html#pydvl.reporting.scores.sort_values_array">sort_values_array() (in module pydvl.reporting.scores)</a>
 </li>
       <li><a href="pydvl/reporting/scores.html#pydvl.reporting.scores.sort_values_history">sort_values_history() (in module pydvl.reporting.scores)</a>
-</li>
-      <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.spearman">spearman() (in module pydvl.utils.numeric)</a>
 </li>
       <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.spearman_correlation">spearman_correlation() (in module pydvl.reporting.plots)</a>
 </li>
@@ -794,7 +837,7 @@
 </li>
       <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedClientConfig.timeout">timeout (MemcachedClientConfig attribute)</a>
 </li>
-      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheInfo.timeouts">timeouts (CacheInfo attribute)</a>
+      <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheStats.timeouts">timeouts (CacheStats attribute)</a>
 </li>
       <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.top_k_value_accuracy">top_k_value_accuracy() (in module pydvl.utils.numeric)</a>
 </li>
@@ -832,7 +875,7 @@
         <li><a href="pydvl/influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchNeuralNetwork.training">(TorchNeuralNetwork attribute)</a>, <a href="pydvl/influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchNeuralNetwork.training">[1]</a>
 </li>
       </ul></li>
-      <li><a href="pydvl/shapley/montecarlo.html#pydvl.shapley.montecarlo.truncated_montecarlo_shapley">truncated_montecarlo_shapley() (in module pydvl.shapley.montecarlo)</a>
+      <li><a href="pydvl/value/shapley/montecarlo.html#pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley">truncated_montecarlo_shapley() (in module pydvl.value.shapley.montecarlo)</a>
 </li>
       <li><a href="pydvl/influence/types.html#pydvl.influence.types.TwiceDifferentiable">TwiceDifferentiable (class in pydvl.influence.types)</a>
 </li>

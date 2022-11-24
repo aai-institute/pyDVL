@@ -7,6 +7,15 @@
   <title>pyDVL Documentation &mdash; pyDVL 0.2.1.dev0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster.custom.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster.bundle.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-shadow.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-punk.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-noir.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-light.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/tooltipster-sideTip-borderless.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/micromodal.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/sphinx_rtd_theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,8 +26,13 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/js/hoverxref.js"></script>
+        <script src="_static/js/tooltipster.bundle.min.js"></script>
+        <script src="_static/js/micromodal.min.js"></script>
         <script src="_static/design-tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -70,8 +84,8 @@
         <div class="rst-content style-external-links">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-      <li>pyDVL Documentation</li>
+      <li><a href="#" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">pyDVL Documentation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -153,16 +167,92 @@ distributed caching of results.</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="10-getting-started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="20-install.html">Installing pyDVL</a></li>
-<li class="toctree-l1"><a class="reference internal" href="30-data-valuation.html">Computing data values</a></li>
-<li class="toctree-l1"><a class="reference internal" href="40-influence.html">Computing influence values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10-getting-started.html">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="10-getting-started.html#running-the-examples">Running the examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="20-install.html">Installing pyDVL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="20-install.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="20-install.html#setting-up-the-cache">Setting up the cache</a></li>
+<li class="toctree-l2"><a class="reference internal" href="20-install.html#what-s-next">What’s next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="30-data-valuation.html">Computing data values</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="30-data-valuation.html#creating-a-dataset">Creating a Dataset</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="30-data-valuation.html#grouping-data">Grouping data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="30-data-valuation.html#creating-a-utility">Creating a Utility</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="30-data-valuation.html#learning-the-utility">Learning the utility</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="30-data-valuation.html#leave-one-out-values">Leave-One-Out values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="30-data-valuation.html#shapley-values">Shapley values</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="30-data-valuation.html#combinatorial-shapley">Combinatorial Shapley</a></li>
+<li class="toctree-l3"><a class="reference internal" href="30-data-valuation.html#monte-carlo-combinatorial-shapley">Monte Carlo Combinatorial Shapley</a></li>
+<li class="toctree-l3"><a class="reference internal" href="30-data-valuation.html#owen-sampling">Owen sampling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="30-data-valuation.html#permutation-shapley">Permutation Shapley</a></li>
+<li class="toctree-l3"><a class="reference internal" href="30-data-valuation.html#exact-shapley-for-knn">Exact Shapley for KNN</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="30-data-valuation.html#other-methods">Other methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="30-data-valuation.html#problems-of-data-values">Problems of data values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="30-data-valuation.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="40-influence.html">Computing influence values</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="40-influence.html#influence-for-ols">Influence for OLS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="40-influence.html#exact-influences-using-the-twicedifferentiable-protocol">Exact influences using the <cite>TwiceDifferentiable</cite> protocol</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="40-influence.html#approximate-matrix-inversion">Approximate matrix inversion</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="40-influence.html#perturbation-influences">Perturbation influences</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="examples/shapley_basic_spotify.html">Shapley for data valuation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples/shapley_knn_flowers.html">KNN Shapley</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples/shapley_utility_learning.html">Data Utility Learning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples/influence_synthetic.html">Influence functions for data mislabeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples/influence_wine.html">Influence functions and neural networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/shapley_basic_spotify.html">Shapley for data valuation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_basic_spotify.html#Setup">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_basic_spotify.html#Loading-and-grouping-the-dataset">Loading and grouping the dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_basic_spotify.html#Creating-the-utility-and-computing-values">Creating the utility and computing values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_basic_spotify.html#Evaluation-on-anomalous-data">Evaluation on anomalous data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples/shapley_knn_flowers.html">KNN Shapley</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_knn_flowers.html#Setup">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_knn_flowers.html#Building-a-Dataset-and-a-Utility">Building a Dataset and a Utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_knn_flowers.html#Computing-values">Computing values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_knn_flowers.html#Inspecting-the-results">Inspecting the results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_knn_flowers.html#Corrupting-labels">Corrupting labels</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples/shapley_utility_learning.html">Data Utility Learning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_utility_learning.html#Setup">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_utility_learning.html#Dataset">Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_utility_learning.html#Data-Shapley">Data Shapley</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/shapley_utility_learning.html#Evaluation-on-anomalous-data">Evaluation on anomalous data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples/influence_synthetic.html">Influence functions for data mislabeling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Imports">Imports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Constants">Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Dataset">Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Plotting-the-dataset">Plotting the dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Training-the-model">Training the model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Calculating-influences">Calculating influences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Inversion-through-conjugate-gradient">Inversion through conjugate gradient</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Appendix:-Calculating-the-decision-boundary">Appendix: Calculating the decision boundary</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples/influence_wine.html">Influence functions and neural networks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Imports">Imports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Constants">Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Dataset">Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Fit-a-neural-network-to-the-data">Fit a neural network to the data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Calculating-influences-for-small-neural-networks">Calculating influences for small neural networks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Influence-of-training-features">Influence of training features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Speeding-up-influences-for-big-models">Speeding up influences for big models</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
