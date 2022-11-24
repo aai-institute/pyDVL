@@ -1,17 +1,18 @@
 import functools
 from collections import OrderedDict, defaultdict
-from typing import TYPE_CHECKING, Dict, Optional, Sequence, Tuple, Type
+from typing import TYPE_CHECKING, Dict, Optional, Sequence, Tuple, Type, Union
 
 import numpy as np
 import pytest
 import ray
 from pymemcache.client import Client
+from scipy.stats import spearmanr
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 
-from pydvl.utils import Dataset, MemcachedClientConfig, Utility
-from pydvl.utils.numeric import random_matrix_with_condition_number, spearman
+from pydvl.utils import Dataset, MemcachedClientConfig, MemcachedConfig, Scorer, Utility
+from pydvl.utils.numeric import random_matrix_with_condition_number
 from pydvl.utils.parallel import available_cpus
 
 if TYPE_CHECKING:
@@ -109,7 +110,9 @@ def docker_services(
 @pytest.fixture(scope="session")
 def memcached_service(docker_ip, docker_services, do_not_start_memcache):
     """Ensure that memcached service is up and responsive.
-    If do_not_start_memcache is True then we just return the default values: 'localhost', 11211
+
+    If `do_not_start_memcache` is True then we just return the default values
+    'localhost', 11211
     """
     if do_not_start_memcache:
         return "localhost", 11211
@@ -126,7 +129,7 @@ def memcached_service(docker_ip, docker_services, do_not_start_memcache):
 
 
 @pytest.fixture(scope="function")
-def memcache_client_config(memcached_service):
+def memcache_client_config(memcached_service) -> MemcachedClientConfig:
 
     client_config = MemcachedClientConfig(
         server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
@@ -136,7 +139,7 @@ def memcache_client_config(memcached_service):
 
 
 @pytest.fixture(scope="function")
-def memcached_client(memcache_client_config):
+def memcached_client(memcache_client_config) -> Tuple[Client, MemcachedClientConfig]:
     from pymemcache.client import Client
 
     try:
@@ -152,26 +155,37 @@ def memcached_client(memcache_client_config):
 
 
 @pytest.fixture(scope="function")
-def boston_dataset(n_points, n_features):
+def boston_dataset(num_points, num_features) -> Dataset:
     from sklearn import datasets
 
     dataset = datasets.load_boston()
-    dataset.data = dataset.data[:n_points, :n_features]
-    dataset.feature_names = dataset.feature_names[:n_features]
-    dataset.target = dataset.target[:n_points]
+    dataset.data = dataset.data[:num_points, :num_features]
+    dataset.feature_names = dataset.feature_names[:num_features]
+    dataset.target = dataset.target[:num_points]
     return Dataset.from_sklearn(dataset, train_size=0.5)
 
 
 @pytest.fixture(scope="function")
-def linear_dataset(a, b, num_points):
+def linear_dataset(a: float, b: float, num_points: int):
+    """Constructs a dataset sampling from y=ax+b + eps, with eps~Gaussian and
+    x in [-1,1]
+
+    :param a: Slope
+    :param b: intercept
+    :param num_points: number of (x,y) samples to construct
+    :param train_size: fraction of points to use for training (between 0 and 1)
+
+    :return: Dataset with train/test split. call str() on it to see the parameters
+    """
     from sklearn.utils import Bunch
 
     step = 2 / num_points
+    stddev = 0.1
     x = np.arange(-1, 1, step)
-    y = np.random.normal(loc=a * x + b, scale=0.1)
+    y = np.random.normal(loc=a * x + b, scale=stddev)
     db = Bunch()
     db.data, db.target = x.reshape(-1, 1), y
-    db.DESCR = f"y~N({a}*x + {b}, 1)"
+    db.DESCR = f"{{y_i~N({a}*x_i + {b}, {stddev:0.2f}): i=1, ..., {num_points}}}"
     db.feature_names = ["x"]
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.3)
@@ -214,7 +228,7 @@ def seed_numpy(seed=42):
 
 @pytest.fixture
 def num_workers():
-    return min(8, available_cpus())
+    return max(1, available_cpus() - 1)
 
 
 @pytest.fixture
@@ -294,7 +308,7 @@ def dummy_utility(num_samples: int = 10):
     x = np.arange(0, num_samples, 1).reshape(-1, 1)
     nil = np.zeros_like(x)
     data = Dataset(
-        x, nil, nil, nil, feature_names=["x"], target_names=["y"], description=["dummy"]
+        x, nil, nil, nil, feature_names=["x"], target_names=["y"], description="dummy"
     )
 
     class DummyModel(SupervisedModel):
@@ -314,7 +328,7 @@ def dummy_utility(num_samples: int = 10):
         def score(self, x: ndarray, y: ndarray) -> float:
             return self.utility
 
-    return Utility(DummyModel(data), data, scoring=None, enable_cache=False)
+    return Utility(DummyModel(data), data, enable_cache=False)
 
 
 @pytest.fixture(scope="function")
@@ -352,14 +366,16 @@ class TolerateErrors:
         return True
 
 
-def check_total_value(u: Utility, values: OrderedDict, atol: float = 1e-6):
+def check_total_value(
+    u: Utility, values: OrderedDict, rtol: float = 0.05, atol: float = 1e-6
+):
     """Checks absolute distance between total and added values.
     Shapley value is supposed to fulfill the total value axiom."""
     total_utility = u(u.data.indices)
     values = np.fromiter(values.values(), dtype=float, count=len(u.data))
     # We could want relative tolerances here if we didn't have the range of
     # the scorer.
-    assert np.isclose(values.sum(), total_utility, atol=atol)
+    assert np.isclose(values.sum(), total_utility, rtol=rtol, atol=atol)
 
 
 def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e-6):
@@ -384,17 +400,20 @@ def check_values(
 ):
     """Compares values in dictionaries.
 
+    Asserts that `|value - exact_value| < |exact_value| * rtol + atol` for
+    all pairs of `value`, `exact_value` with equal keys.
+
     Note that this does not assume any ordering (despite values typically being
     stored in an OrderedDict elsewhere.
 
     :param values:
     :param exact_values:
     :param rtol: relative tolerance of elements in `values` with respect to
-        elements in `exact_values`. E.g. if rtol = 0.1, we must have
-        |value - exact_value|/|exact_value| < 0.1 for every value
+        elements in `exact_values`. E.g. if rtol = 0.1, and atol = 0 we must
+        have |value - exact_value|/|exact_value| < 0.1 for every value
     :param atol: absolute tolerance of elements in `values` with respect to
-        elements in `exact_values`. E.g. if atol = 0.1, we must have
-        |value - exact_value| < 0.1 for every value.
+        elements in `exact_values`. E.g. if atol = 0.1, and rtol = 0 we must
+        have |value - exact_value| < 0.1 for every value.
     """
     for key in values:
         assert (
@@ -427,7 +446,7 @@ def check_rank_correlation(
     ranks = np.array(list(values.keys())[:k])
     ranks_exact = np.array(list(exact_values.keys())[:k])
 
-    correlation = spearman(ranks, ranks_exact)
+    correlation, pvalue = spearmanr(ranks, ranks_exact)
     assert correlation >= threshold, f"{correlation} < {threshold}"
 
 

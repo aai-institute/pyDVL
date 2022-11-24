@@ -5,9 +5,9 @@ from sklearn import datasets
 from sklearn.metrics import make_scorer
 from sklearn.neighbors import KNeighborsClassifier
 
-from pydvl.shapley.knn import knn_shapley
-from pydvl.shapley.naive import combinatorial_exact_shapley
 from pydvl.utils import Dataset, Utility, available_cpus
+from pydvl.value.shapley import knn_shapley
+from pydvl.value.shapley.naive import combinatorial_exact_shapley
 
 log = logging.getLogger(__name__)
 
@@ -49,5 +49,5 @@ def test_knn_montecarlo_match(seed):
 
     # will check only matching top elements since the scoring functions are not exactly the same
     top_knn = knn_keys[:2]
-    top_montecarlo = exact_keys[:4]
-    assert np.all([k in top_montecarlo for k in top_knn])
+    top_exact = exact_keys[:4]
+    assert np.all([k in top_exact for k in top_knn])

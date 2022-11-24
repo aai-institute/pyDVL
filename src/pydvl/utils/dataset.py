@@ -5,7 +5,7 @@ Shapley value computations require evaluation of a scoring function (the
 *utility*). This is typically the performance of the model on a test set (as an
 approximation to its true expected performance). It is therefore convenient to
 keep both the training data and the test data together to be passed around to
-methods in :mod:`~pydvl.shapley`. This is done with
+methods in :mod:`~pydvl.value.shapley`. This is done with
 :class:`~pydvl.utils.dataset.Dataset`.
 
 This abstraction layer also seamlessly grouping data points together if one is

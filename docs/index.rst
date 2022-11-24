@@ -72,7 +72,6 @@ If you're a first time user of pyDVL, we recommend you to go through the
 
 .. toctree::
    :caption: Table of Contents
-   :titlesonly:
    :glob:
 
    *

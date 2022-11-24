@@ -5,8 +5,8 @@ from itertools import permutations
 
 import numpy as np
 
-from ..reporting.scores import sort_values
-from ..utils import (
+from pydvl.reporting.scores import sort_values
+from pydvl.utils import (
     MapReduceJob,
     ParallelConfig,
     Utility,
@@ -29,7 +29,7 @@ def permutation_exact_shapley(
     cases.
 
     :param u: Utility object with model, data, and scoring function
-    :param progress: set to True to use tqdm progress bars.
+    :param progress: Whether to display progress bars for each job.
     :return: OrderedDict of exact Shapley values
     """
 
@@ -81,9 +81,9 @@ def _combinatorial_exact_shapley(
 
 def combinatorial_exact_shapley(
     u: Utility,
+    *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
-    *,
     progress: bool = False,
 ) -> "OrderedDict[str, float]":
     r"""Computes the exact Shapley value using the combinatorial definition.
@@ -99,7 +99,7 @@ def combinatorial_exact_shapley(
     :param n_jobs: Number of parallel jobs to use
     :param config: Object configuring parallel computation, with cluster address,
         number of cpus, etc.
-    :param progress: set to True to use tqdm progress bars
+    :param progress: Whether to display progress bars for each job.
 
     :return: Dictionary of {"index or label": exact_value}, sorted by decreasing
         value.

@@ -24,6 +24,8 @@ from .backend import init_parallel_backend
 
 __all__ = ["MapReduceJob"]
 
+from ..types import maybe_add_argument
+
 T = TypeVar("T")
 R = TypeVar("R")
 Identity = lambda x, *args, **kwargs: x
@@ -32,7 +34,7 @@ MapFunction = Callable[..., R]
 ReduceFunction = Callable[[Iterable[R]], R]
 
 
-def wrap_func_with_remote_args(func, *, timeout: int = 300):
+def wrap_func_with_remote_args(func, *, timeout: Optional[float] = None):
     def wrapper(*args, **kwargs):
         args = list(args)
         for i, v in enumerate(args[:]):
@@ -44,7 +46,9 @@ def wrap_func_with_remote_args(func, *, timeout: int = 300):
     return wrapper
 
 
-def get_value(v: Union[ObjectRef, Iterable[ObjectRef], Any], *, timeout: int = 300):
+def get_value(
+    v: Union[ObjectRef, Iterable[ObjectRef], Any], *, timeout: Optional[float] = None
+):
     if isinstance(v, ObjectRef):
         return ray.get(v, timeout=timeout)
     elif isinstance(v, Iterable):
@@ -54,15 +58,16 @@ def get_value(v: Union[ObjectRef, Iterable[ObjectRef], Any], *, timeout: int = 3
 
 
 class MapReduceJob(Generic[T, R]):
-    """Takes an embarrassingly parallel fun and runs it in num_jobs parallel
+    """Takes an embarrassingly parallel fun and runs it in n_jobs parallel
     jobs, splitting the data into the same number of chunks, one for each job.
 
     It repeats the process num_runs times, allocating jobs across runs. E.g.
-    if num_jobs = 90 and num_runs=10, each whole execution of fun uses 9 jobs,
-    with the data split evenly among them. If num_jobs=2 and num_runs=10, two
+    if n_jobs = 90 and n_runs=10, each whole execution of fun uses 9 jobs,
+    with the data split evenly among them. If n_jobs=2 and n_runs=10, two
     cores are used, five times in succession, and each job receives all data.
 
-    Results are aggregated per run using reduce_func(), but not across runs.
+    Results are aggregated per run using `reduce_func`, but **not across runs**.
+    A list of length `n_runs` is always returned.
 
     Typing information for objects of this class requires the type of the inputs
     that are split for `map_func` and the type of its output.
@@ -70,17 +75,25 @@ class MapReduceJob(Generic[T, R]):
     :param map_func: Function that will be applied to the input chunks in each
         job.
     :param reduce_func: Function that will be applied to the results of
-        `map_func` to reduce them.
+        `map_func` to reduce them. This will be done independently for each run,
+        i.e. the reducer need and must not account for data of multiple runs.
     :param map_kwargs: Keyword arguments that will be passed to `map_func` in
-        each job.
+        each job. Alternatively, one can use `itertools.partial`.
     :param reduce_kwargs: Keyword arguments that will be passed to `reduce_func`
-        in each job.
+        in each job. Alternatively, one can use `itertools.partial`.
     :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig`
         with cluster address, number of cpus, etc.
     :param n_jobs: Number of parallel jobs to run. Does not accept 0
-    :param n_runs: Number of times to run the functions on the whole data.
-    :param timeout: Amount of time in seconds to wait for remote results.
-    :param max_parallel_tasks: Maximum number of jobs to start in parallel.
+    :param n_runs: Number of times to run `map_func` and `reduce_func` on the
+        whole data.
+    :param timeout: Amount of time in seconds to wait for remote results before
+        ... TODO
+    :param max_parallel_tasks: Maximum number of jobs to start in parallel. Any
+        tasks above this number won't be submitted to the backend before some
+        are done. This is to avoid swamping the work queue. Note that tasks have
+        a low memory footprint, so this is probably not a big concernt, except
+        in the case of an infinite stream (not the case for MapReduceJob). See
+        https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html
 
     :Examples:
 
@@ -125,7 +138,7 @@ class MapReduceJob(Generic[T, R]):
         chunkify_inputs: bool = True,
         n_jobs: int = 1,
         n_runs: int = 1,
-        timeout: int = 300,
+        timeout: Optional[float] = None,
         max_parallel_tasks: Optional[int] = None,
     ):
         self.config = config
@@ -157,7 +170,7 @@ class MapReduceJob(Generic[T, R]):
         if self.reduce_kwargs is None:
             self.reduce_kwargs = dict()
 
-        self._map_func = map_func
+        self._map_func = maybe_add_argument(map_func, "job_id")
         self._reduce_func = reduce_func
 
     def __call__(
@@ -195,7 +208,7 @@ class MapReduceJob(Generic[T, R]):
 
             map_result = []
             for j, next_chunk in enumerate(chunks):
-                result = map_func(next_chunk, **self.map_kwargs)
+                result = map_func(next_chunk, job_id=j, **self.map_kwargs)
                 map_result.append(result)
                 total_n_jobs += 1
 
@@ -236,11 +249,17 @@ class MapReduceJob(Generic[T, R]):
     def _backpressure(
         self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int
     ) -> int:
+        """
+        See https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html
+        :param jobs:
+        :param n_dispatched:
+        :param n_finished:
+        :return:
+        """
         while (n_in_flight := n_dispatched - n_finished) > self.max_parallel_tasks:
-            previous_n_finished = n_finished
             wait_for_num_jobs = n_in_flight - self.max_parallel_tasks
             finished_jobs, _ = self.parallel_backend.wait(
-                jobs, num_returns=wait_for_num_jobs, timeout=self.timeout
+                jobs, num_returns=wait_for_num_jobs, timeout=10  # FIXME make parameter?
             )
             n_finished += len(finished_jobs)
         return n_finished

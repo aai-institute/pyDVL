@@ -44,7 +44,10 @@ class RayParallelBackend:
         ray.init(**self.config)
 
     def get(
-        self, v: Union[ObjectRef, Iterable[ObjectRef], T], *, timeout: int = 300
+        self,
+        v: Union[ObjectRef, Iterable[ObjectRef], T],
+        *,
+        timeout: Optional[float] = None,
     ) -> Union[T, Any]:
         if isinstance(v, ObjectRef):
             return ray.get(v, timeout=timeout)

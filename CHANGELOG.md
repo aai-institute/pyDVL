@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 - 💥 Breaking changes
 
 - Simplified and fixed powerset sampling and testing
   [PR #181](https://github.com/appliedAI-Initiative/pyDVL/pull/181)
@@ -12,6 +12,12 @@
   [PR #185](https://github.com/appliedAI-Initiative/pyDVL/pull/185)
 - Modified Pull Request template to automatically link PR to issue
   [PR ##186](https://github.com/appliedAI-Initiative/pyDVL/pull/186)
+- First implementation of Owen Sampling, squashed scores, better testing
+  [PR #194](https://github.com/appliedAI-Initiative/pyDVL/pull/194)
+- Improved documentation on caching, Shapley, caveats of values, bibtex
+  [PR #194](https://github.com/appliedAI-Initiative/pyDVL/pull/194)
+- **Breaking change:** Rearranging of modules to accommodate for new methods
+  [PR #194](https://github.com/appliedAI-Initiative/pyDVL/pull/194)
 
 
 ## 0.2.0 - 📚 Better docs

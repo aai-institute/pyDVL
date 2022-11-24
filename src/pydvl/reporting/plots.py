@@ -2,6 +2,7 @@ from typing import Any, List, Optional, OrderedDict, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import scipy as sp
 from matplotlib.axes import Axes
 
@@ -57,6 +58,8 @@ def shaded_mean_std(
 
 def shapley_results(results: dict, filename: str = None):
     """
+    FIXME: change this to use dataframes
+
     :param results: dict
     :param filename: For plt.savefig(). Set to None to disable saving.
 
@@ -123,13 +126,15 @@ def shapley_results(results: dict, filename: str = None):
         plt.savefig(filename, dpi=300)
 
 
-def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue):
+def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue: float):
     """Simple matrix plots with spearman correlation for each pair in vv.
 
     :param vv: list of OrderedDicts with index: value. Spearman correlation
-               is computed for the keys.
+        is computed for the keys.
     :param num_values: Use only these many values from the data (from the start
-                       of the OrderedDicts)
+        of the OrderedDicts)
+    :param pvalue: correlation coefficients for which the p-value is below the
+        threshold `pvalue/len(vv)` will be discarded.
     """
     r: np.ndarray = np.ndarray((len(vv), len(vv)))
     p: np.ndarray = np.ndarray((len(vv), len(vv)))
@@ -145,13 +150,47 @@ def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue):
             )  # Bonferroni correction
             p[i][j] = spearman.pvalue
     fig, axs = plt.subplots(1, 2, figsize=(16, 7))
-    plot1 = axs[0].matshow(r)
+    plot1 = axs[0].matshow(r, vmin=-1, vmax=1)
     axs[0].set_title(f"Spearman correlation (top {num_values} values)")
     axs[0].set_xlabel("Runs")
     axs[0].set_ylabel("Runs")
     fig.colorbar(plot1, ax=axs[0])
-    plot2 = axs[1].matshow(p)
+    plot2 = axs[1].matshow(p, vmin=0, vmax=1)
     axs[1].set_title("p-value")
     axs[1].set_xlabel("Runs")
     axs[1].set_ylabel("Runs")
     fig.colorbar(plot2, ax=axs[1])
+
+    return fig
+
+
+def plot_shapley(
+    df: pd.DataFrame,
+    *,
+    ax: Optional[plt.Axes] = None,
+    title: str = None,
+    xlabel: str = None,
+    ylabel: str = None,
+) -> plt.Axes:
+    """Plots the shapley values, as returned from shapley.compute_shapley_values.
+
+    :param dval_df: dataframe with the shapley values
+    :param figsize: tuple with figure size
+    :param title: string, title of the plot
+    :param xlabel: string, x label of the plot
+    :param ylabel: string, y label of the plot
+    """
+    if ax is None:
+        _, ax = plt.subplots()
+    ax.errorbar(
+        x=df.index,
+        y=df["data_value"],
+        yerr=df["data_value_std"],
+        fmt="o",
+        capsize=6,
+    )
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    plt.xticks(rotation=60)
+    return ax

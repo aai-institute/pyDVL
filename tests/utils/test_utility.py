@@ -7,12 +7,7 @@ from pydvl.utils import DataUtilityLearning, MemcachedConfig, Utility, powerset
 
 
 # noinspection PyUnresolvedReferences
-@pytest.mark.parametrize(
-    "a, b, num_points",
-    [
-        (2, 0, 8),
-    ],
-)
+@pytest.mark.parametrize("a, b, num_points", [(2, 0, 8)])
 @pytest.mark.parametrize("training_budget", [2, 10])
 def test_data_utility_learning_wrapper(linear_dataset, training_budget):
     u = Utility(
@@ -31,12 +26,7 @@ def test_data_utility_learning_wrapper(linear_dataset, training_budget):
 
 
 # noinspection PyUnresolvedReferences
-@pytest.mark.parametrize(
-    "a, b, num_points",
-    [
-        (2, 0, 8),
-    ],
-)
+@pytest.mark.parametrize("a, b, num_points", [(2, 0, 8)])
 def test_cache(linear_dataset, memcache_client_config):
     u = Utility(
         model=LinearRegression(),
@@ -51,19 +41,14 @@ def test_cache(linear_dataset, memcache_client_config):
 
     for s in subsets:
         u(s)
-    assert u._utility_wrapper.cache_info.hits == 0
+    assert u._utility_wrapper.stats.hits == 0
 
     for s in subsets:
         u(s)
-    assert u._utility_wrapper.cache_info.hits == len(subsets)
+    assert u._utility_wrapper.stats.hits == len(subsets)
 
 
-@pytest.mark.parametrize(
-    "a, b, num_points",
-    [
-        (2, 0, 8),
-    ],
-)
+@pytest.mark.parametrize("a, b, num_points", [(2, 0, 8)])
 def test_different_cache(linear_dataset, memcache_client_config):
     u1 = Utility(
         model=LinearRegression(),

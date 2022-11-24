@@ -3,46 +3,11 @@ from typing import TYPE_CHECKING, Iterable, List, Optional, Sequence, Tuple
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
-from .dataset import Dataset
+from pydvl.utils import Dataset
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
-
-__all__ = ["plot_shapley", "plot_iris"]
-
-
-def plot_shapley(
-    df: pd.DataFrame,
-    *,
-    ax: Optional[plt.Axes] = None,
-    title: str = None,
-    xlabel: str = None,
-    ylabel: str = None,
-) -> plt.Axes:
-    """Plots the shapley values, as returned from shapley.compute_shapley_values.
-
-    :param dval_df: dataframe with the shapley values
-    :param figsize: tuple with figure size
-    :param title: string, title of the plot
-    :param xlabel: string, x label of the plot
-    :param ylabel: string, y label of the plot
-    """
-    if ax is None:
-        _, ax = plt.subplots()
-    ax.errorbar(
-        x=df.index,
-        y=df["data_value"],
-        yerr=df["data_value_std"],
-        fmt="o",
-        capsize=6,
-    )
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.set_title(title)
-    plt.xticks(rotation=60)
-    return ax
 
 
 def plot_dataset(
