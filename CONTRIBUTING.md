@@ -173,6 +173,20 @@ any rst files which are not manually created), you can use a file watcher.
 This is not part of the development setup of pyDVL (yet! PRs welcome), but
 modern IDEs provide functionality for this.
 
+Use the **docs** tox environment to build the documentation the same way it is done in CI:
+
+```bash
+tox -e docs
+```
+
+Locally, you can use the **docs-dev** tox environment to continuously rebuild docs on changes:
+
+```bash
+tox -e docs-dev
+```
+
+**NOTE:** This currently only rebuilds on changes to `.rst` files and notebooks.
+
 ### Writing mathematics
 
 In sphinx one can write mathematics with the directives `:math:` (inline) or
@@ -201,7 +215,19 @@ def f(x: float) -> float:
 
 ## CI and release processes
 
-#### Automatic release process
+### Skipping CI run
+
+You sometimes would like to skip CI for certain commits (e.g. updating the readme). 
+In order to do that you can simply prefix the commit message with `[skip ci]`.
+
+- Other strings, like `[ci skip]` are allowed, but we prefer `[skip ci]`.
+- The string doesn't have to be at the beginning of the commit message, but we prefer doing it 
+  that way because it makes it immediately apparent when looking at commits in a PR.
+
+Refer to the official [Github documentation](https://docs.github.com/en/actions/managing-workflow-runs/skipping-workflow-runs) 
+for more information.
+
+### Automatic release process
 
 In order to create an automatic release, a few prerequisites need to be
 satisfied:
@@ -212,7 +238,7 @@ satisfied:
 
 Then, a new release can be created using the script
 `build_scripts/release-version.sh` (leave out the version parameter to have
-`bumpversion` automatically derive the next release version):
+`bumpversion` automatically derive the next release version by bumping the patch part):
 
 ```shell script
 ./scripts/release-version.sh 0.1.6
@@ -228,14 +254,17 @@ If running in interactive mode (without `-y|--yes`), the script will output a
 summary of pending changes and ask for confirmation before executing the
 actions.
 
-#### Manual release process
+Once this is done, a package will be automatically created and published from CI to PyPI.
+
+### Manual release process
+
 If the automatic release process doesn't cover your use case, you can also
 create a new release manually by following these steps:
 
 1. (Repeat as needed) implement features on feature branches merged into
-  `develop`. Each merge into develop will advance the `.devNNN` version suffix
-   and publish the pre-release version into the package registry. These versions
-   can be installed using `pip install --pre`.
+  `develop`. Each merge into develop will publish a new pre-release version 
+   to TestPyPI. These versions can be installed using `pip install --pre 
+   --index-url https://test.pypi.org/simple/`.
 2. When ready to release: From the develop branch create the release branch and
    perform release activities (update changelog, news, ...). For your own
    convenience, define an env variable for the release version
@@ -269,6 +298,7 @@ create a new release manually by following these steps:
 7. Delete the release branch if necessary: 
    `git branch -d release/${RELEASE_VERSION}`
 8. Pour yourself a cup of coffee, you earned it! :coffee: :sparkles:
+9. A package will be automatically created and published from CI to PyPI.
 
 ### CI and requirements for releases
 
@@ -296,9 +326,9 @@ part of the version number, create a tag and push it from CI.
 
 To do that, we use 2 different tox environments:
 
+- **bump-dev-version**: Uses bump2version to bump the dev version,
+  without committing  the new version or creating a corresponding git tag.
 - **publish-test-package**: Builds and publishes a package to TestPyPI
-- **bump-dev-version-and-create-tag**: Uses bump2version to bump the dev version, 
-  commit the new version and create a corresponding git tag.
 
 
 ## Other useful information

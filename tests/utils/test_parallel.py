@@ -95,6 +95,7 @@ def test_map_reduce_job_chunkified_inputs(
         ([1, 2, 3, 4], 3, [[1, 2], [3], [4]]),
         ([1, 2, 3, 4], 5, [[1], [2], [3], [4]]),
         (range(10), 4, [range(0, 3), range(3, 6), range(6, 8), range(8, 10)]),
+        (list(range(5)), 42, [[i] for i in range(5)]),
     ],
 )
 def test_chunkification(data, n_chunks, expected_chunks):
