@@ -62,8 +62,8 @@ class MapReduceJob(Generic[T, R]):
     jobs, splitting the data into the same number of chunks, one for each job.
 
     It repeats the process num_runs times, allocating jobs across runs. E.g.
-    if n_jobs = 90 and num_runs=10, each whole execution of fun uses 9 jobs,
-    with the data split evenly among them. If n_jobs=2 and num_runs=10, two
+    if n_jobs = 90 and n_runs=10, each whole execution of fun uses 9 jobs,
+    with the data split evenly among them. If n_jobs=2 and n_runs=10, two
     cores are used, five times in succession, and each job receives all data.
 
     Results are aggregated per run using `reduce_func`, but **not across runs**.
