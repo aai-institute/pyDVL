@@ -260,8 +260,8 @@ values in pyDVL. First construct the dataset and utility, then call
    dataset = Dataset(...)
    utility = Utility(data, model)
    df = compute_shapley_values(
-           u=utility, mode="owen", max_iterations=4, max_q=200
-       )
+       u=utility, mode="owen", max_iterations=4, max_q=200
+   )
 
 There are more details on Owen
 sampling, and its variant *Antithetic Owen Sampling* in the documentation for the
@@ -293,8 +293,8 @@ efficient enough to be useful in some applications.
    data = Dataset(...)
    utility = Utility(model, data)
    df = compute_shapley_values(
-           u=utility, mode="truncated_montecarlo", max_iterations=100
-       )
+       u=utility, mode="truncated_montecarlo", max_iterations=100
+   )
 
 
 Exact Shapley for KNN

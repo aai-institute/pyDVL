@@ -39,7 +39,7 @@ class ShapleyMode(str, Enum):
     PermutationMontecarlo = "permutation_montecarlo"
     TruncatedMontecarlo = "truncated_montecarlo"
     Owen = "owen"
-    OwenAntithetic = "owen_anti"
+    OwenAntithetic = "owen_antithetic"
     KNN = "knn"
 
 

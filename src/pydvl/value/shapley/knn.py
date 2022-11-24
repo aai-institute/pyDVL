@@ -19,10 +19,10 @@ def knn_shapley(
 ) -> OrderedDict[str, float]:
     """Computes exact Shapley values for a KNN classifier.
 
-    This implements the method described in [1]. It exploits the local structure
-    of K-Nearest Neighbours to reduce the number of calls to the utility
-    function to a constant number per index, thus reducing computation time to
-    $O(n)$
+    This implements the method described in :footcite:t:`jia_efficient_2019a`.
+    It exploits the local structure of K-Nearest Neighbours to reduce the number
+    of calls to the utility function to a constant number per index, thus
+    reducing computation time to $O(n)$.
 
     :param data: A :class:`pydvl.utils.dataset.Dataset` object with a training /
         test split.
@@ -37,11 +37,7 @@ def knn_shapley(
 
     .. rubric:: References
 
-    [1]: Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nezihe Merve
-    Gurel, Bo Li, Ce Zhang, Costas Spanos, and Dawn Song.
-    ‘Efficient Task-Specific Data Valuation for Nearest Neighbor Algorithms’.
-    Proceedings of the VLDB Endowment 12, no. 11 (1 July 2019): 1610–23.
-    https://doi.org/10.14778/3342263.3342637.
+    .. footbibliography::
 
     .. versionadded:: 0.1.0
 
