@@ -30,7 +30,7 @@ jobs:
         id: get_branch_name
         if: github.ref_type == 'tag'
         run: |
-          export BRANCH_NAME=$(git log -1 --format='%D' $env:GITHUB_REF | | sed -e 's/.*origin\/\(.*\),.*/\1/')
+          export BRANCH_NAME=$(git log -1 --format='%D' $GITHUB_REF | | sed -e 's/.*origin\/\(.*\),.*/\1/')
           echo ::set-output name=branch_name::${BRANCH_NAME}
         shell: bash
       - name: Fail if tag is not on 'master' branch
