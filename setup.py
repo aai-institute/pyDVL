@@ -6,7 +6,6 @@ from setuptools import find_packages, setup
 repository_root = Path(__file__).parent
 long_description = (repository_root / "README.md").read_text()
 
-
 setup(
     name="pyDVL",
     package_dir={"": "src"},
@@ -39,4 +38,9 @@ setup(
         "Operating System :: POSIX",
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
     ],
+    project_urls={
+        "Source": "https://appliedAI-Initiative/pydvl",
+        "Documentation": "https://appliedai-initiative.github.io/pyDVL/",
+        "TransferLab": "https://transferlab.appliedai.de",
+    },
 )
