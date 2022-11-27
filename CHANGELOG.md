@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- GH action to mark issues as stale
+  [PR #201](https://github.com/appliedAI-Initiative/pyDVL/pull/201)
+
 ## 0.3.0 - 💥 Breaking changes
 
 - Simplified and fixed powerset sampling and testing
