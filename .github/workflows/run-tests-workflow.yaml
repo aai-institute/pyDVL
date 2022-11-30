@@ -4,9 +4,13 @@ on:
   workflow_call:
     inputs:
       tests_to_run:
-        description: "Determines which tests to run using Tox. Should be one of: default, torch, notebooks"
+        description: "Determines which tests to run using Tox. Should be one of: base, torch, notebooks"
         type: string
-        required: false
+        required: true
+      python_version:
+        description: "Determines which Python version to use"
+        type: string
+        required: true
 
 env:
   PY_COLORS: 1
@@ -18,10 +22,10 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: Set up Python 3.8
+    - name: Set up Python ${{ inputs.python-version }}
       uses: actions/setup-python@v4
       with:
-        python-version: 3.8
+        python-version: ${{ inputs.python-version }}
         cache: 'pip'
     - name: Install Dev Requirements
       run: pip install -r requirements-dev.txt

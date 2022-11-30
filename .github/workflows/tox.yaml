@@ -71,22 +71,34 @@ jobs:
         path: ./docs/_build
         retention-days: 1
   base-tests:
+    strategy:
+      matrix:
+        python_version: ["3.8", "3.9", "3.10"]
     name: Run base tests
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: base
+      python_version: ${{ matrix.python_version }}
     needs: [lint]
   torch-tests:
+    strategy:
+      matrix:
+        python_version: ["3.8", "3.9", "3.10"]
     name: Run tests that use PyTorch
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: torch
+      python_version: ${{ matrix.python_version }}
     needs: [lint]
   notebook-tests:
+    strategy:
+      matrix:
+        python_version: ["3.8", "3.9", "3.10"]
     name: Run notebook tests
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
       tests_to_run: notebooks
+      python_version: ${{ matrix.python_version }}
     needs: [lint]
   push-docs-and-release-testpypi:
     name: Push Docs and maybe release Package to TestPyPI
