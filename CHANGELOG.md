@@ -4,6 +4,8 @@
 
 - GH action to mark issues as stale
   [PR #201](https://github.com/appliedAI-Initiative/pyDVL/pull/201)
+- Disabled caching of Utility values as well as repeated evaluations by default
+  [PR #211](https://github.com/appliedAI-Initiative/pyDVL/pull/211)
 
 ## 0.3.0 - 💥 Breaking changes
 
