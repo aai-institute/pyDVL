@@ -6,6 +6,8 @@
   [PR #201](https://github.com/appliedAI-Initiative/pyDVL/pull/201)
 - Disabled caching of Utility values as well as repeated evaluations by default
   [PR #211](https://github.com/appliedAI-Initiative/pyDVL/pull/211)
+- Test and officially support Python version 3.9 and 3.10 
+  [PR #208](https://github.com/appliedAI-Initiative/pyDVL/pull/208)
 
 ## 0.3.0 - 💥 Breaking changes
 
