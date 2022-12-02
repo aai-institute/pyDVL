@@ -17,7 +17,8 @@ from pydvl.value.shapley.montecarlo import (
     truncated_montecarlo_shapley,
 )
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
-from tests.conftest import check_rank_correlation, check_total_value, check_values
+
+from ..conftest import check_rank_correlation, check_total_value, check_values
 
 log = logging.getLogger(__name__)
 

@@ -180,7 +180,7 @@ def test_memcached_parallel_repeated_training(
     def map_func(indices: "NDArray[int]") -> float:
         # from pydvl.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
-        return np.sum(indices).item() + np.random.normal(scale=10)
+        return np.sum(indices).item() + np.random.normal(scale=5)
 
     def reduce_func(chunks: "NDArray[float]") -> float:
         return np.sum(chunks).item()

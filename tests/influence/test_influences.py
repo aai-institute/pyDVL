@@ -4,7 +4,7 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 
-from tests.conftest import create_mock_dataset
+from .conftest import create_mock_dataset
 
 try:
     import torch.nn.functional as F

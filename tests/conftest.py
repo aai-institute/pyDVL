@@ -6,16 +6,9 @@ import numpy as np
 import pytest
 import ray
 from pymemcache.client import Client
-from scipy.stats import spearmanr
-from sklearn.linear_model import LinearRegression
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 
-from pydvl.utils import Dataset, MemcachedClientConfig, Utility
-from pydvl.utils.numeric import random_matrix_with_condition_number
+from pydvl.utils import Dataset, MemcachedClientConfig
 from pydvl.utils.parallel import available_cpus
-from pydvl.utils.types import SortOrder
-from pydvl.value import ValuationResult, ValuationStatus
 
 if TYPE_CHECKING:
     from _pytest.config import Config
@@ -193,36 +186,6 @@ def linear_dataset(a: float, b: float, num_points: int):
     return Dataset.from_sklearn(data=db, train_size=0.3)
 
 
-def polynomial(coefficients, x):
-    powers = np.arange(len(coefficients))
-    return np.power(x, np.tile(powers, (len(x), 1)).T).T @ coefficients
-
-
-@pytest.fixture
-def input_dimension(request) -> int:
-    return request.param
-
-
-@pytest.fixture
-def output_dimension(request) -> int:
-    return request.param
-
-
-@pytest.fixture
-def problem_dimension(request) -> int:
-    return request.param
-
-
-@pytest.fixture
-def batch_size(request) -> int:
-    return request.param
-
-
-@pytest.fixture
-def condition_number(request) -> float:
-    return request.param
-
-
 @pytest.fixture(autouse=True)
 def seed_numpy(seed=42):
     np.random.seed(seed)
@@ -236,122 +199,6 @@ def num_workers():
 @pytest.fixture
 def n_jobs(num_workers):
     return num_workers
-
-
-@pytest.fixture(scope="function")
-def quadratic_linear_equation_system(quadratic_matrix: np.ndarray, batch_size: int):
-    A = quadratic_matrix
-    problem_dimension = A.shape[0]
-    b = np.random.random([batch_size, problem_dimension])
-    return A, b
-
-
-@pytest.fixture(scope="function")
-def quadratic_matrix(problem_dimension: int, condition_number: float):
-    return random_matrix_with_condition_number(problem_dimension, condition_number)
-
-
-@pytest.fixture(scope="function")
-def singular_quadratic_linear_equation_system(
-    quadratic_matrix: np.ndarray, batch_size: int
-):
-    A = quadratic_matrix
-    problem_dimension = A.shape[0]
-    i, j = tuple(np.random.choice(problem_dimension, replace=False, size=2))
-    if j < i:
-        i, j = j, i
-
-    v = (A[i] + A[j]) / 2
-    A[i], A[j] = v, v
-    b = np.random.random([batch_size, problem_dimension])
-    return A, b
-
-
-@pytest.fixture(scope="function")
-def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
-    output_dimension, input_dimension = problem_dimension
-    A = random_matrix_with_condition_number(
-        max(input_dimension, output_dimension), condition_number
-    )
-    A = A[:output_dimension, :input_dimension]
-    b = np.random.uniform(size=[output_dimension])
-    return A, b
-
-
-@pytest.fixture(scope="function")
-def polynomial_dataset(coefficients: np.ndarray):
-    """Coefficients must be for monomials of increasing degree"""
-    from sklearn.utils import Bunch
-
-    x = np.arange(-1, 1, 0.05)
-    locs = polynomial(coefficients, x)
-    y = np.random.normal(loc=locs, scale=0.3)
-    db = Bunch()
-    db.data, db.target = x.reshape(-1, 1), y
-    poly = [f"{c} x^{i}" for i, c in enumerate(coefficients)]
-    poly = " + ".join(poly)
-    db.DESCR = f"$y \\sim N({poly}, 1)$"
-    db.feature_names = ["x"]
-    db.target_names = ["y"]
-    return Dataset.from_sklearn(data=db, train_size=0.15), coefficients
-
-
-@pytest.fixture(scope="function")
-def polynomial_pipeline(coefficients):
-    return make_pipeline(PolynomialFeatures(len(coefficients) - 1), LinearRegression())
-
-
-def dummy_utility(num_samples: int = 10):
-    from numpy import ndarray
-
-    from pydvl.utils import SupervisedModel
-
-    # Indices match values
-    x = np.arange(0, num_samples, 1).reshape(-1, 1)
-    nil = np.zeros_like(x)
-    data = Dataset(
-        x, nil, nil, nil, feature_names=["x"], target_names=["y"], description="dummy"
-    )
-
-    class DummyModel(SupervisedModel):
-        """Under this model each data point receives a score of index / max,
-        assuming that the values of training samples match their indices."""
-
-        def __init__(self, data: Dataset):
-            self.m = max(data.x_train)
-            self.utility = 0
-
-        def fit(self, x: ndarray, y: ndarray):
-            self.utility = np.sum(x) / self.m
-
-        def predict(self, x: ndarray) -> ndarray:
-            return x
-
-        def score(self, x: ndarray, y: ndarray) -> float:
-            return self.utility
-
-    return Utility(DummyModel(data), data, enable_cache=False)
-
-
-@pytest.fixture(scope="function")
-def analytic_shapley(num_samples):
-    """Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
-
-    def exact():
-        pass
-
-    u = dummy_utility(num_samples)
-    m = float(max(u.data.x_train))
-    values = np.array([i / m for i in u.data.indices])
-    result = ValuationResult(
-        algorithm=exact,
-        values=values,
-        stderr=np.zeros_like(values),
-        data_names=u.data.indices,
-        sort=SortOrder.Descending,
-        status=ValuationStatus.Converged,
-    )
-    return u, result
 
 
 class TolerateErrors:
@@ -377,94 +224,6 @@ class TolerateErrors:
                 f"Maximum number of {self.max_errors} error(s) reached"
             )
         return True
-
-
-def check_total_value(
-    u: Utility, values: ValuationResult, rtol: float = 0.05, atol: float = 1e-6
-):
-    """Checks absolute distance between total and added values.
-    Shapley value is supposed to fulfill the total value axiom."""
-    total_utility = u(u.data.indices)
-    # We can use relative tolerances if we don't have the range of the scorer.
-    assert np.isclose(np.sum(values.values), total_utility, rtol=rtol, atol=atol)
-
-
-def check_exact(
-    values: ValuationResult,
-    exact_values: ValuationResult,
-    rtol: float = 0.1,
-    atol: float = 1e-6,
-):
-    """Compares ranks and values."""
-
-    values = values.sort("desc")
-    exact_values = exact_values.sort("desc")
-
-    assert np.all(values.indices == exact_values.indices), "Ranks do not match"
-    assert np.allclose(
-        values.values, exact_values.values, rtol=rtol, atol=atol
-    ), "Values do not match"
-
-
-def check_values(
-    values: ValuationResult,
-    exact_values: ValuationResult,
-    rtol: float = 0.1,
-    atol: float = 1e-5,
-):
-    """Compares values in dictionaries.
-
-    Asserts that `|value - exact_value| < |exact_value| * rtol + atol` for
-    all pairs of `value`, `exact_value` with equal keys.
-
-    Note that this does not assume any ordering (despite values typically being
-    stored in an OrderedDict elsewhere.
-
-    :param values:
-    :param exact_values:
-    :param rtol: relative tolerance of elements in `values` with respect to
-        elements in `exact_values`. E.g. if rtol = 0.1, and atol = 0 we must
-        have |value - exact_value|/|exact_value| < 0.1 for every value
-    :param atol: absolute tolerance of elements in `values` with respect to
-        elements in `exact_values`. E.g. if atol = 0.1, and rtol = 0 we must
-        have |value - exact_value| < 0.1 for every value.
-    """
-    # Ensure that both result objects have the same sorting (none)
-    values = values.sort(None)
-    exact_values = exact_values.sort(None)
-
-    assert np.allclose(values.values, exact_values.values, rtol=rtol, atol=atol)
-
-
-def check_rank_correlation(
-    values: ValuationResult,
-    exact_values: ValuationResult,
-    k: int = None,
-    threshold: float = 0.9,
-):
-    """Checks that the indices of `values` and `exact_values` follow the same
-    order (by value), with some slack, using Spearman's correlation.
-
-    Runs an assertion for testing.
-
-    :param values: The values and indices to test
-    :param exact_values: The ground truth
-    :param k: Consider only these many, starting from the top.
-    :param threshold: minimal value for spearman correlation for the test to
-        succeed
-    """
-    # FIXME: estimate proper threshold for spearman
-
-    k = k or len(values)
-
-    values = values.sort(SortOrder.Descending)
-    exact_values = exact_values.sort(SortOrder.Descending)
-
-    top_k = np.array([it.index for it in values[:k]])
-    top_k_exact = np.array([it.index for it in exact_values[:k]])
-
-    correlation, pvalue = spearmanr(top_k, top_k_exact)
-    assert correlation >= threshold, f"{correlation} < {threshold}"
 
 
 # Tolerate Errors Plugin
@@ -674,34 +433,3 @@ def pytest_terminal_summary(
 ):
     tolerate_session = terminalreporter.config._tolerate_session
     tolerate_session.display(terminalreporter)
-
-
-def create_mock_dataset(
-    linear_model: Tuple[np.ndarray, np.ndarray],
-    train_set_size: int,
-    test_set_size: int,
-    noise: float = 0.01,
-) -> Dataset:
-    A, b = linear_model
-    o_d, i_d = tuple(A.shape)
-    data_model = lambda x: np.random.normal(x @ A.T + b, noise)
-
-    x_train = np.random.uniform(size=[train_set_size, i_d])
-    y_train = data_model(x_train)
-    x_test = np.random.uniform(size=[test_set_size, i_d])
-    y_test = data_model(x_test)
-    dataset = Dataset(
-        x_train=x_train,
-        y_train=y_train,
-        x_test=x_test,
-        y_test=y_test,
-        is_multi_output=True,
-    )
-
-    scaler_x = MinMaxScaler()
-    scaler_y = MinMaxScaler()
-    dataset.x_train = scaler_x.fit_transform(dataset.x_train)
-    dataset.y_train = scaler_y.fit_transform(dataset.y_train)
-    dataset.x_test = scaler_x.transform(dataset.x_test)
-    dataset.y_test = scaler_y.transform(dataset.y_test)
-    return (x_train, y_train), (x_test, y_test)

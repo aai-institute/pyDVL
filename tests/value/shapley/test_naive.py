@@ -4,12 +4,13 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import GroupedDataset, MemcachedConfig, SortOrder, Utility
+from pydvl.utils import GroupedDataset, MemcachedConfig, Utility
+from pydvl.value import SortOrder
 from pydvl.value.shapley.naive import (
     combinatorial_exact_shapley,
     permutation_exact_shapley,
 )
-from tests.conftest import check_total_value, check_values
+from ..conftest import check_total_value, check_values
 
 log = logging.getLogger(__name__)
 
