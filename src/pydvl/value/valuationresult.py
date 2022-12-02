@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Callable, Sequence, TYPE_CHECKING, Optional, OrderedDict
+from typing import TYPE_CHECKING, Callable, Optional, Sequence
 
 import numpy as np
 
@@ -26,13 +26,22 @@ class ValuationResult:
     .. todo::
        document this
 
+    :param algorithm: The method used
+    :param status: The end status of the algorithm
+    :param values:
+    :param stderr:
+    :param data_names: Names for the data points. Defaults to index numbers
+        if not set.
+    :param sort: Whether to sort the values.
+
+    :raises ValueError: If data names and values have mismatching lengths.
     """
 
     _indices: "NDArray[np.int_]"
     _values: "NDArray[np.float_]"
     _data: Dataset
     _stderr: Optional["NDArray[np.float_]"]
-    _algorithm: Callable  # TODO: BaseValuator
+    _algorithm: str  # TODO: BaseValuator
     _status: ValuationStatus  # TODO: Maybe? BaseValuator.Status
 
     def __init__(
@@ -44,22 +53,10 @@ class ValuationResult:
         data_names: Optional[Sequence[str]] = None,
         sort: Optional[SortOrder] = None,
     ):
-        """
-
-        :param algorithm: The method used
-        :param status: The end status of the algorithm
-        :param values:
-        :param stderr:
-        :param data_names: Names for the data points. Defaults to index numbers
-            if not set.
-        :param sort: Whether to sort the values.
-
-        :raises ValueError: If data names and values have mismatching lengths.
-        """
-        if stderr and len(stderr) != len(values):
+        if stderr is not None and len(stderr) != len(values):
             raise ValueError("Lengths of values and stderr do not match")
 
-        self._algorithm = algorithm
+        self._algorithm = getattr(algorithm, "__name__", "value")
         self._status = status
         self._values = values
         self._stderr = stderr
@@ -68,16 +65,18 @@ class ValuationResult:
             self._names = np.arange(0, len(values), dtype=np.int_)
         else:
             self._names = np.array(data_names)
-
-        if sort is None:
-            self._indices = np.arange(0, len(values), dtype=np.int_)
-        else:
-            self._indices = np.argsort(values)
-            if sort == SortOrder.Descending:
-                self._indices = self._indices[::-1]
-
-        if len(self._names) != len(self._indices):
+        if len(self._names) != len(self._values):
             raise ValueError("Data names and data values have different lengths")
+        self.sort(sort)
+
+    def sort(self, sort_order: Optional[SortOrder] = None) -> "ValuationResult":
+        if sort_order is None:
+            self._indices = np.arange(0, len(self._values), dtype=np.int_)
+        else:
+            self._indices = np.argsort(self._values)
+            if sort_order == SortOrder.Descending:
+                self._indices = self._indices[::-1]
+        return self
 
     @property
     def values(self) -> "NDArray[np.float_]":
@@ -93,7 +92,7 @@ class ValuationResult:
 
     @property
     def algorithm(self) -> str:
-        return str(self._algorithm)
+        return self._algorithm
 
     def to_dataframe(self) -> "DataFrame":
         try:
@@ -101,15 +100,14 @@ class ValuationResult:
         except ImportError:
             raise ImportError("Pandas required for DataFrame export")
 
-        # column = str(self._algorithm)
         df = pd.DataFrame(
             self._values[self._indices],
             index=self._names[self._indices],
-            columns=["data_value"],
+            columns=[self._algorithm],
         )
 
         if self._stderr is None:
-            df["data_value_std"] = 0
+            df[self._algorithm + "_stderr"] = 0
         else:
-            df["data_value_std"] = pd.Series(self._stderr[self._indices])
+            df[self._algorithm + "_stderr"] = self._stderr[self._indices]
         return df
