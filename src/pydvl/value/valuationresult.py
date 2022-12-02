@@ -8,10 +8,13 @@ from pydvl.utils import Dataset
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
+__all__ = ["ValuationResult", "ValuationStatus", "SortOrder"]
+
 
 class ValuationStatus(Enum):
+    Pending = "pending"
     Converged = "converged"
-    MaxIter = "maximum number of iterations reached"
+    MaxIterations = "maximum number of iterations reached"
     Failed = "failed"
 
 
@@ -23,9 +26,6 @@ class SortOrder(Enum):
 class ValuationResult:
     """Objects of this class hold the results of valuation algorithms.
 
-    .. todo::
-       document this
-
     :param algorithm: The method used
     :param status: The end status of the algorithm
     :param values:
@@ -35,6 +35,11 @@ class ValuationResult:
     :param sort: Whether to sort the values.
 
     :raises ValueError: If data names and values have mismatching lengths.
+
+
+    .. todo::
+       document this
+
     """
 
     _indices: "NDArray[np.int_]"
@@ -94,20 +99,29 @@ class ValuationResult:
     def algorithm(self) -> str:
         return self._algorithm
 
-    def to_dataframe(self) -> "DataFrame":
+    def to_dataframe(self, column: Optional[str] = None) -> "DataFrame":
+        """Returns values as a dataframe
+
+        :param column: Name for the column holding the data value. Defaults to
+            the name of the algorithm used.
+        :return: A dataframe with two columns, one for the values, with name
+            given as explained in `column`, and another with standard errors for
+            approximate algorithms. The latter will be named `column+'_stderr'`.
+        """
         try:
             import pandas as pd
         except ImportError:
             raise ImportError("Pandas required for DataFrame export")
 
+        column = column or self._algorithm
         df = pd.DataFrame(
             self._values[self._indices],
             index=self._names[self._indices],
-            columns=[self._algorithm],
+            columns=[column],
         )
 
         if self._stderr is None:
-            df[self._algorithm + "_stderr"] = 0
+            df[column + "_stderr"] = 0
         else:
-            df[self._algorithm + "_stderr"] = self._stderr[self._indices]
+            df[column + "_stderr"] = self._stderr[self._indices]
         return df

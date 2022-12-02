@@ -46,6 +46,8 @@ from ...utils import Utility, maybe_progress
 from ...utils.config import ParallelConfig
 from ...utils.numeric import get_running_avg_variance, random_powerset
 from ...utils.parallel import MapReduceJob, init_parallel_backend
+from .. import ValuationResult
+from ..valuationresult import SortOrder, ValuationStatus
 from .actor import get_shapley_coordinator, get_shapley_worker
 
 if TYPE_CHECKING:
@@ -77,7 +79,7 @@ def truncated_montecarlo_shapley(
     progress: bool = False,
     coordinator_update_period: int = 10,
     worker_update_period: int = 5,
-) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
+) -> ValuationResult:
     """Monte Carlo approximation to the Shapley value of data points.
 
     This implements the permutation-based method described in
@@ -117,9 +119,7 @@ def truncated_montecarlo_shapley(
         coordinator every so often.
     :param worker_update_period: interval in seconds between different updates to
         and from the coordinator
-    :return: Tuple with the first element being an :obj:`collections.OrderedDict`
-        of approximate Shapley values for the indices, and the second being the
-        estimated standard error of each value.
+    :return: Object with the data values.
 
     .. rubric::References
 
@@ -148,19 +148,20 @@ def truncated_montecarlo_shapley(
     ]
     for worker_id in range(n_jobs):
         workers[worker_id].run(block=False)
-    last_update_time = time()
-    is_done = False
-    while not is_done:
-        sleep(0.01)
-        if time() - last_update_time > coordinator_update_period:
-            is_done = coordinator.check_done()
-            last_update_time = time()
-    dvl_values, dvl_std = coordinator.get_results()
-    sorted_shapley_values = sort_values(
-        {u.data.data_names[i]: v for i, v in enumerate(dvl_values)}
+
+    while coordinator.status == ValuationStatus.Pending:
+        sleep(coordinator_update_period)
+
+    values, stderr = coordinator.get_results()
+
+    return ValuationResult(
+        algorithm=truncated_montecarlo_shapley,
+        status=coordinator.status,
+        values=values,
+        stderr=stderr,
+        data_names=u.data.data_names,
+        sort=SortOrder.Descending,
     )
-    montecarlo_error = {u.data.data_names[i]: v for i, v in enumerate(dvl_std)}
-    return sorted_shapley_values, montecarlo_error
 
 
 def _permutation_montecarlo_marginals(
@@ -201,7 +202,7 @@ def permutation_montecarlo_shapley(
     n_jobs: int,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
-) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
+) -> ValuationResult:
     """Computes an approximate Shapley value using independent index permutations.
 
     :param u: Utility object with model, data, and scoring function
@@ -210,8 +211,7 @@ def permutation_montecarlo_shapley(
     :param config: Object configuring parallel computation, with cluster address,
         number of cpus, etc.
     :param progress: Whether to display progress bars for each job.
-    :return: Tuple with the first element being an ordered Dict of approximate
-        Shapley values for the indices, the second being their standard error
+    :return: Object with the data values.
     """
     parallel_backend = init_parallel_backend(config)
 
@@ -230,13 +230,17 @@ def permutation_montecarlo_shapley(
     )
     full_results = map_reduce_job(u_id)[0]
 
-    acc = np.mean(full_results, axis=0)
-    acc_std = np.std(full_results, axis=0) / np.sqrt(full_results.shape[0])
-    sorted_shapley_values = sort_values(
-        {u.data.data_names[i]: v for i, v in enumerate(acc)}
+    values = np.mean(full_results, axis=0)
+    stderr = np.std(full_results, axis=0) / np.sqrt(full_results.shape[0])
+
+    return ValuationResult(
+        algorithm=permutation_montecarlo_shapley,
+        status=ValuationStatus.MaxIterations,
+        values=values,
+        stderr=stderr,
+        data_names=u.data.data_names,
+        sort=SortOrder.Descending,
     )
-    montecarlo_error = {u.data.data_names[i]: v for i, v in enumerate(acc_std)}
-    return sorted_shapley_values, montecarlo_error
 
 
 def _combinatorial_montecarlo_shapley(
@@ -325,7 +329,7 @@ def combinatorial_montecarlo_shapley(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
-) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
+) -> ValuationResult:
     """Computes an approximate Shapley value using the combinatorial definition.
 
     This consists of randomly sampling subsets of the power set of the training
@@ -341,8 +345,7 @@ def combinatorial_montecarlo_shapley(
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param progress: Whether to display progress bars for each job.
-    :return: Tuple with the first element being an ordered Dict of approximate
-        Shapley values for the indices, the second being their standard error
+    :return: Object with the data values.
     """
     parallel_backend = init_parallel_backend(config)
     u_id = parallel_backend.put(u)
@@ -357,12 +360,15 @@ def combinatorial_montecarlo_shapley(
         config=config,
     )
     results = map_reduce_job(u.data.indices)[0]
-    sorted_shapley_values = sort_values(
-        {u.data.data_names[i]: v for i, v in enumerate(results.values)}
-    )
-    montecarlo_errors = {u.data.data_names[i]: v for i, v in enumerate(results.stderr)}
 
-    return sorted_shapley_values, montecarlo_errors
+    return ValuationResult(
+        algorithm=combinatorial_montecarlo_shapley,
+        status=ValuationStatus.MaxIterations,
+        values=results.values,
+        stderr=results.stderr,
+        data_names=u.data.data_names,
+        sort=SortOrder.Descending,
+    )
 
 
 class OwenAlgorithm(Enum):
@@ -432,7 +438,7 @@ def owen_sampling_shapley(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
-) -> Tuple["OrderedDict[str, float]", Dict[str, float]]:
+) -> ValuationResult:
     r"""Owen sampling of Shapley values.
 
     This function computes a Monte Carlo approximation to
@@ -478,8 +484,7 @@ def owen_sampling_shapley(
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param progress: Whether to display progress bars for each job.
-    :return: Tuple with the first element being an ordered Dict of approximate
-        Shapley values for the indices, the second being their standard error
+    :return: Object with the data values.
 
     .. rubric:: References
 
@@ -513,9 +518,12 @@ def owen_sampling_shapley(
     )
 
     results = map_reduce_job(u.data.indices)[0]
-    sorted_shapley_values = sort_values(
-        {u.data.data_names[i]: v for i, v in enumerate(results.values)}
-    )
-    montecarlo_errors = {u.data.data_names[i]: v for i, v in enumerate(results.stderr)}
 
-    return sorted_shapley_values, montecarlo_errors
+    return ValuationResult(
+        algorithm=owen_sampling_shapley,
+        status=ValuationStatus.MaxIterations,
+        values=results.values,
+        stderr=results.stderr,
+        data_names=u.data.data_names,
+        sort=SortOrder.Descending,
+    )

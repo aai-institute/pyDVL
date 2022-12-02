@@ -16,6 +16,7 @@ from pydvl.utils import Utility, get_running_avg_variance, maybe_progress
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from pydvl.utils.parallel.backend import init_parallel_backend
+from pydvl.value.valuationresult import ValuationStatus
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -79,6 +80,7 @@ class ShapleyCoordinator(Coordinator):
             )
         self.value_tolerance = value_tolerance
         self.max_iterations = max_iterations
+        self._status = ValuationStatus.Pending
 
     def get_results(self) -> Tuple["NDArray", "NDArray"]:
         """Aggregates the results of the different workers
@@ -133,12 +135,22 @@ class ShapleyCoordinator(Coordinator):
                 and std_to_val_ratio < self.value_tolerance
             ):
                 self._is_done = True
+                logger.info("Converged")
+                self._status = ValuationStatus.Converged
             if (
                 self.max_iterations is not None
                 and self._total_iterations > self.max_iterations
             ):
                 self._is_done = True
+                logger.info(f"Max iterations ({self.max_iterations}) reached")
+                self._status = ValuationStatus.MaxIterations
         return self._is_done
+
+    @property
+    def status(self) -> ValuationStatus:
+        if self._status == ValuationStatus.Pending:
+            self.check_done()
+        return self._status
 
 
 class ShapleyWorker(Worker):

@@ -5,15 +5,11 @@ interface to all methods defined in the modules.
 
 Please refer to :ref:`data valuation` for an overview of Shapley Data value.
 """
-import warnings
 from enum import Enum
 from typing import Optional, cast
 
-import numpy as np
-import pandas as pd
-import sklearn.neighbors as skn
-
 from pydvl.utils import Utility
+from pydvl.value import ValuationResult
 from pydvl.value.shapley.knn import knn_shapley
 from pydvl.value.shapley.montecarlo import (
     OwenAlgorithm,
@@ -31,7 +27,12 @@ __all__ = ["compute_shapley_values"]
 
 
 class ShapleyMode(str, Enum):
-    """Supported algorithms for the computation of Shapley values."""
+    """Supported algorithms for the computation of Shapley values.
+
+    .. todo::
+       Make algorithms register themselves here.
+
+    """
 
     CombinatorialExact = "combinatorial_exact"
     PermutationExact = "permutation_exact"
@@ -49,7 +50,7 @@ def compute_shapley_values(
     max_iterations: Optional[int] = None,
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     **kwargs,
-) -> pd.DataFrame:
+) -> ValuationResult:
     """Umbrella method to compute Shapley values with any of the available
     algorithms.
 
@@ -113,12 +114,10 @@ def compute_shapley_values(
     if mode not in list(ShapleyMode):
         raise ValueError(f"Invalid value encountered in {mode=}")
 
-    stderr: Optional[dict]
-
     if mode == ShapleyMode.TruncatedMontecarlo:
         # TODO fix progress showing and maybe_progress in remote case
         progress = False
-        values, stderr = truncated_montecarlo_shapley(
+        return truncated_montecarlo_shapley(
             u=u,
             max_iterations=max_iterations,
             n_jobs=n_jobs,
@@ -130,7 +129,7 @@ def compute_shapley_values(
             raise ValueError(
                 "max_iterations cannot be None for Combinatorial Montecarlo Shapley"
             )
-        values, stderr = combinatorial_montecarlo_shapley(
+        return combinatorial_montecarlo_shapley(
             u, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.PermutationMontecarlo:
@@ -138,15 +137,13 @@ def compute_shapley_values(
             raise ValueError(
                 "max_iterations cannot be None for Permutation Montecarlo Shapley"
             )
-        values, stderr = permutation_montecarlo_shapley(
+        return permutation_montecarlo_shapley(
             u, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.CombinatorialExact:
-        values = combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)
-        stderr = None
+        return combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)
     elif mode == ShapleyMode.PermutationExact:
-        values = permutation_exact_shapley(u, progress=progress)
-        stderr = None
+        return permutation_exact_shapley(u, progress=progress)
     elif mode == ShapleyMode.Owen or mode == ShapleyMode.OwenAntithetic:
         if max_iterations is None:
             raise ValueError("max_iterations cannot be None for Owen methods")
@@ -158,7 +155,7 @@ def compute_shapley_values(
             if mode == ShapleyMode.Owen
             else OwenAlgorithm.Antithetic
         )
-        values, stderr = owen_sampling_shapley(
+        return owen_sampling_shapley(
             u,
             max_iterations=max_iterations,
             max_q=cast(int, kwargs.get("max_q")),
@@ -166,22 +163,6 @@ def compute_shapley_values(
             n_jobs=n_jobs,
         )
     elif mode == ShapleyMode.KNN:
-        if not isinstance(u.model, skn.KNeighborsClassifier):
-            raise TypeError("KNN Shapley requires a K-Nearest Neighbours model")
-        values = knn_shapley(
-            u.data, cast(skn.KNeighborsClassifier, u.model), progress=progress
-        )
-        stderr = None
+        return knn_shapley(u, progress=progress)
     else:
         raise ValueError(f"Invalid value encountered in {mode=}")
-
-    df = pd.DataFrame(
-        list(values.values()), index=list(values.keys()), columns=["data_value"]
-    )
-
-    if stderr is None:
-        df["data_value_std"] = np.nan  # FIXME: why NaN? stddev of a constant RV is 0
-    else:
-        df["data_value_std"] = pd.Series(stderr)
-
-    return df

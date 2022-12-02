@@ -5,5 +5,6 @@ See :ref:`data valuation` for an introduction to the concepts and methods
 implemented here.
 """
 
-from .shapley import ShapleyMode, compute_shapley_values
-from .valuationresult import ValuationResult
+from .loo import *
+from .shapley import *
+from .valuationresult import *

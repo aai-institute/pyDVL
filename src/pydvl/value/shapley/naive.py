@@ -17,10 +17,11 @@ from pydvl.utils import (
 
 __all__ = ["permutation_exact_shapley", "combinatorial_exact_shapley"]
 
+from pydvl.value import ValuationResult
+from pydvl.value.valuationresult import SortOrder, ValuationStatus
 
-def permutation_exact_shapley(
-    u: Utility, *, progress: bool = True
-) -> "OrderedDict[str, float]":
+
+def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     """Computes the exact Shapley value using permutations.
 
     When the length of the training set is > 10 this prints a warning since the
@@ -53,7 +54,14 @@ def permutation_exact_shapley(
             values[idx] += u(p[: i + 1]) - u(p[:i])
     values /= math.factorial(n)
 
-    return sort_values({u.data.data_names[i]: v for i, v in enumerate(values)})
+    return ValuationResult(
+        algorithm=permutation_exact_shapley,
+        status=ValuationStatus.Converged,
+        values=values,
+        stderr=None,
+        data_names=u.data.data_names,
+        sort=SortOrder.Descending,
+    )
 
 
 def _combinatorial_exact_shapley(
@@ -85,7 +93,7 @@ def combinatorial_exact_shapley(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
-) -> "OrderedDict[str, float]":
+) -> ValuationResult:
     r"""Computes the exact Shapley value using the combinatorial definition.
 
     $$v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}} \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)]$$
@@ -100,9 +108,7 @@ def combinatorial_exact_shapley(
     :param config: Object configuring parallel computation, with cluster address,
         number of cpus, etc.
     :param progress: Whether to display progress bars for each job.
-
-    :return: Dictionary of {"index or label": exact_value}, sorted by decreasing
-        value.
+    :return: Object with the data values.
     """
     # Arbitrary choice, will depend on time required, caching, etc.
     if len(u.data) // n_jobs > 20:
@@ -124,4 +130,11 @@ def combinatorial_exact_shapley(
         n_jobs=n_jobs,
     )
     values = map_reduce_job(u.data.indices)[0]
-    return sort_values({u.data.data_names[i]: v for i, v in enumerate(values)})
+    return ValuationResult(
+        algorithm=combinatorial_exact_shapley,
+        status=ValuationStatus.Converged,
+        values=values,
+        stderr=None,
+        data_names=u.data.data_names,
+        sort=SortOrder.Descending,
+    )
