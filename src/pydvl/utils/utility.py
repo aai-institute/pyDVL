@@ -67,10 +67,10 @@ class Utility:
     >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
     >>> from sklearn.linear_model import LinearRegression, LogisticRegression
     >>> from sklearn.datasets import load_iris
-    >>> dataset = Dataset.from_sklearn(load_iris())
-    >>> u = Utility(LogisticRegression(), dataset)
+    >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
+    >>> u = Utility(LogisticRegression(random_state=16), dataset)
     >>> u(dataset.indices)
-    0.9666666666666667
+    0.9
 
     """
 

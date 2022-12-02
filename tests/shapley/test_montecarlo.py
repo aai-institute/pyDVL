@@ -66,7 +66,9 @@ def test_hoeffding_bound_montecarlo(
 @pytest.mark.parametrize(
     "a, b, num_points", [(2, 0, 21)]  # training set will have 0.3 * 21 = 6 samples
 )
-@pytest.mark.parametrize("scorer, rtol", [(squashed_r2, 0.2), (squashed_variance, 0.2)])
+@pytest.mark.parametrize(
+    "scorer, rtol", [(squashed_r2, 0.25), (squashed_variance, 0.25)]
+)
 @pytest.mark.parametrize(
     "fun, max_iterations, kwargs",
     [
