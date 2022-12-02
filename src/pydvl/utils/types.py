@@ -146,6 +146,6 @@ def compose_score(
 
         def __repr__(self):
             capitalized_name = "".join(s.capitalize() for s in self._name.split(" "))
-            return f"{capitalized_name}(scorer={self._scorer})"
+            return f"{capitalized_name} (scorer={self._scorer})"
 
     return NewScorer(scoring_function, name=name)
