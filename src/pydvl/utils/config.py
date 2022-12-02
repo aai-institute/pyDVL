@@ -80,7 +80,7 @@ class MemcachedConfig:
 
     client_config: MemcachedClientConfig = field(default_factory=MemcachedClientConfig)
     time_threshold: float = 0.3
-    allow_repeated_evaluations: bool = True
+    allow_repeated_evaluations: bool = False
     rtol_stderr: float = 0.1
     min_repetitions: int = 3
     ignore_args: Optional[Iterable[str]] = None

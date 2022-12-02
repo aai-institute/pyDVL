@@ -59,8 +59,19 @@ class Utility:
         Used only when catch_errors is True
     :param default_score: score in the case of models that have not been fit,
         e.g. when too little data is passed, or errors arise.
-    :param enable_cache: whether to use memcached for memoization.
-    :param cache_options:
+    :param enable_cache: If True, use memcached for memoization.
+    :param cache_options: Optional configuration object for memcached.
+
+    :Example:
+
+    >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
+    >>> from sklearn.linear_model import LinearRegression, LogisticRegression
+    >>> from sklearn.datasets import load_iris
+    >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
+    >>> u = Utility(LogisticRegression(random_state=16), dataset)
+    >>> u(dataset.indices)
+    0.9
+
     """
 
     model: SupervisedModel
@@ -76,7 +87,7 @@ class Utility:
         catch_errors: bool = True,
         show_warnings: bool = False,
         default_score: float = 0.0,
-        enable_cache: bool = True,
+        enable_cache: bool = False,
         cache_options: Optional[MemcachedConfig] = None,
     ):
         self.model = model
@@ -85,7 +96,10 @@ class Utility:
         self.show_warnings = show_warnings
         self.default_score = default_score
         self.enable_cache = enable_cache
-        self.cache_options = cache_options
+        if cache_options is None:
+            self.cache_options: MemcachedConfig = MemcachedConfig()
+        else:
+            self.cache_options = cache_options
         self._signature = serialize((hash(model), hash(data), hash(scoring)))
         self.scorer = check_scoring(self.model, scoring)
         self._initialize_utility_wrapper()
@@ -96,11 +110,7 @@ class Utility:
 
     def _initialize_utility_wrapper(self):
         if self.enable_cache:
-            if self.cache_options is None:
-                cache_options = dict()  # type: ignore
-            else:
-                cache_options = self.cache_options
-            self._utility_wrapper = memcached(**cache_options)(  # type: ignore
+            self._utility_wrapper = memcached(**self.cache_options)(  # type: ignore
                 self._utility, signature=self._signature
             )
         else:
@@ -194,7 +204,7 @@ class DataUtilityLearning:
     >>> from sklearn.linear_model import LinearRegression, LogisticRegression
     >>> from sklearn.datasets import load_iris
     >>> dataset = Dataset.from_sklearn(load_iris())
-    >>> u = Utility(LogisticRegression(), dataset, enable_cache=False)
+    >>> u = Utility(LogisticRegression(), dataset)
     >>> wrapped_u = DataUtilityLearning(u, 3, LinearRegression())
     ... # First 3 calls will be computed normally
     >>> for i in range(3):
