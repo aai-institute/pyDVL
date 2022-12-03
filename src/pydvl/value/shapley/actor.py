@@ -140,7 +140,7 @@ class ShapleyCoordinator(Coordinator):
                 self._is_done = True
                 logger.info("Converged")
                 self._status = ValuationStatus.Converged
-            if (
+            elif (
                 self.max_iterations is not None
                 and self._total_iterations > self.max_iterations
             ):
