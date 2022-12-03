@@ -8,8 +8,8 @@
   [PR #211](https://github.com/appliedAI-Initiative/pyDVL/pull/211)
 - Test and officially support Python version 3.9 and 3.10 
   [PR #208](https://github.com/appliedAI-Initiative/pyDVL/pull/208)
-- Introduces a class ValuationResult to gather and inspect results from all
-  valuation algorithms
+- **Breaking change:** Introduces a class ValuationResult to gather and inspect
+  results from all valuation algorithms
   [PR #214](https://github.com/appliedAI-Initiative/pyDVL/pull/214)
 
 ## 0.3.0 - 💥 Breaking changes

@@ -1,6 +1,6 @@
 import functools
-from collections import OrderedDict, defaultdict
-from typing import TYPE_CHECKING, Dict, Optional, Sequence, Tuple, Type, Union
+from collections import defaultdict
+from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
 
 import numpy as np
 import pytest
@@ -11,7 +11,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 
-from pydvl.utils import Dataset, MemcachedClientConfig, MemcachedConfig, Scorer, Utility
+from pydvl.utils import Dataset, MemcachedClientConfig, Utility
 from pydvl.utils.numeric import random_matrix_with_condition_number
 from pydvl.utils.parallel import available_cpus
 from pydvl.utils.types import SortOrder
