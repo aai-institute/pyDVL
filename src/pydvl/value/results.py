@@ -1,3 +1,12 @@
+"""
+This module collects types and methods for the inspection of the results of
+valuation algorithms.
+
+The most important class is :class:`ValuationResult`, which provides access
+to raw values, as well as convenient behaviour as a Sequence with extended
+indexing abilities, and conversion to `pandas DataFrames
+<https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
+"""
 import collections
 from dataclasses import dataclass
 from enum import Enum

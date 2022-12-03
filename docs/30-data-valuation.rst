@@ -174,7 +174,7 @@ definitions, but other methods are typically preferable.
    values = naive_loo(utility)
 
 The return value of all valuation functions is an object of type
-:class:`~pydvl.value.valuationresult.ValuationResult`. This can be iterated over,
+:class:`~pydvl.value.results.ValuationResult`. This can be iterated over,
 indexed with integers, slices and Iterables, as well as converted to a
 `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
 
@@ -218,7 +218,7 @@ We convert the return value to a
 `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_
 and name the column with the results as `value`. Please refer to the
 documentation in :mod:`pydvl.value.shapley` and
-:class:`~pydvl.value.valuationresult.ValuationResult` for more information.
+:class:`~pydvl.value.results.ValuationResult` for more information.
 
 Monte Carlo Combinatorial Shapley
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
