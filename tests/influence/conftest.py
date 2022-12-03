@@ -1,10 +1,13 @@
-from typing import Tuple
+from typing import TYPE_CHECKING, Tuple
 
 import numpy as np
 import pytest
 from sklearn.preprocessing import MinMaxScaler
 
 from pydvl.utils import Dataset, random_matrix_with_condition_number
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 
 @pytest.fixture
@@ -73,11 +76,14 @@ def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
 
 
 def create_mock_dataset(
-    linear_model: Tuple[np.ndarray, np.ndarray],
+    linear_model: Tuple["NDArray[np.float_]", "NDArray[np.float_]"],
     train_set_size: int,
     test_set_size: int,
     noise: float = 0.01,
-) -> Dataset:
+) -> Tuple[
+    Tuple["NDArray[np.float_]", "NDArray[np.float_]"],
+    Tuple["NDArray[np.float_]", "NDArray[np.float_]"],
+]:
     A, b = linear_model
     o_d, i_d = tuple(A.shape)
     data_model = lambda x: np.random.normal(x @ A.T + b, noise)
