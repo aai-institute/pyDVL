@@ -7,7 +7,7 @@ to raw values, as well as convenient behaviour as a Sequence with extended
 indexing abilities, and conversion to `pandas DataFrames
 <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
 """
-import collections
+import collections.abc
 from dataclasses import dataclass
 from enum import Enum
 from typing import (
@@ -56,7 +56,7 @@ class ValueItem:
     stderr: Optional[np.float_]
 
 
-class ValuationResult(collections.Sequence):
+class ValuationResult(collections.abc.Sequence):
     """Objects of this class hold the results of valuation algorithms.
 
     Results can be sorted with :meth:`sort`. Note that sorting values affects
@@ -180,7 +180,7 @@ class ValuationResult(collections.Sequence):
     ) -> Union[ValueItem, List[ValueItem]]:
         if isinstance(key, slice):
             return [cast(ValueItem, self[i]) for i in range(*key.indices(len(self)))]
-        elif isinstance(key, collections.Iterable):
+        elif isinstance(key, collections.abc.Iterable):
             return [cast(ValueItem, self[i]) for i in key]
         elif isinstance(key, int):
             if key < 0:
