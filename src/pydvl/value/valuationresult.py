@@ -1,4 +1,5 @@
 import collections
+from dataclasses import dataclass
 from enum import Enum
 from typing import (
     TYPE_CHECKING,
@@ -7,15 +8,21 @@ from typing import (
     Generator,
     Iterable,
     List,
-    NamedTuple,
     Optional,
     Sequence,
     Union,
+    cast,
+    overload,
 )
 
 import numpy as np
 
 from pydvl.utils import Dataset, SortOrder
+
+try:
+    import pandas  # Try to import here for the benefit of mypy
+except ImportError:
+    pass
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -30,7 +37,8 @@ class ValuationStatus(Enum):
     Failed = "failed"
 
 
-class ValueItem(NamedTuple):
+@dataclass
+class ValueItem:
     index: np.int_
     name: str
     value: np.float_
@@ -67,7 +75,8 @@ class ValuationResult(collections.Sequence):
     _indices: "NDArray[np.int_]"
     _values: "NDArray[np.float_]"
     _data: Dataset
-    _stderr: Optional["NDArray[np.float_]"]
+    _names: "Union[NDArray[np.int_], NDArray[np.str_]]"
+    _stderr: "NDArray[np.float_]"
     _algorithm: str  # TODO: BaseValuator
     _status: ValuationStatus  # TODO: Maybe? BaseValuator.Status
     _sort_order: Optional[SortOrder] = None
@@ -87,7 +96,7 @@ class ValuationResult(collections.Sequence):
         self._algorithm = getattr(algorithm, "__name__", "value")
         self._status = status
         self._values = values
-        self._stderr = stderr
+        self._stderr = np.zeros_like(values) if stderr is None else stderr
 
         if data_names is None:
             self._names = np.arange(0, len(values), dtype=np.int_)
@@ -144,13 +153,25 @@ class ValuationResult(collections.Sequence):
     def algorithm(self) -> str:
         return self._algorithm
 
+    @overload
+    def __getitem__(self, key: int) -> ValueItem:
+        ...
+
+    @overload
+    def __getitem__(self, key: slice) -> List[ValueItem]:
+        ...
+
+    @overload
+    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]:
+        ...
+
     def __getitem__(
         self, key: Union[slice, Iterable[int], int]
     ) -> Union[ValueItem, List[ValueItem]]:
         if isinstance(key, slice):
-            return [self[i] for i in range(*key.indices(len(self)))]
+            return [cast(ValueItem, self[i]) for i in range(*key.indices(len(self)))]
         elif isinstance(key, collections.Iterable):
-            return [self[i] for i in key]
+            return [cast(ValueItem, self[i]) for i in key]
         elif isinstance(key, int):
             if key < 0:
                 key += len(self)
@@ -171,7 +192,7 @@ class ValuationResult(collections.Sequence):
     def __len__(self):
         return len(self._indices)
 
-    def to_dataframe(self, column: Optional[str] = None) -> "DataFrame":
+    def to_dataframe(self, column: Optional[str] = None) -> "pandas.DataFrame":
         """Returns values as a dataframe
 
         :param column: Name for the column holding the data value. Defaults to
@@ -179,14 +200,12 @@ class ValuationResult(collections.Sequence):
         :return: A dataframe with two columns, one for the values, with name
             given as explained in `column`, and another with standard errors for
             approximate algorithms. The latter will be named `column+'_stderr'`.
+        :raise ImportError: If pandas is not installed
         """
-        try:
-            import pandas as pd
-        except ImportError:
+        if not pandas:
             raise ImportError("Pandas required for DataFrame export")
-
         column = column or self._algorithm
-        df = pd.DataFrame(
+        df = pandas.DataFrame(
             self._values[self._indices],
             index=self._names[self._indices],
             columns=[column],
