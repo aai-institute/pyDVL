@@ -1,14 +1,11 @@
-from collections import OrderedDict
-from typing import Dict
-
 import numpy as np
 import pytest
-from scipy.stats import spearmanr
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
-from pydvl.utils import Dataset, Utility
+from pydvl.utils import Dataset, SortOrder, Utility
+from pydvl.value import ValuationResult, ValuationStatus
 
 
 def polynomial(coefficients, x):
@@ -39,6 +36,7 @@ def polynomial_pipeline(coefficients):
     return make_pipeline(PolynomialFeatures(len(coefficients) - 1), LinearRegression())
 
 
+@pytest.fixture(scope="function")
 def dummy_utility(num_samples: int = 10):
     from numpy import ndarray
 
@@ -74,92 +72,19 @@ def dummy_utility(num_samples: int = 10):
 @pytest.fixture(scope="function")
 def analytic_shapley(num_samples):
     """Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
+
+    def exact():
+        pass
+
     u = dummy_utility(num_samples)
-    exact_values = OrderedDict(
-        {i: i / float(max(u.data.x_train)) for i in u.data.indices}
+    m = float(max(u.data.x_train))
+    values = np.array([i / m for i in u.data.indices])
+    result = ValuationResult(
+        algorithm=exact,
+        values=values,
+        stderr=np.zeros_like(values),
+        data_names=u.data.indices,
+        sort=SortOrder.Descending,
+        status=ValuationStatus.Converged,
     )
-    return u, exact_values
-
-
-def check_total_value(
-    u: Utility, values: OrderedDict, rtol: float = 0.05, atol: float = 1e-6
-):
-    """Checks absolute distance between total and added values.
-    Shapley value is supposed to fulfill the total value axiom."""
-    total_utility = u(u.data.indices)
-    values = np.fromiter(values.values(), dtype=float, count=len(u.data))
-    # We could want relative tolerances here if we didn't have the range of
-    # the scorer.
-    assert np.isclose(values.sum(), total_utility, rtol=rtol, atol=atol)
-
-
-def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e-6):
-    """Compares ranks and values."""
-
-    k = list(values.keys())
-    ek = list(exact_values.keys())
-
-    assert np.all(k == ek), "Ranks do not match"
-
-    v = np.array(list(values.values()))
-    ev = np.array(list(exact_values.values()))
-
-    assert np.allclose(v, ev, atol=atol), f"{v} != {ev}"
-
-
-def check_values(
-    values: Dict,
-    exact_values: Dict,
-    rtol: float = 0.1,
-    atol: float = 1e-5,
-):
-    """Compares values in dictionaries.
-
-    Asserts that `|value - exact_value| < |exact_value| * rtol + atol` for
-    all pairs of `value`, `exact_value` with equal keys.
-
-    Note that this does not assume any ordering (despite values typically being
-    stored in an OrderedDict elsewhere.
-
-    :param values:
-    :param exact_values:
-    :param rtol: relative tolerance of elements in `values` with respect to
-        elements in `exact_values`. E.g. if rtol = 0.1, and atol = 0 we must
-        have |value - exact_value|/|exact_value| < 0.1 for every value
-    :param atol: absolute tolerance of elements in `values` with respect to
-        elements in `exact_values`. E.g. if atol = 0.1, and rtol = 0 we must
-        have |value - exact_value| < 0.1 for every value.
-    """
-    for key in values:
-        assert (
-            abs(values[key] - exact_values[key]) < abs(exact_values[key]) * rtol + atol
-        )
-
-
-def check_rank_correlation(
-    values: OrderedDict,
-    exact_values: OrderedDict,
-    k: int = None,
-    threshold: float = 0.9,
-):
-    """Checks that the indices of `values` and `exact_values` follow the same
-    order (by value), with some slack, using Spearman's correlation.
-
-    Runs an assertion for testing.
-
-    :param values: The values and indices to test
-    :param exact_values: The ground truth
-    :param k: Consider only these many, starting from the top.
-    :param threshold: minimal value for spearman correlation for the test to
-        succeed
-    """
-    # FIXME: estimate proper threshold for spearman
-    if k is not None:
-        raise NotImplementedError
-    else:
-        k = len(values)
-    ranks = np.array(list(values.keys())[:k])
-    ranks_exact = np.array(list(exact_values.keys())[:k])
-
-    correlation, pvalue = spearmanr(ranks, ranks_exact)
-    assert correlation >= threshold, f"{correlation} < {threshold}"
+    return u, result
