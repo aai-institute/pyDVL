@@ -4,8 +4,11 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import GroupedDataset, MemcachedConfig, Utility
-from pydvl.value.shapley import combinatorial_exact_shapley, permutation_exact_shapley
+from pydvl.utils import GroupedDataset, MemcachedConfig, SortOrder, Utility
+from pydvl.value.shapley.naive import (
+    combinatorial_exact_shapley,
+    permutation_exact_shapley,
+)
 from tests.conftest import check_total_value, check_values
 
 log = logging.getLogger(__name__)
@@ -119,7 +122,7 @@ def test_linear_with_outlier(
     shapley_values = permutation_exact_shapley(linear_utility, progress=False)
     check_total_value(linear_utility, shapley_values, atol=total_atol)
 
-    assert shapley_values.sort("desc").indices[0] == outlier_idx
+    assert shapley_values.sort(SortOrder.Ascending).indices[0] == outlier_idx
 
 
 @pytest.mark.parametrize(
@@ -181,7 +184,6 @@ def test_polynomial_with_outlier(
     )
 
     shapley_values = permutation_exact_shapley(poly_utility, progress=False)
-    log.info(f"Shapley values: {shapley_values}")
     check_total_value(poly_utility, shapley_values, atol=total_atol)
 
-    assert int(list(shapley_values.keys())[0]) == outlier_idx
+    assert shapley_values.sort(SortOrder.Ascending)[0].index == outlier_idx

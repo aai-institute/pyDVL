@@ -177,7 +177,7 @@ def test_linear_montecarlo_with_outlier(
 
     check_total_value(linear_utility, values, atol=total_atol)
 
-    assert values.sort(SortOrder.Descending)[0].index == outlier_idx
+    assert values.sort(SortOrder.Ascending)[0].index == outlier_idx
 
 
 @pytest.mark.parametrize(
