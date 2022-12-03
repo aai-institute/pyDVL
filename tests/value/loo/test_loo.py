@@ -5,7 +5,7 @@ from pydvl.value.loo import naive_loo
 from .. import check_total_value, check_values
 
 
-@pytest.mark.parametrize("num_samples", [0, 10])
+@pytest.mark.parametrize("num_samples", [10, 100])
 def test_naive_loo(num_samples, analytic_loo):
     """Compares the naive loo with analytic values in a dummy model"""
     u, exact_values = analytic_loo
