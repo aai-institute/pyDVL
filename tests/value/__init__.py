@@ -5,6 +5,11 @@ from pydvl.utils import SortOrder, Utility
 from pydvl.value import ValuationResult
 
 
+def polynomial(coefficients, x):
+    powers = np.arange(len(coefficients))
+    return np.power(x, np.tile(powers, (len(x), 1)).T).T @ coefficients
+
+
 def check_total_value(
     u: Utility, values: ValuationResult, rtol: float = 0.05, atol: float = 1e-6
 ):

@@ -6,11 +6,7 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from pydvl.utils import Dataset, SortOrder, Utility
 from pydvl.value import ValuationResult, ValuationStatus
-
-
-def polynomial(coefficients, x):
-    powers = np.arange(len(coefficients))
-    return np.power(x, np.tile(powers, (len(x), 1)).T).T @ coefficients
+from . import polynomial
 
 
 @pytest.fixture(scope="function")
