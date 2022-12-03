@@ -13,7 +13,7 @@ from pydvl.utils import (
     maybe_progress,
     powerset,
 )
-from pydvl.value import ValuationResult, ValuationStatus
+from pydvl.value.results import ValuationResult, ValuationStatus
 
 __all__ = ["permutation_exact_shapley", "combinatorial_exact_shapley"]
 

@@ -148,7 +148,7 @@ class ValuationResult(collections.abc.Sequence):
         return self._values
 
     @property
-    def indices(self) -> "NDArray":
+    def indices(self) -> "NDArray[np.int_]":
         """The indices for the values, possibly sorted.
         If the object is unsorted, then this is the same as
         `np.arange(len(values))`. Otherwise, the indices sort :meth:`values`
