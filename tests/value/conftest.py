@@ -70,21 +70,20 @@ def dummy_utility(num_samples: int = 10):
 
 
 @pytest.fixture(scope="function")
-def analytic_shapley(num_samples):
+def analytic_shapley(dummy_utility):
     """Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
 
     def exact():
         pass
 
-    u = dummy_utility(num_samples)
-    m = float(max(u.data.x_train))
-    values = np.array([i / m for i in u.data.indices])
+    m = float(max(dummy_utility.data.x_train))
+    values = np.array([i / m for i in dummy_utility.data.indices])
     result = ValuationResult(
         algorithm=exact,
         values=values,
         stderr=np.zeros_like(values),
-        data_names=u.data.indices,
+        data_names=dummy_utility.data.indices,
         sort=SortOrder.Descending,
         status=ValuationStatus.Converged,
     )
-    return u, result
+    return dummy_utility, result

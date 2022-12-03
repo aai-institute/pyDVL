@@ -34,7 +34,7 @@ log = logging.getLogger(__name__)
     ],
 )
 def test_analytic_montecarlo_shapley(
-    analytic_shapley, fun, rtol, max_iterations, kwargs
+    num_samples, analytic_shapley, fun, rtol, max_iterations, kwargs
 ):
     u, exact_values = analytic_shapley
 
@@ -50,7 +50,7 @@ def test_analytic_montecarlo_shapley(
     "fun", [permutation_montecarlo_shapley, combinatorial_montecarlo_shapley]
 )
 def test_hoeffding_bound_montecarlo(
-    analytic_shapley, fun, delta: float, eps: float, tolerate
+    num_samples, analytic_shapley, fun, delta: float, eps: float, tolerate
 ):
     u, exact_values = analytic_shapley
 
