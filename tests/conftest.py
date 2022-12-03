@@ -201,31 +201,7 @@ def n_jobs(num_workers):
     return num_workers
 
 
-class TolerateErrors:
-    """A context manager to swallow errors up to a certain threshold.
-    Use to test (ε,δ)-approximations.
-    """
-
-    def __init__(
-        self, max_errors: int, exception_cls: Type[BaseException] = AssertionError
-    ):
-        self.max_errors = max_errors
-        self.Exception = exception_cls
-        self.error_count = 0
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is not None:
-            self.error_count += 1
-        if self.error_count > self.max_errors:
-            raise self.Exception(
-                f"Maximum number of {self.max_errors} error(s) reached"
-            )
-        return True
-
-
+################################################################################
 # Tolerate Errors Plugin
 
 
