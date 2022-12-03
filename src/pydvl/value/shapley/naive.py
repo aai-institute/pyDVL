@@ -1,24 +1,21 @@
 import math
 import warnings
-from collections import OrderedDict
 from itertools import permutations
 
 import numpy as np
 
-from pydvl.reporting.scores import sort_values
 from pydvl.utils import (
     MapReduceJob,
     ParallelConfig,
+    SortOrder,
     Utility,
     init_parallel_backend,
     maybe_progress,
     powerset,
 )
+from pydvl.value import ValuationResult, ValuationStatus
 
 __all__ = ["permutation_exact_shapley", "combinatorial_exact_shapley"]
-
-from pydvl.value import ValuationResult
-from pydvl.value.valuationresult import SortOrder, ValuationStatus
 
 
 def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:

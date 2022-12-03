@@ -5,6 +5,6 @@ See :ref:`data valuation` for an introduction to the concepts and methods
 implemented here.
 """
 
-from .valuationresult import *
+from .valuationresult import *  # isort: skip
 from .loo import *
 from .shapley import *

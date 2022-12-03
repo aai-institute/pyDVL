@@ -33,21 +33,25 @@ groups instead.
 
 import logging
 import math
-from collections import OrderedDict
 from enum import Enum
-from time import sleep, time
-from typing import TYPE_CHECKING, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple
+from time import sleep
+from typing import TYPE_CHECKING, Iterable, NamedTuple, Optional, Sequence
 from warnings import warn
 
 import numpy as np
 
-from ...reporting.scores import sort_values
-from ...utils import Utility, maybe_progress
-from ...utils.config import ParallelConfig
-from ...utils.numeric import get_running_avg_variance, random_powerset
-from ...utils.parallel import MapReduceJob, init_parallel_backend
-from .. import ValuationResult
-from ..valuationresult import SortOrder, ValuationStatus
+from pydvl.utils import (
+    MapReduceJob,
+    ParallelConfig,
+    SortOrder,
+    Utility,
+    get_running_avg_variance,
+    init_parallel_backend,
+    maybe_progress,
+    random_powerset,
+)
+from pydvl.value import ValuationResult, ValuationStatus
+
 from .actor import get_shapley_coordinator, get_shapley_worker
 
 if TYPE_CHECKING:

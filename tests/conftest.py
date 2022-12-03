@@ -14,6 +14,8 @@ from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 from pydvl.utils import Dataset, MemcachedClientConfig, MemcachedConfig, Scorer, Utility
 from pydvl.utils.numeric import random_matrix_with_condition_number
 from pydvl.utils.parallel import available_cpus
+from pydvl.utils.types import SortOrder
+from pydvl.value import ValuationResult, ValuationStatus
 
 if TYPE_CHECKING:
     from _pytest.config import Config

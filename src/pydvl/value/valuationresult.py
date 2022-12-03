@@ -3,12 +3,12 @@ from typing import TYPE_CHECKING, Callable, Optional, Sequence
 
 import numpy as np
 
-from pydvl.utils import Dataset
+from pydvl.utils import Dataset, SortOrder
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
-__all__ = ["ValuationResult", "ValuationStatus", "SortOrder"]
+__all__ = ["ValuationResult", "ValuationStatus"]
 
 
 class ValuationStatus(Enum):
@@ -18,9 +18,11 @@ class ValuationStatus(Enum):
     Failed = "failed"
 
 
-class SortOrder(Enum):
-    Ascending = "asc"
-    Descending = "dsc"
+class ValueItem(NamedTuple):
+    index: np.int_
+    name: str
+    value: np.float_
+    stderr: Optional[np.float_]
 
 
 class ValuationResult:

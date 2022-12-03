@@ -9,6 +9,7 @@ from sklearn.tree import DecisionTreeRegressor
 
 from pydvl.utils import GroupedDataset, MemcachedConfig, Scorer, Utility
 from pydvl.utils.numeric import lower_bound_hoeffding, squashed_r2, squashed_variance
+from pydvl.utils.types import SortOrder
 from pydvl.value.shapley.montecarlo import (
     combinatorial_montecarlo_shapley,
     owen_sampling_shapley,

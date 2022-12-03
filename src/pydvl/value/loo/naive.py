@@ -1,13 +1,9 @@
-from typing import OrderedDict
-
 import numpy as np
 
-from pydvl.utils import Utility, maybe_progress
+from pydvl.utils import SortOrder, Utility, maybe_progress
+from pydvl.value import ValuationResult, ValuationStatus
 
 __all__ = ["naive_loo"]
-
-from pydvl.value import ValuationResult
-from pydvl.value.valuationresult import SortOrder, ValuationStatus
 
 
 def naive_loo(u: Utility, *, progress: bool = True) -> ValuationResult:

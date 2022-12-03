@@ -2,12 +2,13 @@
 transformations. Some of it probably belongs elsewhere.
 """
 import inspect
+from enum import Enum
 from typing import Callable, Optional, Protocol, Type, Union
 
 from numpy import ndarray
 from sklearn.metrics import get_scorer
 
-__all__ = ["SupervisedModel", "Scorer", "compose_score"]
+__all__ = ["SupervisedModel", "Scorer", "compose_score", "SortOrder"]
 
 
 class SupervisedModel(Protocol):
@@ -149,3 +150,8 @@ def compose_score(
             return f"{capitalized_name} (scorer={self._scorer})"
 
     return NewScorer(scoring_function, name=name)
+
+
+class SortOrder(Enum):
+    Ascending = "asc"
+    Descending = "desc"
