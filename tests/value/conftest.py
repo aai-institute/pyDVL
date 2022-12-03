@@ -34,7 +34,7 @@ def polynomial_pipeline(coefficients):
 
 
 @pytest.fixture(scope="function")
-def dummy_utility(num_samples: int = 10):
+def dummy_utility(num_samples):
     from numpy import ndarray
 
     from pydvl.utils import SupervisedModel
