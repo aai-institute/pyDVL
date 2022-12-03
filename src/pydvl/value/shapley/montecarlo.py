@@ -153,14 +153,14 @@ def truncated_montecarlo_shapley(
     for worker_id in range(n_jobs):
         workers[worker_id].run(block=False)
 
-    while coordinator.status == ValuationStatus.Pending:
+    while not coordinator.check_done():
         sleep(coordinator_update_period)
 
     values, stderr = coordinator.get_results()
 
     return ValuationResult(
         algorithm=truncated_montecarlo_shapley,
-        status=coordinator.status,
+        status=coordinator.status(),
         values=values,
         stderr=stderr,
         data_names=u.data.data_names,

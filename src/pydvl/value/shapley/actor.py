@@ -119,11 +119,14 @@ class ShapleyCoordinator(Coordinator):
         """Checks whether the accuracy of the calculation or the total number
         of iterations have crossed the set thresholds.
 
-        If the threshold has been reached, sets the flag
-        :attr:`~ShapleyCoordinator.is_done` to `True`.
+        If any of the thresholds have been reached, then calls to
+        :meth:`~Coordinator.is_done` return `True`.
 
-        :return: value of :attr:`~ShapleyCoordinator.is_done`
+        :return: True if converged or reached max iterations.
         """
+        if self._is_done:
+            return True
+
         if len(self.workers_results) == 0:
             logger.info("No worker has updated its status yet.")
             self._is_done = False
@@ -146,10 +149,7 @@ class ShapleyCoordinator(Coordinator):
                 self._status = ValuationStatus.MaxIterations
         return self._is_done
 
-    @property
     def status(self) -> ValuationStatus:
-        if self._status == ValuationStatus.Pending:
-            self.check_done()
         return self._status
 
 
