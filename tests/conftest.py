@@ -336,11 +336,22 @@ def dummy_utility(num_samples: int = 10):
 @pytest.fixture(scope="function")
 def analytic_shapley(num_samples):
     """Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
+
+    def exact():
+        pass
+
     u = dummy_utility(num_samples)
-    exact_values = OrderedDict(
-        {i: i / float(max(u.data.x_train)) for i in u.data.indices}
+    m = float(max(u.data.x_train))
+    values = np.array([i / m for i in u.data.indices])
+    result = ValuationResult(
+        algorithm=exact,
+        values=values,
+        stderr=np.zeros_like(values),
+        data_names=u.data.indices,
+        sort=SortOrder.Descending,
+        status=ValuationStatus.Converged,
     )
-    return u, exact_values
+    return u, result
 
 
 class TolerateErrors:
@@ -369,34 +380,35 @@ class TolerateErrors:
 
 
 def check_total_value(
-    u: Utility, values: OrderedDict, rtol: float = 0.05, atol: float = 1e-6
+    u: Utility, values: ValuationResult, rtol: float = 0.05, atol: float = 1e-6
 ):
     """Checks absolute distance between total and added values.
     Shapley value is supposed to fulfill the total value axiom."""
     total_utility = u(u.data.indices)
-    values = np.fromiter(values.values(), dtype=float, count=len(u.data))
-    # We could want relative tolerances here if we didn't have the range of
-    # the scorer.
-    assert np.isclose(values.sum(), total_utility, rtol=rtol, atol=atol)
+    # We can use relative tolerances if we don't have the range of the scorer.
+    assert np.isclose(np.sum(values.values), total_utility, rtol=rtol, atol=atol)
 
 
-def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e-6):
+def check_exact(
+    values: ValuationResult,
+    exact_values: ValuationResult,
+    rtol: float = 0.1,
+    atol: float = 1e-6,
+):
     """Compares ranks and values."""
 
-    k = list(values.keys())
-    ek = list(exact_values.keys())
+    values = values.sort("desc")
+    exact_values = exact_values.sort("desc")
 
-    assert np.all(k == ek), "Ranks do not match"
-
-    v = np.array(list(values.values()))
-    ev = np.array(list(exact_values.values()))
-
-    assert np.allclose(v, ev, atol=atol), f"{v} != {ev}"
+    assert np.all(values.indices == exact_values.indices), "Ranks do not match"
+    assert np.allclose(
+        values.values, exact_values.values, rtol=rtol, atol=atol
+    ), "Values do not match"
 
 
 def check_values(
-    values: Dict,
-    exact_values: Dict,
+    values: ValuationResult,
+    exact_values: ValuationResult,
     rtol: float = 0.1,
     atol: float = 1e-5,
 ):
@@ -417,15 +429,16 @@ def check_values(
         elements in `exact_values`. E.g. if atol = 0.1, and rtol = 0 we must
         have |value - exact_value| < 0.1 for every value.
     """
-    for key in values:
-        assert (
-            abs(values[key] - exact_values[key]) < abs(exact_values[key]) * rtol + atol
-        )
+    # Ensure that both result objects have the same sorting (none)
+    values = values.sort(None)
+    exact_values = exact_values.sort(None)
+
+    assert np.allclose(values.values, exact_values.values, rtol=rtol, atol=atol)
 
 
 def check_rank_correlation(
-    values: OrderedDict,
-    exact_values: OrderedDict,
+    values: ValuationResult,
+    exact_values: ValuationResult,
     k: int = None,
     threshold: float = 0.9,
 ):
@@ -441,18 +454,17 @@ def check_rank_correlation(
         succeed
     """
     # FIXME: estimate proper threshold for spearman
-    if k is not None:
-        raise NotImplementedError
-    else:
-        k = len(values)
-    ranks = np.array(list(values.keys())[:k])
-    ranks_exact = np.array(list(exact_values.keys())[:k])
 
-    correlation, pvalue = spearmanr(ranks, ranks_exact)
+    k = k or len(values)
+
+    values = values.sort(SortOrder.Descending)
+    exact_values = exact_values.sort(SortOrder.Descending)
+
+    top_k = np.array([it.index for it in values[:k]])
+    top_k_exact = np.array([it.index for it in exact_values[:k]])
+
+    correlation, pvalue = spearmanr(top_k, top_k_exact)
     assert correlation >= threshold, f"{correlation} < {threshold}"
-
-
-# start_logging_server()
 
 
 # Tolerate Errors Plugin

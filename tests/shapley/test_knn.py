@@ -20,9 +20,8 @@ def test_knn_montecarlo_match(seed):
         stratify_by_target=True,
     )
     model = KNeighborsClassifier(n_neighbors=5)
-
-    knn_values = knn_shapley(data, model, progress=False)
-    knn_keys = list(knn_values.keys())
+    u = Utility(model=model, data=data)
+    knn_values = knn_shapley(u, progress=False)
 
     def knn_loss_function(labels, predictions, n_classes=3):
         log.debug(f"{predictions=}")
@@ -43,11 +42,9 @@ def test_knn_montecarlo_match(seed):
     exact_values = combinatorial_exact_shapley(
         utility, progress=False, n_jobs=min(len(data), available_cpus())
     )
-    exact_keys = list(exact_values.keys())
-    log.debug(f"{knn_keys=}")
-    log.debug(f"{exact_keys=}")
 
     # will check only matching top elements since the scoring functions are not exactly the same
-    top_knn = knn_keys[:2]
-    top_exact = exact_keys[:4]
+    exact_values.sort("desc")
+    top_knn = knn_values.indices[:2]
+    top_exact = exact_values.indices[:4]
     assert np.all([k in top_exact for k in top_knn])
