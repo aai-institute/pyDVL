@@ -27,10 +27,11 @@ class ParallelConfig:
 @unpackable
 @dataclass
 class MemcachedClientConfig:
-    """Configuration for the connection to the memcached server.
+    """Configuration of the memcached client.
 
-    :param server: tuple of (server, port).
-    :param connect_timeout: seconds to wait for a connection to memcached.
+    :param server: A tuple of (IP|domain name, port).
+    :param connect_timeout: How many seconds to wait before raising
+        `ConnectionRefusedError` on failure to connect.
     :param timeout: seconds to wait for send or recv calls on the socket
         connected to memcached.
     :param no_delay: set the `TCP_NODELAY` flag, which may help with performance

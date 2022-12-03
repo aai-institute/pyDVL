@@ -58,6 +58,9 @@ def powerset(s: Union[Sequence, "NDArray"]) -> Iterator[Collection[T]]:
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
 
+# FIXME: this is not a lower bound but an upper bound (with these many samples
+#  one achieves the desired accuracy) and it only applies to the permutation
+#  definition
 def lower_bound_hoeffding(delta: float, eps: float, score_range: float) -> int:
     """Lower bound on the number of samples required for MonteCarlo Shapley to
     obtain an (ε,δ)-approximation.
