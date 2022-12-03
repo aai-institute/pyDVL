@@ -202,11 +202,15 @@ class ValuationResult(collections.Sequence):
     def __len__(self):
         return len(self._indices)
 
-    def to_dataframe(self, column: Optional[str] = None) -> "pandas.DataFrame":
-        """Returns values as a dataframe
+    def to_dataframe(
+        self, column: Optional[str] = None, use_names: bool = False
+    ) -> "pandas.DataFrame":
+        """Returns values as a dataframe.
 
         :param column: Name for the column holding the data value. Defaults to
             the name of the algorithm used.
+        :param use_names: Whether to use data names instead of indices for the
+            DataFrame's index.
         :return: A dataframe with two columns, one for the values, with name
             given as explained in `column`, and another with standard errors for
             approximate algorithms. The latter will be named `column+'_stderr'`.
@@ -217,7 +221,7 @@ class ValuationResult(collections.Sequence):
         column = column or self._algorithm
         df = pandas.DataFrame(
             self._values[self._indices],
-            index=self._names[self._indices],
+            index=self._names[self._indices] if use_names else self._indices,
             columns=[column],
         )
 
