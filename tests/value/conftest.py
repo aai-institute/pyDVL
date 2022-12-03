@@ -6,6 +6,7 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from pydvl.utils import Dataset, SortOrder, Utility
 from pydvl.value import ValuationResult, ValuationStatus
+
 from . import polynomial
 
 
