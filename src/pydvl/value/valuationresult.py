@@ -1,5 +1,17 @@
+import collections
 from enum import Enum
-from typing import TYPE_CHECKING, Callable, Optional, Sequence
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Generator,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Union,
+)
 
 import numpy as np
 
@@ -25,8 +37,16 @@ class ValueItem(NamedTuple):
     stderr: Optional[np.float_]
 
 
-class ValuationResult:
+class ValuationResult(collections.Sequence):
     """Objects of this class hold the results of valuation algorithms.
+
+    Sorted values affect how iterators and the object itself as sequence behave:
+    `values[0]` returns a :class:`ValueItem` with the highest or lowest ranking
+    point if this object is sorted by descending or ascending value,
+    respectively. If unsorted, `values[0]` returns a `ValueItem` for index 0.
+
+    Similarly `iter(valuation_result)` returns `ValueItem`s in the order in
+    which the object is sorted.
 
     :param algorithm: The method used
     :param status: The end status of the algorithm
@@ -34,10 +54,10 @@ class ValuationResult:
     :param stderr:
     :param data_names: Names for the data points. Defaults to index numbers
         if not set.
-    :param sort: Whether to sort the values.
+    :param sort: Whether to sort the values. See above how this affects usage
+        as an iterable or sequence.
 
     :raises ValueError: If data names and values have mismatching lengths.
-
 
     .. todo::
        document this
@@ -50,6 +70,7 @@ class ValuationResult:
     _stderr: Optional["NDArray[np.float_]"]
     _algorithm: str  # TODO: BaseValuator
     _status: ValuationStatus  # TODO: Maybe? BaseValuator.Status
+    _sort_order: Optional[SortOrder] = None
 
     def __init__(
         self,
@@ -77,6 +98,19 @@ class ValuationResult:
         self.sort(sort)
 
     def sort(self, sort_order: Optional[SortOrder] = None) -> "ValuationResult":
+        """Sorts the values in place.
+
+        Repeated calls with the same `sort_order` are no-ops.
+
+        :param sort_order: None to leave unsorted, otherwise sorts in ascending
+            or descending order by value.
+        :return: The same object, sorted in place.
+        """
+        if self._sort_order == sort_order:
+            return self
+
+        self._sort_order = sort_order
+
         if sort_order is None:
             self._indices = np.arange(0, len(self._values), dtype=np.int_)
         else:
@@ -85,13 +119,22 @@ class ValuationResult:
                 self._indices = self._indices[::-1]
         return self
 
-    @property
-    def values(self) -> "NDArray[np.float_]":
-        return self._values[self._indices]
+    def is_sorted(self) -> bool:
+        return self._sort_order is not None
 
     @property
-    def names(self) -> "NDArray":
-        return self._names[self._indices]
+    def values(self) -> "NDArray[np.float_]":
+        """The raw values, unsorted. Position `i` in the array represents index
+        `i` of the data."""
+        return self._values
+
+    @property
+    def indices(self) -> "NDArray":
+        """The indices for the values, possibly sorted.
+        If the object is unsorted, then this is the same as
+        `np.arange(len(values))`. Otherwise, the indices sort :meth:`values`
+        """
+        return self._indices
 
     @property
     def status(self) -> ValuationStatus:
@@ -100,6 +143,33 @@ class ValuationResult:
     @property
     def algorithm(self) -> str:
         return self._algorithm
+
+    def __getitem__(
+        self, key: Union[slice, Iterable[int], int]
+    ) -> Union[ValueItem, List[ValueItem]]:
+        if isinstance(key, slice):
+            return [self[i] for i in range(*key.indices(len(self)))]
+        elif isinstance(key, collections.Iterable):
+            return [self[i] for i in key]
+        elif isinstance(key, int):
+            if key < 0:
+                key += len(self)
+            if key < 0 or key >= len(self):
+                raise IndexError(f"Index {key} out of range (0, {len(self)}).")
+            idx = self._indices[key]
+            return ValueItem(
+                idx, self._names[idx], self._values[idx], self._stderr[idx]
+            )
+        else:
+            raise TypeError("Indices must be integers, iterable or slices")
+
+    def __iter__(self) -> Generator[ValueItem, Any, None]:
+        """Iterate over the results returning tuples `(index, value)`"""
+        for idx in self._indices:
+            yield ValueItem(idx, self._names[idx], self._values[idx], self._stderr[idx])
+
+    def __len__(self):
+        return len(self._indices)
 
     def to_dataframe(self, column: Optional[str] = None) -> "DataFrame":
         """Returns values as a dataframe
