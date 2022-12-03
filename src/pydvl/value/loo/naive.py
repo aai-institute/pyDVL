@@ -16,7 +16,7 @@ def naive_loo(u: Utility, *, progress: bool = True) -> ValuationResult:
     :return: Object with the data values.
     """
 
-    values = np.zeros_like(u.data.indices, dtype=np.float)
+    values = np.zeros_like(u.data.indices, dtype=np.float_)
     all_indices = set(u.data.indices)
     for i in maybe_progress(u.data.indices, progress):  # type: ignore
         subset = all_indices.difference({i})

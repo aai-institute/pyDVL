@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import spearmanr
+
 from pydvl.utils import SortOrder, Utility
 from pydvl.value import ValuationResult
 
