@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
         (6, permutation_exact_shapley, 0.01, 1e-5),
     ],
 )
-def test_analytic_exact_shapley(analytic_shapley, fun, rtol, total_atol):
+def test_analytic_exact_shapley(num_samples, analytic_shapley, fun, rtol, total_atol):
     """Compares the combinatorial exact shapley and permutation exact shapley with
     the analytic_shapley calculation for a dummy model.
     """
