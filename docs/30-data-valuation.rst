@@ -173,6 +173,10 @@ definitions, but other methods are typically preferable.
    utility = Utility(...)
    values = naive_loo(utility)
 
+The return value of all valuation functions is an object of type
+:class:`~pydvl.value.valuationresult.ValuationResult`. This can be iterated over,
+indexed with integers, slices and Iterables, as well as converted to a
+`pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
 
 .. _Shapley:
 
@@ -207,12 +211,14 @@ $$v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}} \binom{n-1}{ | S
 
    from pydvl.value import compute_shapley_value
    utility = Utility(...)
-   df = compute_shapley_values(utility, mode="combinatorial_exact")
+   values = compute_shapley_values(utility, mode="combinatorial_exact")
+   df = values.to_dataframe(column='value')
 
-The return value `df` is a
+We convert the return value to a
 `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_
-with the values. Please refer to the documentation in :mod:`pydvl.value.shapley`
-for more information.
+and name the column with the results as `value`. Please refer to the
+documentation in :mod:`pydvl.value.shapley` and
+:class:`~pydvl.value.valuationresult.ValuationResult` for more information.
 
 Monte Carlo Combinatorial Shapley
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -231,10 +237,11 @@ same pattern:
    model = ...
    data = Dataset(...)
    utility = Utility(model, data)
-   df = compute_shapley_values(utility, mode="combinatorial_montecarlo")
+   values = compute_shapley_values(utility, mode="combinatorial_montecarlo")
+   df = values.to_dataframe(column='cmc')
 
-The DataFrame returned by Monte Carlo methods will usually contain approximate
-standard errors as an additional column.
+The DataFrames returned by most Monte Carlo methods will contain approximate
+standard errors as an additional column, in this case named `cmc_stderr`.
 
 
 Owen sampling
@@ -259,7 +266,7 @@ values in pyDVL. First construct the dataset and utility, then call
    model = ...
    dataset = Dataset(...)
    utility = Utility(data, model)
-   df = compute_shapley_values(
+   values = compute_shapley_values(
        u=utility, mode="owen", max_iterations=4, max_q=200
    )
 
@@ -292,7 +299,7 @@ efficient enough to be useful in some applications.
    model = ...
    data = Dataset(...)
    utility = Utility(model, data)
-   df = compute_shapley_values(
+   values = compute_shapley_values(
        u=utility, mode="truncated_montecarlo", max_iterations=100
    )
 
@@ -315,7 +322,7 @@ and can be used in pyDVL with:
    model = KNeighborsClassifier(n_neighbors=5)
    data = Dataset(...)
    utility = Utility(model, data)
-   df = compute_shapley_values(u=utility, mode="knn")
+   values = compute_shapley_values(u=utility, mode="knn")
 
 
 Other methods

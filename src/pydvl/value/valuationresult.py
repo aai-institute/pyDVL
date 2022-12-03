@@ -39,6 +39,8 @@ class ValuationStatus(Enum):
 
 @dataclass
 class ValueItem:
+    """The result of a value computation for one datum."""
+
     index: np.int_
     name: str
     value: np.float_
@@ -48,28 +50,27 @@ class ValueItem:
 class ValuationResult(collections.Sequence):
     """Objects of this class hold the results of valuation algorithms.
 
-    Sorted values affect how iterators and the object itself as sequence behave:
-    `values[0]` returns a :class:`ValueItem` with the highest or lowest ranking
-    point if this object is sorted by descending or ascending value,
-    respectively. If unsorted, `values[0]` returns a `ValueItem` for index 0.
+    Results can be sorted with :meth:`sort`. Note that sorting values affects
+    how iterators and the object itself as ``Sequence`` behave: ``values[0]``
+    returns a :class:`ValueItem` with the highest or lowest ranking point if
+    this object is sorted by descending or ascending value, respectively. If
+    unsorted, ``values[0]`` returns a ``ValueItem`` for index 0.
 
-    Similarly `iter(valuation_result)` returns `ValueItem`s in the order in
-    which the object is sorted.
+    Similarly, ``iter(valuation_result)`` returns a generator of
+    :class:`ValueItem` in the order in which the object is sorted.
 
-    :param algorithm: The method used
-    :param status: The end status of the algorithm
-    :param values:
-    :param stderr:
+    :param algorithm: The method used.
+    :param status: The end status of the algorithm.
+    :param values: An array of values, data indices correspond to positions in
+        the array.
+    :param stderr: An optional array of standard errors in the computation of
+        each value.
     :param data_names: Names for the data points. Defaults to index numbers
         if not set.
     :param sort: Whether to sort the values. See above how this affects usage
         as an iterable or sequence.
 
-    :raises ValueError: If data names and values have mismatching lengths.
-
-    .. todo::
-       document this
-
+    :raise ValueError: If data names and values have mismatching lengths.
     """
 
     _indices: "NDArray[np.int_]"

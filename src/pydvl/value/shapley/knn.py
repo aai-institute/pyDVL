@@ -1,7 +1,8 @@
 """
 This module contains Shapley computations for K-Nearest Neighbours.
 
-(to do: implement approximate KNN computation for sublinear complexity)
+.. todo::
+   Implement approximate KNN computation for sublinear complexity)
 """
 
 from typing import Dict, Union
@@ -24,14 +25,12 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     reducing computation time to $O(n)$.
 
     :param u: Utility with a KNN model to extract parameters from. The object
-        will not be modified nor used other than to call
-        `get_params() <https://scikit-learn.org/stable/modules/generated
-        /sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator
-        .get_params>`_
+        will not be modified nor used other than to call `get_params()
+        <https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params>`_
     :param progress: Whether to display a progress bar.
     :return: Object with the data values.
     :raises TypeError: If the model in the utility is not a `KNeighborsClassifier
-    <https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html>`_
+        <https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html>`_
 
     . rubric:: References
 
