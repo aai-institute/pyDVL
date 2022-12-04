@@ -1,3 +1,7 @@
+import pickle
+from copy import deepcopy
+
+import cloudpickle
 import numpy as np
 import pytest
 
@@ -102,3 +106,61 @@ def test_indexing(ranks_asc, dummy_values):
         assert ranks_asc[:-2] == [it.index for it in dummy_values[:-2]]
         assert ranks_asc[-2:] == [it.index for it in dummy_values[-2:]]
         assert ranks_asc[-2:] == [it.index for it in dummy_values[[-2, -1]]]
+
+
+@pytest.mark.parametrize(
+    "serialize, deserialize",
+    [(pickle.dumps, pickle.loads), (cloudpickle.dumps, cloudpickle.loads)],
+)
+@pytest.mark.parametrize("values, names", [([], None), ([2.0, 3.0, 1.0], None)])
+def test_serialization(serialize, deserialize, dummy_values):
+    serded = deserialize(serialize(dummy_values.sort(SortOrder.Descending)))
+    assert dummy_values == serded  # Serialization OK (if __eq__ ok...)
+    assert dummy_values.sort(SortOrder.Ascending) != serded  # Order checks
+
+
+@pytest.mark.parametrize("values, names", [([], []), ([2, 3, 1], ["a", "b", "c"])])
+def test_equality(values, names, dummy_values):
+    assert dummy_values == dummy_values
+
+    c = deepcopy(dummy_values)
+    dummy_values.sort(SortOrder.Descending)
+    c.sort(SortOrder.Ascending)
+    assert c != dummy_values
+
+    c2 = ValuationResult(
+        algorithm="dummy",
+        status=c.status,
+        values=c.values,
+        stderr=c._stderr,
+        data_names=c._names,
+    )
+    assert c != c2
+
+    c2 = ValuationResult(
+        algorithm=c._algorithm,
+        status=ValuationStatus.Failed,
+        values=c.values,
+        stderr=c._stderr,
+        data_names=c._names,
+    )
+    assert c != c2
+
+    c2 = ValuationResult(
+        algorithm=c._algorithm,
+        status=c.status,
+        values=c.values,
+        stderr=c._stderr,
+        data_names=c._names,
+        sort=c._sort_order,
+    )
+    assert c == c2
+
+    c2 = ValuationResult(
+        algorithm=c._algorithm,
+        status=c.status,
+        values=c.values + 1.0,
+        stderr=c._stderr,
+        data_names=c._names,
+    )
+    assert c != c2
