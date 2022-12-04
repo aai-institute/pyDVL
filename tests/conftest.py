@@ -326,10 +326,7 @@ class TolerateErrorFixture:
             self.session.set_exceptions_to_ignore(self.name, exceptions_to_ignore)
 
     def __call__(
-        self,
-        max_failures: int,
-        *,
-        exceptions_to_ignore: EXCEPTIONS_TYPE = None,
+        self, max_failures: int, *, exceptions_to_ignore: EXCEPTIONS_TYPE = None
     ):
         self.session.set_max_failures(self.name, max_failures)
         self.session.set_exceptions_to_ignore(self.name, exceptions_to_ignore)
@@ -370,9 +367,7 @@ def wrap_pytest_function(pyfuncitem: pytest.Function):
 
 @pytest.fixture(scope="function")
 def tolerate(request: pytest.FixtureRequest):
-    fixture = TolerateErrorFixture(
-        request.node,
-    )
+    fixture = TolerateErrorFixture(request.node)
     return fixture
 
 

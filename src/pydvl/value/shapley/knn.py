@@ -11,7 +11,7 @@ import numpy as np
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
 from pydvl.utils import SortOrder, Utility, maybe_progress
-from pydvl.value import ValuationResult, ValuationStatus
+from pydvl.value.results import ValuationResult, ValuationStatus
 
 __all__ = ["knn_shapley"]
 
@@ -80,7 +80,7 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
             values[ii[i]] += (value_at_x - values[ii[i]]) / j
 
     return ValuationResult(
-        algorithm=knn_shapley,
+        algorithm="knn_shapley",
         status=ValuationStatus.Converged,
         values=values,
         stderr=None,

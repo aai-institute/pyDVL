@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Optional, cast
 
 from pydvl.utils import Utility
-from pydvl.value import ValuationResult
+from pydvl.value.results import ValuationResult
 from pydvl.value.shapley.knn import knn_shapley
 from pydvl.value.shapley.montecarlo import (
     OwenAlgorithm,

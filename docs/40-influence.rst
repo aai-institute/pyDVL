@@ -4,6 +4,11 @@
 Computing influence values
 ==========================
 
+
+.. warning::
+   Much of the code in the package :mod:`pydvl.influence` is experimental or
+   untested. Package structure and basic API are bound to change before v1.0.0
+
 .. todo::
 
    This section needs rewriting:

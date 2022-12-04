@@ -13,18 +13,22 @@ from pydvl.utils import (
     maybe_progress,
     powerset,
 )
-from pydvl.value import ValuationResult, ValuationStatus
+from pydvl.value.results import ValuationResult, ValuationStatus
 
 __all__ = ["permutation_exact_shapley", "combinatorial_exact_shapley"]
 
 
 def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
-    """Computes the exact Shapley value using permutations.
+    r"""Computes the exact Shapley value using the formulation with permutations:
+
+    $$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)} [u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})].$$
+
+    See :ref:`data valuation` for details.
 
     When the length of the training set is > 10 this prints a warning since the
     computation becomes too expensive. Used mostly for internal testing and
-    simple use cases. Please refer to the Monte Carlo methods for all other
-    cases.
+    simple use cases. Please refer to the :mod:`Monte Carlo
+    <pydvl.value.shapley.montecarlo>` approximations for practical applications.
 
     :param u: Utility object with model, data, and scoring function
     :param progress: Whether to display progress bars for each job.
@@ -52,7 +56,7 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
     values /= math.factorial(n)
 
     return ValuationResult(
-        algorithm=permutation_exact_shapley,
+        algorithm="permutation_exact_shapley",
         status=ValuationStatus.Converged,
         values=values,
         stderr=None,
@@ -93,12 +97,15 @@ def combinatorial_exact_shapley(
 ) -> ValuationResult:
     r"""Computes the exact Shapley value using the combinatorial definition.
 
-    $$v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}} \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)]$$
+    $$v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}} \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)].$$
+
+    See :ref:`data valuation` for details.
 
     If the length of the training set is > n_jobs*20 this prints a warning
     because the computation is very expensive. Used mostly for internal testing
-    and simple use cases. Please refer to the Monte Carlo methods for all other
-    cases.
+    and simple use cases. Please refer to the
+    :mod:`Monte Carlo <pydvl.shapley.montecarlo>` approximations for practical
+    applications.
 
     :param u: Utility object with model, data, and scoring function
     :param n_jobs: Number of parallel jobs to use
@@ -128,7 +135,7 @@ def combinatorial_exact_shapley(
     )
     values = map_reduce_job(u.data.indices)[0]
     return ValuationResult(
-        algorithm=combinatorial_exact_shapley,
+        algorithm="combinatorial_exact_shapley",
         status=ValuationStatus.Converged,
         values=values,
         stderr=None,

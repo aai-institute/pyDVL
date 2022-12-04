@@ -1,3 +1,7 @@
+import pickle
+from copy import deepcopy
+
+import cloudpickle
 import numpy as np
 import pytest
 
@@ -5,14 +9,10 @@ from pydvl.utils.types import SortOrder
 from pydvl.value import ValuationResult, ValuationStatus
 
 
-def dummy_valuator():
-    pass
-
-
 @pytest.fixture
 def dummy_values(values, names):
     return ValuationResult(
-        dummy_valuator,
+        algorithm="dummy_valuator",
         status=ValuationStatus.Converged,
         values=np.array(values),
         stderr=np.zeros_like(values),
@@ -22,8 +22,7 @@ def dummy_values(values, names):
 
 
 @pytest.mark.parametrize(
-    "values, names, ranks_asc",
-    [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])],
+    "values, names, ranks_asc", [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])]
 )
 def test_sorting(values, names, ranks_asc, dummy_values):
 
@@ -36,8 +35,7 @@ def test_sorting(values, names, ranks_asc, dummy_values):
 
 
 @pytest.mark.parametrize(
-    "values, names, ranks_asc",
-    [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])],
+    "values, names, ranks_asc", [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])]
 )
 def test_dataframe_sorting(values, names, ranks_asc, dummy_values):
     sorted_names = [names[r] for r in ranks_asc]
@@ -60,8 +58,7 @@ def test_dataframe_sorting(values, names, ranks_asc, dummy_values):
 
 
 @pytest.mark.parametrize(
-    "values, names, ranks_asc",
-    [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])],
+    "values, names, ranks_asc", [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])]
 )
 def test_iter(names, ranks_asc, dummy_values):
     for rank, it in enumerate(dummy_values):
@@ -72,8 +69,7 @@ def test_iter(names, ranks_asc, dummy_values):
 
 
 @pytest.mark.parametrize(
-    "values, names, ranks_asc",
-    [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])],
+    "values, names, ranks_asc", [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])]
 )
 def test_todataframe(ranks_asc, dummy_values):
     df = dummy_values.to_dataframe()
@@ -95,8 +91,8 @@ def test_indexing(ranks_asc, dummy_values):
     dummy_values.sort(SortOrder.Ascending)
     if len(ranks_asc) == 0:
         with pytest.raises(IndexError):
-            dummy_values[1]
-        dummy_values[:2]
+            dummy_values[1]  # noqa
+        dummy_values[:2]  # noqa
     else:
         assert ranks_asc[:] == [it.index for it in dummy_values[:]]
         assert ranks_asc[0] == dummy_values[0].index
@@ -106,3 +102,61 @@ def test_indexing(ranks_asc, dummy_values):
         assert ranks_asc[:-2] == [it.index for it in dummy_values[:-2]]
         assert ranks_asc[-2:] == [it.index for it in dummy_values[-2:]]
         assert ranks_asc[-2:] == [it.index for it in dummy_values[[-2, -1]]]
+
+
+@pytest.mark.parametrize(
+    "serialize, deserialize",
+    [(pickle.dumps, pickle.loads), (cloudpickle.dumps, cloudpickle.loads)],
+)
+@pytest.mark.parametrize("values, names", [([], None), ([2.0, 3.0, 1.0], None)])
+def test_serialization(serialize, deserialize, dummy_values):
+    serded = deserialize(serialize(dummy_values.sort(SortOrder.Descending)))
+    assert dummy_values == serded  # Serialization OK (if __eq__ ok...)
+    assert dummy_values.sort(SortOrder.Ascending) != serded  # Order checks
+
+
+@pytest.mark.parametrize("values, names", [([], []), ([2, 3, 1], ["a", "b", "c"])])
+def test_equality(values, names, dummy_values):
+    assert dummy_values == dummy_values
+
+    c = deepcopy(dummy_values)
+    dummy_values.sort(SortOrder.Descending)
+    c.sort(SortOrder.Ascending)
+    assert c != dummy_values
+
+    c2 = ValuationResult(
+        algorithm="dummy",
+        status=c.status,
+        values=c.values,
+        stderr=c._stderr,
+        data_names=c._names,
+    )
+    assert c != c2
+
+    c2 = ValuationResult(
+        algorithm=c._algorithm,
+        status=ValuationStatus.Failed,
+        values=c.values,
+        stderr=c._stderr,
+        data_names=c._names,
+    )
+    assert c != c2
+
+    c2 = ValuationResult(
+        algorithm=c._algorithm,
+        status=c.status,
+        values=c.values,
+        stderr=c._stderr,
+        data_names=c._names,
+        sort=c._sort_order,
+    )
+    assert c == c2
+
+    c2 = ValuationResult(
+        algorithm=c._algorithm,
+        status=c.status,
+        values=c.values + 1.0,
+        stderr=c._stderr,
+        data_names=c._names,
+    )
+    assert c != c2

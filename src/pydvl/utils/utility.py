@@ -3,12 +3,12 @@ This module contains classes to manage and learn utility functions for the
 computation of values. Please see the documentation on :ref:`data valuation` for
 more information.
 
-:class:`Utility` holds information about model, data and scoring function (which
-is the utility* function itself for Shapley value). It is automatically cached
-across machines.
+:class:`Utility` holds information about model, data and scoring function (the
+latter being what one usually understands under *utility* in the general
+definition of Shapley value). It is automatically cached across machines.
 
 :class:`DataUtilityLearning` adds support for learning the scoring function
-to avoid repeated re-training of the model.
+to avoid repeated re-training of the model to compute the score.
 
 """
 import logging

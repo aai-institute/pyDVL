@@ -89,11 +89,11 @@ class ValuationResult(collections.abc.Sequence):
     _stderr: "NDArray[np.float_]"
     _algorithm: str  # TODO: BaseValuator
     _status: ValuationStatus  # TODO: Maybe? BaseValuator.Status
-    _sort_order: Optional[SortOrder] = None
+    _sort_order: Optional[SortOrder]
 
     def __init__(
         self,
-        algorithm: Callable,  # BaseValuator,
+        algorithm: str,  # BaseValuator,
         status: ValuationStatus,  # Valuation.Status,
         values: "NDArray[np.float_]",
         stderr: Optional["NDArray[np.float_]"] = None,
@@ -103,10 +103,12 @@ class ValuationResult(collections.abc.Sequence):
         if stderr is not None and len(stderr) != len(values):
             raise ValueError("Lengths of values and stderr do not match")
 
-        self._algorithm = getattr(algorithm, "__name__", "value")
+        self._algorithm = algorithm
         self._status = status
         self._values = values
         self._stderr = np.zeros_like(values) if stderr is None else stderr
+        self._indices = np.arange(0, len(self._values), dtype=np.int_)
+        self._sort_order = None
 
         if data_names is None:
             self._names = np.arange(0, len(values), dtype=np.int_)
@@ -114,6 +116,7 @@ class ValuationResult(collections.abc.Sequence):
             self._names = np.array(data_names)
         if len(self._names) != len(self._values):
             raise ValueError("Data names and data values have different lengths")
+
         self.sort(sort)
 
     def sort(self, sort_order: Optional[SortOrder] = None) -> "ValuationResult":
@@ -128,14 +131,14 @@ class ValuationResult(collections.abc.Sequence):
         if self._sort_order == sort_order:
             return self
 
-        self._sort_order = sort_order
-
         if sort_order is None:
             self._indices = np.arange(0, len(self._values), dtype=np.int_)
-        else:
+        elif sort_order == SortOrder.Ascending:
             self._indices = np.argsort(self._values)
-            if sort_order == SortOrder.Descending:
-                self._indices = self._indices[::-1]
+        elif sort_order == SortOrder.Descending:
+            self._indices = np.argsort(self._values)[::-1]
+
+        self._sort_order = sort_order
         return self
 
     def is_sorted(self) -> bool:
@@ -148,7 +151,7 @@ class ValuationResult(collections.abc.Sequence):
         return self._values
 
     @property
-    def indices(self) -> "NDArray":
+    def indices(self) -> "NDArray[np.int_]":
         """The indices for the values, possibly sorted.
         If the object is unsorted, then this is the same as
         `np.arange(len(values))`. Otherwise, the indices sort :meth:`values`
@@ -201,6 +204,19 @@ class ValuationResult(collections.abc.Sequence):
 
     def __len__(self):
         return len(self._indices)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ValuationResult):
+            return NotImplemented
+        return bool(
+            self._algorithm == other._algorithm
+            and self._status == other._status
+            and self._sort_order == other._sort_order
+            and np.all(self.values == other.values)
+            and np.all(self._stderr == other._stderr)
+            and np.all(self._names == other._names)
+            # and np.all(self.indices == other.indices)  # Redundant
+        )
 
     def to_dataframe(
         self, column: Optional[str] = None, use_names: bool = False

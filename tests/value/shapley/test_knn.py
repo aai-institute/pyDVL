@@ -5,7 +5,10 @@ from sklearn import datasets
 from sklearn.metrics import make_scorer
 from sklearn.neighbors import KNeighborsClassifier
 
-from pydvl.utils import Dataset, SortOrder, Utility, available_cpus
+from pydvl.utils import available_cpus
+from pydvl.utils.dataset import Dataset
+from pydvl.utils.types import SortOrder
+from pydvl.utils.utility import Utility
 from pydvl.value.shapley.knn import knn_shapley
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
 
@@ -33,11 +36,7 @@ def test_knn_montecarlo_match(seed):
     scorer = make_scorer(knn_loss_function, greater_is_better=True, needs_proba=True)
 
     utility = Utility(
-        model,
-        data=data,
-        scoring=scorer,
-        show_warnings=False,
-        enable_cache=False,
+        model, data=data, scoring=scorer, show_warnings=False, enable_cache=False
     )
     exact_values = combinatorial_exact_shapley(
         utility, progress=False, n_jobs=min(len(data), available_cpus())
