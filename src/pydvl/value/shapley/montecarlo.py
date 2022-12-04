@@ -207,10 +207,17 @@ def permutation_montecarlo_shapley(
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
 ) -> ValuationResult:
-    """Computes an approximate Shapley value using independent index permutations.
+    r"""Computes an approximate Shapley value by sampling independent index
+    permutations to approximate the sum:
 
-    :param u: Utility object with model, data, and scoring function
+    $$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
+    [u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})].$$
+
+    See :ref:`data valuation` for details.
+
+    :param u: Utility object with model, data, and scoring function.
     :param max_iterations: total number of iterations (permutations) to use
+        across all jobs.
     :param n_jobs: number of jobs across which to distribute the computation.
     :param config: Object configuring parallel computation, with cluster address,
         number of cpus, etc.
@@ -334,15 +341,25 @@ def combinatorial_montecarlo_shapley(
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
 ) -> ValuationResult:
-    """Computes an approximate Shapley value using the combinatorial definition.
+    r"""Computes an approximate Shapley value using the combinatorial
+    definition:
+
+    $$v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}}
+    \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)]$$
 
     This consists of randomly sampling subsets of the power set of the training
     indices in :attr:`~pydvl.utils.utility.Utility.data`, and computing their
-    marginal utilities.
+    marginal utilities. See :ref:`data valuation` for details.
+
+    Parallelization is done by splitting the set of indices across processes and
+    computing the sum over subsets $S \subseteq N \setminus \{i\}$ separately.
 
     :param u: Utility object with model, data, and scoring function
-    :param max_iterations: Number of subsets to sample from the power set for
-        every index
+    :param max_iterations: total number of subsets to use **for each index**.
+        Note that this has different semantics from the homonymous parameter for
+        :func:`~pydvl.shapley.montecarlo.permutation_montecarlo_shapley`.Because
+        sampling is done with replacement, the approximation is poor even for
+        $2^{m}$  with $m>n$, even though there are $2^{n-1}$ subsets for each $i$.
     :param n_jobs: number of parallel jobs across which to distribute the
         computation. Each worker receives a chunk of
         :attr:`~pydvl.utils.dataset.Dataset.indices`
