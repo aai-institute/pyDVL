@@ -205,6 +205,19 @@ class ValuationResult(collections.abc.Sequence):
     def __len__(self):
         return len(self._indices)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ValuationResult):
+            return NotImplemented
+        return bool(
+            self._algorithm == other._algorithm
+            and self._status == other._status
+            and self._sort_order == other._sort_order
+            and np.all(self.values == other.values)
+            and np.all(self._stderr == other._stderr)
+            and np.all(self._names == other._names)
+            # and np.all(self.indices == other.indices)  # Redundant
+        )
+
     def to_dataframe(
         self, column: Optional[str] = None, use_names: bool = False
     ) -> "pandas.DataFrame":
