@@ -394,8 +394,8 @@ def check_exact(
 ):
     """Compares ranks and values."""
 
-    values = values.sort("desc")
-    exact_values = exact_values.sort("desc")
+    values = values.sort(SortOrder.Descending)
+    exact_values = exact_values.sort(SortOrder.Descending)
 
     assert np.all(values.indices == exact_values.indices), "Ranks do not match"
     assert np.allclose(

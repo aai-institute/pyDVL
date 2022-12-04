@@ -40,7 +40,7 @@ def test_knn_montecarlo_match(seed):
     )
 
     # will check only matching top elements since the scoring functions are not exactly the same
-    exact_values.sort("desc")
+    exact_values.sort(SortOrder.Descending)
     top_knn = knn_values.indices[:2]
     top_exact = exact_values.indices[:4]
     assert np.all([k in top_exact for k in top_knn])
