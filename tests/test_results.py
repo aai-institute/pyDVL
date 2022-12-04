@@ -22,8 +22,7 @@ def dummy_values(values, names):
 
 
 @pytest.mark.parametrize(
-    "values, names, ranks_asc",
-    [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])],
+    "values, names, ranks_asc", [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])]
 )
 def test_sorting(values, names, ranks_asc, dummy_values):
 
@@ -36,8 +35,7 @@ def test_sorting(values, names, ranks_asc, dummy_values):
 
 
 @pytest.mark.parametrize(
-    "values, names, ranks_asc",
-    [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])],
+    "values, names, ranks_asc", [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])]
 )
 def test_dataframe_sorting(values, names, ranks_asc, dummy_values):
     sorted_names = [names[r] for r in ranks_asc]
@@ -60,8 +58,7 @@ def test_dataframe_sorting(values, names, ranks_asc, dummy_values):
 
 
 @pytest.mark.parametrize(
-    "values, names, ranks_asc",
-    [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])],
+    "values, names, ranks_asc", [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])]
 )
 def test_iter(names, ranks_asc, dummy_values):
     for rank, it in enumerate(dummy_values):
@@ -72,8 +69,7 @@ def test_iter(names, ranks_asc, dummy_values):
 
 
 @pytest.mark.parametrize(
-    "values, names, ranks_asc",
-    [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])],
+    "values, names, ranks_asc", [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])]
 )
 def test_todataframe(ranks_asc, dummy_values):
     df = dummy_values.to_dataframe()
@@ -95,8 +91,8 @@ def test_indexing(ranks_asc, dummy_values):
     dummy_values.sort(SortOrder.Ascending)
     if len(ranks_asc) == 0:
         with pytest.raises(IndexError):
-            dummy_values[1]
-        dummy_values[:2]
+            dummy_values[1]  # noqa
+        dummy_values[:2]  # noqa
     else:
         assert ranks_asc[:] == [it.index for it in dummy_values[:]]
         assert ranks_asc[0] == dummy_values[0].index
