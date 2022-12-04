@@ -93,7 +93,7 @@ class ValuationResult(collections.abc.Sequence):
 
     def __init__(
         self,
-        algorithm: Callable,  # BaseValuator,
+        algorithm: str,  # BaseValuator,
         status: ValuationStatus,  # Valuation.Status,
         values: "NDArray[np.float_]",
         stderr: Optional["NDArray[np.float_]"] = None,
@@ -103,7 +103,7 @@ class ValuationResult(collections.abc.Sequence):
         if stderr is not None and len(stderr) != len(values):
             raise ValueError("Lengths of values and stderr do not match")
 
-        self._algorithm = getattr(algorithm, "__name__", "value")
+        self._algorithm = algorithm
         self._status = status
         self._values = values
         self._stderr = np.zeros_like(values) if stderr is None else stderr

@@ -337,14 +337,11 @@ def dummy_utility(num_samples: int = 10):
 def analytic_shapley(num_samples):
     """Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
 
-    def exact():
-        pass
-
     u = dummy_utility(num_samples)
     m = float(max(u.data.x_train))
     values = np.array([i / m for i in u.data.indices])
     result = ValuationResult(
-        algorithm=exact,
+        algorithm="exact",
         values=values,
         stderr=np.zeros_like(values),
         data_names=u.data.indices,

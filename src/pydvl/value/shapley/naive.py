@@ -56,7 +56,7 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
     values /= math.factorial(n)
 
     return ValuationResult(
-        algorithm=permutation_exact_shapley,
+        algorithm="permutation_exact_shapley",
         status=ValuationStatus.Converged,
         values=values,
         stderr=None,
@@ -135,7 +135,7 @@ def combinatorial_exact_shapley(
     )
     values = map_reduce_job(u.data.indices)[0]
     return ValuationResult(
-        algorithm=combinatorial_exact_shapley,
+        algorithm="combinatorial_exact_shapley",
         status=ValuationStatus.Converged,
         values=values,
         stderr=None,

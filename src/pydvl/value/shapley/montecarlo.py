@@ -159,7 +159,7 @@ def truncated_montecarlo_shapley(
     values, stderr = coordinator.get_results()
 
     return ValuationResult(
-        algorithm=truncated_montecarlo_shapley,
+        algorithm="truncated_montecarlo_shapley",
         status=coordinator.status(),
         values=values,
         stderr=stderr,
@@ -245,7 +245,7 @@ def permutation_montecarlo_shapley(
     stderr = np.std(full_results, axis=0) / np.sqrt(full_results.shape[0])
 
     return ValuationResult(
-        algorithm=permutation_montecarlo_shapley,
+        algorithm="permutation_montecarlo_shapley",
         status=ValuationStatus.MaxIterations,
         values=values,
         stderr=stderr,
@@ -383,7 +383,7 @@ def combinatorial_montecarlo_shapley(
     results = map_reduce_job(u.data.indices)[0]
 
     return ValuationResult(
-        algorithm=combinatorial_montecarlo_shapley,
+        algorithm="combinatorial_montecarlo_shapley",
         status=ValuationStatus.MaxIterations,
         values=results.values,
         stderr=results.stderr,
@@ -541,7 +541,7 @@ def owen_sampling_shapley(
     results = map_reduce_job(u.data.indices)[0]
 
     return ValuationResult(
-        algorithm=owen_sampling_shapley,
+        algorithm="owen_sampling_shapley",
         status=ValuationStatus.MaxIterations,
         values=results.values,
         stderr=results.stderr,

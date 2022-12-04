@@ -23,7 +23,7 @@ def naive_loo(u: Utility, *, progress: bool = True) -> ValuationResult:
         values[i] = u(u.data.indices) - u(subset)
 
     return ValuationResult(
-        algorithm=naive_loo,
+        algorithm="naive_loo",
         status=ValuationStatus.Converged,
         values=values,
         stderr=None,

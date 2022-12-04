@@ -80,7 +80,7 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
             values[ii[i]] += (value_at_x - values[ii[i]]) / j
 
     return ValuationResult(
-        algorithm=knn_shapley,
+        algorithm="knn_shapley",
         status=ValuationStatus.Converged,
         values=values,
         stderr=None,

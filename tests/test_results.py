@@ -5,14 +5,10 @@ from pydvl.utils.types import SortOrder
 from pydvl.value import ValuationResult, ValuationStatus
 
 
-def dummy_valuator():
-    pass
-
-
 @pytest.fixture
 def dummy_values(values, names):
     return ValuationResult(
-        dummy_valuator,
+        algorithm="dummy_valuator",
         status=ValuationStatus.Converged,
         values=np.array(values),
         stderr=np.zeros_like(values),
