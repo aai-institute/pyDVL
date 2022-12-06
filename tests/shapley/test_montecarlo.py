@@ -60,7 +60,7 @@ def test_hoeffding_bound_montecarlo(
             values = fun(u=u, max_iterations=max_iterations, n_jobs=1)
             # Trivial bound on total error using triangle inequality
             check_total_value(u, values, atol=len(u.data) * eps)
-            check_rank_correlation(values, exact_values, threshold=0.9)
+            check_rank_correlation(values, exact_values, threshold=0.8)
 
 
 @pytest.mark.parametrize(
