@@ -14,7 +14,6 @@ from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 from pydvl.utils import Dataset, MemcachedClientConfig, Utility
 from pydvl.utils.numeric import random_matrix_with_condition_number
 from pydvl.utils.parallel import available_cpus
-from pydvl.utils.types import SortOrder
 from pydvl.value import ValuationResult, ValuationStatus
 
 if TYPE_CHECKING:
@@ -345,7 +344,6 @@ def analytic_shapley(num_samples):
         values=values,
         stderr=np.zeros_like(values),
         data_names=u.data.indices,
-        sort=SortOrder.Descending,
         status=ValuationStatus.Converged,
     )
     return u, result
@@ -394,8 +392,8 @@ def check_exact(
 ):
     """Compares ranks and values."""
 
-    values = values.sort(SortOrder.Descending)
-    exact_values = exact_values.sort(SortOrder.Descending)
+    values.sort()
+    exact_values.sort()
 
     assert np.all(values.indices == exact_values.indices), "Ranks do not match"
     assert np.allclose(
@@ -426,10 +424,6 @@ def check_values(
         elements in `exact_values`. E.g. if atol = 0.1, and rtol = 0 we must
         have |value - exact_value| < 0.1 for every value.
     """
-    # Ensure that both result objects have the same sorting (none)
-    values = values.sort(None)
-    exact_values = exact_values.sort(None)
-
     assert np.allclose(values.values, exact_values.values, rtol=rtol, atol=atol)
 
 
@@ -454,11 +448,11 @@ def check_rank_correlation(
 
     k = k or len(values)
 
-    values = values.sort(SortOrder.Descending)
-    exact_values = exact_values.sort(SortOrder.Descending)
+    values.sort()  # Probably a noop since default is to sort
+    exact_values.sort()
 
-    top_k = np.array([it.index for it in values[:k]])
-    top_k_exact = np.array([it.index for it in exact_values[:k]])
+    top_k = np.array([it.index for it in values[-k:]])
+    top_k_exact = np.array([it.index for it in exact_values[-k:]])
 
     correlation, pvalue = spearmanr(top_k, top_k_exact)
     assert correlation >= threshold, f"{correlation} < {threshold}"

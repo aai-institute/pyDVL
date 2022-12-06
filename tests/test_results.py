@@ -5,7 +5,6 @@ import cloudpickle
 import numpy as np
 import pytest
 
-from pydvl.utils.types import SortOrder
 from pydvl.value import ValuationResult, ValuationStatus
 
 
@@ -17,7 +16,7 @@ def dummy_values(values, names):
         values=np.array(values),
         stderr=np.zeros_like(values),
         data_names=names,
-        sort=SortOrder.Ascending,
+        sort=True,
     )
 
 
@@ -28,10 +27,16 @@ def test_sorting(values, names, ranks_asc, dummy_values):
 
     assert np.alltrue([it.value for it in dummy_values] == sorted(values))
     assert np.alltrue(dummy_values.indices == ranks_asc)
+    assert np.alltrue(
+        [it.value for it in reversed(dummy_values)] == sorted(values, reverse=True)
+    )
 
-    dummy_values.sort(SortOrder.Descending)
+    dummy_values.sort(reverse=True)
     assert np.alltrue([it.value for it in dummy_values] == sorted(values, reverse=True))
     assert np.alltrue(dummy_values.indices == list(reversed(ranks_asc)))
+    assert np.alltrue(
+        dummy_values.values[dummy_values.indices] == sorted(values, reverse=True)
+    )
 
 
 @pytest.mark.parametrize(
@@ -49,11 +54,11 @@ def test_dataframe_sorting(values, names, ranks_asc, dummy_values):
         assert np.alltrue(df.index.values == sorted_names)
         assert np.alltrue(df["dummy_valuator"].values == sorted(values))
 
-        df = dummy_values.sort(SortOrder.Descending).to_dataframe(use_names=True)
+        dummy_values.sort(reverse=True)
+        df = dummy_values.to_dataframe(use_names=True)
         assert np.alltrue(df.index.values == list(reversed(sorted_names)))
         assert np.alltrue(df["dummy_valuator"].values == sorted(values, reverse=True))
     except ImportError:
-        # FIXME: do we have pandas as strict dependency or not
         pass
 
 
@@ -88,7 +93,6 @@ def test_todataframe(ranks_asc, dummy_values):
     [([], [], []), ([2.0, 3.0, 1.0, 6.0], ["a", "b", "c", "d"], [2, 0, 1, 3])],
 )
 def test_indexing(ranks_asc, dummy_values):
-    dummy_values.sort(SortOrder.Ascending)
     if len(ranks_asc) == 0:
         with pytest.raises(IndexError):
             dummy_values[1]  # noqa
@@ -110,9 +114,10 @@ def test_indexing(ranks_asc, dummy_values):
 )
 @pytest.mark.parametrize("values, names", [([], None), ([2.0, 3.0, 1.0], None)])
 def test_serialization(serialize, deserialize, dummy_values):
-    serded = deserialize(serialize(dummy_values.sort(SortOrder.Descending)))
+    serded = deserialize(serialize(dummy_values))
     assert dummy_values == serded  # Serialization OK (if __eq__ ok...)
-    assert dummy_values.sort(SortOrder.Ascending) != serded  # Order checks
+    dummy_values.sort(reverse=True)
+    assert dummy_values != serded  # Order checks
 
 
 @pytest.mark.parametrize("values, names", [([], []), ([2, 3, 1], ["a", "b", "c"])])
@@ -120,8 +125,7 @@ def test_equality(values, names, dummy_values):
     assert dummy_values == dummy_values
 
     c = deepcopy(dummy_values)
-    dummy_values.sort(SortOrder.Descending)
-    c.sort(SortOrder.Ascending)
+    dummy_values.sort(reverse=True)
     assert c != dummy_values
 
     c2 = ValuationResult(
@@ -148,15 +152,17 @@ def test_equality(values, names, dummy_values):
         values=c.values,
         stderr=c._stderr,
         data_names=c._names,
-        sort=c._sort_order,
     )
+    c2.sort(c._sort_order)
+
     assert c == c2
 
-    c2 = ValuationResult(
-        algorithm=c._algorithm,
-        status=c.status,
-        values=c.values + 1.0,
-        stderr=c._stderr,
-        data_names=c._names,
-    )
-    assert c != c2
+    if len(c) > 0:
+        c2 = ValuationResult(
+            algorithm=c._algorithm,
+            status=c.status,
+            values=c.values + 1.0,
+            stderr=c._stderr,
+            data_names=c._names,
+        )
+        assert c != c2

@@ -10,10 +10,10 @@ indexing abilities, and conversion to `pandas DataFrames
 import collections.abc
 from dataclasses import dataclass
 from enum import Enum
+from functools import total_ordering
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     Generator,
     Iterable,
     List,
@@ -26,7 +26,7 @@ from typing import (
 
 import numpy as np
 
-from pydvl.utils import Dataset, SortOrder
+from pydvl.utils import Dataset
 
 try:
     import pandas  # Try to import here for the benefit of mypy
@@ -46,27 +46,50 @@ class ValuationStatus(Enum):
     Failed = "failed"
 
 
+@total_ordering
 @dataclass
 class ValueItem:
-    """The result of a value computation for one datum."""
+    """The result of a value computation for one datum.
 
+    ValueItems can be compared with the usual operators. These take only the
+    :attribute:`value` into account
+
+    .. todo::
+       Maybe have a mode of comparing similar to `np.isclose`, or taking the
+       :attribute:`stderr` into account.
+    """
+
+    #: Index of the sample with this value in the original :class:`Dataset`
     index: np.int_
+    #: Name of the sample if it was provided. Otherwise `str(index)`
     name: str
+    #: The value
     value: np.float_
+    #: Standard error of the value if it was computed with an appoximate method
     stderr: Optional[np.float_]
+
+    def __lt__(self, other):
+        return self.value < other.value
+
+    def __eq__(self, other):
+        return self.value == other.value
 
 
 class ValuationResult(collections.abc.Sequence):
     """Objects of this class hold the results of valuation algorithms.
 
-    Results can be sorted with :meth:`sort`. Note that sorting values affects
-    how iterators and the object itself as ``Sequence`` behave: ``values[0]``
+    These include indices in the original :class:`Dataset`, any data names (e.g.
+    group names in :class:`GroupedDataset`), the values themselves, and standard
+    errors in the case of Monte Carlo methods. These can iterated over like any
+    ``Sequence``: ``iter(valuation_result)`` returns a generator of
+    :class:`ValueItem` in the order in which the object is sorted.
+
+    Results can be sorted in-place with :meth:`sort` or using python's standard
+    ``sorted()`` and ``reversed()`` Note that sorting values affects how
+    iterators and the object itself as ``Sequence`` behave: ``values[0]``
     returns a :class:`ValueItem` with the highest or lowest ranking point if
     this object is sorted by descending or ascending value, respectively. If
     unsorted, ``values[0]`` returns a ``ValueItem`` for index 0.
-
-    Similarly, ``iter(valuation_result)`` returns a generator of
-    :class:`ValueItem` in the order in which the object is sorted.
 
     :param algorithm: The method used.
     :param status: The end status of the algorithm.
@@ -76,8 +99,8 @@ class ValuationResult(collections.abc.Sequence):
         each value.
     :param data_names: Names for the data points. Defaults to index numbers
         if not set.
-    :param sort: Whether to sort the values. See above how this affects usage
-        as an iterable or sequence.
+    :param sort: Whether to sort the indices by ascending value. See above how
+        this affects usage as an iterable or sequence.
 
     :raise ValueError: If data names and values have mismatching lengths.
     """
@@ -89,7 +112,8 @@ class ValuationResult(collections.abc.Sequence):
     _stderr: "NDArray[np.float_]"
     _algorithm: str  # TODO: BaseValuator
     _status: ValuationStatus  # TODO: Maybe? BaseValuator.Status
-    _sort_order: Optional[SortOrder]
+    # None for unsorted, True for ascending, False for descending
+    _sort_order: Optional[bool]
 
     def __init__(
         self,
@@ -98,7 +122,7 @@ class ValuationResult(collections.abc.Sequence):
         values: "NDArray[np.float_]",
         stderr: Optional["NDArray[np.float_]"] = None,
         data_names: Optional[Sequence[str]] = None,
-        sort: Optional[SortOrder] = None,
+        sort: bool = True,
     ):
         if stderr is not None and len(stderr) != len(values):
             raise ValueError("Lengths of values and stderr do not match")
@@ -107,8 +131,12 @@ class ValuationResult(collections.abc.Sequence):
         self._status = status
         self._values = values
         self._stderr = np.zeros_like(values) if stderr is None else stderr
-        self._indices = np.arange(0, len(self._values), dtype=np.int_)
         self._sort_order = None
+
+        if sort:
+            self.sort()
+        else:
+            self._indices = np.arange(0, len(self._values), dtype=np.int_)
 
         if data_names is None:
             self._names = np.arange(0, len(values), dtype=np.int_)
@@ -117,32 +145,28 @@ class ValuationResult(collections.abc.Sequence):
         if len(self._names) != len(self._values):
             raise ValueError("Data names and data values have different lengths")
 
-        self.sort(sort)
+    def sort(self, reverse: bool = False) -> None:
+        """Sorts the indices in place by ascending value.
 
-    def sort(self, sort_order: Optional[SortOrder] = None) -> "ValuationResult":
-        """Sorts the values in place.
+        Repeated calls with the same sort order are no-ops. Once sorted,
+        iteration over the results will follow the order.
 
-        Repeated calls with the same `sort_order` are no-ops.
-
-        :param sort_order: None to leave unsorted, otherwise sorts in ascending
-            or descending order by value.
-        :return: The same object, sorted in place.
+        :param reverse: Whether to sort in descending order by value.
         """
-        if self._sort_order == sort_order:
-            return self
 
-        if sort_order is None:
-            self._indices = np.arange(0, len(self._values), dtype=np.int_)
-        elif sort_order == SortOrder.Ascending:
-            self._indices = np.argsort(self._values)
-        elif sort_order == SortOrder.Descending:
-            self._indices = np.argsort(self._values)[::-1]
+        # Try to save time if we are already sorted in some way
+        if self._sort_order is not None:
+            if self._sort_order == reverse:  # no change
+                return
+            self._indices = self._indices[::-1]  # flip order
+        else:
+            if reverse:
+                self._indices = np.argsort(self._values)[::-1]
+            else:
+                self._indices = np.argsort(self._values)
 
-        self._sort_order = sort_order
-        return self
-
-    def is_sorted(self) -> bool:
-        return self._sort_order is not None
+        self._sort_order = reverse
+        return
 
     @property
     def values(self) -> "NDArray[np.float_]":

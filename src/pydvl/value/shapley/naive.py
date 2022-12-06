@@ -7,7 +7,6 @@ import numpy as np
 from pydvl.utils import (
     MapReduceJob,
     ParallelConfig,
-    SortOrder,
     Utility,
     init_parallel_backend,
     maybe_progress,
@@ -61,7 +60,6 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
         values=values,
         stderr=None,
         data_names=u.data.data_names,
-        sort=SortOrder.Descending,
     )
 
 
@@ -140,5 +138,4 @@ def combinatorial_exact_shapley(
         values=values,
         stderr=None,
         data_names=u.data.data_names,
-        sort=SortOrder.Descending,
     )

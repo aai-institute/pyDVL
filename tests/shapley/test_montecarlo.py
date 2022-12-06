@@ -9,7 +9,6 @@ from sklearn.tree import DecisionTreeRegressor
 
 from pydvl.utils import GroupedDataset, MemcachedConfig, Scorer, Utility
 from pydvl.utils.numeric import lower_bound_hoeffding, squashed_r2, squashed_variance
-from pydvl.utils.types import SortOrder
 from pydvl.value.shapley.montecarlo import (
     combinatorial_montecarlo_shapley,
     owen_sampling_shapley,
@@ -176,17 +175,13 @@ def test_linear_montecarlo_with_outlier(
     )
 
     check_total_value(linear_utility, values, atol=total_atol)
-
-    assert values.sort(SortOrder.Ascending)[0].index == outlier_idx
+    assert values[0].index == outlier_idx
 
 
 @pytest.mark.parametrize(
     "a, b, num_points, num_groups", [(2, 0, 21, 2)]  # 24*0.3=6 samples in 2 groups
 )
-@pytest.mark.parametrize(
-    "scorer, rtol",
-    [(squashed_r2, 0.1), (squashed_variance, 0.1)],
-)
+@pytest.mark.parametrize("scorer, rtol", [(squashed_r2, 0.1), (squashed_variance, 0.1)])
 @pytest.mark.parametrize(
     "fun, max_iterations, kwargs",
     [
