@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Unreleased - 💥 More breaking changes!
 
 - GH action to mark issues as stale
   [PR #201](https://github.com/appliedAI-Initiative/pyDVL/pull/201)
@@ -8,6 +8,9 @@
   [PR #211](https://github.com/appliedAI-Initiative/pyDVL/pull/211)
 - Test and officially support Python version 3.9 and 3.10 
   [PR #208](https://github.com/appliedAI-Initiative/pyDVL/pull/208)
+- **Breaking change:** Introduces a class ValuationResult to gather and inspect
+  results from all valuation algorithms
+  [PR #214](https://github.com/appliedAI-Initiative/pyDVL/pull/214)
 
 ## 0.3.0 - 💥 Breaking changes
 

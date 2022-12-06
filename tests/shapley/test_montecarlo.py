@@ -37,7 +37,7 @@ def test_analytic_montecarlo_shapley(
 ):
     u, exact_values = analytic_shapley
 
-    values, _ = fun(
+    values = fun(
         u, max_iterations=int(max_iterations), progress=False, n_jobs=1, **kwargs
     )
 
@@ -57,10 +57,10 @@ def test_hoeffding_bound_montecarlo(
 
     for _ in range(10):
         with tolerate(max_failures=int(10 * delta)):
-            values, _ = fun(u=u, max_iterations=max_iterations, n_jobs=1)
+            values = fun(u=u, max_iterations=max_iterations, n_jobs=1)
             # Trivial bound on total error using triangle inequality
             check_total_value(u, values, atol=len(u.data) * eps)
-            check_rank_correlation(values, exact_values, threshold=0.9)
+            check_rank_correlation(values, exact_values, threshold=0.8)
 
 
 @pytest.mark.parametrize(
@@ -115,7 +115,7 @@ def test_linear_montecarlo_shapley(
     )
 
     exact_values = combinatorial_exact_shapley(u, progress=False)
-    values, _ = fun(
+    values = fun(
         u, max_iterations=int(max_iterations), progress=False, n_jobs=1, **kwargs
     )
 
@@ -166,7 +166,7 @@ def test_linear_montecarlo_with_outlier(
         scoring=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
-    values, _ = fun(
+    values = fun(
         linear_utility,
         max_iterations=int(max_iterations),
         progress=False,
@@ -175,17 +175,13 @@ def test_linear_montecarlo_with_outlier(
     )
 
     check_total_value(linear_utility, values, atol=total_atol)
-
-    assert int(list(values.keys())[0]) == outlier_idx
+    assert values[0].index == outlier_idx
 
 
 @pytest.mark.parametrize(
     "a, b, num_points, num_groups", [(2, 0, 21, 2)]  # 24*0.3=6 samples in 2 groups
 )
-@pytest.mark.parametrize(
-    "scorer, rtol",
-    [(squashed_r2, 0.1), (squashed_variance, 0.1)],
-)
+@pytest.mark.parametrize("scorer, rtol", [(squashed_r2, 0.1), (squashed_variance, 0.1)])
 @pytest.mark.parametrize(
     "fun, max_iterations, kwargs",
     [
@@ -223,7 +219,7 @@ def test_grouped_linear_montecarlo_shapley(
     )
     exact_values = combinatorial_exact_shapley(grouped_linear_utility, progress=False)
 
-    values, _ = fun(
+    values = fun(
         grouped_linear_utility,
         max_iterations=int(max_iterations),
         progress=False,
