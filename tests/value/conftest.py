@@ -4,7 +4,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
-from pydvl.utils import Dataset, SortOrder, Utility
+from pydvl.utils import Dataset, Utility
 from pydvl.value import ValuationResult, ValuationStatus
 
 from . import polynomial
@@ -70,17 +70,13 @@ def dummy_utility(num_samples):
 def analytic_shapley(dummy_utility):
     """Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
 
-    def exact():
-        pass
-
     m = float(max(dummy_utility.data.x_train))
     values = np.array([i / m for i in dummy_utility.data.indices])
     result = ValuationResult(
-        algorithm=exact,
+        algorithm="exact",
         values=values,
         stderr=np.zeros_like(values),
         data_names=dummy_utility.data.indices,
-        sort=SortOrder.Descending,
         status=ValuationStatus.Converged,
     )
     return dummy_utility, result

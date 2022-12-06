@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import spearmanr
 
-from pydvl.utils import SortOrder, Utility
+from pydvl.utils import Utility
 from pydvl.value import ValuationResult
 
 
@@ -28,8 +28,8 @@ def check_exact(
 ):
     """Compares ranks and values."""
 
-    values = values.sort(SortOrder.Descending)
-    exact_values = exact_values.sort(SortOrder.Descending)
+    values.sort()
+    exact_values.sort()
 
     assert np.all(values.indices == exact_values.indices), "Ranks do not match"
     assert np.allclose(
@@ -60,9 +60,8 @@ def check_values(
         elements in `exact_values`. E.g. if atol = 0.1, and rtol = 0 we must
         have |value - exact_value| < 0.1 for every value.
     """
-    # Ensure that both result objects have the same sorting (none)
-    values = values.sort(None)
-    exact_values = exact_values.sort(None)
+    values.sort()
+    exact_values.sort()
 
     assert np.allclose(values.values, exact_values.values, rtol=rtol, atol=atol)
 
@@ -88,11 +87,11 @@ def check_rank_correlation(
 
     k = k or len(values)
 
-    values = values.sort(SortOrder.Descending)
-    exact_values = exact_values.sort(SortOrder.Descending)
+    values.sort()
+    exact_values.sort()
 
-    top_k = np.array([it.index for it in values[:k]])
-    top_k_exact = np.array([it.index for it in exact_values[:k]])
+    top_k = np.array([it.index for it in values[-k:]])
+    top_k_exact = np.array([it.index for it in exact_values[-k:]])
 
     correlation, pvalue = spearmanr(top_k, top_k_exact)
     assert correlation >= threshold, f"{correlation} < {threshold}"

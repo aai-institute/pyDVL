@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 
-from pydvl.utils import GroupedDataset, MemcachedConfig, Scorer, SortOrder, Utility
+from pydvl.utils import GroupedDataset, MemcachedConfig, Scorer, Utility
 from pydvl.utils.numeric import lower_bound_hoeffding, squashed_r2, squashed_variance
 from pydvl.value.shapley.montecarlo import (
     combinatorial_montecarlo_shapley,
