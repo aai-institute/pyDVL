@@ -1,0 +1,6 @@
+results
+=======
+
+.. automodule:: pydvl.value.results
+   :members:
+   :undoc-members:

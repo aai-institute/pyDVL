@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="actor" href="shapley/actor.html" /><link rel="prev" title="results" href="results.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="shapley" href="shapley.html" /><link rel="prev" title="naive" href="loo/naive.html" />
 
     <meta name="generator" content="sphinx-5.3.0, furo 2022.09.29"/>
-        <title>shapley - pyDVL 0.3.1.dev0 documentation</title>
+        <title>results - pyDVL 0.3.1.dev0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/tooltipster.custom.css" />
@@ -231,8 +231,8 @@
 <li class="toctree-l4"><a class="reference internal" href="loo/naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="results.html">results</a></li>
-<li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">shapley</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">results</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="shapley/montecarlo.html">montecarlo</a></li>
@@ -277,104 +277,139 @@
           </label>
         </div>
         <article role="main">
-          <section id="module-pydvl.value.shapley">
-<span id="shapley"></span><h1>shapley<a class="headerlink" href="#module-pydvl.value.shapley" title="Permalink to this heading"></a></h1>
-<p>This package holds all routines for the computation of Shapley Data value. Users
-will want to use <a class="reference internal" href="#pydvl.value.shapley.compute_shapley_values" title="pydvl.value.shapley.compute_shapley_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code></a> as single
-interface to all methods defined in the modules.</p>
-<p>Please refer to <a class="reference internal" href="../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for an overview of Shapley Data value.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="pydvl.value.shapley.compute_shapley_values">
-<span class="sig-name descname"><span class="pre">compute_shapley_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ShapleyMode</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ShapleyMode.TruncatedMontecarlo</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/__init__.py#L47"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.compute_shapley_values" title="Permalink to this definition"></a></dt>
-<dd><p>Umbrella method to compute Shapley values with any of the available
-algorithms.</p>
-<p>See <a class="reference internal" href="../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for an overview.</p>
-<p>The following algorithms are available. Note that the exact methods can only
-work with very small datasets and are thus intended only for testing. Some
-algorithms also accept additional arguments, please refer to the
-documentation of each particular method.</p>
-<ul class="simple">
-<li><p>‘combinatorial_exact’: uses the combinatorial implementation of data
-Shapley. Implemented in
-<a class="reference internal" href="shapley/naive.html#pydvl.value.shapley.naive.combinatorial_exact_shapley" title="pydvl.value.shapley.naive.combinatorial_exact_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">combinatorial_exact_shapley()</span></code></a>.</p></li>
-<li><p>‘permutation_exact’: uses the permutation-based implementation of data
-Shapley. Computation is <strong>not parallelized</strong>. Implemented in
-<a class="reference internal" href="shapley/naive.html#pydvl.value.shapley.naive.permutation_exact_shapley" title="pydvl.value.shapley.naive.permutation_exact_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">permutation_exact_shapley()</span></code></a>.</p></li>
-<li><p>‘permutation_montecarlo’: uses the approximate Monte Carlo implementation
-of permutation data Shapley. Implemented in
-<a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley" title="pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">permutation_montecarlo_shapley()</span></code></a>.</p></li>
-<li><p>‘combinatorial_montecarlo’:  uses the approximate Monte Carlo
-implementation of combinatorial data Shapley. Implemented in
-<a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley" title="pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">combinatorial_montecarlo_shapley()</span></code></a>.</p></li>
-<li><p>‘truncated_montecarlo’: default option, same as permutation_montecarlo but
-stops the computation whenever a certain accuracy is reached.
-Implemented in
-<a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley" title="pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">truncated_montecarlo_shapley()</span></code></a>.</p></li>
-<li><p>‘owen_sampling’: Uses the Owen continuous extension of the utility function
-to the unit cube. Implemented in
-<a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.owen_sampling_shapley" title="pydvl.value.shapley.montecarlo.owen_sampling_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">owen_sampling_shapley()</span></code></a>.
-This method requires an additional parameter <cite>q_max</cite> for the number of
-subdivisions of the unit interval to use for integration.</p></li>
-<li><p>‘owen_halved’: Same as ‘owen_sampling’ but uses correlated samples in the
-expectation. Implemented in
-<a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.owen_sampling_shapley" title="pydvl.value.shapley.montecarlo.owen_sampling_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">owen_sampling_shapley()</span></code></a>.
-This method  requires an additional parameter <cite>q_max</cite> for the number of
-subdivisions of the interval [0,0.5] to use for integration.</p></li>
-</ul>
-<p>Additionally, one can use model-specific methods:</p>
-<ul class="simple">
-<li><p>‘knn’: use only with K-Nearest neighbour models. Implemented in
-<a class="reference internal" href="shapley/knn.html#pydvl.value.shapley.knn.knn_shapley" title="pydvl.value.shapley.knn.knn_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">knn_shapley()</span></code></a>.</p></li>
-</ul>
+          <section id="module-pydvl.value.results">
+<span id="results"></span><h1>results<a class="headerlink" href="#module-pydvl.value.results" title="Permalink to this heading"></a></h1>
+<p>This module collects types and methods for the inspection of the results of
+valuation algorithms.</p>
+<p>The most important class is <a class="reference internal" href="#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValuationResult</span></code></a>, which provides access
+to raw values, as well as convenient behaviour as a Sequence with extended
+indexing abilities, and conversion to <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html">pandas DataFrames</a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.value.results.ValuationResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ValuationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.value.results.ValuationStatus" title="pydvl.value.results.ValuationStatus"><span class="pre">ValuationStatus</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">np.float_</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stderr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">np.float_</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/results.py#L78"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.results.ValuationResult" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></p>
+<p>Objects of this class hold the results of valuation algorithms.</p>
+<p>These include indices in the original <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code>, any data names (e.g.
+group names in <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedDataset</span></code>), the values themselves, and standard
+errors in the case of Monte Carlo methods. These can iterated over like any
+<code class="docutils literal notranslate"><span class="pre">Sequence</span></code>: <code class="docutils literal notranslate"><span class="pre">iter(valuation_result)</span></code> returns a generator of
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ValueItem</span></code> in the order in which the object is sorted.</p>
+<p>Results can be sorted in-place with <a class="reference internal" href="#pydvl.value.results.ValuationResult.sort" title="pydvl.value.results.ValuationResult.sort"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sort()</span></code></a> or using python’s standard
+<code class="docutils literal notranslate"><span class="pre">sorted()</span></code> and <code class="docutils literal notranslate"><span class="pre">reversed()</span></code> Note that sorting values affects how
+iterators and the object itself as <code class="docutils literal notranslate"><span class="pre">Sequence</span></code> behave: <code class="docutils literal notranslate"><span class="pre">values[0]</span></code>
+returns a <code class="xref py py-class docutils literal notranslate"><span class="pre">ValueItem</span></code> with the highest or lowest ranking point if
+this object is sorted by descending or ascending value, respectively. If
+unsorted, <code class="docutils literal notranslate"><span class="pre">values[0]</span></code> returns a <code class="docutils literal notranslate"><span class="pre">ValueItem</span></code> for index 0.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – <a class="reference internal" href="../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> object with model, data, and
-scoring function.</p></li>
-<li><p><strong>max_iterations</strong> – total number of iterations, used for Monte Carlo
-methods. <strong>Note:</strong> power set-based methods interpret this differently
-to permutation-based methods. For the former, this is the number of
-subsets to sample for each index or process, whereas for the latter it
-is the total number of permutations to sample.</p></li>
-<li><p><strong>n_jobs</strong> – Number of parallel jobs (available only to some methods)</p></li>
-<li><p><strong>mode</strong> – Choose which shapley algorithm to use. See
-<code class="xref py py-class docutils literal notranslate"><span class="pre">ShapleyMode</span></code> for a list of allowed value.</p></li>
+<li><p><strong>algorithm</strong> – The method used.</p></li>
+<li><p><strong>status</strong> – The end status of the algorithm.</p></li>
+<li><p><strong>values</strong> – An array of values, data indices correspond to positions in
+the array.</p></li>
+<li><p><strong>stderr</strong> – An optional array of standard errors in the computation of
+each value.</p></li>
+<li><p><strong>data_names</strong> – Names for the data points. Defaults to index numbers
+if not set.</p></li>
+<li><p><strong>sort</strong> – Whether to sort the indices by ascending value. See above how
+this affects usage as an iterable or sequence.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>pandas DataFrame with index being group names or data indices, and
-columns: <cite>data_value</cite> (calculated shapley value) and <cite>data_value_std</cite>
-(standard deviation of <cite>data_value</cite> for Monte Carlo estimators)</p>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If data names and values have mismatching lengths.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pydvl.value.results.ValuationResult.sort">
+<span class="sig-name descname"><span class="pre">sort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#pydvl.value.results.ValuationResult.sort" title="Permalink to this definition"></a></dt>
+<dd><p>Sorts the indices in place by ascending value.</p>
+<p>Repeated calls with the same sort order are no-ops. Once sorted,
+iteration over the results will follow the order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>reverse</strong> – Whether to sort in descending order by value.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<p class="rubric">Modules in this package</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="shapley/actor.html">actor</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="shapley/actor.html#pydvl.value.shapley.actor.get_shapley_coordinator"><code class="docutils literal notranslate"><span class="pre">get_shapley_coordinator()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley/actor.html#pydvl.value.shapley.actor.get_shapley_worker"><code class="docutils literal notranslate"><span class="pre">get_shapley_worker()</span></code></a></li>
+<dl class="py property">
+<dt class="sig sig-object py" id="pydvl.value.results.ValuationResult.values">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">np.float_</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pydvl.value.results.ValuationResult.values" title="Permalink to this definition"></a></dt>
+<dd><p>The raw values, unsorted. Position <cite>i</cite> in the array represents index
+<cite>i</cite> of the data.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pydvl.value.results.ValuationResult.indices">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">indices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">np.int_</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pydvl.value.results.ValuationResult.indices" title="Permalink to this definition"></a></dt>
+<dd><p>The indices for the values, possibly sorted.
+If the object is unsorted, then this is the same as
+<cite>np.arange(len(values))</cite>. Otherwise, the indices sort <a class="reference internal" href="#pydvl.value.results.ValuationResult.values" title="pydvl.value.results.ValuationResult.values"><code class="xref py py-meth docutils literal notranslate"><span class="pre">values()</span></code></a></p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pydvl.value.results.ValuationResult.status">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pydvl.value.results.ValuationStatus" title="pydvl.value.results.ValuationStatus"><span class="pre">ValuationStatus</span></a></em><a class="headerlink" href="#pydvl.value.results.ValuationResult.status" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pydvl.value.results.ValuationResult.algorithm">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">algorithm</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#pydvl.value.results.ValuationResult.algorithm" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydvl.value.results.ValuationResult.to_dataframe">
+<span class="sig-name descname"><span class="pre">to_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#pydvl.value.results.ValuationResult.to_dataframe" title="Permalink to this definition"></a></dt>
+<dd><p>Returns values as a dataframe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>column</strong> – Name for the column holding the data value. Defaults to
+the name of the algorithm used.</p></li>
+<li><p><strong>use_names</strong> – Whether to use data names instead of indices for the
+DataFrame’s index.</p></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="shapley/knn.html">knn</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="shapley/knn.html#pydvl.value.shapley.knn.knn_shapley"><code class="docutils literal notranslate"><span class="pre">knn_shapley()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="shapley/montecarlo.html">montecarlo</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley"><code class="docutils literal notranslate"><span class="pre">truncated_montecarlo_shapley()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley"><code class="docutils literal notranslate"><span class="pre">permutation_montecarlo_shapley()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley"><code class="docutils literal notranslate"><span class="pre">combinatorial_montecarlo_shapley()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.owen_sampling_shapley"><code class="docutils literal notranslate"><span class="pre">owen_sampling_shapley()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="shapley/naive.html">naive</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="shapley/naive.html#pydvl.value.shapley.naive.permutation_exact_shapley"><code class="docutils literal notranslate"><span class="pre">permutation_exact_shapley()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley/naive.html#pydvl.value.shapley.naive.combinatorial_exact_shapley"><code class="docutils literal notranslate"><span class="pre">combinatorial_exact_shapley()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</div>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dataframe with two columns, one for the values, with name
+given as explained in <cite>column</cite>, and another with standard errors for
+approximate algorithms. The latter will be named <cite>column+’_stderr’</cite>.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ImportError</strong> – If pandas is not installed</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.value.results.ValuationStatus">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ValuationStatus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/results.py#L42"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.results.ValuationStatus" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.results.ValuationStatus.Pending">
+<span class="sig-name descname"><span class="pre">Pending</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'pending'</span></em><a class="headerlink" href="#pydvl.value.results.ValuationStatus.Pending" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.results.ValuationStatus.Converged">
+<span class="sig-name descname"><span class="pre">Converged</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'converged'</span></em><a class="headerlink" href="#pydvl.value.results.ValuationStatus.Converged" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.results.ValuationStatus.MaxIterations">
+<span class="sig-name descname"><span class="pre">MaxIterations</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'maximum</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">iterations</span> <span class="pre">reached'</span></em><a class="headerlink" href="#pydvl.value.results.ValuationStatus.MaxIterations" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.results.ValuationStatus.Failed">
+<span class="sig-name descname"><span class="pre">Failed</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'failed'</span></em><a class="headerlink" href="#pydvl.value.results.ValuationStatus.Failed" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -382,23 +417,23 @@ columns: <cite>data_value</cite> (calculated shapley value) and <cite>data_value
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="shapley/actor.html">
+          <a class="next-page" href="shapley.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">actor</div>
+                <div class="title">shapley</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="results.html">
+          <a class="prev-page" href="loo/naive.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">results</div>
+                <div class="title">naive</div>
                 
               </div>
             </a>
@@ -439,8 +474,23 @@ columns: <cite>data_value</cite> (calculated shapley value) and <cite>data_value
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">shapley</a><ul>
-<li><a class="reference internal" href="#pydvl.value.shapley.compute_shapley_values"><code class="docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code></a></li>
+<li><a class="reference internal" href="#">results</a><ul>
+<li><a class="reference internal" href="#pydvl.value.results.ValuationResult"><code class="docutils literal notranslate"><span class="pre">ValuationResult</span></code></a><ul>
+<li><a class="reference internal" href="#pydvl.value.results.ValuationResult.sort"><code class="docutils literal notranslate"><span class="pre">ValuationResult.sort()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.results.ValuationResult.values"><code class="docutils literal notranslate"><span class="pre">ValuationResult.values</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.results.ValuationResult.indices"><code class="docutils literal notranslate"><span class="pre">ValuationResult.indices</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.results.ValuationResult.status"><code class="docutils literal notranslate"><span class="pre">ValuationResult.status</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.results.ValuationResult.algorithm"><code class="docutils literal notranslate"><span class="pre">ValuationResult.algorithm</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.results.ValuationResult.to_dataframe"><code class="docutils literal notranslate"><span class="pre">ValuationResult.to_dataframe()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pydvl.value.results.ValuationStatus"><code class="docutils literal notranslate"><span class="pre">ValuationStatus</span></code></a><ul>
+<li><a class="reference internal" href="#pydvl.value.results.ValuationStatus.Pending"><code class="docutils literal notranslate"><span class="pre">ValuationStatus.Pending</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.results.ValuationStatus.Converged"><code class="docutils literal notranslate"><span class="pre">ValuationStatus.Converged</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.results.ValuationStatus.MaxIterations"><code class="docutils literal notranslate"><span class="pre">ValuationStatus.MaxIterations</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.results.ValuationStatus.Failed"><code class="docutils literal notranslate"><span class="pre">ValuationStatus.Failed</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

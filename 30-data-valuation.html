@@ -231,6 +231,7 @@
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/loo/naive.html">naive</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/value/results.html">results</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/knn.html">knn</a></li>
@@ -410,6 +411,10 @@ definitions, but other methods are typically preferable.</p>
 <span class="n">values</span> <span class="o">=</span> <span class="n">naive_loo</span><span class="p">(</span><span class="n">utility</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>The return value of all valuation functions is an object of type
+<a class="reference internal" href="pydvl/value/results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValuationResult</span></code></a>. This can be iterated over,
+indexed with integers, slices and Iterables, as well as converted to a
+<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html">pandas DataFrame</a>.</p>
 </section>
 <section id="shapley-values">
 <span id="shapley"></span><h2>Shapley values<a class="headerlink" href="#shapley-values" title="Permalink to this heading"></a></h2>
@@ -436,13 +441,15 @@ training samples within the training set:</p>
 </p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_shapley_value</span>
 <span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;combinatorial_exact&quot;</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;combinatorial_exact&quot;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The return value <cite>df</cite> is a
+<p>We convert the return value to a
 <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html">pandas DataFrame</a>
-with the values. Please refer to the documentation in <a class="reference internal" href="pydvl/value/shapley.html#module-pydvl.value.shapley" title="pydvl.value.shapley"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.value.shapley</span></code></a>
-for more information.</p>
+and name the column with the results as <cite>value</cite>. Please refer to the
+documentation in <a class="reference internal" href="pydvl/value/shapley.html#module-pydvl.value.shapley" title="pydvl.value.shapley"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.value.shapley</span></code></a> and
+<a class="reference internal" href="pydvl/value/results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValuationResult</span></code></a> for more information.</p>
 </section>
 <section id="monte-carlo-combinatorial-shapley">
 <h3>Monte Carlo Combinatorial Shapley<a class="headerlink" href="#monte-carlo-combinatorial-shapley" title="Permalink to this heading"></a></h3>
@@ -457,15 +464,16 @@ same pattern:</p>
 <span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;combinatorial_montecarlo&quot;</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;combinatorial_montecarlo&quot;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s1">&#39;cmc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The DataFrame returned by Monte Carlo methods will usually contain approximate
-standard errors as an additional column.</p>
+<p>The DataFrames returned by most Monte Carlo methods will contain approximate
+standard errors as an additional column, in this case named <cite>cmc_stderr</cite>.</p>
 </section>
 <section id="owen-sampling">
 <h3>Owen sampling<a class="headerlink" href="#owen-sampling" title="Permalink to this heading"></a></h3>
-<p><strong>Owen Sampling</strong> (Okhrati and Lipani<a class="footnote-reference brackets" href="#footcite-okhrati-multilinear-2021" id="id2">2</a>) is a practical
+<p><strong>Owen Sampling</strong> (Okhrati and Lipani<a class="footnote-reference brackets" href="#footcite-okhrati-multilinear-2021" id="id3">2</a>) is a practical
 algorithm based on the combinatorial definition. It uses a continuous extension
 of the utility from <span class="math notranslate nohighlight">\(\{0,1\}^n\)</span>, where a 1 in position <span class="math notranslate nohighlight">\(i\)</span> means that sample
 <span class="math notranslate nohighlight">\(x_i\)</span> is used to train the model, to <span class="math notranslate nohighlight">\([0,1]^n\)</span>. The ensuing expression for
@@ -483,7 +491,7 @@ values in pyDVL. First construct the dataset and utility, then call
 <span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
     <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;owen&quot;</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">max_q</span><span class="o">=</span><span class="mi">200</span>
 <span class="p">)</span>
 </pre></div>
@@ -506,7 +514,7 @@ It uses permutations over indices instead of subsets:</p>
 position of index <span class="math notranslate nohighlight">\(i\)</span>. To approximate this sum (with <span class="math notranslate nohighlight">\(\mathcal{O}(n!)\)</span> terms!)
 one uses Monte Carlo sampling of permutations, something which has surprisingly
 low sample complexity. By adding early stopping, the result is the so-called
-<strong>Truncated Monte Carlo Shapley</strong> (Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id3">3</a>), which is
+<strong>Truncated Monte Carlo Shapley</strong> (Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id4">3</a>), which is
 efficient enough to be useful in some applications.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
 <span class="kn">from</span> <span class="nn">pydvl.value.shapley</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
@@ -514,7 +522,7 @@ efficient enough to be useful in some applications.</p>
 <span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
     <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;truncated_montecarlo&quot;</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span>
 <span class="p">)</span>
 </pre></div>
@@ -525,7 +533,7 @@ efficient enough to be useful in some applications.</p>
 <p>It is possible to exploit the local structure of K-Nearest Neighbours to reduce
 the amount of subsets to consider: because no sample besides the K closest
 affects the score, most are irrelevant and it is possible to compute a value in
-linear time. This method was introduced by Jia <em>et al.</em><a class="footnote-reference brackets" href="#footcite-jia-efficient-2019a" id="id4">4</a>,
+linear time. This method was introduced by Jia <em>et al.</em><a class="footnote-reference brackets" href="#footcite-jia-efficient-2019a" id="id5">4</a>,
 and can be used in pyDVL with:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
 <span class="kn">from</span> <span class="nn">pydvl.value.shapley</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
@@ -534,7 +542,7 @@ and can be used in pyDVL with:</p>
 <span class="n">model</span> <span class="o">=</span> <span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;knn&quot;</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;knn&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -546,7 +554,7 @@ progress), and <strong>Banzhaf indices</strong> (the latter is just a different 
 scheme with better numerical stability properties). Contributions are welcome!</p>
 </section>
 <section id="problems-of-data-values">
-<span id="id5"></span><h2>Problems of data values<a class="headerlink" href="#problems-of-data-values" title="Permalink to this heading"></a></h2>
+<span id="id6"></span><h2>Problems of data values<a class="headerlink" href="#problems-of-data-values" title="Permalink to this heading"></a></h2>
 <p>There are a number of factors that affect how useful values can be for your
 project. In particular, regression can be especially tricky, but the particular
 nature of every (non-trivial) ML problem can have an effect:</p>
@@ -582,7 +590,7 @@ variance, as will their Monte Carlo estimates. One workaround in pyDVL is to
 configure the caching system to allow multiple evaluations of the utility for
 every index set. A moving average is computed and returned once the standard
 error is small, see <a class="reference internal" href="pydvl/utils/config.html#pydvl.utils.config.MemcachedConfig" title="pydvl.utils.config.MemcachedConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">MemcachedConfig</span></code></a>.</p>
-<p>Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id6">5</a> prove that by relaxing one of the Shapley axioms
+<p>Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id7">5</a> prove that by relaxing one of the Shapley axioms
 and considering the general class of semi-values, of which Shapley is an
 instance, one can prove that a choice of constant weights is the best one can
 do in a utility-agnostic setting. So-called <em>Data Banzhaf</em> is on our to-do
@@ -609,21 +617,21 @@ require cross-validating the whole value computation).</p></li>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h2>
-<div class="docutils container" id="id7">
+<div class="docutils container" id="id8">
 <dl class="footnote brackets">
 <dt class="label" id="footcite-wang-improving-2022"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
 <dd><p>Tianhao Wang, Yu Yang, and Ruoxi Jia. Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning. In <em>International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning</em>. arXiv, April 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2107.06336v2">http://arxiv.org/abs/2107.06336v2</a> (visited on 2022-05-19), <a class="reference external" href="https://arxiv.org/abs/2107.06336v2">arXiv:2107.06336v2</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2107.06336">doi:10.48550/arXiv.2107.06336</a>.</p>
 </dd>
-<dt class="label" id="footcite-okhrati-multilinear-2021"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dt class="label" id="footcite-okhrati-multilinear-2021"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
 <dd><p>Ramin Okhrati and Aldo Lipani. A Multilinear Sampling Algorithm to Estimate Shapley Values. In <em>2020 25th International Conference on Pattern Recognition (ICPR)</em>, 7992–7999. IEEE, January 2021. URL: <a class="reference external" href="https://ieeexplore.ieee.org/abstract/document/9412511">https://ieeexplore.ieee.org/abstract/document/9412511</a>, <a class="reference external" href="https://arxiv.org/abs/2010.12082">arXiv:2010.12082</a>, <a class="reference external" href="https://doi.org/10.1109/ICPR48806.2021.9412511">doi:10.1109/ICPR48806.2021.9412511</a>.</p>
 </dd>
-<dt class="label" id="footcite-ghorbani-data-2019"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
+<dt class="label" id="footcite-ghorbani-data-2019"><span class="brackets"><a class="fn-backref" href="#id4">3</a></span></dt>
 <dd><p>Amirata Ghorbani and James Zou. Data Shapley: Equitable Valuation of Data for Machine Learning. In <em>Proceedings of the 36th International Conference on Machine Learning, PMLR</em>, 2242–2251. PMLR, May 2019. URL: <a class="reference external" href="http://proceedings.mlr.press/v97/ghorbani19c.html">http://proceedings.mlr.press/v97/ghorbani19c.html</a> (visited on 2020-11-01), <a class="reference external" href="https://arxiv.org/abs/1904.02868">arXiv:1904.02868</a>.</p>
 </dd>
-<dt class="label" id="footcite-jia-efficient-2019a"><span class="brackets"><a class="fn-backref" href="#id4">4</a></span></dt>
+<dt class="label" id="footcite-jia-efficient-2019a"><span class="brackets"><a class="fn-backref" href="#id5">4</a></span></dt>
 <dd><p>Ruoxi Jia, David Dao, Boxin Wang, Frances Ann Hubis, Nezihe Merve Gurel, Bo Li, Ce Zhang, Costas Spanos, and Dawn Song. Efficient task-specific data valuation for nearest neighbor algorithms. <em>Proceedings of the VLDB Endowment</em>, 12(11):1610–1623, July 2019. URL: <a class="reference external" href="https://doi.org/10.14778/3342263.3342637">https://doi.org/10.14778/3342263.3342637</a> (visited on 2021-02-12), <a class="reference external" href="https://doi.org/10.14778/3342263.3342637">doi:10.14778/3342263.3342637</a>.</p>
 </dd>
-<dt class="label" id="footcite-wang-data-2022"><span class="brackets"><a class="fn-backref" href="#id6">5</a></span></dt>
+<dt class="label" id="footcite-wang-data-2022"><span class="brackets"><a class="fn-backref" href="#id7">5</a></span></dt>
 <dd><p>Jiachen T. Wang and Ruoxi Jia. Data Banzhaf: A Robust Data Valuation Framework for Machine Learning. October 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2205.15466">http://arxiv.org/abs/2205.15466</a> (visited on 2022-10-28), <a class="reference external" href="https://arxiv.org/abs/2205.15466">arXiv:2205.15466</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2205.15466">doi:10.48550/arXiv.2205.15466</a>.</p>
 </dd>
 </dl>

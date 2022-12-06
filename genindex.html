@@ -229,6 +229,7 @@
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/loo/naive.html">naive</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/value/results.html">results</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/knn.html">knn</a></li>
@@ -276,7 +277,7 @@
           
 <section class="genindex-section">
   <h1 id="index">Index</h1>
-  <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#H"><strong>H</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#K"><strong>K</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#W"><strong>W</strong></a></div>
+  <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#H"><strong>H</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#K"><strong>K</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#V"><strong>V</strong></a> | <a href="#W"><strong>W</strong></a></div>
 </section>
 <section id="A" class="genindex-section">
   <h2>A</h2>
@@ -288,6 +289,8 @@
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationResult.algorithm">algorithm (ValuationResult property)</a>
+</li>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations">allow_repeated_evaluations (MemcachedConfig attribute)</a>
 </li>
         <li><a href="pydvl/utils/parallel/backend.html#pydvl.utils.parallel.backend.available_cpus">available_cpus() (in module pydvl.utils.parallel.backend)</a>
@@ -332,10 +335,10 @@
 </li>
         <li><a href="pydvl/value/shapley/montecarlo.html#pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley">combinatorial_montecarlo_shapley() (in module pydvl.value.shapley.montecarlo)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/types.html#pydvl.utils.types.compose_score">compose_score() (in module pydvl.utils.types)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/reporting/scores.html#pydvl.reporting.scores.compute_fb_scores">compute_fb_scores() (in module pydvl.reporting.scores)</a>
 </li>
         <li><a href="pydvl/influence/general.html#pydvl.influence.general.compute_influences">compute_influences() (in module pydvl.influence.general)</a>
@@ -347,6 +350,8 @@
         <li><a href="pydvl/influence/conjugate_gradient.html#pydvl.influence.conjugate_gradient.conjugate_gradient">conjugate_gradient() (in module pydvl.influence.conjugate_gradient)</a>
 </li>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedClientConfig.connect_timeout">connect_timeout (MemcachedClientConfig attribute)</a>
+</li>
+        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationStatus.Converged">Converged (ValuationStatus attribute)</a>
 </li>
         <li><a href="pydvl/utils/parallel/actor.html#pydvl.utils.parallel.actor.Coordinator">Coordinator (class in pydvl.utils.parallel.actor)</a>
 </li>
@@ -398,6 +403,8 @@
   <h2>F</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationStatus.Failed">Failed (ValuationStatus attribute)</a>
+</li>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset.feature">feature() (Dataset method)</a>
 </li>
         <li><a href="pydvl/utils/types.html#pydvl.utils.types.SupervisedModel.fit">fit() (SupervisedModel method)</a>
@@ -479,6 +486,8 @@
         <ul>
           <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.GroupedDataset.indices">(GroupedDataset property)</a>
 </li>
+          <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationResult.indices">(ValuationResult property)</a>
+</li>
         </ul></li>
         <li><a href="pydvl/influence/general.html#pydvl.influence.general.InfluenceType">InfluenceType (class in pydvl.influence.general)</a>
 </li>
@@ -547,6 +556,8 @@
         <li><a href="pydvl/utils/parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.map">map() (MapReduceJob method)</a>
 </li>
         <li><a href="pydvl/utils/parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob">MapReduceJob (class in pydvl.utils.parallel.map_reduce)</a>
+</li>
+        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationStatus.MaxIterations">MaxIterations (ValuationStatus attribute)</a>
 </li>
         <li><a href="pydvl/utils/progress.html#pydvl.utils.progress.maybe_progress">maybe_progress() (in module pydvl.utils.progress)</a>
 </li>
@@ -626,6 +637,8 @@
 </li>
           <li><a href="pydvl/value/loo/naive.html#module-pydvl.value.loo.naive">pydvl.value.loo.naive</a>
 </li>
+          <li><a href="pydvl/value/results.html#module-pydvl.value.results">pydvl.value.results</a>
+</li>
           <li><a href="pydvl/value/shapley.html#module-pydvl.value.shapley">pydvl.value.shapley</a>
 </li>
           <li><a href="pydvl/value/shapley/actor.html#module-pydvl.value.shapley.actor">pydvl.value.shapley.actor</a>
@@ -690,6 +703,8 @@
         <li><a href="pydvl/utils/parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.parallel_backend">parallel_backend (MapReduceJob property)</a>
 </li>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.ParallelConfig">ParallelConfig (class in pydvl.utils.config)</a>
+</li>
+        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationStatus.Pending">Pending (ValuationStatus attribute)</a>
 </li>
         <li><a href="pydvl/value/shapley/naive.html#pydvl.value.shapley.naive.permutation_exact_shapley">permutation_exact_shapley() (in module pydvl.value.shapley.naive)</a>
 </li>
@@ -916,6 +931,13 @@
 </li>
         </ul></li>
         <li>
+    pydvl.value.results
+
+        <ul>
+          <li><a href="pydvl/value/results.html#module-pydvl.value.results">module</a>
+</li>
+        </ul></li>
+        <li>
     pydvl.value.shapley
 
         <ul>
@@ -998,9 +1020,11 @@
 </li>
         <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.shapley_results">shapley_results() (in module pydvl.reporting.plots)</a>
 </li>
+        <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility.signature">signature (Utility property)</a>
+</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility.signature">signature (Utility property)</a>
+        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationResult.sort">sort() (ValuationResult method)</a>
 </li>
         <li><a href="pydvl/reporting/scores.html#pydvl.reporting.scores.sort_values">sort_values() (in module pydvl.reporting.scores)</a>
 </li>
@@ -1016,6 +1040,8 @@
           <li><a href="pydvl/influence/types.html#pydvl.influence.types.TwiceDifferentiable.split_grad">(TwiceDifferentiable method)</a>
 </li>
         </ul></li>
+        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationResult.status">status (ValuationResult property)</a>
+</li>
         <li><a href="pydvl/utils/types.html#pydvl.utils.types.SupervisedModel">SupervisedModel (class in pydvl.utils.types)</a>
 </li>
     </ul></td>
@@ -1033,6 +1059,8 @@
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedClientConfig.timeout">timeout (MemcachedClientConfig attribute)</a>
 </li>
         <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheStats.timeouts">timeouts (CacheStats attribute)</a>
+</li>
+        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationResult.to_dataframe">to_dataframe() (ValuationResult method)</a>
 </li>
         <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.top_k_value_accuracy">top_k_value_accuracy() (in module pydvl.utils.numeric)</a>
 </li>
@@ -1093,6 +1121,22 @@
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility">Utility (class in pydvl.utils.utility)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="V" class="genindex-section">
+  <h2>V</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationResult">ValuationResult (class in pydvl.value.results)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationStatus">ValuationStatus (class in pydvl.value.results)</a>
+</li>
+        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationResult.values">values (ValuationResult property)</a>
 </li>
     </ul></td>
   </tr></table>
