@@ -10,7 +10,7 @@ from typing import Dict, Union
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
-from pydvl.utils import SortOrder, Utility, maybe_progress
+from pydvl.utils import Utility, maybe_progress
 from pydvl.value.results import ValuationResult, ValuationStatus
 
 __all__ = ["knn_shapley"]
@@ -85,5 +85,4 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
         values=values,
         stderr=None,
         data_names=u.data.data_names,
-        sort=SortOrder.Descending,
     )

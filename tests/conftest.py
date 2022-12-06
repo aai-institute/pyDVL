@@ -9,6 +9,7 @@ from pymemcache.client import Client
 
 from pydvl.utils import Dataset, MemcachedClientConfig
 from pydvl.utils.parallel import available_cpus
+from pydvl.value import ValuationResult, ValuationStatus
 
 if TYPE_CHECKING:
     from _pytest.config import Config

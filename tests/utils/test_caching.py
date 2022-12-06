@@ -20,12 +20,7 @@ def test_failed_connection():
 
 
 @pytest.mark.parametrize(
-    "numbers_series",
-    [
-        (np.arange(-4, 12)),
-        (np.arange(10)),
-        (np.linspace(1, 4, 10)),
-    ],
+    "numbers_series", [(np.arange(-4, 12)), (np.arange(10)), (np.linspace(1, 4, 10))]
 )
 def test_get_running_avg_variance(numbers_series):
     avg, var = 0.0, 0.0
@@ -154,13 +149,7 @@ def test_memcached_faster_with_repeated_training(memcached_client):
     assert fast_time < slow_time
 
 
-@pytest.mark.parametrize(
-    "n, atol",
-    [
-        (10, 4),
-        (20, 10),
-    ],
-)
+@pytest.mark.parametrize("n, atol", [(10, 4), (20, 10)])
 @pytest.mark.parametrize("n_jobs", [1, 2])
 @pytest.mark.parametrize("n_runs", [100])
 def test_memcached_parallel_repeated_training(

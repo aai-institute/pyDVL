@@ -1,6 +1,6 @@
 import numpy as np
 
-from pydvl.utils import SortOrder, Utility, maybe_progress
+from pydvl.utils import Utility, maybe_progress
 from pydvl.value.results import ValuationResult, ValuationStatus
 
 __all__ = ["naive_loo"]
@@ -32,5 +32,4 @@ def naive_loo(u: Utility, *, progress: bool = True) -> ValuationResult:
         values=values,
         stderr=None,
         data_names=u.data.data_names,
-        sort=SortOrder.Descending,
     )

@@ -7,7 +7,6 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from pydvl.utils import available_cpus
 from pydvl.utils.dataset import Dataset
-from pydvl.utils.types import SortOrder
 from pydvl.utils.utility import Utility
 from pydvl.value.shapley.knn import knn_shapley
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
@@ -24,7 +23,7 @@ def test_knn_montecarlo_match(seed):
     )
     model = KNeighborsClassifier(n_neighbors=5)
     u = Utility(model=model, data=data)
-    knn_values = knn_shapley(u, progress=False).sort(SortOrder.Descending)
+    knn_values = knn_shapley(u, progress=False)
 
     def knn_loss_function(labels, predictions, n_classes=3):
         log.debug(f"{predictions=}")
@@ -40,10 +39,12 @@ def test_knn_montecarlo_match(seed):
     )
     exact_values = combinatorial_exact_shapley(
         utility, progress=False, n_jobs=min(len(data), available_cpus())
-    ).sort(SortOrder.Descending)
+    )
 
     # will check only matching top elements since the scoring functions are not
     # exactly the same
-    top_knn = knn_values.indices[:2]
-    top_exact = exact_values.indices[:4]
+    knn_values.sort()  # should be noop
+    exact_values.sort()  # should be noop
+    top_knn = knn_values.indices[-2:]
+    top_exact = exact_values.indices[-4:]
     assert np.all([k in top_exact for k in top_knn])

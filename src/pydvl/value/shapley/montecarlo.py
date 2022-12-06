@@ -43,7 +43,6 @@ import numpy as np
 from pydvl.utils import (
     MapReduceJob,
     ParallelConfig,
-    SortOrder,
     Utility,
     get_running_avg_variance,
     init_parallel_backend,
@@ -164,7 +163,6 @@ def truncated_montecarlo_shapley(
         values=values,
         stderr=stderr,
         data_names=u.data.data_names,
-        sort=SortOrder.Descending,
     )
 
 
@@ -250,7 +248,6 @@ def permutation_montecarlo_shapley(
         values=values,
         stderr=stderr,
         data_names=u.data.data_names,
-        sort=SortOrder.Descending,
     )
 
 
@@ -388,7 +385,6 @@ def combinatorial_montecarlo_shapley(
         values=results.values,
         stderr=results.stderr,
         data_names=u.data.data_names,
-        sort=SortOrder.Descending,
     )
 
 
@@ -546,5 +542,4 @@ def owen_sampling_shapley(
         values=results.values,
         stderr=results.stderr,
         data_names=u.data.data_names,
-        sort=SortOrder.Descending,
     )
