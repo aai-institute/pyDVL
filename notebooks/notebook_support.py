@@ -1,13 +1,26 @@
+from copy import deepcopy
+from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, List, Optional, Sequence, Tuple
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from cloudpickle import pickle as pkl
 
 from pydvl.utils import Dataset
 
+try:
+    import torch
+
+    _TORCH_INSTALLED = True
+except ImportError:
+    _TORCH_INSTALLED = False
+
 if TYPE_CHECKING:
     from numpy.typing import NDArray
+
+imgnet_model_data_path = Path().resolve().parent / "data/imgnet_model"
 
 
 def plot_dataset(
@@ -258,3 +271,208 @@ def plot_iris(
             edgecolors="r",
             s=80,
         )
+
+
+def load_preprocess_imagenet(
+    train_size: float,
+    test_size: float,
+    downsample_ds_to_fraction: float = 1,
+    keep_labels: Optional[List] = None,
+    random_state: Optional[int] = None,
+    is_CI: bool = False,
+):
+    try:
+        from datasets import load_dataset
+        from torchvision import transforms
+    except ImportError as e:
+        raise RuntimeError(
+            "Torchvision and Huggingface datasets are required to load and "
+            "process the imagenet dataset."
+        ) from e
+
+    preprocess_rgb = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.225, 0.225, 0.225]),
+        ]
+    )
+
+    def _process_dataset(ds):
+        processed_ds = {"normalized_images": [], "labels": [], "images": []}
+        for i, item in enumerate(ds):
+            if item["image"].mode == "RGB":
+                processed_ds["normalized_images"].append(preprocess_rgb(item["image"]))
+                processed_ds["images"].append(item["image"])
+                processed_ds["labels"].append(item["label"])
+        return pd.DataFrame.from_dict(processed_ds)
+
+    tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="train")
+    if downsample_ds_to_fraction != 1:
+        tiny_imagenet = tiny_imagenet.shard(1 / downsample_ds_to_fraction, 0)
+    if keep_labels is not None:
+        tiny_imagenet = tiny_imagenet.filter(lambda item: item["label"] in keep_labels)
+
+    split_ds = tiny_imagenet.train_test_split(
+        train_size=1 - test_size,
+        seed=random_state,
+    )
+    test_ds = _process_dataset(split_ds["test"])
+
+    split_ds = split_ds["train"].train_test_split(
+        train_size=train_size,
+        seed=random_state,
+    )
+    train_ds = _process_dataset(split_ds["train"])
+    val_ds = _process_dataset(split_ds["test"])
+    return train_ds, val_ds, test_ds
+
+
+def save_model(model, train_loss, val_loss, model_name):
+    torch.save(model.state_dict(), imgnet_model_data_path / f"{model_name}_weights.pth")
+    with open(
+        imgnet_model_data_path / f"{model_name}_train_val_loss.pkl", "wb"
+    ) as file:
+        pkl.dump([train_loss, val_loss], file)
+
+
+def load_model(model, model_name):
+    model.load_state_dict(
+        torch.load(imgnet_model_data_path / f"{model_name}_weights.pth")
+    )
+    with open(
+        imgnet_model_data_path / f"{model_name}_train_val_loss.pkl", "rb"
+    ) as file:
+        train_loss, val_loss = pkl.load(file)
+    return train_loss, val_loss
+
+
+def save_results(results, file_name):
+    with open(imgnet_model_data_path / f"{file_name}", "wb") as file:
+        pkl.dump(results, file)
+
+
+def load_results(file_name):
+    with open(imgnet_model_data_path / f"{file_name}", "rb") as file:
+        results = pkl.load(file)
+    return results
+
+
+def plot_sample_images(
+    dataset,
+    labels,
+    n_images_per_class=3,
+    figsize=(8, 8),
+):
+    plt.rcParams["figure.figsize"] = figsize
+    fig, axes = plt.subplots(nrows=n_images_per_class, ncols=len(labels))
+    fig.suptitle("Examples of training images")
+    for class_idx, class_label in enumerate(labels):
+        for img_idx, (_, img_data) in enumerate(
+            dataset[dataset["labels"] == class_label].iterrows()
+        ):
+            axes[img_idx, class_idx].imshow(img_data["images"])
+            axes[img_idx, class_idx].axis("off")
+            axes[img_idx, class_idx].set_title(f"img label: {class_label}")
+            if img_idx + 1 >= n_images_per_class:
+                break
+    plt.show()
+
+
+def plot_top_bottom_if_images(
+    subset_influences,
+    subset_images,
+    num_to_plot,
+    figsize=(8, 8),
+):
+    top_if_idxs = np.argsort(subset_influences)[-num_to_plot:]
+    bottom_if_idxs = np.argsort(subset_influences)[:num_to_plot]
+
+    fig, axes = plt.subplots(nrows=num_to_plot, ncols=2)
+    plt.rcParams["figure.figsize"] = figsize
+    fig.suptitle("Botton (left) and top (right) influences")
+
+    for plt_idx, img_idx in enumerate(bottom_if_idxs):
+        axes[plt_idx, 0].set_title(f"img influence: {subset_influences[img_idx]:0f}")
+        axes[plt_idx, 0].imshow(subset_images[img_idx])
+        axes[plt_idx, 0].axis("off")
+
+    for plt_idx, img_idx in enumerate(top_if_idxs):
+        axes[plt_idx, 1].set_title(f"img influence: {subset_influences[img_idx]:0f}")
+        axes[plt_idx, 1].imshow(subset_images[img_idx])
+        axes[plt_idx, 1].axis("off")
+
+    plt.show()
+
+
+def plot_train_val_loss(train_loss, val_loss):
+    _, ax = plt.subplots()
+    ax.plot(train_loss, label="Train")
+    ax.plot(val_loss, label="Val")
+    ax.set_ylabel("Loss")
+    ax.set_xlabel("Train epoch")
+    ax.legend()
+    plt.show()
+
+
+def get_corrupted_imagenet(
+    dataset, labels_to_keep, fraction_to_corrupt, avg_influences
+):
+    indices_to_corrupt = []
+    corrupted_dataset = deepcopy(dataset)
+    corrupted_indices = {l: [] for l in labels_to_keep}
+
+    avg_influences_series = pd.DataFrame()
+    avg_influences_series["avg_influences"] = avg_influences
+    avg_influences_series["labels"] = dataset["labels"]
+
+    for label in labels_to_keep:
+        class_data = avg_influences_series[avg_influences_series["labels"] == label]
+        num_corrupt = int(fraction_to_corrupt * len(class_data))
+        indices_to_corrupt = class_data.nlargest(
+            num_corrupt, "avg_influences"
+        ).index.tolist()
+        wrong_labels = [l for l in labels_to_keep if l != label]
+        for img_idx in indices_to_corrupt:
+            sample_label = np.random.choice(wrong_labels)
+            corrupted_dataset.at[img_idx, "labels"] = sample_label
+            corrupted_indices[sample_label].append(img_idx)
+    return corrupted_dataset, corrupted_indices
+
+
+def plot_influence_distribution(
+    corrupted_dataset,
+    labels_to_keep,
+    corrupted_indices,
+    avg_corrupted_influences,
+    figsize=(16, 8),
+):
+    plt.rcParams["figure.figsize"] = figsize
+    fig, axes = plt.subplots(nrows=1, ncols=2)
+    fig.suptitle("Distribution of corrupted and clean influences.")
+    avg_label_influence = pd.DataFrame(
+        columns=["label", "avg_non_corrupted_infl", "avg_corrupted_infl"]
+    )
+    for idx, label in enumerate(labels_to_keep):
+        avg_influences_series = pd.Series(avg_corrupted_influences)
+        class_influences = avg_influences_series[corrupted_dataset["labels"] == label]
+        corrupted_infl = class_influences[
+            class_influences.index.isin(corrupted_indices[label])
+        ]
+        non_corrupted_infl = class_influences[
+            ~class_influences.index.isin(corrupted_indices[label])
+        ]
+        avg_label_influence.loc[idx] = [
+            label,
+            np.mean(non_corrupted_infl),
+            np.mean(corrupted_infl),
+        ]
+        axes[idx].hist(
+            non_corrupted_infl, label="non corrupted data", density=True, alpha=0.7
+        )
+        axes[idx].hist(corrupted_infl, label="corrupted data", density=True, alpha=0.7)
+        axes[idx].set_xlabel("influence values")
+        axes[idx].set_ylabel("Points distribution")
+        axes[idx].set_title(f"influences for {label=}")
+        axes[idx].legend()
+    plt.show()
+    return avg_label_influence.astype({"label": "int32"})

@@ -467,60 +467,6 @@ def load_wine_dataset(
     )
 
 
-def load_preprocess_imagenet(
-    train_size: float,
-    test_size: float,
-    downsample_ds_to_fraction: float = 1,
-    keep_labels: Optional[List] = None,
-    random_state: Optional[int] = None,
-    is_CI: bool = False,
-):
-    try:
-        from datasets import load_dataset
-        from torchvision import transforms
-    except ImportError as e:
-        raise RuntimeError(
-            "PyTorch, Torchvision and datasets are required to load and "
-            "process the imagenet dataset."
-        ) from e
-
-    preprocess_rgb = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.225, 0.225, 0.225]),
-        ]
-    )
-
-    def _process_dataset(ds):
-        processed_ds = {"normalized_images": [], "labels": [], "images": []}
-        for i, item in enumerate(ds):
-            if item["image"].mode == "RGB":
-                processed_ds["normalized_images"].append(preprocess_rgb(item["image"]))
-                processed_ds["images"].append(item["image"])
-                processed_ds["labels"].append(item["label"])
-        return pd.DataFrame.from_dict(processed_ds)
-
-    tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="train")
-    if downsample_ds_to_fraction != 1:
-        tiny_imagenet = tiny_imagenet.shard(1 / downsample_ds_to_fraction, 0)
-    if keep_labels is not None:
-        tiny_imagenet = tiny_imagenet.filter(lambda item: item["label"] in keep_labels)
-
-    split_ds = tiny_imagenet.train_test_split(
-        train_size=1 - test_size,
-        seed=random_state,
-    )
-    test_ds = _process_dataset(split_ds["test"])
-
-    split_ds = split_ds["train"].train_test_split(
-        train_size=train_size,
-        seed=random_state,
-    )
-    train_ds = _process_dataset(split_ds["train"])
-    val_ds = _process_dataset(split_ds["test"])
-    return train_ds, val_ds, test_ds
-
-
 def synthetic_classification_dataset(
     mus: np.ndarray,
     sigma: float,
