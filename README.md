@@ -32,24 +32,28 @@ Data Valuation is the task of estimating the intrinsic value of a data point
 wrt. the training set, the model and a scoring function. We currently implement
 methods from the following papers:
 
-- Ghorbani, Amirata, and James Zou. ‘Data Shapley: Equitable Valuation of Data for
-  Machine Learning’. In International Conference on Machine Learning, 2242–51.
-  PMLR, 2019. http://proceedings.mlr.press/v97/ghorbani19c.html.
-- Wang, Tianhao, Yu Yang, and Ruoxi Jia. ‘Improving Cooperative Game Theory-Based
-  Data Valuation via Data Utility Learning’. arXiv, 2022.
-  https://doi.org/10.48550/arXiv.2107.06336.
+- Ghorbani, Amirata, and James Zou. 
+  [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).
+  In International Conference on Machine Learning, 2242–51. PMLR, 2019.
+- Wang, Tianhao, Yu Yang, and Ruoxi Jia. 
+  [Improving Cooperative Game Theory-Based Data Valuation via Data Utility Learning](https://doi.org/10.48550/arXiv.2107.06336).
+  arXiv, 2022.
 - Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nezihe Merve Gurel, Bo Li,
-  Ce Zhang, Costas Spanos, and Dawn Song. ‘Efficient Task-Specific Data Valuation
-  for Nearest Neighbor Algorithms’. Proceedings of the VLDB Endowment 12, no. 11 (1
-  July 2019): 1610–23. https://doi.org/10.14778/3342263.3342637.
+  Ce Zhang, Costas Spanos, and Dawn Song.
+  [Efficient Task-Specific Data Valuation for Nearest Neighbor Algorithms](https://doi.org/10.14778/3342263.3342637).
+  Proceedings of the VLDB Endowment 12, no. 11 (1 July 2019): 1610–23.
+- Okhrati, Ramin, and Aldo Lipani.
+  [A Multilinear Sampling Algorithm to Estimate Shapley Values](https://doi.org/10.1109/ICPR48806.2021.9412511).
+  In 2020 25th International Conference on Pattern Recognition (ICPR), 7992–99.
+  IEEE, 2021.
 
 Influence Functions compute the effect that single points have on an estimator /
 model. We implement methods from the following papers:
 
-- Koh, Pang Wei, and Percy Liang. ‘Understanding Black-Box Predictions via
-  Influence Functions’. In Proceedings of the 34th International Conference on
-  Machine Learning, 70:1885–94. Sydney, Australia: PMLR, 2017.
-  http://proceedings.mlr.press/v70/koh17a.html.
+- Koh, Pang Wei, and Percy Liang.
+  [Understanding Black-Box Predictions via Influence Functions](http://proceedings.mlr.press/v70/koh17a.html).
+  In Proceedings of the 34th International Conference on Machine Learning,
+  70:1885–94. Sydney, Australia: PMLR, 2017.
 
 # Installation
 
@@ -98,18 +102,20 @@ Data Shapley values:
 ```python
 import numpy as np
 from pydvl.utils import Dataset, Utility
-from pydvl.shapley import compute_shapley_values
+from pydvl.value.shapley import compute_shapley_values
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
 X, y = np.arange(100).reshape((50, 2)), np.arange(50)
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.5, random_state=16
-)
+        X, y, test_size=0.5, random_state=16
+        )
 dataset = Dataset(X_train, y_train, X_test, y_test)
 model = LinearRegression()
 utility = Utility(model, dataset)
-values, errors = compute_shapley_values(u=utility, max_iterations=100)
+values = compute_shapley_values(
+        u=utility, max_iterations=100, mode="truncated_montecarlo"
+    )
 ```
 
 For more instructions and information refer to [Getting

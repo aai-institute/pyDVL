@@ -3,57 +3,64 @@ This module contains routines for numerical computations used across the
 library.
 """
 
-import math
-from enum import Enum
 from itertools import chain, combinations
 from typing import (
     TYPE_CHECKING,
     Collection,
     Generator,
     Iterator,
-    List,
     Optional,
+    Sequence,
     Tuple,
     TypeVar,
+    Union,
 )
 
 import numpy as np
 
+from pydvl.utils.types import compose_score
+
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
-    FloatOrArray = TypeVar("FloatOrArray", float, "NDArray")
+FloatOrArray = TypeVar("FloatOrArray", float, "NDArray")
 
 __all__ = [
-    "powerset",
-    "random_powerset",
+    "get_running_avg_variance",
     "linear_regression_analytical_derivative_d2_theta",
     "linear_regression_analytical_derivative_d_theta",
     "linear_regression_analytical_derivative_d_x_d_theta",
+    "lower_bound_hoeffding",
+    "powerset",
     "random_matrix_with_condition_number",
-    "spearman",
+    "random_powerset",
     "top_k_value_accuracy",
-    "get_running_avg_variance",
-    "PowerSetDistribution",
+    "squashed_r2",
+    "squashed_variance",
 ]
 
 T = TypeVar("T")
 
 
-def powerset(it: "NDArray") -> Iterator[Collection[T]]:
+def powerset(s: Union[Sequence, "NDArray"]) -> Iterator[Collection[T]]:
     """Returns an iterator for the power set of the argument.
 
-    Subsets are generated in sequence by growing size. See
-    :func:`random_powerset` for random sampling.
+     Subsets are generated in sequence by growing size. See
+     :func:`random_powerset` for random sampling.
 
     >>> from pydvl.utils.numeric import powerset
     >>> list(powerset([1,2]))
     [(), (1,), (2,), (1, 2)]
+
+     :param s: The set to use
+     :return: An iterator
     """
-    s = list(it)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
 
+# FIXME: this is not a lower bound but an upper bound (with these many samples
+#  one achieves the desired accuracy) and it only applies to the permutation
+#  definition
 def lower_bound_hoeffding(delta: float, eps: float, score_range: float) -> int:
     """Lower bound on the number of samples required for MonteCarlo Shapley to
     obtain an (ε,δ)-approximation.
@@ -64,76 +71,43 @@ def lower_bound_hoeffding(delta: float, eps: float, score_range: float) -> int:
     return int(np.ceil(np.log(2 / delta) * score_range**2 / (2 * eps**2)))
 
 
-class PowerSetDistribution(Enum):
-    UNIFORM = "uniform"
-    WEIGHTED = "weighted"
-
-
 def random_powerset(
-    s: "NDArray",
-    max_subsets: Optional[int] = None,
-    dist: PowerSetDistribution = PowerSetDistribution.WEIGHTED,
+    s: "NDArray", max_subsets: Optional[int] = None, q: float = 0.5
 ) -> Generator["NDArray", None, None]:
-    """Uniformly samples a subset from the power set of the argument, without
+    """Samples subsets from the power set of the argument, without
     pre-generating all subsets and in no order.
-
-    This function accepts arbitrarily large values for n. However, values
-    in the tens of thousands can take very long to compute, hence the ability
-    to run in parallel with num_jobs.
 
     See `powerset()` if you wish to deterministically generate all subsets.
 
+    To generate subsets, `len(s)` Bernoulli draws with probability `q` are drawn.
+    The default value of `q = 0.5` provides a uniform distribution over the
+    power set of `s`. Other choices can be used e.g. to implement
+    :func:`Owen sampling <pydvl.value.shapley.montecarlo.owen_sampling_shapley>`.
+
     :param s: set to sample from
     :param max_subsets: if set, stop the generator after this many steps.
-    :param dist: whether to sample from the "true" distribution, i.e. weighted
-        by the number of sets of size k, or "uniformly", taking e.g. the empty
-        set to be as likely as any other
+        Defaults to `np.iinfo(np.int32).max`
+    :param q: Sampling probability for elements. The default 0.5 yields a
+        uniform distribution over the power set of s.
+
+    :return: Samples from the power set of s
+    :raises: TypeError: if the data `s` is not a NumPy array
+    :raises: ValueError: if the element sampling probability is not in [0,1]
+
     """
     if not isinstance(s, np.ndarray):
         raise TypeError("Set must be an NDArray")
+    if q < 0 or q > 1:
+        raise ValueError("Element sampling probability must be in [0,1]")
 
-    n = len(s)
     total = 1
     if max_subsets is None:
         max_subsets = np.iinfo(np.int32).max
-
-    def subset_probabilities(n: int) -> List[float]:
-        return [math.comb(n, j) / 2**n for j in range(n + 1)]
-
-    _subset_probabilities = subset_probabilities
-
     while total <= max_subsets:
-        if dist == PowerSetDistribution.WEIGHTED:
-            k = np.random.choice(np.arange(n + 1), p=_subset_probabilities(n))
-        else:
-            k = np.random.choice(np.arange(n + 1))
-        subset = np.random.choice(s, replace=False, size=k)
+        selection = np.random.uniform(size=len(s)) > q
+        subset = s[selection]
         yield subset
         total += 1
-
-
-def spearman(x: "NDArray", y: "NDArray") -> float:
-    """Spearman correlation for integer, distinct ranks.
-
-    :return: A float in [-1,1]: -1 for reversed ranks, 1 for perfect match, 0
-        for independent ranks
-    """
-    lx = len(x)
-    ly = len(y)
-    if lx == 0 or ly == 0 or lx != ly:
-        raise ValueError("Ranks must be non empty and same length")
-    if len(np.unique(x)) != lx or len(np.unique(y)) != ly:
-        raise ValueError("Ranks must be unique")
-    for a in x, y:
-        if min(a) < 0 or min(a) > 1 or max(a) - min(a) > len(a):
-            raise ValueError("Ranks must be in range [0,n-1] or [1,n]")
-    try:
-        if x.dtype != int or y.dtype != int:
-            raise ValueError("Ranks must be integers")
-    except AttributeError:
-        raise TypeError("Input must be numpy.ndarray")
-
-    return 1 - 6 * float(np.sum((x - y) ** 2)) / (lx**3 - lx)
 
 
 def random_matrix_with_condition_number(n: int, condition_number: float) -> "NDArray":
@@ -239,15 +213,16 @@ def linear_regression_analytical_derivative_d_x_d_theta(
 
 
 def get_running_avg_variance(
-    previous_avg: "FloatOrArray",
-    previous_variance: "FloatOrArray",
-    new_value: "FloatOrArray",
+    previous_avg: FloatOrArray,
+    previous_variance: FloatOrArray,
+    new_value: FloatOrArray,
     count: int,
-) -> Tuple["FloatOrArray", "FloatOrArray"]:
+) -> Tuple[FloatOrArray, FloatOrArray]:
     """Uses Welford's algorithm to calculate the running average and variance of
      a set of numbers.
 
-    See [Welford's algorithm in wikipedia](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm)
+    See `Welford's algorithm in wikipedia
+    <https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm>`_
 
     :param previous_avg: average value at previous step
     :param previous_variance: variance at previous step
@@ -274,3 +249,13 @@ def top_k_value_accuracy(y_true: "NDArray", y_pred: "NDArray", k: int = 3) -> fl
     top_k_pred_values = np.argsort(y_pred)[-k:]
     top_k_accuracy = len(np.intersect1d(top_k_exact_values, top_k_pred_values)) / k
     return top_k_accuracy
+
+
+def sigmoid(x: float) -> float:
+    return float(1 / (1 + np.exp(-x)))
+
+
+squashed_r2 = compose_score("r2", sigmoid, "squashed r2")
+squashed_variance = compose_score(
+    "explained_variance", sigmoid, "squashed explained variance"
+)

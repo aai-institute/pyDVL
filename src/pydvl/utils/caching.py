@@ -8,17 +8,35 @@ service, locally or remotely, see :ref:`caching setup`.
 .. warning::
 
    Function evaluations are cached with a key based on the function's signature
-   and code. This can lead to undesired cache reuse, see `Cache reuse`.
+   and code. This can lead to undesired cache hits, see :ref:`cache reuse`.
+
+   Remember **not to reuse utility objects for different datasets**.
 
 Configuration
 -------------
 
-Memoization is added by default to any callable used to construct a
-:class:`pydvl.utils.utility.Utility` (done with the decorator :func:`memcached`),
-but it can be disabled. Depending on the nature of the utility you might want to
-enable the computation of a running average of function values, see below. You
-can see all configuration options under
+Memoization is disabled by default but can be enabled easily, see :ref:`caching setup`.
+When enabled, it will be added to any callable used to construct a
+:class:`pydvl.utils.utility.Utility` (done with the decorator :func:`memcached`).
+Depending on the nature of the utility you might want to
+enable the computation of a running average of function values, see
+:ref:`caching stochastic functions`. You can see all configuration options under
 :class:`~pydvl.utils.config.MemcachedConfig`.
+
+.. rubric:: Default configuration
+
+.. code-block:: python
+
+   default_config = dict(
+       server=('localhost', 11211),
+       connect_timeout=1.0,
+       timeout=0.1,
+       # IMPORTANT! Disable small packet consolidation:
+       no_delay=True,
+       serde=serde.PickleSerde(pickle_version=PICKLE_VERSION)
+   )
+
+.. _caching stochastic functions:
 
 Usage with stochastic functions
 -------------------------------
@@ -32,23 +50,40 @@ memoization.
 This behaviour can be activated with
 :attr:`~pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations`.
 
+.. _cache reuse:
+
 Cache reuse
 -----------
 
-When a function is wrapped with :func:`memcached` for memoization, its signature
-(input and output names) and code are used as a key for the cache. If you are
-running experiments with the same utility but different datasets, this can lead
-to evaluations of the utility on new data returning old values because utilities
-typically only use sample indices as arguments (so there is no way to tell the
-difference between '1' for dataset A and '1' for dataset 2 from the point of
-view of the cache). One solution is to add dummy arguments with the dataset
-name. Another is to empty the cache between runs. And yet another is to simply
-use a different function name for the utility to be computed on the new dataset.
+When working directly with :func:`memcached`, it is essential to only cache pure
+functions. If they have any kind of state, either internal or external (e.g. a
+closure over some data that may change), then the cache will fail to notice this
+and the same value will be returned.
 
-If a function is going to run across multiple processes and some reporting
-arguments are added (like a `job_id` for logging purposes), these will be part
-of the signature and make the functions distinct to the eyes of the cache. This
-can be avoided with the use of
+When a function is wrapped with :func:`memcached` for memoization, its signature
+(input and output names) and code are used as a key for the cache. Alternatively
+you can pass a custom value to be used as key with
+
+.. code-block:: python
+
+   cached_fun = memcached(**cache_options)(fun, signature=custom_signature)
+
+If you are running experiments with the same :class:`~pydvl.utils.utility.Utility`
+but different datasets, this will lead to evaluations of the utility on new data
+returning old values because utilities only use sample indices as arguments (so
+there is no way to tell the difference between '1' for dataset A and '1' for
+dataset 2 from the point of view of the cache). One solution is to empty the
+cache between runs, but the preferred one is to **use a different Utility
+object for each dataset**.
+
+Unexpected cache misses
+-----------------------
+
+Because all arguments to a function are used as part of the key for the cache,
+sometimes one must exclude some of them. For example, If a function is going to
+run across multiple processes and some reporting arguments are added (like a
+`job_id` for logging purposes), these will be part of the signature and make the
+functions distinct to the eyes of the cache. This can be avoided with the use of
 :attr:`~pydvl.utils.config.MemcachedConfig.ignore_args` in the configuration.
 
 
@@ -80,7 +115,7 @@ T = TypeVar("T")
 
 
 @dataclass
-class CacheInfo:
+class CacheStats:
     """Statistics gathered by cached functions."""
 
     sets: int = 0
@@ -109,7 +144,7 @@ def memcached(
     """
     Transparent, distributed memoization of function calls.
 
-    Given a function and its signature, memcached creates a distributed cache
+    Given a function and its signature, memcached uses a distributed cache
     that, for each set of inputs, keeps track of the average returned value,
     with variance and number of times it was calculated.
 
@@ -121,6 +156,15 @@ def memcached(
     not be called anymore. In other words, the function will be recomputed
     until the value has stabilized with a standard error smaller than
     `rtol_stderr * running average`.
+
+    .. warning::
+
+       Do not cache functions with state! See :ref:`cache reuse`
+
+    .. code-block:: python
+       :caption: Example usage
+
+       cached_fun = memcached(**cache_options)(heavy_computation)
 
     :param client_config: configuration for `pymemcache's Client()
         <https://pymemcache.readthedocs.io/en/stable/apidoc/pymemcache.client.base.html>`_.
@@ -145,19 +189,6 @@ def memcached(
         do not affect the result of the computation.
     :return: A wrapped function
 
-    **Default configuration:**
-
-    .. code-block:: python
-       :caption: Default configuration
-
-       default_config = dict(
-           server=('localhost', 11211),
-           connect_timeout=1.0,
-           timeout=0.1,
-           # IMPORTANT! Disable small packet consolidation:
-           no_delay=True,
-           serde=serde.PickleSerde(pickle_version=PICKLE_VERSION)
-       )
     """
     if ignore_args is None:
         ignore_args = []
@@ -199,9 +230,13 @@ def memcached(
 
         @wraps(fun, updated=[])  # don't try to use update() for a class
         class Wrapped:
+            config: MemcachedClientConfig
+            stats: CacheStats
+            client: RetryingClient
+
             def __init__(self, config: MemcachedClientConfig):
                 self.config = config
-                self.cache_info = CacheInfo()
+                self.stats = CacheStats()
                 self.client = connect(self.config)
                 self._signature = signature
 
@@ -222,10 +257,10 @@ def memcached(
                         result_dict["count"] = 1
                         result_dict["variance"] = 0
                         self.client.set(key, result_dict, noreply=True)
-                        self.cache_info.sets += 1
-                    self.cache_info.misses += 1
+                        self.stats.sets += 1
+                    self.stats.misses += 1
                 elif allow_repeated_evaluations:
-                    self.cache_info.hits += 1
+                    self.stats.hits += 1
                     value = result_dict["value"]
                     count = result_dict["count"]
                     variance = result_dict["variance"]
@@ -242,9 +277,9 @@ def memcached(
                         result_dict["count"] = count + 1
                         result_dict["variance"] = new_var
                         self.client.set(key, result_dict, noreply=True)
-                        self.cache_info.sets += 1
+                        self.stats.sets += 1
                 else:
-                    self.cache_info.hits += 1
+                    self.stats.hits += 1
                 return result_dict["value"]  # type: ignore
 
             def __getstate__(self):
@@ -258,7 +293,7 @@ def memcached(
             def __setstate__(self, d: dict):
                 """Restores a client connection after loading from a pickle."""
                 self.config = d["config"]
-                self.cache_info = d["cache_info"]
+                self.stats = d["stats"]
                 self.client = Client(**self.config)
                 self._signature = signature
 
@@ -267,15 +302,15 @@ def memcached(
                 try:
                     result = self.client.get(key)
                 except socket.timeout as e:
-                    self.cache_info.timeouts += 1
+                    self.stats.timeouts += 1
                     warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
                 except OSError as e:
-                    self.cache_info.errors += 1
+                    self.stats.errors += 1
                     warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
                 except AttributeError as e:
                     # FIXME: this depends on _recv() failing on invalid sockets
                     # See pymemcache.base.py,
-                    self.cache_info.reconnects += 1
+                    self.stats.reconnects += 1
                     warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
                     self.client = connect(self.config)
                 return result

@@ -4,9 +4,13 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.shapley import combinatorial_exact_shapley, permutation_exact_shapley
 from pydvl.utils import GroupedDataset, MemcachedConfig, Utility
-from tests.conftest import check_total_value, check_values
+from pydvl.value.shapley.naive import (
+    combinatorial_exact_shapley,
+    permutation_exact_shapley,
+)
+
+from .. import check_total_value, check_values
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +23,7 @@ log = logging.getLogger(__name__)
         (6, permutation_exact_shapley, 0.01, 1e-5),
     ],
 )
-def test_analytic_exact_shapley(analytic_shapley, fun, rtol, total_atol):
+def test_analytic_exact_shapley(num_samples, analytic_shapley, fun, rtol, total_atol):
     """Compares the combinatorial exact shapley and permutation exact shapley with
     the analytic_shapley calculation for a dummy model.
     """
@@ -30,7 +34,7 @@ def test_analytic_exact_shapley(analytic_shapley, fun, rtol, total_atol):
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points, score_type",
+    "a, b, num_points, scorer",
     [
         (2, 0, 20, "r2"),
         (2, 1, 20, "r2"),
@@ -39,12 +43,12 @@ def test_analytic_exact_shapley(analytic_shapley, fun, rtol, total_atol):
     ],
 )
 def test_linear(
-    linear_dataset, memcache_client_config, score_type, rtol=0.01, total_atol=1e-5
+    linear_dataset, memcache_client_config, scorer, rtol=0.01, total_atol=1e-5
 ):
     linear_utility = Utility(
         LinearRegression(),
         data=linear_dataset,
-        scoring=score_type,
+        scoring=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
 
@@ -58,18 +62,14 @@ def test_linear(
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points, num_groups, score_type",
-    [
-        (2, 0, 50, 3, "r2"),
-        (2, 1, 100, 5, "r2"),
-        (2, 1, 100, 5, "explained_variance"),
-    ],
+    "a, b, num_points, num_groups, scorer",
+    [(2, 0, 50, 3, "r2"), (2, 1, 100, 5, "r2"), (2, 1, 100, 5, "explained_variance")],
 )
 def test_grouped_linear(
     linear_dataset,
     num_groups,
     memcache_client_config,
-    score_type,
+    scorer,
     rtol=0.01,
     total_atol=1e-5,
 ):
@@ -80,7 +80,7 @@ def test_grouped_linear(
     grouped_linear_utility = Utility(
         LinearRegression(),
         data=grouped_linear_dataset,
-        scoring=score_type,
+        scoring=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     values_combinatorial = combinatorial_exact_shapley(
@@ -97,7 +97,7 @@ def test_grouped_linear(
 
 
 @pytest.mark.parametrize(
-    "a, b, num_points, score_type",
+    "a, b, num_points, scorer",
     [
         (2, 1, 20, "explained_variance"),
         (2, 0, 20, "r2"),
@@ -106,25 +106,24 @@ def test_grouped_linear(
     ],
 )
 def test_linear_with_outlier(
-    linear_dataset, memcache_client_config, score_type, total_atol=1e-5
+    linear_dataset, memcache_client_config, scorer, total_atol=1e-5
 ):
     outlier_idx = np.random.randint(len(linear_dataset.y_train))
     linear_dataset.y_train[outlier_idx] -= 100
     linear_utility = Utility(
         LinearRegression(),
         data=linear_dataset,
-        scoring=score_type,
+        scoring=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     shapley_values = permutation_exact_shapley(linear_utility, progress=False)
-    log.info(f"Shapley values: {shapley_values}")
     check_total_value(linear_utility, shapley_values, atol=total_atol)
 
-    assert int(list(shapley_values.keys())[0]) == outlier_idx
+    assert shapley_values.indices[0] == outlier_idx
 
 
 @pytest.mark.parametrize(
-    "coefficients, score_type",
+    "coefficients, scorer",
     [
         (np.random.randint(-3, 3, size=3), "r2"),
         (np.random.randint(-3, 3, size=5), "neg_median_absolute_error"),
@@ -135,7 +134,7 @@ def test_polynomial(
     polynomial_dataset,
     polynomial_pipeline,
     memcache_client_config,
-    score_type,
+    scorer,
     rtol=0.01,
     total_atol=1e-5,
 ):
@@ -143,7 +142,7 @@ def test_polynomial(
     poly_utility = Utility(
         polynomial_pipeline,
         dataset,
-        scoring=score_type,
+        scoring=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
 
@@ -157,7 +156,7 @@ def test_polynomial(
 
 
 @pytest.mark.parametrize(
-    "coefficients, score_type",
+    "coefficients, scorer",
     [
         (np.random.randint(-3, 3, size=3), "r2"),
         (np.random.randint(-3, 3, size=3), "neg_median_absolute_error"),
@@ -168,7 +167,7 @@ def test_polynomial_with_outlier(
     polynomial_dataset,
     polynomial_pipeline,
     memcache_client_config,
-    score_type,
+    scorer,
     total_atol=1e-5,
 ):
     dataset, _ = polynomial_dataset
@@ -177,12 +176,11 @@ def test_polynomial_with_outlier(
     poly_utility = Utility(
         polynomial_pipeline,
         dataset,
-        scoring=score_type,
+        scoring=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
 
     shapley_values = permutation_exact_shapley(poly_utility, progress=False)
-    log.info(f"Shapley values: {shapley_values}")
     check_total_value(poly_utility, shapley_values, atol=total_atol)
 
-    assert int(list(shapley_values.keys())[0]) == outlier_idx
+    assert shapley_values[0].index == outlier_idx

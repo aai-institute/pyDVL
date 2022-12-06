@@ -3,22 +3,22 @@ This module contains classes to manage and learn utility functions for the
 computation of values. Please see the documentation on :ref:`data valuation` for
 more information.
 
-:class:`Utility` holds information about model, data and scoring function (which
-is the utility* function itself for Shapley value). It is automatically cached
-across machines.
+:class:`Utility` holds information about model, data and scoring function (the
+latter being what one usually understands under *utility* in the general
+definition of Shapley value). It is automatically cached across machines.
 
 :class:`DataUtilityLearning` adds support for learning the scoring function
-to avoid repeated re-training of the model.
+to avoid repeated re-training of the model to compute the score.
 
 """
 import logging
 import warnings
-from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, Optional, Tuple, Union
 
 import numpy as np
 from sklearn.metrics import check_scoring
 
-from .caching import memcached, serialize
+from .caching import CacheStats, memcached, serialize
 from .config import MemcachedConfig
 from .dataset import Dataset
 from .types import Scorer, SupervisedModel
@@ -59,36 +59,49 @@ class Utility:
         Used only when catch_errors is True
     :param default_score: score in the case of models that have not been fit,
         e.g. when too little data is passed, or errors arise.
-    :param enable_cache: whether to use memcached for memoization.
-    :param cache_options:
+    :param enable_cache: If True, use memcached for memoization.
+    :param cache_options: Optional configuration object for memcached.
+
+    :Example:
+
+    >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
+    >>> from sklearn.linear_model import LinearRegression, LogisticRegression
+    >>> from sklearn.datasets import load_iris
+    >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
+    >>> u = Utility(LogisticRegression(random_state=16), dataset)
+    >>> u(dataset.indices)
+    0.9
+
     """
 
     model: SupervisedModel
     data: Dataset
-    scoring: Optional[Scorer]
+    scorer: Scorer
 
     def __init__(
         self,
         model: SupervisedModel,
         data: Dataset,
-        scoring: Optional[Scorer] = None,
+        scoring: Optional[Union[str, Scorer]] = None,
         *,
         catch_errors: bool = True,
         show_warnings: bool = False,
         default_score: float = 0.0,
-        enable_cache: bool = True,
+        enable_cache: bool = False,
         cache_options: Optional[MemcachedConfig] = None,
     ):
         self.model = model
         self.data = data
-        self.scoring = scoring
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
         self.default_score = default_score
         self.enable_cache = enable_cache
-        self.cache_options = cache_options
+        if cache_options is None:
+            self.cache_options: MemcachedConfig = MemcachedConfig()
+        else:
+            self.cache_options = cache_options
         self._signature = serialize((hash(model), hash(data), hash(scoring)))
-
+        self.scorer = check_scoring(self.model, scoring)
         self._initialize_utility_wrapper()
 
         # FIXME: can't modify docstring of methods. Instead, I could use a
@@ -97,11 +110,7 @@ class Utility:
 
     def _initialize_utility_wrapper(self):
         if self.enable_cache:
-            if self.cache_options is None:
-                cache_options = dict()  # type: ignore
-            else:
-                cache_options = self.cache_options
-            self._utility_wrapper = memcached(**cache_options)(  # type: ignore
+            self._utility_wrapper = memcached(**self.cache_options)(  # type: ignore
                 self._utility, signature=self._signature
             )
         else:
@@ -113,23 +122,33 @@ class Utility:
 
     def _utility(self, indices: FrozenSet) -> float:
         """Fits the model on a subset of the training data and scores it on the
-        test data. If the object is constructed with cache_size > 0, results are
-        memoized to avoid duplicate computation. This is useful in particular
-        when computing utilities of permutations of indices.
+        test data. If the object is constructed with `enable_cache = True`,
+        results are memoized to avoid duplicate computation. This is useful in
+        particular when computing utilities of permutations of indices or when
+        randomly sampling from the powerset of indices.
 
-        :param indices: a subset of indices from data.x_train.index. The type
-         must be hashable for the caching to work, e.g. wrap the argument with
-         `frozenset` (rather than `tuple` since order should not matter)
-        :return: 0 if no indices are passed, `default_score` if we fail to fit the model,
-         otherwise the value the scorer on the test data.
+        :param indices: a subset of valid indices for
+            :attr:`~pydvl.utils.dataset.Dataset.x_train`. The type must be
+            hashable for the caching to work, e.g. wrap the argument with
+            `frozenset <https://docs.python.org/3/library/stdtypes.html#frozenset>`_
+            (rather than `tuple` since order should not matter)
+        :return: 0 if no indices are passed, `default_score` if we fail to fit
+            the model or the scorer returns NaN, otherwise the score on the test
+            data.
         """
         if not indices:
             return 0.0
-        scorer = check_scoring(self.model, self.scoring)
+
         x, y = self.data.get_training_data(list(indices))
         try:
             self.model.fit(x, y)
-            return float(scorer(self.model, self.data.x_test, self.data.y_test))
+            score = float(self.scorer(self.model, self.data.x_test, self.data.y_test))
+            # Some scorers raise exceptions if they return NaNs, some might not
+            if np.isnan(score):
+                if self.show_warnings:
+                    warnings.warn(f"Scorer returned NaN", RuntimeWarning)
+                return self.default_score
+            return score
         except Exception as e:
             if self.catch_errors:
                 if self.show_warnings:
@@ -141,6 +160,15 @@ class Utility:
     def signature(self):
         """Signature used for caching model results."""
         return self._signature
+
+    @property
+    def cache_stats(self) -> Optional[CacheStats]:
+        """Cache statistics are gathered when cache is enabled.
+        See :class:`~pydvl.utils.caching.CacheInfo` for all fields returned.
+        """
+        if self.enable_cache:
+            return self._utility_wrapper.stats  # type: ignore
+        return None
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -155,7 +183,8 @@ class Utility:
 
 
 class DataUtilityLearning:
-    """Implementation of Data Utility Learning algorithm [1]_.
+    """Implementation of Data Utility Learning algorithm
+    :footcite:t:`wang_improving_2022`.
 
     This object wraps a :class:`~pydvl.utils.utility.Utility` and delegates
     calls to it, up until a given budget (number of iterations). Every tuple
@@ -175,7 +204,7 @@ class DataUtilityLearning:
     >>> from sklearn.linear_model import LinearRegression, LogisticRegression
     >>> from sklearn.datasets import load_iris
     >>> dataset = Dataset.from_sklearn(load_iris())
-    >>> u = Utility(LogisticRegression(), dataset, enable_cache=False)
+    >>> u = Utility(LogisticRegression(), dataset)
     >>> wrapped_u = DataUtilityLearning(u, 3, LinearRegression())
     ... # First 3 calls will be computed normally
     >>> for i in range(3):
@@ -183,10 +212,10 @@ class DataUtilityLearning:
     >>> wrapped_u((1, 2, 3)) # Subsequent calls will be computed using the fit model for DUL
     0.0
 
-    .. note::
-        .. [1] `Tianhao Wang, Yu Yang, Ruoxi Jia.
-           "Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning."
-           arXiv, 2021 <https://arxiv.org/abs/2107.06336v2>`_.
+    .. rubric:: References
+
+    .. footbibliography::
+
     """
 
     def __init__(

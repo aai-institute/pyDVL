@@ -5,7 +5,6 @@ from pydvl.utils.numeric import (
     powerset,
     random_matrix_with_condition_number,
     random_powerset,
-    spearman,
 )
 
 
@@ -13,76 +12,58 @@ def test_powerset():
     with pytest.raises(TypeError):
         set(powerset(1))
 
-    assert set(powerset([])) == {()}
-    assert set(powerset((1, 2))) == {(), (1,), (1, 2), (2,)}
+    assert set(powerset(np.array([]))) == {()}
+    assert set(powerset(np.array([1, 2]))) == {(), (1,), (1, 2), (2,)}
 
     # Check correct number of sets of each size
     n = 10
-    sizes = np.zeros(n + 1)
-    for s in powerset(range(n)):
-        sizes[len(s)] += 1
-
-    assert all([np.math.comb(n, j) for j in range(n + 1)] == sizes)
-
-
-@pytest.mark.parametrize("n, max_subsets", [(0, 10), (1, 1e3)])
-def test_random_powerset(n, max_subsets, count_amplifier=3):
-    """
-    Tests that random_powerset samples the same items as the powerset method and
-    with constant frequency.
-    Sampling a number max_subsets of sets, we need to check that their relative frequency
-    is the same, up to sampling errors. To do so, we count the occurrence of each set, and
-    assert that the difference in count between the max and the min is much smaller than
-    the mean value count. More precisely, we assert that
-    (maximum_count - minimum_count) * count_amplifier < mean_count
-    where count_amplifier must be bigger than 1.
-    """
-    s = np.arange(1, n + 1)
-    result = random_powerset(
-        s,
-        max_subsets=max_subsets,
-    )
-
-    result_exact = set(powerset(s))
-    count_powerset = {key: 0 for key in result_exact}
-
-    for res_pow in result:
-        res_pow = tuple(np.sort(res_pow))
-        count_powerset[tuple(res_pow)] += 1
-    value_counts = list(count_powerset.values())
-    assert count_amplifier * (np.max(value_counts) - np.min(value_counts)) < np.mean(
-        value_counts
-    )
+    size_counts = np.zeros(n + 1)
+    item_counts = np.zeros(n, dtype=float)
+    for subset in powerset(np.arange(n)):
+        size_counts[len(subset)] += 1
+        for x in subset:
+            item_counts[x] += 1
+    assert np.allclose(item_counts / 2**n, 0.5)
+    assert all([np.math.comb(n, j) for j in range(n + 1)] == size_counts)
 
 
+# TODO: include tests for multiple values of q, including 0 and 1
 @pytest.mark.parametrize(
-    "x, y, expected",
-    [
-        ([], [], ValueError),
-        ([1], [1], TypeError),
-        ([1, 2, 3], [1, 2, 3], 1.0),
-        ([1, 2, 3], [3, 2, 1], -1.0),
-        (np.arange(1, 4), np.arange(4, 7), ValueError),
-        # FIXME: non deterministic test
-        pytest.param(
-            np.random.permutation(np.arange(100)),
-            np.random.permutation(np.arange(100)),
-            (0.0, 0.1),
-            marks=pytest.mark.skip("This test case is flaky."),
-        ),
-    ],
+    "n, max_subsets", [(1, 10), (10, 2**10), (5, 2**7), (0, 1)]
 )
-def test_spearman(x, y, expected):
-    if isinstance(expected, float):
-        x = np.array(x, dtype=int)
-        y = np.array(y, dtype=int)
-        assert spearman(x, y) == expected
-    elif isinstance(expected, tuple):
-        value, atol = expected
-        assert np.isclose(spearman(x, y), value, atol=atol)
-    else:
-        with pytest.raises(expected):
-            spearman(x, y)
+def test_random_powerset(n, max_subsets):
+    """Tests frequency of items in sets and frequencies of set sizes.
+
+    By Hoeffding for a Bernoulli, we have for each item in the set:
+        P(|ΣX-mq| > mε) < 2 exp(-2mε^2)
+    where m=max_subsets
+    For m=100, q=0.5, ε=0.1 this means that the count for any item will be
+    within ±1 of 5, with probability at least ≈ 1 - 2exp(-2) ≈ 0.73 which is
+    admittedly a rather crappy bound (and vacuous for low values of max_subsets)
+
+    For the frequencies of set sizes, we divide counts by number of sets to
+    allow for larger errors at the extrema (low and high set sizes), where the
+    counts are lower.
+    """
+    s = np.arange(n)
+    item_counts = np.zeros_like(s, dtype=np.float_)
+    size_counts = np.zeros(n + 1)
+    for subset in random_powerset(s, max_subsets=max_subsets):
+        size_counts[len(subset)] += 1
+        for item in subset:
+            item_counts[item] += 1
+    q = 0.5
+    eps = 0.1
+    item_frequencies = item_counts / max_subsets
+
+    assert np.count_nonzero(
+        np.abs(item_frequencies - q) > eps
+    ) < max_subsets * 2 * np.exp(-2 * max_subsets * eps**2)
+
+    true_size_counts = np.array([np.math.comb(n, j) for j in range(n + 1)])
+    assert np.allclose(
+        true_size_counts / 2**n, size_counts / max_subsets, atol=1 / (1 + n)
+    )
 
 
 @pytest.mark.parametrize(

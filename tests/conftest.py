@@ -1,18 +1,15 @@
 import functools
-from collections import OrderedDict, defaultdict
-from typing import Dict, TYPE_CHECKING, Optional, Sequence, Tuple, Type
+from collections import defaultdict
+from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
 
 import numpy as np
 import pytest
 import ray
 from pymemcache.client import Client
-from sklearn.linear_model import LinearRegression
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 
-from pydvl.utils import Dataset, MemcachedClientConfig, Utility
-from pydvl.utils.numeric import random_matrix_with_condition_number, spearman
+from pydvl.utils import Dataset, MemcachedClientConfig
 from pydvl.utils.parallel import available_cpus
+from pydvl.value import ValuationResult, ValuationStatus
 
 if TYPE_CHECKING:
     from _pytest.config import Config
@@ -109,7 +106,9 @@ def docker_services(
 @pytest.fixture(scope="session")
 def memcached_service(docker_ip, docker_services, do_not_start_memcache):
     """Ensure that memcached service is up and responsive.
-    If do_not_start_memcache is True then we just return the default values: 'localhost', 11211
+
+    If `do_not_start_memcache` is True then we just return the default values
+    'localhost', 11211
     """
     if do_not_start_memcache:
         return "localhost", 11211
@@ -126,7 +125,7 @@ def memcached_service(docker_ip, docker_services, do_not_start_memcache):
 
 
 @pytest.fixture(scope="function")
-def memcache_client_config(memcached_service):
+def memcache_client_config(memcached_service) -> MemcachedClientConfig:
 
     client_config = MemcachedClientConfig(
         server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
@@ -136,7 +135,7 @@ def memcache_client_config(memcached_service):
 
 
 @pytest.fixture(scope="function")
-def memcached_client(memcache_client_config):
+def memcached_client(memcache_client_config) -> Tuple[Client, MemcachedClientConfig]:
     from pymemcache.client import Client
 
     try:
@@ -152,59 +151,40 @@ def memcached_client(memcache_client_config):
 
 
 @pytest.fixture(scope="function")
-def boston_dataset(n_points, n_features):
+def boston_dataset(num_points, num_features) -> Dataset:
     from sklearn import datasets
 
     dataset = datasets.load_boston()
-    dataset.data = dataset.data[:n_points, :n_features]
-    dataset.feature_names = dataset.feature_names[:n_features]
-    dataset.target = dataset.target[:n_points]
+    dataset.data = dataset.data[:num_points, :num_features]
+    dataset.feature_names = dataset.feature_names[:num_features]
+    dataset.target = dataset.target[:num_points]
     return Dataset.from_sklearn(dataset, train_size=0.5)
 
 
 @pytest.fixture(scope="function")
-def linear_dataset(a, b, num_points):
+def linear_dataset(a: float, b: float, num_points: int):
+    """Constructs a dataset sampling from y=ax+b + eps, with eps~Gaussian and
+    x in [-1,1]
+
+    :param a: Slope
+    :param b: intercept
+    :param num_points: number of (x,y) samples to construct
+    :param train_size: fraction of points to use for training (between 0 and 1)
+
+    :return: Dataset with train/test split. call str() on it to see the parameters
+    """
     from sklearn.utils import Bunch
 
     step = 2 / num_points
+    stddev = 0.1
     x = np.arange(-1, 1, step)
-    y = np.random.normal(loc=a * x + b, scale=0.1)
+    y = np.random.normal(loc=a * x + b, scale=stddev)
     db = Bunch()
     db.data, db.target = x.reshape(-1, 1), y
-    db.DESCR = f"y~N({a}*x + {b}, 1)"
+    db.DESCR = f"{{y_i~N({a}*x_i + {b}, {stddev:0.2f}): i=1, ..., {num_points}}}"
     db.feature_names = ["x"]
     db.target_names = ["y"]
     return Dataset.from_sklearn(data=db, train_size=0.3)
-
-
-def polynomial(coefficients, x):
-    powers = np.arange(len(coefficients))
-    return np.power(x, np.tile(powers, (len(x), 1)).T).T @ coefficients
-
-
-@pytest.fixture
-def input_dimension(request) -> int:
-    return request.param
-
-
-@pytest.fixture
-def output_dimension(request) -> int:
-    return request.param
-
-
-@pytest.fixture
-def problem_dimension(request) -> int:
-    return request.param
-
-
-@pytest.fixture
-def batch_size(request) -> int:
-    return request.param
-
-
-@pytest.fixture
-def condition_number(request) -> float:
-    return request.param
 
 
 @pytest.fixture(autouse=True)
@@ -214,7 +194,7 @@ def seed_numpy(seed=42):
 
 @pytest.fixture
 def num_workers():
-    return min(8, available_cpus())
+    return max(1, available_cpus() - 1)
 
 
 @pytest.fixture
@@ -222,218 +202,7 @@ def n_jobs(num_workers):
     return num_workers
 
 
-@pytest.fixture(scope="function")
-def quadratic_linear_equation_system(quadratic_matrix: np.ndarray, batch_size: int):
-    A = quadratic_matrix
-    problem_dimension = A.shape[0]
-    b = np.random.random([batch_size, problem_dimension])
-    return A, b
-
-
-@pytest.fixture(scope="function")
-def quadratic_matrix(problem_dimension: int, condition_number: float):
-    return random_matrix_with_condition_number(problem_dimension, condition_number)
-
-
-@pytest.fixture(scope="function")
-def singular_quadratic_linear_equation_system(
-    quadratic_matrix: np.ndarray, batch_size: int
-):
-    A = quadratic_matrix
-    problem_dimension = A.shape[0]
-    i, j = tuple(np.random.choice(problem_dimension, replace=False, size=2))
-    if j < i:
-        i, j = j, i
-
-    v = (A[i] + A[j]) / 2
-    A[i], A[j] = v, v
-    b = np.random.random([batch_size, problem_dimension])
-    return A, b
-
-
-@pytest.fixture(scope="function")
-def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
-    output_dimension, input_dimension = problem_dimension
-    A = random_matrix_with_condition_number(
-        max(input_dimension, output_dimension), condition_number
-    )
-    A = A[:output_dimension, :input_dimension]
-    b = np.random.uniform(size=[output_dimension])
-    return A, b
-
-
-@pytest.fixture(scope="function")
-def polynomial_dataset(coefficients: np.ndarray):
-    """Coefficients must be for monomials of increasing degree"""
-    from sklearn.utils import Bunch
-
-    x = np.arange(-1, 1, 0.05)
-    locs = polynomial(coefficients, x)
-    y = np.random.normal(loc=locs, scale=0.3)
-    db = Bunch()
-    db.data, db.target = x.reshape(-1, 1), y
-    poly = [f"{c} x^{i}" for i, c in enumerate(coefficients)]
-    poly = " + ".join(poly)
-    db.DESCR = f"$y \\sim N({poly}, 1)$"
-    db.feature_names = ["x"]
-    db.target_names = ["y"]
-    return Dataset.from_sklearn(data=db, train_size=0.15), coefficients
-
-
-@pytest.fixture(scope="function")
-def polynomial_pipeline(coefficients):
-    return make_pipeline(PolynomialFeatures(len(coefficients) - 1), LinearRegression())
-
-
-def dummy_utility(num_samples: int = 10):
-    from numpy import ndarray
-
-    from pydvl.utils import SupervisedModel
-
-    # Indices match values
-    x = np.arange(0, num_samples, 1).reshape(-1, 1)
-    nil = np.zeros_like(x)
-    data = Dataset(
-        x, nil, nil, nil, feature_names=["x"], target_names=["y"], description=["dummy"]
-    )
-
-    class DummyModel(SupervisedModel):
-        """Under this model each data point receives a score of index / max,
-        assuming that the values of training samples match their indices."""
-
-        def __init__(self, data: Dataset):
-            self.m = max(data.x_train)
-            self.utility = 0
-
-        def fit(self, x: ndarray, y: ndarray):
-            self.utility = np.sum(x) / self.m
-
-        def predict(self, x: ndarray) -> ndarray:
-            return x
-
-        def score(self, x: ndarray, y: ndarray) -> float:
-            return self.utility
-
-    return Utility(DummyModel(data), data, scoring=None, enable_cache=False)
-
-
-@pytest.fixture(scope="function")
-def analytic_shapley(num_samples):
-    """Scores are i/n, so v(i) = 1/n! Σ_π [U(S^π + {i}) - U(S^π)] = i/n"""
-    u = dummy_utility(num_samples)
-    exact_values = OrderedDict(
-        {i: i / float(max(u.data.x_train)) for i in u.data.indices}
-    )
-    return u, exact_values
-
-
-class TolerateErrors:
-    """A context manager to swallow errors up to a certain threshold.
-    Use to test (ε,δ)-approximations.
-    """
-
-    def __init__(
-        self, max_errors: int, exception_cls: Type[BaseException] = AssertionError
-    ):
-        self.max_errors = max_errors
-        self.Exception = exception_cls
-        self.error_count = 0
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is not None:
-            self.error_count += 1
-        if self.error_count > self.max_errors:
-            raise self.Exception(
-                f"Maximum number of {self.max_errors} error(s) reached"
-            )
-        return True
-
-
-def check_total_value(u: Utility, values: OrderedDict, atol: float = 1e-6):
-    """Checks absolute distance between total and added values.
-    Shapley value is supposed to fulfill the total value axiom."""
-    total_utility = u(u.data.indices)
-    values = np.fromiter(values.values(), dtype=float, count=len(u.data))
-    # We could want relative tolerances here if we didn't have the range of
-    # the scorer.
-    assert np.isclose(values.sum(), total_utility, atol=atol)
-
-
-def check_exact(values: OrderedDict, exact_values: OrderedDict, atol: float = 1e-6):
-    """Compares ranks and values."""
-
-    k = list(values.keys())
-    ek = list(exact_values.keys())
-
-    assert np.all(k == ek), "Ranks do not match"
-
-    v = np.array(list(values.values()))
-    ev = np.array(list(exact_values.values()))
-
-    assert np.allclose(v, ev, atol=atol), f"{v} != {ev}"
-
-
-def check_values(
-    values: Dict,
-    exact_values: Dict,
-    rtol: float = 0.1,
-    atol: float = 1e-5,
-):
-    """Compares values in dictionaries.
-
-    Note that this does not assume any ordering (despite values typically being
-    stored in an OrderedDict elsewhere.
-
-    :param values:
-    :param exact_values:
-    :param rtol: relative tolerance of elements in `values` with respect to
-        elements in `exact_values`. E.g. if rtol = 0.1, we must have
-        |value - exact_value|/|exact_value| < 0.1 for every value
-    :param atol: absolute tolerance of elements in `values` with respect to
-        elements in `exact_values`. E.g. if atol = 0.1, we must have
-        |value - exact_value| < 0.1 for every value.
-    """
-    for key in values:
-        assert (
-            abs(values[key] - exact_values[key]) < abs(exact_values[key]) * rtol + atol
-        )
-
-
-def check_rank_correlation(
-    values: OrderedDict,
-    exact_values: OrderedDict,
-    k: int = None,
-    threshold: float = 0.9,
-):
-    """Checks that the indices of `values` and `exact_values` follow the same
-    order (by value), with some slack, using Spearman's correlation.
-
-    Runs an assertion for testing.
-
-    :param values: The values and indices to test
-    :param exact_values: The ground truth
-    :param k: Consider only these many, starting from the top.
-    :param threshold: minimal value for spearman correlation for the test to
-        succeed
-    """
-    # FIXME: estimate proper threshold for spearman
-    if k is not None:
-        raise NotImplementedError
-    else:
-        k = len(values)
-    ranks = np.array(list(values.keys())[:k])
-    ranks_exact = np.array(list(exact_values.keys())[:k])
-
-    correlation = spearman(ranks, ranks_exact)
-    assert correlation >= threshold, f"{correlation} < {threshold}"
-
-
-# start_logging_server()
-
-
+################################################################################
 # Tolerate Errors Plugin
 
 
@@ -558,10 +327,7 @@ class TolerateErrorFixture:
             self.session.set_exceptions_to_ignore(self.name, exceptions_to_ignore)
 
     def __call__(
-        self,
-        max_failures: int,
-        *,
-        exceptions_to_ignore: EXCEPTIONS_TYPE = None,
+        self, max_failures: int, *, exceptions_to_ignore: EXCEPTIONS_TYPE = None
     ):
         self.session.set_max_failures(self.name, max_failures)
         self.session.set_exceptions_to_ignore(self.name, exceptions_to_ignore)
@@ -602,9 +368,7 @@ def wrap_pytest_function(pyfuncitem: pytest.Function):
 
 @pytest.fixture(scope="function")
 def tolerate(request: pytest.FixtureRequest):
-    fixture = TolerateErrorFixture(
-        request.node,
-    )
+    fixture = TolerateErrorFixture(request.node)
     return fixture
 
 
@@ -641,34 +405,3 @@ def pytest_terminal_summary(
 ):
     tolerate_session = terminalreporter.config._tolerate_session
     tolerate_session.display(terminalreporter)
-
-
-def create_mock_dataset(
-    linear_model: Tuple[np.ndarray, np.ndarray],
-    train_set_size: int,
-    test_set_size: int,
-    noise: float = 0.01,
-) -> Dataset:
-    A, b = linear_model
-    o_d, i_d = tuple(A.shape)
-    data_model = lambda x: np.random.normal(x @ A.T + b, noise)
-
-    x_train = np.random.uniform(size=[train_set_size, i_d])
-    y_train = data_model(x_train)
-    x_test = np.random.uniform(size=[test_set_size, i_d])
-    y_test = data_model(x_test)
-    dataset = Dataset(
-        x_train=x_train,
-        y_train=y_train,
-        x_test=x_test,
-        y_test=y_test,
-        is_multi_output=True,
-    )
-
-    scaler_x = MinMaxScaler()
-    scaler_y = MinMaxScaler()
-    dataset.x_train = scaler_x.fit_transform(dataset.x_train)
-    dataset.y_train = scaler_y.fit_transform(dataset.y_train)
-    dataset.x_test = scaler_x.transform(dataset.x_test)
-    dataset.y_test = scaler_y.transform(dataset.y_test)
-    return (x_train, y_train), (x_test, y_test)

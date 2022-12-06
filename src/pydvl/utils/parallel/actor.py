@@ -50,13 +50,15 @@ class RayActorWrapper:
 
         def remote_caller(method_name: str):
             # Wrapper for remote class' methods to mimic local calls
-            def wrapper(*args, block: bool = True, **kwargs):
+            def wrapper(
+                *args, block: bool = True, timeout: Optional[float] = None, **kwargs
+            ):
                 obj_ref = getattr(self.actor_handle, method_name).remote(
                     *args, **kwargs
                 )
                 if block:
                     return parallel_backend.get(
-                        obj_ref, timeout=300
+                        obj_ref, timeout=timeout
                     )  # Block until called method returns.
                 else:
                     return obj_ref  # Don't block and return a future.
@@ -126,20 +128,20 @@ class Worker(abc.ABC):
         worker_id: int,
         *,
         progress: bool = False,
-        update_frequency: int = 30,
+        update_period: int = 30,
     ):
         """A worker
 
         :param coordinator: worker results will be pushed to this coordinator
         :param worker_id: id used for reporting through maybe_progress
         :param progress: set to True to report progress, else False
-        :param update_frequency: interval in seconds between different updates
+        :param update_period: interval in seconds between different updates
             to and from the coordinator
         """
         super().__init__()
         self.worker_id = worker_id
         self.coordinator = coordinator
-        self.update_frequency = update_frequency
+        self.update_period = update_period
         self.progress = progress
 
     def run(self, *args, **kwargs):

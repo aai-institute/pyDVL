@@ -20,12 +20,7 @@ def test_failed_connection():
 
 
 @pytest.mark.parametrize(
-    "numbers_series",
-    [
-        (np.arange(-4, 12)),
-        (np.arange(10)),
-        (np.linspace(1, 4, 10)),
-    ],
+    "numbers_series", [(np.arange(-4, 12)), (np.arange(10)), (np.linspace(1, 4, 10))]
 )
 def test_get_running_avg_variance(numbers_series):
     avg, var = 0.0, 0.0
@@ -45,7 +40,7 @@ def test_memcached_single_job(memcached_client):
 
     # TODO: maybe this should be a fixture too...
     @memcached(client_config=config, time_threshold=0)  # Always cache results
-    def foo(indices: Iterable[int]) -> float:
+    def foo(indices: "NDArray[int]") -> float:
         return float(np.sum(indices))
 
     n = 1000
@@ -66,7 +61,7 @@ def test_memcached_parallel_jobs(memcached_client):
         # Note that we typically do NOT want to ignore run_id
         ignore_args=["job_id", "run_id"],
     )
-    def foo(indices: Iterable[int], *args, **kwargs) -> float:
+    def foo(indices: "NDArray[int]", *args, **kwargs) -> float:
         # logger.info(f"run_id: {run_id}, running...")
         return float(np.sum(indices))
 
@@ -95,7 +90,7 @@ def test_memcached_repeated_training(memcached_client):
         # Note that we typically do NOT want to ignore run_id
         ignore_args=["job_id", "run_id"],
     )
-    def foo(indices: Iterable[int]) -> float:
+    def foo(indices: "NDArray[int]") -> float:
         # from pydvl.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
         return float(np.sum(indices)) + np.random.normal(scale=10)
@@ -106,7 +101,7 @@ def test_memcached_repeated_training(memcached_client):
         result = foo(np.arange(n))
 
     assert (result - np.sum(np.arange(n))) < 1
-    assert foo.cache_info.sets < foo.cache_info.hits
+    assert foo.stats.sets < foo.stats.hits
 
 
 def test_memcached_faster_with_repeated_training(memcached_client):
@@ -120,13 +115,13 @@ def test_memcached_faster_with_repeated_training(memcached_client):
         # Note that we typically do NOT want to ignore run_id
         ignore_args=["job_id", "run_id"],
     )
-    def foo_cache(indices: Iterable[int]) -> float:
+    def foo_cache(indices: "NDArray[int]") -> float:
         # from pydvl.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
         sleep(0.01)
         return float(np.sum(indices)) + np.random.normal(scale=1)
 
-    def foo_no_cache(indices: Iterable[int]) -> float:
+    def foo_no_cache(indices: "NDArray[int]") -> float:
         # from pydvl.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
         sleep(0.01)
@@ -154,13 +149,7 @@ def test_memcached_faster_with_repeated_training(memcached_client):
     assert fast_time < slow_time
 
 
-@pytest.mark.parametrize(
-    "n, atol",
-    [
-        (10, 4),
-        (20, 10),
-    ],
-)
+@pytest.mark.parametrize("n, atol", [(10, 4), (20, 10)])
 @pytest.mark.parametrize("n_jobs", [1, 2])
 @pytest.mark.parametrize("n_runs", [100])
 def test_memcached_parallel_repeated_training(
@@ -177,12 +166,12 @@ def test_memcached_parallel_repeated_training(
         # Note that we typically do NOT want to ignore run_id
         ignore_args=["job_id", "run_id"],
     )
-    def map_func(indices: Iterable[int]) -> float:
+    def map_func(indices: "NDArray[int]") -> float:
         # from pydvl.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
-        return np.sum(indices).item() + np.random.normal(scale=10)
+        return np.sum(indices).item() + np.random.normal(scale=5)
 
-    def reduce_func(chunks: Iterable[float]) -> float:
+    def reduce_func(chunks: "NDArray[float]") -> float:
         return np.sum(chunks).item()
 
     map_reduce_job = MapReduceJob(map_func, reduce_func, n_jobs=n_jobs, n_runs=n_runs)

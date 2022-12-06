@@ -1,8 +1,15 @@
 name: Upload Python Package to PyPI
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+    - "v*"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: Why did you trigger the pipeline?
+        required: False
+        default: Check if it runs again due to external changes
 
 env:
   PY_COLORS: 1
@@ -16,6 +23,19 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Fail if manually triggered workflow is not on 'master' branch
+        if: github.event_name == 'workflow_dispatch' && github.ref_name != 'master'
+        run: exit -1
+      - name: Extract branch name from tag
+        id: get_branch_name
+        if: github.ref_type == 'tag'
+        run: |
+          export BRANCH_NAME=$(git log -1 --format='%D' $GITHUB_REF | | sed -e 's/.*origin\/\(.*\),.*/\1/')
+          echo ::set-output name=branch_name::${BRANCH_NAME}
+        shell: bash
+      - name: Fail if tag is not on 'master' branch
+        if: github.ref_type == 'tag' && steps.get_branch_name.outputs.branch_name != 'master'
+        run: exit -1
       - name: Set up Python 3.8
         uses: actions/setup-python@v4
         with:
