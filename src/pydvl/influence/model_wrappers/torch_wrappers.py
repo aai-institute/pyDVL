@@ -112,8 +112,9 @@ class TorchModelBase(ABC):
             mean_epoch_train_loss = np.mean(batch_loss)
             val_loss.append(epoch_val_loss)
             train_loss.append(mean_epoch_train_loss)
-            logger.info(f"Epoch: {epoch} ---> Training loss: {mean_epoch_train_loss}")
-            logger.info(f"Epoch: {epoch} ---> Validation loss: {epoch_val_loss}")
+            logger.info(
+                f"Epoch: {epoch} ---> Training loss: {mean_epoch_train_loss}, Validation loss: {epoch_val_loss}"
+            )
         return train_loss, val_loss
 
     def predict(self, x: torch.Tensor) -> np.ndarray:

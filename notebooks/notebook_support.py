@@ -281,6 +281,21 @@ def load_preprocess_imagenet(
     random_state: Optional[int] = None,
     is_CI: bool = False,
 ):
+    """Loads the tiny imagened dataset from huggingface and preprocesses it
+    for model input.
+
+    :param train_size: fraction of indices to use for training
+    :param test_size: fraction of data to use for testing
+    :param downsample_ds_to_fraction: which fraction of the full dataset to keep. \
+        E.g. downsample_ds_to_fraction=0.2 only 20% of the dataset is kept
+    :param keep_labels: which of the original labels to keep. \
+        E.g. keep_labels=[10,20] only returns the images with labels 10 and 20.
+    :param random_state: Random state. Fix this for reproducibility of sampling.
+    :param is_CI: True for loading a much reduced dataset. Used in CI.
+    :return: a tuple of three dataframes, first holding the training data, second validation, third test. \
+        Each has 3 keys: normalized_images has all the input images, rescaled to mean 0.5 and std 0.225, \
+        labels has the labels of each image, while images has the unmodified images.
+    """
     try:
         from datasets import load_dataset
         from torchvision import transforms
@@ -306,7 +321,12 @@ def load_preprocess_imagenet(
                 processed_ds["labels"].append(item["label"])
         return pd.DataFrame.from_dict(processed_ds)
 
-    tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="train")
+    if is_CI:
+        tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="val")
+        tiny_imagenet = tiny_imagenet.shard(1 / 10, 0)
+    else:
+        tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="train")
+
     if downsample_ds_to_fraction != 1:
         tiny_imagenet = tiny_imagenet.shard(1 / downsample_ds_to_fraction, 0)
     if keep_labels is not None:
@@ -328,6 +348,13 @@ def load_preprocess_imagenet(
 
 
 def save_model(model, train_loss, val_loss, model_name):
+    """Saves the model weights, with also its training and validation losses.
+
+    :param model: trained model
+    :param train_loss: list of training losses, one per epoch
+    :param val_loss: list of validation losses, also one per epoch
+    :param model_name: model name, used for saving the files
+    """
     torch.save(model.state_dict(), imgnet_model_data_path / f"{model_name}_weights.pth")
     with open(
         imgnet_model_data_path / f"{model_name}_train_val_loss.pkl", "wb"
@@ -336,6 +363,13 @@ def save_model(model, train_loss, val_loss, model_name):
 
 
 def load_model(model, model_name):
+    """Given the model and the model name, it loads the model weights from the file {model_name}_weights.pth.
+        Then , it also loads and returns the training and validation losses.
+
+    :param model: model
+    :param model_name: name of the model whose weights have been previously saved
+    :return: two lists, one with training and one with validation losses.
+    """
     model.load_state_dict(
         torch.load(imgnet_model_data_path / f"{model_name}_weights.pth")
     )
@@ -347,11 +381,21 @@ def load_model(model, model_name):
 
 
 def save_results(results, file_name):
+    """Saves (pickles) any file to {file_name}.pkl
+
+    :param results: any serializable object
+    :param file_name: string, file name where to save the object
+    """
     with open(imgnet_model_data_path / f"{file_name}", "wb") as file:
         pkl.dump(results, file)
 
 
 def load_results(file_name):
+    """Loads the pickle file {file_name}.pkl
+
+    :param file_name: string, file name where the object is saved
+    :return: saved object
+    """
     with open(imgnet_model_data_path / f"{file_name}", "rb") as file:
         results = pkl.load(file)
     return results
@@ -359,11 +403,15 @@ def load_results(file_name):
 
 def plot_sample_images(
     dataset,
-    labels,
     n_images_per_class=3,
-    figsize=(8, 8),
 ):
-    plt.rcParams["figure.figsize"] = figsize
+    """Given the preprocessed imagenet dataset (or a subset of it), it plots \
+    a number n_images_per_class of images for each class.
+
+    :param dataset: imagenet dataset
+    :param n_images_per_class: int, number of images per class to plot
+    """
+    labels = dataset["labels"].unique()
     fig, axes = plt.subplots(nrows=n_images_per_class, ncols=len(labels))
     fig.suptitle("Examples of training images")
     for class_idx, class_label in enumerate(labels):
@@ -382,13 +430,18 @@ def plot_top_bottom_if_images(
     subset_influences,
     subset_images,
     num_to_plot,
-    figsize=(8, 8),
 ):
+    """Given the influence values and the related images, it plots a number 2* num_to_plot of images,
+    of which those on the right column have the lowest influence, those on the right the highest.
+
+    :param subset_influences: an array with influence values
+    :param subset_images: an array of images
+    :param num_to_plot: int, number of high and low influence images to plot
+    """
     top_if_idxs = np.argsort(subset_influences)[-num_to_plot:]
     bottom_if_idxs = np.argsort(subset_influences)[:num_to_plot]
 
     fig, axes = plt.subplots(nrows=num_to_plot, ncols=2)
-    plt.rcParams["figure.figsize"] = figsize
     fig.suptitle("Botton (left) and top (right) influences")
 
     for plt_idx, img_idx in enumerate(bottom_if_idxs):
@@ -405,6 +458,11 @@ def plot_top_bottom_if_images(
 
 
 def plot_train_val_loss(train_loss, val_loss):
+    """Plots the train and validation loss
+
+    :param train_loss: list of training losses, one per epoch
+    :param val_loss: list of validation losses, one per epoch
+    """
     _, ax = plt.subplots()
     ax.plot(train_loss, label="Train")
     ax.plot(val_loss, label="Val")
@@ -414,24 +472,34 @@ def plot_train_val_loss(train_loss, val_loss):
     plt.show()
 
 
-def get_corrupted_imagenet(
-    dataset, labels_to_keep, fraction_to_corrupt, avg_influences
-):
+def get_corrupted_imagenet(dataset, fraction_to_corrupt, avg_influences):
+    """Given the preprocessed tiny imagenet dataset (or a subset of it), 
+    it takes a fraction of the images with the highest influence and (randomly)
+    flips their labels.
+
+    :param dataset: preprocessed tiny imagenet dataset
+    :param fraction_to_corrupt: float, fraction of data to corrupt
+    :param avg_influences: average influences of each training point on the test set in the \
+        non-corrupted case.
+    :return: first element is the corrupted dataset, second is the list of entries \
+        that have been corrupted.
+    """
     indices_to_corrupt = []
+    labels = dataset["labels"].unique()
     corrupted_dataset = deepcopy(dataset)
-    corrupted_indices = {l: [] for l in labels_to_keep}
+    corrupted_indices = {l: [] for l in labels}
 
     avg_influences_series = pd.DataFrame()
     avg_influences_series["avg_influences"] = avg_influences
     avg_influences_series["labels"] = dataset["labels"]
 
-    for label in labels_to_keep:
+    for label in labels:
         class_data = avg_influences_series[avg_influences_series["labels"] == label]
         num_corrupt = int(fraction_to_corrupt * len(class_data))
         indices_to_corrupt = class_data.nlargest(
             num_corrupt, "avg_influences"
         ).index.tolist()
-        wrong_labels = [l for l in labels_to_keep if l != label]
+        wrong_labels = [l for l in labels if l != label]
         for img_idx in indices_to_corrupt:
             sample_label = np.random.choice(wrong_labels)
             corrupted_dataset.at[img_idx, "labels"] = sample_label
@@ -439,20 +507,44 @@ def get_corrupted_imagenet(
     return corrupted_dataset, corrupted_indices
 
 
-def plot_influence_distribution(
+def plot_influence_distribution_by_label(influences, dataset):
+    """For each label in dataset it plots the histogram of the distribution of
+    influence values.
+
+    :param influences: array of influences
+    :param dataset: (preprocessed) tiny-imagenet dataset
+    """
+    _, ax = plt.subplots()
+    labels = dataset["labels"].unique()
+    for label in labels:
+        ax.hist(influences[dataset["labels"] == label], label=label, alpha=0.7)
+    ax.set_xlabel("influence values")
+    ax.set_ylabel("number of points")
+    ax.set_title("Influence distribution")
+    ax.legend()
+    plt.show()
+
+
+def plot_corrupted_influences_distribution(
     corrupted_dataset,
-    labels_to_keep,
     corrupted_indices,
     avg_corrupted_influences,
-    figsize=(16, 8),
 ):
-    plt.rcParams["figure.figsize"] = figsize
+    """Given a corrupted dataset, it plots the histogram with the distribution of
+    influence values. This is done separately for each label: each has a plot where
+    the distribution of the influence of non-corrupted points is compared to that of corrupted ones
+
+    :param corrupted_dataset: corrupted dataset as returned by get_corrupted_imagenet
+    :param corrupted_indices: list of corrupted indices, as returned by get_corrupted_imagenet
+    :param avg_corrupted_influences: average influence of each training point on the test dataset
+    """
+    labels = corrupted_dataset["labels"].unique()
     fig, axes = plt.subplots(nrows=1, ncols=2)
     fig.suptitle("Distribution of corrupted and clean influences.")
     avg_label_influence = pd.DataFrame(
         columns=["label", "avg_non_corrupted_infl", "avg_corrupted_infl"]
     )
-    for idx, label in enumerate(labels_to_keep):
+    for idx, label in enumerate(labels):
         avg_influences_series = pd.Series(avg_corrupted_influences)
         class_influences = avg_influences_series[corrupted_dataset["labels"] == label]
         corrupted_infl = class_influences[
@@ -469,10 +561,16 @@ def plot_influence_distribution(
         axes[idx].hist(
             non_corrupted_infl, label="non corrupted data", density=True, alpha=0.7
         )
-        axes[idx].hist(corrupted_infl, label="corrupted data", density=True, alpha=0.7)
+        axes[idx].hist(
+            corrupted_infl,
+            label="corrupted data",
+            density=True,
+            alpha=0.7,
+            color="green",
+        )
         axes[idx].set_xlabel("influence values")
-        axes[idx].set_ylabel("Points distribution")
-        axes[idx].set_title(f"influences for {label=}")
+        axes[idx].set_ylabel("Distribution")
+        axes[idx].set_title(f"Influences for {label=}")
         axes[idx].legend()
     plt.show()
     return avg_label_influence.astype({"label": "int32"})
