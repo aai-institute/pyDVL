@@ -294,7 +294,7 @@ def load_preprocess_imagenet(
     :param is_CI: True for loading a much reduced dataset. Used in CI.
     :return: a tuple of three dataframes, first holding the training data, second validation, third test. \
         Each has 3 keys: normalized_images has all the input images, rescaled to mean 0.5 and std 0.225, \
-        labels has the labels of each image, while images has the unmodified images.
+        labels has the labels of each image, while images has the unmodified PIL images.
     """
     try:
         from datasets import load_dataset
@@ -380,7 +380,7 @@ def save_model(model, train_loss, val_loss, model_name):
 
 def load_model(model, model_name):
     """Given the model and the model name, it loads the model weights from the file {model_name}_weights.pth.
-        Then , it also loads and returns the training and validation losses.
+        Then, it also loads and returns the training and validation losses.
 
     :param model: model
     :param model_name: name of the model whose weights have been previously saved
@@ -447,7 +447,7 @@ def plot_top_bottom_if_images(
     subset_images,
     num_to_plot,
 ):
-    """Given the influence values and the related images, it plots a number 2* num_to_plot of images,
+    """Given the influence values and the related images, it plots a number 2*num_to_plot of images,
     of which those on the right column have the lowest influence, those on the right the highest.
 
     :param subset_influences: an array with influence values
@@ -497,8 +497,8 @@ def get_corrupted_imagenet(dataset, fraction_to_corrupt, avg_influences):
     :param fraction_to_corrupt: float, fraction of data to corrupt
     :param avg_influences: average influences of each training point on the test set in the \
         non-corrupted case.
-    :return: first element is the corrupted dataset, second is the list of entries \
-        that have been corrupted.
+    :return: first element is the corrupted dataset, second is the list of indices \
+        related to the images that have been corrupted.
     """
     indices_to_corrupt = []
     labels = dataset["labels"].unique()
@@ -524,7 +524,7 @@ def get_corrupted_imagenet(dataset, fraction_to_corrupt, avg_influences):
 
 
 def plot_influence_distribution_by_label(influences, dataset):
-    """For each label in dataset it plots the histogram of the distribution of
+    """For each label in the dataset it plots the histogram of the distribution of
     influence values.
 
     :param influences: array of influences
@@ -553,6 +553,7 @@ def plot_corrupted_influences_distribution(
     :param corrupted_dataset: corrupted dataset as returned by get_corrupted_imagenet
     :param corrupted_indices: list of corrupted indices, as returned by get_corrupted_imagenet
     :param avg_corrupted_influences: average influence of each training point on the test dataset
+    :return: a dataframe holding the average influence of corrupted and non-corrupted data
     """
     labels = corrupted_dataset["labels"].unique()
     fig, axes = plt.subplots(nrows=1, ncols=2)
