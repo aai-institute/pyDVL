@@ -5,34 +5,44 @@ from itertools import zip_longest
 import numpy as np
 import pytest
 
+from pydvl.utils.config import ParallelConfig
 from pydvl.utils.parallel import MapReduceJob
 
 
+@pytest.fixture(scope="session", params=["sequential", "ray"])
+def parallel_config(request):
+    return ParallelConfig(backend=request.param)
+
+
 @pytest.fixture()
-def map_reduce_job(request):
+def map_reduce_job(parallel_config, request):
     try:
         kind, map_func, reduce_func = request.param
         assert kind == "custom"
     except ValueError:
         kind = request.param
     if kind == "numpy":
-        return MapReduceJob(map_func=np.sum, reduce_func=np.sum)
+        return MapReduceJob(map_func=np.sum, reduce_func=np.sum, config=parallel_config)
     elif kind == "list":
         return MapReduceJob(
-            map_func=lambda x: x, reduce_func=lambda r: reduce(operator.add, r, [])
+            map_func=lambda x: x,
+            reduce_func=lambda r: reduce(operator.add, r, []),
+            config=parallel_config,
         )
     elif kind == "range":
         return MapReduceJob(
             map_func=lambda x: list(x),
             reduce_func=lambda r: reduce(operator.add, list(r), []),
+            config=parallel_config,
         )
     elif kind == "custom":
         return MapReduceJob(
-            map_func=map_func,
-            reduce_func=reduce_func,
+            map_func=map_func, reduce_func=reduce_func, config=parallel_config
         )
     else:
-        return MapReduceJob(map_func=lambda x: x * x, reduce_func=lambda r: r)
+        return MapReduceJob(
+            map_func=lambda x: x * x, reduce_func=lambda r: r, config=parallel_config
+        )
 
 
 @pytest.mark.parametrize(

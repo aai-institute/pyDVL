@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Literal, Optional, Tuple, Union
 
 from pymemcache.serde import PickleSerde
 
@@ -19,7 +19,7 @@ class ParallelConfig:
     :param num_workers: Number of workers (CPUs) to use.
     """
 
-    backend: str = "ray"
+    backend: Literal["sequential", "ray"] = "ray"
     address: Optional[Union[str, Tuple[str, int]]] = None
     num_workers: Optional[int] = None
 
