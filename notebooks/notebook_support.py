@@ -322,8 +322,24 @@ def load_preprocess_imagenet(
         return pd.DataFrame.from_dict(processed_ds)
 
     if is_CI:
-        tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="val")
-        tiny_imagenet = tiny_imagenet.shard(1 / 10, 0)
+        tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="valid")
+        tiny_imagenet_train = tiny_imagenet.shard(10, 0)
+        tiny_imagenet_val = tiny_imagenet.shard(10, 1)
+        tiny_imagenet_test = tiny_imagenet.shard(2, 1)
+        if keep_labels is not None:
+            tiny_imagenet_train = tiny_imagenet_train.filter(
+                lambda item: item["label"] in keep_labels
+            )
+            tiny_imagenet_val = tiny_imagenet_val.filter(
+                lambda item: item["label"] in keep_labels
+            )
+            tiny_imagenet_test = tiny_imagenet_test.filter(
+                lambda item: item["label"] in keep_labels
+            )
+        train_ds = _process_dataset(tiny_imagenet_train)
+        val_ds = _process_dataset(tiny_imagenet_val)
+        test_ds = _process_dataset(tiny_imagenet_test)
+        return train_ds, val_ds, test_ds
     else:
         tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="train")
 
