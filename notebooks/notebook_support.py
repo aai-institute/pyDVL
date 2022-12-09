@@ -573,4 +573,4 @@ def plot_corrupted_influences_distribution(
         axes[idx].set_title(f"Influences for {label=}")
         axes[idx].legend()
     plt.show()
-    return avg_label_influence.astype({"label": "int32"})
+    return avg_label_influence

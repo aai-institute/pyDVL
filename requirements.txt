@@ -7,4 +7,3 @@ pymemcache
 cloudpickle
 tqdm
 matplotlib
-datasets
