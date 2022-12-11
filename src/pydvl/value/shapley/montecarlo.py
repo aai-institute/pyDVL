@@ -34,6 +34,7 @@ groups instead.
 import logging
 import math
 from enum import Enum
+from itertools import repeat
 from time import sleep
 from typing import TYPE_CHECKING, Iterable, NamedTuple, Optional, Sequence
 from warnings import warn
@@ -234,10 +235,13 @@ def permutation_montecarlo_shapley(
         map_kwargs=dict(max_permutations=iterations_per_job, progress=progress),
         reduce_kwargs=dict(axis=0),
         config=config,
-        chunkify_inputs=False,
         n_jobs=n_jobs,
     )
-    full_results = map_reduce_job(u_id)[0]
+    if n_jobs == 1:
+        input_ = u_id
+    else:
+        input_ = repeat(u_id, times=n_jobs)
+    full_results = map_reduce_job(input_)[0]
 
     values = np.mean(full_results, axis=0)
     stderr = np.std(full_results, axis=0) / np.sqrt(full_results.shape[0])
@@ -373,7 +377,6 @@ def combinatorial_montecarlo_shapley(
         map_func=_combinatorial_montecarlo_shapley,
         reduce_func=disjoint_reducer,
         map_kwargs=dict(u=u_id, max_iterations=max_iterations, progress=progress),
-        chunkify_inputs=True,
         n_jobs=n_jobs,
         config=config,
     )
@@ -529,7 +532,6 @@ def owen_sampling_shapley(
             progress=progress,
         ),
         reduce_func=disjoint_reducer,
-        chunkify_inputs=True,
         n_jobs=n_jobs,
         config=config,
     )

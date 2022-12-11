@@ -83,7 +83,6 @@ class MapReduceJob(Generic[T, R]):
         in each job. Alternatively, one can use `itertools.partial`.
     :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig`
         with cluster address, number of cpus, etc.
-    :param chunkify_inputs: If True, the input is split across jobs, otherwise it is repeated.
     :param n_jobs: Number of parallel jobs to run. Does not accept 0
     :param n_runs: Number of times to run `map_func` and `reduce_func` on the
         whole data.
@@ -111,21 +110,6 @@ class MapReduceJob(Generic[T, R]):
     >>> map_reduce_job(np.arange(5))
     [10, 10, 10]
 
-    If we set `chunkify_inputs` to `False` the input is not split across jobs
-    but instead repeated:
-
-    >>> from pydvl.utils.parallel import MapReduceJob
-    >>> import numpy as np
-    >>> map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
-    ...     map_func=np.sum,
-    ...     reduce_func=np.sum,
-    ...     chunkify_inputs=False,
-    ...     n_jobs=2,
-    ...     n_runs=3,
-    ... )
-    >>> map_reduce_job(np.arange(5))
-    [20, 20, 20]
-
     """
 
     def __init__(
@@ -136,7 +120,6 @@ class MapReduceJob(Generic[T, R]):
         reduce_kwargs: Optional[Dict] = None,
         config: ParallelConfig = ParallelConfig(),
         *,
-        chunkify_inputs: bool = True,
         n_jobs: int = 1,
         n_runs: int = 1,
         timeout: Optional[float] = None,
@@ -147,7 +130,6 @@ class MapReduceJob(Generic[T, R]):
         self._parallel_backend_ref = weakref.ref(parallel_backend)
 
         self.timeout = timeout
-        self.chunkify_inputs = chunkify_inputs
         self.n_runs = n_runs
 
         self._n_jobs = 1
@@ -180,14 +162,11 @@ class MapReduceJob(Generic[T, R]):
         *,
         n_jobs: Optional[int] = None,
         n_runs: Optional[int] = None,
-        chunkify_inputs: Optional[bool] = None,
     ) -> List[R]:
         if n_jobs is not None:
             self.n_jobs = n_jobs
         if n_runs is not None:
             self.n_runs = n_runs
-        if chunkify_inputs is not None:
-            self.chunkify_inputs = chunkify_inputs
 
         map_results = self.map(inputs)
         reduce_results = self.reduce(map_results)
@@ -202,10 +181,7 @@ class MapReduceJob(Generic[T, R]):
         total_n_finished = 0
 
         for _ in range(self.n_runs):
-            if self.chunkify_inputs and self.n_jobs > 1:
-                chunks = self._chunkify(inputs, num_chunks=self.n_jobs)
-            else:
-                chunks = repeat(inputs, times=self.n_jobs)
+            chunks = self._chunkify(inputs, num_chunks=self.n_jobs)
 
             map_result = []
             for j, next_chunk in enumerate(chunks):
@@ -274,23 +250,27 @@ class MapReduceJob(Generic[T, R]):
         if num_chunks == 0:
             raise ValueError("Number of chunks should be greater than 0")
 
-        n = len(data)
+        elif num_chunks == 1:
+            yield data
 
-        # This is very much inspired by numpy's array_split function
-        # The difference is that it only uses built-in functions
-        # and does not convert the input data to an array
-        chunk_size, remainder = divmod(n, num_chunks)
-        chunk_indices = tuple(
-            accumulate(
-                [0]
-                + remainder * [chunk_size + 1]
-                + (num_chunks - remainder) * [chunk_size]
+        else:
+            n = len(data)
+
+            # This is very much inspired by numpy's array_split function
+            # The difference is that it only uses built-in functions
+            # and does not convert the input data to an array
+            chunk_size, remainder = divmod(n, num_chunks)
+            chunk_indices = tuple(
+                accumulate(
+                    [0]
+                    + remainder * [chunk_size + 1]
+                    + (num_chunks - remainder) * [chunk_size]
+                )
             )
-        )
-        for start_index, end_index in zip(chunk_indices[:-1], chunk_indices[1:]):
-            if start_index >= end_index:
-                return
-            yield data[start_index:end_index]
+            for start_index, end_index in zip(chunk_indices[:-1], chunk_indices[1:]):
+                if start_index >= end_index:
+                    return
+                yield data[start_index:end_index]
 
     @property
     def parallel_backend(self):

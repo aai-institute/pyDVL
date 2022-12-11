@@ -128,7 +128,6 @@ def combinatorial_exact_shapley(
         map_func=_combinatorial_exact_shapley,
         map_kwargs=dict(u=u_id, progress=progress),
         reduce_func=reduce_fun,
-        chunkify_inputs=True,
         n_jobs=n_jobs,
     )
     values = map_reduce_job(u.data.indices)[0]

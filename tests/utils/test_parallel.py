@@ -50,35 +50,6 @@ def map_reduce_job(parallel_config, request):
     [
         ("list", [], [[]]),
         ("list", [1, 2], [[1, 2]]),
-        ("list", [1, 2, 3], [[1, 2, 3]]),
-        ("range", range(10), [list(range(10))]),
-        ("numpy", list(range(10)), [45]),
-    ],
-    indirect=["map_reduce_job"],
-)
-@pytest.mark.parametrize("n_jobs", [1, 2])
-@pytest.mark.parametrize("n_runs", [1, 2])
-def test_map_reduce_job(map_reduce_job, indices, n_jobs, n_runs, expected):
-    result = map_reduce_job(
-        indices,
-        n_jobs=n_jobs,
-        n_runs=n_runs,
-        chunkify_inputs=False,
-    )
-    assert len(result) == n_runs
-    for exp, ret in zip_longest(expected * n_runs, result, fillvalue=None):
-        exp = exp * n_jobs
-        if not isinstance(ret, np.ndarray):
-            assert ret == exp
-        else:
-            assert (ret == exp).all()
-
-
-@pytest.mark.parametrize(
-    "map_reduce_job, indices, expected",
-    [
-        ("list", [], [[]]),
-        ("list", [1, 2], [[1, 2]]),
         ("list", [1, 2, 3, 4], [[1, 2, 3, 4]]),
         ("range", range(10), [list(range(10))]),
         ("numpy", list(range(10)), [45]),
@@ -87,9 +58,7 @@ def test_map_reduce_job(map_reduce_job, indices, n_jobs, n_runs, expected):
 )
 @pytest.mark.parametrize("n_jobs", [2, 4])
 @pytest.mark.parametrize("n_runs", [1, 2])
-def test_map_reduce_job_chunkified_inputs(
-    map_reduce_job, indices, n_jobs, n_runs, expected
-):
+def test_map_reduce_job(map_reduce_job, indices, n_jobs, n_runs, expected):
     result = map_reduce_job(indices, n_jobs=n_jobs, n_runs=n_runs)
     assert len(result) == n_runs
     for exp, ret in zip_longest(expected * n_runs, result, fillvalue=None):
