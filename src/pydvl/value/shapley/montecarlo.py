@@ -223,10 +223,6 @@ def permutation_montecarlo_shapley(
     :param progress: Whether to display progress bars for each job.
     :return: Object with the data values.
     """
-    parallel_backend = init_parallel_backend(config)
-
-    u_id = parallel_backend.put(u)
-
     iterations_per_job = max(1, max_iterations // n_jobs)
 
     map_reduce_job: MapReduceJob["NDArray", "NDArray"] = MapReduceJob(
@@ -238,9 +234,9 @@ def permutation_montecarlo_shapley(
         n_jobs=n_jobs,
     )
     if n_jobs == 1:
-        input_ = u_id
+        input_ = u
     else:
-        input_ = tuple(repeat(u_id, times=n_jobs))
+        input_ = tuple(repeat(u, times=n_jobs))
     full_results = map_reduce_job(input_)[0]
 
     values = np.mean(full_results, axis=0)

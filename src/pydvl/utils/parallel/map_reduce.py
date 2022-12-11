@@ -3,7 +3,6 @@ from itertools import accumulate, chain
 from typing import (
     Any,
     Callable,
-    Collection,
     Dict,
     Generic,
     Iterable,
@@ -19,6 +18,7 @@ import ray
 from ray import ObjectRef
 
 from ..config import ParallelConfig
+from ..utility import Utility
 from .backend import init_parallel_backend
 
 __all__ = ["MapReduceJob"]
@@ -157,13 +157,21 @@ class MapReduceJob(Generic[T, R]):
 
     def __call__(
         self,
-        inputs: Union[Collection[T], Any],
+        inputs: Union[Sequence[T], Sequence[Utility], Utility],
     ) -> List[R]:
-        map_results = self.map(inputs)
+        if isinstance(inputs, Utility):
+            inputs_ = self.parallel_backend.put(inputs)
+        elif isinstance(inputs[0], Utility):
+            inputs_ = [self.parallel_backend.put(x) for x in inputs]
+        else:
+            inputs_ = inputs
+        map_results = self.map(inputs_)
         reduce_results = self.reduce(map_results)
         return reduce_results
 
-    def map(self, inputs: Union[Sequence[T], Any]) -> List[List["ObjectRef[R]"]]:
+    def map(
+        self, inputs: Union[Sequence[T], Sequence["ObjectRef"], "ObjectRef"]
+    ) -> List[List["ObjectRef[R]"]]:
         map_results: List[List["ObjectRef[R]"]] = []
 
         map_func = self._wrap_function(self._map_func)
