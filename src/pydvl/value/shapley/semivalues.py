@@ -125,22 +125,11 @@ def banzhaf_coefficient(n: int, _: int):
 
 def beta_coefficient(alpha: int, beta: int):
     @lru_cache
-    def coefficient_w(n: int, ns: int):
-        j = ns + 1
-        p1 = (beta + np.arange(0, j - 1)).prod() * (alpha + np.arange(0, n - j)).prod()
-        p2 = (alpha + beta + np.arange(0, n - 1)).prod()
-        return n * p1 / p2
-
-    return coefficient_w
-
-
-def beta_coefficient_orig(alpha: int, beta: int):
-    @lru_cache
     def coefficient_w_tilde(n: int, ns: int):
         j = ns + 1
         p1 = (beta + np.arange(0, j - 1)).prod() * (alpha + np.arange(0, n - j)).prod()
         p2 = (alpha + beta + np.arange(0, n - 1)).prod()
-        return n * math.comb(n - 1, j - 1) * p1 / p2
+        return n * math.comb(n - 1, ns) * p1 / p2
 
     return coefficient_w_tilde
 
@@ -166,7 +155,7 @@ def beta_shapley_paper(
     u: Utility, alpha: int, beta: int, max_subsets: int
 ) -> ValuationResult:
     sampler = UniformSampler(u.data.indices, max_subsets=max_subsets)
-    return _semivalues(sampler, u, beta_coefficient_orig(alpha, beta))
+    return _semivalues(sampler, u, beta_coefficient(alpha, beta))
 
 
 def banzhaf_index(u: Utility, max_subsets: int):
