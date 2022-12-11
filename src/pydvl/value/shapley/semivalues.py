@@ -1,6 +1,6 @@
 import math
 from functools import lru_cache
-from typing import Optional
+from typing import Callable, Optional
 
 import numpy as np
 from numpy._typing import NDArray
@@ -10,7 +10,11 @@ from pydvl.value import ValuationResult, ValuationStatus
 from pydvl.value.sampler import OwenSampler, PermutationSampler, Sampler, UniformSampler
 
 
-from pydvl.utils.types import Coefficient, StoppingCriterion
+SemiValue = Callable[[Utility, Sampler, ...], ValuationResult]
+Coefficient = Callable[[int, int], int]
+StoppingCriterion = Callable[
+    [int, NDArray[np.float_], NDArray[np.float_], NDArray[np.float_]], ValuationStatus
+]
 
 
 def _semivalues(

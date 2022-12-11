@@ -4,18 +4,10 @@ transformations. Some of it probably belongs elsewhere.
 import inspect
 from typing import Callable, Optional, Protocol, Type, Union
 
-import numpy as np
 from numpy import ndarray
-from numpy._typing import NDArray
 from sklearn.metrics import get_scorer
 
-__all__ = [
-    "SupervisedModel",
-    "Scorer",
-    "compose_score",
-    "Coefficient",
-    "StoppingCriterion",
-]
+__all__ = ["SupervisedModel", "Scorer", "compose_score"]
 
 
 class SupervisedModel(Protocol):
@@ -157,9 +149,3 @@ def compose_score(
             return f"{capitalized_name} (scorer={self._scorer})"
 
     return NewScorer(scoring_function, name=name)
-
-
-Coefficient = Callable[[int, int], int]
-StoppingCriterion = Callable[
-    [NDArray[np.float_], NDArray[np.float_], NDArray[np.float_]], bool
-]
