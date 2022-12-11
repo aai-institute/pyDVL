@@ -240,7 +240,7 @@ def permutation_montecarlo_shapley(
     if n_jobs == 1:
         input_ = u_id
     else:
-        input_ = repeat(u_id, times=n_jobs)
+        input_ = tuple(repeat(u_id, times=n_jobs))
     full_results = map_reduce_job(input_)[0]
 
     values = np.mean(full_results, axis=0)

@@ -15,38 +15,57 @@ def parallel_config(request):
 
 
 @pytest.fixture()
-def map_reduce_job(parallel_config, request):
+def map_reduce_job_and_parameters(parallel_config, n_jobs, n_runs, request):
     try:
         kind, map_func, reduce_func = request.param
         assert kind == "custom"
     except ValueError:
         kind = request.param
     if kind == "numpy":
-        return MapReduceJob(map_func=np.sum, reduce_func=np.sum, config=parallel_config)
+        map_reduce_job = MapReduceJob(
+            map_func=np.sum,
+            reduce_func=np.sum,
+            config=parallel_config,
+            n_jobs=n_jobs,
+            n_runs=n_runs,
+        )
     elif kind == "list":
-        return MapReduceJob(
+        map_reduce_job = MapReduceJob(
             map_func=lambda x: x,
             reduce_func=lambda r: reduce(operator.add, r, []),
             config=parallel_config,
+            n_jobs=n_jobs,
+            n_runs=n_runs,
         )
     elif kind == "range":
-        return MapReduceJob(
+        map_reduce_job = MapReduceJob(
             map_func=lambda x: list(x),
             reduce_func=lambda r: reduce(operator.add, list(r), []),
             config=parallel_config,
+            n_jobs=n_jobs,
+            n_runs=n_runs,
         )
     elif kind == "custom":
-        return MapReduceJob(
-            map_func=map_func, reduce_func=reduce_func, config=parallel_config
+        map_reduce_job = MapReduceJob(
+            map_func=map_func,
+            reduce_func=reduce_func,
+            config=parallel_config,
+            n_jobs=n_jobs,
+            n_runs=n_runs,
         )
     else:
-        return MapReduceJob(
-            map_func=lambda x: x * x, reduce_func=lambda r: r, config=parallel_config
+        map_reduce_job = MapReduceJob(
+            map_func=lambda x: x * x,
+            reduce_func=lambda r: r,
+            config=parallel_config,
+            n_jobs=n_jobs,
+            n_runs=n_runs,
         )
+    return map_reduce_job, n_jobs, n_runs
 
 
 @pytest.mark.parametrize(
-    "map_reduce_job, indices, expected",
+    "map_reduce_job_and_parameters, indices, expected",
     [
         ("list", [], [[]]),
         ("list", [1, 2], [[1, 2]]),
@@ -54,12 +73,13 @@ def map_reduce_job(parallel_config, request):
         ("range", range(10), [list(range(10))]),
         ("numpy", list(range(10)), [45]),
     ],
-    indirect=["map_reduce_job"],
+    indirect=["map_reduce_job_and_parameters"],
 )
 @pytest.mark.parametrize("n_jobs", [1, 2, 4])
 @pytest.mark.parametrize("n_runs", [1, 2, 4])
-def test_map_reduce_job(map_reduce_job, indices, n_jobs, n_runs, expected):
-    result = map_reduce_job(indices, n_jobs=n_jobs, n_runs=n_runs)
+def test_map_reduce_job(map_reduce_job_and_parameters, indices, expected):
+    map_reduce_job, n_jobs, n_runs = map_reduce_job_and_parameters
+    result = map_reduce_job(indices)
     assert len(result) == n_runs
     for exp, ret in zip_longest(expected * n_runs, result, fillvalue=None):
         if not isinstance(ret, np.ndarray):
@@ -119,14 +139,15 @@ def test_backpressure(
 # TODO: figure out test cases for this test
 @pytest.mark.skip
 @pytest.mark.parametrize(
-    "map_reduce_job, indices, n_jobs, n_runs, expected",
+    "map_reduce_job_and_parameters, indices, n_jobs, n_runs, expected",
     [
         ("other", [], 1, 1, [[]]),
     ],
-    indirect=["map_reduce_job"],
+    indirect=["map_reduce_job_and_parameters"],
 )
 def test_map_reduce_job_expected_failures(
-    map_reduce_job, indices, n_jobs, n_runs, expected
+    map_reduce_job_and_parameters, indices, expected
 ):
+    map_reduce_job, *_ = map_reduce_job_and_parameters
     with pytest.raises(expected):
-        map_reduce_job(indices, n_jobs=n_jobs, n_runs=n_runs)
+        map_reduce_job(indices)

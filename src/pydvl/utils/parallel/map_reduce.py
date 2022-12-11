@@ -1,6 +1,5 @@
-import warnings
 import weakref
-from itertools import accumulate, chain, repeat
+from itertools import accumulate, chain
 from typing import (
     Any,
     Callable,
@@ -159,15 +158,7 @@ class MapReduceJob(Generic[T, R]):
     def __call__(
         self,
         inputs: Union[Collection[T], Any],
-        *,
-        n_jobs: Optional[int] = None,
-        n_runs: Optional[int] = None,
     ) -> List[R]:
-        if n_jobs is not None:
-            self.n_jobs = n_jobs
-        if n_runs is not None:
-            self.n_runs = n_runs
-
         map_results = self.map(inputs)
         reduce_results = self.reduce(map_results)
         return reduce_results
