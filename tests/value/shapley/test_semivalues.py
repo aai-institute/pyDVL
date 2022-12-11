@@ -13,11 +13,10 @@ import pytest
 
 
 @pytest.mark.parametrize("fun", [beta_shapley, beta_shapley_paper])
-@pytest.mark.parametrize("alpha, beta", [(1, 1), (1, 2)])
-@pytest.mark.parametrize("num_samples, max_samples", [(10, 600)])
-def test_beta_shapley(analytic_shapley, fun, alpha, beta, max_samples):
+@pytest.mark.parametrize("num_samples, max_subsets", [(10, 1000)])
+def test_beta_shapley(analytic_shapley, fun, max_subsets):
     u, exact_values = analytic_shapley
-    values = fun(u, alpha, beta, int(max_samples))
+    values = fun(u, alpha=1, beta=1, max_subsets=int(max_subsets))
     check_values(values, exact_values, rtol=0.1)
 
 
