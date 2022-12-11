@@ -17,6 +17,7 @@ from typing import (
 )
 
 import numpy as np
+from scipy.special import expit
 
 from pydvl.utils.types import compose_score
 
@@ -252,7 +253,7 @@ def top_k_value_accuracy(y_true: "NDArray", y_pred: "NDArray", k: int = 3) -> fl
 
 
 def sigmoid(x: float) -> float:
-    return float(1 / (1 + np.exp(-x)))
+    return expit(x).item()
 
 
 squashed_r2 = compose_score("r2", sigmoid, "squashed r2")
