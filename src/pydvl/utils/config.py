@@ -16,12 +16,12 @@ class ParallelConfig:
 
     :param backend: Type of backend to use. For now only 'ray' is supported.
     :param address: Address of existing remote or local cluster to use.
-    :param num_workers: Number of workers (CPUs) to use.
+    :param n_local_workers: Number of workers (CPUs) to use when using a local ray cluster
     """
 
     backend: Literal["sequential", "ray"] = "ray"
     address: Optional[Union[str, Tuple[str, int]]] = None
-    num_workers: Optional[int] = None
+    n_local_workers: Optional[int] = None
 
 
 @unpackable

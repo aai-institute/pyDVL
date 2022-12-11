@@ -70,7 +70,7 @@ class SequentialParallelBackend(BaseParallelBackend):
         config_dict = asdict(config)
         config_dict.pop("backend")
         config_dict.pop("address")
-        config_dict["num_cpus"] = config_dict.pop("num_workers")
+        config_dict["num_cpus"] = config_dict.pop("n_local_workers")
         self.config = config_dict
 
     def get(self, v: Any, *args, **kwargs):
@@ -120,7 +120,7 @@ class RayParallelBackend(BaseParallelBackend):
     def __init__(self, config: ParallelConfig):
         config_dict = asdict(config)
         config_dict.pop("backend")
-        config_dict["num_cpus"] = config_dict.pop("num_workers")
+        config_dict["num_cpus"] = config_dict.pop("n_local_workers")
         self.config = config_dict
         ray.init(**self.config)
 
