@@ -83,6 +83,7 @@ class MapReduceJob(Generic[T, R]):
         in each job. Alternatively, one can use `itertools.partial`.
     :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig`
         with cluster address, number of cpus, etc.
+    :param chunkify_inputs: If True, the input is split across jobs, otherwise it is repeated.
     :param n_jobs: Number of parallel jobs to run. Does not accept 0
     :param n_runs: Number of times to run `map_func` and `reduce_func` on the
         whole data.
