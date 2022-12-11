@@ -57,13 +57,13 @@ def get_value(
 
 
 class MapReduceJob(Generic[T, R]):
-    """Takes an embarrassingly parallel fun and runs it in n_jobs parallel
+    """Takes an embarrassingly parallel fun and runs it in `n_jobs` parallel
     jobs, splitting the data into the same number of chunks, one for each job.
 
-    It repeats the process num_runs times, allocating jobs across runs. E.g.
-    if n_jobs = 90 and n_runs=10, each whole execution of fun uses 9 jobs,
-    with the data split evenly among them. If n_jobs=2 and n_runs=10, two
-    cores are used, five times in succession, and each job receives all data.
+    It repeats the process `n_runs` times, allocating jobs across runs. E.g.
+    if `n_jobs=90` and `n_runs=10`, each whole execution of fun uses 9 jobs,
+    with the data split evenly among them. If `n_jobs=2` and `n_runs=10`, two
+    jobs are used, five times in succession, and each job receives all data.
 
     Results are aggregated per run using `reduce_func`, but **not across runs**.
     A list of length `n_runs` is always returned.
@@ -132,6 +132,7 @@ class MapReduceJob(Generic[T, R]):
         self.n_runs = n_runs
 
         self._n_jobs = 1
+        # This uses the setter defined below
         self.n_jobs = n_jobs
 
         if max_parallel_tasks is None:
@@ -161,7 +162,7 @@ class MapReduceJob(Generic[T, R]):
     ) -> List[R]:
         if isinstance(inputs, Utility):
             inputs_ = self.parallel_backend.put(inputs)
-        elif isinstance(inputs[0], Utility):
+        elif len(inputs) > 0 and isinstance(inputs[0], Utility):
             inputs_ = [self.parallel_backend.put(x) for x in inputs]
         else:
             inputs_ = inputs
@@ -180,7 +181,11 @@ class MapReduceJob(Generic[T, R]):
         total_n_finished = 0
 
         for _ in range(self.n_runs):
-            chunks = self._chunkify(inputs, n_chunks=self.n_jobs)
+            # In this first case we don't use chunking at all
+            if self.n_runs >= self.n_jobs:
+                chunks = [inputs]
+            else:
+                chunks = self._chunkify(inputs, n_chunks=self.n_jobs)
 
             map_result = []
             for j, next_chunk in enumerate(chunks):
