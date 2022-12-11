@@ -56,8 +56,8 @@ def map_reduce_job(parallel_config, request):
     ],
     indirect=["map_reduce_job"],
 )
-@pytest.mark.parametrize("n_jobs", [2, 4])
-@pytest.mark.parametrize("n_runs", [1, 2])
+@pytest.mark.parametrize("n_jobs", [1, 2, 4])
+@pytest.mark.parametrize("n_runs", [1, 2, 4])
 def test_map_reduce_job(map_reduce_job, indices, n_jobs, n_runs, expected):
     result = map_reduce_job(indices, n_jobs=n_jobs, n_runs=n_runs)
     assert len(result) == n_runs

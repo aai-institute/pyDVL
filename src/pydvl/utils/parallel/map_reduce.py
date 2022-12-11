@@ -181,7 +181,7 @@ class MapReduceJob(Generic[T, R]):
         total_n_finished = 0
 
         for _ in range(self.n_runs):
-            chunks = self._chunkify(inputs, num_chunks=self.n_jobs)
+            chunks = self._chunkify(inputs, n_chunks=self.n_jobs)
 
             map_result = []
             for j, next_chunk in enumerate(chunks):
@@ -245,12 +245,12 @@ class MapReduceJob(Generic[T, R]):
         return n_finished
 
     @staticmethod
-    def _chunkify(data: Sequence[T], num_chunks: int) -> Iterator[Sequence[T]]:
+    def _chunkify(data: Sequence[T], n_chunks: int) -> Iterator[Sequence[T]]:
         # Splits a list of values into chunks for each job
-        if num_chunks == 0:
+        if n_chunks == 0:
             raise ValueError("Number of chunks should be greater than 0")
 
-        elif num_chunks == 1:
+        elif n_chunks == 1:
             yield data
 
         else:
@@ -259,12 +259,12 @@ class MapReduceJob(Generic[T, R]):
             # This is very much inspired by numpy's array_split function
             # The difference is that it only uses built-in functions
             # and does not convert the input data to an array
-            chunk_size, remainder = divmod(n, num_chunks)
+            chunk_size, remainder = divmod(n, n_chunks)
             chunk_indices = tuple(
                 accumulate(
                     [0]
                     + remainder * [chunk_size + 1]
-                    + (num_chunks - remainder) * [chunk_size]
+                    + (n_chunks - remainder) * [chunk_size]
                 )
             )
             for start_index, end_index in zip(chunk_indices[:-1], chunk_indices[1:]):
