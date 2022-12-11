@@ -118,6 +118,11 @@ def combinatorial_coefficient(n: int, ns: int) -> int:
     return 2 ** (n - 1) / (n * math.comb(n - 1, ns))
 
 
+@lru_cache
+def banzhaf_coefficient(n: int, _: int):
+    return 1.0 / 2 ** (n - 1)
+
+
 def beta_coefficient(alpha: int, beta: int):
     @lru_cache
     def coefficient_w(n: int, ns: int):
@@ -127,11 +132,6 @@ def beta_coefficient(alpha: int, beta: int):
         return n * p1 / p2
 
     return coefficient_w
-
-
-@lru_cache
-def banzhaf_coefficient(n: int, _: int):
-    return 1.0 / 2 ** (n - 1)
 
 
 def beta_coefficient_orig(alpha: int, beta: int):
