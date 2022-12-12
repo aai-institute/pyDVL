@@ -1,13 +1,25 @@
 from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Optional, Sequence, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from cloudpickle import pickle as pkl
+from PIL.JpegImagePlugin import JpegImageFile
 
+from pydvl.influence.model_wrappers.torch_wrappers import TorchModel
 from pydvl.utils import Dataset
 
 try:
@@ -280,7 +292,7 @@ def load_preprocess_imagenet(
     keep_labels: Optional[List] = None,
     random_state: Optional[int] = None,
     is_CI: bool = False,
-):
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Loads the tiny imagened dataset from huggingface and preprocesses it
     for model input.
 
@@ -363,7 +375,12 @@ def load_preprocess_imagenet(
     return train_ds, val_ds, test_ds
 
 
-def save_model(model, train_loss, val_loss, model_name):
+def save_model(
+    model: TorchModel,
+    train_loss: List[float],
+    val_loss: List[float],
+    model_name: Literal,
+):
     """Saves the model weights, with also its training and validation losses.
 
     :param model: trained model
@@ -378,7 +395,9 @@ def save_model(model, train_loss, val_loss, model_name):
         pkl.dump([train_loss, val_loss], file)
 
 
-def load_model(model, model_name):
+def load_model(
+    model: TorchModel, model_name: Literal
+) -> Tuple[List[float], List[float]]:
     """Given the model and the model name, it loads the model weights from the file {model_name}_weights.pth.
         Then, it also loads and returns the training and validation losses.
 
@@ -396,7 +415,7 @@ def load_model(model, model_name):
     return train_loss, val_loss
 
 
-def save_results(results, file_name):
+def save_results(results: Any, file_name: Literal):
     """Saves (pickles) any file to {file_name}.pkl
 
     :param results: any serializable object
@@ -406,7 +425,7 @@ def save_results(results, file_name):
         pkl.dump(results, file)
 
 
-def load_results(file_name):
+def load_results(file_name: Literal) -> Any:
     """Loads the pickle file {file_name}.pkl
 
     :param file_name: string, file name where the object is saved
@@ -418,7 +437,7 @@ def load_results(file_name):
 
 
 def plot_sample_images(
-    dataset,
+    dataset: pd.DataFrame,
     n_images_per_class=3,
 ):
     """Given the preprocessed imagenet dataset (or a subset of it), it plots \
@@ -443,15 +462,15 @@ def plot_sample_images(
 
 
 def plot_top_bottom_if_images(
-    subset_influences,
-    subset_images,
-    num_to_plot,
+    subset_influences: "NDArray",
+    subset_images: List[JpegImageFile],
+    num_to_plot: int,
 ):
     """Given the influence values and the related images, it plots a number 2*num_to_plot of images,
     of which those on the right column have the lowest influence, those on the right the highest.
 
     :param subset_influences: an array with influence values
-    :param subset_images: an array of images
+    :param subset_images: a list of images
     :param num_to_plot: int, number of high and low influence images to plot
     """
     top_if_idxs = np.argsort(subset_influences)[-num_to_plot:]
@@ -473,7 +492,7 @@ def plot_top_bottom_if_images(
     plt.show()
 
 
-def plot_train_val_loss(train_loss, val_loss):
+def plot_train_val_loss(train_loss: List[float], val_loss: List[float]):
     """Plots the train and validation loss
 
     :param train_loss: list of training losses, one per epoch
@@ -488,7 +507,9 @@ def plot_train_val_loss(train_loss, val_loss):
     plt.show()
 
 
-def get_corrupted_imagenet(dataset, fraction_to_corrupt, avg_influences):
+def get_corrupted_imagenet(
+    dataset: pd.DataFrame, fraction_to_corrupt: float, avg_influences: "NDArray"
+) -> Tuple[pd.DataFrame, Dict[Any, List[int]]]:
     """Given the preprocessed tiny imagenet dataset (or a subset of it), 
     it takes a fraction of the images with the highest influence and (randomly)
     flips their labels.
@@ -523,7 +544,7 @@ def get_corrupted_imagenet(dataset, fraction_to_corrupt, avg_influences):
     return corrupted_dataset, corrupted_indices
 
 
-def plot_influence_distribution_by_label(influences, dataset):
+def plot_influence_distribution_by_label(influences: "NDArray", dataset: pd.DataFrame):
     """For each label in the dataset it plots the histogram of the distribution of
     influence values.
 
@@ -542,10 +563,10 @@ def plot_influence_distribution_by_label(influences, dataset):
 
 
 def plot_corrupted_influences_distribution(
-    corrupted_dataset,
-    corrupted_indices,
-    avg_corrupted_influences,
-):
+    corrupted_dataset: pd.DataFrame,
+    corrupted_indices: Dict[Any, List[int]],
+    avg_corrupted_influences: "NDArray",
+) -> "NDArray":
     """Given a corrupted dataset, it plots the histogram with the distribution of
     influence values. This is done separately for each label: each has a plot where
     the distribution of the influence of non-corrupted points is compared to that of corrupted ones
