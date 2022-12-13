@@ -14,6 +14,7 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
+    overload,
 )
 
 import numpy as np
@@ -22,8 +23,6 @@ from pydvl.utils.types import compose_score
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
-
-FloatOrArray = TypeVar("FloatOrArray", float, "NDArray")
 
 __all__ = [
     "get_running_avg_variance",
@@ -212,12 +211,29 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     return full_derivative / N  # type: ignore
 
 
+@overload
 def get_running_avg_variance(
-    previous_avg: FloatOrArray,
-    previous_variance: FloatOrArray,
-    new_value: FloatOrArray,
+    previous_avg: float, previous_variance: float, new_value: float, count: int
+) -> Tuple[float, float]:
+    ...
+
+
+@overload
+def get_running_avg_variance(
+    previous_avg: "NDArray[np.float_]",
+    previous_variance: "NDArray[np.float_]",
+    new_value: "NDArray[np.float_]",
     count: int,
-) -> Tuple[FloatOrArray, FloatOrArray]:
+) -> Tuple["NDArray[np.float_]", "NDArray[np.float_]"]:
+    ...
+
+
+def get_running_avg_variance(
+    previous_avg: Union[float, "NDArray[np.float_]"],
+    previous_variance: Union[float, "NDArray[np.float_]"],
+    new_value: Union[float, "NDArray[np.float_]"],
+    count: int,
+) -> Tuple[Union[float, "NDArray[np.float_]"], Union[float, "NDArray[np.float_]"]]:
     """Uses Welford's algorithm to calculate the running average and variance of
      a set of numbers.
 
