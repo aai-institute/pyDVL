@@ -11,6 +11,11 @@
 - **Breaking change:** Introduces a class ValuationResult to gather and inspect
   results from all valuation algorithms
   [PR #214](https://github.com/appliedAI-Initiative/pyDVL/pull/214)
+- **Breaking change**: Removes `chunkify_inputs` argument from `MapReduceJob`,
+  renames ParallelConfig's `num_workers` attribute to `n_local_workers`,
+  fixes a bug in `MapReduceJob`'s chunkification when `n_runs` >= `n_jobs`,
+  and defines a sequential parallel backend to run all jobs in the current thread
+  [PR #232](https://github.com/appliedAI-Initiative/pyDVL/pull/232)
 
 ## 0.3.0 - 💥 Breaking changes
 
