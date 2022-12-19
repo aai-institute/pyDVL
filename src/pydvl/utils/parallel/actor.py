@@ -1,15 +1,11 @@
 import abc
 import inspect
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from ray import ObjectRef
 
 from .backend import RayParallelBackend
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
-
 
 __all__ = ["RayActorWrapper", "Coordinator", "Worker"]
 
@@ -25,7 +21,7 @@ class RayActorWrapper:
 
     :Example:
 
-    >>> from pydvl.utils.parallel import init_parallel_backend
+    >>> from pydvl.utils.parallel.backend import RayParallelBackend
     >>> from pydvl.utils.config import ParallelConfig
     >>> from pydvl.utils.parallel.actor import RayActorWrapper
     >>> class Actor:
@@ -35,8 +31,8 @@ class RayActorWrapper:
     ...     def get(self):
     ...         return self.x
     ...
-    >>> config = ParallelConfig()
-    >>> parallel_backend = init_parallel_backend(config)
+    >>> config = ParallelConfig(backend="ray")
+    >>> parallel_backend = RayParallelBackend(config)
     >>> actor_handle = parallel_backend.wrap(Actor).remote(5)
     >>> parallel_backend.get(actor_handle.get.remote())
     5
