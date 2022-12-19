@@ -253,7 +253,8 @@ def top_k_value_accuracy(y_true: "NDArray", y_pred: "NDArray", k: int = 3) -> fl
 
 
 def sigmoid(x: float) -> float:
-    return expit(x).item()
+    result: float = expit(x).item()
+    return result
 
 
 squashed_r2 = compose_score("r2", sigmoid, "squashed r2")
