@@ -8,7 +8,7 @@ methods for pyDVL that use parallelization.
 import logging
 import warnings
 from time import time
-from typing import TYPE_CHECKING, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Tuple, Union, cast
 
 import numpy as np
 
@@ -21,6 +21,8 @@ from pydvl.value.results import ValuationStatus
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
+    from ...utils.parallel.backend import RayParallelBackend
+
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
 
@@ -31,27 +33,33 @@ logger = logging.getLogger(__name__)
 def get_shapley_coordinator(
     *args, config: ParallelConfig = ParallelConfig(), **kwargs
 ) -> "ShapleyCoordinator":
-    parallel_backend = init_parallel_backend(config)
     if config.backend == "ray":
+        parallel_backend = cast(RayParallelBackend, init_parallel_backend(config))
         remote_cls = parallel_backend.wrap(ShapleyCoordinator)
         handle = remote_cls.remote(*args, **kwargs)
-        coordinator = RayActorWrapper(handle, parallel_backend)
+        coordinator = cast(
+            ShapleyCoordinator, RayActorWrapper(handle, parallel_backend)
+        )
+    elif config.backend == "sequential":
+        coordinator = ShapleyCoordinator(*args, **kwargs)
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
-    return coordinator  # type: ignore
+    return coordinator
 
 
 def get_shapley_worker(
     *args, config: ParallelConfig = ParallelConfig(), **kwargs
 ) -> "ShapleyWorker":
-    parallel_backend = init_parallel_backend(config)
     if config.backend == "ray":
+        parallel_backend = cast(RayParallelBackend, init_parallel_backend(config))
         remote_cls = parallel_backend.wrap(ShapleyWorker)
         handle = remote_cls.remote(*args, **kwargs)
-        worker = RayActorWrapper(handle, parallel_backend)
+        worker = cast(ShapleyWorker, RayActorWrapper(handle, parallel_backend))
+    elif config.backend == "sequential":
+        worker = ShapleyWorker(*args, **kwargs)
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
-    return worker  # type: ignore
+    return worker
 
 
 class ShapleyCoordinator(Coordinator):
