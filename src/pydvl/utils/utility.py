@@ -13,6 +13,7 @@ to avoid repeated re-training of the model to compute the score.
 """
 import logging
 import warnings
+from dataclasses import asdict
 from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, Optional, Tuple, Union
 
 import numpy as np
@@ -110,7 +111,7 @@ class Utility:
 
     def _initialize_utility_wrapper(self):
         if self.enable_cache:
-            self._utility_wrapper = memcached(**self.cache_options)(  # type: ignore
+            self._utility_wrapper = memcached(**asdict(self.cache_options))(  # type: ignore
                 self._utility, signature=self._signature
             )
         else:

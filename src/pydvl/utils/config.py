@@ -3,8 +3,6 @@ from typing import Iterable, Optional, Tuple, Union
 
 from pymemcache.serde import PickleSerde
 
-from .types import unpackable
-
 PICKLE_VERSION = 5  # python >= 3.8
 
 __all__ = ["ParallelConfig", "MemcachedClientConfig", "MemcachedConfig"]
@@ -24,7 +22,6 @@ class ParallelConfig:
     num_workers: Optional[int] = None
 
 
-@unpackable
 @dataclass
 class MemcachedClientConfig:
     """Configuration of the memcached client.
@@ -50,7 +47,6 @@ class MemcachedClientConfig:
     serde: PickleSerde = PickleSerde(pickle_version=PICKLE_VERSION)
 
 
-@unpackable
 @dataclass
 class MemcachedConfig:
     """Configuration for :func:`~pydvl.utils.caching.memcached`, providing
