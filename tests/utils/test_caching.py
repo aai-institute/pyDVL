@@ -20,13 +20,13 @@ def test_failed_connection():
 
 
 @pytest.mark.parametrize(
-    "numbers_series", [(np.arange(-4, 12)), (np.arange(10)), (np.linspace(1, 4, 10))]
+    "sequence", [np.arange(-4, 12), np.arange(10), np.random.random(size=100)]
 )
-def test_get_running_avg_variance(numbers_series):
+def test_get_running_avg_variance(sequence):
     avg, var = 0.0, 0.0
-    for i, n in enumerate(numbers_series[:-1]):
-        true_avg = np.mean(numbers_series[: i + 1])
-        true_var = np.var(numbers_series[: i + 1])
+    for i, n in enumerate(sequence[:-1]):
+        true_avg = np.mean(sequence[: i + 1])
+        true_var = np.var(sequence[: i + 1])
 
         new_avg, new_var = get_running_avg_variance(avg, var, n, i)
         avg, var = new_avg, new_var

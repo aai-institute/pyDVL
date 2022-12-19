@@ -198,9 +198,8 @@ def memcached(
         """First tries to establish a connection, then tries setting and
         getting a value."""
         try:
-            test_config: Dict = asdict(config)
             client = RetryingClient(
-                Client(**test_config),
+                Client(**asdict(config)),
                 attempts=3,
                 retry_delay=0.1,
                 retry_for=[MemcacheUnexpectedCloseError],
@@ -325,8 +324,6 @@ def memcached(
         Wrapped.__qualname__ = ".".join(reversed(patched))
 
         # TODO: pick from some config file or something
-        if client_config is not None:
-            return Wrapped(client_config)
-        return Wrapped(MemcachedClientConfig())
+        return Wrapped(client_config or MemcachedClientConfig())
 
     return wrapper
