@@ -8,6 +8,8 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 
 import numpy as np
 
+from ...utils import maybe_progress
+
 try:
     import torch
     import torch.nn as nn
@@ -68,6 +70,7 @@ class TorchModelBase(ABC):
         scheduler: Optional[_LRScheduler] = None,
         num_epochs: int = 1,
         batch_size: int = 64,
+        progress: bool = True,
     ):
         """
         Wrapper of pytorch fit method. It fits the model to the supplied data.
@@ -80,6 +83,7 @@ class TorchModelBase(ABC):
         :param scheduler: A pytorch scheduler. If None, no scheduler is used.
         :param num_epochs: Number of epochs to repeat training.
         :param batch_size: Batch size to use in training.
+        :param progress: True, iff progress shall be printed.
         :param tensor_type: accuracy of tensors. Typically 'float' or 'long'
         """
         x_train = torch.as_tensor(x_train).clone()
@@ -92,7 +96,11 @@ class TorchModelBase(ABC):
         train_loss = []
         val_loss = []
 
-        for epoch in range(num_epochs):
+        for epoch in maybe_progress(
+            range(num_epochs),
+            progress,
+            desc="Model fitting",
+        ):
             batch_loss = []
             for train_batch in dataloader:
                 batch_x, batch_y = train_batch

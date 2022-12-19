@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Callable, Dict, Optional
 import numpy as np
 from scipy.sparse.linalg import LinearOperator
 
+from ..utils import maybe_progress
 from .conjugate_gradient import (
     batched_preconditioned_conjugate_gradient,
     conjugate_gradient,
@@ -69,15 +70,14 @@ def calculate_influence_factors(
     :param inversion_func: function to use to invert the product of hvp (hessian vector product) and the gradient
         of the loss (s_test in the paper).
     :param lam: regularization of the hessian
-    :param progress: True for plotting the progress bar, False otherwise.
-    :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
     :param progress: If True, display progress bars.
+    :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
     """
     if not _TORCH_INSTALLED:
         raise RuntimeWarning("This function requires PyTorch.")
     grad_xy, _ = model.grad(x, y)
-    hvp = lambda v: model.mvp(grad_xy, v, progress=progress) + lam * v
-    test_grads = model.split_grad(x_test, y_test, progress=progress)
+    hvp = lambda v: model.mvp(grad_xy, v) + lam * v
+    test_grads = model.split_grad(x_test, y_test, progress)
     return inversion_func(hvp, test_grads)
 
 
@@ -86,6 +86,7 @@ def _calculate_influences_up(
     x: "NDArray",
     y: "NDArray",
     influence_factors: "NDArray",
+    progress: bool = False,
 ) -> "NDArray":
     """
     Calculates the influence from the influence factors and the scores of the training points.
@@ -95,9 +96,10 @@ def _calculate_influences_up(
     :param x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
     :param y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
     :param influence_factors: np.ndarray containing influence factors
+    :param progress: If True, display progress bars.
     :returns: A np.ndarray of size [NxM], where N is number of test points and M number of train points.
     """
-    train_grads = model.split_grad(x, y)
+    train_grads = model.split_grad(x, y, progress)
     return np.einsum("ta,va->tv", influence_factors, train_grads)  # type: ignore
 
 
@@ -106,6 +108,7 @@ def _calculate_influences_pert(
     x: "NDArray",
     y: "NDArray",
     influence_factors: "NDArray",
+    progress: bool = False,
 ) -> "NDArray":
     """
     Calculates the influence from the influence factors and the scores of the training points.
@@ -115,11 +118,16 @@ def _calculate_influences_pert(
     :param x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
     :param y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
     :param influence_factors: np.ndarray containing influence factors
+    :param progress: If True, display progress bars.
     :returns: A np.ndarray of size [NxMxP], where N is number of test points, M number of train points,
         and P the number of features.
     """
     all_pert_influences = []
-    for i in np.arange(len(x)):
+    for i in maybe_progress(
+        len(x),
+        progress,
+        desc="Influence Perturbation",
+    ):
         grad_xy, tensor_x = model.grad(x[i : i + 1], y[i])
         perturbation_influences = model.mvp(
             grad_xy,
@@ -190,7 +198,7 @@ def compute_influences(
     n_params = differentiable_model.num_params()
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
         "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,  # type: ignore
-        "cg": lambda hvp, x: conjugate_gradient(LinearOperator((n_params, n_params), matvec=hvp), x),  # type: ignore
+        "cg": lambda hvp, x: conjugate_gradient(LinearOperator((n_params, n_params), matvec=hvp), x, progress),  # type: ignore
         "batched_cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(  # type: ignore
             hvp, x, **inversion_method_kwargs
         )[
@@ -215,4 +223,5 @@ def compute_influences(
         x,
         y,
         influence_factors,
+        progress,
     )

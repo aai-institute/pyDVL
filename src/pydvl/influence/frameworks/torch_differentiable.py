@@ -95,7 +95,11 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
             )
             .detach()
             .numpy()
-            for i in maybe_progress(range(len(x)), progress)
+            for i in maybe_progress(
+                range(len(x)),
+                progress,
+                desc="Split Gradient",
+            )
         ]
         return np.stack(grads, axis=0)
 
@@ -163,7 +167,11 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
                     retain_graph=True,
                 )
             )
-            for i in maybe_progress(range(len(z)), progress)
+            for i in maybe_progress(
+                range(len(z)),
+                progress,
+                desc="MVP",
+            )
         ]
         hvp = torch.stack([grad.contiguous().view(-1) for grad in all_flattened_grads])
         return hvp.detach().numpy()  # type: ignore

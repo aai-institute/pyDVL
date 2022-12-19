@@ -415,27 +415,6 @@ def load_model(
     return train_loss, val_loss
 
 
-def save_results(results: Any, file_name: Literal):
-    """Saves (pickles) any file to {file_name}.pkl
-
-    :param results: any serializable object
-    :param file_name: string, file name where to save the object
-    """
-    with open(imgnet_model_data_path / f"{file_name}", "wb") as file:
-        pkl.dump(results, file)
-
-
-def load_results(file_name: Literal) -> Any:
-    """Loads the pickle file {file_name}.pkl
-
-    :param file_name: string, file name where the object is saved
-    :return: saved object
-    """
-    with open(imgnet_model_data_path / f"{file_name}", "rb") as file:
-        results = pkl.load(file)
-    return results
-
-
 def plot_sample_images(
     dataset: pd.DataFrame,
     n_images_per_class=3,
@@ -580,7 +559,7 @@ def plot_corrupted_influences_distribution(
     fig, axes = plt.subplots(nrows=1, ncols=2)
     fig.suptitle("Distribution of corrupted and clean influences.")
     avg_label_influence = pd.DataFrame(
-        columns=["label", "avg_non_corrupted_infl", "avg_corrupted_infl"]
+        columns=["label", "avg_non_corrupted_infl", "avg_corrupted_infl", "score_diff"]
     )
     for idx, label in enumerate(labels):
         avg_influences_series = pd.Series(avg_corrupted_influences)
@@ -591,10 +570,13 @@ def plot_corrupted_influences_distribution(
         non_corrupted_infl = class_influences[
             ~class_influences.index.isin(corrupted_indices[label])
         ]
+        avg_non_corrupted = np.mean(non_corrupted_infl)
+        avg_corrupted = np.mean(corrupted_infl)
         avg_label_influence.loc[idx] = [
             label,
-            np.mean(non_corrupted_infl),
-            np.mean(corrupted_infl),
+            avg_non_corrupted,
+            avg_corrupted,
+            avg_non_corrupted - avg_corrupted,
         ]
         axes[idx].hist(
             non_corrupted_infl, label="non corrupted data", density=True, alpha=0.7
