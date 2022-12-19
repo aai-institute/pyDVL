@@ -225,10 +225,7 @@ class MapReduceJob(Generic[T, R]):
         remote_func = self.parallel_backend.wrap(
             wrap_func_with_remote_args(func, timeout=self.timeout)
         )
-        if hasattr(remote_func, "remote"):
-            return remote_func.remote
-        else:
-            return remote_func
+        return gettatr(remote_func, "remote", remote_func)
 
     def _backpressure(
         self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int

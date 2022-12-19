@@ -50,7 +50,7 @@ class BaseParallelBackend(ABC):
 
 
 class SequentialParallelBackend(BaseParallelBackend):
-    """Class used to run jobs sequentiall and locally. It shouldn't
+    """Class used to run jobs sequentially and locally. It shouldn't
     be initialized directly. You should instead call `init_parallel_backend`.
 
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with number of cpus
