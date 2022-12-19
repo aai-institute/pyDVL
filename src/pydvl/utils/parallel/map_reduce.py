@@ -1,15 +1,16 @@
 import weakref
+from collections.abc import Iterable, Sequence
+from functools import singledispatch, singledispatchmethod
 from itertools import accumulate, chain
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
     Generic,
-    Iterable,
     Iterator,
     List,
     Optional,
-    Sequence,
     TypeVar,
     Union,
 )
@@ -18,12 +19,10 @@ import ray
 from ray import ObjectRef
 
 from ..config import ParallelConfig
-from ..utility import Utility
+from ..types import maybe_add_argument
 from .backend import init_parallel_backend
 
 __all__ = ["MapReduceJob"]
-
-from ..types import maybe_add_argument
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -32,28 +31,48 @@ Identity = lambda x, *args, **kwargs: x
 MapFunction = Callable[..., R]
 ReduceFunction = Callable[[Iterable[R]], R]
 
+if not TYPE_CHECKING:
+    # HACK to make singledispatchmethod work with staticmethod
+    def _register(self, cls, method=None):
+        if hasattr(cls, "__func__"):
+            setattr(cls, "__annotations__", cls.__func__.__annotations__)
+        return self.dispatcher.register(cls, func=method)
 
-def wrap_func_with_remote_args(func, *, timeout: Optional[float] = None):
+    singledispatchmethod.register = _register
+
+
+def _wrap_func_with_remote_args(func, *, timeout: Optional[float] = None):
     def wrapper(*args, **kwargs):
         args = list(args)
         for i, v in enumerate(args[:]):
-            args[i] = get_value(v, timeout=timeout)
+            args[i] = _get_value(v, timeout=timeout)
         for k, v in kwargs.items():
-            kwargs[k] = get_value(v, timeout=timeout)
+            kwargs[k] = _get_value(v, timeout=timeout)
         return func(*args, **kwargs)
 
+    # Doing it manually here because using wraps or update_wrapper
+    # from functools doesn't work with ray for some unknown reason
+    wrapper.__module__ = func.__module__
+    wrapper.__name__ = func.__name__
+    wrapper.__annotations__ = func.__annotations__
+    wrapper.__qualname__ = func.__qualname__
+    wrapper.__doc__ = func.__doc__
     return wrapper
 
 
-def get_value(
-    v: Union[ObjectRef, Iterable[ObjectRef], Any], *, timeout: Optional[float] = None
-):
-    if isinstance(v, ObjectRef):
-        return ray.get(v, timeout=timeout)
-    elif isinstance(v, Iterable):
-        return [get_value(x, timeout=timeout) for x in v]
-    else:
-        return v
+@singledispatch
+def _get_value(v: T, *, timeout: Optional[float] = None) -> T:
+    return v
+
+
+@_get_value.register
+def _(v: ObjectRef, *, timeout: Optional[float] = None) -> Any:
+    return ray.get(v, timeout=timeout)
+
+
+@_get_value.register
+def _(v: Iterable, *, timeout: Optional[float] = None) -> List[Any]:
+    return [_get_value(x, timeout=timeout) for x in v]
 
 
 class MapReduceJob(Generic[T, R]):
@@ -158,20 +177,19 @@ class MapReduceJob(Generic[T, R]):
 
     def __call__(
         self,
-        inputs: Union[Sequence[T], Sequence[Utility], Utility],
+        inputs: Union[Sequence[T], T],
     ) -> List[R]:
-        if isinstance(inputs, Utility):
-            inputs_ = self.parallel_backend.put(inputs)
-        elif len(inputs) > 0 and isinstance(inputs[0], Utility):
-            inputs_ = [self.parallel_backend.put(x) for x in inputs]
-        else:
+        inputs_: Union[Sequence[T], "ObjectRef[T]"]
+        if isinstance(inputs, Sequence):
             inputs_ = inputs
+        else:
+            inputs_ = self.parallel_backend.put(inputs)
         map_results = self.map(inputs_)
         reduce_results = self.reduce(map_results)
         return reduce_results
 
     def map(
-        self, inputs: Union[Sequence[T], Sequence["ObjectRef"], "ObjectRef"]
+        self, inputs: Union[Sequence[T], "ObjectRef[T]"]
     ) -> List[List["ObjectRef[R]"]]:
         map_results: List[List["ObjectRef[R]"]] = []
 
@@ -183,7 +201,7 @@ class MapReduceJob(Generic[T, R]):
         for _ in range(self.n_runs):
             # In this first case we don't use chunking at all
             if self.n_runs >= self.n_jobs:
-                chunks = [inputs]
+                chunks = iter([inputs])
             else:
                 chunks = self._chunkify(inputs, n_chunks=self.n_jobs)
 
@@ -217,15 +235,14 @@ class MapReduceJob(Generic[T, R]):
             total_n_finished = self._backpressure(
                 reduce_results, n_dispatched=total_n_jobs, n_finished=total_n_finished
             )
-
         results = self.parallel_backend.get(reduce_results, timeout=self.timeout)
         return results  # type: ignore
 
     def _wrap_function(self, func):
         remote_func = self.parallel_backend.wrap(
-            wrap_func_with_remote_args(func, timeout=self.timeout)
+            _wrap_func_with_remote_args(func, timeout=self.timeout)
         )
-        return gettatr(remote_func, "remote", remote_func)
+        return getattr(remote_func, "remote", remote_func)
 
     def _backpressure(
         self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int
@@ -245,9 +262,17 @@ class MapReduceJob(Generic[T, R]):
             n_finished += len(finished_jobs)
         return n_finished
 
+    @singledispatchmethod
     @staticmethod
-    def _chunkify(data: Sequence[T], n_chunks: int) -> Iterator[Sequence[T]]:
-        # Splits a list of values into chunks for each job
+    def _chunkify(data: Any, n_chunks: int):
+        raise NotImplementedError(
+            f"_chunkify does not support data of type {type(data)}"
+        )
+
+    @_chunkify.register
+    @staticmethod
+    def _(data: Sequence, n_chunks: int) -> Iterator[Sequence[T]]:
+        """Splits a sequence of values into `n_chunks` chunks for each job"""
         if n_chunks == 0:
             raise ValueError("Number of chunks should be greater than 0")
 
@@ -272,6 +297,20 @@ class MapReduceJob(Generic[T, R]):
                 if start_index >= end_index:
                     return
                 yield data[start_index:end_index]
+
+    @_chunkify.register
+    @staticmethod
+    def _(data: ObjectRef, n_chunks: int) -> Iterator[ObjectRef]:
+        """Repeatedly yields the passed data object `n_chunks` number of times"""
+        if n_chunks == 0:
+            raise ValueError("Number of chunks should be greater than 0")
+
+        elif n_chunks == 1:
+            yield data
+
+        else:
+            for _ in range(n_chunks):
+                yield data
 
     @property
     def parallel_backend(self):

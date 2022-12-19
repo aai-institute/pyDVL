@@ -17,7 +17,9 @@ __all__ = [
 
 T = TypeVar("T")
 
-_PARALLEL_BACKENDS: Dict[str, "BaseParallelBackend"] = {}
+_PARALLEL_BACKENDS: Dict[
+    str, Union["RayParallelBackend", "SequentialParallelBackend"]
+] = {}
 
 
 class BaseParallelBackend(ABC):
@@ -77,7 +79,7 @@ class SequentialParallelBackend(BaseParallelBackend):
         return v
 
     def put(self, v: Any, *args, **kwargs) -> Any:
-        pass
+        return v
 
     def wrap(self, *args, **kwargs) -> Any:
         assert len(args) == 1
@@ -91,7 +93,7 @@ class SequentialParallelBackend(BaseParallelBackend):
             raise ValueError("n_jobs == 0 in Parallel has no meaning")
         elif n_jobs is None or n_jobs < 0:
             if self.config["num_cpus"]:
-                eff_n_jobs = self.config["num_cpus"]
+                eff_n_jobs: int = self.config["num_cpus"]
             else:
                 eff_n_jobs = available_cpus()
         else:
@@ -127,9 +129,10 @@ class RayParallelBackend(BaseParallelBackend):
     def get(
         self,
         v: Union[ObjectRef, Iterable[ObjectRef], T],
-        *,
-        timeout: Optional[float] = None,
+        *args,
+        **kwargs,
     ) -> Union[T, Any]:
+        timeout: Optional[float] = kwargs.get("timeout", None)
         if isinstance(v, ObjectRef):
             return ray.get(v, timeout=timeout)
         elif isinstance(v, Iterable):
@@ -137,7 +140,7 @@ class RayParallelBackend(BaseParallelBackend):
         else:
             return v
 
-    def put(self, v: Any, **kwargs) -> ObjectRef:
+    def put(self, v: T, *args, **kwargs) -> "ObjectRef[T]":
         return ray.put(v, **kwargs)  # type: ignore
 
     def wrap(self, *args, **kwargs) -> RemoteFunction:
@@ -145,11 +148,12 @@ class RayParallelBackend(BaseParallelBackend):
 
     def wait(
         self,
-        v: List["ray.ObjectRef"],
-        *,
-        num_returns: int = 1,
-        timeout: Optional[float] = None,
+        v: List["ObjectRef"],
+        *args,
+        **kwargs,
     ) -> Tuple[List[ObjectRef], List[ObjectRef]]:
+        num_returns: int = kwargs.get("num_returns", 1)
+        timeout: Optional[float] = kwargs.get("timeout", None)
         return ray.wait(  # type: ignore
             v,
             num_returns=num_returns,
@@ -167,7 +171,9 @@ class RayParallelBackend(BaseParallelBackend):
         return eff_n_jobs
 
 
-def init_parallel_backend(config: ParallelConfig) -> "BaseParallelBackend":
+def init_parallel_backend(
+    config: ParallelConfig,
+) -> Union[RayParallelBackend, SequentialParallelBackend]:
     """Initializes the parallel backend and returns an instance of it.
 
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.

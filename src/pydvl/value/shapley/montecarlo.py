@@ -36,7 +36,7 @@ import math
 from enum import Enum
 from itertools import repeat
 from time import sleep
-from typing import TYPE_CHECKING, Iterable, NamedTuple, Optional, Sequence
+from typing import TYPE_CHECKING, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
 from warnings import warn
 
 import numpy as np
@@ -225,7 +225,7 @@ def permutation_montecarlo_shapley(
     """
     iterations_per_job = max(1, max_iterations // n_jobs)
 
-    map_reduce_job: MapReduceJob["NDArray", "NDArray"] = MapReduceJob(
+    map_reduce_job: MapReduceJob[Utility, "NDArray"] = MapReduceJob(
         map_func=_permutation_montecarlo_marginals,
         reduce_func=np.concatenate,  # type: ignore
         map_kwargs=dict(max_permutations=iterations_per_job, progress=progress),
@@ -233,11 +233,7 @@ def permutation_montecarlo_shapley(
         config=config,
         n_jobs=n_jobs,
     )
-    if n_jobs == 1:
-        input_ = u
-    else:
-        input_ = tuple(repeat(u, times=n_jobs))
-    full_results = map_reduce_job(input_)[0]
+    full_results = map_reduce_job(u)[0]
 
     values = np.mean(full_results, axis=0)
     stderr = np.std(full_results, axis=0) / np.sqrt(full_results.shape[0])
