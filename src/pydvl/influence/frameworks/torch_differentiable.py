@@ -76,7 +76,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         :param progress: True, iff progress shall be printed.
         :returns: A np.ndarray [NxP] representing the gradients with respect to all parameters of the model.
         """
-        x = torch.as_tensor(x)
+        x = torch.as_tensor(x).unsqueeze(1)
         y = torch.as_tensor(y)
 
         params = [
@@ -87,7 +87,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
             flatten_gradient(
                 autograd.grad(
                     self.loss(
-                        torch.squeeze(self.model(x[i].unsqueeze(0))),
+                        torch.squeeze(self.model(x[i])),
                         torch.squeeze(y[i]),
                     ),
                     params,

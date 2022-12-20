@@ -1,16 +1,6 @@
 from copy import deepcopy
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -36,16 +26,16 @@ imgnet_model_data_path = Path().resolve().parent / "data/imgnet_model"
 
 
 def plot_dataset(
-    train_ds: Tuple["NDArray", "NDArray"],
-    test_ds: Tuple["NDArray", "NDArray"],
-    x_min: Optional["NDArray"] = None,
-    x_max: Optional["NDArray"] = None,
+    train_ds: Tuple["NDArray[np.float_]", "NDArray[np.int_]"],
+    test_ds: Tuple["NDArray[np.float_]", "NDArray[np.int_]"],
+    x_min: Optional["NDArray[np.float_]"] = None,
+    x_max: Optional["NDArray[np.float_]"] = None,
     *,
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     legend_title: Optional[str] = None,
     vline: Optional[float] = None,
-    line: Optional["NDArray"] = None,
+    line: Optional["NDArray[np.float_]"] = None,
     suptitle: Optional[str] = None,
     s: Optional[float] = None,
     figsize: Tuple[int, int] = (20, 10),
@@ -120,15 +110,15 @@ def plot_dataset(
 
 
 def plot_influences(
-    x: "NDArray",
-    influences: "NDArray",
+    x: "NDArray[np.float_]",
+    influences: "NDArray[np.float_]",
     corrupted_indices: Optional[List[int]] = None,
     *,
     ax: Optional[plt.Axes] = None,
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     legend_title: Optional[str] = None,
-    line: Optional["NDArray"] = None,
+    line: Optional["NDArray[np.float_]"] = None,
     suptitle: Optional[str] = None,
     colorbar_limits: Optional[Tuple] = None,
 ) -> plt.Axes:
@@ -309,13 +299,15 @@ def load_preprocess_imagenet(
         labels has the labels of each image, while images has the unmodified PIL images.
     """
     try:
-        from datasets import load_dataset
+        from datasets import load_dataset, utils
         from torchvision import transforms
     except ImportError as e:
         raise RuntimeError(
             "Torchvision and Huggingface datasets are required to load and "
             "process the imagenet dataset."
         ) from e
+
+    utils.logging.set_verbosity_error()
 
     preprocess_rgb = transforms.Compose(
         [
@@ -335,19 +327,14 @@ def load_preprocess_imagenet(
 
     if is_CI:
         tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="valid")
-        tiny_imagenet_train = tiny_imagenet.shard(10, 0)
-        tiny_imagenet_val = tiny_imagenet.shard(10, 1)
-        tiny_imagenet_test = tiny_imagenet.shard(2, 1)
         if keep_labels is not None:
-            tiny_imagenet_train = tiny_imagenet_train.filter(
+            tiny_imagenet = tiny_imagenet.filter(
                 lambda item: item["label"] in keep_labels
             )
-            tiny_imagenet_val = tiny_imagenet_val.filter(
-                lambda item: item["label"] in keep_labels
-            )
-            tiny_imagenet_test = tiny_imagenet_test.filter(
-                lambda item: item["label"] in keep_labels
-            )
+        split = tiny_imagenet.shard(2, 0)
+        tiny_imagenet_test = tiny_imagenet.shard(2, 1)
+        tiny_imagenet_train = split.shard(5, 0)
+        tiny_imagenet_val = split.shard(5, 1)
         train_ds = _process_dataset(tiny_imagenet_train)
         val_ds = _process_dataset(tiny_imagenet_val)
         test_ds = _process_dataset(tiny_imagenet_test)
@@ -379,7 +366,7 @@ def save_model(
     model: TorchModel,
     train_loss: List[float],
     val_loss: List[float],
-    model_name: Literal,
+    model_name: str,
 ):
     """Saves the model weights, with also its training and validation losses.
 
@@ -395,9 +382,7 @@ def save_model(
         pkl.dump([train_loss, val_loss], file)
 
 
-def load_model(
-    model: TorchModel, model_name: Literal
-) -> Tuple[List[float], List[float]]:
+def load_model(model: TorchModel, model_name: str) -> Tuple[List[float], List[float]]:
     """Given the model and the model name, it loads the model weights from the file {model_name}_weights.pth.
         Then, it also loads and returns the training and validation losses.
 
@@ -417,13 +402,13 @@ def load_model(
 
 def plot_sample_images(
     dataset: pd.DataFrame,
-    n_images_per_class=3,
+    n_images_per_class: int = 3,
 ):
     """Given the preprocessed imagenet dataset (or a subset of it), it plots \
     a number n_images_per_class of images for each class.
 
     :param dataset: imagenet dataset
-    :param n_images_per_class: int, number of images per class to plot
+    :param n_images_per_class: number of images per class to plot
     """
     labels = dataset["labels"].unique()
     fig, axes = plt.subplots(nrows=n_images_per_class, ncols=len(labels))
@@ -441,7 +426,7 @@ def plot_sample_images(
 
 
 def plot_top_bottom_if_images(
-    subset_influences: "NDArray",
+    subset_influences: "NDArray[np.float_]",
     subset_images: List[JpegImageFile],
     num_to_plot: int,
 ):
@@ -486,8 +471,10 @@ def plot_train_val_loss(train_loss: List[float], val_loss: List[float]):
     plt.show()
 
 
-def get_corrupted_imagenet(
-    dataset: pd.DataFrame, fraction_to_corrupt: float, avg_influences: "NDArray"
+def corrupt_imagenet(
+    dataset: pd.DataFrame,
+    fraction_to_corrupt: float,
+    avg_influences: "NDArray[np.float_]",
 ) -> Tuple[pd.DataFrame, Dict[Any, List[int]]]:
     """Given the preprocessed tiny imagenet dataset (or a subset of it), 
     it takes a fraction of the images with the highest influence and (randomly)
@@ -523,32 +510,13 @@ def get_corrupted_imagenet(
     return corrupted_dataset, corrupted_indices
 
 
-def plot_influence_distribution_by_label(influences: "NDArray", dataset: pd.DataFrame):
-    """For each label in the dataset it plots the histogram of the distribution of
-    influence values.
-
-    :param influences: array of influences
-    :param dataset: (preprocessed) tiny-imagenet dataset
-    """
-    _, ax = plt.subplots()
-    labels = dataset["labels"].unique()
-    for label in labels:
-        ax.hist(influences[dataset["labels"] == label], label=label, alpha=0.7)
-    ax.set_xlabel("influence values")
-    ax.set_ylabel("number of points")
-    ax.set_title("Influence distribution")
-    ax.legend()
-    plt.show()
-
-
-def plot_corrupted_influences_distribution(
+def get_mean_corrupted_influences(
     corrupted_dataset: pd.DataFrame,
     corrupted_indices: Dict[Any, List[int]],
-    avg_corrupted_influences: "NDArray",
-) -> "NDArray":
-    """Given a corrupted dataset, it plots the histogram with the distribution of
-    influence values. This is done separately for each label: each has a plot where
-    the distribution of the influence of non-corrupted points is compared to that of corrupted ones
+    avg_corrupted_influences: "NDArray[np.float_]",
+) -> pd.DataFrame:
+    """Given a corrupted dataset, it returns a dataframe with average influence for each class
+    and separately for corrupted (and non) point.
 
     :param corrupted_dataset: corrupted dataset as returned by get_corrupted_imagenet
     :param corrupted_indices: list of corrupted indices, as returned by get_corrupted_imagenet
@@ -556,8 +524,6 @@ def plot_corrupted_influences_distribution(
     :return: a dataframe holding the average influence of corrupted and non-corrupted data
     """
     labels = corrupted_dataset["labels"].unique()
-    fig, axes = plt.subplots(nrows=1, ncols=2)
-    fig.suptitle("Distribution of corrupted and clean influences.")
     avg_label_influence = pd.DataFrame(
         columns=["label", "avg_non_corrupted_infl", "avg_corrupted_infl", "score_diff"]
     )
@@ -578,6 +544,35 @@ def plot_corrupted_influences_distribution(
             avg_corrupted,
             avg_non_corrupted - avg_corrupted,
         ]
+    return avg_label_influence
+
+
+def plot_corrupted_influences_distribution(
+    corrupted_dataset: pd.DataFrame,
+    corrupted_indices: Dict[Any, List[int]],
+    avg_corrupted_influences: "NDArray[np.float_]",
+):
+    """Given a corrupted dataset, it plots the histogram with the distribution of
+    influence values. This is done separately for each label: each has a plot where
+    the distribution of the influence of non-corrupted points is compared to that of corrupted ones
+
+    :param corrupted_dataset: corrupted dataset as returned by get_corrupted_imagenet
+    :param corrupted_indices: list of corrupted indices, as returned by get_corrupted_imagenet
+    :param avg_corrupted_influences: average influence of each training point on the test dataset
+    :return: a dataframe holding the average influence of corrupted and non-corrupted data
+    """
+    labels = corrupted_dataset["labels"].unique()
+    fig, axes = plt.subplots(nrows=1, ncols=2)
+    fig.suptitle("Distribution of corrupted and clean influences.")
+    for idx, label in enumerate(labels):
+        avg_influences_series = pd.Series(avg_corrupted_influences)
+        class_influences = avg_influences_series[corrupted_dataset["labels"] == label]
+        corrupted_infl = class_influences[
+            class_influences.index.isin(corrupted_indices[label])
+        ]
+        non_corrupted_infl = class_influences[
+            ~class_influences.index.isin(corrupted_indices[label])
+        ]
         axes[idx].hist(
             non_corrupted_infl, label="non corrupted data", density=True, alpha=0.7
         )
@@ -593,4 +588,3 @@ def plot_corrupted_influences_distribution(
         axes[idx].set_title(f"Influences for {label=}")
         axes[idx].legend()
     plt.show()
-    return avg_label_influence

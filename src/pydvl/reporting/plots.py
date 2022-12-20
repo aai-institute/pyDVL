@@ -1,10 +1,13 @@
-from typing import Any, List, Optional, OrderedDict, Sequence
+from typing import TYPE_CHECKING, Any, List, Optional, OrderedDict, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy as sp
 from matplotlib.axes import Axes
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 
 def shaded_mean_std(
@@ -194,3 +197,22 @@ def plot_shapley(
     ax.set_title(title)
     plt.xticks(rotation=60)
     return ax
+
+
+def plot_influence_distribution_by_label(
+    influences: "NDArray[np.float_]", labels: "NDArray[np.float_]"
+):
+    """Plots the histogram of influence values for each label in the dataset.
+
+    :param influences: array of influences
+    :param labels: labels for each element influences input
+    """
+    _, ax = plt.subplots()
+    unique_labels = np.unique(labels)
+    for label in unique_labels:
+        ax.hist(influences[labels == label], label=label, alpha=0.7)
+    ax.set_xlabel("influence values")
+    ax.set_ylabel("number of points")
+    ax.set_title("Influence distribution")
+    ax.legend()
+    plt.show()
