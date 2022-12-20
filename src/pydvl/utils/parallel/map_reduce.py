@@ -264,7 +264,7 @@ class MapReduceJob(Generic[T, R]):
 
     @_chunkify.register
     @staticmethod
-    def _(data: Sequence, n_chunks: int) -> Iterator[Sequence[T]]:
+    def _(data: Sequence, n_chunks: int) -> Iterator[SequenceType[T]]:
         """Splits a sequence of values into `n_chunks` chunks for each job"""
         if n_chunks == 0:
             raise ValueError("Number of chunks should be greater than 0")
