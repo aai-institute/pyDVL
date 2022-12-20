@@ -61,7 +61,7 @@ def _wrap_func_with_remote_args(func, *, timeout: Optional[float] = None):
 
 
 @singledispatch
-def _get_value(v: T, *, timeout: Optional[float] = None) -> T:
+def _get_value(v: Any, *, timeout: Optional[float] = None) -> Any:
     return v
 
 
