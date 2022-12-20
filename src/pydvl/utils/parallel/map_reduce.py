@@ -2,18 +2,9 @@ import weakref
 from collections.abc import Iterable, Sequence
 from functools import singledispatch, singledispatchmethod
 from itertools import accumulate, chain
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Iterator,
-    List,
-    Optional,
-    TypeVar,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Callable, Dict, Generic
+from typing import Iterable as IterableType
+from typing import Iterator, List, Optional, TypeVar, Union
 
 import ray
 from ray import ObjectRef
@@ -29,7 +20,7 @@ R = TypeVar("R")
 Identity = lambda x, *args, **kwargs: x
 
 MapFunction = Callable[..., R]
-ReduceFunction = Callable[[Iterable[R]], R]
+ReduceFunction = Callable[[IterableType[R]], R]
 
 if not TYPE_CHECKING:
     # HACK to make singledispatchmethod work with staticmethod
