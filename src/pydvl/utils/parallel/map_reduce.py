@@ -4,7 +4,9 @@ from functools import singledispatch, singledispatchmethod
 from itertools import accumulate, chain
 from typing import TYPE_CHECKING, Any, Callable, Dict, Generic
 from typing import Iterable as IterableType
-from typing import Iterator, List, Optional, TypeVar, Union
+from typing import Iterator, List, Optional
+from typing import Sequence as SequenceType
+from typing import TypeVar, Union
 
 import ray
 from ray import ObjectRef
@@ -168,9 +170,9 @@ class MapReduceJob(Generic[T, R]):
 
     def __call__(
         self,
-        inputs: Union[Sequence[T], T],
+        inputs: Union[SequenceType[T], T],
     ) -> List[R]:
-        inputs_: Union[Sequence[T], "ObjectRef[T]"]
+        inputs_: Union[SequenceType[T], "ObjectRef[T]"]
         if isinstance(inputs, Sequence):
             inputs_ = inputs
         else:
@@ -180,7 +182,7 @@ class MapReduceJob(Generic[T, R]):
         return reduce_results
 
     def map(
-        self, inputs: Union[Sequence[T], "ObjectRef[T]"]
+        self, inputs: Union[SequenceType[T], "ObjectRef[T]"]
     ) -> List[List["ObjectRef[R]"]]:
         map_results: List[List["ObjectRef[R]"]] = []
 

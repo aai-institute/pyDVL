@@ -15,13 +15,11 @@ import numpy as np
 from pydvl.utils import Utility, get_running_avg_variance, maybe_progress
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
-from pydvl.utils.parallel.backend import init_parallel_backend
+from pydvl.utils.parallel.backend import RayParallelBackend, init_parallel_backend
 from pydvl.value.results import ValuationStatus
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
-
-    from ...utils.parallel.backend import RayParallelBackend
 
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
