@@ -124,6 +124,8 @@ class RayParallelBackend(BaseParallelBackend):
         config_dict.pop("backend")
         config_dict["num_cpus"] = config_dict.pop("n_local_workers")
         self.config = config_dict
+        if not self.config["address"] is None:
+            self.config["ignore_reinit_error"] = True
         ray.init(**self.config)
 
     def get(
