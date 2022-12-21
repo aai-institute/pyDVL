@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 def conjugate_gradient(
-    A: "NDArray", batch_y: "NDArray", progress: bool = False
-) -> "NDArray":
+    A: "NDArray[np.float_]", batch_y: "NDArray[np.float_]", progress: bool = False
+) -> "NDArray[np.float_]":
     """
     Given a matrix and a batch of vectors, it uses conjugate gradient to calculate the solution
     to Ax = y for each y in batch_y.
