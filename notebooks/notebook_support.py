@@ -145,7 +145,7 @@ def plot_influences(
 
     plt.colorbar(sc, label=legend_title)
     if colorbar_limits is not None:
-        plt.clim(*colorbar_limits)
+        sc.clim(*colorbar_limits)
     if corrupted_indices is not None:
         ax.scatter(
             x[:, 0][corrupted_indices],
