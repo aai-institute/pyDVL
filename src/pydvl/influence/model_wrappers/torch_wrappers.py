@@ -155,6 +155,9 @@ class TorchModel(TorchModelBase):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.model(x)
 
+    def __call__(self, *args, **kwargs):
+        return self.model(*args, **kwargs)
+
 
 class TorchLinearRegression(nn.Module, TorchModelBase):
     """
