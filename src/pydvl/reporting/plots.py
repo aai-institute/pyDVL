@@ -186,11 +186,7 @@ def plot_shapley(
     if ax is None:
         _, ax = plt.subplots()
     ax.errorbar(
-        x=df.index,
-        y=df["data_value"],
-        yerr=df["data_value_std"],
-        fmt="o",
-        capsize=6,
+        x=df.index, y=df["data_value"], yerr=df["data_value_std"], fmt="o", capsize=6
     )
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
@@ -200,19 +196,23 @@ def plot_shapley(
 
 
 def plot_influence_distribution_by_label(
-    influences: "NDArray[np.float_]", labels: "NDArray[np.float_]"
+    influences: "NDArray[np.float_]",
+    labels: "NDArray[np.float_]",
+    title_extra: str = "",
 ):
-    """Plots the histogram of influence values for each label in the dataset.
+    """Plots the histogram of the influence that all samples in the training set
+     have over a single sample index, separated by labels.
 
-    :param influences: array of influences
-    :param labels: labels for each element influences input
+    :param influences: array of influences (training samples x test samples)
+    :param labels: labels for the training set.
+    :param title_extra:
     """
     _, ax = plt.subplots()
     unique_labels = np.unique(labels)
     for label in unique_labels:
         ax.hist(influences[labels == label], label=label, alpha=0.7)
-    ax.set_xlabel("influence values")
-    ax.set_ylabel("number of points")
-    ax.set_title("Influence distribution")
+    ax.set_xlabel("Influence values")
+    ax.set_ylabel("Number of samples")
+    ax.set_title(f"Distribution of influences " + title_extra)
     ax.legend()
     plt.show()

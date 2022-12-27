@@ -28,7 +28,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class InternalDataset(Dataset):
+class InternalDataset(torch.utils.data.Dataset):
     """
     Simple class wrapper for the data loader.
     TODO: remove it once dataset is compatible with data loaders
