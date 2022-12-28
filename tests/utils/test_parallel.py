@@ -1,5 +1,5 @@
 import operator
-from functools import reduce
+from functools import partial, reduce
 from itertools import zip_longest
 
 import numpy as np
@@ -22,7 +22,8 @@ def map_reduce_job_and_parameters(parallel_config, n_jobs, n_runs, request):
     except ValueError:
         kind = request.param
     if kind == "numpy":
-        map_reduce_job = MapReduceJob(
+        map_reduce_job = partial(
+            MapReduceJob,
             map_func=np.sum,
             reduce_func=np.sum,
             config=parallel_config,
@@ -30,7 +31,8 @@ def map_reduce_job_and_parameters(parallel_config, n_jobs, n_runs, request):
             n_runs=n_runs,
         )
     elif kind == "list":
-        map_reduce_job = MapReduceJob(
+        map_reduce_job = partial(
+            MapReduceJob,
             map_func=lambda x: x,
             reduce_func=lambda r: reduce(operator.add, r, []),
             config=parallel_config,
@@ -38,7 +40,8 @@ def map_reduce_job_and_parameters(parallel_config, n_jobs, n_runs, request):
             n_runs=n_runs,
         )
     elif kind == "range":
-        map_reduce_job = MapReduceJob(
+        map_reduce_job = partial(
+            MapReduceJob,
             map_func=lambda x: list(x),
             reduce_func=lambda r: reduce(operator.add, list(r), []),
             config=parallel_config,
@@ -46,7 +49,8 @@ def map_reduce_job_and_parameters(parallel_config, n_jobs, n_runs, request):
             n_runs=n_runs,
         )
     elif kind == "custom":
-        map_reduce_job = MapReduceJob(
+        map_reduce_job = partial(
+            MapReduceJob,
             map_func=map_func,
             reduce_func=reduce_func,
             config=parallel_config,
@@ -54,7 +58,8 @@ def map_reduce_job_and_parameters(parallel_config, n_jobs, n_runs, request):
             n_runs=n_runs,
         )
     else:
-        map_reduce_job = MapReduceJob(
+        map_reduce_job = partial(
+            MapReduceJob,
             map_func=lambda x: x * x,
             reduce_func=lambda r: r,
             config=parallel_config,
@@ -79,7 +84,7 @@ def map_reduce_job_and_parameters(parallel_config, n_jobs, n_runs, request):
 @pytest.mark.parametrize("n_runs", [1, 2, 4])
 def test_map_reduce_job(map_reduce_job_and_parameters, indices, expected):
     map_reduce_job, n_jobs, n_runs = map_reduce_job_and_parameters
-    result = map_reduce_job(indices)
+    result = map_reduce_job(indices)()
     assert len(result) == n_runs
     for exp, ret in zip_longest(expected * n_runs, result, fillvalue=None):
         if not isinstance(ret, np.ndarray):
@@ -123,13 +128,17 @@ def test_backpressure(
         time.sleep(1)
         return x
 
+    inputs_ = list(range(n_dispatched))
+
     map_reduce_job = MapReduceJob(
+        inputs_,
         map_func=map_func,
         max_parallel_tasks=max_parallel_tasks,
         timeout=10,
     )
+
     map_func = map_reduce_job._wrap_function(map_func)
-    jobs = [map_func(x) for x in range(n_dispatched)]
+    jobs = [map_func(x) for x in inputs_]
     n_finished = map_reduce_job._backpressure(
         jobs, n_finished=n_finished, n_dispatched=n_dispatched
     )

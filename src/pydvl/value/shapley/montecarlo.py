@@ -34,7 +34,6 @@ groups instead.
 import logging
 import math
 from enum import Enum
-from itertools import repeat
 from time import sleep
 from typing import TYPE_CHECKING, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
 from warnings import warn
@@ -226,6 +225,7 @@ def permutation_montecarlo_shapley(
     iterations_per_job = max(1, max_iterations // n_jobs)
 
     map_reduce_job: MapReduceJob[Utility, "NDArray"] = MapReduceJob(
+        u,
         map_func=_permutation_montecarlo_marginals,
         reduce_func=np.concatenate,  # type: ignore
         map_kwargs=dict(max_permutations=iterations_per_job, progress=progress),
@@ -233,7 +233,7 @@ def permutation_montecarlo_shapley(
         config=config,
         n_jobs=n_jobs,
     )
-    full_results = map_reduce_job(u)[0]
+    full_results = map_reduce_job()[0]
 
     values = np.mean(full_results, axis=0)
     stderr = np.std(full_results, axis=0) / np.sqrt(full_results.shape[0])
@@ -366,13 +366,14 @@ def combinatorial_montecarlo_shapley(
 
     # FIXME? max_iterations has different semantics in permutation-based methods
     map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
+        u.data.indices,
         map_func=_combinatorial_montecarlo_shapley,
         reduce_func=disjoint_reducer,
         map_kwargs=dict(u=u_id, max_iterations=max_iterations, progress=progress),
         n_jobs=n_jobs,
         config=config,
     )
-    results = map_reduce_job(u.data.indices)[0]
+    results = map_reduce_job()[0]
 
     return ValuationResult(
         algorithm="combinatorial_montecarlo_shapley",
@@ -515,6 +516,7 @@ def owen_sampling_shapley(
     u_id = parallel_backend.put(u)
 
     map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
+        u.data.indices,
         map_func=_owen_sampling_shapley,
         map_kwargs=dict(
             u=u_id,
@@ -528,7 +530,7 @@ def owen_sampling_shapley(
         config=config,
     )
 
-    results = map_reduce_job(u.data.indices)[0]
+    results = map_reduce_job()[0]
 
     return ValuationResult(
         algorithm="owen_sampling_shapley",

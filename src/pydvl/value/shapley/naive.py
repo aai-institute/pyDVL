@@ -125,12 +125,13 @@ def combinatorial_exact_shapley(
         return np.array(results).sum(axis=0)
 
     map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
+        u.data.indices,
         map_func=_combinatorial_exact_shapley,
         map_kwargs=dict(u=u_id, progress=progress),
         reduce_func=reduce_fun,
         n_jobs=n_jobs,
     )
-    values = map_reduce_job(u.data.indices)[0]
+    values = map_reduce_job()[0]
     return ValuationResult(
         algorithm="combinatorial_exact_shapley",
         status=ValuationStatus.Converged,

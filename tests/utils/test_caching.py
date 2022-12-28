@@ -68,8 +68,8 @@ def test_memcached_parallel_jobs(memcached_client):
     n = 1234
     n_runs = 10
     hits_before = client.stats()[b"get_hits"]
-    map_reduce_job = MapReduceJob(foo, np.sum, n_jobs=4, n_runs=n_runs)
-    result = map_reduce_job(np.arange(n))
+    map_reduce_job = MapReduceJob(np.arange(n), foo, np.sum, n_jobs=4, n_runs=n_runs)
+    result = map_reduce_job()
     hits_after = client.stats()[b"get_hits"]
 
     assert result[0] == n * (n - 1) / 2  # Sanity check
@@ -174,8 +174,10 @@ def test_memcached_parallel_repeated_training(
     def reduce_func(chunks: "NDArray[float]") -> float:
         return np.sum(chunks).item()
 
-    map_reduce_job = MapReduceJob(map_func, reduce_func, n_jobs=n_jobs, n_runs=n_runs)
-    result = map_reduce_job(np.arange(n))
+    map_reduce_job = MapReduceJob(
+        np.arange(n), map_func, reduce_func, n_jobs=n_jobs, n_runs=n_runs
+    )
+    result = map_reduce_job()
 
     exact_value = np.sum(np.arange(n)).item()
 

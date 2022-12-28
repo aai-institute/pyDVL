@@ -82,6 +82,7 @@ class MapReduceJob(Generic[T, R]):
     Typing information for objects of this class requires the type of the inputs
     that are split for `map_func` and the type of its output.
 
+    :param inputs:
     :param map_func: Function that will be applied to the input chunks in each
         job.
     :param reduce_func: Function that will be applied to the results of
@@ -112,18 +113,33 @@ class MapReduceJob(Generic[T, R]):
     >>> from pydvl.utils.parallel import MapReduceJob
     >>> import numpy as np
     >>> map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
+    ...     np.arange(5),
     ...     map_func=np.sum,
     ...     reduce_func=np.sum,
     ...     n_jobs=2,
     ...     n_runs=3,
     ... )
-    >>> map_reduce_job(np.arange(5))
+    >>> map_reduce_job()
     [10, 10, 10]
 
+    When passed a single object as input, it will be repeated for each job, if n_jobs > n_runs:
+
+    >>> from pydvl.utils.parallel import MapReduceJob
+    >>> import numpy as np
+    >>> map_reduce_job: MapReduceJob[int, np.ndarray] = MapReduceJob(
+    ...     5,
+    ...     map_func=np.sum,
+    ...     reduce_func=np.sum,
+    ...     n_jobs=4,
+    ...     n_runs=2,
+    ... )
+    >>> map_reduce_job()
+    [20, 20]
     """
 
     def __init__(
         self,
+        inputs: Union[SequenceType[T], T],
         map_func: MapFunction[R],
         reduce_func: Optional[ReduceFunction[R]] = None,
         map_kwargs: Optional[Dict] = None,
@@ -152,6 +168,11 @@ class MapReduceJob(Generic[T, R]):
         else:
             self.max_parallel_tasks = max_parallel_tasks
 
+        if isinstance(inputs, Sequence):
+            self.inputs_: Union[SequenceType[T], "ObjectRef[T]"] = inputs
+        else:
+            self.inputs_ = self.parallel_backend.put(inputs)
+
         if reduce_func is None:
             reduce_func = Identity
 
@@ -169,14 +190,8 @@ class MapReduceJob(Generic[T, R]):
 
     def __call__(
         self,
-        inputs: Union[SequenceType[T], T],
     ) -> List[R]:
-        inputs_: Union[SequenceType[T], "ObjectRef[T]"]
-        if isinstance(inputs, Sequence):
-            inputs_ = inputs
-        else:
-            inputs_ = self.parallel_backend.put(inputs)
-        map_results = self.map(inputs_)
+        map_results = self.map(self.inputs_)
         reduce_results = self.reduce(map_results)
         return reduce_results
 

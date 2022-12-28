@@ -16,10 +16,7 @@ __all__ = [
 
 T = TypeVar("T")
 
-_PARALLEL_BACKENDS: Dict[
-    str,
-    Union["Type[RayParallelBackend]", "Type[SequentialParallelBackend]"],
-] = {}
+_PARALLEL_BACKENDS: Dict[str, "Type[BaseParallelBackend]"] = {}
 
 
 class AbstractNoPublicConstructor(ABCMeta):
@@ -73,7 +70,7 @@ class BaseParallelBackend(metaclass=AbstractNoPublicConstructor):
     def wait(self, v: Any, *args, **kwargs) -> Any:
         ...
 
-    def effective_n_jobs(self, n_jobs: Optional[int]) -> int:
+    def effective_n_jobs(self, n_jobs: Optional[int]) -> Optional[int]:
         if n_jobs == 0:
             raise ValueError("n_jobs == 0 in Parallel has no meaning")
         return n_jobs
@@ -203,7 +200,7 @@ def init_parallel_backend(
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
     parallel_backend_cls = _PARALLEL_BACKENDS[config.backend]
     parallel_backend = parallel_backend_cls._create(config)
-    return parallel_backend
+    return parallel_backend  # type: ignore
 
 
 def available_cpus() -> int:
