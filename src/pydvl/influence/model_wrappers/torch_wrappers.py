@@ -12,7 +12,7 @@ try:
     from torch.nn import Softmax, Tanh
     from torch.optim import Optimizer
     from torch.optim.lr_scheduler import _LRScheduler
-    from torch.utils.data import DataLoader, Dataset
+    from torch.utils.data import DataLoader, TensorDataset
 
     _TORCH_INSTALLED = True
 except ImportError:
@@ -29,24 +29,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-
-
-class InternalDataset(torch.utils.data.Dataset):
-    """
-    Simple class wrapper for the data loader.
-    TODO: remove it once dataset is compatible with data loaders
-    """
-
-    def __init__(self, x, y) -> None:
-        super().__init__()
-        self.x = x
-        self.y = y
-
-    def __len__(self):
-        return len(self.x)
-
-    def __getitem__(self, idx):
-        return self.x[idx], self.y[idx]
 
 
 class TorchModelBase(ABC):
@@ -90,7 +72,7 @@ class TorchModelBase(ABC):
         x_val = torch.as_tensor(x_val).clone()
         y_val = torch.as_tensor(y_val).clone()
 
-        dataset = InternalDataset(x_train, y_train)
+        dataset = TensorDataset(x_train, y_train)
         dataloader = DataLoader(dataset, batch_size=batch_size)
         train_loss = []
         val_loss = []

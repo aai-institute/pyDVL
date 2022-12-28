@@ -1,0 +1,4 @@
+torch==1.13.1
+torchvision==0.14.1
+datasets==2.6.1
+Pillow==9.2.0
