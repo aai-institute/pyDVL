@@ -138,3 +138,4 @@ pylint.html
 
 # Saved data
 runs/
+data/models/

@@ -1,7 +1,3 @@
-"""
-Contains all models used in test and demonstration. Note that they could be written as one module, but for clarity all
- three are defined explicitly.
-"""
 import logging
 from abc import ABC, abstractmethod
 from typing import Any, Callable, List, Optional, Tuple, Union
@@ -32,7 +28,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class InternalDataset(Dataset):
+class InternalDataset(torch.utils.data.Dataset):
     """
     Simple class wrapper for the data loader.
     TODO: remove it once dataset is compatible with data loaders
@@ -71,7 +67,7 @@ class TorchModelBase(ABC):
         num_epochs: int = 1,
         batch_size: int = 64,
         progress: bool = True,
-    ):
+    ) -> Tuple["NDArray[np.float_]", "NDArray[np.float_]"]:
         """
         Wrapper of pytorch fit method. It fits the model to the supplied data.
         It represents a simple machine learning loop, iterating over a number of
@@ -96,11 +92,7 @@ class TorchModelBase(ABC):
         train_loss = []
         val_loss = []
 
-        for epoch in maybe_progress(
-            range(num_epochs),
-            progress,
-            desc="Model fitting",
-        ):
+        for epoch in maybe_progress(range(num_epochs), progress, desc="Model fitting"):
             batch_loss = []
             for train_batch in dataloader:
                 batch_x, batch_y = train_batch
@@ -123,7 +115,7 @@ class TorchModelBase(ABC):
             logger.info(
                 f"Epoch: {epoch} ---> Training loss: {mean_epoch_train_loss}, Validation loss: {epoch_val_loss}"
             )
-        return train_loss, val_loss
+        return np.array(train_loss), np.array(val_loss)
 
     def predict(self, x: torch.Tensor) -> np.ndarray:
         """
@@ -154,6 +146,9 @@ class TorchModel(TorchModelBase):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.model(x)
+
+    def __call__(self, *args, **kwargs):
+        return self.model(*args, **kwargs)
 
 
 class TorchLinearRegression(nn.Module, TorchModelBase):

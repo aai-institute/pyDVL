@@ -1,3 +1,5 @@
+import os
+import pickle as pkl
 from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Sequence, Tuple
@@ -6,10 +8,12 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from cloudpickle import pickle as pkl
+import torch.nn as nn
 from PIL.JpegImagePlugin import JpegImageFile
+from torch.optim import Adam
+from torchvision.models import ResNet18_Weights, resnet18
 
-from pydvl.influence.model_wrappers.torch_wrappers import TorchModel
+from pydvl.influence.model_wrappers import TorchModel
 from pydvl.utils import Dataset
 
 try:
@@ -22,7 +26,109 @@ except ImportError:
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
-imgnet_model_data_path = Path().resolve().parent / "data/imgnet_model"
+MODEL_PATH = Path().resolve().parent / "data" / "models"
+
+
+def new_resnet_model(output_size: int) -> TorchModel:
+    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+
+    for param in model.parameters():
+        param.requires_grad = False
+
+    # Fine-tune final few layers
+    model.avgpool = nn.AdaptiveAvgPool2d(1)
+    n_features = model.fc.in_features
+    model.fc = nn.Linear(n_features, output_size)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+    return TorchModel(model)
+
+
+class TrainingManager:
+    """A simple class to handle persistence of the model for the notebook
+    `influence_imagenet.ipynb`
+    """
+
+    def __init__(
+        self,
+        name: str,
+        model: TorchModel,
+        loss: torch.nn.modules.loss._Loss,
+        train_x: "NDArray[np.float_]",
+        train_y: "NDArray[np.float_]",
+        val_x: "NDArray[np.float_]",
+        val_y: "NDArray[np.float_]",
+        data_dir: Path,
+    ):
+        self.name = name
+        self.model_wrapper = model
+        self.loss = loss
+        self.train_x, self.train_y = train_x, train_y
+        self.val_x, self.val_y = val_x, val_y
+        self.data_dir = data_dir
+        os.makedirs(self.data_dir, exist_ok=True)
+
+    @property
+    def model(self) -> nn.Module:
+        return self.model_wrapper.model
+
+    def train(
+        self,
+        n_epochs: int,
+        lr: float = 0.001,
+        batch_size: int = 1000,
+        use_cache: bool = True,
+    ) -> Tuple["NDArray[np.float_]", "NDArray[np.float_]"]:
+        """
+        :return: Tuple of training_loss, validation_loss
+        """
+        if use_cache:
+            try:
+                training_loss, validation_loss = self.load()
+                print("Cached model found, loading...")
+                return training_loss, validation_loss
+            except:
+                print(f"No pretrained model found. Training for {n_epochs} epochs:")
+
+        optimizer = Adam(self.model.parameters(), lr=lr)
+
+        training_loss, validation_loss = self.model_wrapper.fit(
+            x_train=self.train_x,
+            y_train=self.train_y,
+            x_val=self.val_x,
+            y_val=self.val_y,
+            loss=self.loss,
+            optimizer=optimizer,
+            num_epochs=n_epochs,
+            batch_size=batch_size,
+        )
+        if use_cache:
+            self.save(training_loss, validation_loss)
+
+        return training_loss, validation_loss
+
+    def save(
+        self, training_loss: "NDArray[np.float_]", validation_loss: "NDArray[np.float_]"
+    ):
+        """Saves the model weights and training and validation losses.
+
+        :param training_loss: list of training losses, one per epoch
+        :param validation_loss: list of validation losses, also one per epoch
+        """
+        torch.save(self.model.state_dict(), self.data_dir / f"{self.name}_weights.pth")
+        with open(self.data_dir / f"{self.name}_train_val_loss.pkl", "wb") as file:
+            pkl.dump([training_loss, validation_loss], file)
+
+    def load(self) -> Tuple["NDArray[np.float_]", "NDArray[np.float_]"]:
+        """Loads model weights and training and validation losses.
+        :return: two arrays, one with training and one with validation losses.
+        """
+        self.model.load_state_dict(
+            torch.load(self.data_dir / f"{self.name}_weights.pth")
+        )
+        with open(self.data_dir / f"{self.name}_train_val_loss.pkl", "rb") as file:
+            return pkl.load(file)
 
 
 def plot_dataset(
@@ -52,6 +158,7 @@ def plot_dataset(
     :param line: Optional, line of shape (M,2), where each row is a point of the
         2-d line.
     :param s: The thickness of the points to plot.
+    :param figsize: for `plt.figure()`
     """
 
     fig = plt.figure(figsize=figsize, constrained_layout=True)
@@ -59,10 +166,7 @@ def plot_dataset(
     ax = [fig.add_subplot(spec[:-1, i]) for i in range(2)]
     ax.append(fig.add_subplot(spec[-1, :]))
 
-    datasets = {
-        "train": train_ds,
-        "test": test_ds,
-    }
+    datasets = {"train": train_ds, "test": test_ds}
 
     discrete_keys = [
         key for key, dataset in datasets.items() if dataset[1].dtype == int
@@ -278,25 +382,27 @@ def plot_iris(
 def load_preprocess_imagenet(
     train_size: float,
     test_size: float,
-    downsample_ds_to_fraction: float = 1,
-    keep_labels: Optional[List] = None,
+    downsampling_ratio: float = 1,
+    keep_labels: Optional[dict] = None,
     random_state: Optional[int] = None,
-    is_CI: bool = False,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Loads the tiny imagened dataset from huggingface and preprocesses it
+    """Loads the tiny imagenet dataset from huggingface and preprocesses it
     for model input.
 
     :param train_size: fraction of indices to use for training
     :param test_size: fraction of data to use for testing
-    :param downsample_ds_to_fraction: which fraction of the full dataset to keep. \
+    :param downsampling_ratio: which fraction of the full dataset to keep.
         E.g. downsample_ds_to_fraction=0.2 only 20% of the dataset is kept
-    :param keep_labels: which of the original labels to keep. \
-        E.g. keep_labels=[10,20] only returns the images with labels 10 and 20.
+    :param keep_labels: which of the original labels to keep and their names.
+        E.g. keep_labels={10:"a", 20: "b"} only returns the images with labels
+        10 and 20 and changes the values to "a" and "b" respectively.
     :param random_state: Random state. Fix this for reproducibility of sampling.
-    :param is_CI: True for loading a much reduced dataset. Used in CI.
-    :return: a tuple of three dataframes, first holding the training data, second validation, third test. \
-        Each has 3 keys: normalized_images has all the input images, rescaled to mean 0.5 and std 0.225, \
-        labels has the labels of each image, while images has the unmodified PIL images.
+    :return: a tuple of three dataframes, first holding the training data,
+    second validation, third test.
+        Each has 3 keys: normalized_images has all the input images, rescaled
+        to mean 0.5 and std 0.225,
+        labels has the labels of each image, while images has the unmodified
+        PIL images.
     """
     try:
         from datasets import load_dataset, utils
@@ -322,10 +428,13 @@ def load_preprocess_imagenet(
             if item["image"].mode == "RGB":
                 processed_ds["normalized_images"].append(preprocess_rgb(item["image"]))
                 processed_ds["images"].append(item["image"])
-                processed_ds["labels"].append(item["label"])
+                if keep_labels is not None:
+                    processed_ds["labels"].append(keep_labels[item["label"]])
+                else:
+                    processed_ds["labels"].append(item["label"])
         return pd.DataFrame.from_dict(processed_ds)
 
-    if is_CI:
+    if os.environ.get("CI"):
         tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="valid")
         if keep_labels is not None:
             tiny_imagenet = tiny_imagenet.filter(
@@ -339,73 +448,35 @@ def load_preprocess_imagenet(
         val_ds = _process_dataset(tiny_imagenet_val)
         test_ds = _process_dataset(tiny_imagenet_test)
         return train_ds, val_ds, test_ds
-    else:
-        tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="train")
 
-    if downsample_ds_to_fraction != 1:
-        tiny_imagenet = tiny_imagenet.shard(1 / downsample_ds_to_fraction, 0)
+    tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="train")
+
+    if downsampling_ratio != 1:
+        tiny_imagenet = tiny_imagenet.shard(
+            num_shards=int(1 / downsampling_ratio), index=0
+        )
     if keep_labels is not None:
-        tiny_imagenet = tiny_imagenet.filter(lambda item: item["label"] in keep_labels)
+        tiny_imagenet = tiny_imagenet.filter(
+            lambda item: item["label"] in keep_labels.keys()
+        )
 
     split_ds = tiny_imagenet.train_test_split(
-        train_size=1 - test_size,
-        seed=random_state,
+        train_size=1 - test_size, seed=random_state
     )
     test_ds = _process_dataset(split_ds["test"])
 
     split_ds = split_ds["train"].train_test_split(
-        train_size=train_size,
-        seed=random_state,
+        train_size=train_size, seed=random_state
     )
     train_ds = _process_dataset(split_ds["train"])
     val_ds = _process_dataset(split_ds["test"])
+
     return train_ds, val_ds, test_ds
 
 
-def save_model(
-    model: TorchModel,
-    train_loss: List[float],
-    val_loss: List[float],
-    model_name: str,
-):
-    """Saves the model weights, with also its training and validation losses.
-
-    :param model: trained model
-    :param train_loss: list of training losses, one per epoch
-    :param val_loss: list of validation losses, also one per epoch
-    :param model_name: model name, used for saving the files
-    """
-    torch.save(model.state_dict(), imgnet_model_data_path / f"{model_name}_weights.pth")
-    with open(
-        imgnet_model_data_path / f"{model_name}_train_val_loss.pkl", "wb"
-    ) as file:
-        pkl.dump([train_loss, val_loss], file)
-
-
-def load_model(model: TorchModel, model_name: str) -> Tuple[List[float], List[float]]:
-    """Given the model and the model name, it loads the model weights from the file {model_name}_weights.pth.
-        Then, it also loads and returns the training and validation losses.
-
-    :param model: model
-    :param model_name: name of the model whose weights have been previously saved
-    :return: two lists, one with training and one with validation losses.
-    """
-    model.load_state_dict(
-        torch.load(imgnet_model_data_path / f"{model_name}_weights.pth")
-    )
-    with open(
-        imgnet_model_data_path / f"{model_name}_train_val_loss.pkl", "rb"
-    ) as file:
-        train_loss, val_loss = pkl.load(file)
-    return train_loss, val_loss
-
-
-def plot_sample_images(
-    dataset: pd.DataFrame,
-    n_images_per_class: int = 3,
-):
-    """Given the preprocessed imagenet dataset (or a subset of it), it plots \
-    a number n_images_per_class of images for each class.
+def plot_sample_images(dataset: pd.DataFrame, n_images_per_class: int = 3):
+    """Plots several images for each class of a pre-processed imagenet dataset
+    (or a subset of it).
 
     :param dataset: imagenet dataset
     :param n_images_per_class: number of images per class to plot
@@ -425,13 +496,14 @@ def plot_sample_images(
     plt.show()
 
 
-def plot_top_bottom_if_images(
+def plot_lowest_highest_influence_images(
     subset_influences: "NDArray[np.float_]",
     subset_images: List[JpegImageFile],
     num_to_plot: int,
 ):
-    """Given the influence values and the related images, it plots a number 2*num_to_plot of images,
-    of which those on the right column have the lowest influence, those on the right the highest.
+    """Given a set of images and their influences over another, plots two columns
+    of `num_to_plot` images each. Those on the right column have the lowest influence,
+     those on the right the highest.
 
     :param subset_influences: an array with influence values
     :param subset_images: a list of images
@@ -441,7 +513,7 @@ def plot_top_bottom_if_images(
     bottom_if_idxs = np.argsort(subset_influences)[:num_to_plot]
 
     fig, axes = plt.subplots(nrows=num_to_plot, ncols=2)
-    fig.suptitle("Botton (left) and top (right) influences")
+    fig.suptitle("Lowest (left) and highest (right) influences")
 
     for plt_idx, img_idx in enumerate(bottom_if_idxs):
         axes[plt_idx, 0].set_title(f"img influence: {subset_influences[img_idx]:0f}")
@@ -456,15 +528,17 @@ def plot_top_bottom_if_images(
     plt.show()
 
 
-def plot_train_val_loss(train_loss: List[float], val_loss: List[float]):
+def plot_losses(
+    training_loss: "NDArray[np.float_]", validation_loss: "NDArray[np.float_]"
+):
     """Plots the train and validation loss
 
-    :param train_loss: list of training losses, one per epoch
-    :param val_loss: list of validation losses, one per epoch
+    :param training_loss: list of training losses, one per epoch
+    :param validation_loss: list of validation losses, one per epoch
     """
     _, ax = plt.subplots()
-    ax.plot(train_loss, label="Train")
-    ax.plot(val_loss, label="Val")
+    ax.plot(training_loss, label="Train")
+    ax.plot(validation_loss, label="Val")
     ax.set_ylabel("Loss")
     ax.set_xlabel("Train epoch")
     ax.legend()
@@ -487,7 +561,6 @@ def corrupt_imagenet(
     :return: first element is the corrupted dataset, second is the list of indices \
         related to the images that have been corrupted.
     """
-    indices_to_corrupt = []
     labels = dataset["labels"].unique()
     corrupted_dataset = deepcopy(dataset)
     corrupted_indices = {l: [] for l in labels}
@@ -510,7 +583,7 @@ def corrupt_imagenet(
     return corrupted_dataset, corrupted_indices
 
 
-def get_mean_corrupted_influences(
+def compute_mean_corrupted_influences(
     corrupted_dataset: pd.DataFrame,
     corrupted_indices: Dict[Any, List[int]],
     avg_corrupted_influences: "NDArray[np.float_]",
@@ -551,18 +624,25 @@ def plot_corrupted_influences_distribution(
     corrupted_dataset: pd.DataFrame,
     corrupted_indices: Dict[Any, List[int]],
     avg_corrupted_influences: "NDArray[np.float_]",
+    figsize: Tuple[int, int] = (16, 8),
 ):
-    """Given a corrupted dataset, it plots the histogram with the distribution of
-    influence values. This is done separately for each label: each has a plot where
-    the distribution of the influence of non-corrupted points is compared to that of corrupted ones
+    """Given a corrupted dataset, plots the histogram with the distribution of
+    influence values. This is done separately for each label: each has a plot
+    where the distribution of the influence of non-corrupted points is compared
+    to that of corrupted ones.
 
-    :param corrupted_dataset: corrupted dataset as returned by get_corrupted_imagenet
-    :param corrupted_indices: list of corrupted indices, as returned by get_corrupted_imagenet
-    :param avg_corrupted_influences: average influence of each training point on the test dataset
-    :return: a dataframe holding the average influence of corrupted and non-corrupted data
+    :param corrupted_dataset: corrupted dataset as returned by
+        get_corrupted_imagenet
+    :param corrupted_indices: list of corrupted indices, as returned by
+        get_corrupted_imagenet
+    :param avg_corrupted_influences: average influence of each training point on
+        the test dataset
+    :param figsize: for `plt.subplots()`
+    :return: a dataframe holding the average influence of corrupted and
+        non-corrupted data
     """
     labels = corrupted_dataset["labels"].unique()
-    fig, axes = plt.subplots(nrows=1, ncols=2)
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle("Distribution of corrupted and clean influences.")
     for idx, label in enumerate(labels):
         avg_influences_series = pd.Series(avg_corrupted_influences)
@@ -574,16 +654,12 @@ def plot_corrupted_influences_distribution(
             ~class_influences.index.isin(corrupted_indices[label])
         ]
         axes[idx].hist(
-            non_corrupted_infl, label="non corrupted data", density=True, alpha=0.7
+            non_corrupted_infl, label="Non corrupted", density=True, alpha=0.7
         )
         axes[idx].hist(
-            corrupted_infl,
-            label="corrupted data",
-            density=True,
-            alpha=0.7,
-            color="green",
+            corrupted_infl, label="Corrupted", density=True, alpha=0.7, color="green"
         )
-        axes[idx].set_xlabel("influence values")
+        axes[idx].set_xlabel("Influence values")
         axes[idx].set_ylabel("Distribution")
         axes[idx].set_title(f"Influences for {label=}")
         axes[idx].legend()
