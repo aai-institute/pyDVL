@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -17,6 +17,9 @@ try:
     _TORCH_INSTALLED = True
 except ImportError:
     _TORCH_INSTALLED = False
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 __all__ = [
     "TorchLinearRegression",
@@ -57,10 +60,10 @@ class TorchModelBase(ABC):
 
     def fit(
         self,
-        x_train: Union[np.ndarray, torch.tensor],
-        y_train: Union[np.ndarray, torch.tensor],
-        x_val: Union[np.ndarray, torch.tensor],
-        y_val: Union[np.ndarray, torch.tensor],
+        x_train: Union["NDArray[np.float_]", torch.tensor],
+        y_train: Union["NDArray[np.float_]", torch.tensor],
+        x_val: Union["NDArray[np.float_]", torch.tensor],
+        y_val: Union["NDArray[np.float_]", torch.tensor],
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         optimizer: Optimizer,
         scheduler: Optional[_LRScheduler] = None,
@@ -117,7 +120,7 @@ class TorchModelBase(ABC):
             )
         return np.array(train_loss), np.array(val_loss)
 
-    def predict(self, x: torch.Tensor) -> np.ndarray:
+    def predict(self, x: torch.Tensor) -> "NDArray[np.float_]":
         """
         Use internal model to deliver prediction in numpy.
         :param x: A np.ndarray [NxD] representing the features x_i.
@@ -157,7 +160,10 @@ class TorchLinearRegression(nn.Module, TorchModelBase):
     """
 
     def __init__(
-        self, n_input: int, n_output: int, init: Tuple[np.ndarray, np.ndarray] = None
+        self,
+        n_input: int,
+        n_output: int,
+        init: Tuple["NDArray[np.float_]", "NDArray[np.float_]"] = None,
     ):
         """
         :param n_input: input to the model.
@@ -195,7 +201,11 @@ class TorchBinaryLogisticRegression(nn.Module, TorchModelBase):
     A simple binary logistic regression model p(y)=sigmoid(dot(a, x) + b).
     """
 
-    def __init__(self, n_input: int, init: Tuple[np.ndarray, np.ndarray] = None):
+    def __init__(
+        self,
+        n_input: int,
+        init: Tuple["NDArray[np.float_]", "NDArray[np.float_]"] = None,
+    ):
         """
         :param n_input: Number of feature inputs to the BinaryLogisticRegressionModel.
         :param init A tuple representing the initialization for the weight matrix A and the bias b. If set to None
@@ -211,7 +221,7 @@ class TorchBinaryLogisticRegression(nn.Module, TorchModelBase):
         self.A = nn.Parameter(torch.tensor(init[0]), requires_grad=True)
         self.b = nn.Parameter(torch.tensor(init[1]), requires_grad=True)
 
-    def forward(self, x: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
+    def forward(self, x: Union["NDArray[np.float_]", torch.Tensor]) -> torch.Tensor:
         """
         Calculate sigmoid(dot(a, x) + b) using RAM-optimized calculation layout.
         :param x: Tensor [NxD] representing the features x_i.
@@ -233,7 +243,7 @@ class TorchMLP(nn.Module, TorchModelBase):
         n_output: int,
         n_neurons_per_layer: List[int],
         output_probabilities: bool = True,
-        init: List[Tuple[np.ndarray, np.ndarray]] = None,
+        init: List[Tuple["NDArray[np.float_]", "NDArray[np.float_]"]] = None,
     ):
         """
         :param n_input: Number of feature in input.
