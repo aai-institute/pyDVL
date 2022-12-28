@@ -1,4 +1,3 @@
-import weakref
 from collections.abc import Iterable, Sequence
 from functools import singledispatch, singledispatchmethod
 from itertools import accumulate, chain
@@ -138,7 +137,7 @@ class MapReduceJob(Generic[T, R]):
     ):
         self.config = config
         parallel_backend = init_parallel_backend(self.config)
-        self._parallel_backend_ref = weakref.ref(parallel_backend)
+        self.parallel_backend = parallel_backend
 
         self.timeout = timeout
         self.n_runs = n_runs
@@ -304,13 +303,6 @@ class MapReduceJob(Generic[T, R]):
         else:
             for _ in range(n_chunks):
                 yield data
-
-    @property
-    def parallel_backend(self):
-        parallel_backend = self._parallel_backend_ref()
-        if parallel_backend is None:
-            raise RuntimeError(f"Could not get reference to parallel backend instance")
-        return parallel_backend
 
     @property
     def n_jobs(self) -> int:
