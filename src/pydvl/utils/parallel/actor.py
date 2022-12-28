@@ -21,7 +21,7 @@ class RayActorWrapper:
 
     :Example:
 
-    >>> from pydvl.utils.parallel.backend import RayParallelBackend
+    >>> from pydvl.utils.parallel.backend import RayParallelBackend, init_parallel_backend
     >>> from pydvl.utils.config import ParallelConfig
     >>> from pydvl.utils.parallel.actor import RayActorWrapper
     >>> class Actor:
@@ -32,7 +32,8 @@ class RayActorWrapper:
     ...         return self.x
     ...
     >>> config = ParallelConfig(backend="ray")
-    >>> parallel_backend = RayParallelBackend(config)
+    >>> parallel_backend = init_parallel_backend(config)
+    >>> assert isinstance(parallel_backend, RayParallelBackend)
     >>> actor_handle = parallel_backend.wrap(Actor).remote(5)
     >>> parallel_backend.get(actor_handle.get.remote())
     5
