@@ -2,18 +2,7 @@ import functools
 import os
 from abc import ABCMeta, abstractmethod
 from dataclasses import asdict
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union
 
 import ray
 from ray import ObjectRef
