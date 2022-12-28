@@ -5,8 +5,8 @@ from sklearn import datasets
 from sklearn.metrics import make_scorer
 from sklearn.neighbors import KNeighborsClassifier
 
-from pydvl.utils import available_cpus
 from pydvl.utils.dataset import Dataset
+from pydvl.utils.parallel.backend import available_cpus
 from pydvl.utils.utility import Utility
 from pydvl.value.shapley.knn import knn_shapley
 from pydvl.value.shapley.naive import combinatorial_exact_shapley

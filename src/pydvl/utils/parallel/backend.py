@@ -12,7 +12,6 @@ from ..config import ParallelConfig
 
 __all__ = [
     "init_parallel_backend",
-    "available_cpus",
 ]
 
 T = TypeVar("T")
