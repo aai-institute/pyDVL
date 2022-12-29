@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="API Reference" href="../pydvl/index.html" /><link rel="prev" title="Influence functions for data mislabeling" href="influence_synthetic.html" />
 
-    <meta name="generator" content="sphinx-5.3.0, furo 2022.09.29"/>
+    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
         <title>Influence functions and neural networks - pyDVL 0.3.1.dev0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster.custom.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster.bundle.min.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster-sideTip-shadow.min.css" />
@@ -164,7 +164,7 @@
   
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
-  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form>
@@ -178,6 +178,8 @@
 <li class="toctree-l2"><a class="reference internal" href="shapley_basic_spotify.html">Shapley for data valuation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shapley_knn_flowers.html">KNN Shapley</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shapley_utility_learning.html">Data Utility Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_imagenet.html">Influence functions for neural networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_imagenet.html#Theory-of-influence-functions-for-neural-networks">Theory of influence functions for neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Influence functions and neural networks</a></li>
 </ul>
@@ -580,7 +582,8 @@ div.rendered_html tbody tr:hover {
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
-<span class="kn">from</span> <span class="nn">pydvl.influence.model_wrappers</span> <span class="kn">import</span> <span class="n">TorchNeuralNetwork</span>
+<span class="kn">from</span> <span class="nn">notebook_support</span> <span class="kn">import</span> <span class="n">plot_train_val_loss</span>
+<span class="kn">from</span> <span class="nn">pydvl.influence.model_wrappers</span> <span class="kn">import</span> <span class="n">TorchMLP</span>
 <span class="kn">from</span> <span class="nn">pydvl.influence.general</span> <span class="kn">import</span> <span class="n">compute_influences</span>
 <span class="kn">from</span> <span class="nn">pydvl.utils.dataset</span> <span class="kn">import</span> <span class="n">load_wine_dataset</span>
 <span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">ConfusionMatrixDisplay</span><span class="p">,</span> <span class="n">f1_score</span>
@@ -666,7 +669,7 @@ div.rendered_html tbody tr:hover {
 <span class="n">weight_decay</span> <span class="o">=</span> <span class="mf">0.01</span>
 <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda:0&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 
-<span class="n">nn_model</span> <span class="o">=</span> <span class="n">TorchNeuralNetwork</span><span class="p">(</span><span class="n">feature_dimension</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">network_size</span><span class="p">)</span>
+<span class="n">nn_model</span> <span class="o">=</span> <span class="n">TorchMLP</span><span class="p">(</span><span class="n">feature_dimension</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">network_size</span><span class="p">)</span>
 <span class="n">nn_model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
 <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">nn_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="n">weight_decay</span><span class="p">)</span>
@@ -689,22 +692,15 @@ div.rendered_html tbody tr:hover {
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/home/anesbenmerzoug/workdir/repositories/transferlab/pyDVL/.tox/notebooks/lib/python3.8/site-packages/torch/cuda/__init__.py:83: UserWarning: CUDA initialization: Unexpected error from cudaGetDeviceCount(). Did you run some cuda functions before calling NumCudaDevices() that might have already set an error? Error 803: system has unsupported display driver / cuda driver combination (Triggered internally at  ../c10/cuda/CUDAFunctions.cpp:109.)
-  return torch._C._cuda_getDeviceCount() &gt; 0
-</pre></div></div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "9001287c81bb4cc08a9e27c420f2e260", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <p>Let’s check that the training has found a stable minimum by plotting the training and validation loss</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">train_loss</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Train&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">val_loss</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Val&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_train_val_loss</span><span class="p">(</span><span class="n">train_loss</span><span class="p">,</span> <span class="n">val_loss</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -759,8 +755,8 @@ div.rendered_html tbody tr:hover {
 <h2>Calculating influences for small neural networks<a class="headerlink" href="#Calculating-influences-for-small-neural-networks" title="Permalink to this heading"></a></h2>
 <p>The following cell calculates the influences of each training data point on the neural network. Neural networks have typically a very bumpy parameter space, which, during training, is explored until the configuration that minimises the loss is found. There is an important assumption in influence functions that the model lays at a (at least local) minimum of such loss, and if this is not fulfilled many issues can arise. In order to avoid this scenario, a regularisation term should be used
 whenever dealing with big and noisy models.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">train_influences</span> <span class="o">=</span> <span class="n">compute_influences</span><span class="p">(</span>
@@ -771,14 +767,27 @@ whenever dealing with big and noisy models.</p>
     <span class="n">influence_type</span><span class="o">=</span><span class="s2">&quot;up&quot;</span><span class="p">,</span>
     <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;direct&quot;</span><span class="p">,</span>
     <span class="n">hessian_regularization</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "4b5f7a72f877486b8007e1a0969e1b27", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "15553c7a94c6433b9994a28cf19aa666", "version_major": 2, "version_minor": 0}</script></div>
+</div>
 <p>the returned matrix, train_influences, has a quantity of columns equal to the points in the training set, and a number of rows equal to the points in the test set. At each element <span class="math notranslate nohighlight">\(a_{i,j}\)</span> it stores the influence that training point <span class="math notranslate nohighlight">\(j\)</span> has on the classification of test point <span class="math notranslate nohighlight">\(i\)</span>.</p>
 <p>If we take the average across every column of the influences matrix, we obtain an estimate of the overall influence of a training point on the total accuracy of the network.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mean_train_influences</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">train_influences</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -787,7 +796,7 @@ whenever dealing with big and noisy models.</p>
 </div>
 <p>The following histogram shows that there are big differences in score within the training set (notice the log-scale on the y axis).</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
@@ -810,7 +819,7 @@ whenever dealing with big and noisy models.</p>
 </div>
 <p>We can see that the corrupted points tend to have a negative effect on the model, as expected</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span>
@@ -829,16 +838,16 @@ whenever dealing with big and noisy models.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Average influence of corrupted points:  -0.0091332215651622
-Average influence of other points:  0.005688357264626681
+Average influence of corrupted points:  -0.008919590861305823
+Average influence of other points:  0.005525699381638608
 </pre></div></div>
 </div>
 </section>
 <section id="Influence-of-training-features">
 <h2>Influence of training features<a class="headerlink" href="#Influence-of-training-features" title="Permalink to this heading"></a></h2>
 <p>We have seen how to calculate the influence of single training points on each test point using influence_type ‘up’. Using influence_type ‘perturbation’ we can also calculate the influence of the input features of each point. In the next cell we will calculate the average influence of each feature on training and test points, and ultimately assess which are the most relevant to model performance.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">feature_influences</span> <span class="o">=</span> <span class="n">compute_influences</span><span class="p">(</span>
@@ -849,12 +858,25 @@ Average influence of other points:  0.005688357264626681
     <span class="n">influence_type</span><span class="o">=</span><span class="s2">&quot;perturbation&quot;</span><span class="p">,</span>
     <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;direct&quot;</span><span class="p">,</span>
     <span class="n">hessian_regularization</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "a4f6b7fdbc6d41d1886ab969bcf4ff03", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "e73769256e964c4aacf3be5a6a96211d", "version_major": 2, "version_minor": 0}</script></div>
+</div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mean_feature_influences</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">feature_influences</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
@@ -881,7 +903,7 @@ Average influence of other points:  0.005688357264626681
 <h2>Speeding up influences for big models<a class="headerlink" href="#Speeding-up-influences-for-big-models" title="Permalink to this heading"></a></h2>
 <p>The calculation of the Hessian matrix (necessary to calculate the influences) can be quite numerically challenging, but there are some techniques to speed up its calculation. PyDVL allows to use the full method (“direct”) or the conjugate gradient method (“cg”). The first one should be used only for very small networks (like our current example), while for bigger ones “cg” is advisable.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cg_train_influences</span> <span class="o">=</span> <span class="n">compute_influences</span><span class="p">(</span>
@@ -899,7 +921,7 @@ Average influence of other points:  0.005688357264626681
 </div>
 <p>Let’s compare the results obtained through conjugate gradient with those from the direct method</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span>
@@ -913,7 +935,7 @@ Average influence of other points:  0.005688357264626681
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Percentage error of cg over direct method:0.0020569105093179133 %
+Percentage error of cg over direct method:0.0015781619965701342 %
 </pre></div></div>
 </div>
 <p>This was a quick introduction to the pyDVL interface for influence functions. Despite their speed and simplicity, influence functions are known to be a very noisy estimator of data quality, as pointed out in the paper <a class="reference external" href="https://arxiv.org/abs/2006.14651">“Influence functions in deep learning are fragile”</a>. The size of the network, the weight decay, the inversion method used for calculating influences, the size of the test set: they all add up to the total amount of noise. Experiments may

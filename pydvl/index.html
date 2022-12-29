@@ -5,10 +5,10 @@
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="influence" href="influence.html" /><link rel="prev" title="Influence functions and neural networks" href="../examples/influence_wine.html" />
 
-    <meta name="generator" content="sphinx-5.3.0, furo 2022.09.29"/>
+    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
         <title>API Reference - pyDVL 0.3.1.dev0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster.custom.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster.bundle.min.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster-sideTip-shadow.min.css" />
@@ -164,7 +164,7 @@
   
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
-  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form>
@@ -178,6 +178,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../examples/shapley_basic_spotify.html">Shapley for data valuation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/shapley_knn_flowers.html">KNN Shapley</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/shapley_utility_learning.html">Data Utility Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/influence_imagenet.html">Influence functions for neural networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/influence_imagenet.html#Theory-of-influence-functions-for-neural-networks">Theory of influence functions for neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/influence_synthetic.html">Influence functions for data mislabeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/influence_wine.html">Influence functions and neural networks</a></li>
 </ul>
@@ -337,9 +339,9 @@
 <li class="toctree-l4"><a class="reference internal" href="influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchBinaryLogisticRegression.training"><code class="docutils literal notranslate"><span class="pre">TorchBinaryLogisticRegression.training</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchNeuralNetwork"><code class="docutils literal notranslate"><span class="pre">TorchNeuralNetwork</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchNeuralNetwork.forward"><code class="docutils literal notranslate"><span class="pre">TorchNeuralNetwork.forward()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchNeuralNetwork.training"><code class="docutils literal notranslate"><span class="pre">TorchNeuralNetwork.training</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchMLP"><code class="docutils literal notranslate"><span class="pre">TorchMLP</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchMLP.forward"><code class="docutils literal notranslate"><span class="pre">TorchMLP.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchMLP.training"><code class="docutils literal notranslate"><span class="pre">TorchMLP.training</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="influence/model_wrappers/torch_wrappers.html">torch_wrappers</a><ul>
@@ -353,9 +355,13 @@
 <li class="toctree-l5"><a class="reference internal" href="influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchBinaryLogisticRegression.training"><code class="docutils literal notranslate"><span class="pre">TorchBinaryLogisticRegression.training</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchNeuralNetwork"><code class="docutils literal notranslate"><span class="pre">TorchNeuralNetwork</span></code></a><ul>
-<li class="toctree-l5"><a class="reference internal" href="influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchNeuralNetwork.forward"><code class="docutils literal notranslate"><span class="pre">TorchNeuralNetwork.forward()</span></code></a></li>
-<li class="toctree-l5"><a class="reference internal" href="influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchNeuralNetwork.training"><code class="docutils literal notranslate"><span class="pre">TorchNeuralNetwork.training</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchMLP"><code class="docutils literal notranslate"><span class="pre">TorchMLP</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchMLP.forward"><code class="docutils literal notranslate"><span class="pre">TorchMLP.forward()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchMLP.training"><code class="docutils literal notranslate"><span class="pre">TorchMLP.training</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchModel"><code class="docutils literal notranslate"><span class="pre">TorchModel</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchModel.forward"><code class="docutils literal notranslate"><span class="pre">TorchModel.forward()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -380,6 +386,7 @@
 <li class="toctree-l3"><a class="reference internal" href="reporting/plots.html#pydvl.reporting.plots.shapley_results"><code class="docutils literal notranslate"><span class="pre">shapley_results()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="reporting/plots.html#pydvl.reporting.plots.spearman_correlation"><code class="docutils literal notranslate"><span class="pre">spearman_correlation()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="reporting/plots.html#pydvl.reporting.plots.plot_shapley"><code class="docutils literal notranslate"><span class="pre">plot_shapley()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reporting/plots.html#pydvl.reporting.plots.plot_influence_distribution_by_label"><code class="docutils literal notranslate"><span class="pre">plot_influence_distribution_by_label()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="reporting/scores.html">scores</a><ul>

@@ -4,9 +4,9 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="#" /><link rel="search" title="Search" href="search.html" />
 
-    <meta name="generator" content="sphinx-5.3.0, furo 2022.09.29"/><title>Index - pyDVL 0.3.1.dev0 documentation</title>
+    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 --><title>Index - pyDVL 0.3.1.dev0 documentation</title>
 <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/css/tooltipster.custom.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/tooltipster.bundle.min.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/tooltipster-sideTip-shadow.min.css" />
@@ -162,7 +162,7 @@
   
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
-  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form>
@@ -176,6 +176,8 @@
 <li class="toctree-l2"><a class="reference internal" href="examples/shapley_basic_spotify.html">Shapley for data valuation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/shapley_knn_flowers.html">KNN Shapley</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/shapley_utility_learning.html">Data Utility Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html">Influence functions for neural networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html#Theory-of-influence-functions-for-neural-networks">Theory of influence functions for neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/influence_synthetic.html">Influence functions for data mislabeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/influence_wine.html">Influence functions and neural networks</a></li>
 </ul>
@@ -414,7 +416,9 @@
         <ul>
           <li><a href="pydvl/influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchLinearRegression.forward">(TorchLinearRegression method)</a>, <a href="pydvl/influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchLinearRegression.forward">[1]</a>
 </li>
-          <li><a href="pydvl/influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchNeuralNetwork.forward">(TorchNeuralNetwork method)</a>, <a href="pydvl/influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchNeuralNetwork.forward">[1]</a>
+          <li><a href="pydvl/influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchMLP.forward">(TorchMLP method)</a>, <a href="pydvl/influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchMLP.forward">[1]</a>
+</li>
+          <li><a href="pydvl/influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchModel.forward">(TorchModel method)</a>
 </li>
         </ul></li>
     </ul></td>
@@ -711,6 +715,8 @@
         <li><a href="pydvl/value/shapley/montecarlo.html#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley">permutation_montecarlo_shapley() (in module pydvl.value.shapley.montecarlo)</a>
 </li>
         <li><a href="pydvl/influence/general.html#pydvl.influence.general.InfluenceType.Perturbation">Perturbation (InfluenceType attribute)</a>
+</li>
+        <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.plot_influence_distribution_by_label">plot_influence_distribution_by_label() (in module pydvl.reporting.plots)</a>
 </li>
         <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.plot_shapley">plot_shapley() (in module pydvl.reporting.plots)</a>
 </li>
@@ -1078,12 +1084,14 @@
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="pydvl/influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchNeuralNetwork">TorchNeuralNetwork (class in pydvl.influence.model_wrappers)</a>
+        <li><a href="pydvl/influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchMLP">TorchMLP (class in pydvl.influence.model_wrappers)</a>
 
         <ul>
-          <li><a href="pydvl/influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchNeuralNetwork">(class in pydvl.influence.model_wrappers.torch_wrappers)</a>
+          <li><a href="pydvl/influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchMLP">(class in pydvl.influence.model_wrappers.torch_wrappers)</a>
 </li>
         </ul></li>
+        <li><a href="pydvl/influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchModel">TorchModel (class in pydvl.influence.model_wrappers.torch_wrappers)</a>
+</li>
         <li><a href="pydvl/influence/frameworks.html#pydvl.influence.frameworks.TorchTwiceDifferentiable">TorchTwiceDifferentiable (class in pydvl.influence.frameworks)</a>
 
         <ul>
@@ -1095,7 +1103,7 @@
         <ul>
           <li><a href="pydvl/influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchLinearRegression.training">(TorchLinearRegression attribute)</a>, <a href="pydvl/influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchLinearRegression.training">[1]</a>
 </li>
-          <li><a href="pydvl/influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchNeuralNetwork.training">(TorchNeuralNetwork attribute)</a>, <a href="pydvl/influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchNeuralNetwork.training">[1]</a>
+          <li><a href="pydvl/influence/model_wrappers.html#pydvl.influence.model_wrappers.TorchMLP.training">(TorchMLP attribute)</a>, <a href="pydvl/influence/model_wrappers/torch_wrappers.html#pydvl.influence.model_wrappers.torch_wrappers.TorchMLP.training">[1]</a>
 </li>
         </ul></li>
         <li><a href="pydvl/value/shapley/montecarlo.html#pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley">truncated_montecarlo_shapley() (in module pydvl.value.shapley.montecarlo)</a>
