@@ -77,7 +77,7 @@ def truncated_montecarlo_shapley(
     value_tolerance: Optional[float] = None,
     max_iterations: Optional[int] = None,
     *,
-    n_jobs: Optional[int] = None,
+    n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
     coordinator_update_period: int = 10,
@@ -201,7 +201,7 @@ def permutation_montecarlo_shapley(
     u: Utility,
     max_iterations: int,
     *,
-    n_jobs: int,
+    n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
 ) -> ValuationResult:
