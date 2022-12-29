@@ -1,11 +1,9 @@
-from collections.abc import Iterable, Sequence
-from functools import singledispatch, singledispatchmethod
+from collections.abc import Iterable
+from functools import singledispatch
 from itertools import accumulate, chain
-from typing import TYPE_CHECKING, Any, Callable, Dict, Generic
+from typing import Any, Callable, Dict, Generic
 from typing import Iterable as IterableType
-from typing import Iterator, List, Optional
-from typing import Sequence as SequenceType
-from typing import TypeVar, Union
+from typing import Iterator, List, Optional, Sequence, TypeVar, Union
 
 import ray
 from ray import ObjectRef
@@ -22,15 +20,6 @@ Identity = lambda x, *args, **kwargs: x
 
 MapFunction = Callable[..., R]
 ReduceFunction = Callable[[IterableType[R]], R]
-
-if not TYPE_CHECKING:
-    # HACK to make singledispatchmethod work with staticmethod
-    def _register(self, cls, method=None):
-        if hasattr(cls, "__func__"):
-            setattr(cls, "__annotations__", cls.__func__.__annotations__)
-        return self.dispatcher.register(cls, func=method)
-
-    singledispatchmethod.register = _register
 
 
 def _wrap_func_with_remote_args(func, *, timeout: Optional[float] = None):
@@ -139,7 +128,7 @@ class MapReduceJob(Generic[T, R]):
 
     def __init__(
         self,
-        inputs: Union[SequenceType[T], T],
+        inputs: Union[Sequence[T], T],
         map_func: MapFunction[R],
         reduce_func: Optional[ReduceFunction[R]] = None,
         map_kwargs: Optional[Dict] = None,
@@ -167,7 +156,7 @@ class MapReduceJob(Generic[T, R]):
         self.max_parallel_tasks = max_parallel_tasks or default_max_parallel_tasks
 
         if isinstance(inputs, Sequence):
-            self.inputs_: Union[SequenceType[T], "ObjectRef[T]"] = inputs
+            self.inputs_: Union[Sequence[T], "ObjectRef[T]"] = inputs
         else:
             self.inputs_ = self.parallel_backend.put(inputs)
 
@@ -201,7 +190,7 @@ class MapReduceJob(Generic[T, R]):
         return reduce_results
 
     def map(
-        self, inputs: Union[SequenceType[T], "ObjectRef[T]"]
+        self, inputs: Union[Sequence[T], "ObjectRef[T]"]
     ) -> List[List["ObjectRef[R]"]]:
         map_results: List[List["ObjectRef[R]"]] = []
 
@@ -274,26 +263,24 @@ class MapReduceJob(Generic[T, R]):
             n_finished += len(finished_jobs)
         return n_finished
 
-    @singledispatchmethod
     @staticmethod
-    def _chunkify(data: Any, n_chunks: int):
-        raise NotImplementedError(
-            f"_chunkify does not support data of type {type(data)}"
-        )
-
-    @_chunkify.register
-    @staticmethod
-    def _(data: Sequence, n_chunks: int) -> Iterator[SequenceType[T]]:
-        """Splits a sequence of values into `n_chunks` chunks for each job"""
+    def _chunkify(
+        data: Union[Sequence[T], "ObjectRef[T]"], n_chunks: int
+    ) -> Union[Sequence[T], "ObjectRef[T]"]:
+        """If data is a sequence, it splits it into sequences of size `n_chunks` for each job that we call chunks.
+        If instead data is an `ObjectRef` instance, then it yields it repeatedly `n_chunks` number of times.
+        """
         if n_chunks == 0:
             raise ValueError("Number of chunks should be greater than 0")
 
         elif n_chunks == 1:
             yield data
 
+        if isinstance(data, ObjectRef):
+            for _ in range(n_chunks):
+                yield data
         else:
             n = len(data)
-
             # This is very much inspired by numpy's array_split function
             # The difference is that it only uses built-in functions
             # and does not convert the input data to an array
@@ -309,20 +296,6 @@ class MapReduceJob(Generic[T, R]):
                 if start_index >= end_index:
                     return
                 yield data[start_index:end_index]
-
-    @_chunkify.register
-    @staticmethod
-    def _(data: ObjectRef, n_chunks: int) -> Iterator[ObjectRef]:
-        """Repeatedly yields the passed data object `n_chunks` number of times"""
-        if n_chunks == 0:
-            raise ValueError("Number of chunks should be greater than 0")
-
-        elif n_chunks == 1:
-            yield data
-
-        else:
-            for _ in range(n_chunks):
-                yield data
 
     @property
     def n_jobs(self) -> int:
