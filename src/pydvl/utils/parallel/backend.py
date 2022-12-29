@@ -196,9 +196,9 @@ def init_parallel_backend(
     <RayParallelBackend: {'address': None, 'num_cpus': None, 'ignore_reinit_error': True}>
 
     """
-   try:
+    try:
         parallel_backend_cls = _PARALLEL_BACKENDS[config.backend]
-   except KeyError:
+    except KeyError:
         raise NotImplementedError(f"Unexpected parallel backend {config.backend}")
     parallel_backend = parallel_backend_cls._create(config)
     return parallel_backend  # type: ignore
