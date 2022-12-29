@@ -70,9 +70,14 @@ class BaseParallelBackend(metaclass=NoPublicConstructor):
     def wait(self, v: Any, *args, **kwargs) -> Any:
         ...
 
-    def effective_n_jobs(self, n_jobs: Optional[int]) -> Optional[int]:
+    @abstractmethod
+    def _effective_n_jobs(self, n_jobs: int) -> int:
+        ...
+
+    def effective_n_jobs(self, n_jobs: int = -1) -> int:
         if n_jobs == 0:
             raise ValueError("n_jobs == 0 in Parallel has no meaning")
+        n_jobs = self._effective_n_jobs(n_jobs)
         return n_jobs
 
     def __repr__(self) -> str:
@@ -106,9 +111,8 @@ class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
     def wait(self, v: Any, *args, **kwargs) -> Tuple[list, list]:
         return v, []
 
-    def effective_n_jobs(self, n_jobs: Optional[int]) -> int:
-        n_jobs = super().effective_n_jobs(n_jobs)
-        if n_jobs is None or n_jobs < 0:
+    def _effective_n_jobs(self, n_jobs: int) -> int:
+        if n_jobs < 0:
             if self.config["num_cpus"]:
                 eff_n_jobs: int = self.config["num_cpus"]
             else:
@@ -169,9 +173,8 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
             timeout=timeout,
         )
 
-    def effective_n_jobs(self, n_jobs: Optional[int]) -> int:
-        n_jobs = super().effective_n_jobs(n_jobs)
-        if n_jobs is None or n_jobs < 0:
+    def _effective_n_jobs(self, n_jobs: int) -> int:
+        if n_jobs < 0:
             ray_cpus = int(ray._private.state.cluster_resources()["CPU"])  # type: ignore
             eff_n_jobs = ray_cpus
         else:
