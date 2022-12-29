@@ -184,7 +184,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
 
 def init_parallel_backend(
     config: ParallelConfig,
-) -> Union[RayParallelBackend, SequentialParallelBackend]:
+) -> BaseParallelBackend:
     """Initializes the parallel backend and returns an instance of it.
 
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
