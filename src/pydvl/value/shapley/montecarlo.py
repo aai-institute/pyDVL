@@ -361,15 +361,13 @@ def combinatorial_montecarlo_shapley(
     :param progress: Whether to display progress bars for each job.
     :return: Object with the data values.
     """
-    parallel_backend = init_parallel_backend(config)
-    u_id = parallel_backend.put(u)
 
     # FIXME? max_iterations has different semantics in permutation-based methods
     map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
         u.data.indices,
         map_func=_combinatorial_montecarlo_shapley,
         reduce_func=disjoint_reducer,
-        map_kwargs=dict(u=u_id, max_iterations=max_iterations, progress=progress),
+        map_kwargs=dict(u=u, max_iterations=max_iterations, progress=progress),
         n_jobs=n_jobs,
         config=config,
     )
@@ -512,14 +510,11 @@ def owen_sampling_shapley(
     if OwenAlgorithm(method) == OwenAlgorithm.Antithetic:
         warn("Owen antithetic sampling not tested and probably bogus")
 
-    parallel_backend = init_parallel_backend(config)
-    u_id = parallel_backend.put(u)
-
     map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
         u.data.indices,
         map_func=_owen_sampling_shapley,
         map_kwargs=dict(
-            u=u_id,
+            u=u,
             method=OwenAlgorithm(method),
             max_iterations=max_iterations,
             max_q=max_q,

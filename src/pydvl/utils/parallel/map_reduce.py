@@ -162,11 +162,9 @@ class MapReduceJob(Generic[T, R]):
         # This uses the setter defined below
         self.n_jobs = n_jobs
 
-        if max_parallel_tasks is None:
-            # TODO: Find a better default value?
-            self.max_parallel_tasks = 2 * (self.n_jobs + self.n_runs)
-        else:
-            self.max_parallel_tasks = max_parallel_tasks
+        # TODO: Find a better default value?
+        default_max_parallel_tasks = 2 * (self.n_jobs + self.n_runs)
+        self.max_parallel_tasks = max_parallel_tasks or default_max_parallel_tasks
 
         if isinstance(inputs, Sequence):
             self.inputs_: Union[SequenceType[T], "ObjectRef[T]"] = inputs
@@ -176,14 +174,21 @@ class MapReduceJob(Generic[T, R]):
         if reduce_func is None:
             reduce_func = Identity
 
-        self.map_kwargs = map_kwargs
-        self.reduce_kwargs = reduce_kwargs
-
-        if self.map_kwargs is None:
+        if map_kwargs is None:
             self.map_kwargs = dict()
+        else:
+            self.map_kwargs = {
+                k: self.parallel_backend.put(v) if not isinstance(v, ObjectRef) else v
+                for k, v in map_kwargs.items()
+            }
 
-        if self.reduce_kwargs is None:
+        if reduce_kwargs is None:
             self.reduce_kwargs = dict()
+        else:
+            self.reduce_kwargs = {
+                k: self.parallel_backend.put(v) if not isinstance(v, ObjectRef) else v
+                for k, v in reduce_kwargs.items()
+            }
 
         self._map_func = maybe_add_argument(map_func, "job_id")
         self._reduce_func = reduce_func

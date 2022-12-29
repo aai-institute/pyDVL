@@ -4,14 +4,7 @@ from itertools import permutations
 
 import numpy as np
 
-from pydvl.utils import (
-    MapReduceJob,
-    ParallelConfig,
-    Utility,
-    init_parallel_backend,
-    maybe_progress,
-    powerset,
-)
+from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress, powerset
 from pydvl.value.results import ValuationResult, ValuationStatus
 
 __all__ = ["permutation_exact_shapley", "combinatorial_exact_shapley"]
@@ -118,18 +111,16 @@ def combinatorial_exact_shapley(
             f"Large dataset! Computation requires 2^{len(u.data)} calls to model.fit()"
         )
 
-    parallel_backend = init_parallel_backend(config)
-    u_id = parallel_backend.put(u)
-
     def reduce_fun(results):
         return np.array(results).sum(axis=0)
 
     map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
         u.data.indices,
         map_func=_combinatorial_exact_shapley,
-        map_kwargs=dict(u=u_id, progress=progress),
+        map_kwargs=dict(u=u, progress=progress),
         reduce_func=reduce_fun,
         n_jobs=n_jobs,
+        config=config,
     )
     values = map_reduce_job()[0]
     return ValuationResult(
