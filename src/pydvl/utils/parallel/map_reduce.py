@@ -266,7 +266,7 @@ class MapReduceJob(Generic[T, R]):
     @staticmethod
     def _chunkify(
         data: Union[Sequence[T], "ObjectRef[T]"], n_chunks: int
-    ) -> Union[Sequence[T], "ObjectRef[T]"]:
+    ) -> Iterator[Union[Sequence[T], "ObjectRef[T]"]]:
         """If data is a sequence, it splits it into sequences of size `n_chunks` for each job that we call chunks.
         If instead data is an `ObjectRef` instance, then it yields it repeatedly `n_chunks` number of times.
         """
