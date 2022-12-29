@@ -19,7 +19,7 @@ T = TypeVar("T")
 _PARALLEL_BACKENDS: Dict[str, "Type[BaseParallelBackend]"] = {}
 
 
-class AbstractNoPublicConstructor(ABCMeta):
+class NoPublicConstructor(ABCMeta):
     """Metaclass that ensures a private constructor
 
     If a class uses this metaclass like this:
@@ -44,7 +44,7 @@ class AbstractNoPublicConstructor(ABCMeta):
         return super().__call__(*args, **kwargs)
 
 
-class BaseParallelBackend(metaclass=AbstractNoPublicConstructor):
+class BaseParallelBackend(metaclass=NoPublicConstructor):
     """Abstract base class for all parallel backends"""
 
     config: Dict[str, Any] = {}
@@ -196,9 +196,10 @@ def init_parallel_backend(
     <RayParallelBackend: {'address': None, 'num_cpus': None, 'ignore_reinit_error': True}>
 
     """
-    if config.backend not in ["sequential", "ray"]:
-        raise NotImplementedError(f"Unexpected parallel type {config.backend}")
-    parallel_backend_cls = _PARALLEL_BACKENDS[config.backend]
+   try:
+        parallel_backend_cls = _PARALLEL_BACKENDS[config.backend]
+   except KeyError:
+        raise NotImplementedError(f"Unexpected parallel backend {config.backend}")
     parallel_backend = parallel_backend_cls._create(config)
     return parallel_backend  # type: ignore
 
