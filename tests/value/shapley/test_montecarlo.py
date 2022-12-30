@@ -186,7 +186,7 @@ def test_linear_montecarlo_with_outlier(
 @pytest.mark.parametrize(
     "fun, max_iterations, kwargs",
     [
-        (permutation_montecarlo_shapley, 600, {}),
+        (permutation_montecarlo_shapley, 700, {}),
         (truncated_montecarlo_shapley, 500, {"coordinator_update_period": 1}),
         (owen_sampling_shapley, 4, {"max_q": 300, "method": "standard"}),
         # FIXME: antithetic breaks for non-deterministic u

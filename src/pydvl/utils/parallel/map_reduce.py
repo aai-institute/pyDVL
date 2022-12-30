@@ -1,9 +1,11 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from functools import singledispatch
-from itertools import accumulate, chain
+from itertools import accumulate, chain, repeat
 from typing import Any, Callable, Dict, Generic
 from typing import Iterable as IterableType
-from typing import Iterator, List, Optional, Sequence, TypeVar, Union
+from typing import List, Optional
+from typing import Sequence as SequenceType
+from typing import TypeVar, Union
 
 import ray
 from ray import ObjectRef
@@ -22,7 +24,7 @@ MapFunction = Callable[..., R]
 ReduceFunction = Callable[[IterableType[R]], R]
 
 
-def _wrap_func_with_remote_args(func, *, timeout: Optional[float] = None):
+def _wrap_func_with_remote_args(func: Callable, *, timeout: Optional[float] = None):
     def wrapper(*args, **kwargs):
         args = list(args)
         for i, v in enumerate(args[:]):
@@ -33,9 +35,7 @@ def _wrap_func_with_remote_args(func, *, timeout: Optional[float] = None):
 
     # Doing it manually here because using wraps or update_wrapper
     # from functools doesn't work with ray for some unknown reason
-    wrapper.__module__ = func.__module__
     wrapper.__name__ = func.__name__
-    wrapper.__annotations__ = func.__annotations__
     wrapper.__qualname__ = func.__qualname__
     wrapper.__doc__ = func.__doc__
     return wrapper
@@ -128,7 +128,7 @@ class MapReduceJob(Generic[T, R]):
 
     def __init__(
         self,
-        inputs: Union[Sequence[T], T],
+        inputs: Union[SequenceType[T], T],
         map_func: MapFunction[R],
         reduce_func: Optional[ReduceFunction[R]] = None,
         map_kwargs: Optional[Dict] = None,
@@ -155,10 +155,7 @@ class MapReduceJob(Generic[T, R]):
         default_max_parallel_tasks = 2 * (self.n_jobs + self.n_runs)
         self.max_parallel_tasks = max_parallel_tasks or default_max_parallel_tasks
 
-        if isinstance(inputs, Sequence):
-            self.inputs_: Union[Sequence[T], "ObjectRef[T]"] = inputs
-        else:
-            self.inputs_ = self.parallel_backend.put(inputs)
+        self.inputs_ = inputs
 
         if reduce_func is None:
             reduce_func = Identity
@@ -167,16 +164,14 @@ class MapReduceJob(Generic[T, R]):
             self.map_kwargs = dict()
         else:
             self.map_kwargs = {
-                k: self.parallel_backend.put(v) if not isinstance(v, ObjectRef) else v
-                for k, v in map_kwargs.items()
+                k: self.parallel_backend.put(v) for k, v in map_kwargs.items()
             }
 
         if reduce_kwargs is None:
             self.reduce_kwargs = dict()
         else:
             self.reduce_kwargs = {
-                k: self.parallel_backend.put(v) if not isinstance(v, ObjectRef) else v
-                for k, v in reduce_kwargs.items()
+                k: self.parallel_backend.put(v) for k, v in reduce_kwargs.items()
             }
 
         self._map_func = maybe_add_argument(map_func, "job_id")
@@ -190,7 +185,7 @@ class MapReduceJob(Generic[T, R]):
         return reduce_results
 
     def map(
-        self, inputs: Union[Sequence[T], "ObjectRef[T]"]
+        self, inputs: Union[SequenceType[T], "ObjectRef[T]"]
     ) -> List[List["ObjectRef[R]"]]:
         map_results: List[List["ObjectRef[R]"]] = []
 
@@ -199,13 +194,13 @@ class MapReduceJob(Generic[T, R]):
         total_n_jobs = 0
         total_n_finished = 0
 
-        for _ in range(self.n_runs):
-            # In this first case we don't use chunking at all
-            if self.n_runs >= self.n_jobs:
-                chunks = iter([inputs])
-            else:
-                chunks = self._chunkify(inputs, n_chunks=self.n_jobs)
+        # In the first case we don't use chunking at all
+        if self.n_runs >= self.n_jobs:
+            chunks = self._chunkify(inputs, n_chunks=1)
+        else:
+            chunks = self._chunkify(inputs, n_chunks=self.n_jobs)
 
+        for _ in range(self.n_runs):
             map_result = []
             for j, next_chunk in enumerate(chunks):
                 result = map_func(next_chunk, job_id=j, **self.map_kwargs)
@@ -239,11 +234,11 @@ class MapReduceJob(Generic[T, R]):
         results = self.parallel_backend.get(reduce_results, timeout=self.timeout)
         return results  # type: ignore
 
-    def _wrap_function(self, func):
+    def _wrap_function(self, func: Callable, **kwargs) -> Callable:
         remote_func = self.parallel_backend.wrap(
-            _wrap_func_with_remote_args(func, timeout=self.timeout)
+            _wrap_func_with_remote_args(func, timeout=self.timeout), **kwargs
         )
-        return getattr(remote_func, "remote", remote_func)
+        return getattr(remote_func, "remote", remote_func)  # type: ignore
 
     def _backpressure(
         self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int
@@ -263,22 +258,22 @@ class MapReduceJob(Generic[T, R]):
             n_finished += len(finished_jobs)
         return n_finished
 
-    @staticmethod
     def _chunkify(
-        data: Union[Sequence[T], "ObjectRef[T]"], n_chunks: int
-    ) -> Iterator[Union[Sequence[T], "ObjectRef[T]"]]:
-        """If data is a sequence, it splits it into sequences of size `n_chunks` for each job that we call chunks.
+        self, data: Union[SequenceType[T], T], n_chunks: int
+    ) -> List["ObjectRef[T]"]:
+        """If data is a SequenceType, it splits it into SequenceTypes of size `n_chunks` for each job that we call chunks.
         If instead data is an `ObjectRef` instance, then it yields it repeatedly `n_chunks` number of times.
         """
         if n_chunks == 0:
             raise ValueError("Number of chunks should be greater than 0")
 
         elif n_chunks == 1:
-            yield data
+            data_id = self.parallel_backend.put(data)
+            return [data_id]
 
-        if isinstance(data, ObjectRef):
-            for _ in range(n_chunks):
-                yield data
+        elif not isinstance(data, Sequence):
+            data_id = self.parallel_backend.put(data)
+            return list(repeat(data_id, times=n_chunks))
         else:
             n = len(data)
             # This is very much inspired by numpy's array_split function
@@ -292,10 +287,16 @@ class MapReduceJob(Generic[T, R]):
                     + (n_chunks - remainder) * [chunk_size]
                 )
             )
+
+            chunks = []
+
             for start_index, end_index in zip(chunk_indices[:-1], chunk_indices[1:]):
                 if start_index >= end_index:
-                    return
-                yield data[start_index:end_index]
+                    break
+                chunk_id = self.parallel_backend.put(data[start_index:end_index])
+                chunks.append(chunk_id)
+
+            return chunks
 
     @property
     def n_jobs(self) -> int:

@@ -153,8 +153,11 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         else:
             return v
 
-    def put(self, v: T, *args, **kwargs) -> "ObjectRef[T]":
-        return ray.put(v, **kwargs)  # type: ignore
+    def put(self, v: T, *args, **kwargs) -> Union["ObjectRef[T]", T]:
+        try:
+            return ray.put(v, **kwargs)  # type: ignore
+        except TypeError:
+            return v  # type: ignore
 
     def wrap(self, *args, **kwargs) -> RemoteFunction:
         return ray.remote(*args, **kwargs)  # type: ignore

@@ -106,7 +106,9 @@ def test_map_reduce_job(map_reduce_job_and_parameters, indices, expected):
     ],
 )
 def test_chunkification(data, n_chunks, expected_chunks):
-    chunks = list(MapReduceJob._chunkify(data, n_chunks))
+    map_reduce_job = MapReduceJob([], map_func=lambda x: x)
+    chunks = list(map_reduce_job._chunkify(data, n_chunks))
+    chunks = map_reduce_job.parallel_backend.get(chunks)
     assert chunks == expected_chunks
 
 
