@@ -25,6 +25,7 @@ from typing import (
 )
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils import Dataset
 
@@ -32,9 +33,6 @@ try:
     import pandas  # Try to import here for the benefit of mypy
 except ImportError:
     pass
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
 
 __all__ = ["ValuationResult", "ValuationStatus"]
 
