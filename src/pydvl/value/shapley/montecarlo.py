@@ -233,7 +233,7 @@ def permutation_montecarlo_shapley(
         config=config,
         n_jobs=n_jobs,
     )
-    full_results = map_reduce_job()[0]
+    full_results = map_reduce_job()
 
     values = np.mean(full_results, axis=0)
     stderr = np.std(full_results, axis=0) / np.sqrt(full_results.shape[0])
@@ -371,7 +371,7 @@ def combinatorial_montecarlo_shapley(
         n_jobs=n_jobs,
         config=config,
     )
-    results = map_reduce_job()[0]
+    results = map_reduce_job()
 
     return ValuationResult(
         algorithm="combinatorial_montecarlo_shapley",
@@ -525,7 +525,7 @@ def owen_sampling_shapley(
         config=config,
     )
 
-    results = map_reduce_job()[0]
+    results = map_reduce_job()
 
     return ValuationResult(
         algorithm="owen_sampling_shapley",

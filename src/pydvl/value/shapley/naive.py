@@ -1,8 +1,10 @@
 import math
 import warnings
 from itertools import permutations
+from typing import List
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress, powerset
 from pydvl.value.results import ValuationResult, ValuationStatus
@@ -58,7 +60,7 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 
 def _combinatorial_exact_shapley(
     indices: np.ndarray, u: Utility, progress: bool
-) -> np.ndarray:
+) -> NDArray:
     """Helper function for :func:`combinatorial_exact_shapley`.
 
     Computes the marginal utilities for the set of indices passed and returns
@@ -111,10 +113,10 @@ def combinatorial_exact_shapley(
             f"Large dataset! Computation requires 2^{len(u.data)} calls to model.fit()"
         )
 
-    def reduce_fun(results):
-        return np.array(results).sum(axis=0)
+    def reduce_fun(results: List[NDArray]) -> NDArray:
+        return np.array(results).sum(axis=0)  # type: ignore
 
-    map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
+    map_reduce_job: MapReduceJob[NDArray, NDArray] = MapReduceJob(
         u.data.indices,
         map_func=_combinatorial_exact_shapley,
         map_kwargs=dict(u=u, progress=progress),
@@ -122,7 +124,7 @@ def combinatorial_exact_shapley(
         n_jobs=n_jobs,
         config=config,
     )
-    values = map_reduce_job()[0]
+    values = map_reduce_job()
     return ValuationResult(
         algorithm="combinatorial_exact_shapley",
         status=ValuationStatus.Converged,
