@@ -17,6 +17,7 @@ object.
 
 """
 
+import logging
 from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple, Union
@@ -29,6 +30,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import Bunch, check_X_y
 
 __all__ = ["Dataset", "GroupedDataset", "load_spotify_dataset", "load_wine_dataset"]
+logger = logging.getLogger(__name__)
 
 
 class Dataset:
@@ -421,7 +423,7 @@ def load_wine_dataset(
     :param train_size: fraction of points used for training dataset
     :param test_size: fraction of points used for test dataset
     :param random_state: fix random seed. If None, no random seed is set.
-    :returns: A tuple of four elements with the first three being input and
+    :return: A tuple of four elements with the first three being input and
         target values in the form of matrices of shape (N,D) the first
         and (N,) the second. The fourth element is a list containing names of
         features of the model. (FIXME doc)

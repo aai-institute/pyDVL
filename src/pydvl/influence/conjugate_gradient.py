@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Callable, Optional, Tuple, Union
 import numpy as np
 from scipy.sparse.linalg import cg
 
+from ..utils import maybe_progress
 from .types import MatrixVectorProduct
 
 if TYPE_CHECKING:
@@ -21,19 +22,22 @@ __all__ = ["conjugate_gradient", "batched_preconditioned_conjugate_gradient"]
 logger = logging.getLogger(__name__)
 
 
-def conjugate_gradient(A: "NDArray", batch_y: "NDArray") -> "NDArray":
+def conjugate_gradient(
+    A: "NDArray[np.float_]", batch_y: "NDArray[np.float_]", progress: bool = False
+) -> "NDArray[np.float_]":
     """
     Given a matrix and a batch of vectors, it uses conjugate gradient to calculate the solution
     to Ax = y for each y in batch_y.
 
     :param A: a real, symmetric and positive-definite matrix of shape [NxN]
     :param batch_y: a matrix of shape [NxP], with P the size of the batch.
+    :param progress: True, iff progress shall be printed.
 
     :return: A NDArray of shape [NxP] representing x, the solution of Ax=b.
     """
     batch_cg = []
-    for y in batch_y:
-        y_cg, _ = cg(A.T, y)
+    for y in maybe_progress(batch_y, progress, desc="Conjugate gradient"):
+        y_cg, _ = cg(A, y)
         batch_cg.append(y_cg)
     return np.asarray(batch_cg)
 

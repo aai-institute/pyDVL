@@ -11,6 +11,9 @@
 - **Breaking change:** Introduces a class ValuationResult to gather and inspect
   results from all valuation algorithms
   [PR #214](https://github.com/appliedAI-Initiative/pyDVL/pull/214)
+- Fixes bug in Influence calculation with multi-dimensional input and adds
+  new example notebook
+  [PR #195](https://github.com/appliedAI-Initiative/pyDVL/pull/195)
 - **Breaking change**: Passes the input to `MapReduceJob` at initialization,
   removes `chunkify_inputs` argument from `MapReduceJob`,
   renames ParallelConfig's `num_workers` attribute to `n_local_workers`,
