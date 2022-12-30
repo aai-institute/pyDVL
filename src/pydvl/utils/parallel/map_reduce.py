@@ -1,5 +1,6 @@
+import inspect
 from collections.abc import Iterable
-from functools import singledispatch
+from functools import singledispatch, update_wrapper
 from itertools import accumulate, repeat
 from typing import (
     Any,
@@ -13,6 +14,7 @@ from typing import (
     Union,
 )
 
+import numpy as np
 import ray
 from numpy.typing import NDArray
 from ray import ObjectRef
@@ -41,11 +43,15 @@ def _wrap_func_with_remote_args(func: Callable, *, timeout: Optional[float] = No
             kwargs[k] = _get_value(v, timeout=timeout)
         return func(*args, **kwargs)
 
-    # Doing it manually here because using wraps or update_wrapper
-    # from functools doesn't work with ray for some unknown reason
-    wrapper.__name__ = func.__name__
-    wrapper.__qualname__ = func.__qualname__
-    wrapper.__doc__ = func.__doc__
+    try:
+        inspect.signature(func)
+        wrapper = update_wrapper(wrapper, func)
+    except ValueError:
+        # Doing it manually here because using update_wrapper from functools
+        # on numpy functions doesn't work with ray for some unknown reason.
+        wrapper.__name__ = func.__name__
+        wrapper.__qualname__ = func.__qualname__
+        wrapper.__doc__ = func.__doc__
     return wrapper
 
 
@@ -57,6 +63,11 @@ def _get_value(v: Any, *, timeout: Optional[float] = None) -> Any:
 @_get_value.register
 def _(v: ObjectRef, *, timeout: Optional[float] = None) -> Any:
     return ray.get(v, timeout=timeout)
+
+
+@_get_value.register
+def _(v: np.ndarray, *, timeout: Optional[float] = None) -> NDArray:
+    return v
 
 
 @_get_value.register
@@ -72,14 +83,14 @@ class MapReduceJob(Generic[T, R]):
     that are split for `map_func` and the type of its output.
 
     :param inputs: The input that will be split and passed to `map_func`.
-        if it's not a sequence object. It will be repeat `n_jobs` number of times.
+        if it's not a sequence object. It will be repeat ``n_jobs`` number of times.
     :param map_func: Function that will be applied to the input chunks in each job.
     :param reduce_func: Function that will be applied to the results of
-        `map_func` to reduce them.
-    :param map_kwargs: Keyword arguments that will be passed to `map_func` in
+        ``map_func`` to reduce them.
+    :param map_kwargs: Keyword arguments that will be passed to ``map_func`` in
         each job. Alternatively, one can use `itertools.partial`.
-    :param reduce_kwargs: Keyword arguments that will be passed to `reduce_func`
-        in each job. Alternatively, one can use `itertools.partial`.
+    :param reduce_kwargs: Keyword arguments that will be passed to ``reduce_func``
+        in each job. Alternatively, one can use :func:`itertools.partial`.
     :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig`
         with cluster address, number of cpus, etc.
     :param n_jobs: Number of parallel jobs to run. Does not accept 0
@@ -105,7 +116,7 @@ class MapReduceJob(Generic[T, R]):
     ...     n_jobs=2,
     ... )
     >>> map_reduce_job()
-    [10]
+    10
 
     When passed a single object as input, it will be repeated for each job:
 
@@ -118,7 +129,7 @@ class MapReduceJob(Generic[T, R]):
     ...     n_jobs=4,
     ... )
     >>> map_reduce_job()
-    [20]
+    20
     """
 
     def __init__(
@@ -144,9 +155,7 @@ class MapReduceJob(Generic[T, R]):
         # This uses the setter defined below
         self.n_jobs = n_jobs
 
-        # TODO: Find a better default value?
-        default_max_parallel_tasks = 2 * self.n_jobs
-        self.max_parallel_tasks = max_parallel_tasks or default_max_parallel_tasks
+        self.max_parallel_tasks = max_parallel_tasks
 
         self.inputs_ = inputs
 
@@ -178,6 +187,7 @@ class MapReduceJob(Generic[T, R]):
         return reduce_results
 
     def map(self, inputs: Union[Sequence[T], T]) -> List["ObjectRef[R]"]:
+        """Splits the input data into chunks and calls a wrapped :func:`map_func` on them."""
         map_results: List["ObjectRef[R]"] = []
 
         map_func = self._wrap_function(self._map_func)
@@ -197,10 +207,11 @@ class MapReduceJob(Generic[T, R]):
                 n_dispatched=total_n_jobs,
                 n_finished=total_n_finished,
             )
-
         return map_results
 
     def reduce(self, chunks: List["ObjectRef[R]"]) -> R:
+        """Reduces the resulting chunks from a call to :meth:`~pydvl.utils.parallel.map_reduce.MapReduceJob.map`
+        by passing them to a wrapped :func:`reduce_func`."""
         reduce_func = self._wrap_function(self._reduce_func)
 
         reduce_result = reduce_func(chunks, **self.reduce_kwargs)
@@ -284,6 +295,7 @@ class MapReduceJob(Generic[T, R]):
 
     @property
     def n_jobs(self) -> int:
+        """Effective number of jobs according to the used ParallelBackend instance."""
         return self._n_jobs
 
     @n_jobs.setter

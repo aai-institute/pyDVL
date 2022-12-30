@@ -4,8 +4,8 @@ from functools import partial, reduce
 import numpy as np
 import pytest
 
-from pydvl.utils.config import ParallelConfig
-from pydvl.utils.parallel import MapReduceJob
+from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
+from pydvl.utils.parallel.map_reduce import _get_value
 
 
 @pytest.fixture()
@@ -139,18 +139,36 @@ def test_backpressure(
     assert n_finished == expected_n_finished
 
 
-# TODO: figure out test cases for this test
-@pytest.mark.skip
+def test_map_reduce_job_partial_map_and_reduce_func(parallel_config):
+    def map_func(x, y):
+        return x + y
+
+    def reduce_func(x, y):
+        return np.sum(np.concatenate(x)) + y
+
+    map_func = partial(map_func, y=10)
+    reduce_func = partial(reduce_func, y=5)
+
+    map_reduce_job = MapReduceJob(
+        np.arange(10),
+        map_func=map_func,
+        reduce_func=reduce_func,
+        config=parallel_config,
+    )
+    result = map_reduce_job()
+    assert result == 150
+
+
 @pytest.mark.parametrize(
-    "map_reduce_job_and_parameters, indices, n_jobs, expected",
+    "x, expected_x",
     [
-        ("other", [], 1, [[]]),
+        (None, None),
+        ([0, 1], [0, 1]),
+        (np.arange(3), np.arange(3)),
     ],
-    indirect=["map_reduce_job_and_parameters"],
 )
-def test_map_reduce_job_expected_failures(
-    map_reduce_job_and_parameters, indices, expected
-):
-    map_reduce_job, *_ = map_reduce_job_and_parameters
-    with pytest.raises(expected):
-        map_reduce_job(indices)
+def test_map_reduce_get_value(x, expected_x, parallel_config):
+    assert np.all(_get_value(x) == expected_x)
+    parallel_backend = init_parallel_backend(parallel_config)
+    x_id = parallel_backend.put(x)
+    assert np.all(_get_value(x_id) == expected_x)
