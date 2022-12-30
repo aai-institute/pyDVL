@@ -173,7 +173,7 @@ class Utility:
     def __getstate__(self):
         state = self.__dict__.copy()
         # Don't pickle _utility_wrapper
-        del state["_utility_wrapper"]
+        state.pop("_utility_wrapper", None)
         return state
 
     def __setstate__(self, state):
