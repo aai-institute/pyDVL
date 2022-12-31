@@ -24,12 +24,14 @@ from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple, Uni
 
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 from sklearn.datasets import load_wine
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import Bunch, check_X_y
 
 __all__ = ["Dataset", "GroupedDataset", "load_spotify_dataset", "load_wine_dataset"]
+
 logger = logging.getLogger(__name__)
 
 
@@ -239,6 +241,46 @@ class Dataset:
             description=data.get("DESCR"),
         )
 
+    @classmethod
+    def from_arrays(
+        cls,
+        X: NDArray,
+        y: NDArray,
+        train_size: float = 0.8,
+        random_state: Optional[int] = None,
+        stratify_by_target: bool = False,
+    ) -> "Dataset":
+        """Constructs a Dataset object from X and y numpy arrays  as returned by the
+        `make_*` functions in `sklearn generated datasets
+        <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
+
+        :param X: numpy array of shape (n_samples, n_features)
+        :param y: numpy array of shape (n_samples,)
+        :param train_size: size of the training dataset. Used in
+            `train_test_split`
+        :param random_state: seed for train / test split
+        :param stratify_by_target: If `True`, data is split in a stratified
+            fashion, using the y variable as labels. Read more in
+            `sklearn's user guide
+            <https://scikit-learn.org/stable/modules/cross_validation.html
+            #stratification>`.
+
+        :return: Dataset with the passed X and y arrays split across training and test sets.
+        """
+        x_train, x_test, y_train, y_test = train_test_split(
+            X,
+            y,
+            train_size=train_size,
+            random_state=random_state,
+            stratify=y if stratify_by_target else None,
+        )
+        return Dataset(
+            x_train,
+            y_train,
+            x_test,
+            y_test,
+        )
+
 
 class GroupedDataset(Dataset):
     """Class that groups data points.
@@ -338,12 +380,49 @@ class GroupedDataset(Dataset):
             #stratification>`.
         :param data_groups: for each element in the training set, it associates
             a group index or name.
+
         :return: Dataset with the selected sklearn data
         """
         if data_groups is None:
             raise ValueError("data_groups argument is missing")
         dataset = super().from_sklearn(
             data, train_size, random_state, stratify_by_target
+        )
+        return cls.from_dataset(dataset, data_groups)
+
+    @classmethod
+    def from_arrays(
+        cls,
+        X: NDArray,
+        y: NDArray,
+        train_size: float = 0.8,
+        random_state: Optional[int] = None,
+        stratify_by_target: bool = False,
+        data_groups: Optional[List] = None,
+    ) -> "Dataset":
+        """Constructs a Dataset object from X and y numpy arrays  as returned by the
+        `make_*` functions in `sklearn generated datasets
+        <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
+
+        :param X: numpy array of shape (n_samples, n_features)
+        :param y: numpy array of shape (n_samples,)
+        :param train_size: size of the training dataset. Used in
+            `train_test_split`
+        :param random_state: seed for train / test split
+        :param stratify_by_target: If `True`, data is split in a stratified
+            fashion, using the y variable as labels. Read more in
+            `sklearn's user guide
+            <https://scikit-learn.org/stable/modules/cross_validation.html
+            #stratification>`.
+        :param data_groups: for each element in the training set, it associates
+            a group index or name.
+
+        :return: Dataset with the passed X and y arrays split across training and test sets.
+        """
+        if data_groups is None:
+            raise ValueError("data_groups argument is missing")
+        dataset = super().from_arrays(
+            X, y, train_size, random_state, stratify_by_target
         )
         return cls.from_dataset(dataset, data_groups)
 

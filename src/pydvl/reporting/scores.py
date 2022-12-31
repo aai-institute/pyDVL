@@ -1,13 +1,16 @@
 from collections import OrderedDict
 from functools import partial
 from itertools import chain
-from typing import List, Mapping, Sequence, TypeVar
+from operator import itemgetter
+from typing import Dict, Iterable, List, Mapping, Sequence, TypeVar, Union
 
 import numpy as np
 from joblib import Parallel, delayed
+from numpy.typing import NDArray
 from tqdm import tqdm, trange
 
-from pydvl.utils import Dataset, SupervisedModel
+from pydvl.utils import Dataset, SupervisedModel, Utility
+from pydvl.value.results import ValuationResult
 
 __all__ = [
     "sort_values",
@@ -15,27 +18,27 @@ __all__ = [
     "sort_values_history",
     "backward_elimination",
     "compute_fb_scores",
+    "compute_removal_score",
+    "compute_random_removal_score",
 ]
 
 KT = TypeVar("KT")
 VT = TypeVar("VT")
 
 
-def sort_values_array(values: np.ndarray) -> "OrderedDict[int, np.ndarray]":
+def sort_values_array(values: np.ndarray) -> Dict[int, "NDArray"]:
     vals = np.mean(values, axis=1)
-    return OrderedDict(sorted(enumerate(vals), key=lambda x: x[1]))  # type: ignore
+    return OrderedDict(sorted(enumerate(vals), key=itemgetter(1)))
 
 
-def sort_values_history(
-    values: Mapping[KT, Sequence[VT]]
-) -> "OrderedDict[KT, Sequence[VT]]":
+def sort_values_history(values: Mapping[KT, Sequence[VT]]) -> Dict[KT, Sequence[VT]]:
     """Sorts a dict of sample_id: [values] by the last item in each list."""
-    return OrderedDict(sorted(values.items(), key=lambda x: x[1][-1]))  # type: ignore
+    return OrderedDict(sorted(values.items(), key=itemgetter(1, -1)))
 
 
-def sort_values(values: Mapping[KT, VT]) -> "OrderedDict[KT, VT]":
+def sort_values(values: Mapping[KT, VT]) -> Dict[KT, VT]:
     """Sorts a dict of sample_id: value_float by value."""
-    return OrderedDict(sorted(values.items(), key=lambda x: x[1]))  # type: ignore
+    return OrderedDict(sorted(values.items(), key=itemgetter(1)))
 
 
 def backward_elimination(
@@ -156,3 +159,66 @@ def compute_fb_scores(
     }
 
     return results
+
+
+def compute_removal_score(
+    u: Utility,
+    values: ValuationResult,
+    percentages: Union["NDArray", Iterable[float]],
+    *,
+    remove_best: bool = True,
+) -> Dict[float, float]:
+    r"""Fits model and computes score on the test set after incrementally removing
+    a percentage of data points from the training set.
+
+    :param u: Utility object with model, data, and scoring function
+    :param values: Data values of data instances in the training set.
+    :param percentages: Sequence of removal percentages.
+    """
+    # Sanity checks
+    if np.any([x >= 1.0 or x < 0.0 for x in percentages]):
+        raise ValueError("All percentages should be in the range [0.0, 1.0)")
+
+    if len(values) != len(u.data.indices):
+        raise ValueError(
+            f"The number of values, {len(values) }, should be equal to the number of data indices, {len(u.data.indices)}"
+        )
+
+    scores = {}
+
+    # We sort in descending order if we want to remove the best values
+    sort_in_descending_order = remove_best
+    values.sort(reverse=sort_in_descending_order)
+
+    for pct in percentages:
+        n_removal = int(pct * len(u.data))
+        indices = values.indices[n_removal:]
+        score = u(indices)
+        scores[pct] = score
+    return scores
+
+
+def compute_random_removal_score(
+    u: Utility,
+    percentages: Union["NDArray", Iterable[float]],
+) -> Dict[float, float]:
+    r"""Fits model and computes score on the test set after incrementally removing
+    a percentage of random data points from the training set.
+
+    :param u: Utility object with model, data, and scoring function
+    :param percentages: Sequence of removal percentages.
+    """
+    # Sanity checks
+    if np.any([x >= 1.0 or x < 0.0 for x in percentages]):
+        raise ValueError("All percentages should be in the range [0.0, 1.0)")
+
+    scores = {}
+
+    for pct in percentages:
+        n_removal = int(pct * len(u.data))
+        indices = np.random.choice(
+            u.data.indices, size=len(u.data) - n_removal, replace=False
+        )
+        score = u(indices)
+        scores[pct] = score
+    return scores
