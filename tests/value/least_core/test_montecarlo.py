@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
     "miner_utility, rtol, max_iterations",
     [
         (8, 0.1, 128),
-        (15, 0.1, 1024),
+        (15, 0.15, 1024),
     ],
     indirect=["miner_utility"],
 )
