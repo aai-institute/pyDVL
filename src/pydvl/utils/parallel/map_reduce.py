@@ -239,15 +239,14 @@ class MapReduceJob(Generic[T, R]):
         """
         if self.max_parallel_tasks is None:
             return 0
-        else:
-            while (n_in_flight := n_dispatched - n_finished) > self.max_parallel_tasks:
-                wait_for_num_jobs = n_in_flight - self.max_parallel_tasks
-                finished_jobs, _ = self.parallel_backend.wait(
-                    jobs,
-                    num_returns=wait_for_num_jobs,
-                    timeout=10,  # FIXME make parameter?
-                )
-                n_finished += len(finished_jobs)
+        while (n_in_flight := n_dispatched - n_finished) > self.max_parallel_tasks:
+            wait_for_num_jobs = n_in_flight - self.max_parallel_tasks
+            finished_jobs, _ = self.parallel_backend.wait(
+                jobs,
+                num_returns=wait_for_num_jobs,
+                timeout=10,  # FIXME make parameter?
+            )
+            n_finished += len(finished_jobs)
         return n_finished
 
     def _chunkify(self, data: ChunkifyInputType, n_chunks: int) -> List["ObjectRef[T]"]:
@@ -257,41 +256,39 @@ class MapReduceJob(Generic[T, R]):
         if n_chunks <= 0:
             raise ValueError("Number of chunks should be greater than 0")
 
-        elif n_chunks == 1:
+        if n_chunks == 1:
             data_id = self.parallel_backend.put(data)
             return [data_id]
+
+        try:
+            # This is used as a check to determine whether data is iterable or not
+            # if it's the former, then the value will be used to determine the chunk indices.
+            n = len(data)
+        except TypeError:
+            data_id = self.parallel_backend.put(data)
+            return list(repeat(data_id, times=n_chunks))
         else:
-            try:
-                # This is used as a check to determine whether data is iterable or not
-                # if it's the former, then the value will be used to determine the chunk indices.
-                n = len(data)
-            except TypeError:
-                data_id = self.parallel_backend.put(data)
-                return list(repeat(data_id, times=n_chunks))
-            else:
-                # This is very much inspired by numpy's array_split function
-                # The difference is that it only uses built-in functions
-                # and does not convert the input data to an array
-                chunk_size, remainder = divmod(n, n_chunks)
-                chunk_indices = tuple(
-                    accumulate(
-                        [0]
-                        + remainder * [chunk_size + 1]
-                        + (n_chunks - remainder) * [chunk_size]
-                    )
+            # This is very much inspired by numpy's array_split function
+            # The difference is that it only uses built-in functions
+            # and does not convert the input data to an array
+            chunk_size, remainder = divmod(n, n_chunks)
+            chunk_indices = tuple(
+                accumulate(
+                    [0]
+                    + remainder * [chunk_size + 1]
+                    + (n_chunks - remainder) * [chunk_size]
                 )
+            )
 
-                chunks = []
+            chunks = []
 
-                for start_index, end_index in zip(
-                    chunk_indices[:-1], chunk_indices[1:]
-                ):
-                    if start_index >= end_index:
-                        break
-                    chunk_id = self.parallel_backend.put(data[start_index:end_index])
-                    chunks.append(chunk_id)
+            for start_index, end_index in zip(chunk_indices[:-1], chunk_indices[1:]):
+                if start_index >= end_index:
+                    break
+                chunk_id = self.parallel_backend.put(data[start_index:end_index])
+                chunks.append(chunk_id)
 
-                return chunks
+            return chunks
 
     @property
     def n_jobs(self) -> int:
