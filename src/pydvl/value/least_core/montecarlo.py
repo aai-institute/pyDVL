@@ -124,24 +124,22 @@ def montecarlo_least_core(
     if options is None:
         options = {}
 
-    parallel_backend = init_parallel_backend(config)
-
-    u_id = parallel_backend.put(u)
-
     iterations_per_job = max(1, max_iterations // n_jobs)
 
     logger.debug("Instantiating MapReduceJob")
     map_reduce_job: MapReduceJob["Utility", Tuple["NDArray", "NDArray"]] = MapReduceJob(
+        inputs=u,
         map_func=_montecarlo_least_core,
         reduce_func=_reduce_func,
         map_kwargs=dict(
             max_iterations=iterations_per_job,
             progress=progress,
         ),
+        n_jobs=n_jobs,
         config=config,
     )
     logger.debug("Calling MapReduceJob instance")
-    utility_values, A_ub = map_reduce_job(u_id, chunkify_inputs=False, n_jobs=n_jobs)[0]
+    utility_values, A_ub = map_reduce_job()
 
     if np.any(np.isnan(utility_values)):
         warnings.warn(
