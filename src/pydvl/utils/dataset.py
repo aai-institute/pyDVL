@@ -208,7 +208,7 @@ class Dataset:
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
     ) -> "Dataset":
-        """Constructs a Dataset object from an sklearn bunch as returned by the
+        """Constructs a :class:`Dataset` object from an :class:`sklearn.utils.Bunch` bunch as returned by the
         `load_*` functions in `sklearn toy datasets
         <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_.
 
@@ -250,7 +250,9 @@ class Dataset:
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
     ) -> "Dataset":
-        """Constructs a Dataset object from X and y numpy arrays  as returned by the
+        """.. versionadded:: 0.4.0
+
+        Constructs a :class:`Dataset` object from X and y numpy arrays  as returned by the
         `make_*` functions in `sklearn generated datasets
         <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
 
@@ -364,7 +366,7 @@ class GroupedDataset(Dataset):
         stratify_by_target: bool = False,
         data_groups: Optional[List] = None,
     ) -> "GroupedDataset":
-        """Constructs a Dataset object from an sklearn bunch as returned by the
+        """Constructs a :class:`GroupedDataset` object from an sklearn bunch as returned by the
         `load_*` functions in `sklearn toy datasets
         <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_ and groups
         it.
@@ -400,7 +402,9 @@ class GroupedDataset(Dataset):
         stratify_by_target: bool = False,
         data_groups: Optional[List] = None,
     ) -> "Dataset":
-        """Constructs a Dataset object from X and y numpy arrays  as returned by the
+        """.. versionadded:: 0.4.0
+
+        Constructs a :class:`GroupedDataset` object from X and y numpy arrays  as returned by the
         `make_*` functions in `sklearn generated datasets
         <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
 
@@ -430,13 +434,13 @@ class GroupedDataset(Dataset):
     def from_dataset(
         cls, dataset: Dataset, data_groups: Sequence[Any]
     ) -> "GroupedDataset":
-        """Given a dataset, it makes it into a grouped dataset by passing a list
-        of data groups, one for each element in the training set.
+        """Given a :class:`Dataset` object, it creates it into a :class:`GroupedDataset` object
+        by passing a list of data groups, one for each element in the training set.
 
-        :param dataset: Dataset object
+        :param dataset: :class:`Dataset` object
         :param data_groups: for each element in the training set, it associates a group
             index or name.
-        :return: GroupedDataset, with the initial Dataset grouped by data_groups.
+        :return: :class:`GroupedDataset`, with the initial :class:`Dataset` grouped by data_groups.
         """
         return GroupedDataset(
             x_train=dataset.x_train,
