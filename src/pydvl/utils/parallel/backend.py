@@ -1,4 +1,5 @@
 import functools
+import logging
 import os
 from abc import ABCMeta, abstractmethod
 from dataclasses import asdict
@@ -137,7 +138,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         self.config = config_dict
         if self.config["address"] is None:
             self.config["ignore_reinit_error"] = True
-        ray.init(**self.config)
+        ray.init(logging_level=logging.WARNING, **self.config)
 
     def get(
         self,
