@@ -282,21 +282,21 @@
           <section id="installing-pydvl">
 <span id="pydvl-installation"></span><h1>Installing pyDVL<a class="headerlink" href="#installing-pydvl" title="Permalink to this heading"></a></h1>
 <p>To install the latest release use:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install pyDVL
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>pyDVL
 </pre></div>
 </div>
 <p>You can also install the latest development version from <a class="reference external" href="https://test.pypi.org/project/pyDVL/">TestPyPI</a>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install pyDVL --index-url https://test.pypi.org/simple/
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>pyDVL<span class="w"> </span>--index-url<span class="w"> </span>https://test.pypi.org/simple/
 </pre></div>
 </div>
 <p>To use all features of influence functions execute:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install pyDVL<span class="o">[</span>influence<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>pyDVL<span class="o">[</span>influence<span class="o">]</span>
 </pre></div>
 </div>
 <p>This includes a dependency on <a class="reference external" href="https://pytorch.org/">PyTorch</a> and thus is left
 out by default.</p>
 <p>In order to check the installation you can use:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python -c <span class="s2">&quot;import valuation; print(pydvl.__version__)&quot;</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import valuation; print(pydvl.__version__)&quot;</span>
 </pre></div>
 </div>
 <section id="dependencies">
@@ -315,11 +315,11 @@ uses it to cache certain results and speed-up the computations. You can either
 install it as a package or run it inside a docker container (the simplest). For
 installation instructions, refer to <a class="reference external" href="https://github.com/memcached/memcached/wiki#getting-started">Getting started</a> in memcached’s
 wiki. Then you can run it with:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>memcached -u user
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>memcached<span class="w"> </span>-u<span class="w"> </span>user
 </pre></div>
 </div>
 <p>To run memcached inside a container in daemon mode instead, do:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>docker container run -d --rm -p <span class="m">11211</span>:11211 memcached:latest
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>container<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">11211</span>:11211<span class="w"> </span>memcached:latest
 </pre></div>
 </div>
 <div class="admonition warning">

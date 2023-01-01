@@ -597,8 +597,8 @@ v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}} \binom{n-1}{|S|}^{-1} 
     <span class="n">Utility</span><span class="p">,</span>
     <span class="n">DataUtilityLearning</span><span class="p">,</span>
     <span class="n">top_k_value_accuracy</span><span class="p">,</span>
-    <span class="n">available_cpus</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pydvl.utils.parallel.backend</span> <span class="kn">import</span> <span class="n">available_cpus</span>
 <span class="kn">from</span> <span class="nn">pydvl.reporting.plots</span> <span class="kn">import</span> <span class="n">shaded_mean_std</span>
 <span class="kn">from</span> <span class="nn">pydvl.value.shapley</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
 </pre></div>
@@ -625,7 +625,7 @@ v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}} \binom{n-1}{|S|}^{-1} 
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">LinearSVC</span><span class="p">()</span>
 <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">x_train</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y_train</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean accuracy: </span><span class="si">{</span><span class="mi">100</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">x_test</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y_test</span><span class="p">)</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean accuracy: </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">x_test</span><span class="p">,</span><span class="w"> </span><span class="n">dataset</span><span class="o">.</span><span class="n">y_test</span><span class="p">)</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -828,7 +828,7 @@ Doing 10 runs for each of 32 different training budgets.
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">LinearSVC</span><span class="p">()</span>
 <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train_corrupted</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean accuracy: </span><span class="si">{</span><span class="mi">100</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">x_test</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y_test</span><span class="p">)</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean accuracy: </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">x_test</span><span class="p">,</span><span class="w"> </span><span class="n">dataset</span><span class="o">.</span><span class="n">y_test</span><span class="p">)</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
