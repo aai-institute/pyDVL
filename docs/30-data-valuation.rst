@@ -324,13 +324,109 @@ and can be used in pyDVL with:
    utility = Utility(model, data)
    values = compute_shapley_values(u=utility, mode="knn")
 
+.. _Least Core:
+
+Core values
+===========
+
+The Core method is another approach to compute data values originating
+in cooperative game theory. The Core is the set of feasible payoffs
+that cannot be improved upon by a subset (a coalition) of the participants.
+
+The Core is a set of payoffs satisfying the following 2 properties:
+
+- Efficiency: $$\displaystyle\sum_{x_i\in D} v_u(x_i) = v_u(D)\,$$
+- Coalitional rationality: $$\displaystyle\sum_{x_i\in S} v_u(x_i) \geq v_u(S), \forall S \subseteq D\,$$
+
+
+Least Core values
+^^^^^^^^^^^^^^^^^
+
+Unfortunately, for many cooperative games the Core may be empty.
+By relaxing the coalitional rationality property by $e \gt 0$,
+we are then able to find approximate payoffs:
+
+$$\displaystyle\sum_{x_i\in S} v_u(x_i) + e \geq v_u(S), \forall S \subseteq D\,$$
+
+The least core value $v$ of the $i$-th sample in dataset $D$ wrt. utility $u$ is computed
+by solving the following Linear Program:
+
+$$
+\begin{array}{lll}
+\text{minimize} & \displaystyle{e} & \\
+\text{subject to} & \displaystyle\sum_{x_i\in D} v_u(x_i) = v_u(D) & \\
+& \displaystyle\sum_{x_i\in S} v_u(x_i) + e \geq v_u(S) &, \forall S \subseteq D \\
+\end{array}
+$$
+
+Exact Least Core
+----------------
+
+This first algorithm is just a verbatim implementation of the definition. As such
+it returns as exact a value as the utility function allows (see what this means
+in :ref:`problems of data values`).
+
+.. code-block:: python
+
+   from pydvl.utils import Dataset, Utility
+   from pydvl.value.least_core import exact_least_core
+   model = ...
+   dataset = Dataset(...)
+   utility = Utility(data, model)
+   values = exact_least_core(utility)
+
+Monte Carlo Least Core
+----------------------
+
+Because the number of subsets $S \subseteq D \setminus \{x_i\}$ is
+$2^{ | D | - 1 }$, one typically must resort to approximations.
+
+The simplest approximation consists of two relaxations of the Least Core (:footcite:t:`yan_procaccia_2021`):
+
+- Further relaxing the coalitional rationality property by a constant value $\epsilon > 0$:
+
+  $$
+  \sum_{x_i\in S} v_u(x_i) + e + \epsilon \geq v_u(S)
+  $$
+
+- Using a fraction of all subsets instead of all possible subsets.
+
+Combined, this gives us the following property:
+
+$$
+P_{S\sim D}\left[\sum_{x_i\in S} v_u(x_i) + e + \epsilon \geq v_u(S)\right] \geq 1 - \delta
+$$
+
+With these relaxations, we obtain a polynomial running time.
+
+Using Owen sampling follows the same pattern as every other method for Shapley
+values in pyDVL. First construct the dataset and utility, then call
+:func:`~pydvl.value.shapley.compute_shapley_values`:
+
+.. code-block:: python
+
+   from pydvl.utils import Dataset, Utility
+   from pydvl.value.least_core import montecarlo_least_core
+   model = ...
+   dataset = Dataset(...)
+   max_iterations = ...
+   assert max_iterations >= len(dataset)
+   utility = Utility(data, model)
+   values = montecarlo_least_core(utility, max_iterations=max_iterations)
+
+.. note::
+
+   ``max_iterations`` needs to be at least equal to the number of data points.
 
 Other methods
 =============
 
-Other game-theoretic concepts in pyDVL's roadmap are the **Least Core** (in
-progress), and **Banzhaf indices** (the latter is just a different weighting
-scheme with better numerical stability properties). Contributions are welcome!
+Other game-theoretic concepts are in pyDVL's roadmap:
+
+- **Banzhaf indices** (which is just a different weighting
+  scheme with better numerical stability properties).
+
+Contributions are welcome!
 
 
 .. _problems of data values:
