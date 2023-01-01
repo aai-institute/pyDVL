@@ -166,7 +166,7 @@ def compute_removal_score(
     values: ValuationResult,
     percentages: Union["NDArray", Iterable[float]],
     *,
-    remove_best: bool = True,
+    remove_best: bool = False,
 ) -> Dict[float, float]:
     r"""Fits model and computes score on the test set after incrementally removing
     a percentage of data points from the training set.
@@ -174,6 +174,7 @@ def compute_removal_score(
     :param u: Utility object with model, data, and scoring function
     :param values: Data values of data instances in the training set.
     :param percentages: Sequence of removal percentages.
+    :param remove_best: If True, removes data points with in order of decreasing valuation.
     """
     # Sanity checks
     if np.any([x >= 1.0 or x < 0.0 for x in percentages]):
