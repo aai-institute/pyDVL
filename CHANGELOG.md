@@ -22,6 +22,8 @@
   fixes a bug in `MapReduceJob`'s chunkification when `n_runs` >= `n_jobs`,
   and defines a sequential parallel backend to run all jobs in the current thread
   [PR #232](https://github.com/appliedAI-Initiative/pyDVL/pull/232)
+- **New method**: Implements exact and monte carlo Least Core for data valuation.
+  [PR #237](https://github.com/appliedAI-Initiative/pyDVL/pull/237)
 
 ## 0.3.0 - 💥 Breaking changes
 
