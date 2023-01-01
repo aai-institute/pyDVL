@@ -242,6 +242,9 @@ class ValuationResult(collections.abc.Sequence):
             # and np.all(self.indices == other.indices)  # Redundant
         )
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(algorithm='{self._algorithm}', status='{self._status.value}', values={self.values})"
+
     def to_dataframe(
         self, column: Optional[str] = None, use_names: bool = False
     ) -> "pandas.DataFrame":

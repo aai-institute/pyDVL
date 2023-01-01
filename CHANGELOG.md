@@ -14,6 +14,14 @@
 - Fixes bug in Influence calculation with multi-dimensional input and adds
   new example notebook
   [PR #195](https://github.com/appliedAI-Initiative/pyDVL/pull/195)
+- **Breaking change**: Passes the input to `MapReduceJob` at initialization,
+  removes `chunkify_inputs` argument from `MapReduceJob`,
+  removes `n_runs` argument from `MapReduceJob`,
+  calls the parallel backend's `put()` method for each generated chunk in `_chunkify()`,
+  renames ParallelConfig's `num_workers` attribute to `n_local_workers`,
+  fixes a bug in `MapReduceJob`'s chunkification when `n_runs` >= `n_jobs`,
+  and defines a sequential parallel backend to run all jobs in the current thread
+  [PR #232](https://github.com/appliedAI-Initiative/pyDVL/pull/232)
 
 ## 0.3.0 - 💥 Breaking changes
 
