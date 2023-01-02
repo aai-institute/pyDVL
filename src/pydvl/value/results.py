@@ -12,7 +12,6 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import total_ordering
 from typing import (
-    TYPE_CHECKING,
     Any,
     Generator,
     Iterable,
@@ -99,6 +98,8 @@ class ValuationResult(collections.abc.Sequence):
         if not set.
     :param sort: Whether to sort the indices by ascending value. See above how
         this affects usage as an iterable or sequence.
+    :param extra_values: Additional values that can be passed as keyword arguments.
+        This can contain, for example, the least core value.
 
     :raise ValueError: If data names and values have mismatching lengths.
     """
@@ -112,6 +113,7 @@ class ValuationResult(collections.abc.Sequence):
     _status: ValuationStatus  # TODO: Maybe? BaseValuator.Status
     # None for unsorted, True for ascending, False for descending
     _sort_order: Optional[bool]
+    _extra_values: Optional[dict]
 
     def __init__(
         self,
@@ -121,6 +123,7 @@ class ValuationResult(collections.abc.Sequence):
         stderr: Optional["NDArray[np.float_]"] = None,
         data_names: Optional[Sequence[str]] = None,
         sort: bool = True,
+        **extra_values,
     ):
         if stderr is not None and len(stderr) != len(values):
             raise ValueError("Lengths of values and stderr do not match")
@@ -130,6 +133,7 @@ class ValuationResult(collections.abc.Sequence):
         self._values = values
         self._stderr = np.zeros_like(values) if stderr is None else stderr
         self._sort_order = None
+        self._extra_values = extra_values or {}
 
         if sort:
             self.sort()
@@ -188,6 +192,15 @@ class ValuationResult(collections.abc.Sequence):
     def algorithm(self) -> str:
         return self._algorithm
 
+    def __getattr__(self, item: str) -> Any:
+        """This allows access to extra values as if they were properties of the instance."""
+        try:
+            return self._extra_values[item]
+        except KeyError as e:
+            raise AttributeError(
+                f"{self.__class__.__name__} object has no attribute {item}"
+            ) from e
+
     @overload
     def __getitem__(self, key: int) -> ValueItem:
         ...
@@ -241,7 +254,16 @@ class ValuationResult(collections.abc.Sequence):
         )
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(algorithm='{self._algorithm}', status='{self._status.value}', values={self.values})"
+        repr_string = (
+            f"{self.__class__.__name__}("
+            f"algorithm='{self._algorithm}',"
+            f"status='{self._status.value}',"
+            f"values={np.array_str(self.values, precision=4, suppress_small=True)}"
+        )
+        for k, v in self._extra_values.items():
+            repr_string += f", {k}={v}"
+        repr_string += ")"
+        return repr_string
 
     def to_dataframe(
         self, column: Optional[str] = None, use_names: bool = False

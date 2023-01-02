@@ -166,3 +166,24 @@ def test_equality(values, names, dummy_values):
             data_names=c._names,
         )
         assert c != c2
+
+
+@pytest.mark.parametrize(
+    "extra_values", [{"test_value": 1.2}, {"test_value1": 1.2, "test_value2": "test"}]
+)
+def test_extra_values(extra_values):
+    kwargs = dict(
+        algorithm="test",
+        status=ValuationStatus.Converged,
+        values=np.random.rand(10),
+        sort=True,
+        test_value=1.2,
+    )
+    kwargs.update(extra_values)
+    result = ValuationResult(**kwargs)
+    for k, v in extra_values.items():
+        assert getattr(result, k) == v
+    # Making sure that the repr dunder method works when using extra values
+    repr_string = repr(result)
+    for k, v in extra_values.items():
+        assert k in repr_string
