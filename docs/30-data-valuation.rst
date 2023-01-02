@@ -329,15 +329,32 @@ and can be used in pyDVL with:
 Core values
 ===========
 
-The Core method is another approach to compute data values originating
-in cooperative game theory. The Core is the set of feasible payoffs
-that cannot be improved upon by a subset (a coalition) of the participants.
+The Shapley values define a fair way to distribute payoffs, in our case data values,
+amongst all participants, in our case data points, when they form a grand coalition i.e. use all data points.
+But they do not consider the question of stability: under which conditions do all participants form the grand coalition?
+Would the participants be willing to form the grand coalition given the the payoffs are divided,
+or would some of them prefer to form smaller coalitions?
 
-The Core is a set of payoffs satisfying the following 2 properties:
+The Core is another approach to compute data values originating
+in cooperative game theory that attempts to answer those questions.
+It is the set of feasible payoffs that cannot be improved upon by a coalition of the participants.
 
-- Efficiency: $$\displaystyle\sum_{x_i\in D} v_u(x_i) = v_u(D)\,$$
-- Coalitional rationality: $$\displaystyle\sum_{x_i\in S} v_u(x_i) \geq v_u(S), \forall S \subseteq D\,$$
+It satisfies the following 2 properties:
 
+- **Efficiency**:
+  The payoffs are distributed such that it is not possible to make any participant better off
+  without making another one worse off.
+  $$\displaystyle\sum_{x_i\in D} v_u(x_i) = v_u(D)\,$$
+
+- **Coalitional rationality**:
+  The sum of payoffs to the agents in any coalition S is at
+  least as large as the amount that these agents could earn by
+  forming a coalition on their own.
+  $$\displaystyle\sum_{x_i\in S} v_u(x_i) \geq v_u(S), \forall S \subseteq D\,$$
+
+The second property states that the sum of payoffs to the agents in any subcoalition S is at
+least as large as the amount that these agents could earn by
+forming a coalition on their own
 
 Least Core values
 ^^^^^^^^^^^^^^^^^
@@ -394,8 +411,10 @@ The simplest approximation consists of two relaxations of the Least Core (:footc
 Combined, this gives us the following property:
 
 $$
-P_{S\sim D}\left[\sum_{x_i\in S} v_u(x_i) + e + \epsilon \geq v_u(S)\right] \geq 1 - \delta
+P_{S\sim D}\left[\sum_{x_i\in S} v_u(x_i) + e^{*} + \epsilon \geq v_u(S)\right] \geq 1 - \delta
 $$
+
+Where $e^{*}$ is the optimal least core value.
 
 With these relaxations, we obtain a polynomial running time.
 
