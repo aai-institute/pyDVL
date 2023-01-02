@@ -192,13 +192,16 @@ class ValuationResult(collections.abc.Sequence):
     def algorithm(self) -> str:
         return self._algorithm
 
-    def __getattr__(self, item: str) -> Any:
+    def __getattr__(self, attr: str) -> Any:
         """This allows access to extra values as if they were properties of the instance."""
+        # This is here to avoid a RecursionError when copying or pickling the object
+        if attr == "_extra_values":
+            raise AttributeError()
         try:
-            return self._extra_values[item]
+            return self._extra_values[attr]
         except KeyError as e:
             raise AttributeError(
-                f"{self.__class__.__name__} object has no attribute {item}"
+                f"{self.__class__.__name__} object has no attribute {attr}"
             ) from e
 
     @overload
