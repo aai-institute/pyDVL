@@ -113,7 +113,7 @@ class ValuationResult(collections.abc.Sequence):
     _status: ValuationStatus  # TODO: Maybe? BaseValuator.Status
     # None for unsorted, True for ascending, False for descending
     _sort_order: Optional[bool]
-    _extra_values: Optional[dict]
+    _extra_values: dict
 
     def __init__(
         self,
