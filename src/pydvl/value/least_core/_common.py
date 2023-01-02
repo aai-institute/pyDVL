@@ -57,8 +57,7 @@ def _solve_linear_programming(
     logger.debug(f"{result=}")
 
     if result.success:
-        # We select all but the last entry because it represents the least core value 'e'
-        values = np.asarray(result.x[:-1])
+        values = np.asarray(result.x)
     else:
         if result.status == 1:
             warnings.warn(

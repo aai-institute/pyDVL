@@ -178,10 +178,15 @@ def montecarlo_least_core(
     else:
         status = ValuationStatus.Converged
 
+    # The last entry represents the least core value 'e'
+    least_core_value = values[-1].item()
+    values = values[:-1]
+
     return ValuationResult(
         algorithm="exact_least_core",
         status=status,
         values=values,
         stderr=None,
         data_names=u.data.data_names,
+        least_core_value=least_core_value,
     )
