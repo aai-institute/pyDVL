@@ -329,10 +329,9 @@ and can be used in pyDVL with:
 Core values
 ===========
 
-The Shapley values define a fair way to distribute payoffs, in our case data values,
-amongst all participants, in our case data points, when they form a grand coalition i.e. use all data points.
+The Shapley values define a fair way to distribute payoffs amongst all participants when they form a grand coalition.
 But they do not consider the question of stability: under which conditions do all participants form the grand coalition?
-Would the participants be willing to form the grand coalition given the the payoffs are divided,
+Would the participants be willing to form the grand coalition given the payoffs are divided,
 or would some of them prefer to form smaller coalitions?
 
 The Core is another approach to compute data values originating
@@ -354,7 +353,7 @@ It satisfies the following 2 properties:
 
 The second property states that the sum of payoffs to the agents in any subcoalition S is at
 least as large as the amount that these agents could earn by
-forming a coalition on their own
+forming a coalition on their own.
 
 Least Core values
 ^^^^^^^^^^^^^^^^^
