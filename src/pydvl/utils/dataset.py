@@ -231,7 +231,7 @@ class Dataset:
             random_state=random_state,
             stratify=data.target if stratify_by_target else None,
         )
-        return Dataset(
+        return cls(
             x_train,
             y_train,
             x_test,
@@ -276,7 +276,7 @@ class Dataset:
             random_state=random_state,
             stratify=y if stratify_by_target else None,
         )
-        return Dataset(
+        return cls(
             x_train,
             y_train,
             x_test,
@@ -387,7 +387,7 @@ class GroupedDataset(Dataset):
         """
         if data_groups is None:
             raise ValueError("data_groups argument is missing")
-        dataset = super().from_sklearn(
+        dataset = Dataset.from_sklearn(
             data, train_size, random_state, stratify_by_target
         )
         return cls.from_dataset(dataset, data_groups)
@@ -425,7 +425,7 @@ class GroupedDataset(Dataset):
         """
         if data_groups is None:
             raise ValueError("data_groups argument is missing")
-        dataset = super().from_arrays(
+        dataset = Dataset.from_arrays(
             X, y, train_size, random_state, stratify_by_target
         )
         return cls.from_dataset(dataset, data_groups)
@@ -442,7 +442,7 @@ class GroupedDataset(Dataset):
             index or name.
         :return: :class:`GroupedDataset`, with the initial :class:`Dataset` grouped by data_groups.
         """
-        return GroupedDataset(
+        return cls(
             x_train=dataset.x_train,
             y_train=dataset.y_train,
             x_test=dataset.x_test,
