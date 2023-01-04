@@ -14,6 +14,7 @@ def dummy_values(values, names):
         algorithm="dummy_valuator",
         status=ValuationStatus.Converged,
         values=np.array(values),
+        steps=1,
         stderr=np.zeros_like(values),
         data_names=names,
         sort=True,
@@ -132,6 +133,7 @@ def test_equality(values, names, dummy_values):
         algorithm="dummy",
         status=c.status,
         values=c.values,
+        steps=c.steps,
         stderr=c._stderr,
         data_names=c._names,
     )
@@ -141,6 +143,7 @@ def test_equality(values, names, dummy_values):
         algorithm=c._algorithm,
         status=ValuationStatus.Failed,
         values=c.values,
+        steps=c.steps,
         stderr=c._stderr,
         data_names=c._names,
     )
@@ -150,6 +153,7 @@ def test_equality(values, names, dummy_values):
         algorithm=c._algorithm,
         status=c.status,
         values=c.values,
+        steps=c.steps,
         stderr=c._stderr,
         data_names=c._names,
     )
@@ -162,6 +166,7 @@ def test_equality(values, names, dummy_values):
             algorithm=c._algorithm,
             status=c.status,
             values=c.values + 1.0,
+            steps=c.steps,
             stderr=c._stderr,
             data_names=c._names,
         )

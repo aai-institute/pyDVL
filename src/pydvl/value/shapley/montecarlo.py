@@ -161,6 +161,7 @@ def truncated_montecarlo_shapley(
         algorithm="truncated_montecarlo_shapley",
         status=coordinator.status(),
         values=values,
+        steps=-1,  # FIXME
         stderr=stderr,
         data_names=u.data.data_names,
     )
@@ -246,6 +247,7 @@ def permutation_montecarlo_shapley(
         algorithm="permutation_montecarlo_shapley",
         status=ValuationStatus.MaxIterations,
         values=values,
+        steps=max_iterations,
         stderr=stderr,
         data_names=u.data.data_names,
     )
@@ -383,6 +385,7 @@ def combinatorial_montecarlo_shapley(
         algorithm="combinatorial_montecarlo_shapley",
         status=ValuationStatus.MaxIterations,
         values=results.values,
+        steps=max_iterations * n_jobs,
         stderr=results.stderr,
         data_names=u.data.data_names,
     )
@@ -540,6 +543,7 @@ def owen_sampling_shapley(
         algorithm="owen_sampling_shapley",
         status=ValuationStatus.MaxIterations,
         values=results.values,
+        steps=max_iterations * n_jobs,
         stderr=results.stderr,
         data_names=u.data.data_names,
     )

@@ -65,6 +65,7 @@ def _semivalues(
         algorithm=f"semivalue_{coefficient.__name__}_{sampler.__class__.__name__}",
         status=status,
         values=values,
+        steps=counts.sum(),
         stderr=np.sqrt(variances / np.maximum(1, counts)),
     )
 

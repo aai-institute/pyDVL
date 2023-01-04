@@ -1,6 +1,5 @@
 import logging
 from time import sleep, time
-from typing import Iterable
 
 import numpy as np
 import pytest

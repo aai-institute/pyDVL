@@ -14,6 +14,7 @@ def analytic_loo(dummy_utility):
     result = ValuationResult(
         algorithm="exact",
         values=values,
+        steps=1,
         stderr=np.zeros_like(values),
         data_names=dummy_utility.data.indices,
         status=ValuationStatus.Converged,

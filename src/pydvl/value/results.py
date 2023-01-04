@@ -120,6 +120,7 @@ class ValuationResult(collections.abc.Sequence):
         algorithm: str,  # BaseValuator,
         status: ValuationStatus,  # Valuation.Status,
         values: "NDArray[np.float_]",
+        steps: int,
         stderr: Optional["NDArray[np.float_]"] = None,
         data_names: Optional[Sequence[str]] = None,
         sort: bool = True,
@@ -130,6 +131,7 @@ class ValuationResult(collections.abc.Sequence):
         self._algorithm = algorithm
         self._status = status
         self._values = values
+        self._steps = steps
         self._stderr = np.zeros_like(values) if stderr is None else stderr
         self._sort_order = None
 
@@ -189,6 +191,10 @@ class ValuationResult(collections.abc.Sequence):
     @property
     def algorithm(self) -> str:
         return self._algorithm
+
+    @property
+    def steps(self) -> int:
+        return self._steps
 
     @overload
     def __getitem__(self, key: int) -> ValueItem:
