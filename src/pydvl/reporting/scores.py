@@ -13,7 +13,6 @@ __all__ = [
     "sort_values_array",
     "sort_values_history",
     "compute_removal_score",
-    "compute_random_removal_score",
 ]
 
 KT = TypeVar("KT")
@@ -74,40 +73,6 @@ def compute_removal_score(
     ):
         n_removal = int(pct * len(u.data))
         indices = values.indices[n_removal:]
-        score = u(indices)
-        scores[pct] = score
-    return scores
-
-
-def compute_random_removal_score(
-    u: Utility,
-    percentages: Union["NDArray", Iterable[float]],
-    *,
-    progress: bool = False,
-) -> Dict[float, float]:
-    r"""Fits model and computes score on the test set after incrementally removing
-    a percentage of random data points from the training set.
-
-    :param u: Utility object with model, data, and scoring function.
-    :param percentages: Sequence of removal percentages.
-    :param progress: If True, display a progress bar.
-    :return: Dictionary that maps the percentages to their respective scores.
-    """
-    # Sanity checks
-    if np.any([x >= 1.0 or x < 0.0 for x in percentages]):
-        raise ValueError("All percentages should be in the range [0.0, 1.0)")
-
-    scores = {}
-
-    for pct in maybe_progress(
-        percentages,
-        display=progress,
-        desc="Random Removal Scores",
-    ):
-        n_removal = int(pct * len(u.data))
-        indices = np.random.choice(
-            u.data.indices, size=len(u.data) - n_removal, replace=False
-        )
         score = u(indices)
         scores[pct] = score
     return scores
