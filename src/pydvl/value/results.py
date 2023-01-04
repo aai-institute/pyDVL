@@ -58,7 +58,7 @@ class ValueItem:
 
     #: Index of the sample with this value in the original :class:`Dataset`
     index: np.int_
-    #: Name of the sample if it was provided. Otherwise `str(index)`
+    #: Name of the sample if it was provided. Otherwise, `str(index)`
     name: str
     #: The value
     value: np.float_
@@ -104,11 +104,11 @@ class ValuationResult(collections.abc.Sequence):
     :raise ValueError: If data names and values have mismatching lengths.
     """
 
-    _indices: "NDArray[np.int_]"
-    _values: "NDArray[np.float_]"
+    _indices: NDArray[np.int_]
+    _values: NDArray[np.float_]
     _data: Dataset
-    _names: "Union[NDArray[np.int_], NDArray[np.str_]]"
-    _stderr: "NDArray[np.float_]"
+    _names: Union[NDArray[np.int_], NDArray[np.str_]]
+    _stderr: NDArray[np.float_]
     _algorithm: str  # TODO: BaseValuator
     _status: ValuationStatus  # TODO: Maybe? BaseValuator.Status
     # None for unsorted, True for ascending, False for descending
@@ -119,8 +119,8 @@ class ValuationResult(collections.abc.Sequence):
         self,
         algorithm: str,  # BaseValuator,
         status: ValuationStatus,  # Valuation.Status,
-        values: "NDArray[np.float_]",
-        stderr: Optional["NDArray[np.float_]"] = None,
+        values: NDArray[np.float_],
+        stderr: Optional[NDArray[np.float_]] = None,
         data_names: Optional[Sequence[str]] = None,
         sort: bool = True,
         **extra_values,
@@ -171,13 +171,13 @@ class ValuationResult(collections.abc.Sequence):
         return
 
     @property
-    def values(self) -> "NDArray[np.float_]":
+    def values(self) -> NDArray[np.float_]:
         """The raw values, unsorted. Position `i` in the array represents index
         `i` of the data."""
         return self._values
 
     @property
-    def indices(self) -> "NDArray[np.int_]":
+    def indices(self) -> NDArray[np.int_]:
         """The indices for the values, possibly sorted.
         If the object is unsorted, then this is the same as
         `np.arange(len(values))`. Otherwise, the indices sort :meth:`values`
@@ -296,3 +296,21 @@ class ValuationResult(collections.abc.Sequence):
         else:
             df[column + "_stderr"] = self._stderr[self._indices]
         return df
+
+    @classmethod
+    def from_random(cls, size: int) -> "ValuationResult":
+        """Creates a :class:`ValuationResult` object and fills it
+        with an array of random values of the given size uniformly sampled
+        from the range [-1, 1].
+
+        :param size: Number of values to put inside the object.
+        :return: :class:`ValuationResult`
+        """
+        values = np.random.uniform(low=-1.0, high=1.0, size=size)
+        return cls(
+            algorithm="random",
+            status=ValuationStatus.Converged,
+            values=values,
+            stderr=None,
+            data_names=np.arange(0, size),
+        )

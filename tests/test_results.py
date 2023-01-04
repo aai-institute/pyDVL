@@ -187,3 +187,9 @@ def test_extra_values(extra_values):
     repr_string = repr(result)
     for k, v in extra_values.items():
         assert k in repr_string
+
+
+@pytest.mark.parametrize("size", [0, 1, 10, 500])
+def test_from_random_creation(size):
+    result = ValuationResult.from_random(size)
+    assert len(result) == size
