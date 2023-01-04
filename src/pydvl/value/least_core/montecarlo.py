@@ -25,7 +25,7 @@ def _montecarlo_least_core(
     progress: bool = False,
     job_id: int = 1,
     **kwargs,
-) -> Tuple[NDArray, NDArray]:
+) -> Tuple[NDArray[np.float_], NDArray[np.float_]]:
     """Computes utility values and the Least Core upper bound matrix for a given number of iterations.
 
     :param u: Utility object with model, data, and scoring function
@@ -64,8 +64,8 @@ def _montecarlo_least_core(
 
 
 def _reduce_func(
-    results: Iterable[Tuple["NDArray", "NDArray"]]
-) -> Tuple["NDArray", "NDArray"]:
+    results: Iterable[Tuple[NDArray[np.float_], NDArray[np.float_]]]
+) -> Tuple[NDArray[np.float_], NDArray[np.float_]]:
     """Combines the results from different parallel runs of the `_montecarlo_least_core` function"""
     utility_values_list, A_ub_list = zip(*results)
     utility_values = np.concatenate(utility_values_list)

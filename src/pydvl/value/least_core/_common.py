@@ -26,15 +26,38 @@ def _solve_linear_program(
     bounds: BOUNDS_TYPE,
     **options,
 ) -> Optional[NDArray[np.float_]]:
-    """Solves a linear programming problem using cvxopt.
+    """Solves a linear program using scipy's :func:`~scipy.optimize.linprog` function.
 
-    :param c:
-    :param A_eq:
-    :param b_eq:
-    :param A_ub:
-    :param b_ub:
-    :param bounds:
-    :param options:
+    > **NOTE**: The following description of the linear program and the parameters is taken verbatim
+    > from scipy
+
+    .. math::
+
+        \min_x \ & c^T x \\
+        \mbox{such that} \ & A_{ub} x \leq b_{ub},\\
+        & A_{eq} x = b_{eq},\\
+        & l \leq x \leq u ,
+
+     where :math:`x` is a vector of decision variables; :math:`c`,
+    :math:`b_{ub}`, :math:`b_{eq}`, :math:`l`, and :math:`u` are vectors; and
+    :math:`A_{ub}` and :math:`A_{eq}` are matrices.
+
+    :param c: The coefficients of the linear objective function to be minimized.
+    :param A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies the
+        coefficients of a linear equality constraint on ``x``.
+    :param b_eq: The equality constraint vector. Each element of ``A_eq @ x`` must equal
+        the corresponding element of ``b_eq``.
+    :param A_ub: The inequality constraint matrix. Each row of ``A_ub`` specifies the
+        coefficients of a linear inequality constraint on ``x``.
+    :param b_ub: The inequality constraint vector. Each element represents an
+        upper bound on the corresponding value of ``A_ub @ x``.
+    :param bounds: A sequence of ``(min, max)`` pairs for each element in ``x``, defining
+        the minimum and maximum values of that decision variable. Use ``None``
+        to indicate that there is no bound. By default, bounds are
+        ``(0, None)`` (all decision variables are non-negative).
+        If a single tuple ``(min, max)`` is provided, then ``min`` and
+        ``max`` will serve as bounds for all decision variables.
+    :param options: A dictionary of solver options. Refer to scipy's documentation for all possible values.
     """
     logger.debug("Solving linear programming problem")
     logger.debug(f"{c=}")
@@ -58,28 +81,29 @@ def _solve_linear_program(
 
     if result.success:
         return np.asarray(result.x)
+
+    values = None
+
+    if result.status == 1:
+        warnings.warn(
+            f"Solver terminated early: '{result.message}'. Consider increasing the solver's maxiter in options"
+        )
+    elif result.status == 2:
+        warnings.warn(
+            f"Could not find solution due to infeasibility of problem: '{result.message}'. "
+            "Consider increasing max_iterations",
+            RuntimeWarning,
+        )
+    elif result.status == 3:
+        warnings.warn(
+            f"Could not find solution due to unboundedness of problem: '{result.message}'. "
+            "Consider increasing max_iterations",
+            RuntimeWarning,
+        )
     else:
-        if result.status == 1:
-            warnings.warn(
-                f"Solver terminated early: '{result.message}'. Consider increasing the solver's maxiter in options"
-            )
-        elif result.status == 2:
-            warnings.warn(
-                f"Could not find solution due to infeasibility of problem: '{result.message}'. "
-                "Consider increasing max_iterations",
-                RuntimeWarning,
-            )
-        elif result.status == 3:
-            warnings.warn(
-                f"Could not find solution due to unboundedness of problem: '{result.message}'. "
-                "Consider increasing max_iterations",
-                RuntimeWarning,
-            )
-        else:
-            warnings.warn(
-                f"Could not find solution due to numerical issues: '{result.message}'. "
-                "Consider increasing max_iterations",
-                RuntimeWarning,
-            )
-        values = None
+        warnings.warn(
+            f"Could not find solution due to numerical issues: '{result.message}'. "
+            "Consider increasing max_iterations",
+            RuntimeWarning,
+        )
     return values
