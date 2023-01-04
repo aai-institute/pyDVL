@@ -311,6 +311,4 @@ class ValuationResult(collections.abc.Sequence):
             algorithm="random",
             status=ValuationStatus.Converged,
             values=values,
-            stderr=None,
-            data_names=np.arange(0, size),
         )
