@@ -114,12 +114,17 @@ def montecarlo_least_core(
     """
     n = len(u.data)
 
-    max_iterations = min(max_iterations, 2**n)
-
     if max_iterations < n:
         raise ValueError(
             "Number of iterations should be greater than the size of the dataset"
         )
+
+    if max_iterations > 2**n:
+        warnings.warn(
+            f"Passed max_iterations is greater than the number subsets! Setting it to 2^{n}",
+            RuntimeWarning,
+        )
+        max_iterations = 2**n
 
     if options is None:
         options = {}
