@@ -142,7 +142,9 @@ class Dataset:
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
-    def get_training_data(self, train_indices: Optional[Iterable[int]]):
+    def get_training_data(
+        self, train_indices: Optional[Iterable[int]]
+    ) -> Tuple[NDArray, NDArray]:
         """Given a set of indices, returns the training data that refer to those
         indices.
 
@@ -157,15 +159,11 @@ class Dataset:
             y = self.y_train[train_indices]
             return x, y
 
-    def get_test_data(self, test_indices: Optional[Iterable[int]]):
-        """Given a set of indices, returns the test data that refer to those
-        indices."""
-        if test_indices is None:
-            return self.x_test, self.y_test
-        else:
-            x = self.x_test[test_indices]
-            y = self.y_test[test_indices]
-            return x, y
+    def get_test_data(
+        self, test_indices: Optional[Iterable[int]]
+    ) -> Tuple[NDArray, NDArray]:
+        """Returns the entire test set regardless of the passed indices."""
+        return self.x_test, self.y_test
 
     def target(self, name: str) -> Tuple[slice, int]:
         try:
