@@ -356,13 +356,13 @@ It satisfies the following 2 properties:
   The payoffs are distributed such that it is not possible
   to make any participant better off
   without making another one worse off.
-  $$\sum_{x_i\in D} v_u(x_i) = v_u(D)\,$$
+  $$\sum_{x_i\in D} v_u(x_i) = u(D)\,$$
 
 - **Coalitional rationality**:
   The sum of payoffs to the agents in any coalition S is at
   least as large as the amount that these agents could earn by
   forming a coalition on their own.
-  $$\sum_{x_i\in S} v_u(x_i) \geq v_u(S), \forall S \subseteq D\,$$
+  $$\sum_{x_i\in S} v_u(x_i) \geq u(S), \forall S \subseteq D\,$$
 
 The second property states that the sum of payoffs to the agents
 in any subcoalition $S$ is at least as large as the amount that
@@ -376,7 +376,7 @@ By relaxing the coalitional rationality property by $e \gt 0$,
 we are then able to find approximate payoffs:
 
 $$
-\sum_{x_i\in S} v_u(x_i) + e \geq v_u(S), \forall S \subseteq D\
+\sum_{x_i\in S} v_u(x_i) + e \geq u(S), \forall S \subseteq D\
 ,$$
 
 The least core value $v$ of the $i$-th sample in dataset $D$ wrt.
@@ -385,8 +385,8 @@ utility $u$ is computed by solving the following Linear Program:
 $$
 \begin{array}{lll}
 \text{minimize} & e & \\
-\text{subject to} & \sum_{x_i\in D} v_u(x_i) = v_u(D) & \\
-& \sum_{x_i\in S} v_u(x_i) + e \geq v_u(S) &, \forall S \subseteq D \\
+\text{subject to} & \sum_{x_i\in D} v_u(x_i) = u(D) & \\
+& \sum_{x_i\in S} v_u(x_i) + e \geq u(S) &, \forall S \subseteq D \\
 \end{array}
 $$
 
@@ -419,7 +419,7 @@ The simplest approximation consists of two relaxations of the Least Core
   a constant value $\epsilon > 0$:
 
   $$
-  \sum_{x_i\in S} v_u(x_i) + e + \epsilon \geq v_u(S)
+  \sum_{x_i\in S} v_u(x_i) + e + \epsilon \geq u(S)
   $$
 
 - Using a fraction of all subsets instead of all possible subsets.
@@ -427,7 +427,7 @@ The simplest approximation consists of two relaxations of the Least Core
 Combined, this gives us the following property:
 
 $$
-P_{S\sim D}\left[\sum_{x_i\in S} v_u(x_i) + e^{*} + \epsilon \geq v_u(S)\right]
+P_{S\sim D}\left[\sum_{x_i\in S} v_u(x_i) + e^{*} + \epsilon \geq u(S)\right]
 \geq 1 - \delta
 $$
 
