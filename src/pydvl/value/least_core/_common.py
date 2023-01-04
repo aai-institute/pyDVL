@@ -6,7 +6,7 @@ import numpy as np
 import scipy
 from numpy.typing import NDArray
 
-__all__ = ["_solve_linear_programming"]
+__all__ = ["_solve_linear_program"]
 
 logger = logging.getLogger(__name__)
 

@@ -8,8 +8,8 @@ from numpy.typing import NDArray
 from pydvl.utils import Utility, maybe_progress
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
-from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
-from pydvl.value.least_core._common import _solve_linear_programming
+from pydvl.utils.parallel import MapReduceJob
+from pydvl.value.least_core._common import _solve_linear_program
 from pydvl.value.results import ValuationResult, ValuationStatus
 
 logger = logging.getLogger(__name__)
@@ -171,7 +171,7 @@ def montecarlo_least_core(
 
     logger.debug(f"{unique_indices=}")
 
-    values = _solve_linear_programming(
+    values = _solve_linear_program(
         c, A_eq, b_eq, A_ub, b_ub, bounds=[(None, None)] * n + [(0.0, None)], **options
     )
 

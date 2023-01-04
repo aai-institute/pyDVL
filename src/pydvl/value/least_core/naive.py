@@ -5,7 +5,7 @@ from typing import Optional
 import numpy as np
 
 from pydvl.utils import Utility, maybe_progress, powerset
-from pydvl.value.least_core._common import _solve_linear_programming
+from pydvl.value.least_core._common import _solve_linear_program
 from pydvl.value.results import ValuationResult, ValuationStatus
 
 __all__ = ["exact_least_core"]
@@ -82,7 +82,7 @@ def exact_least_core(
     b_ub = -utility_values
     b_eq = utility_values[-1:]
 
-    values = _solve_linear_programming(
+    values = _solve_linear_program(
         c,
         A_eq,
         b_eq,
