@@ -17,7 +17,7 @@ BOUNDS_TYPE = Union[
 ]
 
 
-def _solve_linear_programming(
+def _solve_linear_program(
     c: NDArray[np.float_],
     A_eq: NDArray[np.float_],
     b_eq: NDArray[np.float_],
@@ -57,7 +57,7 @@ def _solve_linear_programming(
     logger.debug(f"{result=}")
 
     if result.success:
-        values = np.asarray(result.x)
+        return np.asarray(result.x)
     else:
         if result.status == 1:
             warnings.warn(

@@ -331,11 +331,11 @@ Core values
 
 The Shapley values define a fair way to distribute payoffs amongst all participants when they form a grand coalition.
 But they do not consider the question of stability: under which conditions do all participants form the grand coalition?
-Would the participants be willing to form the grand coalition given the payoffs are divided,
+Would the participants be willing to form the grand coalition given how the payoffs are assigned,
 or would some of them prefer to form smaller coalitions?
 
-The Core is another approach to compute data values originating
-in cooperative game theory that attempts to answer those questions.
+The Core is another approach to computing data values originating
+in cooperative game theory that attempts to ensure this stability.
 It is the set of feasible payoffs that cannot be improved upon by a coalition of the participants.
 
 It satisfies the following 2 properties:
@@ -439,10 +439,10 @@ values in pyDVL. First construct the dataset and utility, then call
 Other methods
 =============
 
-Other game-theoretic concepts are in pyDVL's roadmap:
-
-- **Banzhaf indices** (which is just a different weighting
-  scheme with better numerical stability properties).
+There are other game-theoretic concepts in pyDVL's roadmap, based on the notion
+of semivalue, which is a generalization to different weighting schemes: in particular
+**Banzhaf indices** and **Beta Shapley**, with better numerical and rank stability in
+certain situations.
 
 Contributions are welcome!
 

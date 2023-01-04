@@ -169,12 +169,12 @@ def compute_removal_score(
     remove_best: bool = False,
 ) -> Dict[float, float]:
     r"""Fits model and computes score on the test set after incrementally removing
-    a percentage of data points from the training set.
+    a percentage of data points from the training set, based on their values.
 
     :param u: Utility object with model, data, and scoring function
     :param values: Data values of data instances in the training set.
     :param percentages: Sequence of removal percentages.
-    :param remove_best: If True, removes data points with in order of decreasing valuation.
+    :param remove_best: If True, removes data points in order of decreasing valuation.
     """
     # Sanity checks
     if np.any([x >= 1.0 or x < 0.0 for x in percentages]):
@@ -188,8 +188,7 @@ def compute_removal_score(
     scores = {}
 
     # We sort in descending order if we want to remove the best values
-    sort_in_descending_order = remove_best
-    values.sort(reverse=sort_in_descending_order)
+    values.sort(reverse=remove_best)
 
     for pct in percentages:
         n_removal = int(pct * len(u.data))
