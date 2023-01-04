@@ -379,8 +379,8 @@ $$
 \sum_{x_i\in S} v_u(x_i) + e \geq v_u(S), \forall S \subseteq D\
 ,$$
 
-The least core value $v$ of the $i$-th sample in dataset $D$ wrt. utility $u$ is computed
-by solving the following Linear Program:
+The least core value $v$ of the $i$-th sample in dataset $D$ wrt.
+utility $u$ is computed by solving the following Linear Program:
 
 $$
 \begin{array}{lll}
