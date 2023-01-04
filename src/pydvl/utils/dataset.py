@@ -143,7 +143,7 @@ class Dataset:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
     def get_training_data(
-        self, train_indices: Optional[Iterable[int]]
+        self, indices: Optional[Iterable[int]]
     ) -> Tuple[NDArray, NDArray]:
         """Given a set of indices, returns the training data that refer to those
         indices.
@@ -152,15 +152,15 @@ class Dataset:
         shapley values. Notice that train_indices is not typically equal to the
         full indices, but only a subset of it.
         """
-        if train_indices is None:
+        if indices is None:
             return self.x_train, self.y_train
         else:
-            x = self.x_train[train_indices]
-            y = self.y_train[train_indices]
+            x = self.x_train[indices]
+            y = self.y_train[indices]
             return x, y
 
     def get_test_data(
-        self, test_indices: Optional[Iterable[int]]
+        self, indices: Optional[Iterable[int]]
     ) -> Tuple[NDArray, NDArray]:
         """Returns the entire test set regardless of the passed indices."""
         return self.x_test, self.y_test
