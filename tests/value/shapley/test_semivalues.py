@@ -82,7 +82,7 @@ def test_beta_shapley(
         ),
     ],
 )
-def test_variance_criterion(
+def test_stderr_criterion(
     values: "NDArray[np.float_]",
     variances: "NDArray[np.float_]",
     counts: "NDArray[np.int]",

@@ -144,10 +144,13 @@ def stderr_criterion(eps: float, values_ratio: float) -> StoppingCriterion:
         if len(values) != len(variances) or len(values) != len(counts):
             raise ValueError("Mismatching array lengths")
 
-        sat_ratio = np.count_nonzero(
+        if np.any(counts == 0):
+            return ValuationStatus.Pending
+
+        passing_ratio = np.count_nonzero(
             np.sqrt(variances / counts) <= np.abs(eps * values)
         ) / len(values)
-        if np.all(counts > 10) and sat_ratio >= values_ratio:
+        if passing_ratio >= values_ratio:
             return ValuationStatus.Converged
         return ValuationStatus.Pending
 
