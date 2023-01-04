@@ -205,7 +205,10 @@ The value $v$ of the $i$-th sample in dataset $D$ wrt. utility $u$ is computed
 as a weighted sum of its marginal utility wrt. every possible coalition of
 training samples within the training set:
 
-$$v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}} \binom{n-1}{ | S | }^{-1} [u(S \cup \{x_i\}) − u(S)] ,$$
+$$
+v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}}
+\binom{n-1}{ | S | }^{-1} [u(S \cup \{x_i\}) − u(S)]
+,$$
 
 .. code-block:: python
 
@@ -253,7 +256,10 @@ of the utility from $\{0,1\}^n$, where a 1 in position $i$ means that sample
 $x_i$ is used to train the model, to $[0,1]^n$. The ensuing expression for
 Shapley value uses integration instead of discrete weights:
 
-$$v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})} [u(S \cup {i}) - u(S)].$$
+$$
+v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})}
+[u(S \cup {i}) - u(S)]
+.$$
 
 Using Owen sampling follows the same pattern as every other method for Shapley
 values in pyDVL. First construct the dataset and utility, then call
@@ -282,7 +288,10 @@ Permutation Shapley
 An equivalent way of computing Shapley values appears often in the literature.
 It uses permutations over indices instead of subsets:
 
-$$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)} [u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})],$$
+$$
+v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
+[u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})]
+,$$
 
 where $\sigma_i$ denotes the set of indices in permutation sigma up until the
 position of index $i$. To approximate this sum (with $\mathcal{O}(n!)$ terms!)
@@ -329,31 +338,35 @@ and can be used in pyDVL with:
 Core values
 ===========
 
-The Shapley values define a fair way to distribute payoffs amongst all participants when they form a grand coalition.
-But they do not consider the question of stability: under which conditions do all participants form the grand coalition?
-Would the participants be willing to form the grand coalition given how the payoffs are assigned,
+The Shapley values define a fair way to distribute payoffs amongst all
+participants when they form a grand coalition. But they do not consider
+the question of stability: under which conditions do all participants
+form the grand coalition? Would the participants be willing to form
+the grand coalition given how the payoffs are assigned,
 or would some of them prefer to form smaller coalitions?
 
 The Core is another approach to computing data values originating
 in cooperative game theory that attempts to ensure this stability.
-It is the set of feasible payoffs that cannot be improved upon by a coalition of the participants.
+It is the set of feasible payoffs that cannot be improved upon
+by a coalition of the participants.
 
 It satisfies the following 2 properties:
 
 - **Efficiency**:
-  The payoffs are distributed such that it is not possible to make any participant better off
+  The payoffs are distributed such that it is not possible
+  to make any participant better off
   without making another one worse off.
-  $$\displaystyle\sum_{x_i\in D} v_u(x_i) = v_u(D)\,$$
+  $$\sum_{x_i\in D} v_u(x_i) = v_u(D)\,$$
 
 - **Coalitional rationality**:
   The sum of payoffs to the agents in any coalition S is at
   least as large as the amount that these agents could earn by
   forming a coalition on their own.
-  $$\displaystyle\sum_{x_i\in S} v_u(x_i) \geq v_u(S), \forall S \subseteq D\,$$
+  $$\sum_{x_i\in S} v_u(x_i) \geq v_u(S), \forall S \subseteq D\,$$
 
-The second property states that the sum of payoffs to the agents in any subcoalition S is at
-least as large as the amount that these agents could earn by
-forming a coalition on their own.
+The second property states that the sum of payoffs to the agents
+in any subcoalition $S$ is at least as large as the amount that
+these agents could earn by forming a coalition on their own.
 
 Least Core values
 ^^^^^^^^^^^^^^^^^
@@ -362,25 +375,27 @@ Unfortunately, for many cooperative games the Core may be empty.
 By relaxing the coalitional rationality property by $e \gt 0$,
 we are then able to find approximate payoffs:
 
-$$\displaystyle\sum_{x_i\in S} v_u(x_i) + e \geq v_u(S), \forall S \subseteq D\,$$
+$$
+\sum_{x_i\in S} v_u(x_i) + e \geq v_u(S), \forall S \subseteq D\
+,$$
 
 The least core value $v$ of the $i$-th sample in dataset $D$ wrt. utility $u$ is computed
 by solving the following Linear Program:
 
 $$
 \begin{array}{lll}
-\text{minimize} & \displaystyle{e} & \\
-\text{subject to} & \displaystyle\sum_{x_i\in D} v_u(x_i) = v_u(D) & \\
-& \displaystyle\sum_{x_i\in S} v_u(x_i) + e \geq v_u(S) &, \forall S \subseteq D \\
+\text{minimize} & e & \\
+\text{subject to} & \sum_{x_i\in D} v_u(x_i) = v_u(D) & \\
+& \sum_{x_i\in S} v_u(x_i) + e \geq v_u(S) &, \forall S \subseteq D \\
 \end{array}
 $$
 
 Exact Least Core
 ----------------
 
-This first algorithm is just a verbatim implementation of the definition. As such
-it returns as exact a value as the utility function allows (see what this means
-in :ref:`problems of data values`).
+This first algorithm is just a verbatim implementation of the definition.
+As such it returns as exact a value as the utility function allows
+(see what this means in :ref:`problems of data values`).
 
 .. code-block:: python
 
@@ -397,9 +412,11 @@ Monte Carlo Least Core
 Because the number of subsets $S \subseteq D \setminus \{x_i\}$ is
 $2^{ | D | - 1 }$, one typically must resort to approximations.
 
-The simplest approximation consists of two relaxations of the Least Core (:footcite:t:`yan_procaccia_2021`):
+The simplest approximation consists of two relaxations of the Least Core
+(:footcite:t:`yan_procaccia_2021`):
 
-- Further relaxing the coalitional rationality property by a constant value $\epsilon > 0$:
+- Further relaxing the coalitional rationality property by
+  a constant value $\epsilon > 0$:
 
   $$
   \sum_{x_i\in S} v_u(x_i) + e + \epsilon \geq v_u(S)
@@ -410,7 +427,8 @@ The simplest approximation consists of two relaxations of the Least Core (:footc
 Combined, this gives us the following property:
 
 $$
-P_{S\sim D}\left[\sum_{x_i\in S} v_u(x_i) + e^{*} + \epsilon \geq v_u(S)\right] \geq 1 - \delta
+P_{S\sim D}\left[\sum_{x_i\in S} v_u(x_i) + e^{*} + \epsilon \geq v_u(S)\right]
+\geq 1 - \delta
 $$
 
 Where $e^{*}$ is the optimal least core value.
@@ -435,9 +453,9 @@ Other methods
 =============
 
 There are other game-theoretic concepts in pyDVL's roadmap, based on the notion
-of semivalue, which is a generalization to different weighting schemes: in particular
-**Banzhaf indices** and **Beta Shapley**, with better numerical and rank stability in
-certain situations.
+of semivalue, which is a generalization to different weighting schemes:
+in particular **Banzhaf indices** and **Beta Shapley**, with better numerical
+and rank stability in certain situations.
 
 Contributions are welcome!
 
