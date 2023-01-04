@@ -13,18 +13,16 @@ to avoid repeated re-training of the model to compute the score.
 """
 import logging
 import warnings
-from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, Optional, Tuple, Union
+from typing import Dict, FrozenSet, Iterable, Optional, Tuple, Union
 
 import numpy as np
+from numpy.typing import NDArray
 from sklearn.metrics import check_scoring
 
 from .caching import CacheStats, memcached, serialize
 from .config import MemcachedConfig
 from .dataset import Dataset
 from .types import Scorer, SupervisedModel
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
 
 __all__ = ["Utility", "DataUtilityLearning"]
 
@@ -139,10 +137,11 @@ class Utility:
         if not indices:
             return 0.0
 
-        x, y = self.data.get_training_data(list(indices))
+        x_train, y_train = self.data.get_training_data(list(indices))
+        x_test, y_test = self.data.get_test_data(list(indices))
         try:
-            self.model.fit(x, y)
-            score = float(self.scorer(self.model, self.data.x_test, self.data.y_test))
+            self.model.fit(x_train, y_train)
+            score = float(self.scorer(self.model, x_test, y_test))
             # Some scorers raise exceptions if they return NaNs, some might not
             if np.isnan(score):
                 if self.show_warnings:
@@ -226,9 +225,9 @@ class DataUtilityLearning:
         self.model = model
         self._current_iteration = 0
         self._is_model_fit = False
-        self._utility_samples: Dict[FrozenSet, Tuple["NDArray", float]] = {}
+        self._utility_samples: Dict[FrozenSet, Tuple[NDArray, float]] = {}
 
-    def _convert_indices_to_boolean_vector(self, x: Iterable[int]) -> "NDArray":
+    def _convert_indices_to_boolean_vector(self, x: Iterable[int]) -> NDArray:
         boolean_vector = np.zeros((1, len(self.utility.data)), dtype=bool)
         if x is not None:
             boolean_vector[:, tuple(x)] = True
