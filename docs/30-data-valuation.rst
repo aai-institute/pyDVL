@@ -417,10 +417,6 @@ Where $e^{*}$ is the optimal least core value.
 
 With these relaxations, we obtain a polynomial running time.
 
-Using Owen sampling follows the same pattern as every other method for Shapley
-values in pyDVL. First construct the dataset and utility, then call
-:func:`~pydvl.value.shapley.compute_shapley_values`:
-
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
@@ -428,7 +424,6 @@ values in pyDVL. First construct the dataset and utility, then call
    model = ...
    dataset = Dataset(...)
    max_iterations = ...
-   assert max_iterations >= len(dataset)
    utility = Utility(data, model)
    values = montecarlo_least_core(utility, max_iterations=max_iterations)
 
