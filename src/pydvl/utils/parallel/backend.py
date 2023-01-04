@@ -138,7 +138,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         self.config = config_dict
         if self.config["address"] is None:
             self.config["ignore_reinit_error"] = True
-        ray.init(logging_level=logging.WARNING, **self.config)
+        ray.init(**self.config)
 
     def get(
         self,
@@ -200,7 +200,7 @@ def init_parallel_backend(
     >>> config = ParallelConfig(backend="ray")
     >>> parallel_backend = init_parallel_backend(config)
     >>> parallel_backend
-    <RayParallelBackend: {'address': None, 'num_cpus': None, 'ignore_reinit_error': True}>
+    <RayParallelBackend: {'address': None, 'logging_level': 30, 'num_cpus': None, 'ignore_reinit_error': True}>
 
     """
     try:

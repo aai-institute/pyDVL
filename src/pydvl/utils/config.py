@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass, field
 from typing import Iterable, Literal, Optional, Tuple, Union
 
@@ -16,12 +17,14 @@ class ParallelConfig:
 
     :param backend: Type of backend to use. For now only 'ray' is supported.
     :param address: Address of existing remote or local cluster to use.
-    :param n_local_workers: Number of workers (CPUs) to use when using a local ray cluster
+    :param n_local_workers: Number of workers (CPUs) to use when using a local ray cluster.
+    :param logging_level: Logging level for the parallel backend's worker.
     """
 
     backend: Literal["sequential", "ray"] = "ray"
     address: Optional[Union[str, Tuple[str, int]]] = None
     n_local_workers: Optional[int] = None
+    logging_level: int = logging.WARNING
 
 
 @unpackable
