@@ -59,12 +59,9 @@ def _solve_linear_program(
         ``max`` will serve as bounds for all decision variables.
     :param options: A dictionary of solver options. Refer to scipy's documentation for all possible values.
     """
-    logger.debug("Solving linear programming problem")
-    logger.debug(f"{c=}")
-    logger.debug(f"{A_eq=}")
-    logger.debug(f"{b_eq=}")
-    logger.debug(f"{A_ub=}")
-    logger.debug(f"{b_ub=}")
+    logger.debug(
+        f"Solving linear programming problem: {c=}, {A_eq=}, {b_eq=}, {A_ub=}, {b_ub=}"
+    )
 
     result: scipy.optimize.OptimizeResult = scipy.optimize.linprog(
         c,
