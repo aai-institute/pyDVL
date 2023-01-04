@@ -1,12 +1,12 @@
 """
 This module contains convenience classes to handle data and groups thereof.
 
-Shapley value computations require evaluation of a scoring function (the
-*utility*). This is typically the performance of the model on a test set (as an
-approximation to its true expected performance). It is therefore convenient to
-keep both the training data and the test data together to be passed around to
-methods in :mod:`~pydvl.value.shapley`. This is done with
-:class:`~pydvl.utils.dataset.Dataset`.
+Shapley and Least Core value computations require evaluation of a scoring function
+(the *utility*). This is typically the performance of the model on a test set
+(as an approximation to its true expected performance). It is therefore convenient
+to keep both the training data and the test data together to be passed around to
+methods in :mod:`~pydvl.value.shapley` and :mod:`~pydvl.value.least_core`.
+This is done with :class:`~pydvl.utils.dataset.Dataset`.
 
 This abstraction layer also seamlessly grouping data points together if one is
 interested in computing their value as a group, see
@@ -143,7 +143,7 @@ class Dataset:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
     def get_training_data(
-        self, indices: Optional[Iterable[int]]
+        self, indices: Optional[Iterable[int]] = None
     ) -> Tuple[NDArray, NDArray]:
         """Given a set of indices, returns the training data that refer to those
         indices.
@@ -151,18 +151,64 @@ class Dataset:
         This is used when calling different sub-sets of indices to calculate
         shapley values. Notice that train_indices is not typically equal to the
         full indices, but only a subset of it.
+
+        :param indices: Optional indices that will be used
+            to select data points from the training data.
+        :return: If indices is not None, the selected x and y arrays from
+            the training data. Otherwise, the entire training data.
         """
         if indices is None:
             return self.x_train, self.y_train
-        else:
-            x = self.x_train[indices]
-            y = self.y_train[indices]
-            return x, y
+        x = self.x_train[indices]
+        y = self.y_train[indices]
+        return x, y
 
     def get_test_data(
-        self, indices: Optional[Iterable[int]]
+        self, indices: Optional[Iterable[int]] = None
     ) -> Tuple[NDArray, NDArray]:
-        """Returns the entire test set regardless of the passed indices."""
+        """Returns the entire test set regardless of the passed indices.
+
+        The passed indices will not be used because for data valuation
+        we generally want to score the trained model on the entire test data.
+
+        Additionally, the way this method is used in the
+        :class:`~pydvl.utils.utility.Utility` class, the passed indices will
+        be those of the training data and would not work on the test data.
+
+        There may be cases where it is desired to use parts of the test data.
+        In those cases, it is recommended to inherit from the :class:`Dataset`
+        class and to override the :meth:`~Dataset.get_test_data` method.
+
+        For example, the following snippet shows how one could go about
+        mapping the training data indices into test data indices
+        inside :meth:`~Dataset.get_test_data`:
+
+        :Example:
+
+            >>> from pydvl.utils import Dataset
+            >>> import numpy as np
+            >>> class DatasetWithTestDataIndices(Dataset):
+            ...    def get_test_data(self, indices=None):
+            ...        if indices is None:
+            ...            return self.x_test, self.y_test
+            ...        fraction = len(list(indices)) / len(self)
+            ...        mapped_indices = len(self.x_test) / len(self) * np.asarray(indices)
+            ...        mapped_indices = np.unique(mapped_indices.astype(int))
+            ...        return self.x_test[mapped_indices], self.y_test[mapped_indices]
+            ...
+            >>> X = np.random.rand(100, 10)
+            >>> y = np.random.randint(0, 2, 100)
+            >>> dataset = DatasetWithTestDataIndices.from_arrays(X, y)
+            >>> indices = np.random.choice(dataset.indices, 30, replace=False)
+            >>> _ = dataset.get_training_data(indices)
+            >>> _ = dataset.get_test_data(indices)
+
+
+        :param indices: Optional indices into the test data. This argument
+            is unused and is left as is to keep the same interface as
+            :meth:`Dataset.get_training_data`.
+        :return: The entire test data.
+        """
         return self.x_test, self.y_test
 
     def target(self, name: str) -> Tuple[slice, int]:
