@@ -11,6 +11,7 @@ The following examples illustrate the usage of pyDVL features.
    :glob:
 
    shapley*
+   least_core*
 
 .. toctree::
    :caption: Influence function

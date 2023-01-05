@@ -178,6 +178,7 @@
 <li class="toctree-l2"><a class="reference internal" href="examples/shapley_basic_spotify.html">Shapley for data valuation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/shapley_knn_flowers.html">KNN Shapley</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/shapley_utility_learning.html">Data Utility Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/least_core_basic.html">Least Core for Data Valuation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html">Influence functions for neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html#Theory-of-influence-functions-for-neural-networks">Theory of influence functions for neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/influence_synthetic.html">Influence functions for data mislabeling</a></li>
@@ -229,12 +230,17 @@
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/banzhaf/montecarlo.html">montecarlo</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/least_core/montecarlo.html">montecarlo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/least_core/naive.html">naive</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/loo/naive.html">naive</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/value/results.html">results</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
@@ -356,6 +362,14 @@ distributed caching of results.</p>
 <li class="toctree-l3"><a class="reference internal" href="30-data-valuation.html#exact-shapley-for-knn">Exact Shapley for KNN</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="30-data-valuation.html#core-values">Core values</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="30-data-valuation.html#least-core-values">Least Core values</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="30-data-valuation.html#exact-least-core">Exact Least Core</a></li>
+<li class="toctree-l4"><a class="reference internal" href="30-data-valuation.html#monte-carlo-least-core">Monte Carlo Least Core</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="30-data-valuation.html#other-methods">Other methods</a></li>
 <li class="toctree-l2"><a class="reference internal" href="30-data-valuation.html#problems-of-data-values">Problems of data values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="30-data-valuation.html#references">References</a></li>
@@ -391,6 +405,17 @@ distributed caching of results.</p>
 <li class="toctree-l3"><a class="reference internal" href="examples/shapley_utility_learning.html#Dataset">Dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="examples/shapley_utility_learning.html#Data-Shapley">Data Shapley</a></li>
 <li class="toctree-l3"><a class="reference internal" href="examples/shapley_utility_learning.html#Evaluation-on-anomalous-data">Evaluation on anomalous data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples/least_core_basic.html">Least Core for Data Valuation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/least_core_basic.html#Setup">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/least_core_basic.html#Dataset">Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/least_core_basic.html#Estimating-Exact-Least-Core-Values">Estimating Exact Least Core Values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/least_core_basic.html#Data-Removal">Data Removal</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples/least_core_basic.html#Remove-Best">Remove Best</a></li>
+<li class="toctree-l4"><a class="reference internal" href="examples/least_core_basic.html#Remove-Worst">Remove Worst</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html">Influence functions for neural networks</a><ul>

@@ -178,6 +178,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../examples/shapley_basic_spotify.html">Shapley for data valuation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/shapley_knn_flowers.html">KNN Shapley</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/shapley_utility_learning.html">Data Utility Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/least_core_basic.html">Least Core for Data Valuation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/influence_imagenet.html">Influence functions for neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/influence_imagenet.html#Theory-of-influence-functions-for-neural-networks">Theory of influence functions for neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/influence_synthetic.html">Influence functions for data mislabeling</a></li>
@@ -229,12 +230,17 @@
 <li class="toctree-l4"><a class="reference internal" href="value/banzhaf/montecarlo.html">montecarlo</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="value/least_core/montecarlo.html">montecarlo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="value/least_core/naive.html">naive</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="value/loo/naive.html">naive</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="value/results.html">results</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/montecarlo.html">montecarlo</a></li>
@@ -393,8 +399,7 @@
 <li class="toctree-l3"><a class="reference internal" href="reporting/scores.html#pydvl.reporting.scores.sort_values"><code class="docutils literal notranslate"><span class="pre">sort_values()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="reporting/scores.html#pydvl.reporting.scores.sort_values_array"><code class="docutils literal notranslate"><span class="pre">sort_values_array()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="reporting/scores.html#pydvl.reporting.scores.sort_values_history"><code class="docutils literal notranslate"><span class="pre">sort_values_history()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reporting/scores.html#pydvl.reporting.scores.backward_elimination"><code class="docutils literal notranslate"><span class="pre">backward_elimination()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reporting/scores.html#pydvl.reporting.scores.compute_fb_scores"><code class="docutils literal notranslate"><span class="pre">compute_fb_scores()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reporting/scores.html#pydvl.reporting.scores.compute_removal_score"><code class="docutils literal notranslate"><span class="pre">compute_removal_score()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -423,6 +428,7 @@
 <li class="toctree-l4"><a class="reference internal" href="utils/config.html#pydvl.utils.config.ParallelConfig.backend"><code class="docutils literal notranslate"><span class="pre">ParallelConfig.backend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="utils/config.html#pydvl.utils.config.ParallelConfig.address"><code class="docutils literal notranslate"><span class="pre">ParallelConfig.address</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="utils/config.html#pydvl.utils.config.ParallelConfig.n_local_workers"><code class="docutils literal notranslate"><span class="pre">ParallelConfig.n_local_workers</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/config.html#pydvl.utils.config.ParallelConfig.logging_level"><code class="docutils literal notranslate"><span class="pre">ParallelConfig.logging_level</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="utils/config.html#pydvl.utils.config.MemcachedClientConfig"><code class="docutils literal notranslate"><span class="pre">MemcachedClientConfig</span></code></a><ul>
@@ -460,6 +466,7 @@
 <li class="toctree-l4"><a class="reference internal" href="utils/dataset.html#pydvl.utils.dataset.Dataset.data_names"><code class="docutils literal notranslate"><span class="pre">Dataset.data_names</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="utils/dataset.html#pydvl.utils.dataset.Dataset.dim"><code class="docutils literal notranslate"><span class="pre">Dataset.dim</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="utils/dataset.html#pydvl.utils.dataset.Dataset.from_sklearn"><code class="docutils literal notranslate"><span class="pre">Dataset.from_sklearn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/dataset.html#pydvl.utils.dataset.Dataset.from_arrays"><code class="docutils literal notranslate"><span class="pre">Dataset.from_arrays()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="utils/dataset.html#pydvl.utils.dataset.GroupedDataset"><code class="docutils literal notranslate"><span class="pre">GroupedDataset</span></code></a><ul>
@@ -467,6 +474,7 @@
 <li class="toctree-l4"><a class="reference internal" href="utils/dataset.html#pydvl.utils.dataset.GroupedDataset.data_names"><code class="docutils literal notranslate"><span class="pre">GroupedDataset.data_names</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="utils/dataset.html#pydvl.utils.dataset.GroupedDataset.get_training_data"><code class="docutils literal notranslate"><span class="pre">GroupedDataset.get_training_data()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="utils/dataset.html#pydvl.utils.dataset.GroupedDataset.from_sklearn"><code class="docutils literal notranslate"><span class="pre">GroupedDataset.from_sklearn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/dataset.html#pydvl.utils.dataset.GroupedDataset.from_arrays"><code class="docutils literal notranslate"><span class="pre">GroupedDataset.from_arrays()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="utils/dataset.html#pydvl.utils.dataset.GroupedDataset.from_dataset"><code class="docutils literal notranslate"><span class="pre">GroupedDataset.from_dataset()</span></code></a></li>
 </ul>
 </li>
@@ -553,6 +561,17 @@
 <li class="toctree-l3"><a class="reference internal" href="value/banzhaf/montecarlo.html">montecarlo</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="value/least_core.html">least_core</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/least_core/montecarlo.html">montecarlo</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="value/least_core/montecarlo.html#pydvl.value.least_core.montecarlo.montecarlo_least_core"><code class="docutils literal notranslate"><span class="pre">montecarlo_least_core()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="value/least_core/naive.html">naive</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="value/least_core/naive.html#pydvl.value.least_core.naive.exact_least_core"><code class="docutils literal notranslate"><span class="pre">exact_least_core()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="value/loo.html">loo</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="value/loo/naive.html">naive</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="value/loo/naive.html#pydvl.value.loo.naive.naive_loo"><code class="docutils literal notranslate"><span class="pre">naive_loo()</span></code></a></li>
@@ -568,6 +587,7 @@
 <li class="toctree-l4"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.status"><code class="docutils literal notranslate"><span class="pre">ValuationResult.status</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.algorithm"><code class="docutils literal notranslate"><span class="pre">ValuationResult.algorithm</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.to_dataframe"><code class="docutils literal notranslate"><span class="pre">ValuationResult.to_dataframe()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.from_random"><code class="docutils literal notranslate"><span class="pre">ValuationResult.from_random()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationStatus"><code class="docutils literal notranslate"><span class="pre">ValuationStatus</span></code></a><ul>

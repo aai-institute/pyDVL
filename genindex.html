@@ -176,6 +176,7 @@
 <li class="toctree-l2"><a class="reference internal" href="examples/shapley_basic_spotify.html">Shapley for data valuation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/shapley_knn_flowers.html">KNN Shapley</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/shapley_utility_learning.html">Data Utility Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/least_core_basic.html">Least Core for Data Valuation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html">Influence functions for neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html#Theory-of-influence-functions-for-neural-networks">Theory of influence functions for neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/influence_synthetic.html">Influence functions for data mislabeling</a></li>
@@ -227,12 +228,17 @@
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/banzhaf/montecarlo.html">montecarlo</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/least_core/montecarlo.html">montecarlo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/least_core/naive.html">naive</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/loo/naive.html">naive</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/value/results.html">results</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
@@ -305,8 +311,6 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.ParallelConfig.backend">backend (ParallelConfig attribute)</a>
 </li>
-        <li><a href="pydvl/reporting/scores.html#pydvl.reporting.scores.backward_elimination">backward_elimination() (in module pydvl.reporting.scores)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/influence/conjugate_gradient.html#pydvl.influence.conjugate_gradient.batched_preconditioned_conjugate_gradient">batched_preconditioned_conjugate_gradient() (in module pydvl.influence.conjugate_gradient)</a>
@@ -339,11 +343,11 @@
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="pydvl/reporting/scores.html#pydvl.reporting.scores.compute_fb_scores">compute_fb_scores() (in module pydvl.reporting.scores)</a>
-</li>
         <li><a href="pydvl/influence/general.html#pydvl.influence.general.compute_influences">compute_influences() (in module pydvl.influence.general)</a>
 </li>
         <li><a href="pydvl/influence/linear.html#pydvl.influence.linear.compute_linear_influences">compute_linear_influences() (in module pydvl.influence.linear)</a>
+</li>
+        <li><a href="pydvl/reporting/scores.html#pydvl.reporting.scores.compute_removal_score">compute_removal_score() (in module pydvl.reporting.scores)</a>
 </li>
         <li><a href="pydvl/value/shapley.html#pydvl.value.shapley.compute_shapley_values">compute_shapley_values() (in module pydvl.value.shapley)</a>
 </li>
@@ -396,6 +400,10 @@
         <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheStats.errors">errors (CacheStats attribute)</a>
 </li>
     </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/least_core/naive.html#pydvl.value.least_core.naive.exact_least_core">exact_least_core() (in module pydvl.value.least_core.naive)</a>
+</li>
+    </ul></td>
   </tr></table>
 </section>
 
@@ -421,7 +429,15 @@
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset.from_arrays">from_arrays() (Dataset class method)</a>
+
+        <ul>
+          <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.GroupedDataset.from_arrays">(GroupedDataset class method)</a>
+</li>
+        </ul></li>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.GroupedDataset.from_dataset">from_dataset() (GroupedDataset class method)</a>
+</li>
+        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationResult.from_random">from_random() (ValuationResult class method)</a>
 </li>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset.from_sklearn">from_sklearn() (Dataset class method)</a>
 
@@ -545,6 +561,8 @@
 </li>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.load_wine_dataset">load_wine_dataset() (in module pydvl.utils.dataset)</a>
 </li>
+        <li><a href="pydvl/utils/config.html#pydvl.utils.config.ParallelConfig.logging_level">logging_level (ParallelConfig attribute)</a>
+</li>
         <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.lower_bound_hoeffding">lower_bound_hoeffding() (in module pydvl.utils.numeric)</a>
 </li>
     </ul></td>
@@ -635,6 +653,12 @@
 </li>
           <li><a href="pydvl/value/banzhaf/montecarlo.html#module-pydvl.value.banzhaf.montecarlo">pydvl.value.banzhaf.montecarlo</a>
 </li>
+          <li><a href="pydvl/value/least_core.html#module-pydvl.value.least_core">pydvl.value.least_core</a>
+</li>
+          <li><a href="pydvl/value/least_core/montecarlo.html#module-pydvl.value.least_core.montecarlo">pydvl.value.least_core.montecarlo</a>
+</li>
+          <li><a href="pydvl/value/least_core/naive.html#module-pydvl.value.least_core.naive">pydvl.value.least_core.naive</a>
+</li>
           <li><a href="pydvl/value/loo.html#module-pydvl.value.loo">pydvl.value.loo</a>
 </li>
           <li><a href="pydvl/value/loo/naive.html#module-pydvl.value.loo.naive">pydvl.value.loo.naive</a>
@@ -654,6 +678,8 @@
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/least_core/montecarlo.html#pydvl.value.least_core.montecarlo.montecarlo_least_core">montecarlo_least_core() (in module pydvl.value.least_core.montecarlo)</a>
+</li>
         <li><a href="pydvl/influence/frameworks.html#pydvl.influence.frameworks.TorchTwiceDifferentiable.mvp">mvp() (TorchTwiceDifferentiable method)</a>, <a href="pydvl/influence/frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable.mvp">[1]</a>
 
         <ul>
@@ -832,8 +858,6 @@
           <li><a href="pydvl/utils/config.html#module-pydvl.utils.config">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     pydvl.utils.dataset
 
@@ -841,6 +865,8 @@
           <li><a href="pydvl/utils/dataset.html#module-pydvl.utils.dataset">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     pydvl.utils.numeric
 
@@ -916,6 +942,27 @@
 
         <ul>
           <li><a href="pydvl/value/banzhaf/montecarlo.html#module-pydvl.value.banzhaf.montecarlo">module</a>
+</li>
+        </ul></li>
+        <li>
+    pydvl.value.least_core
+
+        <ul>
+          <li><a href="pydvl/value/least_core.html#module-pydvl.value.least_core">module</a>
+</li>
+        </ul></li>
+        <li>
+    pydvl.value.least_core.montecarlo
+
+        <ul>
+          <li><a href="pydvl/value/least_core/montecarlo.html#module-pydvl.value.least_core.montecarlo">module</a>
+</li>
+        </ul></li>
+        <li>
+    pydvl.value.least_core.naive
+
+        <ul>
+          <li><a href="pydvl/value/least_core/naive.html#module-pydvl.value.least_core.naive">module</a>
 </li>
         </ul></li>
         <li>

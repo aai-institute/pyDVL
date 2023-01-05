@@ -178,6 +178,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../examples/shapley_basic_spotify.html">Shapley for data valuation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/shapley_knn_flowers.html">KNN Shapley</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/shapley_utility_learning.html">Data Utility Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/least_core_basic.html">Least Core for Data Valuation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/influence_imagenet.html">Influence functions for neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/influence_imagenet.html#Theory-of-influence-functions-for-neural-networks">Theory of influence functions for neural networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/influence_synthetic.html">Influence functions for data mislabeling</a></li>
@@ -229,12 +230,17 @@
 <li class="toctree-l4"><a class="reference internal" href="value/banzhaf/montecarlo.html">montecarlo</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="value/least_core/montecarlo.html">montecarlo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="value/least_core/naive.html">naive</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="value/loo/naive.html">naive</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="value/results.html">results</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/montecarlo.html">montecarlo</a></li>
@@ -291,6 +297,17 @@ implemented here.</p>
 <li class="toctree-l2"><a class="reference internal" href="value/banzhaf/montecarlo.html">montecarlo</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="value/least_core.html">least_core</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="value/least_core/montecarlo.html">montecarlo</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/least_core/montecarlo.html#pydvl.value.least_core.montecarlo.montecarlo_least_core"><code class="docutils literal notranslate"><span class="pre">montecarlo_least_core()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="value/least_core/naive.html">naive</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/least_core/naive.html#pydvl.value.least_core.naive.exact_least_core"><code class="docutils literal notranslate"><span class="pre">exact_least_core()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="value/loo.html">loo</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="value/loo/naive.html">naive</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="value/loo/naive.html#pydvl.value.loo.naive.naive_loo"><code class="docutils literal notranslate"><span class="pre">naive_loo()</span></code></a></li>
@@ -306,6 +323,7 @@ implemented here.</p>
 <li class="toctree-l3"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.status"><code class="docutils literal notranslate"><span class="pre">ValuationResult.status</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.algorithm"><code class="docutils literal notranslate"><span class="pre">ValuationResult.algorithm</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.to_dataframe"><code class="docutils literal notranslate"><span class="pre">ValuationResult.to_dataframe()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.from_random"><code class="docutils literal notranslate"><span class="pre">ValuationResult.from_random()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationStatus"><code class="docutils literal notranslate"><span class="pre">ValuationStatus</span></code></a><ul>
