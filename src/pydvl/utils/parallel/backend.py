@@ -1,4 +1,5 @@
 import functools
+import logging
 import os
 from abc import ABCMeta, abstractmethod
 from dataclasses import asdict
@@ -199,7 +200,7 @@ def init_parallel_backend(
     >>> config = ParallelConfig(backend="ray")
     >>> parallel_backend = init_parallel_backend(config)
     >>> parallel_backend
-    <RayParallelBackend: {'address': None, 'num_cpus': None, 'ignore_reinit_error': True}>
+    <RayParallelBackend: {'address': None, 'logging_level': 30, 'num_cpus': None, 'ignore_reinit_error': True}>
 
     """
     try:
