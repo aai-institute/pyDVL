@@ -3,7 +3,7 @@ This module collects types and methods for the inspection of the results of
 valuation algorithms.
 
 The most important class is :class:`ValuationResult`, which provides access
-to raw values, as well as convenient behaviour as a Sequence with extended
+to raw values, as well as convenient behaviour as a `Sequence` with extended
 indexing abilities, and conversion to `pandas DataFrames
 <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
 """
@@ -40,10 +40,65 @@ __all__ = ["ValuationResult", "ValuationStatus"]
 
 
 class ValuationStatus(Enum):
+    """Represents the status of an algorithm."""
+
     Pending = "pending"
     Converged = "converged"
+    # TODO: remove MaxIterations
     MaxIterations = "maximum number of iterations reached"
     Failed = "failed"
+
+    def __or__(self, other: "ValuationStatus") -> "ValuationStatus":
+        """The result of bitwise or-ing two valuation statuses is given by the
+        following table:
+
+            |   | P | C | F |
+            |---|---|---|---|
+            | P | P | C | P |
+            | C | C | C | C |
+            | F | P | C | F |
+
+        where P = Pending, C = Converged, F = Failed.
+        """
+        if self == ValuationStatus.Converged or other == ValuationStatus.Converged:
+            return ValuationStatus.Converged
+        if self == ValuationStatus.Pending or other == ValuationStatus.Pending:
+            return ValuationStatus.Pending
+        if self == ValuationStatus.Failed and other == ValuationStatus.Failed:
+            return ValuationStatus.Failed
+        # TODO: Should be unreachable after deleting MaxIterations:
+        raise RuntimeError(f"Unexpected statuses: {self} and {other}")
+
+    def __and__(self, other: "ValuationStatus") -> "ValuationStatus":
+        """The result of bitwise &-ing two valuation statuses is given by the
+        following table:
+
+            |   | P | C | F |
+            |---|---|---|---|
+            | P | P | P | F |
+            | C | P | C | F |
+            | F | F | F | F |
+
+        where P = Pending, C = Converged, F = Failed.
+        """
+        if self == ValuationStatus.Failed or other == ValuationStatus.Failed:
+            return ValuationStatus.Failed
+        if self == ValuationStatus.Pending or other == ValuationStatus.Pending:
+            return ValuationStatus.Pending
+        if self == ValuationStatus.Converged and other == ValuationStatus.Converged:
+            return ValuationStatus.Converged
+        # TODO: Should be unreachable after deleting MaxIterations:
+        raise RuntimeError(f"Unexpected statuses: {self} and {other}")
+
+    def __invert__(self):
+        """The result of bitwise negation of a ValuationStatus is `Failed`
+        if the status is `Converged`, or `Converged` otherwise:
+
+            `P -> C, C -> F, F -> C`
+        """
+        if self == ValuationStatus.Converged:
+            return ValuationStatus.Failed
+        return ValuationStatus.Converged
 
 
 @total_ordering
