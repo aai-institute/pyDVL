@@ -19,16 +19,15 @@ semi-value. The interface is :class:`SemiValue`. The coefficients implement
 """
 
 import math
-import numpy as np
-import scipy as sp
-
 from functools import lru_cache
 from typing import Protocol
+
+import numpy as np
+import scipy as sp
 
 from pydvl.utils import Utility, get_running_avg_variance, maybe_progress
 from pydvl.value import ValuationResult, ValuationStatus
 from pydvl.value.sampler import OwenSampler, PermutationSampler, Sampler, UniformSampler
-
 from pydvl.value.shapley.stopping import StoppingCriterion, StoppingCriterionCallable
 
 

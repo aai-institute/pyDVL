@@ -7,7 +7,8 @@ from numpy._typing import NDArray
 from pydvl.value import ValuationStatus
 
 StoppingCriterionCallable = Callable[
-    [int, NDArray[np.float_], NDArray[np.float_], NDArray[np.int_]], ValuationStatus,
+    [int, NDArray[np.float_], NDArray[np.float_], NDArray[np.int_]],
+    ValuationStatus,
 ]
 
 
