@@ -37,6 +37,9 @@ class Sampler(Generic[T]):
 
     ``[]``, ``[2]``, ``[]``, ``[1]``
 
+    In addition, samplers define a :meth:`weight` function to be used as a
+    multiplier in Monte Carlo sums, so that the limit expectation coincides with
+    the semi-value.
     """
 
     class IndexIteration(Enum):
@@ -53,8 +56,24 @@ class Sampler(Generic[T]):
         """
         self._indices = indices
         self._index_iteration = index_iteration
+        self._n = len(indices)
 
     def __iter__(self):
+        raise NotImplementedError()
+
+    def weight(self, subset: Sequence[T]) -> float:
+        r"""Factor by which to multiply Monte Carlo samples, so that the
+        mean converges to the desired expression.
+
+        By the Law of Large Numbers, the sample mean of $\delta_i(S_j)$ converges
+        to the expectation under the distribution from which $S_j$ is sampled.
+
+        $$ \frac{1}{m}  \sum_{j = 1}^m \delta_i (S_j) c (S_j) \longrightarrow
+           \underset{S \sim \mathcal{D}_{- i}}{\mathbb{E}} [\delta_i (S) c (S)]$$
+
+        We add a factor $c(S_j)$ in order to have this expectation coincide with
+        the desired expression.
+        """
         raise NotImplementedError()
 
     def complement(self, exclude: Sequence[T], *args, **kwargs) -> "NDArray[T]":
@@ -75,7 +94,11 @@ class Sampler(Generic[T]):
 
 class DeterministicSampler(Sampler[T]):
     def __init__(self, indices: "NDArray[T]"):
-        """
+        """Uniform deterministic sampling of subsets.
+
+        For every index $i$, each subset of `indices - {i}` has equal
+        probability $2^{n-1}$.
+
         :param indices: The set of items (indices) to sample from.
         """
         super().__init__(indices, Sampler.IndexIteration.Sequential)
@@ -85,6 +108,11 @@ class DeterministicSampler(Sampler[T]):
             for subset in powerset(self.complement(idx)):
                 yield idx, subset
 
+    def weight(self, subset: Sequence[T]) -> float:
+        """Deterministic sampling should be used only for exact computations,
+        where there is no need for a correcting factor in Monte Carlo sums."""
+        return 1.0
+
 
 class UniformSampler(Sampler[T]):
     def __iter__(self) -> Generator[Tuple[T], Any, None]:
@@ -92,6 +120,13 @@ class UniformSampler(Sampler[T]):
             for idx in self.indices():
                 for subset in random_powerset(self.complement([idx]), max_subsets=1):
                     yield idx, subset
+
+    def weight(self, subset: Sequence[T]) -> float:
+        """Correction coming from Monte Carlo integration so that the mean of
+        the marginals converges to the value: the uniform distribution over the
+        powerset of a set with n-1 elements has mass 2^{n-1} over each subset.
+        The factor 1 / n corresponds to the one in the Shapley definition."""
+        return 2 ** (self._n - 1) / self._n
 
 
 class AntitheticSampler(Sampler[T]):
@@ -110,6 +145,9 @@ class AntitheticSampler(Sampler[T]):
                     yield idx, subset
                     yield idx, self.complement(subset, idx)
 
+    def weight(self, subset: Sequence[T]) -> float:
+        return 2 ** (self._n - 1) / self._n
+
 
 class PermutationSampler(Sampler[T]):
     """
@@ -124,6 +162,9 @@ class PermutationSampler(Sampler[T]):
             for i, idx in enumerate(permutation):
                 yield idx, permutation[:i]
 
+    def weight(self, subset: Sequence[T]) -> float:
+        return 1.0
+
 
 class HierarchicalSampler(Sampler[T]):
     def __iter__(self) -> Generator[Tuple[T], Any, None]:
@@ -134,6 +175,9 @@ class HierarchicalSampler(Sampler[T]):
                     self.complement([idx]), size=k, max_subsets=1
                 ):
                     yield idx, subset
+
+    def weight(self, subset: Sequence[T]) -> float:
+        return 2 ** (self._n - 1) / self._n
 
 
 class OwenSampler(Sampler[T]):
@@ -160,3 +204,6 @@ class OwenSampler(Sampler[T]):
                         self.complement([idx]), q=q, max_subsets=1
                     ):
                         yield q, idx, subset
+
+    def weight(self, subset: Sequence[T]) -> float:
+        raise NotImplementedError("Compute the right weight")
