@@ -1,21 +1,10 @@
 from enum import Enum
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generator,
-    Generic,
-    Optional,
-    Sequence,
-    Tuple,
-    TypeVar,
-)
+from typing import Any, Generator, Generic, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
 
+from numpy.typing import NDArray
 from pydvl.utils import powerset, random_powerset
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
 
 T = TypeVar("T")
 
@@ -27,7 +16,7 @@ class Sampler(Generic[T]):
     at most ``max_subsets`` from its power set are generated.
 
 
-    .. example::
+    :Example:
 
     .. code::python
        for idx, s in DeterministicSampler([1,2], 4):
@@ -48,7 +37,7 @@ class Sampler(Generic[T]):
 
     def __init__(
         self,
-        indices: "NDArray[T]",
+        indices: NDArray[T],
         index_iteration: IndexIteration = IndexIteration.Sequential,
     ):
         """
@@ -76,7 +65,7 @@ class Sampler(Generic[T]):
         """
         raise NotImplementedError()
 
-    def complement(self, exclude: Sequence[T], *args, **kwargs) -> "NDArray[T]":
+    def complement(self, exclude: Sequence[T], *args, **kwargs) -> NDArray[T]:
         return np.setxor1d(self._indices, exclude)
 
     def indices(self) -> Generator[T, Any, None]:
@@ -93,7 +82,7 @@ class Sampler(Generic[T]):
 
 
 class DeterministicSampler(Sampler[T]):
-    def __init__(self, indices: "NDArray[T]"):
+    def __init__(self, indices: NDArray[T]):
         """Uniform deterministic sampling of subsets.
 
         For every index $i$, each subset of `indices - {i}` has equal
@@ -132,7 +121,7 @@ class UniformSampler(Sampler[T]):
 class AntitheticSampler(Sampler[T]):
     def complement(
         self, exclude: Sequence[T], exclude_idx: Optional[T] = None, *args, **kwargs
-    ) -> "NDArray[np.int_]":
+    ) -> NDArray[np.int_]:
         tmp = super().complement(exclude)
         if exclude_idx is None:
             return tmp
@@ -150,10 +139,13 @@ class AntitheticSampler(Sampler[T]):
 
 
 class PermutationSampler(Sampler[T]):
-    """
+    """Sample permutations of indices and iterate through each returning sets,
+    as required for the permutation definition of Shapley value.
+
     .. warning::
        This sampler requires caching to be enabled or computation
        will be doubled wrt. a "direct" implementation of permutation MC
+
     """
 
     def __iter__(self) -> Generator[Tuple[T], Any, None]:
@@ -167,6 +159,13 @@ class PermutationSampler(Sampler[T]):
 
 
 class HierarchicalSampler(Sampler[T]):
+    """Sample a set size, then a set of that size.
+
+    .. todo::
+       This is unnecessary, but a step towards proper stratified sampling.
+
+    """
+
     def __iter__(self) -> Generator[Tuple[T], Any, None]:
         while True:
             for idx in self.indices():
@@ -185,7 +184,7 @@ class OwenSampler(Sampler[T]):
         Standard = "standard"
         Antithetic = "antithetic"
 
-    def __init__(self, indices: "NDArray[T]", method: Algorithm, n_steps: int):
+    def __init__(self, indices: NDArray[T], method: Algorithm, n_steps: int):
         super().__init__(indices)
         q_stop = {
             OwenSampler.Algorithm.Standard: 1.0,
@@ -196,7 +195,7 @@ class OwenSampler(Sampler[T]):
     def complement(self, exclude: Sequence[T], *args, **kwargs):
         return np.setxor1d(self._indices, exclude)
 
-    def __iter__(self) -> Generator[Tuple[np.float, T, T], Any, None]:
+    def __iter__(self) -> Generator[Tuple[np.float_, T, T], Any, None]:
         while True:
             for idx in self.indices():
                 for j, q in enumerate(self.q_steps):

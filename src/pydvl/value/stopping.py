@@ -1,3 +1,7 @@
+""" Stopping criteria for semi-values
+
+"""
+
 from functools import update_wrapper
 from typing import Callable, cast
 
@@ -7,22 +11,25 @@ from numpy._typing import NDArray
 from pydvl.value import ValuationStatus
 
 StoppingCriterionCallable = Callable[
-    [int, NDArray[np.float_], NDArray[np.float_], NDArray[np.int_]],
-    ValuationStatus,
+    [int, NDArray[np.float_], NDArray[np.float_], NDArray[np.int_]], ValuationStatus,
 ]
 
 
 class StoppingCriterion:
-    """A composable callable to determine whether a semi-value computation must
-    stop.
-
-    Stopping criteria can be composed with the binary operators `&` (_and_),
-    `^` (_xor_) and `|` (_or_), see :class:`~pydvl.value.results.ValuationStatus`
-    for the truth tables.
-    """
+    _fun: StoppingCriterionCallable
 
     def __init__(self, fun: StoppingCriterionCallable):
-        self.fun = fun
+        """A composable callable to determine whether a semi-value computation
+        must stop.
+
+        Stopping criteria can be composed with the binary
+        operators ``&`` (_and_), ``^`` (_xor_) and ``|`` (_or_),
+        see :class:`~pydvl.value.results.ValuationStatus` for the truth tables.
+
+        :param fun: A callable to wrap into a composable object.
+
+        """
+        self._fun = fun
         update_wrapper(self, fun)
 
     def __call__(
@@ -32,7 +39,7 @@ class StoppingCriterion:
         variances: NDArray[np.float_],
         counts: NDArray[np.int_],
     ) -> ValuationStatus:
-        return self.fun(step, values, variances, counts)
+        return self._fun(step, values, variances, counts)
 
     def __and__(self, other: "StoppingCriterion") -> "StoppingCriterion":
         # Using variadic args to avoid repeating all args
@@ -83,13 +90,15 @@ def max_samples_criterion(max_samples: np.int_) -> StoppingCriterion:
 
 def min_updates_criterion(min_updates: int, values_ratio: float) -> StoppingCriterion:
     """Checks whether a given fraction of all values has been updated at
-    least ``max_updates`` times.
+    least ``min_updates`` times.
+
     :param min_updates: Maximal amount of updates for each value
     :param values_ratio: Amount of values that must fulfill the criterion
     :return: :attr:`~pydvl.value.results.ValuationStatus.Converged` if at least
-        a fraction of `values_ratio` of the values has been updated
-        ``min_updates`` times, :attr:`~pydvl.value.results.ValuationStatus.Pending`
-        otherwise
+    a fraction of ``values_ratio`` of the values has been updated
+    ``min_updates`` times, :attr:`~pydvl.value.results.ValuationStatus.Pending`
+    otherwise.
+
     """
 
     def check_min_updates(*args, counts: NDArray[np.int_], **kwargs) -> ValuationStatus:
@@ -119,10 +128,10 @@ def stderr_criterion(eps: float, values_ratio: float) -> StoppingCriterion:
 
     :param eps: Threshold multiplier for the values
     :param values_ratio: Amount of values that must fulfill the criterion
-    :return: A convergence criterion returning
-        :attr:`~pydvl.value.results.ValuationStatus.Converged` if at least a
-        fraction of `values_ratio` of the values has standard error below the
-        threshold.
+    :return: A convergence criterion
+        returning :attr:`~pydvl.value.results.ValuationStatus.Converged` if at
+        least a fraction of `values_ratio` of the values has standard error
+        below the threshold.
     """
 
     def check_stderr(

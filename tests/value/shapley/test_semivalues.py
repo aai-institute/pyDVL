@@ -6,7 +6,7 @@ from value import check_values
 from numpy.typing import NDArray
 
 from pydvl.value import ValuationStatus
-from pydvl.value.shapley.semivalues import (
+from pydvl.value.semivalues import (
     SVCoefficient,
     SemiValue,
     banzhaf_coefficient,
@@ -17,9 +17,8 @@ from pydvl.value.shapley.semivalues import (
     permutation_shapley,
     shapley,
 )
-from pydvl.value.shapley.stopping import (
+from pydvl.value.stopping import (
     StoppingCriterion,
-    finite_difference_criterion,
     max_samples_criterion,
     stderr_criterion,
 )

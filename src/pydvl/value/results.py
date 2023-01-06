@@ -368,8 +368,4 @@ class ValuationResult(collections.abc.Sequence):
         :return: :class:`ValuationResult`
         """
         values = np.random.uniform(low=-1.0, high=1.0, size=size)
-        return cls(
-            algorithm="random",
-            status=ValuationStatus.Converged,
-            values=values,
-        )
+        return cls(algorithm="random", status=ValuationStatus.Converged, values=values)
