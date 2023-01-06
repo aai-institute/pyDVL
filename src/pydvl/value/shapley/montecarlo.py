@@ -35,7 +35,7 @@ import logging
 import math
 from enum import Enum
 from time import sleep
-from typing import TYPE_CHECKING, Iterable, NamedTuple, Optional, Sequence
+from typing import TYPE_CHECKING, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
 from warnings import warn
 
 import numpy as np
@@ -77,7 +77,7 @@ def truncated_montecarlo_shapley(
     value_tolerance: Optional[float] = None,
     max_iterations: Optional[int] = None,
     *,
-    n_jobs: Optional[int] = None,
+    n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
     coordinator_update_period: int = 10,
@@ -202,7 +202,7 @@ def permutation_montecarlo_shapley(
     u: Utility,
     max_iterations: int,
     *,
-    n_jobs: int,
+    n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
 ) -> ValuationResult:
@@ -223,22 +223,18 @@ def permutation_montecarlo_shapley(
     :param progress: Whether to display progress bars for each job.
     :return: Object with the data values.
     """
-    parallel_backend = init_parallel_backend(config)
-
-    u_id = parallel_backend.put(u)
-
     iterations_per_job = max(1, max_iterations // n_jobs)
 
-    map_reduce_job: MapReduceJob["NDArray", "NDArray"] = MapReduceJob(
+    map_reduce_job: MapReduceJob[Utility, "NDArray"] = MapReduceJob(
+        u,
         map_func=_permutation_montecarlo_marginals,
         reduce_func=np.concatenate,  # type: ignore
         map_kwargs=dict(max_permutations=iterations_per_job, progress=progress),
         reduce_kwargs=dict(axis=0),
         config=config,
-        chunkify_inputs=False,
         n_jobs=n_jobs,
     )
-    full_results = map_reduce_job(u_id)[0]
+    full_results = map_reduce_job()
 
     values = np.mean(full_results, axis=0)
     stderr = np.std(full_results, axis=0) / np.sqrt(full_results.shape[0])
@@ -367,19 +363,17 @@ def combinatorial_montecarlo_shapley(
     :param progress: Whether to display progress bars for each job.
     :return: Object with the data values.
     """
-    parallel_backend = init_parallel_backend(config)
-    u_id = parallel_backend.put(u)
 
     # FIXME? max_iterations has different semantics in permutation-based methods
     map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
+        u.data.indices,
         map_func=_combinatorial_montecarlo_shapley,
         reduce_func=disjoint_reducer,
-        map_kwargs=dict(u=u_id, max_iterations=max_iterations, progress=progress),
-        chunkify_inputs=True,
+        map_kwargs=dict(u=u, max_iterations=max_iterations, progress=progress),
         n_jobs=n_jobs,
         config=config,
     )
-    results = map_reduce_job(u.data.indices)[0]
+    results = map_reduce_job()
 
     return ValuationResult(
         algorithm="combinatorial_montecarlo_shapley",
@@ -519,25 +513,22 @@ def owen_sampling_shapley(
     if OwenAlgorithm(method) == OwenAlgorithm.Antithetic:
         warn("Owen antithetic sampling not tested and probably bogus")
 
-    parallel_backend = init_parallel_backend(config)
-    u_id = parallel_backend.put(u)
-
     map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
+        u.data.indices,
         map_func=_owen_sampling_shapley,
         map_kwargs=dict(
-            u=u_id,
+            u=u,
             method=OwenAlgorithm(method),
             max_iterations=max_iterations,
             max_q=max_q,
             progress=progress,
         ),
         reduce_func=disjoint_reducer,
-        chunkify_inputs=True,
         n_jobs=n_jobs,
         config=config,
     )
 
-    results = map_reduce_job(u.data.indices)[0]
+    results = map_reduce_job()
 
     return ValuationResult(
         algorithm="owen_sampling_shapley",

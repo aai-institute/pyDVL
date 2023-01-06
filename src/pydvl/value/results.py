@@ -3,7 +3,7 @@ This module collects types and methods for the inspection of the results of
 valuation algorithms.
 
 The most important class is :class:`ValuationResult`, which provides access
-to raw values, as well as convenient behaviour as a `Sequence` with extended
+to raw values, as well as convenient behaviour as a ``Sequence`` with extended
 indexing abilities, and conversion to `pandas DataFrames
 <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
 """
@@ -12,7 +12,6 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import total_ordering
 from typing import (
-    TYPE_CHECKING,
     Any,
     Generator,
     Iterable,
@@ -25,6 +24,7 @@ from typing import (
 )
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils import Dataset
 
@@ -32,9 +32,6 @@ try:
     import pandas  # Try to import here for the benefit of mypy
 except ImportError:
     pass
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
 
 __all__ = ["ValuationResult", "ValuationStatus"]
 
@@ -116,7 +113,7 @@ class ValueItem:
 
     #: Index of the sample with this value in the original :class:`Dataset`
     index: np.int_
-    #: Name of the sample if it was provided. Otherwise `str(index)`
+    #: Name of the sample if it was provided. Otherwise, ``str(index)``
     name: str
     #: The value
     value: np.float_
@@ -156,29 +153,33 @@ class ValuationResult(collections.abc.Sequence):
         if not set.
     :param sort: Whether to sort the indices by ascending value. See above how
         this affects usage as an iterable or sequence.
+    :param extra_values: Additional values that can be passed as keyword arguments.
+        This can contain, for example, the least core value.
 
     :raise ValueError: If data names and values have mismatching lengths.
     """
 
-    _indices: "NDArray[np.int_]"
-    _values: "NDArray[np.float_]"
+    _indices: NDArray[np.int_]
+    _values: NDArray[np.float_]
     _data: Dataset
-    _names: "Union[NDArray[np.int_], NDArray[np.str_]]"
-    _stderr: "NDArray[np.float_]"
+    _names: Union[NDArray[np.int_], NDArray[np.str_]]
+    _stderr: NDArray[np.float_]
     _algorithm: str  # TODO: BaseValuator
     _status: ValuationStatus  # TODO: Maybe? BaseValuator.Status
     # None for unsorted, True for ascending, False for descending
     _sort_order: Optional[bool]
+    _extra_values: dict
 
     def __init__(
         self,
         algorithm: str,  # BaseValuator,
         status: ValuationStatus,  # Valuation.Status,
-        values: "NDArray[np.float_]",
+        values: NDArray[np.float_],
         steps: int,
-        stderr: Optional["NDArray[np.float_]"] = None,
+        stderr: Optional[NDArray[np.float_]] = None,
         data_names: Optional[Sequence[str]] = None,
         sort: bool = True,
+        **extra_values,
     ):
         if stderr is not None and len(stderr) != len(values):
             raise ValueError("Lengths of values and stderr do not match")
@@ -189,6 +190,7 @@ class ValuationResult(collections.abc.Sequence):
         self._steps = steps
         self._stderr = np.zeros_like(values) if stderr is None else stderr
         self._sort_order = None
+        self._extra_values = extra_values or {}
 
         if sort:
             self.sort()
@@ -226,13 +228,13 @@ class ValuationResult(collections.abc.Sequence):
         return
 
     @property
-    def values(self) -> "NDArray[np.float_]":
+    def values(self) -> NDArray[np.float_]:
         """The raw values, unsorted. Position `i` in the array represents index
         `i` of the data."""
         return self._values
 
     @property
-    def indices(self) -> "NDArray[np.int_]":
+    def indices(self) -> NDArray[np.int_]:
         """The indices for the values, possibly sorted.
         If the object is unsorted, then this is the same as
         `np.arange(len(values))`. Otherwise, the indices sort :meth:`values`
@@ -250,6 +252,18 @@ class ValuationResult(collections.abc.Sequence):
     @property
     def steps(self) -> int:
         return self._steps
+
+    def __getattr__(self, attr: str) -> Any:
+        """This allows access to extra values as if they were properties of the instance."""
+        # This is here to avoid a RecursionError when copying or pickling the object
+        if attr == "_extra_values":
+            raise AttributeError()
+        try:
+            return self._extra_values[attr]
+        except KeyError as e:
+            raise AttributeError(
+                f"{self.__class__.__name__} object has no attribute {attr}"
+            ) from e
 
     @overload
     def __getitem__(self, key: int) -> ValueItem:
@@ -303,6 +317,18 @@ class ValuationResult(collections.abc.Sequence):
             # and np.all(self.indices == other.indices)  # Redundant
         )
 
+    def __repr__(self) -> str:
+        repr_string = (
+            f"{self.__class__.__name__}("
+            f"algorithm='{self._algorithm}',"
+            f"status='{self._status.value}',"
+            f"values={np.array_str(self.values, precision=4, suppress_small=True)}"
+        )
+        for k, v in self._extra_values.items():
+            repr_string += f", {k}={v}"
+        repr_string += ")"
+        return repr_string
+
     def to_dataframe(
         self, column: Optional[str] = None, use_names: bool = False
     ) -> "pandas.DataFrame":
@@ -331,3 +357,19 @@ class ValuationResult(collections.abc.Sequence):
         else:
             df[column + "_stderr"] = self._stderr[self._indices]
         return df
+
+    @classmethod
+    def from_random(cls, size: int) -> "ValuationResult":
+        """Creates a :class:`ValuationResult` object and fills it
+        with an array of random values of the given size uniformly sampled
+        from the range [-1, 1].
+
+        :param size: Number of values to put inside the object.
+        :return: :class:`ValuationResult`
+        """
+        values = np.random.uniform(low=-1.0, high=1.0, size=size)
+        return cls(
+            algorithm="random",
+            status=ValuationStatus.Converged,
+            values=values,
+        )
