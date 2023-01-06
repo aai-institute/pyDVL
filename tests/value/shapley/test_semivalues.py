@@ -3,20 +3,24 @@ import math
 import numpy as np
 import pytest
 from value import check_values
+from numpy.typing import NDArray
 
 from pydvl.value import ValuationStatus
 from pydvl.value.shapley.semivalues import (
-    Coefficient,
+    SVCoefficient,
     SemiValue,
-    StoppingCriterion,
     banzhaf_coefficient,
     beta_coefficient,
     beta_shapley,
     beta_shapley_paper,
     combinatorial_coefficient,
-    max_samples_criterion,
     permutation_shapley,
     shapley,
+)
+from pydvl.value.shapley.stopping import (
+    StoppingCriterion,
+    finite_difference_criterion,
+    max_samples_criterion,
     stderr_criterion,
 )
 
@@ -24,25 +28,36 @@ from pydvl.value.shapley.semivalues import (
 @pytest.mark.parametrize(
     "num_samples, fun, criterion",
     [
-        (8, shapley, max_samples_criterion(2**10)),
-        (10, permutation_shapley, max_samples_criterion(300)),
+        #
+        (5, shapley, stderr_criterion(0.1, 1.0) & ~max_samples_criterion(2**10)),
+        (
+            10,
+            permutation_shapley,
+            stderr_criterion(0.1, 1.0) & ~max_samples_criterion(300),
+        ),
     ],
 )
 def test_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
     u, exact_values = analytic_shapley
     values = fun(u, criterion)
+    assert values.status == ValuationStatus.Converged
     check_values(values, exact_values, rtol=0.1)
 
 
 @pytest.mark.parametrize(
-    "num_samples, fun, max_samples, criterion",
+    "num_samples, fun, criterion",
     [
-        (8, shapley, 2**12, stderr_criterion(0.2, 1.0)),
-        (10, permutation_shapley, 3000, stderr_criterion(0.1, 1.0)),
+        # Uniform sampling with replacement is just too bad
+        # (5, shapley, stderr_criterion(0.2, 1.0) | max_samples_criterion(2**12),
+        (
+            10,
+            permutation_shapley,
+            stderr_criterion(0.1, 1.0) | max_samples_criterion(600),
+        )
     ],
 )
 def test_shapley_convergence(
-    analytic_shapley, fun: SemiValue, max_samples: int, criterion: StoppingCriterion
+    analytic_shapley, fun: SemiValue, criterion: StoppingCriterion
 ):
     u, exact_values = analytic_shapley
     values = fun(u, criterion)
@@ -52,17 +67,17 @@ def test_shapley_convergence(
 
 @pytest.mark.parametrize("num_samples", [10])
 @pytest.mark.parametrize(
-    "fun, criterion, max_samples",
+    "fun, criterion",
     [
-        (beta_shapley, stderr_criterion(0.1, 1.0), 1000),
-        (beta_shapley_paper, stderr_criterion(0.1, 1.0), 1000),
+        (beta_shapley, stderr_criterion(0.1, 1.0) | max_samples_criterion(100)),
+        # (beta_shapley, finite_difference_criterion(7, 10, 0.05, 1) | max_samples_criterion(100),
+        (beta_shapley_paper, stderr_criterion(0.1, 1.0) | max_samples_criterion(100)),
     ],
 )
-def test_beta_shapley(
-    analytic_shapley, fun: SemiValue, criterion: StoppingCriterion, max_samples: int
-):
+def test_beta_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
     u, exact_values = analytic_shapley
     values = fun(u, criterion, alpha=1, beta=1)
+    assert values.status == ValuationStatus.Converged
     check_values(values, exact_values, rtol=0.1)
 
 
@@ -83,9 +98,9 @@ def test_beta_shapley(
     ],
 )
 def test_stderr_criterion(
-    values: "NDArray[np.float_]",
-    variances: "NDArray[np.float_]",
-    counts: "NDArray[np.int]",
+    values: NDArray[np.float_],
+    variances: NDArray[np.float_],
+    counts: NDArray[np.int],
     eps: float,
     values_ratio: float,
     status: ValuationStatus,
@@ -111,9 +126,9 @@ def test_stderr_criterion(
     ],
 )
 def test_variance_criterion_exceptions(
-    values: "NDArray[np.float_]",
-    variances: "NDArray[np.float_]",
-    counts: "NDArray[np.int]",
+    values: NDArray[np.float_],
+    variances: NDArray[np.float_],
+    counts: NDArray[np.int],
     exception,
 ):
     with pytest.raises(exception):
@@ -126,11 +141,12 @@ def test_variance_criterion_exceptions(
     [
         beta_coefficient(1, 1),
         beta_coefficient(1, 16),
+        beta_coefficient(4, 1),
         banzhaf_coefficient,
         combinatorial_coefficient,
     ],
 )
-def test_coefficients(n: int, coefficient: Coefficient):
+def test_coefficients(n: int, coefficient: SVCoefficient):
     r"""Coefficients for semi-values must fulfill:
     $$ \sum_{i=1}^{n}\choose{n-1}{j-1}w^{(n)}(j) = n $$
     """
