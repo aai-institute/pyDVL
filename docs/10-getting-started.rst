@@ -19,7 +19,7 @@ algorithms for data valuation and influence functions. You can read:
 
 We only briefly introduce key concepts in the documentation. For a thorough
 introduction and survey of the field, we refer to **the upcoming review** at the
-:tfl:`TransferLab website <>`.
+:tfl:`TransferLab website <reviews/data-valuation>`.
 
 Running the examples
 ====================
