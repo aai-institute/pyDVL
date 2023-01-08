@@ -1,7 +1,7 @@
 import math
 import warnings
 from itertools import permutations
-from typing import List
+from typing import List, Sequence
 
 import numpy as np
 from numpy.typing import NDArray

@@ -42,7 +42,7 @@ def num_samples_eps_delta(eps: float, delta: float, n: int, u_range: float) -> i
 
     """
 
-    log.warning("This bound is bogus. Do not use.")
+    log.warning("This may be bogus. Do not use.")
 
     T = TypeVar("T", NDArray[np.float_], float)
 
@@ -68,29 +68,29 @@ def _build_gt_constraints(
 ) -> Tuple[NDArray[np.float_], NDArray[np.float_]]:
     r"""Builds a matrix and vector modelling the pairwise constraints:
 
-    $$ | s_i - s_j - C_{i j}| \leq \delta, $$
+    $$ | s_i - s_j - C_{i j}| \leq \rho, $$
 
-    where $\delta = \epsilon/(2 \sqrt{N})$ in the paper and
+    where $\rho = \epsilon/(2 \sqrt{N})$ in the paper and
 
     $$C_{i j} = \frac{Z}{T} \sum_{t=1}^T U(S_t) (\beta_{t i} - \beta_{t j}),$$
 
-    for $i \leq j \in [N]$.
+    for $i, j \in [N], j \gte i$.
 
     For every $i$, each such constraint is converted into two:
 
-    $$ s_i - s_j \leq \delta + C_{i j}, $$
-    $$ s_j - s_i \leq \delta - C_{i j}, $$
+    $$ s_i - s_j \leq \rho + C_{i j}, $$
+    $$ s_j - s_i \leq \rho - C_{i j}, $$
 
     and there are $N-i$ of these, for $j \in \{i, i+1, ..., N\}$. We build
     matrices $A^{(i)} \in \mathbb{R}^{N-i \times N}$ representing the first set
-    of constraints $\leq \delta + C_{i j}$ for every $j \geq i$ and stack them
+    of constraints $\leq \rho + C_{i j}$ for every $j \geq i$ and stack them
     vertically.
 
     The second set of constraints is just the negation of the first.
 
     :param n: Number of samples
-    :param bound: Upper bound, typically $\delta = \epsilon/(2 \sqrt{N})$
-    :param C: Monte Carlo estimate of the pair-wise value differences
+    :param bound: Upper bound, typically $\rho = \epsilon/(2 \sqrt{N})$
+    :param C: Monte Carlo estimate of the pair-wise differences of values
     :return: Constraint matrix ``A_ub`` and vector ``b_ub`` for
         ``sp.optimize.linprog``
     """
@@ -168,28 +168,28 @@ def group_testing_shapley(
 
     T = max_iterations
     betas = np.zeros(shape=(T, n), dtype=np.int_)
-    uu = []  # utilities
+    uu = np.empty(T)  # utilities
 
     for t in maybe_progress(T, progress=progress):  # TODO: parallelize here
         k = rng.choice(kk, size=1, p=qq).item()
         s = random_subset_of_size(indices, k)
-        uu.append(u(s))
+        uu[t] = u(s)
         betas[t][s] = 1
 
     # Matrix of estimated differences. See Eqs. (3) and (4) in the paper.
     C = np.zeros(shape=(n, n))
-    for t in range(T):  # FIXME: maybe vectorise and avoid building Bt
-        # A matrix with n columns copies of beta[t]:
-        Bt = np.repeat(betas[t], repeats=n).reshape((n, n))
-        # C_ij += u_t * (β_i - β_j)
-        C += uu[t] * (Bt - Bt.T)
+    for i in range(n):
+        for j in range(i + 1, n):
+            C[i, j] = np.dot(uu, betas[:, i] - betas[:, j])
     C *= Z / T
 
     # Sanity check:
     # CC = np.zeros(shape=(n, n))
-    # for i in range(n):
-    #     for j in range(i + 1, n):
-    #         CC[i, j] = np.sum([uu[t] * (betas[t][i] - betas[t][j]) for t in range(T)])
+    # for t in range(T):  # FIXME: maybe vectorise and avoid building Bt
+    #     # A matrix with n columns copies of beta[t]:
+    #     Bt = np.repeat(betas[t], repeats=n).reshape((n, n))
+    #     # C_ij += u_t * (β_i - β_j)
+    #     CC += uu[t] * (Bt - Bt.T)
     # CC *= Z / T
     # assert np.allclose(np.triu(C), np.triu(CC))
 
@@ -213,29 +213,28 @@ def group_testing_shapley(
         options={},
     )
 
-    ###############################################
-    # Solution of the constraint problem with cvxpy
-
-    import cvxpy as cp
-
-    v = cp.Variable(n)
-    constraints = [cp.sum(v) == total_utility]
-    for i in range(n):
-        for j in range(i + 1, n):
-            constraints.append(v[i] - v[j] <= eps + C[i, j])
-            constraints.append(v[j] - v[i] <= eps - C[i, j])
-
-    cp_result = cp.Problem(cp.Minimize(0), constraints).solve(solver=cp.SCS)
-
-    if not np.allclose(result.x, v.value, rtol=0.01):
-        diff = result.x - v.value
-        raise RuntimeError(
-            f"Mismatch > 1% between the solutions by scipy and cvxpy: "
-            f"mean={diff.mean()}, stdev={diff.std()}"
-        )
-
+    #############################################################
+    # Sanity check: Solution of the constraint problem with cvxpy
+    #
+    # import cvxpy as cp
+    #
+    # v = cp.Variable(n)
+    # constraints = [cp.sum(v) == total_utility]
+    # for i in range(n):
+    #     for j in range(i + 1, n):
+    #         constraints.append(v[i] - v[j] <= eps + C[i, j])
+    #         constraints.append(v[j] - v[i] <= eps - C[i, j])
+    #
+    # cp_result = cp.Problem(cp.Minimize(0), constraints).solve(solver=cp.SCS)
+    #
+    # if not np.allclose(result.x, v.value, rtol=0.01):
+    #     diff = result.x - v.value
+    #     raise RuntimeError(
+    #         f"Mismatch > 1% between the solutions by scipy and cvxpy: "
+    #         f"mean={diff.mean()}, stdev={diff.std()}"
+    #     )
     # cut
-    ###############################################
+    #############################################################
 
     return ValuationResult(
         algorithm="group_testing_shapley",
