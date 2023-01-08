@@ -4,19 +4,10 @@ library.
 """
 
 from itertools import chain, combinations
-from typing import (
-    TYPE_CHECKING,
-    Collection,
-    Generator,
-    Iterator,
-    Optional,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import Collection, Generator, Iterator, Optional, Tuple, TypeVar
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.special import expit
 
 from pydvl.utils.types import compose_score
@@ -35,6 +26,7 @@ __all__ = [
     "powerset",
     "random_matrix_with_condition_number",
     "random_powerset",
+    "random_subset_of_size",
     "top_k_value_accuracy",
     "squashed_r2",
     "squashed_variance",
@@ -109,6 +101,20 @@ def random_powerset(
         subset = s[selection]
         yield subset
         total += 1
+
+
+def random_subset_of_size(s: NDArray[T], size: int) -> NDArray[T]:
+    """Samples a random subset of given size.
+
+    :param s: Set to sample from
+    :param size: Size of the subset to generate
+    :return: The subset
+    :raises ValueError: If size > len(s)
+    """
+    if size > len(s):
+        raise ValueError("Cannot sample subset larger than set")
+    rng = np.random.default_rng()
+    return rng.choice(s, size=size, replace=False)
 
 
 def random_matrix_with_condition_number(n: int, condition_number: float) -> "NDArray":
