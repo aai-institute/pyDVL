@@ -27,6 +27,8 @@
   adds `extra_values` argument to `ValuationResult`,
   adds `compute_removal_score()` and `compute_random_removal_score()` helper functions
   [PR #237](https://github.com/appliedAI-Initiative/pyDVL/pull/237)
+- Fixes bug in ray initialization in `RayParallelBackend` class
+  [PR #239](https://github.com/appliedAI-Initiative/pyDVL/pull/239)
 
 ## 0.3.0 - 💥 Breaking changes
 
