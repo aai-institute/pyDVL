@@ -9,6 +9,11 @@ computed with guarantees.
    implementation notwithstanding, convergence seems to be very slow (in terms
    of evaluations of the utility required). We recommend other Monte Carlo
    methods instead.
+
+You can read more :ref:`in the documentation<data valuation>`.
+
+.. versionadded:: 0.4.0
+
 """
 import logging
 from collections import namedtuple
@@ -67,19 +72,17 @@ def num_samples_eps_delta(
     r"""Implements the formula in Theorem 3 of :footcite:t:`jia_efficient_2019`
     which gives a lower bound on the number of samples required to obtain an
     (ε/√n,δ/(N(N-1))-approximation to all pair-wise differences of Shapley
-    values, wrt.
-    $\ell_2$ norm.
+    values, wrt. $\ell_2$ norm.
 
-    .. warning::
-       There is something wrong with the computation. Do not use this function.
-
-    :param eps:
-    :param delta:
+    :param eps: ε
+    :param delta: δ
     :param n: Number of samples
     :param utility_range: Range of the :class:`~pydvl.utils.utility.Utility`
-    function
+        function
     :return: Number of samples from $2^{[n]}$ guaranteeing ε/√n-correct Shapley
         pair-wise differences of values with probability 1-δ/(N(N-1)).
+
+    .. versionadded:: 0.4.0
 
     """
 

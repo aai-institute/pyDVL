@@ -108,9 +108,8 @@ def compute_shapley_values(
     :param mode: Choose which shapley algorithm to use. See
         :class:`~pydvl.value.shapley.ShapleyMode` for a list of allowed value.
 
-    :return: pandas DataFrame with index being group names or data indices, and
-        columns: `data_value` (calculated shapley value) and `data_value_std`
-        (standard deviation of `data_value` for Monte Carlo estimators)
+    :return: A :class:`~pydvl.value.results.ValuationResult` object with the
+        results.
 
     """
     progress: bool = kwargs.pop("progress", False)
