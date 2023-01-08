@@ -12,7 +12,7 @@
   issn = {2640-3498},
   url = {http://proceedings.mlr.press/v97/ghorbani19c.html},
   urldate = {2020-11-01},
-  abstract = {As data becomes the fuel driving technological and economic growth, a fundamental challenge is how to quantify the value of data in algorithmic predictions and decisions. For example, in healthcare...},
+  abstract = {As data becomes the fuel driving technological and economic growth, a fundamental challenge is how to quantify the value of data in algorithmic predictions and decisions. For example, in healthcare and consumer markets, it has been suggested that individuals should be compensated for the data that they generate, but it is not clear what is an equitable valuation for individual data. In this work, we develop a principled framework to address data valuation in the context of supervised machine learning. Given a learning algorithm trained on n data points to produce a predictor, we propose data Shapley as a metric to quantify the value of each training datum to the predictor performance. Data Shapley uniquely satisfies several natural properties of equitable data valuation. We develop Monte Carlo and gradient-based methods to efficiently estimate data Shapley values in practical settings where complex learning algorithms, including neural networks, are trained on large datasets. In addition to being equitable, extensive experiments across biomedical, image and synthetic data demonstrate that data Shapley has several other benefits: 1) it is more powerful than the popular leave-one-out or leverage score in providing insight on what data is more valuable for a given learning task; 2) low Shapley value data effectively capture outliers and corruptions; 3) high Shapley value data inform what type of new data to acquire to improve the predictor.},
   archiveprefix = {arXiv},
   langid = {english}
 }
@@ -107,16 +107,20 @@
   langid = {english}
 }
 
-@article{yan_procaccia_2021,
-  title = {If You Like Shapley Then You’ll Love the Core},
-  volume = {35},
-  url = {https://ojs.aaai.org/index.php/AAAI/article/view/16721},
-  doi = {10.1609/aaai.v35i6.16721},
-  abstract = {The prevalent approach to problems of credit assignment in machine learning -- such as feature and data valuation -- is to model the problem at hand as a cooperative game and apply the Shapley value. But cooperative game theory offers a rich menu of alternative solution concepts, which famously includes the core and its variants. Our goal is to challenge the machine learning community’s current consensus around the Shapley value, and make a case for the core as a viable alternative. To that end, we prove that arbitrarily good approximations to the least core -- a core relaxation that is always feasible -- can be computed efficiently (but prove an impossibility for a more refined solution concept, the nucleolus). We also perform experiments that corroborate these theoretical results and shed light on settings where the least core may be preferable to the Shapley value.},
-  number = {6},
-  journal = {Proceedings of the AAAI Conference on Artificial Intelligence},
+@inproceedings{yan_if_2021,
+  title = {If {{You Like Shapley Then You}}'ll {{Love}} the {{Core}}},
+  booktitle = {Proceedings of the 35th {{AAAI Conference}} on {{Artificial Intelligence}}, 2021},
   author = {Yan, Tom and Procaccia, Ariel D.},
   year = {2021},
-  month = {May},
-  pages = {5751-5759}
+  month = may,
+  volume = {6},
+  pages = {5751--5759},
+  publisher = {{Association for the Advancement of Artificial Intelligence}},
+  address = {{Virtual conference}},
+  doi = {10.1609/aaai.v35i6.16721},
+  url = {https://ojs.aaai.org/index.php/AAAI/article/view/16721},
+  urldate = {2021-04-23},
+  abstract = {The prevalent approach to problems of credit assignment in machine learning \textemdash{} such as feature and data valuation\textemdash{} is to model the problem at hand as a cooperative game and apply the Shapley value. But cooperative game theory offers a rich menu of alternative solution concepts, which famously includes the core and its variants. Our goal is to challenge the machine learning community's current consensus around the Shapley value, and make a case for the core as a viable alternative. To that end, we prove that arbitrarily good approximations to the least core \textemdash{} a core relaxation that is always feasible \textemdash{} can be computed efficiently (but prove an impossibility for a more refined solution concept, the nucleolus). We also perform experiments that corroborate these theoretical results and shed light on settings where the least core may be preferable to the Shapley value.},
+  copyright = {Copyright (c) 2021, Association for the Advancement of Artificial Intelligence (www.aaai.org). All rights reserved.},
+  langid = {english}
 }

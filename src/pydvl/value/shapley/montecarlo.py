@@ -1,44 +1,44 @@
 r"""
 Monte Carlo approximations to Shapley Data values.
 
-**Note:** You probably want to use the common interface provided by
-:func:`~pydvl.value.shapley.compute_shapley_values` instead of directly using
-the functions in this module.
+.. warning::
+   You probably want to use the common interface provided by
+   :func:`~pydvl.value.shapley.compute_shapley_values` instead of directly using
+   the functions in this module.
 
-Exact computation of Shapley value requires $\mathcal{O}(2^n)$ retrainings of
-the model. Recall the definition of the value of sample $i$:
+Because exact computation of Shapley values requires $\mathcal{O}(2^n)$
+re0trainings of the model, several Monte Carlo approximations are available.
+The first two sample from the powerset of the training data directly:
+:func:`combinatorial_montecarlo_shapley` and :func:`owen_sampling_shapley`. The
+latter uses a reformulation in terms of a continuous extension of the utility.
 
-$$v_i = \frac{1}{n}  \sum_{S \subseteq D \backslash \{ i \}}
-\binom{n - 1}{ | S | }^{-1} [U (S \cup \{ i \}) - U (S)] ,$$
-
-where $D$ is the set of $n$ indices in the training set, which we identify with
-the data itself.
-
-To overcome this problem, it is possible to use various forms of sampling from
-the power set of the training data to obtain a Monte Carlo approximation to the
-true value. This is done in
-:func:`~pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley` and
-:func:`~pydvl.value.shapley.montecarlo.owen_combinatorial_shapley`.
-
-Alternatively, employing the reformulation of the expression above as a sum
+Alternatively, employing another reformulation of the expression above as a sum
 over permutations, one has the implementation in
-:func:`~pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley`, or using
-an early stopping strategy to adapt computation time
-:func:`~pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley`.
+:func:`permutation_montecarlo_shapley`, or using an early stopping strategy to
+reduce computation :func:`truncated_montecarlo_shapley`.
 
-Finally, you can consider grouping your data points using
-:class:`~pydvl.utils.dataset.GroupedDataset` and computing the values of the
-groups instead.
+.. seealso::
+   It is also possible to use :func:`~pydvl.value.shapley.gt.group_testing_shapley`
+   to reduce the number of evaluations of the utility.
+
+.. seealso::
+   Additionally, you can consider grouping your data points using
+   :class:`~pydvl.utils.dataset.GroupedDataset` and computing the values of the
+   groups instead. This is not to be confused with "group testing" as
+   implemented in :func:`~pydvl.value.shapley.gt.group_testing_shapley`: any of
+   the algorithms mentioned above, including Group Testing, can work to valuate
+   groups of samples as units.
 """
 
 import logging
 import math
 from enum import Enum
 from time import sleep
-from typing import TYPE_CHECKING, Iterable, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Iterable, NamedTuple, Optional, Sequence
 from warnings import warn
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils import (
     MapReduceJob,
@@ -52,9 +52,6 @@ from pydvl.utils import (
 from pydvl.value import ValuationResult, ValuationStatus
 
 from .actor import get_shapley_coordinator, get_shapley_worker
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
 
 
 class MonteCarloResults(NamedTuple):
@@ -446,37 +443,32 @@ def owen_sampling_shapley(
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
 ) -> ValuationResult:
-    r"""Owen sampling of Shapley values.
-
-    This function computes a Monte Carlo approximation to
-
-    $$v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})}
-    [u(S \cup {i}) - u(S)]$$
-
-    as described in :footcite:t:`okhrati_multilinear_2021`, using one of two
-    methods. The first one, selected with the argument
-    `mode = OwenAlgorithm.Standard`, approximates the integral with:
-
-    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M
-    [u(S^{(q_j)}_m \cup {i}) - u(S^{(q_j)}_m)],$$
-
-    where $q_j = \frac{j}{Q} \in [0,1]$ and the sets $S^{(q_j)}$ are such that a
-    sample $x \in S^{(q_j)}$ if a draw from a $Ber(q_j)$ distribution is 1.
-
-    The second method, selected with the argument `mode =
-    OwenAlgorithm.Anthithetic`, uses correlated samples in the inner sum to
-    reduce the variance:
-
-    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M
-    [u(S^{(q_j)}_m \cup {i}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup {i})
-    - u((S^{(q_j)}_m)^c)],$$
-
-    where now $q_j = \frac{j}{2Q} \in [0,\frac{1}{2}]$, and $S^c$ is the
-    complement of $S$.
+    r"""Owen sampling of Shapley values as described in
+    :footcite:t:`okhrati_multilinear_2021`.
 
     .. warning::
        Antithetic sampling is unstable and not properly tested
 
+    This function computes a Monte Carlo approximation to
+
+    $$v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{i\}})}
+    [u(S \cup \{i\}) - u(S)]$$
+
+    using one of two methods. The first one, selected with the argument ``mode =
+    OwenAlgorithm.Standard``, approximates the integral with:
+
+    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m \cup \{i\}) - u(S^{(q_j)}_m)],$$
+
+    where $q_j = \frac{j}{Q} \in [0,1]$ and the sets $S^{(q_j)}$ are such that a
+    sample $x \in S^{(q_j)}$ if a draw from a $Ber(q_j)$ distribution is 1.
+
+    The second method, selected with the argument ``mode = OwenAlgorithm.Anthithetic``,
+    uses correlated samples in the inner sum to reduce the variance:
+
+    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m \cup \{i\}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup \{i\}) - u((S^{(q_j)}_m)^c)],$$
+
+    where now $q_j = \frac{j}{2Q} \in [0,\frac{1}{2}]$, and $S^c$ is the
+    complement of $S$.
 
     :param u: :class:`~pydvl.utils.utility.Utility` object holding data, model
         and scoring function.

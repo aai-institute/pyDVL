@@ -10,13 +10,7 @@ To install the latest release use:
 
     pip install pyDVL
 
-You can also install the latest development version from `TestPyPI <https://test.pypi.org/project/pyDVL/>`_:
-
-.. code-block:: shell
-
-    pip install pyDVL --index-url https://test.pypi.org/simple/
-
-To use all features of influence functions execute:
+To use all features of influence functions use instead:
 
 .. code-block:: shell
 
@@ -29,7 +23,14 @@ In order to check the installation you can use:
 
 .. code-block:: shell
 
-    python -c "import valuation; print(pydvl.__version__)"
+    python -c "import pydvl; print(pydvl.__version__)"
+
+You can also install the latest development version from
+`TestPyPI <https://test.pypi.org/project/pyDVL/>`_:
+
+.. code-block:: shell
+
+    pip install pyDVL --index-url https://test.pypi.org/simple/
 
 Dependencies
 ============

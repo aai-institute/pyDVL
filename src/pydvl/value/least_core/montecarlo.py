@@ -106,11 +106,12 @@ def montecarlo_least_core(
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param epsilon: Relaxation value by which the subset utility is decreased.
-    :param options: LP Solver options. \
-        Refer to this page for more information https://docs.scipy.org/doc/scipy/reference/optimize.linprog-highs.html
-    :param progress: If True, shows a tqdm progress bar
-    :return: Dictionary of {"index or label": exact_value}, sorted by decreasing
-        value.
+    :param options: LP Solver options. Refer to `SciPy's documentation
+        <https://docs.scipy.org/doc/scipy/reference/optimize.linprog-highs.html>`_
+        for more information
+    :param progress: Whether to display a progress bar
+    :return: Dictionary of ``{"index or label": exact_value}``, sorted by
+        decreasing value.
     """
     n = len(u.data)
 
