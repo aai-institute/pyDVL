@@ -8,7 +8,11 @@ from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 
 from pydvl.utils import GroupedDataset, MemcachedConfig, Scorer, Utility
-from pydvl.utils.numeric import lower_bound_hoeffding, squashed_r2, squashed_variance
+from pydvl.utils.numeric import (
+    num_samples_permutation_hoeffding,
+    squashed_r2,
+    squashed_variance,
+)
 from pydvl.value.shapley.montecarlo import (
     combinatorial_montecarlo_shapley,
     owen_sampling_shapley,
@@ -54,7 +58,9 @@ def test_hoeffding_bound_montecarlo(
 ):
     u, exact_values = analytic_shapley
 
-    max_iterations = lower_bound_hoeffding(delta=delta, eps=eps, score_range=1)
+    max_iterations = num_samples_permutation_hoeffding(
+        delta=delta, eps=eps, n=num_samples, u_range=1
+    )
 
     for _ in range(10):
         with tolerate(max_failures=int(10 * delta)):
