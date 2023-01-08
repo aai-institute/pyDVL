@@ -33,8 +33,9 @@ GTConstants = namedtuple("GTConstants", ["kk", "Z", "q", "q_tot", "T"])
 def _constants(
     n: int, epsilon: float, delta: float, utility_range: float
 ) -> GTConstants:
-    """A helper function returning the constants for the algorithm.
-    Pretty ugly, yes.
+    """A helper function returning the constants for the algorithm. Pretty ugly,
+    yes.
+
     """
     r = utility_range
 
