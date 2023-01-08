@@ -70,6 +70,8 @@ extlinks = {
 }
 
 bibtex_bibfiles = ["pydvl.bib"]
+bibtex_bibliography_header = "References\n=========="
+bibtex_footbibliography_header = bibtex_bibliography_header
 
 # NBSphinx
 

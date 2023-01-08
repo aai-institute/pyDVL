@@ -211,10 +211,6 @@ class DataUtilityLearning:
     >>> wrapped_u((1, 2, 3)) # Subsequent calls will be computed using the fit model for DUL
     0.0
 
-    .. rubric:: References
-
-    .. footbibliography::
-
     """
 
     def __init__(

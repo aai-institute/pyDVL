@@ -124,10 +124,6 @@ def truncated_montecarlo_shapley(
         and from the coordinator
     :return: Object with the data values.
 
-    .. rubric::References
-
-    .. footbibliography::
-
     """
     parallel_backend = init_parallel_backend(config)
 
@@ -496,10 +492,6 @@ def owen_sampling_shapley(
         address, number of cpus, etc.
     :param progress: Whether to display progress bars for each job.
     :return: Object with the data values.
-
-    .. rubric:: References
-
-    .. footbibliography::
 
     .. versionadded:: 0.3.0
 
