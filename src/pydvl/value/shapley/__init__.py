@@ -10,6 +10,7 @@ from typing import Optional, cast
 
 from pydvl.utils import Utility
 from pydvl.value.results import ValuationResult
+from pydvl.value.shapley.gt import group_testing_shapley
 from pydvl.value.shapley.knn import knn_shapley
 from pydvl.value.shapley.montecarlo import (
     OwenAlgorithm,
@@ -31,17 +32,17 @@ class ShapleyMode(str, Enum):
 
     .. todo::
        Make algorithms register themselves here.
-
     """
 
     CombinatorialExact = "combinatorial_exact"
-    PermutationExact = "permutation_exact"
     CombinatorialMontecarlo = "combinatorial_montecarlo"
-    PermutationMontecarlo = "permutation_montecarlo"
-    TruncatedMontecarlo = "truncated_montecarlo"
+    GroupTesting = "group_testing"
+    KNN = "knn"
     Owen = "owen"
     OwenAntithetic = "owen_antithetic"
-    KNN = "knn"
+    PermutationExact = "permutation_exact"
+    PermutationMontecarlo = "permutation_montecarlo"
+    TruncatedMontecarlo = "truncated_montecarlo"
 
 
 def compute_shapley_values(
@@ -61,32 +62,35 @@ def compute_shapley_values(
     algorithms also accept additional arguments, please refer to the
     documentation of each particular method.
 
-    - 'combinatorial_exact': uses the combinatorial implementation of data
+    - ``combinatorial_exact``: uses the combinatorial implementation of data
       Shapley. Implemented in
       :func:`~pydvl.value.shapley.naive.combinatorial_exact_shapley`.
-    - 'permutation_exact': uses the permutation-based implementation of data
-      Shapley. Computation is **not parallelized**. Implemented in
-      :func:`~pydvl.value.shapley.naive.permutation_exact_shapley`.
-    - 'permutation_montecarlo': uses the approximate Monte Carlo implementation
-      of permutation data Shapley. Implemented in
-      :func:`~pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley`.
-    - 'combinatorial_montecarlo':  uses the approximate Monte Carlo
+    - ``combinatorial_montecarlo``:  uses the approximate Monte Carlo
       implementation of combinatorial data Shapley. Implemented in
       :func:`~pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley`.
-    - 'truncated_montecarlo': default option, same as permutation_montecarlo but
-      stops the computation whenever a certain accuracy is reached.
+    - ``permutation_exact``: uses the permutation-based implementation of data
+      Shapley. Computation is **not parallelized**. Implemented in
+      :func:`~pydvl.value.shapley.naive.permutation_exact_shapley`.
+    - ``permutation_montecarlo``: uses the approximate Monte Carlo
+      implementation of permutation data Shapley. Implemented in
+      :func:`~pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley`.
+    - ``truncated_montecarlo``: default option, same as ``permutation_montecarlo``
+      but stops the computation whenever a certain accuracy is reached.
       Implemented in
       :func:`~pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley`.
-    - 'owen_sampling': Uses the Owen continuous extension of the utility function
-      to the unit cube. Implemented in
+    - ``owen_sampling``: Uses the Owen continuous extension of the utility
+      function to the unit cube. Implemented in
       :func:`~pydvl.value.shapley.montecarlo.owen_sampling_shapley`.
       This method requires an additional parameter `q_max` for the number of
       subdivisions of the unit interval to use for integration.
-    - 'owen_halved': Same as 'owen_sampling' but uses correlated samples in the
+    - ``owen_halved``: Same as 'owen_sampling' but uses correlated samples in the
       expectation. Implemented in
       :func:`~pydvl.value.shapley.montecarlo.owen_sampling_shapley`.
       This method  requires an additional parameter `q_max` for the number of
       subdivisions of the interval [0,0.5] to use for integration.
+    - ``group_testing``: estimates differences of Shapley values and solves a
+      constraint satisfaction problem. High sample complexity, not recommended.
+      Implemented in :func:`~pydvl.value.shapley.gt.group_testing_shapley`.
 
     Additionally, one can use model-specific methods:
 
@@ -164,5 +168,17 @@ def compute_shapley_values(
         )
     elif mode == ShapleyMode.KNN:
         return knn_shapley(u, progress=progress)
+    elif mode == ShapleyMode.GroupTesting:
+        if max_iterations is None:
+            raise ValueError(
+                "max_iterations cannot be None for Group Testing,"
+                "use num_samples_eps_delta() to compute them"
+            )
+        eps = kwargs.get("epsilon")
+        if eps is None:
+            raise ValueError("Group Testing requires error bound epsilon")
+        return group_testing_shapley(
+            u, eps=eps, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
+        )
     else:
         raise ValueError(f"Invalid value encountered in {mode=}")
