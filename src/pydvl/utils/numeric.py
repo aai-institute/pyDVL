@@ -49,23 +49,21 @@ def powerset(s: NDArray[T]) -> Iterator[Collection[T]]:
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
 
-def num_samples_permutation_hoeffding(
-    eps: float, delta: float, n: int, u_range: float
-) -> int:
-    """Upper bound on the number of samples required for MonteCarlo Shapley to
+def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) -> int:
+    """Lower bound on the number of samples required for MonteCarlo Shapley to
     obtain an (ε,δ)-approximation.
 
-    That is: with probability 1-δ, the estimate will be ε-close to the true
-    quantity, if at least n samples are taken.
+    That is: with probability 1-δ, the estimated value for one data point will
+    be ε-close to the true quantity, if at least this many permutations are
+    sampled.
 
     :param eps: ε > 0
     :param delta: 0 < δ <= 1
-    :param n: Number of samples in the dataset
     :param u_range: Range of the :class:`~pydvl.utils.utility.Utility` function
-    :return: Number of permutations required to guarantee ε-correct Shapley
+    :return: Number of _permutations_ required to guarantee ε-correct Shapley
         values with probability 1-δ
     """
-    return int(np.ceil(np.log(2 * n / delta) * 2 * n * u_range**2 / eps**2))
+    return int(np.ceil(np.log(2 / delta) * 2 * u_range**2 / eps**2))
 
 
 def random_powerset(

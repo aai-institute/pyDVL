@@ -58,9 +58,7 @@ def test_hoeffding_bound_montecarlo(
 ):
     u, exact_values = analytic_shapley
 
-    max_iterations = num_samples_permutation_hoeffding(
-        delta=delta, eps=eps, n=num_samples, u_range=1
-    )
+    max_iterations = num_samples_permutation_hoeffding(delta=delta, eps=eps, u_range=1)
 
     for _ in range(10):
         with tolerate(max_failures=int(10 * delta)):
