@@ -82,17 +82,20 @@ class Utility:
         data: Dataset,
         scoring: Optional[Union[str, Scorer]] = None,
         *,
+        default_score: float = 0.0,
+        score_range: Tuple[float, float] = (-np.inf, np.inf),
         catch_errors: bool = True,
         show_warnings: bool = False,
-        default_score: float = 0.0,
         enable_cache: bool = False,
         cache_options: Optional[MemcachedConfig] = None,
     ):
         self.model = model
         self.data = data
+        self.default_score = default_score
+        # TODO: auto-fill from known scorers ?
+        self.score_range = score_range
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
-        self.default_score = default_score
         self.enable_cache = enable_cache
         if cache_options is None:
             self.cache_options: MemcachedConfig = MemcachedConfig()
