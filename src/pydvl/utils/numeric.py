@@ -40,7 +40,7 @@ def powerset(s: NDArray[T]) -> Iterator[Collection[T]]:
 
     >>> import numpy as np
     >>> from pydvl.utils.numeric import powerset
-    >>> list(powerset(np.array(1,2)))
+    >>> list(powerset(np.array((1,2))))
     [(), (1,), (2,), (1, 2)]
 
      :param s: The set to use
