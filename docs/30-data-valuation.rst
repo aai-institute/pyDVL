@@ -333,6 +333,51 @@ and can be used in pyDVL with:
    utility = Utility(model, data)
    values = compute_shapley_values(u=utility, mode="knn")
 
+
+Group testing
+^^^^^^^^^^^^^
+
+An alternative approach introduced in :footcite:t:`jia_efficient_2019a`
+first approximates the differences of values with a Monte Carlo sum. With
+
+\[ \hat{\Delta}_{i \nocomma j} \approx v_i - v_j, \]
+
+one then solves the following linear constraint satisfaction problem (CSP) to
+infer the final values:
+
+\[ \begin{array}{lll}
+     \sum_{i = 1}^N v_i & = & U (D)\\
+     | v_i - v_j - \hat{\Delta}_{i \nocomma j} | & \leqslant &
+     \frac{\varepsilon}{2 \sqrt{N}}
+\end{array} \]
+
+.. warning::
+   We have reproduced this method in pyDVL for completeness and benchmarking,
+   but we don't advocate its use because of the speed and memory cost. Despite
+   our best efforts, the number of samples required in practice for convergence
+   can be several orders of magnitude worse than with e.g. Truncated Monte Carlo.
+
+Usage follows the same pattern as every other Shapley method, but with the
+addition of an ``eps`` parameter required for the solution of the CSP. It should
+be the same value used to compute the minimum number of samples required. This
+can be done with :func:`~pydvl.value.shapley.gt.num_samples_eps_delta`, but note
+that the number returned will be huge! In practice, fewer samples can be enough,
+but the actual number will strongly depend on the utility, in particular its
+variance.
+
+.. code-block:: python
+
+   from pydvl.utils import Dataset, Utility
+   from pydvl.value.shapley import compute_shapley_values
+
+   model = ...
+   data = Dataset(...)
+   utility = Utility(model, data, score_range=(_min, _max))
+   min_iterations = num_samples_eps_delta(epsilon, delta, n, utility.score_range)
+   values = compute_shapley_values(
+       u=utility, mode="group_testing", max_iterations=min_iterations, eps=eps
+   )
+
 .. _Least Core:
 
 Core values
