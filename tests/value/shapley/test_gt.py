@@ -6,18 +6,14 @@ from .. import check_values
 
 
 @pytest.mark.parametrize(
-    "num_samples, fun, rtol, max_iterations, kwargs",
+    "num_samples, fun, atol, max_iterations",
     [
-        (10, group_testing_shapley, 0.1, 1000, {}),
+        (5, group_testing_shapley, 0.01, int(1e5)),
     ],
 )
 def test_group_testing_shapley(
-    num_samples, analytic_shapley, fun, rtol, max_iterations, kwargs
+    num_samples, analytic_shapley, fun, atol, max_iterations
 ):
     u, exact_values = analytic_shapley
-
-    values = fun(
-        u, max_iterations=int(max_iterations), progress=False, n_jobs=1, **kwargs
-    )
-
-    check_values(values, exact_values, rtol=rtol)
+    values = fun(u, max_iterations=int(max_iterations), progress=False, n_jobs=1)
+    check_values(values, exact_values, atol=atol)
