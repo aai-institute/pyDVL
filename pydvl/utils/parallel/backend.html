@@ -289,7 +289,7 @@
 <span id="backend"></span><h1>backend<a class="headerlink" href="#module-pydvl.utils.parallel.backend" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.utils.parallel.backend.init_parallel_backend">
-<span class="sig-name descname"><span class="pre">init_parallel_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseParallelBackend</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L189"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.init_parallel_backend" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_parallel_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseParallelBackend</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L188"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.init_parallel_backend" title="Permalink to this definition"></a></dt>
 <dd><p>Initializes the parallel backend and returns an instance of it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -303,7 +303,7 @@
 <span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">ParallelConfig</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;ray&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">parallel_backend</span> <span class="o">=</span> <span class="n">init_parallel_backend</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">parallel_backend</span>
-<span class="go">&lt;RayParallelBackend: {&#39;address&#39;: None, &#39;logging_level&#39;: 30, &#39;num_cpus&#39;: None, &#39;ignore_reinit_error&#39;: True}&gt;</span>
+<span class="go">&lt;RayParallelBackend: {&#39;address&#39;: None, &#39;logging_level&#39;: 30, &#39;num_cpus&#39;: None}&gt;</span>
 </pre></div>
 </div>
 </dd></dl>
