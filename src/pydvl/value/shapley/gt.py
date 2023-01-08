@@ -27,10 +27,12 @@ __all__ = ["group_testing_shapley", "num_samples_eps_delta"]
 log = logging.getLogger(__name__)
 
 T = TypeVar("T", NDArray[np.float_], float)
-Constants = namedtuple("GTConstants", ["kk", "Z", "q", "q_tot", "T"])
+GTConstants = namedtuple("GTConstants", ["kk", "Z", "q", "q_tot", "T"])
 
 
-def _constants(n: int, epsilon: float, delta: float, utility_range: float) -> Constants:
+def _constants(
+    n: int, epsilon: float, delta: float, utility_range: float
+) -> GTConstants:
     """A helper function returning the constants for the algorithm.
     Pretty ugly, yes.
     """
@@ -55,7 +57,7 @@ def _constants(n: int, epsilon: float, delta: float, utility_range: float) -> Co
     min_iter = 8 * np.log(n * (n - 1) / (2 * delta)) / (1 - q_tot**2)
     min_iter /= h(2 * epsilon / (np.sqrt(n) * Z * r * (1 - q_tot**2)))
 
-    return Constants(kk=kk, Z=Z, q=q, q_tot=q_tot, T=int(min_iter))
+    return GTConstants(kk=kk, Z=Z, q=q, q_tot=q_tot, T=int(min_iter))
 
 
 def num_samples_eps_delta(
@@ -309,12 +311,19 @@ def group_testing_shapley(
     #     )
     ###########################################################################
 
-    return ValuationResult(
-        algorithm="group_testing_shapley",
-        status=ValuationStatus.Converged
-        if result.status == 0
-        else ValuationStatus.Failed,
-        values=result.x,
-        stderr=None,
-        data_names=u.data.data_names,
-    )
+    if result.status == 0:
+        return ValuationResult(
+            algorithm="group_testing_shapley",
+            status=ValuationStatus.Converged,
+            values=result.x,
+            stderr=None,
+            data_names=u.data.data_names,
+        )
+    else:
+        return ValuationResult(
+            algorithm="group_testing_shapley",
+            status=ValuationStatus.Failed,
+            values=np.nan * np.ones_like(u.data.indices),
+            stderr=None,
+            data_names=u.data.data_names,
+        )
