@@ -1,10 +1,11 @@
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
-from pydvl.utils import Dataset, Utility
+from pydvl.utils import Dataset, SupervisedModel, Utility
 from pydvl.value import ValuationResult, ValuationStatus
 
 from . import polynomial
@@ -35,10 +36,6 @@ def polynomial_pipeline(coefficients):
 
 @pytest.fixture(scope="function")
 def dummy_utility(num_samples):
-    from numpy import ndarray
-
-    from pydvl.utils import SupervisedModel
-
     # Indices match values
     x = np.arange(0, num_samples, 1).reshape(-1, 1)
     nil = np.zeros_like(x)
@@ -54,13 +51,13 @@ def dummy_utility(num_samples):
             self.m = max(data.x_train)
             self.utility = 0
 
-        def fit(self, x: ndarray, y: ndarray):
+        def fit(self, x: NDArray, y: NDArray):
             self.utility = np.sum(x) / self.m
 
-        def predict(self, x: ndarray) -> ndarray:
+        def predict(self, x: NDArray) -> NDArray:
             return x
 
-        def score(self, x: ndarray, y: ndarray) -> float:
+        def score(self, x: NDArray, y: NDArray) -> float:
             return self.utility
 
     return Utility(DummyModel(data), data, enable_cache=False)
