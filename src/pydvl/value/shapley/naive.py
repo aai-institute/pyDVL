@@ -59,7 +59,7 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 
 
 def _combinatorial_exact_shapley(
-    indices: np.ndarray, u: Utility, progress: bool
+    indices: Sequence[int], u: Utility, progress: bool
 ) -> NDArray:
     """Helper function for :func:`combinatorial_exact_shapley`.
 
@@ -69,7 +69,7 @@ def _combinatorial_exact_shapley(
     n = len(u.data)
     local_values = np.zeros(n)
     for i in indices:
-        subset = np.setxor1d(u.data.indices, [i], assume_unique=True)
+        subset = np.setxor1d(u.data.indices, [i], assume_unique=True).astype(np.int_)
         for s in maybe_progress(
             powerset(subset),
             progress,

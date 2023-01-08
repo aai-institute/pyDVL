@@ -12,10 +12,7 @@ from scipy.special import expit
 
 from pydvl.utils.types import compose_score
 
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
-
-FloatOrArray = TypeVar("FloatOrArray", float, "NDArray")
+FloatOrArray = TypeVar("FloatOrArray", float, NDArray[np.float_])
 
 __all__ = [
     "get_running_avg_variance",
@@ -32,21 +29,22 @@ __all__ = [
     "squashed_variance",
 ]
 
-T = TypeVar("T")
+T = TypeVar("T", bound=np.generic)
 
 
-def powerset(s: Union[Sequence, "NDArray"]) -> Iterator[Collection[T]]:
+def powerset(s: NDArray[T]) -> Iterator[Collection[T]]:
     """Returns an iterator for the power set of the argument.
 
      Subsets are generated in sequence by growing size. See
      :func:`random_powerset` for random sampling.
 
     >>> from pydvl.utils.numeric import powerset
-    >>> list(powerset([1,2]))
+    >>> list(powerset(np.array(1,2)))
     [(), (1,), (2,), (1, 2)]
 
      :param s: The set to use
      :return: An iterator
+     :raises TypeError: If the argument is not an ``Iterable``.
     """
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
@@ -65,8 +63,8 @@ def lower_bound_hoeffding(delta: float, eps: float, score_range: float) -> int:
 
 
 def random_powerset(
-    s: "NDArray", max_subsets: Optional[int] = None, q: float = 0.5
-) -> Generator["NDArray", None, None]:
+    s: NDArray[T], max_subsets: Optional[int] = None, q: float = 0.5
+) -> Generator[NDArray[T], None, None]:
     """Samples subsets from the power set of the argument, without
     pre-generating all subsets and in no order.
 
@@ -93,11 +91,12 @@ def random_powerset(
     if q < 0 or q > 1:
         raise ValueError("Element sampling probability must be in [0,1]")
 
+    rng = np.random.default_rng()
     total = 1
     if max_subsets is None:
         max_subsets = np.iinfo(np.int32).max
     while total <= max_subsets:
-        selection = np.random.uniform(size=len(s)) > q
+        selection = rng.uniform(size=len(s)) > q
         subset = s[selection]
         yield subset
         total += 1
@@ -244,13 +243,16 @@ def get_running_avg_variance(
     return new_average, new_variance
 
 
-def top_k_value_accuracy(y_true: "NDArray", y_pred: "NDArray", k: int = 3) -> float:
+def top_k_value_accuracy(
+    y_true: NDArray[np.float_], y_pred: NDArray[np.float_], k: int = 3
+) -> float:
     """Computes the top-k accuracy for the estimated values by comparing indices
     of the highest k values.
 
     :param y_true: Exact/true value
     :param y_pred: Predicted/estimated value
-    :param k: Number of the highest values used to compute accuracy
+    :param k: Number of the highest values taken into account
+    :return: Accuracy
     """
     top_k_exact_values = np.argsort(y_true)[-k:]
     top_k_pred_values = np.argsort(y_pred)[-k:]
