@@ -29,6 +29,8 @@
   [PR #237](https://github.com/appliedAI-Initiative/pyDVL/pull/237)
 - **New method**: Group Testing Shapley for valuation, from _Jia et al. 2019_
   [PR #240](https://github.com/appliedAI-Initiative/pyDVL/pull/240)
+- Fixes bug in ray initialization in `RayParallelBackend` class
+  [PR #239](https://github.com/appliedAI-Initiative/pyDVL/pull/239)
 
 ## 0.3.0 - 💥 Breaking changes
 
