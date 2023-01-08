@@ -93,7 +93,7 @@ class Utility:
         self.data = data
         self.default_score = default_score
         # TODO: auto-fill from known scorers ?
-        self.score_range = score_range
+        self.score_range = np.array(score_range)
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
         self.enable_cache = enable_cache

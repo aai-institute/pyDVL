@@ -48,7 +48,10 @@ def dummy_utility(num_samples):
 
     class DummyModel(SupervisedModel):
         """Under this model each data point receives a score of index / max,
-        assuming that the values of training samples match their indices."""
+        assuming that the values of training samples match their indices.
+
+        The utility of a set is the sum of the utilities.
+        """
 
         def __init__(self, data: Dataset):
             self.m = max(data.x_train)
@@ -63,7 +66,9 @@ def dummy_utility(num_samples):
         def score(self, x: ndarray, y: ndarray) -> float:
             return self.utility
 
-    return Utility(DummyModel(data), data, enable_cache=False)
+    return Utility(
+        DummyModel(data), data, score_range=(0, x.sum() / x.max()), enable_cache=False
+    )
 
 
 @pytest.fixture(scope="function")
