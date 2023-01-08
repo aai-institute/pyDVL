@@ -38,6 +38,7 @@ def powerset(s: NDArray[T]) -> Iterator[Collection[T]]:
      Subsets are generated in sequence by growing size. See
      :func:`random_powerset` for random sampling.
 
+    >>> import numpy as np
     >>> from pydvl.utils.numeric import powerset
     >>> list(powerset(np.array(1,2)))
     [(), (1,), (2,), (1, 2)]
