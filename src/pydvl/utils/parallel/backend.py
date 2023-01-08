@@ -136,9 +136,8 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         config_dict.pop("backend")
         config_dict["num_cpus"] = config_dict.pop("n_local_workers")
         self.config = config_dict
-        if self.config["address"] is None:
-            self.config["ignore_reinit_error"] = True
-        ray.init(**self.config)
+        if not ray.is_initialized():
+            ray.init(**self.config)
 
     def get(
         self,
