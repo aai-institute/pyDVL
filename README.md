@@ -44,11 +44,16 @@ methods from the following papers:
   Proceedings of the VLDB Endowment 12, no. 11 (1 July 2019): 1610–23.
 - Okhrati, Ramin, and Aldo Lipani.
   [A Multilinear Sampling Algorithm to Estimate Shapley Values](https://doi.org/10.1109/ICPR48806.2021.9412511).
-  In 2020 25th International Conference on Pattern Recognition (ICPR), 7992–99.
+  In 25th International Conference on Pattern Recognition (ICPR 2020), 7992–99.
   IEEE, 2021.
-- Yan, T., & Procaccia, A. D. 
+- Yan, T., & Procaccia, A. D.
   [If You Like Shapley Then You’ll Love the Core]().
   Proceedings of the AAAI Conference on Artificial Intelligence, 35(6) (2021): 5751-5759.
+- Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nick Hynes, Nezihe Merve
+  Gürel, Bo Li, Ce Zhang, Dawn Song, and Costas J. Spanos.
+  [Towards Efficient Data Valuation Based on the Shapley Value](http://proceedings.mlr.press/v89/jia19a.html).
+  In 22nd International Conference on Artificial Intelligence and Statistics,
+  1167–76. PMLR, 2019.
 
 Influence Functions compute the effect that single points have on an estimator /
 model. We implement methods from the following papers:
