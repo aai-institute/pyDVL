@@ -204,9 +204,11 @@ tox -e docs-dev
 
 Bibliographic citations are managed with the plugin 
 [sphinx-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/index.html).
-To enter a citation first add the entry to `docs/pydvl.bib`. This should be an
-export of the Zotero folder `software/pydvl` in the
-[TransferLab Zotero library](https://www.zotero.org/groups/2703043/transferlab/library).
+To enter a citation first add the entry to `docs/pydvl.bib`. For team
+contributor this should be an export of the Zotero folder `software/pydvl` in
+the [TransferLab Zotero library](https://www.zotero.org/groups/2703043/transferlab/library).
+All other contributors just add the bibtex data, and a maintainer will add it to
+the group library upon merging.
 
 To add a citation inside a module or function's docstring, use the sphinx role
 `:footcite:t:`. A references section is automatically added at the bottom of
