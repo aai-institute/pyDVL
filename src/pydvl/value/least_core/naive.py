@@ -3,6 +3,7 @@ import warnings
 from typing import Optional
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils import Utility, maybe_progress, powerset
 from pydvl.value.least_core._common import (
@@ -84,6 +85,8 @@ def exact_least_core(
     _, least_core_value = _solve_least_core_linear_program(
         n_variables=n, A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
     )
+
+    values: Optional[NDArray[np.float_]]
 
     if least_core_value is None:
         logger.debug("No values were found")

@@ -169,6 +169,8 @@ def montecarlo_least_core(
         n_variables=n, A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
     )
 
+    values: Optional[NDArray[np.float_]]
+
     if least_core_value is None:
         logger.debug("No values were found")
         status = ValuationStatus.Failed

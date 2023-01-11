@@ -65,8 +65,8 @@ def _solve_least_core_linear_program(
 
     try:
         problem.solve(solver=solver, **options)
-    except cp.SOLVER_ERROR as e:
-        raise ValueError("Could not solve linear program") from e
+    except cp.SOLVER_ERROR as err:
+        raise ValueError("Could not solve linear program") from err
 
     if problem.status in cp.settings.SOLUTION_PRESENT:
         logger.debug("Problem was solved")
@@ -146,8 +146,8 @@ def _solve_egalitarian_least_core_quadratic_program(
 
     try:
         problem.solve(solver=solver, **options)
-    except cp.SOLVER_ERROR as e:
-        raise ValueError("Could not solve quadratic program") from e
+    except cp.SOLVER_ERROR as err:
+        raise ValueError("Could not solve quadratic program") from err
 
     if problem.status in cp.settings.SOLUTION_PRESENT:
         logger.debug("Problem was solved")
@@ -157,7 +157,7 @@ def _solve_egalitarian_least_core_quadratic_program(
                 "maximum number of iterations in options",
                 RuntimeWarning,
             )
-        return x.value
+        return x.value  # type: ignore
 
     if problem.status in cp.settings.INF_OR_UNB:
         warnings.warn(
