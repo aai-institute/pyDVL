@@ -9,7 +9,7 @@ from pydvl.utils import Utility, maybe_progress
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import MapReduceJob
-from pydvl.value.least_core._common import _solve_linear_program
+from pydvl.value.least_core._common import _solve_least_core_linear_program
 from pydvl.value.results import ValuationResult, ValuationStatus
 
 logger = logging.getLogger(__name__)
@@ -44,8 +44,7 @@ def _montecarlo_least_core(
         max_subsets=max_iterations,
     )
 
-    A_ub = np.zeros((max_iterations, n + 1))
-    A_ub[:, -1] = -1
+    A_lb = np.zeros((max_iterations, n))
 
     for i, subset in enumerate(
         maybe_progress(
@@ -55,22 +54,22 @@ def _montecarlo_least_core(
             position=job_id,
         )
     ):
-        indices = np.zeros(n + 1, dtype=bool)
+        indices = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
-        A_ub[i, indices] = -1
+        A_lb[i, indices] = 1
         utility_values[i] = u(subset)
 
-    return utility_values, A_ub
+    return utility_values, A_lb
 
 
 def _reduce_func(
     results: Iterable[Tuple[NDArray[np.float_], NDArray[np.float_]]]
 ) -> Tuple[NDArray[np.float_], NDArray[np.float_]]:
     """Combines the results from different parallel runs of the `_montecarlo_least_core` function"""
-    utility_values_list, A_ub_list = zip(*results)
+    utility_values_list, A_lb_list = zip(*results)
     utility_values = np.concatenate(utility_values_list)
-    A_ub = np.concatenate(A_ub_list)
-    return utility_values, A_ub
+    A_lb = np.concatenate(A_lb_list)
+    return utility_values, A_lb
 
 
 def montecarlo_least_core(
@@ -106,11 +105,11 @@ def montecarlo_least_core(
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param epsilon: Relaxation value by which the subset utility is decreased.
-    :param options: LP Solver options. \
-        Refer to this page for more information https://docs.scipy.org/doc/scipy/reference/optimize.linprog-highs.html
+    :param options: Keyword arguments that will be used to select a solver
+        and to configure it. Refer to the following page for all possible options:
+        https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
     :param progress: If True, shows a tqdm progress bar
-    :return: Dictionary of {"index or label": exact_value}, sorted by decreasing
-        value.
+    :return: Object with the data values and the least core value.
     """
     n = len(u.data)
 
@@ -144,7 +143,7 @@ def montecarlo_least_core(
         config=config,
     )
     logger.debug("Calling MapReduceJob instance")
-    utility_values, A_ub = map_reduce_job()
+    utility_values, A_lb = map_reduce_job()
 
     if np.any(np.isnan(utility_values)):
         warnings.warn(
@@ -153,26 +152,17 @@ def montecarlo_least_core(
         )
 
     logger.debug("Building vectors and matrices for linear programming problem")
-    c = np.zeros(n + 1)
-    c[-1] = 1
-    b_ub = -(utility_values - epsilon)
-    # We explicitly add the utility for the empty set
-    A_ub = np.concatenate([np.zeros((1, n + 1)), A_ub], axis=0)
-    A_ub[0, -1] = -1
-    b_ub = np.concatenate([[u([])], b_ub])
-    A_eq = np.ones((1, n + 1))
-    A_eq[:, -1] = 0
+    b_lb = utility_values - epsilon
+    A_eq = np.ones((1, n))
     # We explicitly add the utility value for the entire dataset
     b_eq = np.array([u(u.data.indices)])
 
-    logger.debug("Removing possible duplicate values in upper bound array")
-    A_ub, unique_indices = np.unique(A_ub, return_index=True, axis=0)
-    b_ub = b_ub[unique_indices]
+    logger.debug("Removing possible duplicate values in lower bound array")
+    A_lb, unique_indices = np.unique(A_lb, return_index=True, axis=0)
+    b_lb = b_lb[unique_indices]
 
-    logger.debug(f"{unique_indices=}")
-
-    values = _solve_linear_program(
-        c, A_eq, b_eq, A_ub, b_ub, bounds=[(None, None)] * n + [(0.0, None)], **options
+    values, least_core_value = _solve_least_core_linear_program(
+        n_variables=n, A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
     )
 
     if values is None:
@@ -180,12 +170,9 @@ def montecarlo_least_core(
         status = ValuationStatus.Failed
         values = np.empty(n)
         values[:] = np.nan
+        least_core_value = np.nan
     else:
         status = ValuationStatus.Converged
-
-    # The last entry represents the least core value 'e'
-    least_core_value = values[-1].item()
-    values = values[:-1]
 
     return ValuationResult(
         algorithm="exact_least_core",

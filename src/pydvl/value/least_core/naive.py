@@ -5,7 +5,7 @@ from typing import Optional
 import numpy as np
 
 from pydvl.utils import Utility, maybe_progress, powerset
-from pydvl.value.least_core._common import _solve_linear_program
+from pydvl.value.least_core._common import _solve_least_core_linear_program
 from pydvl.value.results import ValuationResult, ValuationStatus
 
 __all__ = ["exact_least_core"]
@@ -38,12 +38,12 @@ def exact_least_core(
         for all other cases.
 
     :param u: Utility object with model, data, and scoring function
-    :param options: LP Solver options. \
-        Refer to this page for more information https://docs.scipy.org/doc/scipy/reference/optimize.linprog-highs.html
+    :param options: Keyword arguments that will be used to select a solver
+        and to configure it. Refer to the following page for all possible options:
+        https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
     :param progress: If True, shows a tqdm progress bar
 
-    :return: Dictionary of {"index or label": exact_value}, sorted by decreasing
-        value.
+    :return: Object with the data values and the least core value.
     """
     n = len(u.data)
 
@@ -57,12 +57,8 @@ def exact_least_core(
     powerset_size = 2**n
 
     logger.debug("Building vectors and matrices for linear programming problem")
-    c = np.zeros(n + 1)
-    c[-1] = 1
-    A_eq = np.ones((1, n + 1))
-    A_eq[:, -1] = 0
-    A_ub = np.zeros((powerset_size, n + 1))
-    A_ub[:, -1] = -1
+    A_eq = np.ones((1, n))
+    A_lb = np.zeros((powerset_size, n))
 
     logger.debug("Iterating over all subsets")
     utility_values = np.zeros(powerset_size)
@@ -74,22 +70,16 @@ def exact_least_core(
             position=0,
         )
     ):
-        indices = np.zeros(n + 1, dtype=bool)
+        indices = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
-        A_ub[i, indices] = -1
+        A_lb[i, indices] = 1
         utility_values[i] = u(subset)
 
-    b_ub = -utility_values
+    b_lb = utility_values
     b_eq = utility_values[-1:]
 
-    values = _solve_linear_program(
-        c,
-        A_eq,
-        b_eq,
-        A_ub,
-        b_ub,
-        bounds=[(None, None)] * n + [(0.0, None)],
-        **options,
+    values, least_core_value = _solve_least_core_linear_program(
+        n_variables=n, A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
     )
 
     if values is None:
@@ -97,12 +87,9 @@ def exact_least_core(
         status = ValuationStatus.Failed
         values = np.empty(n)
         values[:] = np.nan
+        least_core_value = np.nan
     else:
         status = ValuationStatus.Converged
-
-    # The last entry represents the least core value 'e'
-    least_core_value = values[-1].item()
-    values = values[:-1]
 
     return ValuationResult(
         algorithm="exact_least_core",
