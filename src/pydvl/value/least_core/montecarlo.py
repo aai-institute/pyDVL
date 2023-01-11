@@ -110,8 +110,7 @@ def montecarlo_least_core(
         <https://docs.scipy.org/doc/scipy/reference/optimize.linprog-highs.html>`_
         for more information
     :param progress: Whether to display a progress bar
-    :return: Dictionary of ``{"index or label": exact_value}``, sorted by
-        decreasing value.
+    :return: Object with the data values.
     """
     n = len(u.data)
 
