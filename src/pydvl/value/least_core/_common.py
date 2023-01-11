@@ -65,7 +65,7 @@ def _solve_least_core_linear_program(
 
     try:
         problem.solve(solver=solver, **options)
-    except cp.SOLVER_ERROR as err:
+    except cp.error.SolverError as err:
         raise ValueError("Could not solve linear program") from err
 
     if problem.status in cp.settings.SOLUTION_PRESENT:
@@ -146,7 +146,7 @@ def _solve_egalitarian_least_core_quadratic_program(
 
     try:
         problem.solve(solver=solver, **options)
-    except cp.SOLVER_ERROR as err:
+    except cp.error.SolverError as err:
         raise ValueError("Could not solve quadratic program") from err
 
     if problem.status in cp.settings.SOLUTION_PRESENT:
