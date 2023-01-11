@@ -48,6 +48,11 @@ class Utility:
         a scorer callable or None for the default `model.score()`. Greater
         values must be better. If they are not, a negated version can be
         used (see `make_scorer`)
+    :param default_score: score in the case of models that have not been fit,
+        e.g. when too little data is passed, or errors arise.
+    :param score_range: numerical range of the score function. Some Monte Carlo
+        methods can use this to estimate the number of samples required for a
+        certain quality of approximation.
     :param catch_errors: set to True to catch the errors when fit() fails. This
         could happen in several steps of the pipeline, e.g. when too little
         training data is passed, which happens often during the Shapley value calculations.
@@ -55,8 +60,6 @@ class Utility:
         calculation continues.
     :param show_warnings: True for printing warnings fit fails.
         Used only when catch_errors is True
-    :param default_score: score in the case of models that have not been fit,
-        e.g. when too little data is passed, or errors arise.
     :param enable_cache: If True, use memcached for memoization.
     :param cache_options: Optional configuration object for memcached.
 
