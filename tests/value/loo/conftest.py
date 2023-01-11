@@ -6,7 +6,7 @@ from pydvl.value import ValuationResult, ValuationStatus
 
 @pytest.fixture(scope="function")
 def analytic_loo(dummy_utility):
-    """Scores are i/m, so v(i) = U(D) - U(D\{i})] = i/m"""
+    r"""Scores are i/m, so v(i) = U(D) - U(D\{i})] = i/m"""
 
     m = float(max(dummy_utility.data.x_train))
     values = np.array([i / m for i in dummy_utility.data.indices])

@@ -20,7 +20,7 @@ __all__ = ["montecarlo_least_core"]
 
 def _montecarlo_least_core(
     u: Utility,
-    max_iterations: int,
+    n_iterations: int,
     *,
     progress: bool = False,
     job_id: int = 1,
@@ -29,29 +29,29 @@ def _montecarlo_least_core(
     """Computes utility values and the Least Core upper bound matrix for a given number of iterations.
 
     :param u: Utility object with model, data, and scoring function
-    :param max_iterations: total number of iterations to use
+    :param n_iterations: total number of iterations to use
     :param progress: If True, shows a tqdm progress bar
     :param job_id: Integer id used to determine the position of the progress bar
     :return:
     """
     n = len(u.data)
 
-    utility_values = np.zeros(max_iterations)
+    utility_values = np.zeros(n_iterations)
 
     # Randomly sample subsets of full dataset
     power_set = random_powerset(
         u.data.indices,
-        max_subsets=max_iterations,
+        max_subsets=n_iterations,
     )
 
-    A_ub = np.zeros((max_iterations, n + 1))
+    A_ub = np.zeros((n_iterations, n + 1))
     A_ub[:, -1] = -1
 
     for i, subset in enumerate(
         maybe_progress(
             power_set,
             progress,
-            total=max_iterations,
+            total=n_iterations,
             position=job_id,
         )
     ):
@@ -75,7 +75,7 @@ def _reduce_func(
 
 def montecarlo_least_core(
     u: Utility,
-    max_iterations: int,
+    n_iterations: int,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     *,
@@ -101,7 +101,7 @@ def montecarlo_least_core(
       and used to compute the Least Core values.
 
     :param u: Utility object with model, data, and scoring function
-    :param max_iterations: total number of iterations to use
+    :param n_iterations: total number of iterations to use
     :param n_jobs: number of jobs across which to distribute the computation
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
@@ -114,22 +114,22 @@ def montecarlo_least_core(
     """
     n = len(u.data)
 
-    if max_iterations < n:
+    if n_iterations < n:
         raise ValueError(
             "Number of iterations should be greater than the size of the dataset"
         )
 
-    if max_iterations > 2**n:
+    if n_iterations > 2**n:
         warnings.warn(
-            f"Passed max_iterations is greater than the number subsets! Setting it to 2^{n}",
+            f"Passed n_iterations is greater than the number subsets! Setting it to 2^{n}",
             RuntimeWarning,
         )
-        max_iterations = 2**n
+        n_iterations = 2**n
 
     if options is None:
         options = {}
 
-    iterations_per_job = max(1, max_iterations // n_jobs)
+    iterations_per_job = max(1, n_iterations // n_jobs)
 
     logger.debug("Instantiating MapReduceJob")
     map_reduce_job: MapReduceJob["Utility", Tuple["NDArray", "NDArray"]] = MapReduceJob(
@@ -137,7 +137,7 @@ def montecarlo_least_core(
         map_func=_montecarlo_least_core,
         reduce_func=_reduce_func,
         map_kwargs=dict(
-            max_iterations=iterations_per_job,
+            n_iterations=iterations_per_job,
             progress=progress,
         ),
         n_jobs=n_jobs,

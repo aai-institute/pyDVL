@@ -8,7 +8,7 @@ from pydvl.value.results import ValuationResult, ValuationStatus
 
 
 class MinerUtility(Utility):
-    """
+    r"""
     Consider a group of n miners, who have discovered large bars of gold.
 
     If two miners can carry one piece of gold, then the payoff of a coalition S is:
