@@ -9,7 +9,10 @@ from pydvl.utils import Utility, maybe_progress
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import MapReduceJob
-from pydvl.value.least_core._common import _solve_least_core_linear_program
+from pydvl.value.least_core._common import (
+    _solve_egalitarian_least_core_quadratic_program,
+    _solve_least_core_linear_program,
+)
 from pydvl.value.results import ValuationResult, ValuationStatus
 
 logger = logging.getLogger(__name__)
@@ -88,7 +91,7 @@ def montecarlo_least_core(
     \begin{array}{lll}
     \text{minimize} & \displaystyle{e} & \\
     \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
-    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) & ,
+    & \displaystyle\sum_{i\in S} x_{i} + e + \epsilon \geq v(S) & ,
     \forall S \in \{S_1, S_2, \dots, S_m \overset{\mathrm{iid}}{\sim} U(2^N) \}
     \end{array}
     $$
@@ -98,6 +101,7 @@ def montecarlo_least_core(
     * $U(2^N)$ is the uniform distribution over the powerset of $N$.
     * $m$ is the number of subsets that will be sampled and whose utility will be computed
       and used to compute the Least Core values.
+    * $\epsilon \ge 0$ is an optional relaxation value.
 
     :param u: Utility object with model, data, and scoring function
     :param max_iterations: total number of iterations to use
@@ -161,8 +165,33 @@ def montecarlo_least_core(
     A_lb, unique_indices = np.unique(A_lb, return_index=True, axis=0)
     b_lb = b_lb[unique_indices]
 
-    values, least_core_value = _solve_least_core_linear_program(
+    _, least_core_value = _solve_least_core_linear_program(
         n_variables=n, A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
+    )
+
+    if least_core_value is None:
+        logger.debug("No values were found")
+        status = ValuationStatus.Failed
+        values = np.empty(n)
+        values[:] = np.nan
+        least_core_value = np.nan
+        return ValuationResult(
+            algorithm="montecarlo_least_core",
+            status=status,
+            values=values,
+            stderr=None,
+            data_names=u.data.data_names,
+            least_core_value=least_core_value,
+        )
+
+    values = _solve_egalitarian_least_core_quadratic_program(
+        least_core_value,
+        n_variables=n,
+        A_eq=A_eq,
+        b_eq=b_eq,
+        A_lb=A_lb,
+        b_lb=b_lb,
+        **options,
     )
 
     if values is None:
@@ -175,7 +204,7 @@ def montecarlo_least_core(
         status = ValuationStatus.Converged
 
     return ValuationResult(
-        algorithm="exact_least_core",
+        algorithm="montecarlo_least_core",
         status=status,
         values=values,
         stderr=None,
