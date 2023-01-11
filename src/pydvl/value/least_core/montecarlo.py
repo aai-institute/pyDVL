@@ -81,7 +81,7 @@ def montecarlo_least_core(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     *,
-    epsilon: float = 0.01,
+    epsilon: float = 0.0,
     options: Optional[dict] = None,
     progress: bool = False,
 ) -> ValuationResult:
