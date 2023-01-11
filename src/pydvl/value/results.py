@@ -62,7 +62,7 @@ class ValueItem:
     name: str
     #: The value
     value: np.float_
-    #: Standard error of the value if it was computed with an appoximate method
+    #: Standard error of the value if it was computed with an approximate method
     stderr: Optional[np.float_]
 
     def __lt__(self, other):
@@ -70,6 +70,9 @@ class ValueItem:
 
     def __eq__(self, other):
         return self.value == other.value
+
+    def __index__(self):
+        return self.index
 
 
 class ValuationResult(collections.abc.Sequence):
@@ -303,8 +306,8 @@ class ValuationResult(collections.abc.Sequence):
         with an array of random values of the given size uniformly sampled
         from the range [-1, 1].
 
-        :param size: Number of values to put inside the object.
-        :return: :class:`ValuationResult`
+        :param size: Number of values to generate
+        :return: An instance of :class:`ValuationResult`
         """
         values = np.random.uniform(low=-1.0, high=1.0, size=size)
         return cls(
