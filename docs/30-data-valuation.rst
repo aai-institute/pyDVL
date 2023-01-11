@@ -340,7 +340,7 @@ Group testing
 An alternative approach introduced in :footcite:t:`jia_efficient_2019a`
 first approximates the differences of values with a Monte Carlo sum. With
 
-$$ \hat{\Delta}_{i \nocomma j} \approx v_i - v_j, $$
+$$\hat{\Delta}_{i j} \approx v_i - v_j,$$
 
 one then solves the following linear constraint satisfaction problem (CSP) to
 infer the final values:
@@ -348,7 +348,7 @@ infer the final values:
 $$
 \begin{array}{lll}
 \sum_{i = 1}^N v_i & = & U (D)\\
-| v_i - v_j - \hat{\Delta}_{i \nocomma j} | & \leqslant &
+| v_i - v_j - \hat{\Delta}_{i j} | & \leqslant &
 \frac{\varepsilon}{2 \sqrt{N}}
 \end{array}
 $$
