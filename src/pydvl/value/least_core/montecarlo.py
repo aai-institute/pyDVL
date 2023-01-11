@@ -100,7 +100,7 @@ def montecarlo_least_core(
 
     * $U(2^N)$ is the uniform distribution over the powerset of $N$.
     * $m$ is the number of subsets that will be sampled and whose utility will be computed
-      and used to compute the Least Core values.
+      and used to compute the data values.
     * $\epsilon \ge 0$ is an optional relaxation value.
 
     :param u: Utility object with model, data, and scoring function
