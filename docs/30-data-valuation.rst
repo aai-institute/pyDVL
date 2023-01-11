@@ -273,7 +273,7 @@ values in pyDVL. First construct the dataset and utility, then call
    dataset = Dataset(...)
    utility = Utility(data, model)
    values = compute_shapley_values(
-       u=utility, mode="owen", max_iterations=4, max_q=200
+       u=utility, mode="owen", n_iterations=4, max_q=200
    )
 
 There are more details on Owen
@@ -309,7 +309,7 @@ efficient enough to be useful in some applications.
    data = Dataset(...)
    utility = Utility(model, data)
    values = compute_shapley_values(
-       u=utility, mode="truncated_montecarlo", max_iterations=100
+       u=utility, mode="truncated_montecarlo", n_iterations=100
    )
 
 
@@ -377,7 +377,7 @@ variance.
    utility = Utility(model, data, score_range=(_min, _max))
    min_iterations = num_samples_eps_delta(epsilon, delta, n, utility.score_range)
    values = compute_shapley_values(
-       u=utility, mode="group_testing", max_iterations=min_iterations, eps=eps
+       u=utility, mode="group_testing", n_iterations=min_iterations, eps=eps
    )
 
 .. _Least Core:
@@ -488,13 +488,13 @@ With these relaxations, we obtain a polynomial running time.
    from pydvl.value.least_core import montecarlo_least_core
    model = ...
    dataset = Dataset(...)
-   max_iterations = ...
+   n_iterations = ...
    utility = Utility(data, model)
-   values = montecarlo_least_core(utility, max_iterations=max_iterations)
+   values = montecarlo_least_core(utility, n_iterations=n_iterations)
 
 .. note::
 
-   ``max_iterations`` needs to be at least equal to the number of data points.
+   ``n_iterations`` needs to be at least equal to the number of data points.
 
 Other methods
 =============

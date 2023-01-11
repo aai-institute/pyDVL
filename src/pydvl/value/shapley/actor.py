@@ -67,7 +67,7 @@ class ShapleyCoordinator(Coordinator):
 
     :param value_tolerance: Terminate all workers if the ratio of median
         standard error to median of value has dropped below this value.
-    :param max_iterations: Terminate if the current number of permutations
+    :param n_iterations: Terminate if the current number of permutations
         has exceeded this threshold.
      :param progress: Whether to display progress bars for each job.
     """
@@ -75,17 +75,17 @@ class ShapleyCoordinator(Coordinator):
     def __init__(
         self,
         value_tolerance: Optional[float] = None,
-        max_iterations: Optional[int] = None,
+        n_iterations: Optional[int] = None,
         progress: Optional[bool] = True,
     ):
         super().__init__(progress=progress)
-        if value_tolerance is None and max_iterations is None:
+        if value_tolerance is None and n_iterations is None:
             raise ValueError(
-                "Either value_tolerance or max_iterations must be set as a"
+                "Either value_tolerance or n_iterations must be set as a"
                 "stopping criterion"
             )
         self.value_tolerance = value_tolerance
-        self.max_iterations = max_iterations
+        self.n_iterations = n_iterations
         self._status = ValuationStatus.Pending
 
     def get_results(self) -> Tuple["NDArray", "NDArray"]:
@@ -147,11 +147,11 @@ class ShapleyCoordinator(Coordinator):
                 logger.info("Converged")
                 self._status = ValuationStatus.Converged
             elif (
-                self.max_iterations is not None
-                and self._total_iterations > self.max_iterations
+                self.n_iterations is not None
+                and self._total_iterations > self.n_iterations
             ):
                 self._is_done = True
-                logger.info(f"Max iterations ({self.max_iterations}) reached")
+                logger.info(f"Max iterations ({self.n_iterations}) reached")
                 self._status = ValuationStatus.MaxIterations
         return self._is_done
 

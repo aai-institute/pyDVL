@@ -106,7 +106,7 @@ dataset = Dataset(X_train, y_train, X_test, y_test)
 model = LinearRegression()
 utility = Utility(model, dataset)
 values = compute_shapley_values(
-    u=utility, max_iterations=100, mode="truncated_montecarlo"
+    u=utility, n_iterations=100, mode="truncated_montecarlo"
 )
 ```
 

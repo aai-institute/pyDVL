@@ -154,7 +154,7 @@ def _build_gt_constraints(
 
 
 def _group_testing_shapley(
-    u: Utility, max_iterations: int, progress: bool = False, job_id: int = 1
+    u: Utility, n_iterations: int, progress: bool = False, job_id: int = 1
 ):
     """Helper function for :func:`group_testing_shapley`.
 
@@ -162,7 +162,7 @@ def _group_testing_shapley(
     differences in Shapley values.
 
     :param u: Utility object with model, data, and scoring function
-    :param max_iterations: total number of permutations to use
+    :param n_iterations: total number of permutations to use
     :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress (e.g. to place
     progres bars)
@@ -173,10 +173,10 @@ def _group_testing_shapley(
     n = len(u.data.indices)
     const = _constants(n, 1, 1, 1)  # don't care about eps,delta,range
 
-    betas = np.zeros(shape=(max_iterations, n), dtype=np.int_)  # indicator vars
-    uu = np.empty(max_iterations)  # utilities
+    betas = np.zeros(shape=(n_iterations, n), dtype=np.int_)  # indicator vars
+    uu = np.empty(n_iterations)  # utilities
 
-    for t in maybe_progress(max_iterations, progress=progress, position=job_id):
+    for t in maybe_progress(n_iterations, progress=progress, position=job_id):
         k = rng.choice(const.kk, size=1, p=const.q).item()
         s = random_subset_of_size(u.data.indices, k)
         uu[t] = u(s)
@@ -186,7 +186,7 @@ def _group_testing_shapley(
 
 def group_testing_shapley(
     u: Utility,
-    max_iterations: int,
+    n_iterations: int,
     eps: float,
     *,
     n_jobs: int = 1,
@@ -208,10 +208,10 @@ def group_testing_shapley(
     solve for the individual values in a feasibility problem.
 
     :param u: Utility object with model, data, and scoring function
-    :param max_iterations: Number of tests to perform. Use
+    :param n_iterations: Number of tests to perform. Use
         :func:`num_samples_eps_delta` to estimate this.
     :param eps: Epsilon in the (ε,δ) sample bound. Use the same as for the
-        estimation of ``max_iterations``.
+        estimation of ``n_iterations``.
     :param n_jobs: Number of parallel jobs to use. Each worker performs a chunk
         of all tests (i.e. utility evaluations).
     :param config: Object configuring parallel computation, with cluster
@@ -230,14 +230,14 @@ def group_testing_shapley(
         delta=0.05,
         utility_range=u.score_range.max() - u.score_range.min(),
     )
-    T = max_iterations
+    T = n_iterations
     if T < const.T:
         log.warning(
             f"max iterations of {T} are below the required {const.T} for the "
             f"ε={eps:.02f} guarantee at .95 probability"
         )
 
-    iterations_per_job = max(1, max_iterations // n_jobs)
+    iterations_per_job = max(1, n_iterations // n_jobs)
 
     def reducer(
         results_it: Iterable[Tuple[NDArray, NDArray]]
@@ -250,7 +250,7 @@ def group_testing_shapley(
         u,
         map_func=_group_testing_shapley,
         reduce_func=reducer,
-        map_kwargs=dict(max_iterations=iterations_per_job, progress=progress),
+        map_kwargs=dict(n_iterations=iterations_per_job, progress=progress),
         config=config,
         n_jobs=n_jobs,
     )

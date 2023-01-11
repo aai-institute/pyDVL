@@ -48,7 +48,7 @@ class ShapleyMode(str, Enum):
 def compute_shapley_values(
     u: Utility,
     n_jobs: int = 1,
-    max_iterations: Optional[int] = None,
+    n_iterations: Optional[int] = None,
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     **kwargs,
 ) -> ValuationResult:
@@ -99,7 +99,7 @@ def compute_shapley_values(
 
     :param u: :class:`~pydvl.utils.utility.Utility` object with model, data, and
         scoring function.
-    :param max_iterations: total number of iterations, used for Monte Carlo
+    :param n_iterations: total number of iterations, used for Monte Carlo
         methods. **Note:** power set-based methods interpret this differently
         to permutation-based methods. For the former, this is the number of
         subsets to sample for each index or process, whereas for the latter it
@@ -122,34 +122,34 @@ def compute_shapley_values(
         progress = False
         return truncated_montecarlo_shapley(
             u=u,
-            max_iterations=max_iterations,
+            n_iterations=n_iterations,
             n_jobs=n_jobs,
             progress=progress,
             **kwargs,
         )
     elif mode == ShapleyMode.CombinatorialMontecarlo:
-        if max_iterations is None:
+        if n_iterations is None:
             raise ValueError(
-                "max_iterations cannot be None for Combinatorial Montecarlo Shapley"
+                "n_iterations cannot be None for Combinatorial Montecarlo Shapley"
             )
         return combinatorial_montecarlo_shapley(
-            u, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
+            u, n_iterations=n_iterations, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.PermutationMontecarlo:
-        if max_iterations is None:
+        if n_iterations is None:
             raise ValueError(
-                "max_iterations cannot be None for Permutation Montecarlo Shapley"
+                "n_iterations cannot be None for Permutation Montecarlo Shapley"
             )
         return permutation_montecarlo_shapley(
-            u, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
+            u, n_iterations=n_iterations, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.CombinatorialExact:
         return combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)
     elif mode == ShapleyMode.PermutationExact:
         return permutation_exact_shapley(u, progress=progress)
     elif mode == ShapleyMode.Owen or mode == ShapleyMode.OwenAntithetic:
-        if max_iterations is None:
-            raise ValueError("max_iterations cannot be None for Owen methods")
+        if n_iterations is None:
+            raise ValueError("n_iterations cannot be None for Owen methods")
         if kwargs.get("max_q") is None:
             raise ValueError("Owen Sampling requires max_q for the outer integral")
 
@@ -160,7 +160,7 @@ def compute_shapley_values(
         )
         return owen_sampling_shapley(
             u,
-            max_iterations=max_iterations,
+            n_iterations=n_iterations,
             max_q=cast(int, kwargs.get("max_q")),
             method=method,
             n_jobs=n_jobs,
@@ -168,16 +168,16 @@ def compute_shapley_values(
     elif mode == ShapleyMode.KNN:
         return knn_shapley(u, progress=progress)
     elif mode == ShapleyMode.GroupTesting:
-        if max_iterations is None:
+        if n_iterations is None:
             raise ValueError(
-                "max_iterations cannot be None for Group Testing,"
+                "n_iterations cannot be None for Group Testing,"
                 "use num_samples_eps_delta() to compute them"
             )
         eps = kwargs.get("epsilon")
         if eps is None:
             raise ValueError("Group Testing requires error bound epsilon")
         return group_testing_shapley(
-            u, eps=eps, max_iterations=max_iterations, n_jobs=n_jobs, progress=progress
+            u, eps=eps, n_iterations=n_iterations, n_jobs=n_jobs, progress=progress
         )
     else:
         raise ValueError(f"Invalid value encountered in {mode=}")
