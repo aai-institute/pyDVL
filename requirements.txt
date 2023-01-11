@@ -7,4 +7,4 @@ pymemcache
 cloudpickle
 tqdm
 matplotlib
-scipy==1.10.0
+scipy>=1.7.0
