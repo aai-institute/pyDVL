@@ -83,6 +83,11 @@ def _solve_least_core_linear_program(
         # to avoid any problems with the subsequent quadratic program
         # we just set it to 0.0
         if least_core_value < 0:
+            warnings.warn(
+                f"Least core value '{least_core_value}' is negative but close to zero. "
+                "It will be set to 0.0",
+                RuntimeWarning,
+            )
             least_core_value = 0.0
         return x.value, least_core_value
 
