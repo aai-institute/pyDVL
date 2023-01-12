@@ -460,7 +460,7 @@ Because the number of subsets $S \subseteq D \setminus \{x_i\}$ is
 $2^{ | D | - 1 }$, one typically must resort to approximations.
 
 The simplest approximation consists of two relaxations of the Least Core
-(:footcite:t:`yan_procaccia_2021`):
+(:footcite:t:`yan_if_2021`):
 
 - Further relaxing the coalitional rationality property by
   a constant value $\epsilon > 0$:

@@ -26,10 +26,12 @@ def _solve_linear_program(
     bounds: BOUNDS_TYPE,
     **options,
 ) -> Optional[NDArray[np.float_]]:
-    """Solves a linear program using scipy's :func:`~scipy.optimize.linprog` function.
+    """Solves a linear program using scipy's :func:`~scipy.optimize.linprog`
+    function.
 
-    > **NOTE**: The following description of the linear program and the parameters is taken verbatim
-    > from scipy
+    .. note::
+       The following description of the linear program and the parameters is
+       taken verbatim from scipy
 
     .. math::
 
@@ -38,26 +40,26 @@ def _solve_linear_program(
         & A_{eq} x = b_{eq},\\
         & l \leq x \leq u ,
 
-     where :math:`x` is a vector of decision variables; :math:`c`,
-    :math:`b_{ub}`, :math:`b_{eq}`, :math:`l`, and :math:`u` are vectors; and
-    :math:`A_{ub}` and :math:`A_{eq}` are matrices.
+    where $x$ is a vector of decision variables; $c$, $b_{ub}$, $b_{eq}$, $l$,
+    and $u$ are vectors, and $A_{ub}$ and $A_{eq}$ are matrices.
 
     :param c: The coefficients of the linear objective function to be minimized.
-    :param A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies the
-        coefficients of a linear equality constraint on ``x``.
-    :param b_eq: The equality constraint vector. Each element of ``A_eq @ x`` must equal
-        the corresponding element of ``b_eq``.
-    :param A_ub: The inequality constraint matrix. Each row of ``A_ub`` specifies the
-        coefficients of a linear inequality constraint on ``x``.
+    :param A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies
+        the coefficients of a linear equality constraint on ``x``.
+    :param b_eq: The equality constraint vector. Each element of ``A_eq @ x``
+        must equal the corresponding element of ``b_eq``.
+    :param A_ub: The inequality constraint matrix. Each row of ``A_ub``
+        specifies the coefficients of a linear inequality constraint on ``x``.
     :param b_ub: The inequality constraint vector. Each element represents an
         upper bound on the corresponding value of ``A_ub @ x``.
-    :param bounds: A sequence of ``(min, max)`` pairs for each element in ``x``, defining
-        the minimum and maximum values of that decision variable. Use ``None``
-        to indicate that there is no bound. By default, bounds are
-        ``(0, None)`` (all decision variables are non-negative).
-        If a single tuple ``(min, max)`` is provided, then ``min`` and
-        ``max`` will serve as bounds for all decision variables.
-    :param options: A dictionary of solver options. Refer to scipy's documentation for all possible values.
+    :param bounds: A sequence of ``(min, max)`` pairs for each element in ``x``,
+        defining the minimum and maximum values of that decision variable. Use
+        ``None`` to indicate that there is no bound. By default, bounds are
+        ``(0, None)`` (all decision variables are non-negative). If a single
+        tuple ``(min, max)`` is provided, then ``min`` and ``max`` will serve as
+        bounds for all decision variables.
+    :param options: A dictionary of solver options. Refer to scipy's
+        documentation for all possible values.
     """
     logger.debug(
         f"Solving linear programming problem: {c=}, {A_eq=}, {b_eq=}, {A_ub=}, {b_ub=}"
