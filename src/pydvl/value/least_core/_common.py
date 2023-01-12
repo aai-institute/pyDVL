@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 def _solve_least_core_linear_program(
-    n_variables: int,
     A_eq: NDArray[np.float_],
     b_eq: NDArray[np.float_],
     A_lb: NDArray[np.float_],
@@ -50,6 +49,8 @@ def _solve_least_core_linear_program(
         <https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options>`_
     """
     logger.debug(f"Solving linear program : {A_eq=}, {b_eq=}, {A_lb=}, {b_lb=}")
+
+    n_variables = A_eq.shape[1]
 
     x = cp.Variable(n_variables)
     e = cp.Variable()
@@ -95,7 +96,6 @@ def _solve_least_core_linear_program(
 
 def _solve_egalitarian_least_core_quadratic_program(
     least_core_value: float,
-    n_variables: int,
     A_eq: NDArray[np.float_],
     b_eq: NDArray[np.float_],
     A_lb: NDArray[np.float_],
@@ -134,6 +134,8 @@ def _solve_egalitarian_least_core_quadratic_program(
 
     if least_core_value < 0:
         raise ValueError("Passed least core value should be positive.")
+
+    n_variables = A_eq.shape[1]
 
     x = cp.Variable(n_variables)
     objective = cp.Minimize(cp.norm2(x))

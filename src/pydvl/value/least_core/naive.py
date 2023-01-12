@@ -83,7 +83,7 @@ def exact_least_core(
     b_eq = utility_values[-1:]
 
     _, least_core_value = _solve_least_core_linear_program(
-        n_variables=n, A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
+        A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
     )
 
     values: Optional[NDArray[np.float_]]
@@ -105,7 +105,6 @@ def exact_least_core(
 
     values = _solve_egalitarian_least_core_quadratic_program(
         least_core_value,
-        n_variables=n,
         A_eq=A_eq,
         b_eq=b_eq,
         A_lb=A_lb,
