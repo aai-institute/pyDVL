@@ -46,8 +46,8 @@ def _solve_least_core_linear_program(
     :param b_lb: The inequality constraint vector. Each element represents a
         lower bound on the corresponding value of ``A_lb @ x``.
     :param options: Keyword arguments that will be used to select a solver
-        and to configure it. Refer to the following page for all possible options:
-        https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
+        and to configure it. For all possible options, refer to `cvxpy's documentation
+        <https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options>`_
     """
     logger.debug(f"Solving linear program : {A_eq=}, {b_eq=}, {A_lb=}, {b_lb=}")
 
@@ -117,6 +117,7 @@ def _solve_egalitarian_least_core_quadratic_program(
     :math:`b_{ub}`, :math:`b_{eq}`, :math:`l`, and :math:`u` are vectors; and
     :math:`A_{ub}` and :math:`A_{eq}` are matrices.
 
+    :param least_core_subsidy: Minimal subsidy returned by :func:`_solve_least_core_linear_program`
     :param A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies the
         coefficients of a linear equality constraint on ``x``.
     :param b_eq: The equality constraint vector. Each element of ``A_eq @ x`` must equal
