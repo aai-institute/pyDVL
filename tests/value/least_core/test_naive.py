@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 
 from pydvl.value.least_core import exact_least_core

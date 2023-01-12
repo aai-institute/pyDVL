@@ -1,6 +1,5 @@
 import logging
 
-import numpy as np
 import pytest
 
 from pydvl.value.least_core import montecarlo_least_core
