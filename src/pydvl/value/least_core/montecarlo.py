@@ -47,7 +47,7 @@ def _montecarlo_least_core(
         max_subsets=n_iterations,
     )
 
-    A_lb = np.zeros((max_iterations, n))
+    A_lb = np.zeros((n_iterations, n))
 
     for i, subset in enumerate(
         maybe_progress(
