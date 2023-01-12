@@ -273,7 +273,7 @@ values in pyDVL. First construct the dataset and utility, then call
    dataset = Dataset(...)
    utility = Utility(data, model)
    values = compute_shapley_values(
-       u=utility, mode="owen", max_iterations=4, max_q=200
+       u=utility, mode="owen", n_iterations=4, max_q=200
    )
 
 There are more details on Owen
@@ -309,7 +309,7 @@ efficient enough to be useful in some applications.
    data = Dataset(...)
    utility = Utility(model, data)
    values = compute_shapley_values(
-       u=utility, mode="truncated_montecarlo", max_iterations=100
+       u=utility, mode="truncated_montecarlo", n_iterations=100
    )
 
 
@@ -332,6 +332,53 @@ and can be used in pyDVL with:
    data = Dataset(...)
    utility = Utility(model, data)
    values = compute_shapley_values(u=utility, mode="knn")
+
+
+Group testing
+^^^^^^^^^^^^^
+
+An alternative approach introduced in :footcite:t:`jia_efficient_2019a`
+first approximates the differences of values with a Monte Carlo sum. With
+
+$$\hat{\Delta}_{i j} \approx v_i - v_j,$$
+
+one then solves the following linear constraint satisfaction problem (CSP) to
+infer the final values:
+
+$$
+\begin{array}{lll}
+\sum_{i = 1}^N v_i & = & U (D)\\
+| v_i - v_j - \hat{\Delta}_{i j} | & \leqslant &
+\frac{\varepsilon}{2 \sqrt{N}}
+\end{array}
+$$
+
+.. warning::
+   We have reproduced this method in pyDVL for completeness and benchmarking,
+   but we don't advocate its use because of the speed and memory cost. Despite
+   our best efforts, the number of samples required in practice for convergence
+   can be several orders of magnitude worse than with e.g. Truncated Monte Carlo.
+
+Usage follows the same pattern as every other Shapley method, but with the
+addition of an ``eps`` parameter required for the solution of the CSP. It should
+be the same value used to compute the minimum number of samples required. This
+can be done with :func:`~pydvl.value.shapley.gt.num_samples_eps_delta`, but note
+that the number returned will be huge! In practice, fewer samples can be enough,
+but the actual number will strongly depend on the utility, in particular its
+variance.
+
+.. code-block:: python
+
+   from pydvl.utils import Dataset, Utility
+   from pydvl.value.shapley import compute_shapley_values
+
+   model = ...
+   data = Dataset(...)
+   utility = Utility(model, data, score_range=(_min, _max))
+   min_iterations = num_samples_eps_delta(epsilon, delta, n, utility.score_range)
+   values = compute_shapley_values(
+       u=utility, mode="group_testing", n_iterations=min_iterations, eps=eps
+   )
 
 .. _Least Core:
 
@@ -413,7 +460,7 @@ Because the number of subsets $S \subseteq D \setminus \{x_i\}$ is
 $2^{ | D | - 1 }$, one typically must resort to approximations.
 
 The simplest approximation consists of two relaxations of the Least Core
-(:footcite:t:`yan_procaccia_2021`):
+(:footcite:t:`yan_if_2021`):
 
 - Further relaxing the coalitional rationality property by
   a constant value $\epsilon > 0$:
@@ -441,13 +488,13 @@ With these relaxations, we obtain a polynomial running time.
    from pydvl.value.least_core import montecarlo_least_core
    model = ...
    dataset = Dataset(...)
-   max_iterations = ...
+   n_iterations = ...
    utility = Utility(data, model)
-   values = montecarlo_least_core(utility, max_iterations=max_iterations)
+   values = montecarlo_least_core(utility, n_iterations=n_iterations)
 
 .. note::
 
-   ``max_iterations`` needs to be at least equal to the number of data points.
+   ``n_iterations`` needs to be at least equal to the number of data points.
 
 Other methods
 =============

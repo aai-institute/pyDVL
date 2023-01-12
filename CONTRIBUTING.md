@@ -183,19 +183,36 @@ any rst files which are not manually created), you can use a file watcher.
 This is not part of the development setup of pyDVL (yet! PRs welcome), but
 modern IDEs provide functionality for this.
 
-Use the **docs** tox environment to build the documentation the same way it is done in CI:
+Use the **docs** tox environment to build the documentation the same way it is
+done in CI:
 
 ```bash
 tox -e docs
 ```
 
-Locally, you can use the **docs-dev** tox environment to continuously rebuild docs on changes:
+Locally, you can use the **docs-dev** tox environment to continuously rebuild
+documentation on changes to the `docs` folder:
 
 ```bash
 tox -e docs-dev
 ```
 
-**NOTE:** This currently only rebuilds on changes to `.rst` files and notebooks.
+**Again:** this only rebuilds on changes to `.rst` files and notebooks inside
+`docs`.
+
+### Using bibliography
+
+Bibliographic citations are managed with the plugin 
+[sphinx-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/index.html).
+To enter a citation first add the entry to `docs/pydvl.bib`. For team
+contributor this should be an export of the Zotero folder `software/pydvl` in
+the [TransferLab Zotero library](https://www.zotero.org/groups/2703043/transferlab/library).
+All other contributors just add the bibtex data, and a maintainer will add it to
+the group library upon merging.
+
+To add a citation inside a module or function's docstring, use the sphinx role
+`:footcite:t:`. A references section is automatically added at the bottom of
+each module's auto-generated documentation.
 
 ### Writing mathematics
 
@@ -269,7 +286,8 @@ satisfied:
 
 Then, a new release can be created using the script
 `build_scripts/release-version.sh` (leave out the version parameter to have
-`bumpversion` automatically derive the next release version by bumping the patch part):
+`bumpversion` automatically derive the next release version by bumping the patch
+part):
 
 ```shell script
 ./scripts/release-version.sh 0.1.6
@@ -285,7 +303,8 @@ If running in interactive mode (without `-y|--yes`), the script will output a
 summary of pending changes and ask for confirmation before executing the
 actions.
 
-Once this is done, a package will be automatically created and published from CI to PyPI.
+Once this is done, a package will be automatically created and published from CI
+to PyPI.
 
 ### Manual release process
 

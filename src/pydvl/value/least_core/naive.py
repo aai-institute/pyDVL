@@ -20,7 +20,16 @@ logger = logging.getLogger(__name__)
 def exact_least_core(
     u: Utility, *, options: Optional[dict] = None, progress: bool = True, **kwargs
 ) -> ValuationResult:
-    r"""Computes the exact Least Core values by solving the following Linear Programming problem:
+    r"""Computes the exact Least Core values.
+
+    .. note::
+       If the training set contains more than 20 instances a warning is printed
+       because the computation is very expensive. This method is mostly used for
+       internal testing and simple use cases. Please refer to the
+       :func:`Monte Carlo method <pydvl.value.least_core.montecarlo.montecarlo_least_core>`
+       for practical applications.
+
+    The least core is the solution to the following Linear Programming problem:
 
     $$
     \begin{array}{lll}
@@ -30,16 +39,7 @@ def exact_least_core(
     \end{array}
     $$
 
-    Where $N = \{1, 2, \dots, n\}$ is the set of the training set's indices.
-
-    If the training set contains more than 20 instances a warning is printed
-    because the computation is very expensive.
-
-    .. note::
-
-        This method is mostly used for internal testing and simple use cases.
-        Please refer to the :func:`Monte Carlo method <pydvl.least_core.montecarlo.montecarlo_least_core>` 
-        for all other cases.
+    Where $N = \{1, 2, \dots, n\}$ are the training set's indices.
 
     :param u: Utility object with model, data, and scoring function
     :param options: Keyword arguments that will be used to select a solver
