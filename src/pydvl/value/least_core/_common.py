@@ -19,6 +19,8 @@ def _solve_least_core_linear_program(
     b_eq: NDArray[np.float_],
     A_lb: NDArray[np.float_],
     b_lb: NDArray[np.float_],
+    *,
+    epsilon: float = 0.0,
     **options,
 ) -> Tuple[Optional[NDArray[np.float_]], Optional[float]]:
     """Solves the Least Core's linear program using cvxopt.
@@ -44,6 +46,7 @@ def _solve_least_core_linear_program(
         coefficients of a linear inequality constraint on ``x``.
     :param b_lb: The inequality constraint vector. Each element represents a
         lower bound on the corresponding value of ``A_lb @ x``.
+    :param epsilon: Relaxation value by which the subset utility is decreased.
     :param options: Keyword arguments that will be used to select a solver
         and to configure it. For all possible options, refer to `cvxpy's documentation
         <https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options>`_
@@ -54,11 +57,13 @@ def _solve_least_core_linear_program(
 
     x = cp.Variable(n_variables)
     e = cp.Variable()
+    epsilon_parameter = cp.Parameter(name="epsilon", nonneg=True, value=epsilon)
+
     objective = cp.Minimize(e)
     constraints = [
         e >= 0,
         A_eq @ x == b_eq,
-        A_lb @ x + e * np.ones(len(A_lb)) >= b_lb,
+        (A_lb @ x + e * np.ones(len(A_lb))) >= (b_lb - epsilon_parameter),
     ]
     problem = cp.Problem(objective, constraints)
 
@@ -105,6 +110,7 @@ def _solve_egalitarian_least_core_quadratic_program(
     b_eq: NDArray[np.float_],
     A_lb: NDArray[np.float_],
     b_lb: NDArray[np.float_],
+    epsilon: float = 0.0,
     **options,
 ) -> Optional[NDArray[np.float_]]:
     """Solves the egalitarian Least Core's quadratic program using cvxopt.
@@ -131,6 +137,7 @@ def _solve_egalitarian_least_core_quadratic_program(
         coefficients of a linear inequality constraint on ``x``.
     :param b_lb: The inequality constraint vector. Each element represents a
         lower bound on the corresponding value of ``A_lb @ x``.
+    :param epsilon: Relaxation value by which the subset utility is decreased.
     :param options: Keyword arguments that will be used to select a solver
         and to configure it. Refer to the following page for all possible options:
         https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
@@ -143,10 +150,12 @@ def _solve_egalitarian_least_core_quadratic_program(
     n_variables = A_eq.shape[1]
 
     x = cp.Variable(n_variables)
+    epsilon_parameter = cp.Parameter(name="epsilon", nonneg=True, value=epsilon)
+
     objective = cp.Minimize(cp.norm2(x))
     constraints = [
         A_eq @ x == b_eq,
-        A_lb @ x + subsidy * np.ones(len(A_lb)) >= b_lb,
+        (A_lb @ x + subsidy * np.ones(len(A_lb))) >= (b_lb - epsilon_parameter),
     ]
     problem = cp.Problem(objective, constraints)
 

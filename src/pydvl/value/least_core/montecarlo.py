@@ -156,7 +156,7 @@ def montecarlo_least_core(
         )
 
     logger.debug("Building vectors and matrices for linear programming problem")
-    b_lb = utility_values - epsilon
+    b_lb = utility_values
     A_eq = np.ones((1, n))
     # We explicitly add the utility value for the entire dataset
     b_eq = np.array([u(u.data.indices)])
@@ -166,7 +166,7 @@ def montecarlo_least_core(
     b_lb = b_lb[unique_indices]
 
     _, subsidy = _solve_least_core_linear_program(
-        A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
+        A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, epsilon=epsilon, **options
     )
 
     values: Optional[NDArray[np.float_]]
