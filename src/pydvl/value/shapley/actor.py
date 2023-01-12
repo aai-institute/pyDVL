@@ -175,7 +175,11 @@ class ShapleyWorker(Worker):
         progress: bool = False,
     ):
         """A worker calculates Shapley values using the permutation definition
-         and report the results to the coordinator.
+         and reports the results to the coordinator.
+
+         To implement early stopping, workers can be signaled by the
+         :class:`~pydvl.value.shapley.actor.ShapleyCoordinator` before they are
+         done with their work package
 
         :param u: Utility object with model, data, and scoring function
         :param coordinator: worker results will be pushed to this coordinator
