@@ -1,6 +1,5 @@
 import logging
 from time import sleep, time
-from typing import Iterable
 
 import numpy as np
 import pytest
@@ -52,7 +51,7 @@ def test_memcached_single_job(memcached_client):
     assert hits_after > hits_before
 
 
-def test_memcached_parallel_jobs(memcached_client):
+def test_memcached_parallel_jobs(memcached_client, parallel_config):
     client, config = memcached_client
 
     @memcached(
@@ -68,11 +67,18 @@ def test_memcached_parallel_jobs(memcached_client):
     n = 1234
     n_runs = 10
     hits_before = client.stats()[b"get_hits"]
-    map_reduce_job = MapReduceJob(foo, np.sum, n_jobs=4, n_runs=n_runs)
-    result = map_reduce_job(np.arange(n))
+
+    map_reduce_job = MapReduceJob(
+        np.arange(n), foo, np.sum, n_jobs=4, config=parallel_config
+    )
+    results = []
+
+    for _ in range(n_runs):
+        result = map_reduce_job()
+        results.append(result)
     hits_after = client.stats()[b"get_hits"]
 
-    assert result[0] == n * (n - 1) / 2  # Sanity check
+    assert results[0] == n * (n - 1) / 2  # Sanity check
     # FIXME! This is non-deterministic: if packets are delayed for longer than
     #  the timeout configured then we won't have num_runs hits. So we add this
     #  good old hard-coded magic number here.
@@ -153,7 +159,7 @@ def test_memcached_faster_with_repeated_training(memcached_client):
 @pytest.mark.parametrize("n_jobs", [1, 2])
 @pytest.mark.parametrize("n_runs", [100])
 def test_memcached_parallel_repeated_training(
-    memcached_client, n, atol, n_jobs, n_runs, seed=42
+    memcached_client, n, atol, n_jobs, n_runs, parallel_config, seed=42
 ):
     _, config = memcached_client
     np.random.seed(seed)
@@ -166,18 +172,23 @@ def test_memcached_parallel_repeated_training(
         # Note that we typically do NOT want to ignore run_id
         ignore_args=["job_id", "run_id"],
     )
-    def map_func(indices: "NDArray[int]") -> float:
+    def map_func(indices: "NDArray[np.int_]") -> float:
         # from pydvl.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
         return np.sum(indices).item() + np.random.normal(scale=5)
 
-    def reduce_func(chunks: "NDArray[float]") -> float:
+    def reduce_func(chunks: "NDArray[np.float_]") -> float:
         return np.sum(chunks).item()
 
-    map_reduce_job = MapReduceJob(map_func, reduce_func, n_jobs=n_jobs, n_runs=n_runs)
-    result = map_reduce_job(np.arange(n))
+    map_reduce_job = MapReduceJob(
+        np.arange(n), map_func, reduce_func, n_jobs=n_jobs, config=parallel_config
+    )
+    results = []
+    for _ in range(n_runs):
+        result = map_reduce_job()
+        results.append(result)
 
     exact_value = np.sum(np.arange(n)).item()
 
-    assert np.isclose(result[-1], result[-2], atol=atol)
-    assert np.isclose(result[-1], exact_value, atol=atol)
+    assert np.isclose(results[-1], results[-2], atol=atol)
+    assert np.isclose(results[-1], exact_value, atol=atol)

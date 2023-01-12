@@ -16,7 +16,7 @@ try:
         influences_perturbation_linear_regression_analytical,
         influences_up_linear_regression_analytical,
     )
-    from pydvl.influence.model_wrappers import TorchLinearRegression, TorchNeuralNetwork
+    from pydvl.influence.model_wrappers import TorchLinearRegression, TorchMLP
     from pydvl.utils.dataset import load_wine_dataset
 except ImportError:
     pass
@@ -311,7 +311,7 @@ def test_influences_with_neural_network_explicit_hessian():
     num_classes = len(unique_classes)
     num_epochs = 300
     network_size = [16, 16]
-    nn = TorchNeuralNetwork(feature_dimension, num_classes, network_size)
+    nn = TorchMLP(feature_dimension, num_classes, network_size)
     optimizer = Adam(params=nn.parameters(), lr=0.001, weight_decay=0.001)
     loss = F.cross_entropy
     nn.fit(

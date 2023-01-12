@@ -8,7 +8,11 @@ from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 
 from pydvl.utils import GroupedDataset, MemcachedConfig, Scorer, Utility
-from pydvl.utils.numeric import lower_bound_hoeffding, squashed_r2, squashed_variance
+from pydvl.utils.numeric import (
+    num_samples_permutation_hoeffding,
+    squashed_r2,
+    squashed_variance,
+)
 from pydvl.value.shapley.montecarlo import (
     combinatorial_montecarlo_shapley,
     owen_sampling_shapley,
@@ -24,7 +28,7 @@ log = logging.getLogger(__name__)
 
 # noinspection PyTestParametrized
 @pytest.mark.parametrize(
-    "num_samples, fun, rtol, max_iterations, kwargs",
+    "num_samples, fun, rtol, n_iterations, kwargs",
     [
         (12, permutation_montecarlo_shapley, 0.1, 10, {}),
         # FIXME! it should be enough with 2**(len(data)-1) samples
@@ -34,13 +38,11 @@ log = logging.getLogger(__name__)
     ],
 )
 def test_analytic_montecarlo_shapley(
-    num_samples, analytic_shapley, fun, rtol, max_iterations, kwargs
+    num_samples, analytic_shapley, fun, rtol, n_iterations, kwargs
 ):
     u, exact_values = analytic_shapley
 
-    values = fun(
-        u, max_iterations=int(max_iterations), progress=False, n_jobs=1, **kwargs
-    )
+    values = fun(u, n_iterations=int(n_iterations), progress=False, n_jobs=1, **kwargs)
 
     check_values(values, exact_values, rtol=rtol)
 
@@ -54,11 +56,11 @@ def test_hoeffding_bound_montecarlo(
 ):
     u, exact_values = analytic_shapley
 
-    max_iterations = lower_bound_hoeffding(delta=delta, eps=eps, score_range=1)
+    n_iterations = num_samples_permutation_hoeffding(delta=delta, eps=eps, u_range=1)
 
     for _ in range(10):
         with tolerate(max_failures=int(10 * delta)):
-            values = fun(u=u, max_iterations=max_iterations, n_jobs=1)
+            values = fun(u=u, n_iterations=n_iterations, n_jobs=1)
             # Trivial bound on total error using triangle inequality
             check_total_value(u, values, atol=len(u.data) * eps)
             check_rank_correlation(values, exact_values, threshold=0.8)
@@ -71,7 +73,7 @@ def test_hoeffding_bound_montecarlo(
     "scorer, rtol", [(squashed_r2, 0.25), (squashed_variance, 0.25)]
 )
 @pytest.mark.parametrize(
-    "fun, max_iterations, kwargs",
+    "fun, n_iterations, kwargs",
     [
         # FIXME: Hoeffding says 400 should be enough
         (permutation_montecarlo_shapley, 600, {}),
@@ -87,7 +89,7 @@ def test_linear_montecarlo_shapley(
     scorer: Scorer,
     rtol: float,
     fun,
-    max_iterations: float,
+    n_iterations: float,
     memcache_client_config,
     kwargs: dict,
 ):
@@ -116,9 +118,7 @@ def test_linear_montecarlo_shapley(
     )
 
     exact_values = combinatorial_exact_shapley(u, progress=False)
-    values = fun(
-        u, max_iterations=int(max_iterations), progress=False, n_jobs=1, **kwargs
-    )
+    values = fun(u, n_iterations=int(n_iterations), progress=False, n_jobs=1, **kwargs)
 
     check_values(values, exact_values, rtol=rtol)
     check_total_value(u, values, rtol=rtol)  # FIXME, could be more than rtol
@@ -131,7 +131,7 @@ def test_linear_montecarlo_shapley(
     "scorer, total_atol", [(squashed_r2, 0.1), (squashed_variance, 0.1)]
 )
 @pytest.mark.parametrize(
-    "fun, max_iterations, kwargs",
+    "fun, n_iterations, kwargs",
     [
         (permutation_montecarlo_shapley, 500, {}),
         (truncated_montecarlo_shapley, 500, {"coordinator_update_period": 1}),
@@ -145,7 +145,7 @@ def test_linear_montecarlo_with_outlier(
     scorer: Union[str, Scorer],
     total_atol: float,
     fun,
-    max_iterations: float,
+    n_iterations: float,
     kwargs: dict,
     memcache_client_config,
 ):
@@ -169,7 +169,7 @@ def test_linear_montecarlo_with_outlier(
     )
     values = fun(
         linear_utility,
-        max_iterations=int(max_iterations),
+        n_iterations=int(n_iterations),
         progress=False,
         n_jobs=1,
         **kwargs,
@@ -184,9 +184,9 @@ def test_linear_montecarlo_with_outlier(
 )
 @pytest.mark.parametrize("scorer, rtol", [(squashed_r2, 0.1), (squashed_variance, 0.1)])
 @pytest.mark.parametrize(
-    "fun, max_iterations, kwargs",
+    "fun, n_iterations, kwargs",
     [
-        (permutation_montecarlo_shapley, 600, {}),
+        (permutation_montecarlo_shapley, 700, {}),
         (truncated_montecarlo_shapley, 500, {"coordinator_update_period": 1}),
         (owen_sampling_shapley, 4, {"max_q": 300, "method": "standard"}),
         # FIXME: antithetic breaks for non-deterministic u
@@ -199,7 +199,7 @@ def test_grouped_linear_montecarlo_shapley(
     fun,
     scorer: str,
     rtol: float,
-    max_iterations: float,
+    n_iterations: float,
     kwargs: dict,
     memcache_client_config: "MemcachedClientConfig",
 ):
@@ -222,7 +222,7 @@ def test_grouped_linear_montecarlo_shapley(
 
     values = fun(
         grouped_linear_utility,
-        max_iterations=int(max_iterations),
+        n_iterations=int(n_iterations),
         progress=False,
         n_jobs=1,
         **kwargs,
@@ -233,7 +233,7 @@ def test_grouped_linear_montecarlo_shapley(
 
 @pytest.mark.skip("What is the point testing random forest training?")
 @pytest.mark.parametrize(
-    "num_points, num_features, regressor, scorer, max_iterations",
+    "num_points, num_features, regressor, scorer, n_iterations",
     [
         (10, 3, RandomForestRegressor(n_estimators=2), "r2", 20),
         (10, 3, DecisionTreeRegressor(), "r2", 20),
@@ -243,7 +243,7 @@ def test_random_forest(
     boston_dataset,
     regressor,
     scorer: str,
-    max_iterations: float,
+    n_iterations: float,
     memcache_client_config: "MemcachedClientConfig",
     n_jobs: int,
 ):
@@ -265,5 +265,5 @@ def test_random_forest(
     )
 
     _, _ = truncated_montecarlo_shapley(
-        rf_utility, max_iterations=int(max_iterations), progress=False, n_jobs=n_jobs
+        rf_utility, n_iterations=int(n_iterations), progress=False, n_jobs=n_jobs
     )

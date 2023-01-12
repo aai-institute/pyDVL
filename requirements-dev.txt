@@ -11,7 +11,7 @@ pytest-cov
 pytest-mock
 pytest-timeout
 ray[default] >= 0.8
-tox==3.27.1
+tox<4.0.0
 tox-wheel
 types-tqdm
 twine==4.0.2

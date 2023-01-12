@@ -1,17 +1,12 @@
 import math
 import warnings
 from itertools import permutations
+from typing import List, Sequence
 
 import numpy as np
+from numpy.typing import NDArray
 
-from pydvl.utils import (
-    MapReduceJob,
-    ParallelConfig,
-    Utility,
-    init_parallel_backend,
-    maybe_progress,
-    powerset,
-)
+from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress, powerset
 from pydvl.value.results import ValuationResult, ValuationStatus
 
 __all__ = ["permutation_exact_shapley", "combinatorial_exact_shapley"]
@@ -64,8 +59,8 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 
 
 def _combinatorial_exact_shapley(
-    indices: np.ndarray, u: Utility, progress: bool
-) -> np.ndarray:
+    indices: Sequence[int], u: Utility, progress: bool
+) -> NDArray:
     """Helper function for :func:`combinatorial_exact_shapley`.
 
     Computes the marginal utilities for the set of indices passed and returns
@@ -74,7 +69,7 @@ def _combinatorial_exact_shapley(
     n = len(u.data)
     local_values = np.zeros(n)
     for i in indices:
-        subset = np.setxor1d(u.data.indices, [i], assume_unique=True)
+        subset = np.setxor1d(u.data.indices, [i], assume_unique=True).astype(np.int_)
         for s in maybe_progress(
             powerset(subset),
             progress,
@@ -99,11 +94,12 @@ def combinatorial_exact_shapley(
 
     See :ref:`data valuation` for details.
 
-    If the length of the training set is > n_jobs*20 this prints a warning
-    because the computation is very expensive. Used mostly for internal testing
-    and simple use cases. Please refer to the
-    :mod:`Monte Carlo <pydvl.shapley.montecarlo>` approximations for practical
-    applications.
+    .. note::
+       If the length of the training set is > n_jobs*20 this prints a warning
+       because the computation is very expensive. Used mostly for internal testing
+       and simple use cases. Please refer to the
+       :mod:`Monte Carlo <pydvl.shapley.montecarlo>` approximations for practical
+       applications.
 
     :param u: Utility object with model, data, and scoring function
     :param n_jobs: Number of parallel jobs to use
@@ -118,20 +114,18 @@ def combinatorial_exact_shapley(
             f"Large dataset! Computation requires 2^{len(u.data)} calls to model.fit()"
         )
 
-    parallel_backend = init_parallel_backend(config)
-    u_id = parallel_backend.put(u)
+    def reduce_fun(results: List[NDArray]) -> NDArray:
+        return np.array(results).sum(axis=0)  # type: ignore
 
-    def reduce_fun(results):
-        return np.array(results).sum(axis=0)
-
-    map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
+    map_reduce_job: MapReduceJob[NDArray, NDArray] = MapReduceJob(
+        u.data.indices,
         map_func=_combinatorial_exact_shapley,
-        map_kwargs=dict(u=u_id, progress=progress),
+        map_kwargs=dict(u=u, progress=progress),
         reduce_func=reduce_fun,
-        chunkify_inputs=True,
         n_jobs=n_jobs,
+        config=config,
     )
-    values = map_reduce_job(u.data.indices)[0]
+    values = map_reduce_job()
     return ValuationResult(
         algorithm="combinatorial_exact_shapley",
         status=ValuationStatus.Converged,

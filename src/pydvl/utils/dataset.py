@@ -1,12 +1,12 @@
 """
 This module contains convenience classes to handle data and groups thereof.
 
-Shapley value computations require evaluation of a scoring function (the
-*utility*). This is typically the performance of the model on a test set (as an
-approximation to its true expected performance). It is therefore convenient to
-keep both the training data and the test data together to be passed around to
-methods in :mod:`~pydvl.value.shapley`. This is done with
-:class:`~pydvl.utils.dataset.Dataset`.
+Shapley and Least Core value computations require evaluation of a scoring function
+(the *utility*). This is typically the performance of the model on a test set
+(as an approximation to its true expected performance). It is therefore convenient
+to keep both the training data and the test data together to be passed around to
+methods in :mod:`~pydvl.value.shapley` and :mod:`~pydvl.value.least_core`.
+This is done with :class:`~pydvl.utils.dataset.Dataset`.
 
 This abstraction layer also seamlessly grouping data points together if one is
 interested in computing their value as a group, see
@@ -17,18 +17,22 @@ object.
 
 """
 
+import logging
 from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 from sklearn.datasets import load_wine
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import Bunch, check_X_y
 
 __all__ = ["Dataset", "GroupedDataset", "load_spotify_dataset", "load_wine_dataset"]
+
+logger = logging.getLogger(__name__)
 
 
 class Dataset:
@@ -138,30 +142,74 @@ class Dataset:
         except ValueError:
             raise ValueError(f"Feature {name} is not in {self.feature_names}")
 
-    def get_training_data(self, train_indices: Optional[Iterable[int]]):
+    def get_training_data(
+        self, indices: Optional[Iterable[int]] = None
+    ) -> Tuple[NDArray, NDArray]:
         """Given a set of indices, returns the training data that refer to those
         indices.
 
         This is used when calling different sub-sets of indices to calculate
         shapley values. Notice that train_indices is not typically equal to the
         full indices, but only a subset of it.
-        """
-        if train_indices is None:
-            return self.x_train, self.y_train
-        else:
-            x = self.x_train[train_indices]
-            y = self.y_train[train_indices]
-            return x, y
 
-    def get_test_data(self, test_indices: Optional[Iterable[int]]):
-        """Given a set of indices, returns the test data that refer to those
-        indices."""
-        if test_indices is None:
-            return self.x_test, self.y_test
-        else:
-            x = self.x_test[test_indices]
-            y = self.y_test[test_indices]
-            return x, y
+        :param indices: Optional indices that will be used
+            to select data points from the training data.
+        :return: If indices is not None, the selected x and y arrays from
+            the training data. Otherwise, the entire training data.
+        """
+        if indices is None:
+            return self.x_train, self.y_train
+        x = self.x_train[indices]
+        y = self.y_train[indices]
+        return x, y
+
+    def get_test_data(
+        self, indices: Optional[Iterable[int]] = None
+    ) -> Tuple[NDArray, NDArray]:
+        """Returns the entire test set regardless of the passed indices.
+
+        The passed indices will not be used because for data valuation
+        we generally want to score the trained model on the entire test data.
+
+        Additionally, the way this method is used in the
+        :class:`~pydvl.utils.utility.Utility` class, the passed indices will
+        be those of the training data and would not work on the test data.
+
+        There may be cases where it is desired to use parts of the test data.
+        In those cases, it is recommended to inherit from the :class:`Dataset`
+        class and to override the :meth:`~Dataset.get_test_data` method.
+
+        For example, the following snippet shows how one could go about
+        mapping the training data indices into test data indices
+        inside :meth:`~Dataset.get_test_data`:
+
+        :Example:
+
+            >>> from pydvl.utils import Dataset
+            >>> import numpy as np
+            >>> class DatasetWithTestDataIndices(Dataset):
+            ...    def get_test_data(self, indices=None):
+            ...        if indices is None:
+            ...            return self.x_test, self.y_test
+            ...        fraction = len(list(indices)) / len(self)
+            ...        mapped_indices = len(self.x_test) / len(self) * np.asarray(indices)
+            ...        mapped_indices = np.unique(mapped_indices.astype(int))
+            ...        return self.x_test[mapped_indices], self.y_test[mapped_indices]
+            ...
+            >>> X = np.random.rand(100, 10)
+            >>> y = np.random.randint(0, 2, 100)
+            >>> dataset = DatasetWithTestDataIndices.from_arrays(X, y)
+            >>> indices = np.random.choice(dataset.indices, 30, replace=False)
+            >>> _ = dataset.get_training_data(indices)
+            >>> _ = dataset.get_test_data(indices)
+
+
+        :param indices: Optional indices into the test data. This argument
+            is unused and is left as is to keep the same interface as
+            :meth:`Dataset.get_training_data`.
+        :return: The entire test data.
+        """
+        return self.x_test, self.y_test
 
     def target(self, name: str) -> Tuple[slice, int]:
         try:
@@ -204,7 +252,7 @@ class Dataset:
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
     ) -> "Dataset":
-        """Constructs a Dataset object from an sklearn bunch as returned by the
+        """Constructs a :class:`Dataset` object from an :class:`sklearn.utils.Bunch` bunch as returned by the
         `load_*` functions in `sklearn toy datasets
         <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_.
 
@@ -227,7 +275,7 @@ class Dataset:
             random_state=random_state,
             stratify=data.target if stratify_by_target else None,
         )
-        return Dataset(
+        return cls(
             x_train,
             y_train,
             x_test,
@@ -235,6 +283,48 @@ class Dataset:
             feature_names=data.get("feature_names"),
             target_names=data.get("target_names"),
             description=data.get("DESCR"),
+        )
+
+    @classmethod
+    def from_arrays(
+        cls,
+        X: NDArray,
+        y: NDArray,
+        train_size: float = 0.8,
+        random_state: Optional[int] = None,
+        stratify_by_target: bool = False,
+    ) -> "Dataset":
+        """.. versionadded:: 0.4.0
+
+        Constructs a :class:`Dataset` object from X and y numpy arrays  as returned by the
+        `make_*` functions in `sklearn generated datasets
+        <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
+
+        :param X: numpy array of shape (n_samples, n_features)
+        :param y: numpy array of shape (n_samples,)
+        :param train_size: size of the training dataset. Used in
+            `train_test_split`
+        :param random_state: seed for train / test split
+        :param stratify_by_target: If `True`, data is split in a stratified
+            fashion, using the y variable as labels. Read more in
+            `sklearn's user guide
+            <https://scikit-learn.org/stable/modules/cross_validation.html
+            #stratification>`.
+
+        :return: Dataset with the passed X and y arrays split across training and test sets.
+        """
+        x_train, x_test, y_train, y_test = train_test_split(
+            X,
+            y,
+            train_size=train_size,
+            random_state=random_state,
+            stratify=y if stratify_by_target else None,
+        )
+        return cls(
+            x_train,
+            y_train,
+            x_test,
+            y_test,
         )
 
 
@@ -320,7 +410,7 @@ class GroupedDataset(Dataset):
         stratify_by_target: bool = False,
         data_groups: Optional[List] = None,
     ) -> "GroupedDataset":
-        """Constructs a Dataset object from an sklearn bunch as returned by the
+        """Constructs a :class:`GroupedDataset` object from an sklearn bunch as returned by the
         `load_*` functions in `sklearn toy datasets
         <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_ and groups
         it.
@@ -336,12 +426,51 @@ class GroupedDataset(Dataset):
             #stratification>`.
         :param data_groups: for each element in the training set, it associates
             a group index or name.
+
         :return: Dataset with the selected sklearn data
         """
         if data_groups is None:
             raise ValueError("data_groups argument is missing")
-        dataset = super().from_sklearn(
+        dataset = Dataset.from_sklearn(
             data, train_size, random_state, stratify_by_target
+        )
+        return cls.from_dataset(dataset, data_groups)
+
+    @classmethod
+    def from_arrays(
+        cls,
+        X: NDArray,
+        y: NDArray,
+        train_size: float = 0.8,
+        random_state: Optional[int] = None,
+        stratify_by_target: bool = False,
+        data_groups: Optional[List] = None,
+    ) -> "Dataset":
+        """.. versionadded:: 0.4.0
+
+        Constructs a :class:`GroupedDataset` object from X and y numpy arrays  as returned by the
+        `make_*` functions in `sklearn generated datasets
+        <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
+
+        :param X: numpy array of shape (n_samples, n_features)
+        :param y: numpy array of shape (n_samples,)
+        :param train_size: size of the training dataset. Used in
+            `train_test_split`
+        :param random_state: seed for train / test split
+        :param stratify_by_target: If `True`, data is split in a stratified
+            fashion, using the y variable as labels. Read more in
+            `sklearn's user guide
+            <https://scikit-learn.org/stable/modules/cross_validation.html
+            #stratification>`.
+        :param data_groups: for each element in the training set, it associates
+            a group index or name.
+
+        :return: Dataset with the passed X and y arrays split across training and test sets.
+        """
+        if data_groups is None:
+            raise ValueError("data_groups argument is missing")
+        dataset = Dataset.from_arrays(
+            X, y, train_size, random_state, stratify_by_target
         )
         return cls.from_dataset(dataset, data_groups)
 
@@ -349,15 +478,15 @@ class GroupedDataset(Dataset):
     def from_dataset(
         cls, dataset: Dataset, data_groups: Sequence[Any]
     ) -> "GroupedDataset":
-        """Given a dataset, it makes it into a grouped dataset by passing a list
-        of data groups, one for each element in the training set.
+        """Given a :class:`Dataset` object, it creates it into a :class:`GroupedDataset` object
+        by passing a list of data groups, one for each element in the training set.
 
-        :param dataset: Dataset object
+        :param dataset: :class:`Dataset` object
         :param data_groups: for each element in the training set, it associates a group
             index or name.
-        :return: GroupedDataset, with the initial Dataset grouped by data_groups.
+        :return: :class:`GroupedDataset`, with the initial :class:`Dataset` grouped by data_groups.
         """
-        return GroupedDataset(
+        return cls(
             x_train=dataset.x_train,
             y_train=dataset.y_train,
             x_test=dataset.x_test,
@@ -421,7 +550,7 @@ def load_wine_dataset(
     :param train_size: fraction of points used for training dataset
     :param test_size: fraction of points used for test dataset
     :param random_state: fix random seed. If None, no random seed is set.
-    :returns: A tuple of four elements with the first three being input and
+    :return: A tuple of four elements with the first three being input and
         target values in the form of matrices of shape (N,D) the first
         and (N,) the second. The fourth element is a list containing names of
         features of the model. (FIXME doc)

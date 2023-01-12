@@ -44,8 +44,16 @@ methods from the following papers:
   Proceedings of the VLDB Endowment 12, no. 11 (1 July 2019): 1610–23.
 - Okhrati, Ramin, and Aldo Lipani.
   [A Multilinear Sampling Algorithm to Estimate Shapley Values](https://doi.org/10.1109/ICPR48806.2021.9412511).
-  In 2020 25th International Conference on Pattern Recognition (ICPR), 7992–99.
+  In 25th International Conference on Pattern Recognition (ICPR 2020), 7992–99.
   IEEE, 2021.
+- Yan, T., & Procaccia, A. D.
+  [If You Like Shapley Then You’ll Love the Core]().
+  Proceedings of the AAAI Conference on Artificial Intelligence, 35(6) (2021): 5751-5759.
+- Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nick Hynes, Nezihe Merve
+  Gürel, Bo Li, Ce Zhang, Dawn Song, and Costas J. Spanos.
+  [Towards Efficient Data Valuation Based on the Shapley Value](http://proceedings.mlr.press/v89/jia19a.html).
+  In 22nd International Conference on Artificial Intelligence and Statistics,
+  1167–76. PMLR, 2019.
 
 Influence Functions compute the effect that single points have on an estimator /
 model. We implement methods from the following papers:
@@ -76,18 +84,7 @@ documentation.
 
 # Usage
 
-pyDVL uses [Memcached](https://memcached.org/) to cache certain results and
-speed up computation. You can run it either locally or, using
-[Docker](https://www.docker.com/):
-
-```shell
-docker container run --rm -p 11211:11211 --name pydvl-cache -d memcached:latest
-```
-
-You can read more in the [caching module's
-documentation](https://appliedAI-Initiative.github.io/pyDVL/pydvl/utils/caching.html).
-
-Once that's done, the steps required to compute values for your samples are
+The steps required to compute values for your samples are:
 
 1. Create a `Dataset` object with your train and test splits.
 2. Create an instance of a `SupervisedModel` (basically any sklearn compatible
@@ -108,14 +105,14 @@ from sklearn.model_selection import train_test_split
 
 X, y = np.arange(100).reshape((50, 2)), np.arange(50)
 X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.5, random_state=16
-        )
+    X, y, test_size=0.5, random_state=16
+)
 dataset = Dataset(X_train, y_train, X_test, y_test)
 model = LinearRegression()
 utility = Utility(model, dataset)
 values = compute_shapley_values(
-        u=utility, max_iterations=100, mode="truncated_montecarlo"
-    )
+    u=utility, n_iterations=100, mode="truncated_montecarlo"
+)
 ```
 
 For more instructions and information refer to [Getting
@@ -123,6 +120,21 @@ Started](https://appliedAI-Initiative.github.io/pyDVL/10-getting-started.html) i
 the documentation. We provide several
 [examples](https://appliedAI-Initiative.github.io/pyDVL/examples/index.html)
 with details on the algorithms and their applications.
+
+## Caching
+
+pyDVL offers the possibility to cache certain results and
+speed up computation. It uses [Memcached](https://memcached.org/) For that.
+
+You can run it either locally or, using
+[Docker](https://www.docker.com/):
+
+```shell
+docker container run --rm -p 11211:11211 --name pydvl-cache -d memcached:latest
+```
+
+You can read more in the [caching module's
+documentation](https://appliedAI-Initiative.github.io/pyDVL/pydvl/utils/caching.html).
 
 # Contributing
 
