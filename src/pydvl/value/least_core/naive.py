@@ -82,29 +82,30 @@ def exact_least_core(
     b_lb = utility_values
     b_eq = utility_values[-1:]
 
-    _, least_core_value = _solve_least_core_linear_program(
+    _, subsidy = _solve_least_core_linear_program(
         A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
     )
 
     values: Optional[NDArray[np.float_]]
 
-    if least_core_value is None:
+    if subsidy is None:
         logger.debug("No values were found")
         status = ValuationStatus.Failed
         values = np.empty(n)
         values[:] = np.nan
-        least_core_value = np.nan
+        subsidy = np.nan
+
         return ValuationResult(
             algorithm="exact_least_core",
             status=status,
             values=values,
+            subsidy=subsidy,
             stderr=None,
             data_names=u.data.data_names,
-            least_core_value=least_core_value,
         )
 
     values = _solve_egalitarian_least_core_quadratic_program(
-        least_core_value,
+        subsidy,
         A_eq=A_eq,
         b_eq=b_eq,
         A_lb=A_lb,
@@ -117,7 +118,7 @@ def exact_least_core(
         status = ValuationStatus.Failed
         values = np.empty(n)
         values[:] = np.nan
-        least_core_value = np.nan
+        subsidy = np.nan
     else:
         status = ValuationStatus.Converged
 
@@ -125,7 +126,7 @@ def exact_least_core(
         algorithm="exact_least_core",
         status=status,
         values=values,
+        subsidy=subsidy,
         stderr=None,
         data_names=u.data.data_names,
-        least_core_value=least_core_value,
     )

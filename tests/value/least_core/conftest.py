@@ -56,14 +56,14 @@ def miner_utility(request) -> Tuple[Utility, ValuationResult]:
     u = MinerUtility(n_miners=n_miners)
     if n_miners % 2 == 0:
         exact_values = np.array([0.5] * n_miners)
-        least_core_value = 0.0
+        subsidy = 0.0
     else:
         exact_values = np.array([(n_miners - 1) / (2 * n_miners)] * n_miners)
-        least_core_value = (n_miners - 1) / (2 * n_miners)
+        subsidy = (n_miners - 1) / (2 * n_miners)
     result = ValuationResult(
         algorithm="exact",
         values=exact_values,
-        least_core_value=least_core_value,
+        subsidy=subsidy,
         stderr=np.zeros_like(exact_values),
         data_names=np.arange(len(exact_values)),
         status=ValuationStatus.Converged,

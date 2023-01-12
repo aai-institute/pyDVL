@@ -22,9 +22,7 @@ def test_montecarlo_least_core(miner_utility, rtol, n_iterations):
     values = montecarlo_least_core(
         u, n_iterations=n_iterations, progress=False, n_jobs=4
     )
-    check_values(
-        values, exact_values, rtol=rtol, extra_values_names=["least_core_value"]
-    )
+    check_values(values, exact_values, rtol=rtol, extra_values_names=["subsidy"])
 
 
 @pytest.mark.parametrize(

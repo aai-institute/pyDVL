@@ -165,29 +165,30 @@ def montecarlo_least_core(
     A_lb, unique_indices = np.unique(A_lb, return_index=True, axis=0)
     b_lb = b_lb[unique_indices]
 
-    _, least_core_value = _solve_least_core_linear_program(
+    _, subsidy = _solve_least_core_linear_program(
         A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
     )
 
     values: Optional[NDArray[np.float_]]
 
-    if least_core_value is None:
+    if subsidy is None:
         logger.debug("No values were found")
         status = ValuationStatus.Failed
         values = np.empty(n)
         values[:] = np.nan
-        least_core_value = np.nan
+        subsidy = np.nan
+
         return ValuationResult(
             algorithm="montecarlo_least_core",
             status=status,
             values=values,
+            subsidy=subsidy,
             stderr=None,
             data_names=u.data.data_names,
-            least_core_value=least_core_value,
         )
 
     values = _solve_egalitarian_least_core_quadratic_program(
-        least_core_value,
+        subsidy,
         A_eq=A_eq,
         b_eq=b_eq,
         A_lb=A_lb,
@@ -200,7 +201,7 @@ def montecarlo_least_core(
         status = ValuationStatus.Failed
         values = np.empty(n)
         values[:] = np.nan
-        least_core_value = np.nan
+        subsidy = np.nan
     else:
         status = ValuationStatus.Converged
 
@@ -208,7 +209,7 @@ def montecarlo_least_core(
         algorithm="montecarlo_least_core",
         status=status,
         values=values,
+        subsidy=subsidy,
         stderr=None,
         data_names=u.data.data_names,
-        least_core_value=least_core_value,
     )
