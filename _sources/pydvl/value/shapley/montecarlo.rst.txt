@@ -4,3 +4,11 @@ montecarlo
 .. automodule:: pydvl.value.shapley.montecarlo
    :members:
    :undoc-members:
+   
+   ----
+   
+   Module members
+   ==============
+ 
+.. footbibliography::
+

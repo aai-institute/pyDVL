@@ -4,3 +4,11 @@ scores
 .. automodule:: pydvl.reporting.scores
    :members:
    :undoc-members:
+   
+   ----
+   
+   Module members
+   ==============
+ 
+.. footbibliography::
+

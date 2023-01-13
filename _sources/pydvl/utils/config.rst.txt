@@ -4,3 +4,11 @@ config
 .. automodule:: pydvl.utils.config
    :members:
    :undoc-members:
+   
+   ----
+   
+   Module members
+   ==============
+ 
+.. footbibliography::
+

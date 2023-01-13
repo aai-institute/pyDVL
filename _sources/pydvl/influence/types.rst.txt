@@ -4,3 +4,11 @@ types
 .. automodule:: pydvl.influence.types
    :members:
    :undoc-members:
+   
+   ----
+   
+   Module members
+   ==============
+ 
+.. footbibliography::
+

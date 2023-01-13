@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="montecarlo" href="montecarlo.html" /><link rel="prev" title="actor" href="actor.html" />
+<link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="montecarlo" href="montecarlo.html" /><link rel="prev" title="gt" href="gt.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
         <title>knn - pyDVL 0.3.1.dev0 documentation</title>
@@ -226,22 +226,19 @@
 </ul>
 </li>
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../../value.html">value</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3 has-children"><a class="reference internal" href="../banzhaf.html">banzhaf</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../banzhaf/montecarlo.html">montecarlo</a></li>
-</ul>
-</li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../least_core/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../least_core/naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../loo/naive.html">naive</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../results.html">results</a></li>
-<li class="toctree-l3 current has-children"><a class="reference internal" href="../shapley.html">shapley</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 current has-children"><a class="reference internal" href="../shapley.html">shapley</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="gt.html">gt</a></li>
 <li class="toctree-l4 current current-page"><a class="current reference internal" href="#">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="naive.html">naive</a></li>
@@ -292,6 +289,9 @@
 <p class="admonition-title">Todo</p>
 <p>Implement approximate KNN computation for sublinear complexity)</p>
 </div>
+<hr class="docutils" />
+<section id="module-members">
+<h2>Module members<a class="headerlink" href="#module-members" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.value.shapley.knn.knn_shapley">
 <span class="sig-name descname"><span class="pre">knn_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/knn.py#L19"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.knn.knn_shapley" title="Permalink to this definition"></a></dt>
@@ -315,19 +315,22 @@ will not be modified nor used other than to call <a class="reference external" h
 <dd class="field-odd"><p><strong>TypeError</strong> – If the model in the utility is not a <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html">KNeighborsClassifier</a></p>
 </dd>
 </dl>
-<p>. rubric:: References</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.1.0.</span></p>
+</div>
+</dd></dl>
+
+</section>
 <div class="docutils container" id="id3">
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h2>
+</section>
 <dl class="footnote brackets">
 <dt class="label" id="footcite-jia-efficient-2019a"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
 <dd><p>Ruoxi Jia, David Dao, Boxin Wang, Frances Ann Hubis, Nezihe Merve Gurel, Bo Li, Ce Zhang, Costas Spanos, and Dawn Song. Efficient task-specific data valuation for nearest neighbor algorithms. <em>Proceedings of the VLDB Endowment</em>, 12(11):1610–1623, July 2019. URL: <a class="reference external" href="https://doi.org/10.14778/3342263.3342637">https://doi.org/10.14778/3342263.3342637</a> (visited on 2021-02-12), <a class="reference external" href="https://doi.org/10.14778/3342263.3342637">doi:10.14778/3342263.3342637</a>.</p>
 </dd>
 </dl>
 </div>
-<div class="versionadded">
-<p><span class="versionmodified added">New in version 0.1.0.</span></p>
-</div>
-</dd></dl>
-
 </section>
 
         </article>
@@ -344,14 +347,14 @@ will not be modified nor used other than to call <a class="reference external" h
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="actor.html">
+          <a class="prev-page" href="gt.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">actor</div>
+                <div class="title">gt</div>
                 
               </div>
             </a>
@@ -393,7 +396,10 @@ will not be modified nor used other than to call <a class="reference external" h
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">knn</a><ul>
+<li><a class="reference internal" href="#module-members">Module members</a><ul>
 <li><a class="reference internal" href="#pydvl.value.shapley.knn.knn_shapley"><code class="docutils literal notranslate"><span class="pre">knn_shapley()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

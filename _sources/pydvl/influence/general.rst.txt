@@ -4,3 +4,11 @@ general
 .. automodule:: pydvl.influence.general
    :members:
    :undoc-members:
+   
+   ----
+   
+   Module members
+   ==============
+ 
+.. footbibliography::
+

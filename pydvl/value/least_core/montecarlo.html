@@ -226,22 +226,19 @@
 </ul>
 </li>
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../../value.html">value</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3 has-children"><a class="reference internal" href="../banzhaf.html">banzhaf</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../banzhaf/montecarlo.html">montecarlo</a></li>
-</ul>
-</li>
-<li class="toctree-l3 current has-children"><a class="reference internal" href="../least_core.html">least_core</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 current has-children"><a class="reference internal" href="../least_core.html">least_core</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l4 current current-page"><a class="current reference internal" href="#">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../loo/naive.html">naive</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../results.html">results</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../shapley/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../shapley/naive.html">naive</a></li>
@@ -287,9 +284,12 @@
         <article role="main">
           <section id="module-pydvl.value.least_core.montecarlo">
 <span id="montecarlo"></span><h1>montecarlo<a class="headerlink" href="#module-pydvl.value.least_core.montecarlo" title="Permalink to this heading"></a></h1>
+<hr class="docutils" />
+<section id="module-members">
+<h2>Module members<a class="headerlink" href="#module-members" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.value.least_core.montecarlo.montecarlo_least_core">
-<span class="sig-name descname"><span class="pre">montecarlo_least_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">n_local_workers=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/least_core/montecarlo.py#L76"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.least_core.montecarlo.montecarlo_least_core" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">montecarlo_least_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">n_local_workers=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/least_core/montecarlo.py#L78"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.least_core.montecarlo.montecarlo_least_core" title="Permalink to this definition"></a></dt>
 <dd><p>Computes approximate Least Core values using a Monte Carlo approach.</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
@@ -297,7 +297,7 @@
 \begin{array}{lll}
 \text{minimize} &amp; \displaystyle{e} &amp; \\
 \text{subject to} &amp; \displaystyle\sum_{i\in N} x_{i} = v(N) &amp; \\
-&amp; \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) &amp; ,
+&amp; \displaystyle\sum_{i\in S} x_{i} + e + \epsilon \geq v(S) &amp; ,
 \forall S \in \{S_1, S_2, \dots, S_m \overset{\mathrm{iid}}{\sim} U(2^N) \}
 \end{array}
 \end{split}\]</div>
@@ -307,28 +307,31 @@
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(U(2^N)\)</span> is the uniform distribution over the powerset of <span class="math notranslate nohighlight">\(N\)</span>.</p></li>
 <li><p><span class="math notranslate nohighlight">\(m\)</span> is the number of subsets that will be sampled and whose utility will be computed
-and used to compute the Least Core values.</p></li>
+and used to compute the data values.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\epsilon \ge 0\)</span> is an optional relaxation value.</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
-<li><p><strong>max_iterations</strong> – total number of iterations to use</p></li>
+<li><p><strong>n_iterations</strong> – total number of iterations to use</p></li>
 <li><p><strong>n_jobs</strong> – number of jobs across which to distribute the computation</p></li>
 <li><p><strong>config</strong> – Object configuring parallel computation, with cluster
 address, number of cpus, etc.</p></li>
 <li><p><strong>epsilon</strong> – Relaxation value by which the subset utility is decreased.</p></li>
-<li><p><strong>options</strong> – LP Solver options. Refer to this page for more information <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/optimize.linprog-highs.html">https://docs.scipy.org/doc/scipy/reference/optimize.linprog-highs.html</a></p></li>
+<li><p><strong>options</strong> – Keyword arguments that will be used to select a solver
+and to configure it. Refer to the following page for all possible options:
+<a class="reference external" href="https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options">https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options</a></p></li>
 <li><p><strong>progress</strong> – If True, shows a tqdm progress bar</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Dictionary of {“index or label”: exact_value}, sorted by decreasing
-value.</p>
+<dd class="field-even"><p>Object with the data values and the least core value.</p>
 </dd>
 </dl>
 </dd></dl>
 
+</section>
 </section>
 
         </article>
@@ -394,7 +397,10 @@ value.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">montecarlo</a><ul>
+<li><a class="reference internal" href="#module-members">Module members</a><ul>
 <li><a class="reference internal" href="#pydvl.value.least_core.montecarlo.montecarlo_least_core"><code class="docutils literal notranslate"><span class="pre">montecarlo_least_core()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

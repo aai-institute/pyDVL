@@ -226,22 +226,19 @@
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../pydvl/value.html">value</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/banzhaf.html">banzhaf</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/banzhaf/montecarlo.html">montecarlo</a></li>
-</ul>
-</li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/least_core/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/least_core/naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/loo/naive.html">naive</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../pydvl/value/results.html">results</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/naive.html">naive</a></li>
@@ -562,7 +559,8 @@ div.rendered_html tbody tr:hover {
 </style><section id="Least-Core-for-Data-Valuation">
 <h1>Least Core for Data Valuation<a class="headerlink" href="#Least-Core-for-Data-Valuation" title="Permalink to this heading"></a></h1>
 <p>This notebook introduces Least Core methods for the computation of data values using pyDVL.</p>
-<p>Whereas the Shapley values define a fair way to distribute data values amongst all data points when the entire training set is used. But they do not consider the question of stability: Would some data points get a better payoff by using smaller subsets?</p>
+<p>Shapley values define a fair way of distributing the worth of the whole training set when every data point is part of it. But they do not consider the question of stability of subsets: Could some data points obtain a higher payoff if they formed smaller subsets? It is argued that this might be relevant if data providers are paid based on data value, since Shapley values can incentivise them not to contribute their data to the “grand coalition”, but instead try to form smaller ones. Whether this
+is of actual practical relevance is debatable, but in any case, the least core is an alternative tool available for any task of Data Valuation</p>
 <p>The Core is another approach to compute data values originating in cooperative game theory that attempts to answer those questions. It is the set of feasible payoffs that cannot be improved upon by a coalition of the participants.</p>
 <p>Its use for Data Valuation was first described in the paper <a class="reference external" href="https://ojs.aaai.org/index.php/AAAI/article/view/16721">If You Like Shapley Then You’ll Love the Core</a> by Tom Yan and Ariel D. Procaccia.</p>
 <p>The Least Core value <span class="math notranslate nohighlight">\(v\)</span> of the <span class="math notranslate nohighlight">\(i\)</span>-th sample in dataset <span class="math notranslate nohighlight">\(D\)</span> wrt. utility <span class="math notranslate nohighlight">\(u\)</span> is computed by solving the following Linear Program:</p>
@@ -690,8 +688,8 @@ Testing accuracy: 47.89%
 </pre></div></div>
 </div>
 </section>
-<section id="Estimating-Exact-Least-Core-Values">
-<h2>Estimating Exact Least Core Values<a class="headerlink" href="#Estimating-Exact-Least-Core-Values" title="Permalink to this heading"></a></h2>
+<section id="Estimating-Least-Core-Values">
+<h2>Estimating Least Core Values<a class="headerlink" href="#Estimating-Least-Core-Values" title="Permalink to this heading"></a></h2>
 <p>In this first section we will use a smaller subset of the dataset containing 10 samples in order to be able to compute exact values in a reasonable amount of time. Afterwards, we will use the Monte Carlo method with a limited budget (maximum number of subsets) to approximate these values.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -718,15 +716,15 @@ Testing accuracy: 47.89%
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "c11c6e76148047be9c243b5c094a4ab5", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "7b30add22a5c47d8aed967c9c0319cc4", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 1.89 s, sys: 4.31 s, total: 6.2 s
-Wall time: 936 ms
+CPU times: user 4.95 s, sys: 11.2 s, total: 16.2 s
+Wall time: 2.81 s
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -735,7 +733,7 @@ Wall time: 936 ms
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-ValuationResult(algorithm=&#39;exact_least_core&#39;,status=&#39;converged&#39;,values=[0.04   0.0316 0.0868 0.0532 0.0289 0.04   0.0579 0.0479 0.0374 0.0553], least_core_value=0.28631578947368425)
+ValuationResult(algorithm=&#39;exact_least_core&#39;,status=&#39;converged&#39;,values=[0.04   0.0358 0.0837 0.0563 0.0321 0.0358 0.0579 0.0447 0.0342 0.0584], least_core_value=0.28631578945813296)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -787,15 +785,15 @@ ValuationResult(algorithm=&#39;exact_least_core&#39;,status=&#39;converged&#39;,
     <tr>
       <th>exact_value</th>
       <td>0.04</td>
-      <td>0.031579</td>
-      <td>0.086842</td>
-      <td>0.053158</td>
-      <td>0.028947</td>
-      <td>0.04</td>
+      <td>0.035789</td>
+      <td>0.083684</td>
+      <td>0.056316</td>
+      <td>0.032105</td>
+      <td>0.03579</td>
       <td>0.057895</td>
-      <td>0.047895</td>
-      <td>0.037368</td>
-      <td>0.055263</td>
+      <td>0.044737</td>
+      <td>0.034211</td>
+      <td>0.058421</td>
     </tr>
     <tr>
       <th>exact_value_stderr</th>
@@ -804,7 +802,7 @@ ValuationResult(algorithm=&#39;exact_least_core&#39;,status=&#39;converged&#39;,
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
-      <td>0.00</td>
+      <td>0.00000</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
@@ -831,7 +829,7 @@ ValuationResult(algorithm=&#39;exact_least_core&#39;,status=&#39;converged&#39;,
         <span class="n">column_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;estimated_value_</span><span class="si">{</span><span class="n">budget</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">values</span> <span class="o">=</span> <span class="n">montecarlo_least_core</span><span class="p">(</span>
             <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
-            <span class="n">max_iterations</span><span class="o">=</span><span class="n">budget</span><span class="p">,</span>
+            <span class="n">n_iterations</span><span class="o">=</span><span class="n">budget</span><span class="p">,</span>
             <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
             <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
@@ -859,15 +857,15 @@ ValuationResult(algorithm=&#39;exact_least_core&#39;,status=&#39;converged&#39;,
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "86565fa5a2e94cfeaa1e60b727411a64", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "98d718bbd35c4e8fb5f5f7ccfcf2b36c", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 13.2 s, sys: 1.14 s, total: 14.3 s
-Wall time: 1min 6s
+CPU times: user 16.1 s, sys: 1.23 s, total: 17.4 s
+Wall time: 1min 7s
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -939,12 +937,18 @@ Wall time: 1min 6s
         <span class="k">if</span> <span class="n">budget</span> <span class="o">==</span> <span class="s2">&quot;Random&quot;</span><span class="p">:</span>
             <span class="n">values</span> <span class="o">=</span> <span class="n">ValuationResult</span><span class="o">.</span><span class="n">from_random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">utility</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">values</span> <span class="o">=</span> <span class="n">montecarlo_least_core</span><span class="p">(</span>
-                <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
-                <span class="n">max_iterations</span><span class="o">=</span><span class="n">budget</span><span class="p">,</span>
-                <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
-                <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">montecarlo_least_core</span><span class="p">(</span>
+                    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+                    <span class="n">n_iterations</span><span class="o">=</span><span class="n">budget</span><span class="p">,</span>
+                    <span class="n">options</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s2">&quot;solver&quot;</span><span class="p">:</span> <span class="s2">&quot;SCS&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;max_iters&quot;</span><span class="p">:</span> <span class="mi">20000</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+                    <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="n">compute_removal_score</span><span class="p">(</span>
             <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
             <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">,</span>
@@ -962,15 +966,27 @@ Wall time: 1min 6s
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "7310c2f9fda64a0cbf36dd1dd1ef5d5d", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "2d480ead62be4916a880bb38aade276e", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-cyan-fg">(_montecarlo_least_core pid=2192225)</span> E0112 00:47:01.542081237 2192225 chttp2_transport.cc:1103]   Received a GOAWAY with error code ENHANCE_YOUR_CALM and debug data equal to &#34;too_many_pings&#34;
+<span class="ansi-cyan-fg">(_reduce_func pid=2192229)</span> E0112 00:47:01.540003519 2192229 chttp2_transport.cc:1103]   Received a GOAWAY with error code ENHANCE_YOUR_CALM and debug data equal to &#34;too_many_pings&#34;
+<span class="ansi-cyan-fg">(_montecarlo_least_core pid=2192232)</span> E0112 00:47:01.540140480 2192232 chttp2_transport.cc:1103]   Received a GOAWAY with error code ENHANCE_YOUR_CALM and debug data equal to &#34;too_many_pings&#34;
+<span class="ansi-cyan-fg">(_montecarlo_least_core pid=2192230)</span> E0112 00:47:01.540216114 2193179 chttp2_transport.cc:1103]   Received a GOAWAY with error code ENHANCE_YOUR_CALM and debug data equal to &#34;too_many_pings&#34;
+<span class="ansi-cyan-fg">(_montecarlo_least_core pid=2192228)</span> E0112 00:47:01.540105110 2192228 chttp2_transport.cc:1103]   Received a GOAWAY with error code ENHANCE_YOUR_CALM and debug data equal to &#34;too_many_pings&#34;
+</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 1min 48s, sys: 10.3 s, total: 1min 59s
-Wall time: 13min 31s
+CPU times: user 1h 6min 22s, sys: 14.7 s, total: 1h 6min 36s
+Wall time: 1h 17min 3s
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1006,12 +1022,18 @@ Wall time: 13min 31s
         <span class="k">if</span> <span class="n">budget</span> <span class="o">==</span> <span class="s2">&quot;Random&quot;</span><span class="p">:</span>
             <span class="n">values</span> <span class="o">=</span> <span class="n">ValuationResult</span><span class="o">.</span><span class="n">from_random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">utility</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">values</span> <span class="o">=</span> <span class="n">montecarlo_least_core</span><span class="p">(</span>
-                <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
-                <span class="n">max_iterations</span><span class="o">=</span><span class="n">budget</span><span class="p">,</span>
-                <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
-                <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">montecarlo_least_core</span><span class="p">(</span>
+                    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+                    <span class="n">n_iterations</span><span class="o">=</span><span class="n">budget</span><span class="p">,</span>
+                    <span class="n">options</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s2">&quot;solver&quot;</span><span class="p">:</span> <span class="s2">&quot;SCS&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;max_iters&quot;</span><span class="p">:</span> <span class="mi">20000</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+                    <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="n">compute_removal_score</span><span class="p">(</span>
             <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
             <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">,</span>
@@ -1028,15 +1050,15 @@ Wall time: 13min 31s
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "ab8a49260d3242f6b71bd8d9681e0cc6", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "b10f0b779c9e4621b09a8d9a85594799", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 1min 56s, sys: 11.8 s, total: 2min 8s
-Wall time: 14min 15s
+CPU times: user 1h 6min 48s, sys: 15.3 s, total: 1h 7min 3s
+Wall time: 1h 17min 28s
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1125,7 +1147,7 @@ Wall time: 14min 15s
 <li><a class="reference internal" href="#">Least Core for Data Valuation</a><ul>
 <li><a class="reference internal" href="#Setup">Setup</a></li>
 <li><a class="reference internal" href="#Dataset">Dataset</a></li>
-<li><a class="reference internal" href="#Estimating-Exact-Least-Core-Values">Estimating Exact Least Core Values</a></li>
+<li><a class="reference internal" href="#Estimating-Least-Core-Values">Estimating Least Core Values</a></li>
 <li><a class="reference internal" href="#Data-Removal">Data Removal</a><ul>
 <li><a class="reference internal" href="#Remove-Best">Remove Best</a></li>
 <li><a class="reference internal" href="#Remove-Worst">Remove Worst</a></li>

@@ -4,3 +4,11 @@ caching
 .. automodule:: pydvl.utils.caching
    :members:
    :undoc-members:
+   
+   ----
+   
+   Module members
+   ==============
+ 
+.. footbibliography::
+

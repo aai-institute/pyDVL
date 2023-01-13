@@ -4,3 +4,11 @@ conjugate\_gradient
 .. automodule:: pydvl.influence.conjugate_gradient
    :members:
    :undoc-members:
+   
+   ----
+   
+   Module members
+   ==============
+ 
+.. footbibliography::
+

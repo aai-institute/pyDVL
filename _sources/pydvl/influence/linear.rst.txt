@@ -4,3 +4,11 @@ linear
 .. automodule:: pydvl.influence.linear
    :members:
    :undoc-members:
+   
+   ----
+   
+   Module members
+   ==============
+ 
+.. footbibliography::
+

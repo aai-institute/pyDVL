@@ -226,22 +226,19 @@
 </ul>
 </li>
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../../value.html">value</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3 has-children"><a class="reference internal" href="../banzhaf.html">banzhaf</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../banzhaf/montecarlo.html">montecarlo</a></li>
-</ul>
-</li>
-<li class="toctree-l3 current has-children"><a class="reference internal" href="../least_core.html">least_core</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 current has-children"><a class="reference internal" href="../least_core.html">least_core</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4 current current-page"><a class="current reference internal" href="#">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../loo/naive.html">naive</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../results.html">results</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../shapley/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../shapley/naive.html">naive</a></li>
@@ -287,10 +284,22 @@
         <article role="main">
           <section id="module-pydvl.value.least_core.naive">
 <span id="naive"></span><h1>naive<a class="headerlink" href="#module-pydvl.value.least_core.naive" title="Permalink to this heading"></a></h1>
+<hr class="docutils" />
+<section id="module-members">
+<h2>Module members<a class="headerlink" href="#module-members" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.value.least_core.naive.exact_least_core">
-<span class="sig-name descname"><span class="pre">exact_least_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/least_core/naive.py#L16"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.least_core.naive.exact_least_core" title="Permalink to this definition"></a></dt>
-<dd><p>Computes the exact Least Core values by solving the following Linear Programming problem:</p>
+<span class="sig-name descname"><span class="pre">exact_least_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/least_core/naive.py#L20"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.least_core.naive.exact_least_core" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the exact Least Core values.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the training set contains more than 20 instances a warning is printed
+because the computation is very expensive. This method is mostly used for
+internal testing and simple use cases. Please refer to the
+<a class="reference internal" href="montecarlo.html#pydvl.value.least_core.montecarlo.montecarlo_least_core" title="pydvl.value.least_core.montecarlo.montecarlo_least_core"><code class="xref py py-func docutils literal notranslate"><span class="pre">Monte</span> <span class="pre">Carlo</span> <span class="pre">method</span></code></a>
+for practical applications.</p>
+</div>
+<p>The least core is the solution to the following Linear Programming problem:</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[\begin{split}
@@ -302,30 +311,24 @@
 \end{split}\]</div>
 </div>
 </p>
-<p>Where <span class="math notranslate nohighlight">\(N = \{1, 2, \dots, n\}\)</span> is the set of the training set’s indices.</p>
-<p>If the training set contains more than 20 instances a warning is printed
-because the computation is very expensive.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is mostly used for internal testing and simple use cases.
-Please refer to the <code class="xref py py-func docutils literal notranslate"><span class="pre">Monte</span> <span class="pre">Carlo</span> <span class="pre">method</span></code>
-for all other cases.</p>
-</div>
+<p>Where <span class="math notranslate nohighlight">\(N = \{1, 2, \dots, n\}\)</span> are the training set’s indices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
-<li><p><strong>options</strong> – LP Solver options. Refer to this page for more information <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/optimize.linprog-highs.html">https://docs.scipy.org/doc/scipy/reference/optimize.linprog-highs.html</a></p></li>
+<li><p><strong>options</strong> – Keyword arguments that will be used to select a solver
+and to configure it. Refer to the following page for all possible options:
+<a class="reference external" href="https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options">https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options</a></p></li>
 <li><p><strong>progress</strong> – If True, shows a tqdm progress bar</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Dictionary of {“index or label”: exact_value}, sorted by decreasing
-value.</p>
+<dd class="field-even"><p>Object with the data values and the least core value.</p>
 </dd>
 </dl>
 </dd></dl>
 
+</section>
 </section>
 
         </article>
@@ -391,7 +394,10 @@ value.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">naive</a><ul>
+<li><a class="reference internal" href="#module-members">Module members</a><ul>
 <li><a class="reference internal" href="#pydvl.value.least_core.naive.exact_least_core"><code class="docutils literal notranslate"><span class="pre">exact_least_core()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

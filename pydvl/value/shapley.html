@@ -226,22 +226,19 @@
 </ul>
 </li>
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../value.html">value</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3 has-children"><a class="reference internal" href="banzhaf.html">banzhaf</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="banzhaf/montecarlo.html">montecarlo</a></li>
-</ul>
-</li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="least_core/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="least_core/naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="loo/naive.html">naive</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="results.html">results</a></li>
-<li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">shapley</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">shapley</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="shapley/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="shapley/naive.html">naive</a></li>
@@ -293,7 +290,7 @@ interface to all methods defined in the modules.</p>
 <p>Please refer to <a class="reference internal" href="../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for an overview of Shapley Data value.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.value.shapley.compute_shapley_values">
-<span class="sig-name descname"><span class="pre">compute_shapley_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ShapleyMode</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ShapleyMode.TruncatedMontecarlo</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/__init__.py#L47"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.compute_shapley_values" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">compute_shapley_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ShapleyMode</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ShapleyMode.TruncatedMontecarlo</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/__init__.py#L48"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.compute_shapley_values" title="Permalink to this definition"></a></dt>
 <dd><p>Umbrella method to compute Shapley values with any of the available
 algorithms.</p>
 <p>See <a class="reference internal" href="../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for an overview.</p>
@@ -302,32 +299,35 @@ work with very small datasets and are thus intended only for testing. Some
 algorithms also accept additional arguments, please refer to the
 documentation of each particular method.</p>
 <ul class="simple">
-<li><p>‘combinatorial_exact’: uses the combinatorial implementation of data
+<li><p><code class="docutils literal notranslate"><span class="pre">combinatorial_exact</span></code>: uses the combinatorial implementation of data
 Shapley. Implemented in
 <a class="reference internal" href="shapley/naive.html#pydvl.value.shapley.naive.combinatorial_exact_shapley" title="pydvl.value.shapley.naive.combinatorial_exact_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">combinatorial_exact_shapley()</span></code></a>.</p></li>
-<li><p>‘permutation_exact’: uses the permutation-based implementation of data
-Shapley. Computation is <strong>not parallelized</strong>. Implemented in
-<a class="reference internal" href="shapley/naive.html#pydvl.value.shapley.naive.permutation_exact_shapley" title="pydvl.value.shapley.naive.permutation_exact_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">permutation_exact_shapley()</span></code></a>.</p></li>
-<li><p>‘permutation_montecarlo’: uses the approximate Monte Carlo implementation
-of permutation data Shapley. Implemented in
-<a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley" title="pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">permutation_montecarlo_shapley()</span></code></a>.</p></li>
-<li><p>‘combinatorial_montecarlo’:  uses the approximate Monte Carlo
+<li><p><code class="docutils literal notranslate"><span class="pre">combinatorial_montecarlo</span></code>:  uses the approximate Monte Carlo
 implementation of combinatorial data Shapley. Implemented in
 <a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley" title="pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">combinatorial_montecarlo_shapley()</span></code></a>.</p></li>
-<li><p>‘truncated_montecarlo’: default option, same as permutation_montecarlo but
-stops the computation whenever a certain accuracy is reached.
+<li><p><code class="docutils literal notranslate"><span class="pre">permutation_exact</span></code>: uses the permutation-based implementation of data
+Shapley. Computation is <strong>not parallelized</strong>. Implemented in
+<a class="reference internal" href="shapley/naive.html#pydvl.value.shapley.naive.permutation_exact_shapley" title="pydvl.value.shapley.naive.permutation_exact_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">permutation_exact_shapley()</span></code></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">permutation_montecarlo</span></code>: uses the approximate Monte Carlo
+implementation of permutation data Shapley. Implemented in
+<a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley" title="pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">permutation_montecarlo_shapley()</span></code></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">truncated_montecarlo</span></code>: default option, same as <code class="docutils literal notranslate"><span class="pre">permutation_montecarlo</span></code>
+but stops the computation whenever a certain accuracy is reached.
 Implemented in
 <a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley" title="pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">truncated_montecarlo_shapley()</span></code></a>.</p></li>
-<li><p>‘owen_sampling’: Uses the Owen continuous extension of the utility function
-to the unit cube. Implemented in
+<li><p><code class="docutils literal notranslate"><span class="pre">owen_sampling</span></code>: Uses the Owen continuous extension of the utility
+function to the unit cube. Implemented in
 <a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.owen_sampling_shapley" title="pydvl.value.shapley.montecarlo.owen_sampling_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">owen_sampling_shapley()</span></code></a>.
 This method requires an additional parameter <cite>q_max</cite> for the number of
 subdivisions of the unit interval to use for integration.</p></li>
-<li><p>‘owen_halved’: Same as ‘owen_sampling’ but uses correlated samples in the
+<li><p><code class="docutils literal notranslate"><span class="pre">owen_halved</span></code>: Same as ‘owen_sampling’ but uses correlated samples in the
 expectation. Implemented in
 <a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.owen_sampling_shapley" title="pydvl.value.shapley.montecarlo.owen_sampling_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">owen_sampling_shapley()</span></code></a>.
 This method  requires an additional parameter <cite>q_max</cite> for the number of
 subdivisions of the interval [0,0.5] to use for integration.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">group_testing</span></code>: estimates differences of Shapley values and solves a
+constraint satisfaction problem. High sample complexity, not recommended.
+Implemented in <a class="reference internal" href="shapley/gt.html#pydvl.value.shapley.gt.group_testing_shapley" title="pydvl.value.shapley.gt.group_testing_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">group_testing_shapley()</span></code></a>.</p></li>
 </ul>
 <p>Additionally, one can use model-specific methods:</p>
 <ul class="simple">
@@ -339,7 +339,7 @@ subdivisions of the interval [0,0.5] to use for integration.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> – <a class="reference internal" href="../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> object with model, data, and
 scoring function.</p></li>
-<li><p><strong>max_iterations</strong> – total number of iterations, used for Monte Carlo
+<li><p><strong>n_iterations</strong> – total number of iterations, used for Monte Carlo
 methods. <strong>Note:</strong> power set-based methods interpret this differently
 to permutation-based methods. For the former, this is the number of
 subsets to sample for each index or process, whereas for the latter it
@@ -350,9 +350,8 @@ is the total number of permutations to sample.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>pandas DataFrame with index being group names or data indices, and
-columns: <cite>data_value</cite> (calculated shapley value) and <cite>data_value_std</cite>
-(standard deviation of <cite>data_value</cite> for Monte Carlo estimators)</p>
+<dd class="field-even"><p>A <a class="reference internal" href="results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValuationResult</span></code></a> object with the
+results.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -361,24 +360,44 @@ columns: <cite>data_value</cite> (calculated shapley value) and <cite>data_value
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="shapley/actor.html">actor</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="shapley/actor.html#pydvl.value.shapley.actor.get_shapley_coordinator"><code class="docutils literal notranslate"><span class="pre">get_shapley_coordinator()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley/actor.html#pydvl.value.shapley.actor.get_shapley_worker"><code class="docutils literal notranslate"><span class="pre">get_shapley_worker()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley/actor.html#module-members">Module members</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="shapley/actor.html#pydvl.value.shapley.actor.get_shapley_coordinator"><code class="docutils literal notranslate"><span class="pre">get_shapley_coordinator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="shapley/actor.html#pydvl.value.shapley.actor.get_shapley_worker"><code class="docutils literal notranslate"><span class="pre">get_shapley_worker()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="shapley/gt.html">gt</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="shapley/gt.html#module-members">Module members</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="shapley/gt.html#pydvl.value.shapley.gt.group_testing_shapley"><code class="docutils literal notranslate"><span class="pre">group_testing_shapley()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="shapley/gt.html#pydvl.value.shapley.gt.num_samples_eps_delta"><code class="docutils literal notranslate"><span class="pre">num_samples_eps_delta()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="shapley/knn.html">knn</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="shapley/knn.html#pydvl.value.shapley.knn.knn_shapley"><code class="docutils literal notranslate"><span class="pre">knn_shapley()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley/knn.html#module-members">Module members</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="shapley/knn.html#pydvl.value.shapley.knn.knn_shapley"><code class="docutils literal notranslate"><span class="pre">knn_shapley()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="shapley/montecarlo.html">montecarlo</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley"><code class="docutils literal notranslate"><span class="pre">truncated_montecarlo_shapley()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley"><code class="docutils literal notranslate"><span class="pre">permutation_montecarlo_shapley()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley"><code class="docutils literal notranslate"><span class="pre">combinatorial_montecarlo_shapley()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.owen_sampling_shapley"><code class="docutils literal notranslate"><span class="pre">owen_sampling_shapley()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley/montecarlo.html#module-members">Module members</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley"><code class="docutils literal notranslate"><span class="pre">truncated_montecarlo_shapley()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley"><code class="docutils literal notranslate"><span class="pre">permutation_montecarlo_shapley()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley"><code class="docutils literal notranslate"><span class="pre">combinatorial_montecarlo_shapley()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="shapley/montecarlo.html#pydvl.value.shapley.montecarlo.owen_sampling_shapley"><code class="docutils literal notranslate"><span class="pre">owen_sampling_shapley()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="shapley/naive.html">naive</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="shapley/naive.html#pydvl.value.shapley.naive.permutation_exact_shapley"><code class="docutils literal notranslate"><span class="pre">permutation_exact_shapley()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="shapley/naive.html#pydvl.value.shapley.naive.combinatorial_exact_shapley"><code class="docutils literal notranslate"><span class="pre">combinatorial_exact_shapley()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley/naive.html#module-members">Module members</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="shapley/naive.html#pydvl.value.shapley.naive.permutation_exact_shapley"><code class="docutils literal notranslate"><span class="pre">permutation_exact_shapley()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="shapley/naive.html#pydvl.value.shapley.naive.combinatorial_exact_shapley"><code class="docutils literal notranslate"><span class="pre">combinatorial_exact_shapley()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

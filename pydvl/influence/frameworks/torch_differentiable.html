@@ -226,22 +226,19 @@
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../value.html">value</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../value/banzhaf.html">banzhaf</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../value/banzhaf/montecarlo.html">montecarlo</a></li>
-</ul>
-</li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../value/least_core/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/least_core/naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../value/loo/naive.html">naive</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../value/results.html">results</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/naive.html">naive</a></li>
@@ -288,6 +285,9 @@
           <section id="module-pydvl.influence.frameworks.torch_differentiable">
 <span id="torch-differentiable"></span><h1>torch_differentiable<a class="headerlink" href="#module-pydvl.influence.frameworks.torch_differentiable" title="Permalink to this heading"></a></h1>
 <p>Contains all parts of pyTorch based machine learning model.</p>
+<hr class="docutils" />
+<section id="module-members">
+<h2>Module members<a class="headerlink" href="#module-members" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TorchTwiceDifferentiable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/frameworks/torch_differentiable.py#L36"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable" title="Permalink to this definition"></a></dt>
@@ -345,6 +345,7 @@ selected via the backprop_on argument.</p>
 
 </dd></dl>
 
+</section>
 </section>
 
         </article>
@@ -410,11 +411,14 @@ selected via the backprop_on argument.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">torch_differentiable</a><ul>
+<li><a class="reference internal" href="#module-members">Module members</a><ul>
 <li><a class="reference internal" href="#pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable</span></code></a><ul>
 <li><a class="reference internal" href="#pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable.num_params"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable.num_params()</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable.split_grad"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable.split_grad()</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable.grad"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable.grad()</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable.mvp"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable.mvp()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
