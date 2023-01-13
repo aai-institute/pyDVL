@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
     "miner_utility, rtol, n_iterations",
     [
         (8, 0.1, 128),
-        (15, 0.15, 4096),
+        (15, 0.15, 6000),
     ],
     indirect=["miner_utility"],
 )
@@ -22,7 +22,7 @@ def test_montecarlo_least_core(miner_utility, rtol, n_iterations):
     values = montecarlo_least_core(
         u, n_iterations=n_iterations, progress=False, n_jobs=4
     )
-    check_values(values, exact_values, rtol=rtol)
+    check_values(values, exact_values, rtol=rtol, extra_values_names=["subsidy"])
 
 
 @pytest.mark.parametrize(

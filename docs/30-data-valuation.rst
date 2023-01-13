@@ -419,7 +419,7 @@ Least Core values
 ^^^^^^^^^^^^^^^^^
 
 Unfortunately, for many cooperative games the Core may be empty.
-By relaxing the coalitional rationality property by $e \gt 0$,
+By relaxing the coalitional rationality property by a subsidy $e \gt 0$,
 we are then able to find approximate payoffs:
 
 $$
@@ -471,14 +471,15 @@ The simplest approximation consists of two relaxations of the Least Core
 
 - Using a fraction of all subsets instead of all possible subsets.
 
-Combined, this gives us the following property:
+Combined, this gives us the $(\epsilon, \delta)$-*probably approx-
+imate least core* that satisfies the following property:
 
 $$
 P_{S\sim D}\left[\sum_{x_i\in S} v_u(x_i) + e^{*} + \epsilon \geq u(S)\right]
 \geq 1 - \delta
 $$
 
-Where $e^{*}$ is the optimal least core value.
+Where $e^{*}$ is the optimal least core subsidy.
 
 With these relaxations, we obtain a polynomial running time.
 

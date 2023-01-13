@@ -1,108 +1,184 @@
 import logging
 import warnings
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple
 
+import cvxpy as cp
 import numpy as np
-import scipy
 from numpy.typing import NDArray
 
-__all__ = ["_solve_linear_program"]
+__all__ = [
+    "_solve_least_core_linear_program",
+    "_solve_egalitarian_least_core_quadratic_program",
+]
 
 logger = logging.getLogger(__name__)
 
 
-BOUNDS_TYPE = Union[
-    Tuple[Optional[float], Optional[float]],
-    List[Tuple[Optional[float], Optional[float]]],
-]
-
-
-def _solve_linear_program(
-    c: NDArray[np.float_],
+def _solve_least_core_linear_program(
     A_eq: NDArray[np.float_],
     b_eq: NDArray[np.float_],
-    A_ub: NDArray[np.float_],
-    b_ub: NDArray[np.float_],
-    bounds: BOUNDS_TYPE,
+    A_lb: NDArray[np.float_],
+    b_lb: NDArray[np.float_],
+    *,
+    epsilon: float = 0.0,
     **options,
-) -> Optional[NDArray[np.float_]]:
-    """Solves a linear program using scipy's :func:`~scipy.optimize.linprog`
-    function.
-
-    .. note::
-       The following description of the linear program and the parameters is
-       taken verbatim from scipy
+) -> Tuple[Optional[NDArray[np.float_]], Optional[float]]:
+    """Solves the Least Core's linear program using cvxopt.
 
     .. math::
 
-        \min_x \ & c^T x \\
-        \mbox{such that} \ & A_{ub} x \leq b_{ub},\\
+        \text{minimize} \ & e \\
+        \mbox{such that} \ & A_{eq} x = b_{eq}, \\
+        & A_{lb} x + e \ge b_{lb},\\
         & A_{eq} x = b_{eq},\\
-        & l \leq x \leq u ,
+        & x in \mathcal{R}^n , \\
+        & e \ge 0
 
-    where $x$ is a vector of decision variables; $c$, $b_{ub}$, $b_{eq}$, $l$,
-    and $u$ are vectors, and $A_{ub}$ and $A_{eq}$ are matrices.
+     where :math:`x` is a vector of decision variables; ,
+    :math:`b_{ub}`, :math:`b_{eq}`, :math:`l`, and :math:`u` are vectors; and
+    :math:`A_{ub}` and :math:`A_{eq}` are matrices.
 
-    :param c: The coefficients of the linear objective function to be minimized.
-    :param A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies
-        the coefficients of a linear equality constraint on ``x``.
-    :param b_eq: The equality constraint vector. Each element of ``A_eq @ x``
-        must equal the corresponding element of ``b_eq``.
-    :param A_ub: The inequality constraint matrix. Each row of ``A_ub``
-        specifies the coefficients of a linear inequality constraint on ``x``.
-    :param b_ub: The inequality constraint vector. Each element represents an
-        upper bound on the corresponding value of ``A_ub @ x``.
-    :param bounds: A sequence of ``(min, max)`` pairs for each element in ``x``,
-        defining the minimum and maximum values of that decision variable. Use
-        ``None`` to indicate that there is no bound. By default, bounds are
-        ``(0, None)`` (all decision variables are non-negative). If a single
-        tuple ``(min, max)`` is provided, then ``min`` and ``max`` will serve as
-        bounds for all decision variables.
-    :param options: A dictionary of solver options. Refer to scipy's
-        documentation for all possible values.
+    :param A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies the
+        coefficients of a linear equality constraint on ``x``.
+    :param b_eq: The equality constraint vector. Each element of ``A_eq @ x`` must equal
+        the corresponding element of ``b_eq``.
+    :param A_lb: The inequality constraint matrix. Each row of ``A_lb`` specifies the
+        coefficients of a linear inequality constraint on ``x``.
+    :param b_lb: The inequality constraint vector. Each element represents a
+        lower bound on the corresponding value of ``A_lb @ x``.
+    :param epsilon: Relaxation value by which the subset utility is decreased.
+    :param options: Keyword arguments that will be used to select a solver
+        and to configure it. For all possible options, refer to `cvxpy's documentation
+        <https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options>`_
     """
-    logger.debug(
-        f"Solving linear programming problem: {c=}, {A_eq=}, {b_eq=}, {A_ub=}, {b_ub=}"
-    )
+    logger.debug(f"Solving linear program : {A_eq=}, {b_eq=}, {A_lb=}, {b_lb=}")
 
-    result: scipy.optimize.OptimizeResult = scipy.optimize.linprog(
-        c,
-        A_ub=A_ub,
-        b_ub=b_ub,
-        A_eq=A_eq,
-        b_eq=b_eq,
-        bounds=bounds,
-        method="highs-ipm",
-        options=options,
-    )
+    n_variables = A_eq.shape[1]
 
-    logger.debug(f"{result=}")
+    x = cp.Variable(n_variables)
+    e = cp.Variable()
+    epsilon_parameter = cp.Parameter(name="epsilon", nonneg=True, value=epsilon)
 
-    if result.success:
-        return np.asarray(result.x)
+    objective = cp.Minimize(e)
+    constraints = [
+        e >= 0,
+        A_eq @ x == b_eq,
+        (A_lb @ x + e * np.ones(len(A_lb))) >= (b_lb - epsilon_parameter),
+    ]
+    problem = cp.Problem(objective, constraints)
 
-    values = None
+    solver = options.pop("solver", cp.ECOS)
 
-    if result.status == 1:
+    try:
+        problem.solve(solver=solver, **options)
+    except cp.error.SolverError as err:
+        raise ValueError("Could not solve linear program") from err
+
+    if problem.status in cp.settings.SOLUTION_PRESENT:
+        logger.debug("Problem was solved")
+        if problem.status in [cp.settings.OPTIMAL_INACCURATE, cp.settings.USER_LIMIT]:
+            warnings.warn(
+                "Solver terminated early. Consider increasing the solver's "
+                "maximum number of iterations in options",
+                RuntimeWarning,
+            )
+        subsidy = e.value.item()
+        # HACK: sometimes the returned least core subsidy
+        # is negative but very close to 0
+        # to avoid any problems with the subsequent quadratic program
+        # we just set it to 0.0
+        if subsidy < 0:
+            warnings.warn(
+                f"Least core subsidy e={subsidy} is negative but close to zero. "
+                "It will be set to 0.0",
+                RuntimeWarning,
+            )
+            subsidy = 0.0
+        return x.value, subsidy
+
+    if problem.status in cp.settings.INF_OR_UNB:
         warnings.warn(
-            f"Solver terminated early: '{result.message}'. Consider increasing the solver's maxiter in options"
-        )
-    elif result.status == 2:
-        warnings.warn(
-            f"Could not find solution due to infeasibility of problem: '{result.message}'. "
-            "Consider increasing max_iterations",
+            "Could not find solution due to infeasibility or unboundedness of problem.",
             RuntimeWarning,
         )
-    elif result.status == 3:
+    return None, None
+
+
+def _solve_egalitarian_least_core_quadratic_program(
+    subsidy: float,
+    A_eq: NDArray[np.float_],
+    b_eq: NDArray[np.float_],
+    A_lb: NDArray[np.float_],
+    b_lb: NDArray[np.float_],
+    epsilon: float = 0.0,
+    **options,
+) -> Optional[NDArray[np.float_]]:
+    """Solves the egalitarian Least Core's quadratic program using cvxopt.
+
+    .. math::
+
+        \text{minimize} \ & \| x \|_2 \\
+        \mbox{such that} \ & A_{eq} x = b_{eq}, \\
+        & A_{lb} x + e \ge b_{lb},\\
+        & A_{eq} x = b_{eq},\\
+        & x in \mathcal{R}^n , \\
+        & e \text{ is a constant.}
+
+     where :math:`x` is a vector of decision variables; ,
+    :math:`b_{ub}`, :math:`b_{eq}`, :math:`l`, and :math:`u` are vectors; and
+    :math:`A_{ub}` and :math:`A_{eq}` are matrices.
+
+    :param subsidy: Minimal subsidy returned by :func:`_solve_least_core_linear_program`
+    :param A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies the
+        coefficients of a linear equality constraint on ``x``.
+    :param b_eq: The equality constraint vector. Each element of ``A_eq @ x`` must equal
+        the corresponding element of ``b_eq``.
+    :param A_lb: The inequality constraint matrix. Each row of ``A_lb`` specifies the
+        coefficients of a linear inequality constraint on ``x``.
+    :param b_lb: The inequality constraint vector. Each element represents a
+        lower bound on the corresponding value of ``A_lb @ x``.
+    :param epsilon: Relaxation value by which the subset utility is decreased.
+    :param options: Keyword arguments that will be used to select a solver
+        and to configure it. Refer to the following page for all possible options:
+        https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
+    """
+    logger.debug(f"Solving quadratic program : {A_eq=}, {b_eq=}, {A_lb=}, {b_lb=}")
+
+    if subsidy < 0:
+        raise ValueError("The least core subsidy must be non-negative.")
+
+    n_variables = A_eq.shape[1]
+
+    x = cp.Variable(n_variables)
+    epsilon_parameter = cp.Parameter(name="epsilon", nonneg=True, value=epsilon)
+
+    objective = cp.Minimize(cp.norm2(x))
+    constraints = [
+        A_eq @ x == b_eq,
+        (A_lb @ x + subsidy * np.ones(len(A_lb))) >= (b_lb - epsilon_parameter),
+    ]
+    problem = cp.Problem(objective, constraints)
+
+    solver = options.pop("solver", cp.ECOS)
+
+    try:
+        problem.solve(solver=solver, **options)
+    except cp.error.SolverError as err:
+        raise ValueError("Could not solve quadratic program") from err
+
+    if problem.status in cp.settings.SOLUTION_PRESENT:
+        logger.debug("Problem was solved")
+        if problem.status in [cp.settings.OPTIMAL_INACCURATE, cp.settings.USER_LIMIT]:
+            warnings.warn(
+                "Solver terminated early. Consider increasing the solver's "
+                "maximum number of iterations in options",
+                RuntimeWarning,
+            )
+        return x.value  # type: ignore
+
+    if problem.status in cp.settings.INF_OR_UNB:
         warnings.warn(
-            f"Could not find solution due to unboundedness of problem: '{result.message}'. "
-            "Consider increasing max_iterations",
+            "Could not find solution due to infeasibility or unboundedness of problem.",
             RuntimeWarning,
         )
-    else:
-        warnings.warn(
-            f"Could not find solution due to numerical issues: '{result.message}'. "
-            "Consider increasing max_iterations",
-            RuntimeWarning,
-        )
-    return values
+    return None

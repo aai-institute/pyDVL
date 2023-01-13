@@ -26,7 +26,7 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 
     :param u: Utility object with model, data, and scoring function
     :param progress: Whether to display progress bars for each job.
-    :return: OrderedDict of exact Shapley values
+    :return: Object with the data values.
     """
 
     n = len(u.data)

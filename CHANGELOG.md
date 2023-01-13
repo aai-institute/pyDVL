@@ -31,6 +31,11 @@
   [PR #240](https://github.com/appliedAI-Initiative/pyDVL/pull/240)
 - Fixes bug in ray initialization in `RayParallelBackend` class
   [PR #239](https://github.com/appliedAI-Initiative/pyDVL/pull/239)
+- Improves Least Core methods by solving an egalitarian quadratic program
+  to find a fair distribution of data value that satisfies the constraints
+  given the least core value found by solving the least core linear program,
+  adds cvxpy as a dependency and uses it instead of scipy to solve these programs.
+  [PR #243](https://github.com/appliedAI-Initiative/pyDVL/pull/243)
 
 ## 0.3.0 - 💥 Breaking changes
 
