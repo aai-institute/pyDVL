@@ -263,12 +263,10 @@ runs](#skipping-ci-runs)).
 
 ### Skipping CI runs
 
-You sometimes would like to skip CI for certain commits (e.g. updating the readme). 
-In order to do that you can simply prefix the commit message with `[skip ci]`.
-
-- Other strings, like `[ci skip]` are allowed, but we prefer `[skip ci]`.
-- The string doesn't have to be at the beginning of the commit message, but we prefer doing it 
-  that way because it makes it immediately apparent when looking at commits in a PR.
+One sometimes would like to skip CI for certain commits (e.g. updating the
+readme). In order to do this, simply prefix the commit message with `[skip ci]`.
+The string can be anywhere, but adding it to the beginning of the commit message
+makes it more evident when looking at commits in a PR.
 
 Refer to the official [GitHub documentation](https://docs.github.com/en/actions/managing-workflow-runs/skipping-workflow-runs) 
 for more information.
@@ -290,13 +288,13 @@ Then, a new release can be created using the script
 part):
 
 ```shell script
-./scripts/release-version.sh 0.1.6
+build_scripts/release-version.sh 0.1.6
 ```
 
 To find out how to use the script, pass the `-h` or `--help` flags:
 
 ```shell script
-./build_scripts/release-version.sh --help
+build_scripts/release-version.sh --help
 ```
 
 If running in interactive mode (without `-y|--yes`), the script will output a
