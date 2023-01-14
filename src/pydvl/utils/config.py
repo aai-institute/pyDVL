@@ -1,5 +1,6 @@
+import logging
 from dataclasses import dataclass, field
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Literal, Optional, Tuple, Union
 
 from pymemcache.serde import PickleSerde
 
@@ -16,21 +17,24 @@ class ParallelConfig:
 
     :param backend: Type of backend to use. For now only 'ray' is supported.
     :param address: Address of existing remote or local cluster to use.
-    :param num_workers: Number of workers (CPUs) to use.
+    :param n_local_workers: Number of workers (CPUs) to use when using a local ray cluster.
+    :param logging_level: Logging level for the parallel backend's worker.
     """
 
-    backend: str = "ray"
+    backend: Literal["sequential", "ray"] = "ray"
     address: Optional[Union[str, Tuple[str, int]]] = None
-    num_workers: Optional[int] = None
+    n_local_workers: Optional[int] = None
+    logging_level: int = logging.WARNING
 
 
 @unpackable
 @dataclass
 class MemcachedClientConfig:
-    """Configuration for the connection to the memcached server.
+    """Configuration of the memcached client.
 
-    :param server: tuple of (server, port).
-    :param connect_timeout: seconds to wait for a connection to memcached.
+    :param server: A tuple of (IP|domain name, port).
+    :param connect_timeout: How many seconds to wait before raising
+        `ConnectionRefusedError` on failure to connect.
     :param timeout: seconds to wait for send or recv calls on the socket
         connected to memcached.
     :param no_delay: set the `TCP_NODELAY` flag, which may help with performance
@@ -80,7 +84,7 @@ class MemcachedConfig:
 
     client_config: MemcachedClientConfig = field(default_factory=MemcachedClientConfig)
     time_threshold: float = 0.3
-    allow_repeated_evaluations: bool = True
+    allow_repeated_evaluations: bool = False
     rtol_stderr: float = 0.1
     min_repetitions: int = 3
     ignore_args: Optional[Iterable[str]] = None

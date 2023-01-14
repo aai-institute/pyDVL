@@ -15,9 +15,10 @@ service, locally or remotely, see :ref:`caching setup`.
 Configuration
 -------------
 
-Memoization is added by default to any callable used to construct a
-:class:`pydvl.utils.utility.Utility` (done with the decorator :func:`memcached`),
-but it can be disabled. Depending on the nature of the utility you might want to
+Memoization is disabled by default but can be enabled easily, see :ref:`caching setup`.
+When enabled, it will be added to any callable used to construct a
+:class:`pydvl.utils.utility.Utility` (done with the decorator :func:`memcached`).
+Depending on the nature of the utility you might want to
 enable the computation of a running average of function values, see
 :ref:`caching stochastic functions`. You can see all configuration options under
 :class:`~pydvl.utils.config.MemcachedConfig`.

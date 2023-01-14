@@ -1,26 +1,35 @@
-from typing import OrderedDict
-
 import numpy as np
 
-from pydvl.reporting.scores import sort_values
 from pydvl.utils import Utility, maybe_progress
+from pydvl.value.results import ValuationResult, ValuationStatus
 
 __all__ = ["naive_loo"]
 
 
-def naive_loo(u: Utility, *, progress: bool = True) -> OrderedDict[int, float]:
-    """Computes leave one out score.
+def naive_loo(u: Utility, *, progress: bool = True) -> ValuationResult:
+    r"""Computes leave one out value:
 
-    No caching nor parallelization is implemented.
+    $$v(i) = u(D) - u(D \setminus \{i\}) $$
 
     :param u: Utility object with model, data, and scoring function
     :param progress: If True, display a progress bar
+    :return: Object with the data values.
     """
 
-    values = {i: 0.0 for i in u.data.indices}
-    all_indices = set(u.data.indices)
-    for i in maybe_progress(data.indices, progress):  # type: ignore
-        subset = all_indices.difference({i})
-        values[i] = u(u.data.indices) - u(subset)
+    if len(u.data) < 3:
+        raise ValueError("Dataset must have at least 2 elements")
 
-    return sort_values(values)
+    values = np.zeros_like(u.data.indices, dtype=np.float_)
+    all_indices = set(u.data.indices)
+    total_utility = u(u.data.indices)
+    for i in maybe_progress(u.data.indices, progress):  # type: ignore
+        subset = all_indices.difference({i})
+        values[i] = total_utility - u(subset)
+
+    return ValuationResult(
+        algorithm="naive_loo",
+        status=ValuationStatus.Converged,
+        values=values,
+        stderr=None,
+        data_names=u.data.data_names,
+    )

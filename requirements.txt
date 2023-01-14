@@ -1,6 +1,8 @@
 numpy>=1.20
 pandas>=1.3
 scikit-learn
+scipy>=1.7.0
+cvxpy>=1.3.0
 ray>=0.8
 joblib
 pymemcache

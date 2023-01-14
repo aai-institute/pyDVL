@@ -1,12 +1,10 @@
-"""
-Contains all models used in test and demonstration. Note that they could be written as one module, but for clarity all
- three are defined explicitly.
-"""
 import logging
-from abc import ABC
-from typing import Any, Callable, List, Optional, Tuple, Union
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Tuple, Union
 
 import numpy as np
+
+from ...utils import maybe_progress
 
 try:
     import torch
@@ -14,59 +12,47 @@ try:
     from torch.nn import Softmax, Tanh
     from torch.optim import Optimizer
     from torch.optim.lr_scheduler import _LRScheduler
-    from torch.utils.data import DataLoader, Dataset
+    from torch.utils.data import DataLoader, TensorDataset
 
     _TORCH_INSTALLED = True
 except ImportError:
     _TORCH_INSTALLED = False
 
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
 __all__ = [
     "TorchLinearRegression",
     "TorchBinaryLogisticRegression",
-    "TorchNeuralNetwork",
+    "TorchMLP",
+    "TorchModel",
 ]
 
 logger = logging.getLogger(__name__)
 
 
-class InternalDataset(Dataset):
-    """
-    Simple class wrapper for the data loader.
-    TODO: remove it once dataset is compatible with data loaders
-    """
-
-    def __init__(self, x, y) -> None:
-        super().__init__()
-        self.x = x
-        self.y = y
-
-    def __len__(self):
-        return len(self.x)
-
-    def __getitem__(self, idx):
-        return self.x[idx], self.y[idx]
-
-
-class TorchModel(ABC):
+class TorchModelBase(ABC):
     def __init__(self):
         if not _TORCH_INSTALLED:
             raise RuntimeWarning("This function requires PyTorch.")
 
+    @abstractmethod
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         pass
 
     def fit(
         self,
-        x_train: Union[np.ndarray, torch.tensor],
-        y_train: Union[np.ndarray, torch.tensor],
-        x_val: Union[np.ndarray, torch.tensor],
-        y_val: Union[np.ndarray, torch.tensor],
+        x_train: Union["NDArray[np.float_]", torch.tensor],
+        y_train: Union["NDArray[np.float_]", torch.tensor],
+        x_val: Union["NDArray[np.float_]", torch.tensor],
+        y_val: Union["NDArray[np.float_]", torch.tensor],
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         optimizer: Optimizer,
         scheduler: Optional[_LRScheduler] = None,
         num_epochs: int = 1,
         batch_size: int = 64,
-    ):
+        progress: bool = True,
+    ) -> Tuple["NDArray[np.float_]", "NDArray[np.float_]"]:
         """
         Wrapper of pytorch fit method. It fits the model to the supplied data.
         It represents a simple machine learning loop, iterating over a number of
@@ -78,6 +64,7 @@ class TorchModel(ABC):
         :param scheduler: A pytorch scheduler. If None, no scheduler is used.
         :param num_epochs: Number of epochs to repeat training.
         :param batch_size: Batch size to use in training.
+        :param progress: True, iff progress shall be printed.
         :param tensor_type: accuracy of tensors. Typically 'float' or 'long'
         """
         x_train = torch.as_tensor(x_train).clone()
@@ -85,12 +72,12 @@ class TorchModel(ABC):
         x_val = torch.as_tensor(x_val).clone()
         y_val = torch.as_tensor(y_val).clone()
 
-        dataset = InternalDataset(x_train, y_train)
+        dataset = TensorDataset(x_train, y_train)
         dataloader = DataLoader(dataset, batch_size=batch_size)
         train_loss = []
         val_loss = []
 
-        for epoch in range(num_epochs):
+        for epoch in maybe_progress(range(num_epochs), progress, desc="Model fitting"):
             batch_loss = []
             for train_batch in dataloader:
                 batch_x, batch_y = train_batch
@@ -106,11 +93,16 @@ class TorchModel(ABC):
                 if scheduler:
                     scheduler.step()
             pred_val = self.forward(x_val)
-            val_loss.append(loss(torch.squeeze(pred_val), torch.squeeze(y_val)).item())
-            train_loss.append(np.mean(batch_loss))
-        return train_loss, val_loss
+            epoch_val_loss = loss(torch.squeeze(pred_val), torch.squeeze(y_val)).item()
+            mean_epoch_train_loss = np.mean(batch_loss)
+            val_loss.append(epoch_val_loss)
+            train_loss.append(mean_epoch_train_loss)
+            logger.info(
+                f"Epoch: {epoch} ---> Training loss: {mean_epoch_train_loss}, Validation loss: {epoch_val_loss}"
+            )
+        return np.array(train_loss), np.array(val_loss)
 
-    def predict(self, x: torch.Tensor) -> np.ndarray:
+    def predict(self, x: torch.Tensor) -> "NDArray[np.float_]":
         """
         Use internal model to deliver prediction in numpy.
         :param x: A np.ndarray [NxD] representing the features x_i.
@@ -133,13 +125,27 @@ class TorchModel(ABC):
         return score(self.forward(x), y).detach().numpy()  # type: ignore
 
 
-class TorchLinearRegression(nn.Module, TorchModel):
+class TorchModel(TorchModelBase):
+    def __init__(self, model: nn.Module):
+        self.model = model
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.model(x)
+
+    def __call__(self, *args, **kwargs):
+        return self.model(*args, **kwargs)
+
+
+class TorchLinearRegression(nn.Module, TorchModelBase):
     """
     A simple linear regression model (with bias) f(x)=Ax+b.
     """
 
     def __init__(
-        self, n_input: int, n_output: int, init: Tuple[np.ndarray, np.ndarray] = None
+        self,
+        n_input: int,
+        n_output: int,
+        init: Tuple["NDArray[np.float_]", "NDArray[np.float_]"] = None,
     ):
         """
         :param n_input: input to the model.
@@ -172,12 +178,16 @@ class TorchLinearRegression(nn.Module, TorchModel):
         return x @ self.A.T + self.b
 
 
-class TorchBinaryLogisticRegression(nn.Module, TorchModel):
+class TorchBinaryLogisticRegression(nn.Module, TorchModelBase):
     """
     A simple binary logistic regression model p(y)=sigmoid(dot(a, x) + b).
     """
 
-    def __init__(self, n_input: int, init: Tuple[np.ndarray, np.ndarray] = None):
+    def __init__(
+        self,
+        n_input: int,
+        init: Tuple["NDArray[np.float_]", "NDArray[np.float_]"] = None,
+    ):
         """
         :param n_input: Number of feature inputs to the BinaryLogisticRegressionModel.
         :param init A tuple representing the initialization for the weight matrix A and the bias b. If set to None
@@ -193,7 +203,7 @@ class TorchBinaryLogisticRegression(nn.Module, TorchModel):
         self.A = nn.Parameter(torch.tensor(init[0]), requires_grad=True)
         self.b = nn.Parameter(torch.tensor(init[1]), requires_grad=True)
 
-    def forward(self, x: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
+    def forward(self, x: Union["NDArray[np.float_]", torch.Tensor]) -> torch.Tensor:
         """
         Calculate sigmoid(dot(a, x) + b) using RAM-optimized calculation layout.
         :param x: Tensor [NxD] representing the features x_i.
@@ -203,7 +213,7 @@ class TorchBinaryLogisticRegression(nn.Module, TorchModel):
         return torch.sigmoid(x @ self.A.T + self.b)
 
 
-class TorchNeuralNetwork(nn.Module, TorchModel):
+class TorchMLP(nn.Module, TorchModelBase):
     """
     A simple fully-connected neural network f(x) model defined by y = v_K, v_i = o(A v_(i-1) + b), v_1 = x. It contains
     K layers and K - 2 hidden layers. It holds that K >= 2, because every network contains a input and output.
@@ -215,7 +225,7 @@ class TorchNeuralNetwork(nn.Module, TorchModel):
         n_output: int,
         n_neurons_per_layer: List[int],
         output_probabilities: bool = True,
-        init: List[Tuple[np.ndarray, np.ndarray]] = None,
+        init: List[Tuple["NDArray[np.float_]", "NDArray[np.float_]"]] = None,
     ):
         """
         :param n_input: Number of feature in input.

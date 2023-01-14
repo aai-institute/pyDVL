@@ -5,8 +5,12 @@ import pytest
 from sklearn.linear_model import LinearRegression
 
 from pydvl.utils import GroupedDataset, MemcachedConfig, Utility
-from pydvl.value.shapley import combinatorial_exact_shapley, permutation_exact_shapley
-from tests.conftest import check_total_value, check_values
+from pydvl.value.shapley.naive import (
+    combinatorial_exact_shapley,
+    permutation_exact_shapley,
+)
+
+from .. import check_total_value, check_values
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +23,7 @@ log = logging.getLogger(__name__)
         (6, permutation_exact_shapley, 0.01, 1e-5),
     ],
 )
-def test_analytic_exact_shapley(analytic_shapley, fun, rtol, total_atol):
+def test_analytic_exact_shapley(num_samples, analytic_shapley, fun, rtol, total_atol):
     """Compares the combinatorial exact shapley and permutation exact shapley with
     the analytic_shapley calculation for a dummy model.
     """
@@ -59,11 +63,7 @@ def test_linear(
 
 @pytest.mark.parametrize(
     "a, b, num_points, num_groups, scorer",
-    [
-        (2, 0, 50, 3, "r2"),
-        (2, 1, 100, 5, "r2"),
-        (2, 1, 100, 5, "explained_variance"),
-    ],
+    [(2, 0, 50, 3, "r2"), (2, 1, 100, 5, "r2"), (2, 1, 100, 5, "explained_variance")],
 )
 def test_grouped_linear(
     linear_dataset,
@@ -117,10 +117,9 @@ def test_linear_with_outlier(
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     shapley_values = permutation_exact_shapley(linear_utility, progress=False)
-    log.info(f"Shapley values: {shapley_values}")
     check_total_value(linear_utility, shapley_values, atol=total_atol)
 
-    assert int(list(shapley_values.keys())[0]) == outlier_idx
+    assert shapley_values.indices[0] == outlier_idx
 
 
 @pytest.mark.parametrize(
@@ -182,7 +181,6 @@ def test_polynomial_with_outlier(
     )
 
     shapley_values = permutation_exact_shapley(poly_utility, progress=False)
-    log.info(f"Shapley values: {shapley_values}")
     check_total_value(poly_utility, shapley_values, atol=total_atol)
 
-    assert int(list(shapley_values.keys())[0]) == outlier_idx
+    assert shapley_values[0].index == outlier_idx

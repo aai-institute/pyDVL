@@ -8,14 +8,15 @@ methods for pyDVL that use parallelization.
 import logging
 import warnings
 from time import time
-from typing import TYPE_CHECKING, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Tuple, Union, cast
 
 import numpy as np
 
 from pydvl.utils import Utility, get_running_avg_variance, maybe_progress
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
-from pydvl.utils.parallel.backend import init_parallel_backend
+from pydvl.utils.parallel.backend import RayParallelBackend, init_parallel_backend
+from pydvl.value.results import ValuationStatus
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -30,27 +31,33 @@ logger = logging.getLogger(__name__)
 def get_shapley_coordinator(
     *args, config: ParallelConfig = ParallelConfig(), **kwargs
 ) -> "ShapleyCoordinator":
-    parallel_backend = init_parallel_backend(config)
     if config.backend == "ray":
+        parallel_backend = cast(RayParallelBackend, init_parallel_backend(config))
         remote_cls = parallel_backend.wrap(ShapleyCoordinator)
         handle = remote_cls.remote(*args, **kwargs)
-        coordinator = RayActorWrapper(handle, parallel_backend)
+        coordinator = cast(
+            ShapleyCoordinator, RayActorWrapper(handle, parallel_backend)
+        )
+    elif config.backend == "sequential":
+        coordinator = ShapleyCoordinator(*args, **kwargs)
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
-    return coordinator  # type: ignore
+    return coordinator
 
 
 def get_shapley_worker(
     *args, config: ParallelConfig = ParallelConfig(), **kwargs
 ) -> "ShapleyWorker":
-    parallel_backend = init_parallel_backend(config)
     if config.backend == "ray":
+        parallel_backend = cast(RayParallelBackend, init_parallel_backend(config))
         remote_cls = parallel_backend.wrap(ShapleyWorker)
         handle = remote_cls.remote(*args, **kwargs)
-        worker = RayActorWrapper(handle, parallel_backend)
+        worker = cast(ShapleyWorker, RayActorWrapper(handle, parallel_backend))
+    elif config.backend == "sequential":
+        worker = ShapleyWorker(*args, **kwargs)
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
-    return worker  # type: ignore
+    return worker
 
 
 class ShapleyCoordinator(Coordinator):
@@ -60,7 +67,7 @@ class ShapleyCoordinator(Coordinator):
 
     :param value_tolerance: Terminate all workers if the ratio of median
         standard error to median of value has dropped below this value.
-    :param max_iterations: Terminate if the current number of permutations
+    :param n_iterations: Terminate if the current number of permutations
         has exceeded this threshold.
      :param progress: Whether to display progress bars for each job.
     """
@@ -68,17 +75,18 @@ class ShapleyCoordinator(Coordinator):
     def __init__(
         self,
         value_tolerance: Optional[float] = None,
-        max_iterations: Optional[int] = None,
+        n_iterations: Optional[int] = None,
         progress: Optional[bool] = True,
     ):
         super().__init__(progress=progress)
-        if value_tolerance is None and max_iterations is None:
+        if value_tolerance is None and n_iterations is None:
             raise ValueError(
-                "Either value_tolerance or max_iterations must be set as a"
+                "Either value_tolerance or n_iterations must be set as a"
                 "stopping criterion"
             )
         self.value_tolerance = value_tolerance
-        self.max_iterations = max_iterations
+        self.n_iterations = n_iterations
+        self._status = ValuationStatus.Pending
 
     def get_results(self) -> Tuple["NDArray", "NDArray"]:
         """Aggregates the results of the different workers
@@ -117,11 +125,14 @@ class ShapleyCoordinator(Coordinator):
         """Checks whether the accuracy of the calculation or the total number
         of iterations have crossed the set thresholds.
 
-        If the threshold has been reached, sets the flag
-        :attr:`~ShapleyCoordinator.is_done` to `True`.
+        If any of the thresholds have been reached, then calls to
+        :meth:`~Coordinator.is_done` return `True`.
 
-        :return: value of :attr:`~ShapleyCoordinator.is_done`
+        :return: True if converged or reached max iterations.
         """
+        if self._is_done:
+            return True
+
         if len(self.workers_results) == 0:
             logger.info("No worker has updated its status yet.")
             self._is_done = False
@@ -133,12 +144,19 @@ class ShapleyCoordinator(Coordinator):
                 and std_to_val_ratio < self.value_tolerance
             ):
                 self._is_done = True
-            if (
-                self.max_iterations is not None
-                and self._total_iterations > self.max_iterations
+                logger.info("Converged")
+                self._status = ValuationStatus.Converged
+            elif (
+                self.n_iterations is not None
+                and self._total_iterations > self.n_iterations
             ):
                 self._is_done = True
+                logger.info(f"Max iterations ({self.n_iterations}) reached")
+                self._status = ValuationStatus.MaxIterations
         return self._is_done
+
+    def status(self) -> ValuationStatus:
+        return self._status
 
 
 class ShapleyWorker(Worker):

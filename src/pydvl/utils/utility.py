@@ -3,28 +3,26 @@ This module contains classes to manage and learn utility functions for the
 computation of values. Please see the documentation on :ref:`data valuation` for
 more information.
 
-:class:`Utility` holds information about model, data and scoring function (which
-is the utility* function itself for Shapley value). It is automatically cached
-across machines.
+:class:`Utility` holds information about model, data and scoring function (the
+latter being what one usually understands under *utility* in the general
+definition of Shapley value). It is automatically cached across machines.
 
 :class:`DataUtilityLearning` adds support for learning the scoring function
-to avoid repeated re-training of the model.
+to avoid repeated re-training of the model to compute the score.
 
 """
 import logging
 import warnings
-from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, Optional, Tuple, Union
+from typing import Dict, FrozenSet, Iterable, Optional, Tuple, Union
 
 import numpy as np
+from numpy.typing import NDArray
 from sklearn.metrics import check_scoring
 
 from .caching import CacheStats, memcached, serialize
 from .config import MemcachedConfig
 from .dataset import Dataset
 from .types import Scorer, SupervisedModel
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
 
 __all__ = ["Utility", "DataUtilityLearning"]
 
@@ -50,6 +48,11 @@ class Utility:
         a scorer callable or None for the default `model.score()`. Greater
         values must be better. If they are not, a negated version can be
         used (see `make_scorer`)
+    :param default_score: score in the case of models that have not been fit,
+        e.g. when too little data is passed, or errors arise.
+    :param score_range: numerical range of the score function. Some Monte Carlo
+        methods can use this to estimate the number of samples required for a
+        certain quality of approximation.
     :param catch_errors: set to True to catch the errors when fit() fails. This
         could happen in several steps of the pipeline, e.g. when too little
         training data is passed, which happens often during the Shapley value calculations.
@@ -57,10 +60,19 @@ class Utility:
         calculation continues.
     :param show_warnings: True for printing warnings fit fails.
         Used only when catch_errors is True
-    :param default_score: score in the case of models that have not been fit,
-        e.g. when too little data is passed, or errors arise.
-    :param enable_cache: whether to use memcached for memoization.
-    :param cache_options:
+    :param enable_cache: If True, use memcached for memoization.
+    :param cache_options: Optional configuration object for memcached.
+
+    :Example:
+
+    >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
+    >>> from sklearn.linear_model import LinearRegression, LogisticRegression
+    >>> from sklearn.datasets import load_iris
+    >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
+    >>> u = Utility(LogisticRegression(random_state=16), dataset)
+    >>> u(dataset.indices)
+    0.9
+
     """
 
     model: SupervisedModel
@@ -73,19 +85,25 @@ class Utility:
         data: Dataset,
         scoring: Optional[Union[str, Scorer]] = None,
         *,
+        default_score: float = 0.0,
+        score_range: Tuple[float, float] = (-np.inf, np.inf),
         catch_errors: bool = True,
         show_warnings: bool = False,
-        default_score: float = 0.0,
-        enable_cache: bool = True,
+        enable_cache: bool = False,
         cache_options: Optional[MemcachedConfig] = None,
     ):
         self.model = model
         self.data = data
+        self.default_score = default_score
+        # TODO: auto-fill from known scorers ?
+        self.score_range = np.array(score_range)
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
-        self.default_score = default_score
         self.enable_cache = enable_cache
-        self.cache_options = cache_options
+        if cache_options is None:
+            self.cache_options: MemcachedConfig = MemcachedConfig()
+        else:
+            self.cache_options = cache_options
         self._signature = serialize((hash(model), hash(data), hash(scoring)))
         self.scorer = check_scoring(self.model, scoring)
         self._initialize_utility_wrapper()
@@ -96,11 +114,7 @@ class Utility:
 
     def _initialize_utility_wrapper(self):
         if self.enable_cache:
-            if self.cache_options is None:
-                cache_options = dict()  # type: ignore
-            else:
-                cache_options = self.cache_options
-            self._utility_wrapper = memcached(**cache_options)(  # type: ignore
+            self._utility_wrapper = memcached(**self.cache_options)(  # type: ignore
                 self._utility, signature=self._signature
             )
         else:
@@ -129,10 +143,11 @@ class Utility:
         if not indices:
             return 0.0
 
-        x, y = self.data.get_training_data(list(indices))
+        x_train, y_train = self.data.get_training_data(list(indices))
+        x_test, y_test = self.data.get_test_data(list(indices))
         try:
-            self.model.fit(x, y)
-            score = float(self.scorer(self.model, self.data.x_test, self.data.y_test))
+            self.model.fit(x_train, y_train)
+            score = float(self.scorer(self.model, x_test, y_test))
             # Some scorers raise exceptions if they return NaNs, some might not
             if np.isnan(score):
                 if self.show_warnings:
@@ -163,7 +178,7 @@ class Utility:
     def __getstate__(self):
         state = self.__dict__.copy()
         # Don't pickle _utility_wrapper
-        del state["_utility_wrapper"]
+        state.pop("_utility_wrapper", None)
         return state
 
     def __setstate__(self, state):
@@ -194,17 +209,13 @@ class DataUtilityLearning:
     >>> from sklearn.linear_model import LinearRegression, LogisticRegression
     >>> from sklearn.datasets import load_iris
     >>> dataset = Dataset.from_sklearn(load_iris())
-    >>> u = Utility(LogisticRegression(), dataset, enable_cache=False)
+    >>> u = Utility(LogisticRegression(), dataset)
     >>> wrapped_u = DataUtilityLearning(u, 3, LinearRegression())
     ... # First 3 calls will be computed normally
     >>> for i in range(3):
     ...     _ = wrapped_u((i,))
     >>> wrapped_u((1, 2, 3)) # Subsequent calls will be computed using the fit model for DUL
     0.0
-
-    .. rubric:: References
-
-    .. footbibliography::
 
     """
 
@@ -216,9 +227,9 @@ class DataUtilityLearning:
         self.model = model
         self._current_iteration = 0
         self._is_model_fit = False
-        self._utility_samples: Dict[FrozenSet, Tuple["NDArray", float]] = {}
+        self._utility_samples: Dict[FrozenSet, Tuple[NDArray[np.bool_], float]] = {}
 
-    def _convert_indices_to_boolean_vector(self, x: Iterable[int]) -> "NDArray":
+    def _convert_indices_to_boolean_vector(self, x: Iterable[int]) -> NDArray[np.bool_]:
         boolean_vector = np.zeros((1, len(self.utility.data)), dtype=bool)
         if x is not None:
             boolean_vector[:, tuple(x)] = True

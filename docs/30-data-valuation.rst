@@ -173,6 +173,10 @@ definitions, but other methods are typically preferable.
    utility = Utility(...)
    values = naive_loo(utility)
 
+The return value of all valuation functions is an object of type
+:class:`~pydvl.value.results.ValuationResult`. This can be iterated over,
+indexed with integers, slices and Iterables, as well as converted to a
+`pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
 
 .. _Shapley:
 
@@ -201,18 +205,23 @@ The value $v$ of the $i$-th sample in dataset $D$ wrt. utility $u$ is computed
 as a weighted sum of its marginal utility wrt. every possible coalition of
 training samples within the training set:
 
-$$v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}} \binom{n-1}{ | S | }^{-1} [u(S \cup \{x_i\}) − u(S)] ,$$
+$$
+v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}}
+\binom{n-1}{ | S | }^{-1} [u(S \cup \{x_i\}) − u(S)]
+,$$
 
 .. code-block:: python
 
    from pydvl.value import compute_shapley_value
    utility = Utility(...)
-   df = compute_shapley_values(utility, mode="combinatorial_exact")
+   values = compute_shapley_values(utility, mode="combinatorial_exact")
+   df = values.to_dataframe(column='value')
 
-The return value `df` is a
+We convert the return value to a
 `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_
-with the values. Please refer to the documentation in :mod:`pydvl.value.shapley`
-for more information.
+and name the column with the results as `value`. Please refer to the
+documentation in :mod:`pydvl.value.shapley` and
+:class:`~pydvl.value.results.ValuationResult` for more information.
 
 Monte Carlo Combinatorial Shapley
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -231,10 +240,11 @@ same pattern:
    model = ...
    data = Dataset(...)
    utility = Utility(model, data)
-   df = compute_shapley_values(utility, mode="combinatorial_montecarlo")
+   values = compute_shapley_values(utility, mode="combinatorial_montecarlo")
+   df = values.to_dataframe(column='cmc')
 
-The DataFrame returned by Monte Carlo methods will usually contain approximate
-standard errors as an additional column.
+The DataFrames returned by most Monte Carlo methods will contain approximate
+standard errors as an additional column, in this case named `cmc_stderr`.
 
 
 Owen sampling
@@ -246,7 +256,10 @@ of the utility from $\{0,1\}^n$, where a 1 in position $i$ means that sample
 $x_i$ is used to train the model, to $[0,1]^n$. The ensuing expression for
 Shapley value uses integration instead of discrete weights:
 
-$$v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})} [u(S \cup {i}) - u(S)].$$
+$$
+v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})}
+[u(S \cup {i}) - u(S)]
+.$$
 
 Using Owen sampling follows the same pattern as every other method for Shapley
 values in pyDVL. First construct the dataset and utility, then call
@@ -259,8 +272,8 @@ values in pyDVL. First construct the dataset and utility, then call
    model = ...
    dataset = Dataset(...)
    utility = Utility(data, model)
-   df = compute_shapley_values(
-       u=utility, mode="owen", max_iterations=4, max_q=200
+   values = compute_shapley_values(
+       u=utility, mode="owen", n_iterations=4, max_q=200
    )
 
 There are more details on Owen
@@ -275,7 +288,10 @@ Permutation Shapley
 An equivalent way of computing Shapley values appears often in the literature.
 It uses permutations over indices instead of subsets:
 
-$$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)} [u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})],$$
+$$
+v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
+[u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})]
+,$$
 
 where $\sigma_i$ denotes the set of indices in permutation sigma up until the
 position of index $i$. To approximate this sum (with $\mathcal{O}(n!)$ terms!)
@@ -292,8 +308,8 @@ efficient enough to be useful in some applications.
    model = ...
    data = Dataset(...)
    utility = Utility(model, data)
-   df = compute_shapley_values(
-       u=utility, mode="truncated_montecarlo", max_iterations=100
+   values = compute_shapley_values(
+       u=utility, mode="truncated_montecarlo", n_iterations=100
    )
 
 
@@ -315,15 +331,181 @@ and can be used in pyDVL with:
    model = KNeighborsClassifier(n_neighbors=5)
    data = Dataset(...)
    utility = Utility(model, data)
-   df = compute_shapley_values(u=utility, mode="knn")
+   values = compute_shapley_values(u=utility, mode="knn")
 
+
+Group testing
+^^^^^^^^^^^^^
+
+An alternative approach introduced in :footcite:t:`jia_efficient_2019a`
+first approximates the differences of values with a Monte Carlo sum. With
+
+$$\hat{\Delta}_{i j} \approx v_i - v_j,$$
+
+one then solves the following linear constraint satisfaction problem (CSP) to
+infer the final values:
+
+$$
+\begin{array}{lll}
+\sum_{i = 1}^N v_i & = & U (D)\\
+| v_i - v_j - \hat{\Delta}_{i j} | & \leqslant &
+\frac{\varepsilon}{2 \sqrt{N}}
+\end{array}
+$$
+
+.. warning::
+   We have reproduced this method in pyDVL for completeness and benchmarking,
+   but we don't advocate its use because of the speed and memory cost. Despite
+   our best efforts, the number of samples required in practice for convergence
+   can be several orders of magnitude worse than with e.g. Truncated Monte Carlo.
+
+Usage follows the same pattern as every other Shapley method, but with the
+addition of an ``eps`` parameter required for the solution of the CSP. It should
+be the same value used to compute the minimum number of samples required. This
+can be done with :func:`~pydvl.value.shapley.gt.num_samples_eps_delta`, but note
+that the number returned will be huge! In practice, fewer samples can be enough,
+but the actual number will strongly depend on the utility, in particular its
+variance.
+
+.. code-block:: python
+
+   from pydvl.utils import Dataset, Utility
+   from pydvl.value.shapley import compute_shapley_values
+
+   model = ...
+   data = Dataset(...)
+   utility = Utility(model, data, score_range=(_min, _max))
+   min_iterations = num_samples_eps_delta(epsilon, delta, n, utility.score_range)
+   values = compute_shapley_values(
+       u=utility, mode="group_testing", n_iterations=min_iterations, eps=eps
+   )
+
+.. _Least Core:
+
+Core values
+===========
+
+The Shapley values define a fair way to distribute payoffs amongst all
+participants when they form a grand coalition. But they do not consider
+the question of stability: under which conditions do all participants
+form the grand coalition? Would the participants be willing to form
+the grand coalition given how the payoffs are assigned,
+or would some of them prefer to form smaller coalitions?
+
+The Core is another approach to computing data values originating
+in cooperative game theory that attempts to ensure this stability.
+It is the set of feasible payoffs that cannot be improved upon
+by a coalition of the participants.
+
+It satisfies the following 2 properties:
+
+- **Efficiency**:
+  The payoffs are distributed such that it is not possible
+  to make any participant better off
+  without making another one worse off.
+  $$\sum_{x_i\in D} v_u(x_i) = u(D)\,$$
+
+- **Coalitional rationality**:
+  The sum of payoffs to the agents in any coalition S is at
+  least as large as the amount that these agents could earn by
+  forming a coalition on their own.
+  $$\sum_{x_i\in S} v_u(x_i) \geq u(S), \forall S \subseteq D\,$$
+
+The second property states that the sum of payoffs to the agents
+in any subcoalition $S$ is at least as large as the amount that
+these agents could earn by forming a coalition on their own.
+
+Least Core values
+^^^^^^^^^^^^^^^^^
+
+Unfortunately, for many cooperative games the Core may be empty.
+By relaxing the coalitional rationality property by a subsidy $e \gt 0$,
+we are then able to find approximate payoffs:
+
+$$
+\sum_{x_i\in S} v_u(x_i) + e \geq u(S), \forall S \subseteq D\
+,$$
+
+The least core value $v$ of the $i$-th sample in dataset $D$ wrt.
+utility $u$ is computed by solving the following Linear Program:
+
+$$
+\begin{array}{lll}
+\text{minimize} & e & \\
+\text{subject to} & \sum_{x_i\in D} v_u(x_i) = u(D) & \\
+& \sum_{x_i\in S} v_u(x_i) + e \geq u(S) &, \forall S \subseteq D \\
+\end{array}
+$$
+
+Exact Least Core
+----------------
+
+This first algorithm is just a verbatim implementation of the definition.
+As such it returns as exact a value as the utility function allows
+(see what this means in :ref:`problems of data values`).
+
+.. code-block:: python
+
+   from pydvl.utils import Dataset, Utility
+   from pydvl.value.least_core import exact_least_core
+   model = ...
+   dataset = Dataset(...)
+   utility = Utility(data, model)
+   values = exact_least_core(utility)
+
+Monte Carlo Least Core
+----------------------
+
+Because the number of subsets $S \subseteq D \setminus \{x_i\}$ is
+$2^{ | D | - 1 }$, one typically must resort to approximations.
+
+The simplest approximation consists of two relaxations of the Least Core
+(:footcite:t:`yan_if_2021`):
+
+- Further relaxing the coalitional rationality property by
+  a constant value $\epsilon > 0$:
+
+  $$
+  \sum_{x_i\in S} v_u(x_i) + e + \epsilon \geq u(S)
+  $$
+
+- Using a fraction of all subsets instead of all possible subsets.
+
+Combined, this gives us the $(\epsilon, \delta)$-*probably approx-
+imate least core* that satisfies the following property:
+
+$$
+P_{S\sim D}\left[\sum_{x_i\in S} v_u(x_i) + e^{*} + \epsilon \geq u(S)\right]
+\geq 1 - \delta
+$$
+
+Where $e^{*}$ is the optimal least core subsidy.
+
+With these relaxations, we obtain a polynomial running time.
+
+.. code-block:: python
+
+   from pydvl.utils import Dataset, Utility
+   from pydvl.value.least_core import montecarlo_least_core
+   model = ...
+   dataset = Dataset(...)
+   n_iterations = ...
+   utility = Utility(data, model)
+   values = montecarlo_least_core(utility, n_iterations=n_iterations)
+
+.. note::
+
+   ``n_iterations`` needs to be at least equal to the number of data points.
 
 Other methods
 =============
 
-Other game-theoretic concepts in pyDVL's roadmap are the **Least Core** (in
-progress), and **Banzhaf indices** (the latter is just a different weighting
-scheme with better numerical stability properties). Contributions are welcome!
+There are other game-theoretic concepts in pyDVL's roadmap, based on the notion
+of semivalue, which is a generalization to different weighting schemes:
+in particular **Banzhaf indices** and **Beta Shapley**, with better numerical
+and rank stability in certain situations.
+
+Contributions are welcome!
 
 
 .. _problems of data values:

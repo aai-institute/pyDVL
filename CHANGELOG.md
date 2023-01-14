@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.4.0 - 🏭💥 New algorithms and more breaking changes
+
+- GH action to mark issues as stale
+  [PR #201](https://github.com/appliedAI-Initiative/pyDVL/pull/201)
+- Disabled caching of Utility values as well as repeated evaluations by default
+  [PR #211](https://github.com/appliedAI-Initiative/pyDVL/pull/211)
+- Test and officially support Python version 3.9 and 3.10 
+  [PR #208](https://github.com/appliedAI-Initiative/pyDVL/pull/208)
+- **Breaking change:** Introduces a class ValuationResult to gather and inspect
+  results from all valuation algorithms
+  [PR #214](https://github.com/appliedAI-Initiative/pyDVL/pull/214)
+- Fixes bug in Influence calculation with multi-dimensional input and adds
+  new example notebook
+  [PR #195](https://github.com/appliedAI-Initiative/pyDVL/pull/195)
+- **Breaking change**: Passes the input to `MapReduceJob` at initialization,
+  removes `chunkify_inputs` argument from `MapReduceJob`, removes `n_runs`
+  argument from `MapReduceJob`, calls the parallel backend's `put()` method for
+  each generated chunk in `_chunkify()`, renames ParallelConfig's `num_workers`
+  attribute to `n_local_workers`, fixes a bug in `MapReduceJob`'s chunkification
+  when `n_runs` >= `n_jobs`, and defines a sequential parallel backend to run
+  all jobs in the current thread
+  [PR #232](https://github.com/appliedAI-Initiative/pyDVL/pull/232)
+- **New method**: Implements exact and monte carlo Least Core for data valuation,
+  adds `from_arrays()` class method to the `Dataset` and `GroupedDataset`
+  classes, adds `extra_values` argument to `ValuationResult`, adds
+  `compute_removal_score()` and `compute_random_removal_score()` helper functions
+  [PR #237](https://github.com/appliedAI-Initiative/pyDVL/pull/237)
+- **New method**: Group Testing Shapley for valuation, from _Jia et al. 2019_
+  [PR #240](https://github.com/appliedAI-Initiative/pyDVL/pull/240)
+- Fixes bug in ray initialization in `RayParallelBackend` class
+  [PR #239](https://github.com/appliedAI-Initiative/pyDVL/pull/239)
+- Implements "Egalitarian Least Core", adds [cvxpy](https://www.cvxpy.org/) as a
+  dependency and uses it instead of scipy as optimizer
+  [PR #243](https://github.com/appliedAI-Initiative/pyDVL/pull/243)
+
 ## 0.3.0 - 💥 Breaking changes
 
 - Simplified and fixed powerset sampling and testing

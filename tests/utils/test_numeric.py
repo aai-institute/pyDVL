@@ -5,6 +5,7 @@ from pydvl.utils.numeric import (
     powerset,
     random_matrix_with_condition_number,
     random_powerset,
+    random_subset_of_size,
 )
 
 
@@ -46,7 +47,7 @@ def test_random_powerset(n, max_subsets):
     counts are lower.
     """
     s = np.arange(n)
-    item_counts = np.zeros_like(s, dtype=np.float)
+    item_counts = np.zeros_like(s, dtype=np.float_)
     size_counts = np.zeros(n + 1)
     for subset in random_powerset(s, max_subsets=max_subsets):
         size_counts[len(subset)] += 1
@@ -64,6 +65,21 @@ def test_random_powerset(n, max_subsets):
     assert np.allclose(
         true_size_counts / 2**n, size_counts / max_subsets, atol=1 / (1 + n)
     )
+
+
+@pytest.mark.parametrize(
+    "n, size, exception",
+    [(0, 0, None), (0, 1, ValueError), (10, 0, None), (10, 3, None), (1000, 40, None)],
+)
+def test_random_subset_of_size(n, size, exception):
+    s = np.arange(n)
+    if exception:
+        with pytest.raises(exception):
+            ss = random_subset_of_size(s, size=size)
+    else:
+        ss = random_subset_of_size(s, size=size)
+        assert len(ss) == size
+        assert np.all([x in s for x in ss])
 
 
 @pytest.mark.parametrize(
