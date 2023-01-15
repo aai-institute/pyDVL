@@ -33,8 +33,9 @@ class Utility:
     """Convenience wrapper with configurable memoization of the scoring function.
 
     An instance of `Utility` holds the triple of model, dataset and scoring
-    function which determines the value of data points. This is mostly used for
-    the computation of :ref:`Shapley values<data valuation>`.
+    function which determines the value of data points. This is only used for
+    the computation of :ref:`Shapley values<Shapley>` and
+    :ref:`Least Core values<Least Core>`.
 
     Since evaluating the scoring function requires retraining the model, this
     class wraps it and caches the results of each execution. Caching is
@@ -56,10 +57,9 @@ class Utility:
     :param catch_errors: set to True to catch the errors when fit() fails. This
         could happen in several steps of the pipeline, e.g. when too little
         training data is passed, which happens often during the Shapley value calculations.
-        When this happens, the default_score is returned as a score and Shapley value
+        When this happens, the default_score is returned as a score and value
         calculation continues.
     :param show_warnings: True for printing warnings fit fails.
-        Used only when catch_errors is True
     :param enable_cache: If True, use memcached for memoization.
     :param cache_options: Optional configuration object for memcached.
 
@@ -145,21 +145,22 @@ class Utility:
 
         x_train, y_train = self.data.get_training_data(list(indices))
         x_test, y_test = self.data.get_test_data(list(indices))
-        try:
-            self.model.fit(x_train, y_train)
-            score = float(self.scorer(self.model, x_test, y_test))
-            # Some scorers raise exceptions if they return NaNs, some might not
-            if np.isnan(score):
-                if self.show_warnings:
-                    warnings.warn(f"Scorer returned NaN", RuntimeWarning)
-                return self.default_score
-            return score
-        except Exception as e:
-            if self.catch_errors:
-                if self.show_warnings:
+        with warnings.catch_warnings():
+            if not self.show_warnings:
+                warnings.simplefilter("ignore")
+            try:
+                self.model.fit(x_train, y_train)
+                score = float(self.scorer(self.model, x_test, y_test))
+                # Some scorers raise exceptions if they return NaNs, some might not
+                if np.isnan(score):
+                    warnings.warn("Scorer returned NaN", RuntimeWarning)
+                    return self.default_score
+                return score
+            except Exception as e:
+                if self.catch_errors:
                     warnings.warn(str(e), RuntimeWarning)
-                return self.default_score
-            raise e
+                    return self.default_score
+                raise
 
     @property
     def signature(self):
