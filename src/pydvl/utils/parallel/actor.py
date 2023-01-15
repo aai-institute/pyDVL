@@ -31,12 +31,7 @@ class RayActorWrapper:
     ...         return self.x
     ...
     >>> config = ParallelConfig(backend="ray")
-    >>> parallel_backend = init_parallel_backend(config)
-    >>> assert isinstance(parallel_backend, RayParallelBackend)
-    >>> actor_handle = parallel_backend.wrap(Actor).remote(5)
-    >>> parallel_backend.get(actor_handle.get.remote())
-    5
-    >>> wrapped_actor = RayActorWrapper(actor_handle, parallel_backend)
+    >>> wrapped_actor = RayActorWrapper(Actor, config, 5)
     >>> wrapped_actor.get()
     5
     """
