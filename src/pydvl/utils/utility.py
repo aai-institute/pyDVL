@@ -19,10 +19,10 @@ import numpy as np
 from numpy.typing import NDArray
 from sklearn.metrics import check_scoring
 
-from .caching import CacheStats, memcached, serialize
-from .config import MemcachedConfig
-from .dataset import Dataset
-from .types import Scorer, SupervisedModel
+from pydvl.utils.caching import CacheStats, memcached, serialize
+from pydvl.utils.config import MemcachedConfig
+from pydvl.utils.dataset import Dataset
+from pydvl.utils.types import Scorer, SupervisedModel
 
 __all__ = ["Utility", "DataUtilityLearning"]
 
