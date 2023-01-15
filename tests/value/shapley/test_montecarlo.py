@@ -248,7 +248,7 @@ def test_grouped_linear_montecarlo_shapley(
     ],
 )
 def test_random_forest(
-    boston_dataset,
+    housing_dataset,
     regressor,
     scorer: str,
     n_iterations: float,
@@ -261,7 +261,7 @@ def test_random_forest(
     pipeline and was removed."""
     rf_utility = Utility(
         regressor,
-        data=boston_dataset,
+        data=housing_dataset,
         scoring=scorer,
         enable_cache=True,
         cache_options=MemcachedConfig(
