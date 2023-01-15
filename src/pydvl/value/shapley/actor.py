@@ -8,19 +8,16 @@ methods for pyDVL that use parallelization.
 import logging
 import warnings
 from time import time
-from typing import TYPE_CHECKING, Optional, Tuple, Union, cast
+from typing import Optional, Tuple, Union, cast
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils import Utility, get_running_avg_variance, maybe_progress
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from pydvl.utils.parallel.backend import RayParallelBackend, init_parallel_backend
 from pydvl.value.results import ValuationStatus
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
-
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
 
@@ -32,11 +29,9 @@ def get_shapley_coordinator(
     *args, config: ParallelConfig = ParallelConfig(), **kwargs
 ) -> "ShapleyCoordinator":
     if config.backend == "ray":
-        parallel_backend = cast(RayParallelBackend, init_parallel_backend(config))
-        remote_cls = parallel_backend.wrap(ShapleyCoordinator)
-        handle = remote_cls.remote(*args, **kwargs)
         coordinator = cast(
-            ShapleyCoordinator, RayActorWrapper(handle, parallel_backend)
+            ShapleyCoordinator,
+            RayActorWrapper(ShapleyCoordinator, config, *args, **kwargs),
         )
     elif config.backend == "sequential":
         coordinator = ShapleyCoordinator(*args, **kwargs)
@@ -49,10 +44,9 @@ def get_shapley_worker(
     *args, config: ParallelConfig = ParallelConfig(), **kwargs
 ) -> "ShapleyWorker":
     if config.backend == "ray":
-        parallel_backend = cast(RayParallelBackend, init_parallel_backend(config))
-        remote_cls = parallel_backend.wrap(ShapleyWorker)
-        handle = remote_cls.remote(*args, **kwargs)
-        worker = cast(ShapleyWorker, RayActorWrapper(handle, parallel_backend))
+        worker = cast(
+            ShapleyWorker, RayActorWrapper(ShapleyWorker, config, *args, **kwargs)
+        )
     elif config.backend == "sequential":
         worker = ShapleyWorker(*args, **kwargs)
     else:
