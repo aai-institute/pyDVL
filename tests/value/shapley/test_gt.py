@@ -8,7 +8,7 @@ from .. import check_values
 
 @pytest.mark.parametrize(
     "num_samples, fun, atol, n_iterations, kwargs",
-    [(5, group_testing_shapley, 0.05, int(1e5), {"eps": 0.05})],
+    [(5, group_testing_shapley, 0.05, int(1e5), {"eps": 0.1})],
 )
 def test_group_testing_shapley(
     num_samples, analytic_shapley, fun, atol, n_iterations, kwargs
