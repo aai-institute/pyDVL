@@ -271,7 +271,7 @@ def _combinatorial_montecarlo_shapley(
 
     values = np.zeros(n)
     variances = np.zeros(n)
-    counts = np.zeros(n)
+    counts = np.zeros(n, dtype=int)
     pbar = maybe_progress(indices, progress, position=job_id)
     for idx in pbar:
         # Randomly sample subsets of full dataset without idx
@@ -426,7 +426,9 @@ def _owen_sampling_shapley(
         # Trapezoidal rule
         values[i] = (e[:-1] + e[1:]).sum() / (2 * max_q)
 
-    return MonteCarloResults(values=values, stderr=np.zeros_like(values))
+    return MonteCarloResults(
+        values=values, stderr=np.zeros_like(values), counts=np.ones_like(values)
+    )
 
 
 def owen_sampling_shapley(
