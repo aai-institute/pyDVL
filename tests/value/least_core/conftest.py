@@ -4,14 +4,19 @@ import numpy as np
 import pytest
 
 from pydvl.utils import Utility
-from pydvl.utils.utility import MinerUtility
+from pydvl.utils.utility import GlovesGameUtility, MinerGameUtility
 from pydvl.value.results import ValuationResult, ValuationStatus
 
 
-@pytest.fixture()
-def miner_utility(request) -> Tuple[Utility, ValuationResult]:
-    n_miners = request.param
-    u = MinerUtility(n_miners=n_miners)
+@pytest.fixture(scope="module")
+def test_utility(request) -> Tuple[Utility, ValuationResult]:
+    name, kwargs = request.param
+    if name == "miner":
+        u = MinerGameUtility(**kwargs)
+    elif name == "gloves":
+        u = GlovesGameUtility(**kwargs)
+    else:
+        raise ValueError(f"Unknown '{name}'")
     exact_values, subsidy = u.exact_least_core_values()
     result = ValuationResult(
         algorithm="exact",

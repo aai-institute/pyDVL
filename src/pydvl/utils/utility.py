@@ -10,6 +10,9 @@ definition of Shapley value). It is automatically cached across machines.
 :class:`DataUtilityLearning` adds support for learning the scoring function
 to avoid repeated re-training of the model to compute the score.
 
+This module also contains Utility classes for toy games that are used
+for testing and for demonstration purposes.
+
 """
 import logging
 import warnings
@@ -24,7 +27,7 @@ from pydvl.utils.caching import CacheStats, memcached, serialize
 from pydvl.utils.config import MemcachedConfig
 from pydvl.utils.types import Scorer, SupervisedModel
 
-__all__ = ["Utility", "DataUtilityLearning", "MinerUtility"]
+__all__ = ["Utility", "DataUtilityLearning", "MinerGameUtility", "GlovesGameUtility"]
 
 logger = logging.getLogger(__name__)
 
@@ -262,8 +265,8 @@ class DataUtilityLearning:
         return self.utility.data
 
 
-class MinerUtility(Utility):
-    r"""Toy Utility that is used only for testing purposes.
+class MinerGameUtility(Utility):
+    r"""Toy game utility that is used for testing and demonstration purposes.
 
     Consider a group of n miners, who have discovered large bars of gold.
 
@@ -272,8 +275,8 @@ class MinerUtility(Utility):
 
     $${
     v(S) = \left\{\begin{array}{lll}
-    | S | / 2 & \text{, if} & | S | \text{ is even} \\
-    ( | S | - 1)/2 & \text{, if} & | S |  \text{ is odd}
+    \mid S \mid / 2 & \text{, if} & \mid S \mid \text{ is even} \\
+    ( \mid S \mid - 1)/2 & \text{, if} & \mid S \mid \text{ is odd}
     \end{array}\right.
     }$$
 
@@ -317,4 +320,55 @@ class MinerUtility(Utility):
                 [(self.n_miners - 1) / (2 * self.n_miners)] * self.n_miners
             )
             subsidy = (self.n_miners - 1) / (2 * self.n_miners)
+        return values, subsidy
+
+
+class GlovesGameUtility(Utility):
+    r"""Toy game utility that is used for testing and demonstration purposes.
+
+    In this game, some players have a left glove and others a right glove.
+    Single gloves have a worth of zero while pairs have a worth of 1.
+
+    The payoff of a coalition $S$ is:
+
+    $${
+    v(S) = \min( \mid S \cap L \mid, \mid S \cap R \mid )
+    }$$
+
+    Where $L$, respectively $R$, is the set of players with left gloves,
+    respectively right gloves.
+
+    :param left: Number of players with a left glove.
+    :param right: Number of player with a right glove.
+
+    """
+
+    def __init__(self, left: int, right: int, **kwargs):
+        self.left = left
+        self.right = right
+
+        x = np.empty(left + right)[..., np.newaxis]
+        # The y values don't matter here
+        y = np.zeros_like(x)
+
+        self.data = Dataset(x_train=x, y_train=y, x_test=x, y_test=y)
+
+    def __call__(self, indices: Iterable[int]) -> float:
+        left_sum = float(np.sum(np.asarray(indices) < self.left))
+        right_sum = float(np.sum(np.asarray(indices) >= self.left))
+        return min(left_sum, right_sum)
+
+    def _initialize_utility_wrapper(self):
+        pass
+
+    def exact_least_core_values(self) -> Tuple[NDArray[np.float_], float]:
+        if self.left == self.right:
+            values = np.array([0.5] * (self.left + self.right))
+            subsidy = 0.0
+        elif self.left < self.right:
+            values = np.array([1.0] * self.left + [0.0] * self.right)
+            subsidy = 0.0
+        else:
+            values = np.array([0.0] * self.left + [1.0] * self.right)
+            subsidy = 0.0
         return values, subsidy
