@@ -267,14 +267,15 @@ class MinerUtility(Utility):
 
     Consider a group of n miners, who have discovered large bars of gold.
 
-    If two miners can carry one piece of gold, then the payoff of a coalition S is:
+    If two miners can carry one piece of gold,
+    then the payoff of a coalition $S$ is:
 
-    $$
-    v(S) = \left\{\begin{matrix}
-        |S|/2 & \text{, if} & |S| \text{ is even} \\
-        (|S| - 1)/2 & \text{, if} & |S| \text{ is odd}
-    \end{matrix}\right.
-    $$
+    $${
+    v(S) = \left\{\begin{array}{lll}
+    | S | / 2 & \text{, if} & | S | \text{ is even} \\
+    ( | S | - 1)/2 & \text{, if} & | S |  \text{ is odd}
+    \end{array}\right.
+    }$$
 
     If there are more than two miners and there is an even number of miners,
     then the core consists of the single payoff where each miner gets 1/2.
