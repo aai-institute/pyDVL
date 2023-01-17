@@ -337,6 +337,54 @@ class ValuationResult(collections.abc.Sequence):
         repr_string += ")"
         return repr_string
 
+    def __add__(self, other) -> "ValuationResult":
+        """Adds two ValuationResults.
+
+        .. warning::
+           Abusing this will introduce numerical errors, since the sample means
+           and standard errors are "unwrapped" and recomputed again.
+
+        Means and standard errors are correctly handled. Statuses are added with
+        bit-wise ``&``, see :class:`~pydvl.value.results.ValuationStatus`.
+        ``data_names`` are taken from the left summand, or if unavailable from
+        the right one. The ``algorithm`` string is carried over if both terms
+        have the same one or concatenated.
+
+        .. fixme::
+           Arbitrary extra arguments aren't handled.
+
+        """
+
+        if (
+            not isinstance(other, ValuationResult)
+            or not getattr(self, "_counts")
+            or not getattr(other, "_counts")
+        ):
+            raise NotImplementedError("Cannot add valuation results without count data")
+
+        n, m = self._counts, other._counts
+        xn, xm = self._values, other._values
+        sn, sm = n * self._stderr**2, m * other._stderr**2
+        # Sample mean of n+m samples from two means of n and m samples
+        xnm = (n * xn + m * xm) / (n + m)
+        # Sample variance of n+m samples from two sample variances of n and m samples
+        snm = (n * (sn + xn**2) + m * (sm + xm**2)) / (n + m) - xnm**2
+
+        algorithm = (
+            self._algorithm
+            if self._algorithm == other._algorithm
+            else self._algorithm + " + " + other._algorithm
+        )
+        return ValuationResult(
+            algorithm=algorithm,
+            status=self.status & other.status,
+            values=xnm,
+            stderr=np.sqrt(snm / (n + m)),
+            data_names=self._names or other._names,
+            counts=n + m,
+            # FIXME: what about extra args?
+        )
+
     def to_dataframe(
         self, column: Optional[str] = None, use_names: bool = False
     ) -> "pandas.DataFrame":
