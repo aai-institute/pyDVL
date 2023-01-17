@@ -292,12 +292,12 @@ class ValuationResult(collections.abc.Sequence):
 
         if (
             not isinstance(other, ValuationResult)
-            or not getattr(self, "_counts")
-            or not getattr(other, "_counts")
+            or not hasattr(self, "counts")
+            or not hasattr(other, "counts")
         ):
             raise NotImplementedError("Cannot add valuation results without count data")
 
-        n, m = self._counts, other._counts
+        n, m = self.counts, other.counts
         xn, xm = self._values, other._values
         sn, sm = n * self._stderr**2, m * other._stderr**2
         # Sample mean of n+m samples from two means of n and m samples
@@ -315,14 +315,14 @@ class ValuationResult(collections.abc.Sequence):
             status=self.status & other.status,
             values=xnm,
             stderr=np.sqrt(snm / (n + m)),
-            data_names=self._names or other._names,
+            data_names=self._names if self._names is not None else other._names,
             counts=n + m,
             # FIXME: what about extra args?
         )
 
     def to_dataframe(
         self, column: Optional[str] = None, use_names: bool = False
-    ) -> "pandas.DataFrame":
+    ) -> pandas.DataFrame:
         """Returns values as a dataframe.
 
         :param column: Name for the column holding the data value. Defaults to
