@@ -33,7 +33,9 @@ reduce computation :func:`truncated_montecarlo_shapley`.
 
 import logging
 import math
+import operator
 from enum import Enum
+from functools import reduce
 from time import sleep
 from typing import Iterable, NamedTuple, Optional, Sequence
 from warnings import warn
@@ -47,8 +49,10 @@ from ...utils.parallel import MapReduceJob, init_parallel_backend
 from ...utils.progress import maybe_progress
 from ...utils.status import Status
 from ...utils.utility import Utility
+from ..convergence import ConvergenceCheck
 from ..results import ValuationResult
 from .actor import get_shapley_coordinator, get_shapley_worker
+from .types import PermutationBreaker
 
 
 class MonteCarloResults(NamedTuple):
@@ -157,10 +161,14 @@ def truncated_montecarlo_shapley(
         data_names=u.data.data_names,
     )
 
-
-def _permutation_montecarlo_marginals(
-    u: Utility, max_permutations: int, progress: bool = False, job_id: int = 1
-) -> "NDArray":
+def _permutation_montecarlo_shapley(
+    u: Utility,
+    *,
+    permutation_breaker: Optional[PermutationBreaker] = None,
+    algorithm_name: str = "permutation_montecarlo_shapley",
+    progress: bool = False,
+    job_id: int = 1,
+) -> ValuationResult:
     """Helper function for :func:`permutation_montecarlo_shapley`.
 
     Computes marginal utilities of each training sample in
@@ -168,30 +176,55 @@ def _permutation_montecarlo_marginals(
     sampled permutations.
 
     :param u: Utility object with model, data, and scoring function
-    :param max_permutations: total number of permutations to use
+    :param algorithm_name: For the results object. Used internally by different
+        variants of Shapley using this subroutine
+    :param permutation_breaker: A callable which decides whether to interrupt
+        processing a permutation and set all subsequent marginals to zero.
     :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress (e.g. to place progres bars)
-    :return: a matrix with each row being a different permutation and each
-        column being the score of a different data point
+    :return: An object with the results
     """
     n = len(u.data)
-    values = np.zeros(shape=(max_permutations, n))
-    pbar = maybe_progress(max_permutations, progress, position=job_id)
-    for iter_idx in pbar:
+    values = np.zeros(shape=n)
+    variances = np.zeros_like(values)
+    counts = np.zeros(shape=n, dtype=np.int_)
+    status = None
+    for _ in maybe_progress(np.inf, progress, position=job_id):
         prev_score = 0.0
         permutation = np.random.permutation(u.data.indices)
-        marginals = np.zeros(shape=n)
+        permutation_done = False
         for i, idx in enumerate(permutation):
-            score = u(permutation[: i + 1])
-            marginals[idx] = score - prev_score
+            if permutation_done:
+                score = prev_score
+            else:
+                score = u(permutation[: i + 1])
+            marginal = score - prev_score
+            values[idx], variances[idx] = running_moments(
+                values[idx], variances[idx], marginal, counts[idx]
+            )
+            counts[idx] += 1
             prev_score = score
-        values[iter_idx] = marginals
-    return values
+            if permutation_done or (
+                permutation_breaker and permutation_breaker(idx, values)
+            ):
+                permutation_done = True
+
+        # if early_stopper and early_stopper(values, variances):
+        #     status = Status.Converged
+
+    return ValuationResult(
+        algorithm=algorithm_name,
+        status=status or Status.MaxIterations,
+        values=values,
+        stderr=np.sqrt(variances / np.maximum(1, counts)),
+        counts=counts,
+        data_names=u.data.data_names,
+    )
 
 
 def permutation_montecarlo_shapley(
     u: Utility,
-    n_iterations: int,
+    convergence_check: ConvergenceCheck,
     *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
@@ -206,37 +239,34 @@ def permutation_montecarlo_shapley(
     See :ref:`data valuation` for details.
 
     :param u: Utility object with model, data, and scoring function.
-    :param n_iterations: total number of iterations (permutations) to use
-        across all jobs.
+    :param convergence_check: function checking whether computation must stop.
     :param n_jobs: number of jobs across which to distribute the computation.
-    :param config: Object configuring parallel computation, with cluster address,
+    :param config: Object configuring parallel computation, with cluster
+    address,
         number of cpus, etc.
     :param progress: Whether to display progress bars for each job.
     :return: Object with the data values.
     """
-    iterations_per_job = max(1, n_iterations // n_jobs)
+    total_utility = u(u.data.indices)
 
-    map_reduce_job: MapReduceJob[Utility, "NDArray"] = MapReduceJob(
+    def permutation_breaker(idx: int, marginals: NDArray[np.float_]) -> bool:
+        return marginals[idx] < 0.01 * total_utility
+
+    map_reduce_job: MapReduceJob[Utility, ValuationResult] = MapReduceJob(
         u,
-        map_func=_permutation_montecarlo_marginals,
-        reduce_func=np.concatenate,  # type: ignore
-        map_kwargs=dict(max_permutations=iterations_per_job, progress=progress),
+        map_func=_permutation_montecarlo_shapley,
+        reduce_func=lambda results: reduce(operator.add, results),
+        map_kwargs=dict(
+            algorithm_name="permutation_montecarlo_shapley",
+            convergence_check=convergence_check,
+            permutation_breaker=permutation_breaker,
+            progress=progress,
+        ),
         reduce_kwargs=dict(axis=0),
         config=config,
         n_jobs=n_jobs,
     )
-    full_results = map_reduce_job()
-
-    values = np.mean(full_results, axis=0)
-    stderr = np.std(full_results, axis=0) / np.sqrt(full_results.shape[0])
-
-    return ValuationResult(
-        algorithm="permutation_montecarlo_shapley",
-        status=Status.MaxIterations,
-        values=values,
-        stderr=stderr,
-        data_names=u.data.data_names,
-    )
+    return map_reduce_job()
 
 
 def _combinatorial_montecarlo_shapley(
