@@ -102,7 +102,7 @@ class ValuationResult(collections.abc.Sequence):
     _indices: NDArray[np.int_]
     _values: NDArray[np.float_]
     _data: Dataset
-    _names: Union[NDArray[np.int_], NDArray[np.str_]]
+    _names: NDArray[np.str_]
     _stderr: NDArray[np.float_]
     _algorithm: str  # TODO: BaseValuator
     _status: Status  # TODO: Maybe? BaseValuator.Status
@@ -116,7 +116,7 @@ class ValuationResult(collections.abc.Sequence):
         status: Status,  # Valuation.Status,
         values: NDArray[np.float_],
         stderr: Optional[NDArray[np.float_]] = None,
-        data_names: Optional[Sequence[str]] = None,
+        data_names: Optional[Union[Sequence[str], NDArray[np.str_]]] = None,
         sort: bool = True,
         **extra_values,
     ):
@@ -136,9 +136,8 @@ class ValuationResult(collections.abc.Sequence):
             self._indices = np.arange(0, len(self._values), dtype=np.int_)
 
         if data_names is None:
-            self._names = np.arange(0, len(values), dtype=np.int_)
-        else:
-            self._names = np.array(data_names)
+            data_names = [str(i) for i in range(len(self._values))]
+        self._names = np.array(data_names, dtype=np.str_)
         if len(self._names) != len(self._values):
             raise ValueError("Data names and data values have different lengths")
 

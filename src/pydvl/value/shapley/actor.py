@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Optional, Tuple, Union, cast
 
 import numpy as np
 
+from ...utils import maybe_progress
 from ...utils.config import ParallelConfig
 from ...utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from ...utils.parallel.backend import RayParallelBackend, init_parallel_backend
@@ -87,7 +88,7 @@ class ShapleyCoordinator(Coordinator):
             )
         self.value_tolerance = value_tolerance
         self.n_iterations = n_iterations
-        self._status = ValuationStatus.Pending
+        self._status = Status.Pending
 
     def get_results(self) -> Tuple["NDArray", "NDArray"]:
         """Aggregates the results of the different workers
@@ -146,17 +147,17 @@ class ShapleyCoordinator(Coordinator):
             ):
                 self._is_done = True
                 logger.info("Converged")
-                self._status = ValuationStatus.Converged
+                self._status = Status.Converged
             elif (
                 self.n_iterations is not None
                 and self._total_iterations > self.n_iterations
             ):
                 self._is_done = True
                 logger.info(f"Max iterations ({self.n_iterations}) reached")
-                self._status = ValuationStatus.MaxIterations
+                self._status = Status.MaxIterations
         return self._is_done
 
-    def status(self) -> ValuationStatus:
+    def status(self) -> Status:
         return self._status
 
 

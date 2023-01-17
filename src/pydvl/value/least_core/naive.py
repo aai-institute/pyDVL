@@ -91,7 +91,7 @@ def exact_least_core(
 
     if subsidy is None:
         logger.debug("No values were found")
-        status = ValuationStatus.Failed
+        status = Status.Failed
         values = np.empty(n)
         values[:] = np.nan
         subsidy = np.nan

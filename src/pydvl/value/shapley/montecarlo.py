@@ -47,7 +47,6 @@ from ...utils.parallel import MapReduceJob, init_parallel_backend
 from ...utils.progress import maybe_progress
 from ...utils.status import Status
 from ...utils.utility import Utility
-
 from ..results import ValuationResult
 from .actor import get_shapley_coordinator, get_shapley_worker
 
@@ -233,7 +232,7 @@ def permutation_montecarlo_shapley(
 
     return ValuationResult(
         algorithm="permutation_montecarlo_shapley",
-        status=ValuationStatus.MaxIterations,
+        status=Status.MaxIterations,
         values=values,
         stderr=stderr,
         data_names=u.data.data_names,
