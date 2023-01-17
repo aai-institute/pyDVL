@@ -18,7 +18,6 @@ from ...utils.parallel.backend import RayParallelBackend, init_parallel_backend
 from ...utils.status import Status
 from ...utils.utility import Utility
 from ...value.results import ValuationResult
-from .types import PermutationBreaker
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray

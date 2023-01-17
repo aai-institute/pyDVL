@@ -9,10 +9,9 @@ indexing abilities, and conversion to `pandas DataFrames
 """
 import collections.abc
 from dataclasses import dataclass
-from functools import total_ordering, update_wrapper
+from functools import total_ordering
 from typing import (
     Any,
-    Callable,
     Generator,
     Iterable,
     List,
