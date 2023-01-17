@@ -13,4 +13,4 @@ def test_naive_least_core(miner_utility):
     u, exact_values = miner_utility
     values = exact_least_core(u, progress=False)
     check_total_value(u, values)
-    check_values(values, exact_values)
+    check_values(values, exact_values, extra_values_names=["subsidy"])

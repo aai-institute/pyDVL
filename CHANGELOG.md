@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased - 💥 More breaking changes and new algorithms 🏭 
+## 0.4.0 - 🏭💥 New algorithms and more breaking changes
 
 - GH action to mark issues as stale
   [PR #201](https://github.com/appliedAI-Initiative/pyDVL/pull/201)
@@ -31,6 +31,9 @@
   [PR #240](https://github.com/appliedAI-Initiative/pyDVL/pull/240)
 - Fixes bug in ray initialization in `RayParallelBackend` class
   [PR #239](https://github.com/appliedAI-Initiative/pyDVL/pull/239)
+- Implements "Egalitarian Least Core", adds [cvxpy](https://www.cvxpy.org/) as a
+  dependency and uses it instead of scipy as optimizer
+  [PR #243](https://github.com/appliedAI-Initiative/pyDVL/pull/243)
 
 ## 0.3.0 - 💥 Breaking changes
 
