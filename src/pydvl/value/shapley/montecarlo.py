@@ -19,7 +19,8 @@ reduce computation :func:`truncated_montecarlo_shapley`.
 
 .. seealso::
    It is also possible to use :func:`~pydvl.value.shapley.gt.group_testing_shapley`
-   to reduce the number of evaluations of the utility.
+   to reduce the number of evaluations of the utility. The method is however
+   typically outperformed by others in this module.
 
 .. seealso::
    Additionally, you can consider grouping your data points using
@@ -40,23 +41,22 @@ from warnings import warn
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import (
-    MapReduceJob,
-    ParallelConfig,
-    Utility,
-    get_running_avg_variance,
-    init_parallel_backend,
-    maybe_progress,
-    random_powerset,
-)
-from pydvl.value import ValuationResult, ValuationStatus
+from ...utils.config import ParallelConfig
+from ...utils.numeric import random_powerset, running_moments
+from ...utils.parallel import MapReduceJob, init_parallel_backend
+from ...utils.progress import maybe_progress
+from ...utils.status import Status
+from ...utils.utility import Utility
 
+from ..results import ValuationResult
 from .actor import get_shapley_coordinator, get_shapley_worker
 
 
 class MonteCarloResults(NamedTuple):
-    values: "NDArray[np.float_]"
-    stderr: "NDArray[np.float_]"
+    # TODO: remove this class and use Valuation
+    values: NDArray[np.float_]
+    stderr: NDArray[np.float_]
+    counts: NDArray[np.int_]
 
 
 logger = logging.getLogger(__name__)
@@ -368,7 +368,7 @@ def combinatorial_montecarlo_shapley(
 
     return ValuationResult(
         algorithm="combinatorial_montecarlo_shapley",
-        status=ValuationStatus.MaxIterations,
+        status=Status.MaxIterations,
         values=results.values,
         stderr=results.stderr,
         data_names=u.data.data_names,
@@ -513,7 +513,7 @@ def owen_sampling_shapley(
 
     return ValuationResult(
         algorithm="owen_sampling_shapley",
-        status=ValuationStatus.MaxIterations,
+        status=Status.MaxIterations,
         values=results.values,
         stderr=results.stderr,
         data_names=u.data.data_names,

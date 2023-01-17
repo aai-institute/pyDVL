@@ -6,7 +6,8 @@ import numpy as np
 
 from pydvl.utils import Utility, maybe_progress, powerset
 from pydvl.value.least_core._common import _solve_linear_program
-from pydvl.value.results import ValuationResult, ValuationStatus
+from pydvl.value.results import ValuationResult
+from pydvl.utils.status import Status
 
 __all__ = ["exact_least_core"]
 
@@ -93,11 +94,11 @@ def exact_least_core(
 
     if values is None:
         logger.debug("No values were found")
-        status = ValuationStatus.Failed
+        status = Status.Failed
         values = np.empty(n)
         values[:] = np.nan
     else:
-        status = ValuationStatus.Converged
+        status = Status.Converged
 
     # The last entry represents the least core value 'e'
     least_core_value = values[-1].item()

@@ -9,10 +9,10 @@ indexing abilities, and conversion to `pandas DataFrames
 """
 import collections.abc
 from dataclasses import dataclass
-from enum import Enum
-from functools import total_ordering
+from functools import total_ordering, update_wrapper
 from typing import (
     Any,
+    Callable,
     Generator,
     Iterable,
     List,
@@ -26,79 +26,14 @@ from typing import (
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import Dataset
+from ..utils import Dataset, Status
 
 try:
     import pandas  # Try to import here for the benefit of mypy
 except ImportError:
     pass
 
-__all__ = ["ValuationResult", "ValuationStatus"]
-
-
-class ValuationStatus(Enum):
-    Pending = "pending"
-    Converged = "converged"
-    MaxIterations = "maximum number of iterations reached"
-    Failed = "failed"
-
-    def __or__(self, other: "ValuationStatus") -> "ValuationStatus":
-        """The result of bitwise or-ing two valuation statuses is given by the
-        following table:
-
-            |   | P | C | F |
-            |---|---|---|---|
-            | P | P | C | P |
-            | C | C | C | C |
-            | F | P | C | F |
-
-        where P = Pending, C = Converged, F = Failed.
-        """
-        if self == ValuationStatus.Converged or other == ValuationStatus.Converged:
-            return ValuationStatus.Converged
-        if self == ValuationStatus.Pending or other == ValuationStatus.Pending:
-            return ValuationStatus.Pending
-        if self == ValuationStatus.Failed and other == ValuationStatus.Failed:
-            return ValuationStatus.Failed
-        # TODO: Should be unreachable after deleting MaxIterations:
-        raise RuntimeError(f"Unexpected statuses: {self} and {other}")
-
-    def __and__(self, other: "ValuationStatus") -> "ValuationStatus":
-        """The result of bitwise &-ing two valuation statuses is given by the
-        following table:
-
-            |   | P | C | F |
-            |---|---|---|---|
-            | P | P | P | F |
-            | C | P | C | F |
-            | F | F | F | F |
-
-        where P = Pending, C = Converged, F = Failed.
-        """
-        if self == ValuationStatus.Failed or other == ValuationStatus.Failed:
-            return ValuationStatus.Failed
-        if self == ValuationStatus.Pending or other == ValuationStatus.Pending:
-            return ValuationStatus.Pending
-        if self == ValuationStatus.Converged and other == ValuationStatus.Converged:
-            return ValuationStatus.Converged
-        # TODO: Should be unreachable after deleting MaxIterations:
-        raise RuntimeError(f"Unexpected statuses: {self} and {other}")
-
-    def __invert__(self):
-        """The result of bitwise negation of a ValuationStatus is `Failed`
-        if the status is `Converged`, or `Converged` otherwise:
-
-            `P -> C, C -> F, F -> C`
-        """
-        if self == ValuationStatus.Converged:
-            return ValuationStatus.Failed
-        return ValuationStatus.Converged
-
-    def __bool__(self):
-        """A ValuationStatus evaluates to True iff it's Converged or MaxIterations"""
-        return (
-            self == ValuationStatus.Converged or self == ValuationStatus.MaxIterations
-        )
+__all__ = ["ValuationResult"]
 
 
 @total_ordering
@@ -171,7 +106,7 @@ class ValuationResult(collections.abc.Sequence):
     _names: Union[NDArray[np.int_], NDArray[np.str_]]
     _stderr: NDArray[np.float_]
     _algorithm: str  # TODO: BaseValuator
-    _status: ValuationStatus  # TODO: Maybe? BaseValuator.Status
+    _status: Status  # TODO: Maybe? BaseValuator.Status
     # None for unsorted, True for ascending, False for descending
     _sort_order: Optional[bool]
     _extra_values: dict
@@ -179,7 +114,7 @@ class ValuationResult(collections.abc.Sequence):
     def __init__(
         self,
         algorithm: str,  # BaseValuator,
-        status: ValuationStatus,  # Valuation.Status,
+        status: Status,  # Valuation.Status,
         values: NDArray[np.float_],
         stderr: Optional[NDArray[np.float_]] = None,
         data_names: Optional[Sequence[str]] = None,
@@ -252,7 +187,7 @@ class ValuationResult(collections.abc.Sequence):
         return self._indices
 
     @property
-    def status(self) -> ValuationStatus:
+    def status(self) -> Status:
         return self._status
 
     @property
@@ -345,7 +280,7 @@ class ValuationResult(collections.abc.Sequence):
            and standard errors are "unwrapped" and recomputed again.
 
         Means and standard errors are correctly handled. Statuses are added with
-        bit-wise ``&``, see :class:`~pydvl.value.results.ValuationStatus`.
+        bit-wise ``&``, see :class:`~pydvl.value.results.Status`.
         ``data_names`` are taken from the left summand, or if unavailable from
         the right one. The ``algorithm`` string is carried over if both terms
         have the same one or concatenated.
@@ -426,6 +361,6 @@ class ValuationResult(collections.abc.Sequence):
         values = np.random.uniform(low=-1.0, high=1.0, size=size)
         return cls(
             algorithm="random",
-            status=ValuationStatus.Converged,
+            status=Status.Converged,
             values=values,
         )

@@ -7,7 +7,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress, powerset
-from pydvl.value.results import ValuationResult, ValuationStatus
+from pydvl.value.results import ValuationResult
+from pydvl.utils.status import Status
 
 __all__ = ["permutation_exact_shapley", "combinatorial_exact_shapley"]
 
@@ -51,7 +52,7 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 
     return ValuationResult(
         algorithm="permutation_exact_shapley",
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
         values=values,
         stderr=None,
         data_names=u.data.data_names,
@@ -128,7 +129,7 @@ def combinatorial_exact_shapley(
     values = map_reduce_job()
     return ValuationResult(
         algorithm="combinatorial_exact_shapley",
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
         values=values,
         stderr=None,
         data_names=u.data.data_names,

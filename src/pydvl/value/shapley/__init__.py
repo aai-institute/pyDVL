@@ -5,7 +5,6 @@ interface to all methods defined in the modules.
 
 Please refer to :ref:`data valuation` for an overview of Shapley Data value.
 """
-from enum import Enum
 from typing import Optional, cast
 
 from pydvl.utils import Utility
@@ -23,26 +22,9 @@ from pydvl.value.shapley.naive import (
     combinatorial_exact_shapley,
     permutation_exact_shapley,
 )
+from pydvl.value.shapley.types import ShapleyMode
 
 __all__ = ["compute_shapley_values"]
-
-
-class ShapleyMode(str, Enum):
-    """Supported algorithms for the computation of Shapley values.
-
-    .. todo::
-       Make algorithms register themselves here.
-    """
-
-    CombinatorialExact = "combinatorial_exact"
-    CombinatorialMontecarlo = "combinatorial_montecarlo"
-    GroupTesting = "group_testing"
-    KNN = "knn"
-    Owen = "owen"
-    OwenAntithetic = "owen_antithetic"
-    PermutationExact = "permutation_exact"
-    PermutationMontecarlo = "permutation_montecarlo"
-    TruncatedMontecarlo = "truncated_montecarlo"
 
 
 def compute_shapley_values(

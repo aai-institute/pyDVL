@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 
 from pydvl.utils import Dataset, Utility
-from pydvl.value.results import ValuationResult, ValuationStatus
+from pydvl.value.results import ValuationResult
+from pydvl.utils.status import Status
 
 
 class MinerUtility(Utility):
@@ -63,6 +64,6 @@ def miner_utility(request) -> Tuple[Utility, ValuationResult]:
         values=exact_values,
         stderr=np.zeros_like(exact_values),
         data_names=np.arange(len(exact_values)),
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
     )
     return u, result

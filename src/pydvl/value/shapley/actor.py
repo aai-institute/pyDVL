@@ -12,11 +12,13 @@ from typing import TYPE_CHECKING, Optional, Tuple, Union, cast
 
 import numpy as np
 
-from pydvl.utils import Utility, get_running_avg_variance, maybe_progress
-from pydvl.utils.config import ParallelConfig
-from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
-from pydvl.utils.parallel.backend import RayParallelBackend, init_parallel_backend
-from pydvl.value.results import ValuationStatus
+from ...utils.config import ParallelConfig
+from ...utils.parallel.actor import Coordinator, RayActorWrapper, Worker
+from ...utils.parallel.backend import RayParallelBackend, init_parallel_backend
+from ...utils.status import Status
+from ...utils.utility import Utility
+from ...value.results import ValuationResult
+from .types import PermutationBreaker
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray

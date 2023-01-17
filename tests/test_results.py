@@ -5,14 +5,15 @@ import cloudpickle
 import numpy as np
 import pytest
 
-from pydvl.value import ValuationResult, ValuationStatus
+from pydvl.value import ValuationResult
+from pydvl.utils.status import Status
 
 
 @pytest.fixture
 def dummy_values(values, names):
     return ValuationResult(
         algorithm="dummy_valuator",
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
         values=np.array(values),
         stderr=np.zeros_like(values),
         data_names=names,
@@ -139,7 +140,7 @@ def test_equality(values, names, dummy_values):
 
     c2 = ValuationResult(
         algorithm=c._algorithm,
-        status=ValuationStatus.Failed,
+        status=Status.Failed,
         values=c.values,
         stderr=c._stderr,
         data_names=c._names,
@@ -174,7 +175,7 @@ def test_equality(values, names, dummy_values):
 def test_extra_values(extra_values):
     kwargs = dict(
         algorithm="test",
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
         values=np.random.rand(10),
         sort=True,
         test_value=1.2,

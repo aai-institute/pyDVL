@@ -25,7 +25,8 @@ from numpy.typing import NDArray
 
 from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress
 from pydvl.utils.numeric import random_subset_of_size
-from pydvl.value import ValuationResult, ValuationStatus
+from pydvl.value import ValuationResult
+from pydvl.utils.status import Status
 
 __all__ = ["group_testing_shapley", "num_samples_eps_delta"]
 
@@ -166,8 +167,7 @@ def _group_testing_shapley(
     :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress (e.g. to place
     progres bars)
-    :return: a matrix with each row being a different permutation and each
-        column being the score of a different data point
+    :return:
     """
     rng = np.random.default_rng()
     n = len(u.data.indices)
@@ -318,7 +318,7 @@ def group_testing_shapley(
     if result.status == 0:
         return ValuationResult(
             algorithm="group_testing_shapley",
-            status=ValuationStatus.Converged,
+            status=Status.Converged,
             values=result.x,
             stderr=None,
             data_names=u.data.data_names,
@@ -326,7 +326,7 @@ def group_testing_shapley(
     else:
         return ValuationResult(
             algorithm="group_testing_shapley",
-            status=ValuationStatus.Failed,
+            status=Status.Failed,
             values=np.nan * np.ones_like(u.data.indices),
             stderr=None,
             data_names=u.data.data_names,

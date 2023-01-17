@@ -5,12 +5,14 @@ from typing import Iterable, Optional, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import Utility, maybe_progress
+from pydvl.utils.utility import Utility
+from pydvl.utils.progress import maybe_progress
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import MapReduceJob
 from pydvl.value.least_core._common import _solve_linear_program
-from pydvl.value.results import ValuationResult, ValuationStatus
+from pydvl.value.results import ValuationResult
+from pydvl.utils.status import Status
 
 logger = logging.getLogger(__name__)
 
@@ -177,11 +179,11 @@ def montecarlo_least_core(
 
     if values is None:
         logger.debug("No values were found")
-        status = ValuationStatus.Failed
+        status = Status.Failed
         values = np.empty(n)
         values[:] = np.nan
     else:
-        status = ValuationStatus.Converged
+        status = Status.Converged
 
     # The last entry represents the least core value 'e'
     least_core_value = values[-1].item()
