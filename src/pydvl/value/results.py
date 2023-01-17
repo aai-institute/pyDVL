@@ -42,6 +42,64 @@ class ValuationStatus(Enum):
     MaxIterations = "maximum number of iterations reached"
     Failed = "failed"
 
+    def __or__(self, other: "ValuationStatus") -> "ValuationStatus":
+        """The result of bitwise or-ing two valuation statuses is given by the
+        following table:
+
+            |   | P | C | F |
+            |---|---|---|---|
+            | P | P | C | P |
+            | C | C | C | C |
+            | F | P | C | F |
+
+        where P = Pending, C = Converged, F = Failed.
+        """
+        if self == ValuationStatus.Converged or other == ValuationStatus.Converged:
+            return ValuationStatus.Converged
+        if self == ValuationStatus.Pending or other == ValuationStatus.Pending:
+            return ValuationStatus.Pending
+        if self == ValuationStatus.Failed and other == ValuationStatus.Failed:
+            return ValuationStatus.Failed
+        # TODO: Should be unreachable after deleting MaxIterations:
+        raise RuntimeError(f"Unexpected statuses: {self} and {other}")
+
+    def __and__(self, other: "ValuationStatus") -> "ValuationStatus":
+        """The result of bitwise &-ing two valuation statuses is given by the
+        following table:
+
+            |   | P | C | F |
+            |---|---|---|---|
+            | P | P | P | F |
+            | C | P | C | F |
+            | F | F | F | F |
+
+        where P = Pending, C = Converged, F = Failed.
+        """
+        if self == ValuationStatus.Failed or other == ValuationStatus.Failed:
+            return ValuationStatus.Failed
+        if self == ValuationStatus.Pending or other == ValuationStatus.Pending:
+            return ValuationStatus.Pending
+        if self == ValuationStatus.Converged and other == ValuationStatus.Converged:
+            return ValuationStatus.Converged
+        # TODO: Should be unreachable after deleting MaxIterations:
+        raise RuntimeError(f"Unexpected statuses: {self} and {other}")
+
+    def __invert__(self):
+        """The result of bitwise negation of a ValuationStatus is `Failed`
+        if the status is `Converged`, or `Converged` otherwise:
+
+            `P -> C, C -> F, F -> C`
+        """
+        if self == ValuationStatus.Converged:
+            return ValuationStatus.Failed
+        return ValuationStatus.Converged
+
+    def __bool__(self):
+        """A ValuationStatus evaluates to True iff it's Converged or MaxIterations"""
+        return (
+            self == ValuationStatus.Converged or self == ValuationStatus.MaxIterations
+        )
+
 
 @total_ordering
 @dataclass
