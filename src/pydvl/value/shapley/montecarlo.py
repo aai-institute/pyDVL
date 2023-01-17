@@ -286,7 +286,7 @@ def _combinatorial_montecarlo_shapley(
             position=job_id,
         ):
             marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
-            values[idx], variances[idx] = get_running_avg_variance(
+            values[idx], variances[idx] = running_moments(
                 values[idx], variances[idx], marginal, counts[idx]
             )
             counts[idx] += 1

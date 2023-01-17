@@ -13,9 +13,10 @@ from scipy.special import expit
 from pydvl.utils.types import compose_score
 
 FloatOrArray = TypeVar("FloatOrArray", float, NDArray[np.float_])
+IntOrArray = TypeVar("IntOrArray", int, NDArray[np.int_])
 
 __all__ = [
-    "get_running_avg_variance",
+    "running_moments",
     "linear_regression_analytical_derivative_d2_theta",
     "linear_regression_analytical_derivative_d_theta",
     "linear_regression_analytical_derivative_d_x_d_theta",
@@ -223,17 +224,22 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     return full_derivative / N  # type: ignore
 
 
-def get_running_avg_variance(
+def running_moments(
     previous_avg: FloatOrArray,
     previous_variance: FloatOrArray,
     new_value: FloatOrArray,
-    count: int,
+    count: IntOrArray,
 ) -> Tuple[FloatOrArray, FloatOrArray]:
     """Uses Welford's algorithm to calculate the running average and variance of
      a set of numbers.
 
     See `Welford's algorithm in wikipedia
     <https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm>`_
+
+    .. todo::
+       This can be easily generalised to arbitrary moments. See `this paper
+       <https://www.osti.gov/biblio/1028931>`_
+
 
     :param previous_avg: average value at previous step
     :param previous_variance: variance at previous step

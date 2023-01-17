@@ -105,7 +105,7 @@ from pymemcache import MemcacheUnexpectedCloseError
 from pymemcache.client import Client, RetryingClient
 
 from .config import MemcachedClientConfig
-from .numeric import get_running_avg_variance
+from .numeric import running_moments
 
 PICKLE_VERSION = 5  # python >= 3.8
 
@@ -270,7 +270,7 @@ def memcached(
                         or count <= min_repetitions
                     ):
                         new_value = fun(*args, **kwargs)
-                        new_avg, new_var = get_running_avg_variance(
+                        new_avg, new_var = running_moments(
                             value, variance, new_value, count
                         )
                         result_dict["value"] = new_avg

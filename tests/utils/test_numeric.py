@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from pydvl.utils.numeric import (
+    running_moments,
     powerset,
     random_matrix_with_condition_number,
     random_powerset,
@@ -106,3 +107,21 @@ def test_random_matrix_with_condition_number(n, cond, exception):
             np.linalg.cholesky(mat)
         except np.linalg.LinAlgError:
             pytest.fail("Matrix is not positive definite")
+
+
+@pytest.mark.parametrize(
+    "sequence", [(np.arange(-4, 12)), (np.arange(10)), (np.linspace(1, 4, 10))]
+)
+def test_running_moments(sequence):
+    avg, var = 0.0, 0.0
+    for i, n in enumerate(sequence[:-1]):
+        true_avg = np.mean(sequence[: i + 1])
+        true_var = np.var(sequence[: i + 1])
+
+        new_avg, new_var = running_moments(avg, var, n, i)
+        avg, var = new_avg, new_var
+
+        assert np.isclose(new_avg, true_avg)
+        assert np.isclose(new_var, true_var)
+
+    pytest.fail("need to test array inputs, including variable counts")
