@@ -238,6 +238,12 @@ class ValuationResult(collections.abc.Sequence):
         return self._values
 
     @property
+    def stderr(self) -> NDArray[np.float_]:
+        """The raw standard errors, unsorted. Position `i` in the array
+        represents index `i` of the data."""
+        return self._stderr
+
+    @property
     def indices(self) -> NDArray[np.int_]:
         """The indices for the values, possibly sorted.
         If the object is unsorted, then this is the same as
@@ -306,12 +312,14 @@ class ValuationResult(collections.abc.Sequence):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ValuationResult):
-            return NotImplemented
+            raise NotImplementedError(
+                f"Cannot compare ValuationResult with {type(other)}"
+            )
         return bool(
             self._algorithm == other._algorithm
             and self._status == other._status
             and self._sort_order == other._sort_order
-            and np.all(self.values == other.values)
+            and np.all(self._values == other._values)
             and np.all(self._stderr == other._stderr)
             and np.all(self._names == other._names)
             # and np.all(self.indices == other.indices)  # Redundant
