@@ -11,8 +11,8 @@ import numpy as np
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
 from pydvl.utils import Utility, maybe_progress
-from pydvl.value.results import ValuationResult
 from pydvl.utils.status import Status
+from pydvl.value.results import ValuationResult
 
 __all__ = ["knn_shapley"]
 

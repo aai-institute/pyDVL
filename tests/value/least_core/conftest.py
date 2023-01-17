@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 
 from pydvl.utils import Dataset, Utility
-from pydvl.value.results import ValuationResult
 from pydvl.utils.status import Status
+from pydvl.value.results import ValuationResult
 
 
 class MinerUtility(Utility):

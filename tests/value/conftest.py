@@ -6,8 +6,8 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
 from pydvl.utils import Dataset, SupervisedModel, Utility
-from pydvl.value import ValuationResult
 from pydvl.utils.status import Status
+from pydvl.value import ValuationResult
 
 from . import polynomial
 

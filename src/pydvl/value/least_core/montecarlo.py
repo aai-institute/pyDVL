@@ -5,16 +5,17 @@ from typing import Iterable, Optional, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils.utility import Utility
-from pydvl.utils.progress import maybe_progress
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import MapReduceJob
+from pydvl.utils.progress import maybe_progress
+from pydvl.utils.status import Status
+from pydvl.utils.utility import Utility
 from pydvl.value.least_core._common import (
     _solve_egalitarian_least_core_quadratic_program,
     _solve_least_core_linear_program,
-)from pydvl.value.results import ValuationResult
-from pydvl.utils.status import Status
+)
+from pydvl.value.results import ValuationResult
 
 logger = logging.getLogger(__name__)
 

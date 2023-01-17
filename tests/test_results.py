@@ -7,8 +7,8 @@ import cloudpickle
 import numpy as np
 import pytest
 
-from pydvl.value import ValuationResult
 from pydvl.utils.status import Status
+from pydvl.value import ValuationResult
 
 
 @pytest.fixture

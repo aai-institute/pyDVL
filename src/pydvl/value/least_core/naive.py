@@ -6,12 +6,12 @@ import numpy as np
 from numpy.typing import NDArray
 
 from pydvl.utils import Utility, maybe_progress, powerset
+from pydvl.utils.status import Status
 from pydvl.value.least_core._common import (
     _solve_egalitarian_least_core_quadratic_program,
     _solve_least_core_linear_program,
 )
 from pydvl.value.results import ValuationResult
-from pydvl.utils.status import Status
 
 __all__ = ["exact_least_core"]
 

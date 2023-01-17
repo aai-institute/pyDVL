@@ -2,11 +2,11 @@ import numpy as np
 import pytest
 
 from pydvl.utils.numeric import (
-    running_moments,
     powerset,
     random_matrix_with_condition_number,
     random_powerset,
     random_subset_of_size,
+    running_moments,
 )
 
 

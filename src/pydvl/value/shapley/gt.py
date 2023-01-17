@@ -25,8 +25,8 @@ from numpy.typing import NDArray
 
 from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress
 from pydvl.utils.numeric import random_subset_of_size
-from pydvl.value import ValuationResult
 from pydvl.utils.status import Status
+from pydvl.value import ValuationResult
 
 __all__ = ["group_testing_shapley", "num_samples_eps_delta"]
 
