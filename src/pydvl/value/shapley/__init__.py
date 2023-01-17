@@ -8,6 +8,7 @@ Please refer to :ref:`data valuation` for an overview of Shapley Data value.
 from typing import Optional, cast
 
 from pydvl.utils import Utility
+from pydvl.value.convergence import max_iterations
 from pydvl.value.results import ValuationResult
 from pydvl.value.shapley.gt import group_testing_shapley
 from pydvl.value.shapley.knn import knn_shapley
@@ -99,14 +100,15 @@ def compute_shapley_values(
     if mode not in list(ShapleyMode):
         raise ValueError(f"Invalid value encountered in {mode=}")
 
+    convergence_check = max_iterations(n_iterations)
+    if kwargs.get("convergence_check"):
+        convergence_check |= kwargs.get("convergence_check")
+
     if mode == ShapleyMode.TruncatedMontecarlo:
-        # TODO fix progress showing and maybe_progress in remote case
-        progress = False
         return truncated_montecarlo_shapley(
             u=u,
-            n_iterations=n_iterations,
+            convergence_check=convergence_check,
             n_jobs=n_jobs,
-            progress=progress,
             **kwargs,
         )
     elif mode == ShapleyMode.CombinatorialMontecarlo:

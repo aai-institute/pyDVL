@@ -74,12 +74,10 @@ __all__ = [
 
 def truncated_montecarlo_shapley(
     u: Utility,
-    value_tolerance: Optional[float] = None,
-    n_iterations: Optional[int] = None,
+    convergence_check: ConvergenceCheck,
     *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
-    progress: bool = False,
     coordinator_update_period: int = 10,
     worker_update_period: int = 5,
 ) -> ValuationResult:
@@ -90,34 +88,19 @@ def truncated_montecarlo_shapley(
     over all possible permutations of the index set, with a double stopping
     criterion.
 
-    .. warning::
-
-       This function does not exactly reproduce the stopping criterion of
-       :footcite:t:`ghorbani_data_2019` which uses a hardcoded time delay in the
-       sequence of values. Instead, we use a moving average and the stopping
-       criterion detailed in
-       :meth:`~pydvl.value.shapley.actor.ShapleyCoordinator.check_done`.
-
-    .. todo::
-       Implement the original stopping criterion, maybe Robin-Gelman or some
-       other more principled one.
-
     Instead of naively implementing the expectation, we sequentially add points
-    to a dataset from a permutation. We keep sampling permutations and updating
-    all shapley values until the std/value score in the moving average falls
-    below a given threshold (value_tolerance) or when the number of iterations
-    exceeds a certain number (n_iterations).
+    to a dataset from a permutation. Once a marginal utility is close enough to
+    the total utility we set all marginals to 0 for the remainder of the
+    permutation. We keep sampling permutations and updating all shapley values
+    until the ``convergence_check`` returns ``True``.
 
     :param u: Utility object with model, data, and scoring function
-    :param value_tolerance: Terminate if the standard deviation of the
-        average value for every sample has dropped below this value
-    :param n_iterations: Terminate if the total number of permutations exceeds
-        this number.
+    :param convergence_check: Check on the results which decides when to stop
+        sampling permutations.
     :param n_jobs: number of jobs processing permutations. If None, it will be
         set to :func:`available_cpus`.
     :param config: Object configuring parallel computation, with cluster address,
         number of cpus, etc.
-    :param progress: Whether to display progress bars for each job.
     :param coordinator_update_period: in seconds. Check status with the job
         coordinator every so often.
     :param worker_update_period: interval in seconds between different updates to
@@ -126,22 +109,26 @@ def truncated_montecarlo_shapley(
 
     """
     parallel_backend = init_parallel_backend(config)
-
     n_jobs = parallel_backend.effective_n_jobs(n_jobs)
-
     u_id = parallel_backend.put(u)
 
     coordinator = get_shapley_coordinator(  # type: ignore
-        value_tolerance, n_iterations, progress, config=config
+        config=config, convergence_check=convergence_check
     )
+
+    total_utility = u(u.data.indices)
+
+    def permutation_breaker(idx: int, marginals: NDArray[np.float_]) -> bool:
+        return np.abs(marginals[idx] - total_utility) < 0.01  # FIXME
+
     workers = [
         get_shapley_worker(  # type: ignore
             u=u_id,
             coordinator=coordinator,
             worker_id=worker_id,
-            progress=progress,
             update_period=worker_update_period,
             config=config,
+            permutation_breaker=permutation_breaker,
         )
         for worker_id in range(n_jobs)
     ]
@@ -151,15 +138,8 @@ def truncated_montecarlo_shapley(
     while not coordinator.check_done():
         sleep(coordinator_update_period)
 
-    values, stderr = coordinator.get_results()
+    return coordinator.accumulate()
 
-    return ValuationResult(
-        algorithm="truncated_montecarlo_shapley",
-        status=coordinator.status(),
-        values=values,
-        stderr=stderr,
-        data_names=u.data.data_names,
-    )
 
 def _permutation_montecarlo_shapley(
     u: Utility,
