@@ -277,14 +277,7 @@ def _combinatorial_montecarlo_shapley(
     for idx in pbar:
         # Randomly sample subsets of full dataset without idx
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
-        power_set = random_powerset(subset, max_subsets=n_iterations)
-        for s in maybe_progress(
-            power_set,
-            progress,
-            desc=f"Index {idx}",
-            total=n_iterations,
-            position=job_id,
-        ):
+        for s in random_powerset(subset, max_subsets=n_iterations):
             marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
             values[idx], variances[idx] = running_moments(
                 values[idx], variances[idx], marginal, counts[idx]
@@ -294,6 +287,7 @@ def _combinatorial_montecarlo_shapley(
     return MonteCarloResults(
         values=correction * values,
         stderr=np.sqrt(correction**2 * variances / np.maximum(1, counts)),
+        counts=counts,
     )
 
 
@@ -305,18 +299,20 @@ def disjoint_reducer(results_it: Iterable[MonteCarloResults]) -> MonteCarloResul
     :raises IndexError: If the argument is an empty iterable.
     """
     try:
-        val, std = next((x for x in results_it))
+        val, std, cnt = next((x for x in results_it))
         values = np.zeros_like(val)
         stderr = np.zeros_like(std)
+        counts = np.zeros_like(cnt)
     except StopIteration:
         raise IndexError("Empty results iterable cannot be reduced")
 
-    for val, std in results_it:
+    for val, std, cnt in results_it:
         if np.abs(values[val > 0]).sum() > 0:
             raise ValueError("Returned value sets are not disjoint")
         values += val
         stderr += std
-    return MonteCarloResults(values=values, stderr=stderr)
+        counts += cnt
+    return MonteCarloResults(values=values, stderr=stderr, counts=counts)
 
 
 def combinatorial_montecarlo_shapley(
@@ -371,6 +367,7 @@ def combinatorial_montecarlo_shapley(
         status=Status.MaxIterations,
         values=results.values,
         stderr=results.stderr,
+        counts=results.counts,
         data_names=u.data.data_names,
     )
 
