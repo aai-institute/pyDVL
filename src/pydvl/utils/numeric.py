@@ -4,7 +4,7 @@ library.
 """
 
 from itertools import chain, combinations
-from typing import Collection, Generator, Iterator, Optional, Tuple, TypeVar
+from typing import Collection, Generator, Iterator, Optional, Tuple, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -224,12 +224,13 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     return full_derivative / N  # type: ignore
 
 
+# FIXME: FloatOrArray doesn't really work
 def running_moments(
     previous_avg: FloatOrArray,
     previous_variance: FloatOrArray,
     new_value: FloatOrArray,
     count: IntOrArray,
-) -> Tuple[FloatOrArray, FloatOrArray]:
+) -> Tuple:  # [FloatOrArray, FloatOrArray]:
     """Uses Welford's algorithm to calculate the running average and variance of
      a set of numbers.
 
@@ -247,7 +248,8 @@ def running_moments(
     :param count: number of points seen so far
     :return: new_average, new_variance, calculated with the new number
     """
-    new_average = (new_value + count * previous_avg) / (count + 1)
+    # broadcasted operations seem not to be supported by mypy so we ignore the type
+    new_average = (new_value + count * previous_avg) / (count + 1)  # type: ignore
     new_variance = previous_variance + (
         (new_value - previous_avg) * (new_value - new_average) - previous_variance
     ) / (count + 1)

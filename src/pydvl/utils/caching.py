@@ -98,7 +98,7 @@ from functools import wraps
 from hashlib import blake2b
 from io import BytesIO
 from time import time
-from typing import Callable, Dict, Iterable, Optional, TypeVar
+from typing import Callable, Dict, Iterable, Optional, TypeVar, cast
 
 from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
@@ -246,7 +246,7 @@ def memcached(
 
                 key = blake2b(self._signature + arg_signature).hexdigest().encode("ASCII")  # type: ignore
 
-                result_dict: Dict = self.get_key_value(key)
+                result_dict: Dict[str, float] = self.get_key_value(key)
                 if result_dict is None:
                     result_dict = {}
                     start = time()
@@ -271,7 +271,7 @@ def memcached(
                     ):
                         new_value = fun(*args, **kwargs)
                         new_avg, new_var = running_moments(
-                            value, variance, new_value, count
+                            value, variance, cast(float, new_value), int(count)
                         )
                         result_dict["value"] = new_avg
                         result_dict["count"] = count + 1
