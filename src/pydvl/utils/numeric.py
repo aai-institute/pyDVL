@@ -246,7 +246,7 @@ def running_moments(
     :param previous_variance: variance at previous step
     :param new_value: new value in the series of numbers
     :param count: number of points seen so far
-    :return: new_average, new_variance, calculated with the new number
+    :return: new_average, new_variance, calculated with the new count
     """
     # broadcasted operations seem not to be supported by mypy so we ignore the type
     new_average = (new_value + count * previous_avg) / (count + 1)  # type: ignore
