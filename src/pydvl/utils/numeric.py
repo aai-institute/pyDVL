@@ -237,9 +237,9 @@ def running_moments(
     See `Welford's algorithm in wikipedia
     <https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm>`_
 
-    .. fixme::
+    .. warning::
        This is not really using Welford's correction for numerical stability
-       for the variance.
+       for the variance. (FIXME)
 
     .. todo::
        This could be generalised to arbitrary moments. See `this paper
