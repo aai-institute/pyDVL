@@ -12,13 +12,12 @@ from typing import TYPE_CHECKING, Optional, Tuple, Union, cast
 
 import numpy as np
 
-from ...utils import maybe_progress
+from ...utils import maybe_progress, running_moments
 from ...utils.config import ParallelConfig
 from ...utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from ...utils.parallel.backend import RayParallelBackend, init_parallel_backend
 from ...utils.status import Status
 from ...utils.utility import Utility
-from ...value.results import ValuationResult
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -239,7 +238,7 @@ class ShapleyWorker(Worker):
                     self._var_values = np.zeros_like(self._avg_values)
                     self._iteration_count = 1
                 else:
-                    self._avg_values, self._var_values = get_running_avg_variance(
+                    self._avg_values, self._var_values = running_moments(
                         self._avg_values,
                         self._var_values,
                         values,
