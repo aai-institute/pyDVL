@@ -20,6 +20,7 @@ from typing import Dict, FrozenSet, Iterable, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
+from sklearn.base import clone
 from sklearn.metrics import check_scoring
 
 from pydvl.utils import Dataset
@@ -152,8 +153,11 @@ class Utility:
             if not self.show_warnings:
                 warnings.simplefilter("ignore")
             try:
-                self.model.fit(x_train, y_train)
-                score = float(self.scorer(self.model, x_test, y_test))
+                # Clone the model to avoid the possibility
+                # of reusing a fitted estimator
+                model = clone(self.model)
+                model.fit(x_train, y_train)
+                score = float(self.scorer(model, x_test, y_test))
                 # Some scorers raise exceptions if they return NaNs, some might not
                 if np.isnan(score):
                     warnings.warn("Scorer returned NaN", RuntimeWarning)
