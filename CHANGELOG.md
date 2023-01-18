@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Operations on ValuationResults and Statuses and cleanup
+  [PR #248](https://github.com/appliedAI-Initiative/pyDVL/pull/248)
+
 ## 0.4.0 - 🏭💥 New algorithms and more breaking changes
 
 - GH action to mark issues as stale

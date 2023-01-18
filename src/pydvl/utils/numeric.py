@@ -237,8 +237,12 @@ def running_moments(
     See `Welford's algorithm in wikipedia
     <https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm>`_
 
+    .. warning::
+       This is not really using Welford's correction for numerical stability
+       for the variance. (FIXME)
+
     .. todo::
-       This can be easily generalised to arbitrary moments. See `this paper
+       This could be generalised to arbitrary moments. See `this paper
        <https://www.osti.gov/biblio/1028931>`_
 
 
@@ -248,7 +252,7 @@ def running_moments(
     :param count: number of points seen so far
     :return: new_average, new_variance, calculated with the new count
     """
-    # broadcasted operations seem not to be supported by mypy so we ignore the type
+    # broadcasted operations seem not to be supported by mypy, so we ignore the type
     new_average = (new_value + count * previous_avg) / (count + 1)  # type: ignore
     new_variance = previous_variance + (
         (new_value - previous_avg) * (new_value - new_average) - previous_variance

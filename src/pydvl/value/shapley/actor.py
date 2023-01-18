@@ -14,13 +14,14 @@ from typing import Optional, cast
 
 import numpy as np
 
+from .types import PermutationBreaker
+from ..convergence import ConvergenceCheck
 from ...utils.config import ParallelConfig
 from ...utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from ...utils.parallel.backend import RayParallelBackend, init_parallel_backend
 from ...utils.status import Status
 from ...utils.utility import Utility
 from ...value.results import ValuationResult
-from ..convergence import ConvergenceCheck
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
 
