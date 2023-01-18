@@ -199,6 +199,7 @@ def test_from_random_creation(size):
 
 
 def test_adding():
+    """Test adding multiple valuation results together"""
     n_samples, n_values, n_subsets = 10, 1000, 12
     values = np.random.rand(n_samples, n_values)
     split_indices = np.sort(np.random.randint(1, n_values, size=n_subsets - 1))

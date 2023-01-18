@@ -50,10 +50,10 @@ class Status(Enum):
         raise RuntimeError(f"Unexpected statuses: {self} and {other}")
 
     def __invert__(self):
-        """The result of bitwise negation of a Status is `Failed`
-        if the status is `Converged`, or `Converged` otherwise:
+        """The result of bitwise negation of a Status is ``Failed``
+        if the status is ``Converged``, or ``Converged`` otherwise:
 
-            `P -> C, C -> F, F -> C`
+            ``~P == C, ~C == F, ~F == C``
         """
         if self == Status.Converged:
             return Status.Failed
