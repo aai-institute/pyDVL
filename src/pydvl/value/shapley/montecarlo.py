@@ -97,7 +97,7 @@ def truncated_montecarlo_shapley(
 
     .. warning::
 
-       This function does not work the sequential parallel backend.
+       This function does not work with the sequential parallel backend.
 
     .. todo::
        Implement the original stopping criterion, maybe Robin-Gelman or some

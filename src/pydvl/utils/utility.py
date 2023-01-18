@@ -371,13 +371,11 @@ class GlovesGameUtility(Utility):
         pass
 
     def exact_least_core_values(self) -> Tuple[NDArray[np.float_], float]:
+        subsidy = 0.0
         if self.left == self.right:
             values = np.array([0.5] * (self.left + self.right))
-            subsidy = 0.0
         elif self.left < self.right:
             values = np.array([1.0] * self.left + [0.0] * self.right)
-            subsidy = 0.0
         else:
             values = np.array([0.0] * self.left + [1.0] * self.right)
-            subsidy = 0.0
         return values, subsidy
