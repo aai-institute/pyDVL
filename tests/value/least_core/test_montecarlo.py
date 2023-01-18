@@ -18,11 +18,21 @@ logger = logging.getLogger(__name__)
     ],
     indirect=["test_utility"],
 )
-def test_montecarlo_least_core(test_utility, rtol, n_iterations):
+@pytest.mark.parametrize(
+    "n_jobs",
+    [
+        1,
+        4,
+        pytest.param(
+            -1, marks=pytest.mark.skip("Skipping n_jobs=-1 until it is fixed")
+        ),
+    ],
+)
+def test_montecarlo_least_core(test_utility, rtol, n_iterations, n_jobs):
     u, exact_values = test_utility
 
     values = montecarlo_least_core(
-        u, n_iterations=n_iterations, progress=False, n_jobs=4
+        u, n_iterations=n_iterations, progress=False, n_jobs=n_jobs
     )
     check_values(values, exact_values, rtol=rtol, extra_values_names=["subsidy"])
 
@@ -38,4 +48,4 @@ def test_montecarlo_least_core_failure(test_utility, n_iterations):
     u, exact_values = test_utility
 
     with pytest.raises(ValueError):
-        montecarlo_least_core(u, n_iterations=n_iterations, progress=False, n_jobs=4)
+        montecarlo_least_core(u, n_iterations=n_iterations, progress=False)
