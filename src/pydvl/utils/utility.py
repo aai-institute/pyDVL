@@ -155,7 +155,12 @@ class Utility:
             try:
                 # Clone the model to avoid the possibility
                 # of reusing a fitted estimator
-                model = clone(self.model)
+                try:
+                    model = clone(self.model)
+                except TypeError:
+                    # This happens if the passed model is not an sklearn model
+                    # In this case, we just make a deepcopy of the model.
+                    model = clone(self.model, safe=False)
                 model.fit(x_train, y_train)
                 score = float(self.scorer(model, x_test, y_test))
                 # Some scorers raise exceptions if they return NaNs, some might not
