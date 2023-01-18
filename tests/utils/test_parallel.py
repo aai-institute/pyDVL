@@ -5,7 +5,23 @@ import numpy as np
 import pytest
 
 from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
+from pydvl.utils.parallel.backend import available_cpus
 from pydvl.utils.parallel.map_reduce import _get_value
+
+
+def test_effective_n_jobs(parallel_config):
+    parallel_backend = init_parallel_backend(parallel_config)
+    if parallel_config.backend == "sequential":
+        assert parallel_backend.effective_n_jobs(1) == 1
+        assert parallel_backend.effective_n_jobs(4) == 1
+        assert parallel_backend.effective_n_jobs(-1) == 1
+    else:
+        assert parallel_backend.effective_n_jobs(1) == 1
+        assert parallel_backend.effective_n_jobs(4) == 4
+        if parallel_config.address is None:
+            assert parallel_backend.effective_n_jobs(-1) == available_cpus()
+        else:
+            assert parallel_backend.effective_n_jobs(-1) == 4
 
 
 @pytest.fixture()
