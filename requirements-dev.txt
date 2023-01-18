@@ -8,6 +8,7 @@ bump2version
 pre-commit == 2.20.0
 pytest
 pytest-cov
+pytest-docker
 pytest-mock
 pytest-timeout
 ray[default] >= 0.8
