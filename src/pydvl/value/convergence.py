@@ -6,6 +6,7 @@ import numpy as np
 from pydvl.utils import Status
 from pydvl.value import ValuationResult
 
+__all__ = ["ConvergenceCheck", "median_ratio", "max_iterations", "history_deviation"]
 
 ConvergenceCheckCallable = Callable[[ValuationResult], Status]
 
@@ -14,36 +15,31 @@ class ConvergenceCheck:
     _fun: ConvergenceCheckCallable
 
     def __init__(self, fun: ConvergenceCheckCallable):
-        """A composable callable object to determine whether a computation must
-        stop.
+        """A composable callable object to determine whether a computation must stop.
 
         ``ConvergenceCheck``s take a :class:`~pydvl.value.results.ValuationResult`
         and return a :class:`~pydvl.value.results.Status~.
 
+        :Creating ConvergenceChecks:
 
-        .. rubric:: Creating ConvergenceChecks
+        The easiest way is to declare a function implementing the
+        interface :ref:`ConvergenceCheckCallable` and wrap it with this class
 
-           The easiest way is to declare a function implementing the interface
-           :ref:`ConvergenceCheckCallable` and wrap it with this class
-           ```python
-           fun = lambda valuation: Status.Converged \\
-                if np.allclose(valuation.stderr, 0.01) \\
-                else Status.Pending
-           check = ConvergenceCheck(fun)
-           ```
-            For more realistic examples see e.g.
-            :func:`~pydvl.value.convergence.median_ratio` or
-            :func:`~pydvl.value.convergence.history_deviation`
+        For more realistic examples see
+        e.g. :func:`~pydvl.value.convergence.median_ratio`
+        or :func:`~pydvl.value.convergence.history_deviation`
 
-        .. rubric:: Composing ConvergenceChecks
+        :Composing ConvergenceChecks:
 
         Objects of this type can be composed with the binary operators ``&``
-        (_and_), ``^`` (_xor_) and ``|`` (_or_), see
-        :class:`~pydvl.value.results.Status` for the truth tables.
+        (_and_), ``^`` (_xor_) and ``|`` (_or_),
+        see :class:`~pydvl.value.results.Status` for the truth tables. The unary
+        operator ``~`` (_not_) is also supported.
 
         :param fun: A callable to wrap into a composable object. Use this to
             enable simpler functions to be composed with the operators described
             above.
+
         """
         self._fun = fun
         update_wrapper(self, self._fun)
@@ -92,7 +88,9 @@ def median_ratio(threshold: float) -> ConvergenceCheck:
     """Ratio of medians for convergence.
 
     :param threshold: Converged if the ratio of median standard
-    error to median of value has dropped below this value."""
+        error to median of value has dropped below this value.
+    :return: The convergence check
+    """
 
     def median_ratio_check(results: ValuationResult) -> Status:
         ratio = np.median(results.stderr) / np.median(results.values)
@@ -141,7 +139,8 @@ def history_deviation(n_samples: int, n_steps: int, atol: float) -> ConvergenceC
     :param n_samples: Number of values in the result objects.
     :param n_steps: Checkpoint values every so many updates and use these saved
         values to compare.
-    :param atol:
+    :param atol: Absolute tolerance for convergence.
+    :return: The convergence check
     """
     memory = np.zeros(n_samples)
     converged = np.array([False] * n_samples)

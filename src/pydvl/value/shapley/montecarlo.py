@@ -7,7 +7,7 @@ Monte Carlo approximations to Shapley Data values.
    the functions in this module.
 
 Because exact computation of Shapley values requires $\mathcal{O}(2^n)$
-re0trainings of the model, several Monte Carlo approximations are available.
+re-trainings of the model, several Monte Carlo approximations are available.
 The first two sample from the powerset of the training data directly:
 :func:`combinatorial_montecarlo_shapley` and :func:`owen_sampling_shapley`. The
 latter uses a reformulation in terms of a continuous extension of the utility.
