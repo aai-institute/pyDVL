@@ -67,7 +67,12 @@ def dummy_utility(num_samples):
             return self.utility
 
     return Utility(
-        DummyModel(data), data, score_range=(0, x.sum() / x.max()), enable_cache=False
+        DummyModel(data),
+        data,
+        score_range=(0, x.sum() / x.max()),
+        catch_errors=False,
+        show_warnings=True,
+        enable_cache=False,
     )
 
 
