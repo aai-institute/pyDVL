@@ -44,6 +44,10 @@ class ConvergenceCheck:
         self._fun = fun
         update_wrapper(self, self._fun)
 
+    @property
+    def name(self):
+        return self._fun.__name__
+
     def __call__(self, results: ValuationResult) -> Status:
         return self._fun(results)
 
@@ -51,25 +55,21 @@ class ConvergenceCheck:
         def fun(results: ValuationResult):
             return self(results) & other(results)
 
-        fun.__name__ = (
-            f"Composite ConvergenceCheck: {self.__name__} AND {other.__name__}"
-        )
+        fun.__name__ = f"Composite ConvergenceCheck: {self.name} AND {other.name}"
         return ConvergenceCheck(cast(ConvergenceCheckCallable, fun))
 
     def __or__(self, other: "ConvergenceCheck") -> "ConvergenceCheck":
         def fun(results: ValuationResult):
             return self(results) | other(results)
 
-        fun.__name__ = (
-            f"Composite ConvergenceCheck: {self.__name__} OR {other.__name__}"
-        )
+        fun.__name__ = f"Composite ConvergenceCheck: {self.name} OR {other.name}"
         return ConvergenceCheck(cast(ConvergenceCheckCallable, fun))
 
     def __invert__(self) -> "ConvergenceCheck":
         def fun(results: ValuationResult):
             return ~self(results)
 
-        fun.__name__ = f"Composite ConvergenceCheck: NOT {self.__name__}"
+        fun.__name__ = f"Composite ConvergenceCheck: NOT {self.name}"
         return ConvergenceCheck(cast(ConvergenceCheckCallable, fun))
 
     def __xor__(self, other: "ConvergenceCheck") -> "ConvergenceCheck":
@@ -78,9 +78,7 @@ class ConvergenceCheck:
             b = other(results)
             return (a & ~b) | (~a & b)
 
-        fun.__name__ = (
-            f"Composite ConvergenceCheck: {self.__name__} XOR {other.__name__}"
-        )
+        fun.__name__ = f"Composite ConvergenceCheck: {self.name} XOR {other.name}"
         return ConvergenceCheck(cast(ConvergenceCheckCallable, fun))
 
 
