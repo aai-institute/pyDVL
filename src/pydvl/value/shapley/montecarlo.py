@@ -207,6 +207,7 @@ def _permutation_montecarlo_shapley(
 
         # FIXME: shoe-horning convergence check into this function is bad
         result += ValuationResult(
+            algorithm=algorithm_name,
             values=values,
             stderr=np.sqrt(variances / np.maximum(1, counts)),
             counts=counts,
@@ -257,7 +258,6 @@ def permutation_montecarlo_shapley(
             permutation_breaker=permutation_breaker,
             progress=progress,
         ),
-        reduce_kwargs=dict(axis=0),
         config=config,
         n_jobs=n_jobs,
     )
