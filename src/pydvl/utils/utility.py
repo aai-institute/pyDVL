@@ -118,7 +118,7 @@ class Utility:
         self.enable_cache = enable_cache
         self.cache_options: MemcachedConfig = cache_options or MemcachedConfig()
         self.clone_before_fit = clone_before_fit
-        self._signature = serialize((hash(model), hash(data), hash(scoring)))
+        self._signature = serialize((hash(self.model), hash(data), hash(scoring)))
         self.scorer = check_scoring(self.model, scoring)
         self._initialize_utility_wrapper()
 

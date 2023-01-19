@@ -81,9 +81,12 @@ def test_cache(linear_dataset, memcache_client_config):
 
 
 @pytest.mark.parametrize("a, b, num_points", [(2, 0, 8)])
-def test_different_cache(linear_dataset, memcache_client_config):
+@pytest.mark.parametrize("model_kwargs", [({}, {}), ({}, {"fit_intercept": False})])
+def test_different_cache_signature(
+    linear_dataset, memcache_client_config, model_kwargs
+):
     u1 = Utility(
-        model=LinearRegression(),
+        model=LinearRegression(**model_kwargs[0]),
         data=linear_dataset,
         scoring="r2",
         enable_cache=True,
@@ -92,7 +95,7 @@ def test_different_cache(linear_dataset, memcache_client_config):
         ),
     )
     u2 = Utility(
-        model=LinearRegression(fit_intercept=False),
+        model=LinearRegression(**model_kwargs[1]),
         data=linear_dataset,
         scoring="r2",
         enable_cache=True,
@@ -102,3 +105,5 @@ def test_different_cache(linear_dataset, memcache_client_config):
     )
 
     assert u1.signature != u2.signature
+    assert u1.signature == u1.signature
+    assert u2.signature == u2.signature
