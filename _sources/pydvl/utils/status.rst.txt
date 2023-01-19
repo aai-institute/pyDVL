@@ -1,0 +1,14 @@
+status
+======
+
+.. automodule:: pydvl.utils.status
+   :members:
+   :undoc-members:
+   
+   ----
+   
+   Module members
+   ==============
+ 
+.. footbibliography::
+

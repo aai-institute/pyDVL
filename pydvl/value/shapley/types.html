@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="types" href="types.html" /><link rel="prev" title="montecarlo" href="montecarlo.html" />
+<link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="prev" title="naive" href="naive.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
-        <title>naive - pyDVL 0.4.1.dev0 documentation</title>
+        <title>types - pyDVL 0.4.1.dev0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.custom.css" />
@@ -242,8 +242,8 @@
 <li class="toctree-l4"><a class="reference internal" href="gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="montecarlo.html">montecarlo</a></li>
-<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">naive</a></li>
-<li class="toctree-l4"><a class="reference internal" href="types.html">types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="naive.html">naive</a></li>
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">types</a></li>
 </ul>
 </li>
 </ul>
@@ -284,69 +284,77 @@
           </label>
         </div>
         <article role="main">
-          <section id="module-pydvl.value.shapley.naive">
-<span id="naive"></span><h1>naive<a class="headerlink" href="#module-pydvl.value.shapley.naive" title="Permalink to this heading"></a></h1>
+          <section id="module-pydvl.value.shapley.types">
+<span id="types"></span><h1>types<a class="headerlink" href="#module-pydvl.value.shapley.types" title="Permalink to this heading"></a></h1>
 <hr class="docutils" />
 <section id="module-members">
 <h2>Module members<a class="headerlink" href="#module-members" title="Permalink to this heading"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="pydvl.value.shapley.naive.permutation_exact_shapley">
-<span class="sig-name descname"><span class="pre">permutation_exact_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/naive.py#L16"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.naive.permutation_exact_shapley" title="Permalink to this definition"></a></dt>
-<dd><p>Computes the exact Shapley value using the formulation with permutations:</p>
-<p><div class="math-wrapper docutils container">
-<div class="math notranslate nohighlight">
-\[v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)} [u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})].\]</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ShapleyMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/types.py#L8"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Supported algorithms for the computation of Shapley values.</p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>Make algorithms register themselves here.</p>
 </div>
-</p>
-<p>See <a class="reference internal" href="../../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for details.</p>
-<p>When the length of the training set is &gt; 10 this prints a warning since the
-computation becomes too expensive. Used mostly for internal testing and
-simple use cases. Please refer to the <a class="reference internal" href="montecarlo.html#module-pydvl.value.shapley.montecarlo" title="pydvl.value.shapley.montecarlo"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Monte</span> <span class="pre">Carlo</span></code></a> approximations for practical applications.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
-<li><p><strong>progress</strong> – Whether to display progress bars for each job.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Object with the data values.</p>
-</dd>
-</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.CombinatorialExact">
+<span class="sig-name descname"><span class="pre">CombinatorialExact</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'combinatorial_exact'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.CombinatorialExact" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.CombinatorialMontecarlo">
+<span class="sig-name descname"><span class="pre">CombinatorialMontecarlo</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'combinatorial_montecarlo'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.CombinatorialMontecarlo" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.GroupTesting">
+<span class="sig-name descname"><span class="pre">GroupTesting</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'group_testing'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.GroupTesting" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.KNN">
+<span class="sig-name descname"><span class="pre">KNN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'knn'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.KNN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.Owen">
+<span class="sig-name descname"><span class="pre">Owen</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'owen'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.Owen" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.OwenAntithetic">
+<span class="sig-name descname"><span class="pre">OwenAntithetic</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'owen_antithetic'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.OwenAntithetic" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.PermutationExact">
+<span class="sig-name descname"><span class="pre">PermutationExact</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'permutation_exact'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.PermutationExact" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.PermutationMontecarlo">
+<span class="sig-name descname"><span class="pre">PermutationMontecarlo</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'permutation_montecarlo'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.PermutationMontecarlo" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.TruncatedMontecarlo">
+<span class="sig-name descname"><span class="pre">TruncatedMontecarlo</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'truncated_montecarlo'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.TruncatedMontecarlo" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="pydvl.value.shapley.naive.combinatorial_exact_shapley">
-<span class="sig-name descname"><span class="pre">combinatorial_exact_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">n_local_workers=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/naive.py#L85"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.naive.combinatorial_exact_shapley" title="Permalink to this definition"></a></dt>
-<dd><p>Computes the exact Shapley value using the combinatorial definition.</p>
-<p><div class="math-wrapper docutils container">
-<div class="math notranslate nohighlight">
-\[v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}} \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)].\]</div>
-</div>
-</p>
-<p>See <a class="reference internal" href="../../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for details.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If the length of the training set is &gt; n_jobs*20 this prints a warning
-because the computation is very expensive. Used mostly for internal testing
-and simple use cases. Please refer to the
-<code class="xref py py-mod docutils literal notranslate"><span class="pre">Monte</span> <span class="pre">Carlo</span></code> approximations for practical
-applications.</p>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
-<li><p><strong>n_jobs</strong> – Number of parallel jobs to use</p></li>
-<li><p><strong>config</strong> – Object configuring parallel computation, with cluster address,
-number of cpus, etc.</p></li>
-<li><p><strong>progress</strong> – Whether to display progress bars for each job.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Object with the data values.</p>
-</dd>
-</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.value.shapley.types.PermutationBreaker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PermutationBreaker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/types.py#L26"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.types.PermutationBreaker" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.value.shapley.types.ValueStopper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ValueStopper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/types.py#L31"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.types.ValueStopper" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
 </dd></dl>
 
 </section>
@@ -357,23 +365,15 @@ number of cpus, etc.</p></li>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="types.html">
-              <div class="page-info">
-                <div class="context">
-                  <span>Next</span>
-                </div>
-                <div class="title">types</div>
-              </div>
-              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
-            </a>
-          <a class="prev-page" href="montecarlo.html">
+          
+          <a class="prev-page" href="naive.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">montecarlo</div>
+                <div class="title">naive</div>
                 
               </div>
             </a>
@@ -414,10 +414,22 @@ number of cpus, etc.</p></li>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">naive</a><ul>
+<li><a class="reference internal" href="#">types</a><ul>
 <li><a class="reference internal" href="#module-members">Module members</a><ul>
-<li><a class="reference internal" href="#pydvl.value.shapley.naive.permutation_exact_shapley"><code class="docutils literal notranslate"><span class="pre">permutation_exact_shapley()</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.value.shapley.naive.combinatorial_exact_shapley"><code class="docutils literal notranslate"><span class="pre">combinatorial_exact_shapley()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode"><code class="docutils literal notranslate"><span class="pre">ShapleyMode</span></code></a><ul>
+<li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.CombinatorialExact"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.CombinatorialExact</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.CombinatorialMontecarlo"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.CombinatorialMontecarlo</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.GroupTesting"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.GroupTesting</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.KNN"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.KNN</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.Owen"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.Owen</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.OwenAntithetic"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.OwenAntithetic</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.PermutationExact"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.PermutationExact</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.PermutationMontecarlo"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.PermutationMontecarlo</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.TruncatedMontecarlo"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.TruncatedMontecarlo</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pydvl.value.shapley.types.PermutationBreaker"><code class="docutils literal notranslate"><span class="pre">PermutationBreaker</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.shapley.types.ValueStopper"><code class="docutils literal notranslate"><span class="pre">ValueStopper</span></code></a></li>
 </ul>
 </li>
 </ul>

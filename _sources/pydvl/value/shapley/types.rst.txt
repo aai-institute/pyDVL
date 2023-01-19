@@ -1,0 +1,14 @@
+types
+=====
+
+.. automodule:: pydvl.value.shapley.types
+   :members:
+   :undoc-members:
+   
+   ----
+   
+   Module members
+   ==============
+ 
+.. footbibliography::
+

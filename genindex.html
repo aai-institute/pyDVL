@@ -219,6 +219,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/utils/progress.html">progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/utils/status.html">status</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/utils/types.html">types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/utils/utility.html">utility</a></li>
 </ul>
@@ -240,6 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/naive.html">naive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/types.html">types</a></li>
 </ul>
 </li>
 </ul>
@@ -342,8 +344,12 @@
 </li>
         <li><a href="pydvl/value/shapley/montecarlo.html#pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley">combinatorial_montecarlo_shapley() (in module pydvl.value.shapley.montecarlo)</a>
 </li>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.CombinatorialExact">CombinatorialExact (ShapleyMode attribute)</a>
+</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.CombinatorialMontecarlo">CombinatorialMontecarlo (ShapleyMode attribute)</a>
+</li>
         <li><a href="pydvl/utils/types.html#pydvl.utils.types.compose_score">compose_score() (in module pydvl.utils.types)</a>
 </li>
         <li><a href="pydvl/influence/general.html#pydvl.influence.general.compute_influences">compute_influences() (in module pydvl.influence.general)</a>
@@ -358,7 +364,7 @@
 </li>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedClientConfig.connect_timeout">connect_timeout (MemcachedClientConfig attribute)</a>
 </li>
-        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationStatus.Converged">Converged (ValuationStatus attribute)</a>
+        <li><a href="pydvl/utils/status.html#pydvl.utils.status.Status.Converged">Converged (Status attribute)</a>
 </li>
         <li><a href="pydvl/utils/parallel/actor.html#pydvl.utils.parallel.actor.Coordinator">Coordinator (class in pydvl.utils.parallel.actor)</a>
 </li>
@@ -424,7 +430,7 @@
   <h2>F</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationStatus.Failed">Failed (ValuationStatus attribute)</a>
+        <li><a href="pydvl/utils/status.html#pydvl.utils.status.Status.Failed">Failed (Status attribute)</a>
 </li>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset.feature">feature() (Dataset method)</a>
 </li>
@@ -468,8 +474,6 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.get_results">get_results() (Coordinator method)</a>
 </li>
-        <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.get_running_avg_variance">get_running_avg_variance() (in module pydvl.utils.numeric)</a>
-</li>
         <li><a href="pydvl/value/shapley/actor.html#pydvl.value.shapley.actor.get_shapley_coordinator">get_shapley_coordinator() (in module pydvl.value.shapley.actor)</a>
 </li>
         <li><a href="pydvl/value/shapley/actor.html#pydvl.value.shapley.actor.get_shapley_worker">get_shapley_worker() (in module pydvl.value.shapley.actor)</a>
@@ -495,6 +499,8 @@
         <li><a href="pydvl/value/shapley/gt.html#pydvl.value.shapley.gt.group_testing_shapley">group_testing_shapley() (in module pydvl.value.shapley.gt)</a>
 </li>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.GroupedDataset">GroupedDataset (class in pydvl.utils.dataset)</a>
+</li>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.GroupTesting">GroupTesting (ShapleyMode attribute)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -556,6 +562,8 @@
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.KNN">KNN (ShapleyMode attribute)</a>
+</li>
         <li><a href="pydvl/value/shapley/knn.html#pydvl.value.shapley.knn.knn_shapley">knn_shapley() (in module pydvl.value.shapley.knn)</a>
 </li>
     </ul></td>
@@ -592,7 +600,7 @@
 </li>
         <li><a href="pydvl/utils/parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob">MapReduceJob (class in pydvl.utils.parallel.map_reduce)</a>
 </li>
-        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationStatus.MaxIterations">MaxIterations (ValuationStatus attribute)</a>
+        <li><a href="pydvl/utils/status.html#pydvl.utils.status.Status.MaxIterations">MaxIterations (Status attribute)</a>
 </li>
         <li><a href="pydvl/utils/progress.html#pydvl.utils.progress.maybe_progress">maybe_progress() (in module pydvl.utils.progress)</a>
 </li>
@@ -666,6 +674,8 @@
 </li>
           <li><a href="pydvl/utils/progress.html#module-pydvl.utils.progress">pydvl.utils.progress</a>
 </li>
+          <li><a href="pydvl/utils/status.html#module-pydvl.utils.status">pydvl.utils.status</a>
+</li>
           <li><a href="pydvl/utils/types.html#module-pydvl.utils.types">pydvl.utils.types</a>
 </li>
           <li><a href="pydvl/utils/utility.html#module-pydvl.utils.utility">pydvl.utils.utility</a>
@@ -695,6 +705,8 @@
           <li><a href="pydvl/value/shapley/montecarlo.html#module-pydvl.value.shapley.montecarlo">pydvl.value.shapley.montecarlo</a>
 </li>
           <li><a href="pydvl/value/shapley/naive.html#module-pydvl.value.shapley.naive">pydvl.value.shapley.naive</a>
+</li>
+          <li><a href="pydvl/value/shapley/types.html#module-pydvl.value.shapley.types">pydvl.value.shapley.types</a>
 </li>
         </ul></li>
     </ul></td>
@@ -743,7 +755,13 @@
   <h2>O</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.Owen">Owen (ShapleyMode attribute)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/value/shapley/montecarlo.html#pydvl.value.shapley.montecarlo.owen_sampling_shapley">owen_sampling_shapley() (in module pydvl.value.shapley.montecarlo)</a>
+</li>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.OwenAntithetic">OwenAntithetic (ShapleyMode attribute)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -755,11 +773,17 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.ParallelConfig">ParallelConfig (class in pydvl.utils.config)</a>
 </li>
-        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationStatus.Pending">Pending (ValuationStatus attribute)</a>
+        <li><a href="pydvl/utils/status.html#pydvl.utils.status.Status.Pending">Pending (Status attribute)</a>
 </li>
         <li><a href="pydvl/value/shapley/naive.html#pydvl.value.shapley.naive.permutation_exact_shapley">permutation_exact_shapley() (in module pydvl.value.shapley.naive)</a>
 </li>
         <li><a href="pydvl/value/shapley/montecarlo.html#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley">permutation_montecarlo_shapley() (in module pydvl.value.shapley.montecarlo)</a>
+</li>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.PermutationBreaker">PermutationBreaker (class in pydvl.value.shapley.types)</a>
+</li>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.PermutationExact">PermutationExact (ShapleyMode attribute)</a>
+</li>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.PermutationMontecarlo">PermutationMontecarlo (ShapleyMode attribute)</a>
 </li>
         <li><a href="pydvl/influence/general.html#pydvl.influence.general.InfluenceType.Perturbation">Perturbation (InfluenceType attribute)</a>
 </li>
@@ -935,6 +959,13 @@
 </li>
         </ul></li>
         <li>
+    pydvl.utils.status
+
+        <ul>
+          <li><a href="pydvl/utils/status.html#module-pydvl.utils.status">module</a>
+</li>
+        </ul></li>
+        <li>
     pydvl.utils.types
 
         <ul>
@@ -1039,6 +1070,13 @@
           <li><a href="pydvl/value/shapley/naive.html#module-pydvl.value.shapley.naive">module</a>
 </li>
         </ul></li>
+        <li>
+    pydvl.value.shapley.types
+
+        <ul>
+          <li><a href="pydvl/value/shapley/types.html#module-pydvl.value.shapley.types">module</a>
+</li>
+        </ul></li>
     </ul></td>
   </tr></table>
 </section>
@@ -1064,6 +1102,8 @@
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedConfig.rtol_stderr">rtol_stderr (MemcachedConfig attribute)</a>
 </li>
         <li><a href="pydvl/utils/parallel/actor.html#pydvl.utils.parallel.actor.Worker.run">run() (Worker method)</a>
+</li>
+        <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.running_moments">running_moments() (in module pydvl.utils.numeric)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -1095,6 +1135,8 @@
 </li>
         <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.shapley_results">shapley_results() (in module pydvl.reporting.plots)</a>
 </li>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode">ShapleyMode (class in pydvl.value.shapley.types)</a>
+</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility.signature">signature (Utility property)</a>
@@ -1115,7 +1157,11 @@
           <li><a href="pydvl/influence/types.html#pydvl.influence.types.TwiceDifferentiable.split_grad">(TwiceDifferentiable method)</a>
 </li>
         </ul></li>
+        <li><a href="pydvl/utils/status.html#pydvl.utils.status.Status">Status (class in pydvl.utils.status)</a>
+</li>
         <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationResult.status">status (ValuationResult property)</a>
+</li>
+        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationResult.stderr">stderr (ValuationResult property)</a>
 </li>
         <li><a href="pydvl/utils/types.html#pydvl.utils.types.SupervisedModel">SupervisedModel (class in pydvl.utils.types)</a>
 </li>
@@ -1177,6 +1223,8 @@
         </ul></li>
         <li><a href="pydvl/value/shapley/montecarlo.html#pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley">truncated_montecarlo_shapley() (in module pydvl.value.shapley.montecarlo)</a>
 </li>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.TruncatedMontecarlo">TruncatedMontecarlo (ShapleyMode attribute)</a>
+</li>
         <li><a href="pydvl/influence/types.html#pydvl.influence.types.TwiceDifferentiable">TwiceDifferentiable (class in pydvl.influence.types)</a>
 </li>
     </ul></td>
@@ -1211,9 +1259,9 @@
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationStatus">ValuationStatus (class in pydvl.value.results)</a>
-</li>
         <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationResult.values">values (ValuationResult property)</a>
+</li>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ValueStopper">ValueStopper (class in pydvl.value.shapley.types)</a>
 </li>
     </ul></td>
   </tr></table>

@@ -221,6 +221,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="utils/progress.html">progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/status.html">status</a></li>
 <li class="toctree-l3"><a class="reference internal" href="utils/types.html">types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="utils/utility.html">utility</a></li>
 </ul>
@@ -242,6 +243,7 @@
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/naive.html">naive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="value/shapley/types.html">types</a></li>
 </ul>
 </li>
 </ul>
@@ -514,7 +516,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="utils/numeric.html">numeric</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="utils/numeric.html#module-members">Module members</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="utils/numeric.html#pydvl.utils.numeric.get_running_avg_variance"><code class="docutils literal notranslate"><span class="pre">get_running_avg_variance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/numeric.html#pydvl.utils.numeric.running_moments"><code class="docutils literal notranslate"><span class="pre">running_moments()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="utils/numeric.html#pydvl.utils.numeric.linear_regression_analytical_derivative_d2_theta"><code class="docutils literal notranslate"><span class="pre">linear_regression_analytical_derivative_d2_theta()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="utils/numeric.html#pydvl.utils.numeric.linear_regression_analytical_derivative_d_theta"><code class="docutils literal notranslate"><span class="pre">linear_regression_analytical_derivative_d_theta()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="utils/numeric.html#pydvl.utils.numeric.linear_regression_analytical_derivative_d_x_d_theta"><code class="docutils literal notranslate"><span class="pre">linear_regression_analytical_derivative_d_x_d_theta()</span></code></a></li>
@@ -571,6 +573,19 @@
 <li class="toctree-l2"><a class="reference internal" href="utils/progress.html">progress</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="utils/progress.html#module-members">Module members</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="utils/progress.html#pydvl.utils.progress.maybe_progress"><code class="docutils literal notranslate"><span class="pre">maybe_progress()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="utils/status.html">status</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="utils/status.html#module-members">Module members</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/status.html#pydvl.utils.status.Status"><code class="docutils literal notranslate"><span class="pre">Status</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/status.html#pydvl.utils.status.Status.Pending"><code class="docutils literal notranslate"><span class="pre">Status.Pending</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/status.html#pydvl.utils.status.Status.Converged"><code class="docutils literal notranslate"><span class="pre">Status.Converged</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/status.html#pydvl.utils.status.Status.MaxIterations"><code class="docutils literal notranslate"><span class="pre">Status.MaxIterations</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/status.html#pydvl.utils.status.Status.Failed"><code class="docutils literal notranslate"><span class="pre">Status.Failed</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -657,18 +672,12 @@
 <li class="toctree-l4"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult"><code class="docutils literal notranslate"><span class="pre">ValuationResult</span></code></a><ul>
 <li class="toctree-l5"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.sort"><code class="docutils literal notranslate"><span class="pre">ValuationResult.sort()</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.values"><code class="docutils literal notranslate"><span class="pre">ValuationResult.values</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.stderr"><code class="docutils literal notranslate"><span class="pre">ValuationResult.stderr</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.indices"><code class="docutils literal notranslate"><span class="pre">ValuationResult.indices</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.status"><code class="docutils literal notranslate"><span class="pre">ValuationResult.status</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.algorithm"><code class="docutils literal notranslate"><span class="pre">ValuationResult.algorithm</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.to_dataframe"><code class="docutils literal notranslate"><span class="pre">ValuationResult.to_dataframe()</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationResult.from_random"><code class="docutils literal notranslate"><span class="pre">ValuationResult.from_random()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l4"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationStatus"><code class="docutils literal notranslate"><span class="pre">ValuationStatus</span></code></a><ul>
-<li class="toctree-l5"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationStatus.Pending"><code class="docutils literal notranslate"><span class="pre">ValuationStatus.Pending</span></code></a></li>
-<li class="toctree-l5"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationStatus.Converged"><code class="docutils literal notranslate"><span class="pre">ValuationStatus.Converged</span></code></a></li>
-<li class="toctree-l5"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationStatus.MaxIterations"><code class="docutils literal notranslate"><span class="pre">ValuationStatus.MaxIterations</span></code></a></li>
-<li class="toctree-l5"><a class="reference internal" href="value/results.html#pydvl.value.results.ValuationStatus.Failed"><code class="docutils literal notranslate"><span class="pre">ValuationStatus.Failed</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -714,6 +723,26 @@
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/naive.html#module-members">Module members</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="value/shapley/naive.html#pydvl.value.shapley.naive.permutation_exact_shapley"><code class="docutils literal notranslate"><span class="pre">permutation_exact_shapley()</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="value/shapley/naive.html#pydvl.value.shapley.naive.combinatorial_exact_shapley"><code class="docutils literal notranslate"><span class="pre">combinatorial_exact_shapley()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="value/shapley/types.html">types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="value/shapley/types.html#module-members">Module members</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode"><code class="docutils literal notranslate"><span class="pre">ShapleyMode</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.CombinatorialExact"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.CombinatorialExact</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.CombinatorialMontecarlo"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.CombinatorialMontecarlo</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.GroupTesting"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.GroupTesting</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.KNN"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.KNN</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.Owen"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.Owen</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.OwenAntithetic"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.OwenAntithetic</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.PermutationExact"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.PermutationExact</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.PermutationMontecarlo"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.PermutationMontecarlo</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.TruncatedMontecarlo"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.TruncatedMontecarlo</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="value/shapley/types.html#pydvl.value.shapley.types.PermutationBreaker"><code class="docutils literal notranslate"><span class="pre">PermutationBreaker</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="value/shapley/types.html#pydvl.value.shapley.types.ValueStopper"><code class="docutils literal notranslate"><span class="pre">ValueStopper</span></code></a></li>
 </ul>
 </li>
 </ul>

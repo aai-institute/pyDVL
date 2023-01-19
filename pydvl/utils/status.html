@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="actor" href="parallel/actor.html" /><link rel="prev" title="numeric" href="numeric.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="types" href="types.html" /><link rel="prev" title="progress" href="progress.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
-        <title>parallel - pyDVL 0.4.1.dev0 documentation</title>
+        <title>status - pyDVL 0.4.1.dev0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/tooltipster.custom.css" />
@@ -147,7 +147,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -214,14 +214,14 @@
 <li class="toctree-l3"><a class="reference internal" href="config.html">config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="dataset.html">dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="numeric.html">numeric</a></li>
-<li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">parallel</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="parallel.html">parallel</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="parallel/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="parallel/backend.html">backend</a></li>
 <li class="toctree-l4"><a class="reference internal" href="parallel/map_reduce.html">map_reduce</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="progress.html">progress</a></li>
-<li class="toctree-l3"><a class="reference internal" href="status.html">status</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">status</a></li>
 <li class="toctree-l3"><a class="reference internal" href="types.html">types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="utility.html">utility</a></li>
 </ul>
@@ -278,56 +278,151 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <section id="module-pydvl.utils.parallel">
-<span id="parallel"></span><h1>parallel<a class="headerlink" href="#module-pydvl.utils.parallel" title="Permalink to this heading"></a></h1>
-<p class="rubric">Modules in this package</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="parallel/actor.html">actor</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="parallel/actor.html#module-members">Module members</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.RayActorWrapper"><code class="docutils literal notranslate"><span class="pre">RayActorWrapper</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator"><code class="docutils literal notranslate"><span class="pre">Coordinator</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.add_results"><code class="docutils literal notranslate"><span class="pre">Coordinator.add_results()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.is_done"><code class="docutils literal notranslate"><span class="pre">Coordinator.is_done()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.get_results"><code class="docutils literal notranslate"><span class="pre">Coordinator.get_results()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.check_done"><code class="docutils literal notranslate"><span class="pre">Coordinator.check_done()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Worker"><code class="docutils literal notranslate"><span class="pre">Worker</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Worker.run"><code class="docutils literal notranslate"><span class="pre">Worker.run()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="parallel/backend.html">backend</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="parallel/backend.html#module-members">Module members</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="parallel/backend.html#pydvl.utils.parallel.backend.init_parallel_backend"><code class="docutils literal notranslate"><span class="pre">init_parallel_backend()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="parallel/map_reduce.html">map_reduce</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="parallel/map_reduce.html#module-members">Module members</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob"><code class="docutils literal notranslate"><span class="pre">MapReduceJob</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.map"><code class="docutils literal notranslate"><span class="pre">MapReduceJob.map()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.reduce"><code class="docutils literal notranslate"><span class="pre">MapReduceJob.reduce()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.n_jobs"><code class="docutils literal notranslate"><span class="pre">MapReduceJob.n_jobs</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
+          <section id="module-pydvl.utils.status">
+<span id="status"></span><h1>status<a class="headerlink" href="#module-pydvl.utils.status" title="Permalink to this heading"></a></h1>
+<hr class="docutils" />
+<section id="module-members">
+<h2>Module members<a class="headerlink" href="#module-members" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.utils.status.Status">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/status.py#L4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.status.Status" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Status of a computation.</p>
+<p>Statuses can be combined using bitwise or (<code class="docutils literal notranslate"><span class="pre">|</span></code>) and bitwise and (<code class="docutils literal notranslate"><span class="pre">&amp;</span></code>) to
+get the status of a combined computation. For example, if we have two
+computations, one that has converged and one that has failed, then the
+combined status is <code class="docutils literal notranslate"><span class="pre">Status.Converged</span> <span class="pre">|</span> <span class="pre">Status.Failed</span> <span class="pre">==</span> <span class="pre">Status.Converged</span></code>,
+but <code class="docutils literal notranslate"><span class="pre">Status.Converged</span> <span class="pre">&amp;</span> <span class="pre">Status.Failed</span> <span class="pre">==</span> <span class="pre">Status.Failed</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">OR</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>The result of bitwise or-ing two valuation statuses with <code class="docutils literal notranslate"><span class="pre">|</span></code> is given
+by the following table:</p>
+<div class="table-wrapper docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>P</p></th>
+<th class="head"><p>C</p></th>
+<th class="head"><p>F</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>P</p></td>
+<td><p>P</p></td>
+<td><p>C</p></td>
+<td><p>P</p></td>
+</tr>
+<tr class="row-odd"><td><p>C</p></td>
+<td><p>C</p></td>
+<td><p>C</p></td>
+<td><p>C</p></td>
+</tr>
+<tr class="row-even"><td><p>F</p></td>
+<td><p>P</p></td>
+<td><p>C</p></td>
+<td><p>F</p></td>
+</tr>
+</tbody>
+</table>
 </div>
+<p>where P = Pending, C = Converged, F = Failed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">AND</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>The result of bitwise and-ing two valuation statuses with <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> is given
+by the following table:</p>
+<div class="table-wrapper docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>P</p></th>
+<th class="head"><p>C</p></th>
+<th class="head"><p>F</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>P</p></td>
+<td><p>P</p></td>
+<td><p>P</p></td>
+<td><p>F</p></td>
+</tr>
+<tr class="row-odd"><td><p>C</p></td>
+<td><p>P</p></td>
+<td><p>C</p></td>
+<td><p>F</p></td>
+</tr>
+<tr class="row-even"><td><p>F</p></td>
+<td><p>F</p></td>
+<td><p>F</p></td>
+<td><p>F</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>where P = Pending, C = Converged, F = Failed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">NOT</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>The result of bitwise negation of a Status with <code class="docutils literal notranslate"><span class="pre">~</span></code> is <code class="docutils literal notranslate"><span class="pre">Failed</span></code> if
+the status is <code class="docutils literal notranslate"><span class="pre">Converged</span></code>, or <code class="docutils literal notranslate"><span class="pre">Converged</span></code> otherwise:</p>
+<blockquote>
+<div><p>~P == C, ~C == F, ~F == C</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Boolean casting</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>A Status evaluates to <code class="docutils literal notranslate"><span class="pre">True</span></code> iff it’s <code class="docutils literal notranslate"><span class="pre">Converged</span></code> or <code class="docutils literal notranslate"><span class="pre">MaxIterations</span></code></p>
+<blockquote>
+<div><p>bool(Status.Pending) == False
+bool(Status.Converged) == True
+bool(Status.Failed) == False</p>
+</div></blockquote>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.utils.status.Status.Pending">
+<span class="sig-name descname"><span class="pre">Pending</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'pending'</span></em><a class="headerlink" href="#pydvl.utils.status.Status.Pending" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.utils.status.Status.Converged">
+<span class="sig-name descname"><span class="pre">Converged</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'converged'</span></em><a class="headerlink" href="#pydvl.utils.status.Status.Converged" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.utils.status.Status.MaxIterations">
+<span class="sig-name descname"><span class="pre">MaxIterations</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'maximum</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">iterations</span> <span class="pre">reached'</span></em><a class="headerlink" href="#pydvl.utils.status.Status.MaxIterations" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.utils.status.Status.Failed">
+<span class="sig-name descname"><span class="pre">Failed</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'failed'</span></em><a class="headerlink" href="#pydvl.utils.status.Status.Failed" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
 </section>
 
         </article>
@@ -335,23 +430,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="parallel/actor.html">
+          <a class="next-page" href="types.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">actor</div>
+                <div class="title">types</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="numeric.html">
+          <a class="prev-page" href="progress.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">numeric</div>
+                <div class="title">progress</div>
                 
               </div>
             </a>
@@ -380,8 +475,36 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">status</a><ul>
+<li><a class="reference internal" href="#module-members">Module members</a><ul>
+<li><a class="reference internal" href="#pydvl.utils.status.Status"><code class="docutils literal notranslate"><span class="pre">Status</span></code></a><ul>
+<li><a class="reference internal" href="#pydvl.utils.status.Status.Pending"><code class="docutils literal notranslate"><span class="pre">Status.Pending</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.utils.status.Status.Converged"><code class="docutils literal notranslate"><span class="pre">Status.Converged</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.utils.status.Status.MaxIterations"><code class="docutils literal notranslate"><span class="pre">Status.MaxIterations</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.utils.status.Status.Failed"><code class="docutils literal notranslate"><span class="pre">Status.Failed</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

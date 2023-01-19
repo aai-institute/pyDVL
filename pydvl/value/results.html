@@ -221,6 +221,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../utils/progress.html">progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../utils/status.html">status</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../utils/types.html">types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../utils/utility.html">utility</a></li>
 </ul>
@@ -242,6 +243,7 @@
 <li class="toctree-l4"><a class="reference internal" href="shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="shapley/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="shapley/naive.html">naive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="shapley/types.html">types</a></li>
 </ul>
 </li>
 </ul>
@@ -294,7 +296,7 @@ indexing abilities, and conversion to <a class="reference external" href="https:
 <h2>Module members<a class="headerlink" href="#module-members" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.value.results.ValuationResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ValuationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.value.results.ValuationStatus" title="pydvl.value.results.ValuationStatus"><span class="pre">ValuationStatus</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stderr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra_values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/results.py#L78"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.results.ValuationResult" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ValuationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/status.html#pydvl.utils.status.Status" title="pydvl.utils.status.Status"><span class="pre">Status</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stderr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">str_</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra_values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/results.py#L70"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.results.ValuationResult" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></p>
 <p>Objects of this class hold the results of valuation algorithms.</p>
 <p>These include indices in the original <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code>, any data names (e.g.
@@ -350,6 +352,13 @@ iteration over the results will follow the order.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="pydvl.value.results.ValuationResult.stderr">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stderr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pydvl.value.results.ValuationResult.stderr" title="Permalink to this definition"></a></dt>
+<dd><p>The raw standard errors, unsorted. Position <cite>i</cite> in the array
+represents index <cite>i</cite> of the data.</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="pydvl.value.results.ValuationResult.indices">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">indices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pydvl.value.results.ValuationResult.indices" title="Permalink to this definition"></a></dt>
 <dd><p>The indices for the values, possibly sorted.
@@ -359,7 +368,7 @@ If the object is unsorted, then this is the same as
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pydvl.value.results.ValuationResult.status">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#pydvl.value.results.ValuationStatus" title="pydvl.value.results.ValuationStatus"><span class="pre">ValuationStatus</span></a></em><a class="headerlink" href="#pydvl.value.results.ValuationResult.status" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../utils/status.html#pydvl.utils.status.Status" title="pydvl.utils.status.Status"><span class="pre">Status</span></a></em><a class="headerlink" href="#pydvl.value.results.ValuationResult.status" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -406,33 +415,6 @@ from the range [-1, 1].</p>
 </dd>
 </dl>
 </dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="pydvl.value.results.ValuationStatus">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ValuationStatus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/results.py#L39"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.results.ValuationStatus" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>An enumeration.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.value.results.ValuationStatus.Pending">
-<span class="sig-name descname"><span class="pre">Pending</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'pending'</span></em><a class="headerlink" href="#pydvl.value.results.ValuationStatus.Pending" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.value.results.ValuationStatus.Converged">
-<span class="sig-name descname"><span class="pre">Converged</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'converged'</span></em><a class="headerlink" href="#pydvl.value.results.ValuationStatus.Converged" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.value.results.ValuationStatus.MaxIterations">
-<span class="sig-name descname"><span class="pre">MaxIterations</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'maximum</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">iterations</span> <span class="pre">reached'</span></em><a class="headerlink" href="#pydvl.value.results.ValuationStatus.MaxIterations" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.value.results.ValuationStatus.Failed">
-<span class="sig-name descname"><span class="pre">Failed</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'failed'</span></em><a class="headerlink" href="#pydvl.value.results.ValuationStatus.Failed" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -506,18 +488,12 @@ from the range [-1, 1].</p>
 <li><a class="reference internal" href="#pydvl.value.results.ValuationResult"><code class="docutils literal notranslate"><span class="pre">ValuationResult</span></code></a><ul>
 <li><a class="reference internal" href="#pydvl.value.results.ValuationResult.sort"><code class="docutils literal notranslate"><span class="pre">ValuationResult.sort()</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.value.results.ValuationResult.values"><code class="docutils literal notranslate"><span class="pre">ValuationResult.values</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.results.ValuationResult.stderr"><code class="docutils literal notranslate"><span class="pre">ValuationResult.stderr</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.value.results.ValuationResult.indices"><code class="docutils literal notranslate"><span class="pre">ValuationResult.indices</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.value.results.ValuationResult.status"><code class="docutils literal notranslate"><span class="pre">ValuationResult.status</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.value.results.ValuationResult.algorithm"><code class="docutils literal notranslate"><span class="pre">ValuationResult.algorithm</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.value.results.ValuationResult.to_dataframe"><code class="docutils literal notranslate"><span class="pre">ValuationResult.to_dataframe()</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.value.results.ValuationResult.from_random"><code class="docutils literal notranslate"><span class="pre">ValuationResult.from_random()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#pydvl.value.results.ValuationStatus"><code class="docutils literal notranslate"><span class="pre">ValuationStatus</span></code></a><ul>
-<li><a class="reference internal" href="#pydvl.value.results.ValuationStatus.Pending"><code class="docutils literal notranslate"><span class="pre">ValuationStatus.Pending</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.value.results.ValuationStatus.Converged"><code class="docutils literal notranslate"><span class="pre">ValuationStatus.Converged</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.value.results.ValuationStatus.MaxIterations"><code class="docutils literal notranslate"><span class="pre">ValuationStatus.MaxIterations</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.value.results.ValuationStatus.Failed"><code class="docutils literal notranslate"><span class="pre">ValuationStatus.Failed</span></code></a></li>
 </ul>
 </li>
 </ul>
