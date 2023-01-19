@@ -108,7 +108,7 @@ class Utility:
         cache_options: Optional[MemcachedConfig] = None,
         clone_model: bool = True,
     ):
-        self.model = model
+        self.model = self._clone_model(model)
         self.data = data
         self.default_score = default_score
         # TODO: auto-fill from known scorers ?
