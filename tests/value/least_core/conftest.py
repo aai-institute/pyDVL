@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 
 from pydvl.utils import Utility
-from pydvl.utils.utility import GlovesGameUtility, MinerGameUtility
 from pydvl.utils.status import Status
+from pydvl.utils.utility import GlovesGameUtility, MinerGameUtility
 from pydvl.value.results import ValuationResult
 
 
