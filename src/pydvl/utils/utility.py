@@ -185,14 +185,18 @@ class Utility:
     @staticmethod
     def _clone_model(model: SupervisedModel) -> SupervisedModel:
         """Clones the passed model to avoid the possibility
-        of reusing a fitted estimator"""
+        of reusing a fitted estimator
+
+        :param model: Any supervised model. Typical choices can be found at
+            https://scikit-learn.org/stable/supervised_learning.html
+        """
         try:
             model = clone(model)
         except TypeError:
             # This happens if the passed model is not an sklearn model
             # In this case, we just make a deepcopy of the model.
             model = clone(model, safe=False)
-        model = cast(model, SupervisedModel)
+        model = cast(SupervisedModel, model)
         return model
 
     @property
