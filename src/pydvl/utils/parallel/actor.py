@@ -1,7 +1,7 @@
 import abc
 import inspect
 import logging
-from typing import List, Optional
+from typing import Generic, List, Optional, TypeVar
 
 from ray import ObjectRef
 
@@ -70,19 +70,22 @@ class RayActorWrapper:
                 setattr(self, name, remote_caller(name))
 
 
-class Coordinator(abc.ABC):
+Result = TypeVar("Result")
+
+
+class Coordinator(Generic[Result], abc.ABC):
     """The coordinator has two main tasks: aggregating the results of the
     workers and terminating the process once a certain accuracy or total
     number of iterations is reached.
-
-    :param progress: Whether to display a progress bar
     """
 
+    _status: Status
+
     def __init__(self):
-        self.worker_results: List["ValuationResult"] = []
+        self.worker_results: List[Result] = []
         self._status = Status.Pending
 
-    def add_results(self, results: "ValuationResult"):
+    def add_results(self, results: Result):
         """Used by workers to report their results. Stores the results directly
         into :attr:`worker_results`
 
@@ -99,7 +102,7 @@ class Coordinator(abc.ABC):
         return bool(self._status)
 
     @abc.abstractmethod
-    def accumulate(self) -> "ValuationResult":
+    def accumulate(self) -> Result:
         """Aggregates the results of the different workers."""
         raise NotImplementedError()
 
