@@ -83,14 +83,14 @@ class ValuationResult(collections.abc.Sequence):
     this object is sorted by descending or ascending value, respectively. If
     unsorted, ``values[0]`` returns a ``ValueItem`` for index 0.
 
-    :param algorithm: The method used.
-    :param status: The end status of the algorithm.
     :param values: An array of values, data indices correspond to positions in
         the array.
     :param stderr: An optional array of standard errors in the computation of
         each value.
     :param data_names: Names for the data points. Defaults to index numbers
         if not set.
+    :param algorithm: The method used.
+    :param status: The end status of the algorithm.
     :param sort: Whether to sort the indices by ascending value. See above how
         this affects usage as an iterable or sequence.
     :param extra_values: Additional values that can be passed as keyword arguments.
@@ -104,24 +104,26 @@ class ValuationResult(collections.abc.Sequence):
     _data: Dataset
     _names: NDArray[np.str_]
     _stderr: NDArray[np.float_]
-    _algorithm: str  # TODO: BaseValuator
-    _status: Status  # TODO: Maybe? BaseValuator.Status
+    _algorithm: str
+    _status: Status
     # None for unsorted, True for ascending, False for descending
     _sort_order: Optional[bool]
     _extra_values: dict
 
     def __init__(
         self,
-        algorithm: str,  # BaseValuator,
-        status: Status,  # Valuation.Status,
         values: NDArray[np.float_],
         stderr: Optional[NDArray[np.float_]] = None,
         data_names: Optional[Union[Sequence[str], NDArray[np.str_]]] = None,
+        algorithm: str = "",
+        status: Status = Status.Pending,
         sort: bool = True,
         **extra_values,
     ):
         if stderr is not None and len(stderr) != len(values):
             raise ValueError("Lengths of values and stderr do not match")
+        if data_names is not None and len(data_names) != len(values):
+            raise ValueError("Lengths of values and data_names do not match")
 
         self._algorithm = algorithm
         self._status = status
@@ -270,8 +272,12 @@ class ValuationResult(collections.abc.Sequence):
         repr_string += ")"
         return repr_string
 
-    def __add__(self, other) -> "ValuationResult":
+    def __add__(self, other: "ValuationResult") -> "ValuationResult":
         """Adds two ValuationResults.
+
+        The values must have been computed with the same algorithm. An exception
+        to this is if the algorithm name is "" or the values are an empty array,
+        in which cases the values are taken from the second argument.
 
         .. warning::
            Abusing this will introduce numerical errors, since the sample means
@@ -283,17 +289,27 @@ class ValuationResult(collections.abc.Sequence):
         the right one. The ``algorithm`` string is carried over if both terms
         have the same one or concatenated.
 
-        .. fixme::
-           Arbitrary extra arguments aren't handled.
+        .. warning::
+           FIXME: Arbitrary ``extra_values`` aren't handled.
 
         """
 
-        if (
-            not isinstance(other, ValuationResult)
-            or not hasattr(self, "counts")
-            or not hasattr(other, "counts")
-        ):
-            raise NotImplementedError("Cannot add valuation results without count data")
+        if not isinstance(other, ValuationResult):
+            raise NotImplementedError(f"Cannot add ValuationResult with {type(other)}")
+        if self.algorithm == "" and len(self.values) == 0:  # empty result
+            return other
+        if self.algorithm != other.algorithm:
+            raise ValueError(
+                f"Cannot add results from different algorithms: "
+                f"{self.algorithm} and {other.algorithm}"
+            )
+        if self.values.shape != other.values.shape:
+            raise ValueError(
+                f"Cannot add results with different shapes: "
+                f"{self.values.shape} and {other.values.shape}"
+            )
+        if not hasattr(self, "counts") or not hasattr(other, "counts"):
+            raise ValueError("Cannot add valuation results without count data")
 
         n, m = self.counts, other.counts
         xn, xm = self._values, other._values
@@ -303,13 +319,8 @@ class ValuationResult(collections.abc.Sequence):
         # Sample variance of n+m samples from two sample variances of n and m samples
         snm = (n * (sn + xn**2) + m * (sm + xm**2)) / (n + m) - xnm**2
 
-        algorithm = (
-            self._algorithm
-            if self._algorithm == other._algorithm
-            else self._algorithm + " + " + other._algorithm
-        )
         return ValuationResult(
-            algorithm=algorithm,
+            algorithm=self.algorithm,
             status=self.status & other.status,
             values=xnm,
             stderr=np.sqrt(snm / (n + m)),
@@ -361,4 +372,27 @@ class ValuationResult(collections.abc.Sequence):
             algorithm="random",
             status=Status.Converged,
             values=values,
+        )
+
+    @classmethod
+    def empty(cls, algorithm: str = "", n_samples: int = 0) -> "ValuationResult":
+        """Creates an empty :class:`ValuationResult` object.
+
+        Empty results are characterised by having an empty array of values and
+        an empty algorithm name. When another result is added to an empty one,
+        the empty one is ignored. Alternatively, one can set the algorithm name
+        and length of the array of values in this function. This makes creating
+        subsequent ValuationResults to add to it a bit less verbose (since the
+        algorithm name does not have to be repeated).
+
+        :param algorithm: Name of the algorithm used to compute the values
+        :param n_samples: Number of samples used to compute the values
+        :return: An instance of :class:`ValuationResult`
+        """
+        return cls(
+            algorithm=algorithm,
+            status=Status.Pending,
+            values=np.zeros(n_samples),
+            stderr=np.zeros(n_samples),
+            counts=np.zeros(n_samples, dtype=int),
         )
