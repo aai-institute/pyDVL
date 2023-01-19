@@ -70,6 +70,13 @@ def _(v: np.ndarray, *, timeout: Optional[float] = None) -> NDArray:
     return v
 
 
+# FIXME: This is very strange. Not adding a special case for strings results
+#  in infinite recursion.
+@_get_value.register
+def _(v: str, *, timeout: Optional[float] = None) -> str:
+    return v
+
+
 @_get_value.register
 def _(v: Iterable, *, timeout: Optional[float] = None) -> List[Any]:
     return [_get_value(x, timeout=timeout) for x in v]
