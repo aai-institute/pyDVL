@@ -8,7 +8,7 @@ Please refer to :ref:`data valuation` for an overview of Shapley Data value.
 from typing import Optional, cast
 
 from pydvl.utils import Utility
-from pydvl.value.convergence import max_iterations
+from pydvl.value.convergence import ConvergenceCheck, max_iterations
 from pydvl.value.results import ValuationResult
 from pydvl.value.shapley.gt import group_testing_shapley
 from pydvl.value.shapley.knn import knn_shapley
@@ -100,9 +100,14 @@ def compute_shapley_values(
     if mode not in list(ShapleyMode):
         raise ValueError(f"Invalid value encountered in {mode=}")
 
+    # FIXME: always require some convergence criteria
+
     convergence_check = max_iterations(n_iterations)
-    if kwargs.get("convergence_check"):
-        convergence_check |= kwargs.get("convergence_check")
+    if kwargs.get("convergence_check") is not None:
+        cc = kwargs.pop("convergence_check")
+        if not isinstance(cc, ConvergenceCheck):
+            raise TypeError(f"Expected {cc=} to be of type ConvergenceCheck")
+        convergence_check |= cc
 
     if mode == ShapleyMode.TruncatedMontecarlo:
         return truncated_montecarlo_shapley(
@@ -125,7 +130,7 @@ def compute_shapley_values(
                 "n_iterations cannot be None for Permutation Montecarlo Shapley"
             )
         return permutation_montecarlo_shapley(
-            u, n_iterations=n_iterations, n_jobs=n_jobs, progress=progress
+            u, convergence_check=convergence_check, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.CombinatorialExact:
         return combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)

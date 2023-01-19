@@ -36,6 +36,7 @@ import math
 import operator
 from enum import Enum
 from functools import reduce
+from itertools import count
 from time import sleep
 from typing import Iterable, NamedTuple, Optional, Sequence
 from warnings import warn
@@ -144,6 +145,7 @@ def truncated_montecarlo_shapley(
 def _permutation_montecarlo_shapley(
     u: Utility,
     *,
+    convergence_check: ConvergenceCheck,
     permutation_breaker: Optional[PermutationBreaker] = None,
     algorithm_name: str = "permutation_montecarlo_shapley",
     progress: bool = False,
@@ -156,10 +158,11 @@ def _permutation_montecarlo_shapley(
     sampled permutations.
 
     :param u: Utility object with model, data, and scoring function
-    :param algorithm_name: For the results object. Used internally by different
-        variants of Shapley using this subroutine
+    :param convergence_check: Check on the results which decides when to stop
     :param permutation_breaker: A callable which decides whether to interrupt
         processing a permutation and set all subsequent marginals to zero.
+    :param algorithm_name: For the results object. Used internally by different
+        variants of Shapley using this subroutine
     :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress (e.g. to place progres bars)
     :return: An object with the results
@@ -167,9 +170,10 @@ def _permutation_montecarlo_shapley(
     n = len(u.data)
     values = np.zeros(shape=n)
     variances = np.zeros_like(values)
-    counts = np.zeros(shape=n, dtype=np.int_)
-    status = None
-    for _ in maybe_progress(np.inf, progress, position=job_id):
+    result = ValuationResult.empty(algorithm=algorithm_name, n_samples=n)
+
+    for _ in maybe_progress(count(), progress, position=job_id):  # infinite loop
+        counts = np.zeros(shape=n, dtype=np.int_)
         prev_score = 0.0
         permutation = np.random.permutation(u.data.indices)
         permutation_done = False
@@ -184,22 +188,23 @@ def _permutation_montecarlo_shapley(
             )
             counts[idx] += 1
             prev_score = score
-            if permutation_done or (
-                permutation_breaker and permutation_breaker(idx, values)
+            if (
+                not permutation_done
+                and permutation_breaker
+                and permutation_breaker(idx, values)
             ):
                 permutation_done = True
 
-        # if early_stopper and early_stopper(values, variances):
-        #     status = Status.Converged
+        # FIXME: shoe-horning convergence check into this function is bad
+        result += ValuationResult(
+            values=values,
+            stderr=np.sqrt(variances / np.maximum(1, counts)),
+            counts=counts,
+        )
 
-    return ValuationResult(
-        algorithm=algorithm_name,
-        status=status or Status.MaxIterations,
-        values=values,
-        stderr=np.sqrt(variances / np.maximum(1, counts)),
-        counts=counts,
-        data_names=u.data.data_names,
-    )
+        if convergence_check(result):
+            break
+    return result
 
 
 def permutation_montecarlo_shapley(

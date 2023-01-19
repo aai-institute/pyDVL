@@ -150,6 +150,7 @@ class ShapleyWorker(Worker):
 
         return _permutation_montecarlo_shapley(
             self.u,
+            convergence_check=max_iterations(1),
             permutation_breaker=self.permutation_breaker,
             algorithm_name="truncated_montecarlo_shapley",
         )
