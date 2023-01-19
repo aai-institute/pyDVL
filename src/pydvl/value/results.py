@@ -8,6 +8,7 @@ indexing abilities, and conversion to `pandas DataFrames
 <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
 """
 import collections.abc
+import logging
 from dataclasses import dataclass
 from functools import total_ordering
 from typing import (
@@ -33,6 +34,8 @@ except ImportError:
     pass
 
 __all__ = ["ValuationResult"]
+
+logger = logging.getLogger(__name__)
 
 
 @total_ordering
@@ -298,6 +301,8 @@ class ValuationResult(collections.abc.Sequence):
             raise NotImplementedError(f"Cannot add ValuationResult with {type(other)}")
         if self.algorithm == "" and len(self.values) == 0:  # empty result
             return other
+        if other.algorithm == "" and len(other.values) == 0:  # empty result
+            return self
         if self.algorithm != other.algorithm:
             raise ValueError(
                 f"Cannot add results from different algorithms: "
@@ -318,6 +323,14 @@ class ValuationResult(collections.abc.Sequence):
         xnm = (n * xn + m * xm) / (n + m)
         # Sample variance of n+m samples from two sample variances of n and m samples
         snm = (n * (sn + xn**2) + m * (sm + xm**2)) / (n + m) - xnm**2
+
+        if np.any(snm < 0):
+            if np.any(snm < -1e-6):
+                logger.warning(
+                    "Numerical error in standard error computation. "
+                    f"Negative sample variances clipped to 0 in {snm}"
+                )
+            snm[np.where(snm < 0)] = 0
 
         return ValuationResult(
             algorithm=self.algorithm,
