@@ -408,7 +408,7 @@ class GroupedDataset(Dataset):
         train_size: float = 0.8,
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
-        data_groups: Optional[List] = None,
+        data_groups: Optional[Sequence] = None,
     ) -> "GroupedDataset":
         """Constructs a :class:`GroupedDataset` object from an sklearn bunch as returned by the
         `load_*` functions in `sklearn toy datasets
@@ -444,7 +444,7 @@ class GroupedDataset(Dataset):
         train_size: float = 0.8,
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
-        data_groups: Optional[List] = None,
+        data_groups: Optional[Sequence] = None,
     ) -> "Dataset":
         """.. versionadded:: 0.4.0
 

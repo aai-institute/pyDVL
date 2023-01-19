@@ -35,11 +35,9 @@ def test_creating_dataset_from_x_y_arrays(train_size):
 
 def test_creating_grouped_dataset_from_sklearn(train_size):
     data = load_wine()
-    data_groups = (
-        np.random.randint(low=0, high=3, size=int(train_size * len(data.data)))
-        .flat()
-        .tolist()
-    )
+    data_groups = np.random.randint(
+        low=0, high=3, size=int(train_size * len(data.data))
+    ).flatten()
     n_groups = len(np.unique(data_groups))
     dataset = GroupedDataset.from_sklearn(
         data, data_groups=data_groups, train_size=train_size
@@ -53,11 +51,9 @@ def test_creating_grouped_dataset_subsclassfrom_sklearn(train_size):
     class TestGroupedDataset(GroupedDataset):
         ...
 
-    data_groups = (
-        np.random.randint(low=0, high=3, size=int(train_size * len(data.data)))
-        .flat()
-        .tolist()
-    )
+    data_groups = np.random.randint(
+        low=0, high=3, size=int(train_size * len(data.data))
+    ).flatten()
     n_groups = len(np.unique(data_groups))
     dataset = TestGroupedDataset.from_sklearn(
         data, data_groups=data_groups, train_size=train_size
@@ -68,9 +64,9 @@ def test_creating_grouped_dataset_subsclassfrom_sklearn(train_size):
 
 def test_creating_grouped_dataset_from_x_y_arrays(train_size):
     X, y = make_classification()
-    data_groups = (
-        np.random.randint(low=0, high=3, size=int(train_size * len(X))).flat().tolist()
-    )
+    data_groups = np.random.randint(
+        low=0, high=3, size=int(train_size * len(X))
+    ).flatten()
     n_groups = len(np.unique(data_groups))
     dataset = GroupedDataset.from_arrays(
         X, y, data_groups=data_groups, train_size=train_size
