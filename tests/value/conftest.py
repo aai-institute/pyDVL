@@ -1,11 +1,14 @@
 import numpy as np
 import pytest
+import ray
 from numpy.typing import NDArray
+from ray.cluster_utils import Cluster
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
 from pydvl.utils import Dataset, SupervisedModel, Utility
+from pydvl.utils.config import ParallelConfig
 from pydvl.value import ValuationResult, ValuationStatus
 
 from . import polynomial
@@ -64,7 +67,12 @@ def dummy_utility(num_samples):
             return self.utility
 
     return Utility(
-        DummyModel(data), data, score_range=(0, x.sum() / x.max()), enable_cache=False
+        DummyModel(data),
+        data,
+        score_range=(0, x.sum() / x.max()),
+        catch_errors=False,
+        show_warnings=True,
+        enable_cache=False,
     )
 
 
@@ -82,3 +90,24 @@ def analytic_shapley(dummy_utility):
         status=ValuationStatus.Converged,
     )
     return dummy_utility, result
+
+
+@pytest.fixture(scope="module", params=["sequential", "ray-local", "ray-external"])
+def parallel_config(request):
+    if request.param == "sequential":
+        pytest.skip("Skipping 'sequential' because it doesn't work with TMC")
+        yield ParallelConfig(backend=request.param)
+    elif request.param == "ray-local":
+        yield ParallelConfig(backend="ray")
+        ray.shutdown()
+    elif request.param == "ray-external":
+        # Starts a head-node for the cluster.
+        cluster = Cluster(
+            initialize_head=True,
+            head_node_args={
+                "num_cpus": 4,
+            },
+        )
+        yield ParallelConfig(backend="ray", address=cluster.address)
+        ray.shutdown()
+        cluster.shutdown()

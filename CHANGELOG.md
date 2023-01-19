@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- **Bug fix and minor imporvements**: Fixes bug in
+  Truncated Monte Carlo Shapley (TMC) method  when using a remote Ray cluster,
+  raises an error if a user attempts to use TMC with the dummy sequential
+  parallel backend,
+  clone model inside Utility before fitting and scoring it by default
+  and add boolean `clone_before_fit` argument to disable it if needed,
+  catch all warnings in Utility when show_warnings is set to False,
+  Add Miner and Gloves toy games utilities
+  [PR #247](https://github.com/appliedAI-Initiative/pyDVL/pull/247)
+
 ## 0.4.0 - 🏭💥 New algorithms and more breaking changes
 
 - GH action to mark issues as stale
