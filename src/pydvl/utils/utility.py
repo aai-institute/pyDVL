@@ -41,9 +41,19 @@ class Utility:
     the computation of :ref:`Shapley values<Shapley>` and
     :ref:`Least Core values<Least Core>`.
 
-    Since evaluating the scoring function requires retraining the model, this
-    class wraps it and caches the results of each execution. Caching is
-    available both locally and across nodes, but must always be enabled for your
+    The Utility expect the model to fulfill
+    the :class:`pydvl.utils.types.SupervisedModel` interface
+    i.e. to have a `fit()`, `predict()`, and `score()` methods.
+
+    When calling the utility, the model will be
+    `cloned <https://scikit-learn.org/stable/modules/generated/sklearn.base.clone.html>`_
+    if it is a Sci-Kit Learn model, otherwise a copy is created using `deepcopy()`
+    from the builtin `copy <https://docs.python.org/3/library/copy.html>`_ module.
+
+    Since evaluating the scoring function requires retraining the model
+    and that can be time consuming, this class wraps it and caches
+    the results of each execution. Caching is available both locally
+    and across nodes, but must always be enabled for your
     project first, see :ref:`how to set up the cache<caching setup>`.
 
     :param model: Any supervised model. Typical choices can be found at
@@ -129,8 +139,9 @@ class Utility:
         return utility
 
     def _utility(self, indices: FrozenSet) -> float:
-        """Fits the model on a subset of the training data and scores it on the
-        test data. If the object is constructed with `enable_cache = True`,
+        """Clones the model, fits it on a subset of the training data
+        and scores it on the test data.
+        If the object is constructed with `enable_cache = True`,
         results are memoized to avoid duplicate computation. This is useful in
         particular when computing utilities of permutations of indices or when
         randomly sampling from the powerset of indices.
