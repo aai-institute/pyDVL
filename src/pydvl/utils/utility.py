@@ -16,7 +16,7 @@ for testing and for demonstration purposes.
 """
 import logging
 import warnings
-from typing import Dict, FrozenSet, Iterable, Optional, Tuple, Union
+from typing import Dict, FrozenSet, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -76,6 +76,7 @@ class Utility:
     :param show_warnings: True for printing warnings fit fails.
     :param enable_cache: If True, use memcached for memoization.
     :param cache_options: Optional configuration object for memcached.
+    :param clone_model: If True, the model will be cloned before calling `fit()`.
 
     :Example:
 
@@ -105,6 +106,7 @@ class Utility:
         show_warnings: bool = False,
         enable_cache: bool = False,
         cache_options: Optional[MemcachedConfig] = None,
+        clone_model: bool = True,
     ):
         self.model = model
         self.data = data
@@ -114,10 +116,8 @@ class Utility:
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
         self.enable_cache = enable_cache
-        if cache_options is None:
-            self.cache_options: MemcachedConfig = MemcachedConfig()
-        else:
-            self.cache_options = cache_options
+        self.cache_options: MemcachedConfig = cache_options or MemcachedConfig()
+        self.clone_model = clone_model
         self._signature = serialize((hash(model), hash(data), hash(scoring)))
         self.scorer = check_scoring(self.model, scoring)
         self._initialize_utility_wrapper()
@@ -160,18 +160,15 @@ class Utility:
 
         x_train, y_train = self.data.get_training_data(list(indices))
         x_test, y_test = self.data.get_test_data(list(indices))
+
         with warnings.catch_warnings():
             if not self.show_warnings:
                 warnings.simplefilter("ignore")
             try:
-                # Clone the model to avoid the possibility
-                # of reusing a fitted estimator
-                try:
-                    model = clone(self.model)
-                except TypeError:
-                    # This happens if the passed model is not an sklearn model
-                    # In this case, we just make a deepcopy of the model.
-                    model = clone(self.model, safe=False)
+                if self.clone_model:
+                    model = self._clone_model(self.model)
+                else:
+                    model = self.model
                 model.fit(x_train, y_train)
                 score = float(self.scorer(model, x_test, y_test))
                 # Some scorers raise exceptions if they return NaNs, some might not
@@ -184,6 +181,19 @@ class Utility:
                     warnings.warn(str(e), RuntimeWarning)
                     return self.default_score
                 raise
+
+    @staticmethod
+    def _clone_model(model: SupervisedModel) -> SupervisedModel:
+        """Clones the passed model to avoid the possibility
+        of reusing a fitted estimator"""
+        try:
+            model = clone(model)
+        except TypeError:
+            # This happens if the passed model is not an sklearn model
+            # In this case, we just make a deepcopy of the model.
+            model = clone(model, safe=False)
+        model = cast(model, SupervisedModel)
+        return model
 
     @property
     def signature(self):
