@@ -76,7 +76,7 @@ class Utility:
     :param show_warnings: True for printing warnings fit fails.
     :param enable_cache: If True, use memcached for memoization.
     :param cache_options: Optional configuration object for memcached.
-    :param clone_model: If True, the model will be cloned before calling `fit()`.
+    :param clone_before_fit: If True, the model will be cloned before calling `fit()`.
 
     :Example:
 
@@ -106,7 +106,7 @@ class Utility:
         show_warnings: bool = False,
         enable_cache: bool = False,
         cache_options: Optional[MemcachedConfig] = None,
-        clone_model: bool = True,
+        clone_before_fit: bool = True,
     ):
         self.model = self._clone_model(model)
         self.data = data
@@ -117,7 +117,7 @@ class Utility:
         self.show_warnings = show_warnings
         self.enable_cache = enable_cache
         self.cache_options: MemcachedConfig = cache_options or MemcachedConfig()
-        self.clone_model = clone_model
+        self.clone_before_fit = clone_before_fit
         self._signature = serialize((hash(model), hash(data), hash(scoring)))
         self.scorer = check_scoring(self.model, scoring)
         self._initialize_utility_wrapper()
@@ -165,7 +165,7 @@ class Utility:
             if not self.show_warnings:
                 warnings.simplefilter("ignore")
             try:
-                if self.clone_model:
+                if self.clone_before_fit:
                     model = self._clone_model(self.model)
                 else:
                     model = self.model
