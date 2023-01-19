@@ -125,10 +125,6 @@ def compute_shapley_values(
             u, n_iterations=n_iterations, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.PermutationMontecarlo:
-        if n_iterations is None:
-            raise ValueError(
-                "n_iterations cannot be None for Permutation Montecarlo Shapley"
-            )
         return permutation_montecarlo_shapley(
             u, convergence_check=convergence_check, n_jobs=n_jobs, progress=progress
         )
