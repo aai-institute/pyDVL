@@ -119,7 +119,7 @@ def truncated_montecarlo_shapley(
     total_utility = u(u.data.indices)
 
     def permutation_breaker(idx: int, marginals: NDArray[np.float_]) -> bool:
-        return np.abs(marginals[idx] - total_utility) < 0.01  # FIXME
+        return float(np.abs(marginals[idx] - total_utility)) < 0.01  # FIXME
 
     workers = [
         get_shapley_worker(  # type: ignore
@@ -230,7 +230,7 @@ def permutation_montecarlo_shapley(
     total_utility = u(u.data.indices)
 
     def permutation_breaker(idx: int, marginals: NDArray[np.float_]) -> bool:
-        return marginals[idx] < 0.01 * total_utility
+        return float(marginals[idx]) < 0.01 * total_utility
 
     map_reduce_job: MapReduceJob[Utility, ValuationResult] = MapReduceJob(
         u,
