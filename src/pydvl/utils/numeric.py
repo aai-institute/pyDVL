@@ -4,7 +4,7 @@ library.
 """
 
 from itertools import chain, combinations
-from typing import Collection, Generator, Iterator, Optional, Tuple, TypeVar
+from typing import Collection, Generator, Iterator, Optional, Tuple, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -13,9 +13,10 @@ from scipy.special import expit
 from pydvl.utils.types import compose_score
 
 FloatOrArray = TypeVar("FloatOrArray", float, NDArray[np.float_])
+IntOrArray = TypeVar("IntOrArray", int, NDArray[np.int_])
 
 __all__ = [
-    "get_running_avg_variance",
+    "running_moments",
     "linear_regression_analytical_derivative_d2_theta",
     "linear_regression_analytical_derivative_d_theta",
     "linear_regression_analytical_derivative_d_x_d_theta",
@@ -223,17 +224,27 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     return full_derivative / N  # type: ignore
 
 
-def get_running_avg_variance(
+# FIXME: FloatOrArray doesn't really work
+def running_moments(
     previous_avg: FloatOrArray,
     previous_variance: FloatOrArray,
     new_value: FloatOrArray,
-    count: int,
-) -> Tuple[FloatOrArray, FloatOrArray]:
+    count: IntOrArray,
+) -> Tuple:  # [FloatOrArray, FloatOrArray]:
     """Uses Welford's algorithm to calculate the running average and variance of
      a set of numbers.
 
     See `Welford's algorithm in wikipedia
     <https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm>`_
+
+    .. warning::
+       This is not really using Welford's correction for numerical stability
+       for the variance. (FIXME)
+
+    .. todo::
+       This could be generalised to arbitrary moments. See `this paper
+       <https://www.osti.gov/biblio/1028931>`_
+
 
     :param previous_avg: average value at previous step
     :param previous_variance: variance at previous step
@@ -241,7 +252,8 @@ def get_running_avg_variance(
     :param count: number of points seen so far
     :return: new_average, new_variance, calculated with the new number
     """
-    new_average = (new_value + count * previous_avg) / (count + 1)
+    # broadcasted operations seem not to be supported by mypy, so we ignore the type
+    new_average = (new_value + count * previous_avg) / (count + 1)  # type: ignore
     new_variance = previous_variance + (
         (new_value - previous_avg) * (new_value - new_average) - previous_variance
     ) / (count + 1)

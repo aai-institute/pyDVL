@@ -1,6 +1,6 @@
 import pytest
 
-from pydvl.value import ValuationStatus
+from pydvl.utils.status import Status
 from pydvl.value.shapley.gt import group_testing_shapley
 
 from .. import check_values
@@ -15,5 +15,5 @@ def test_group_testing_shapley(
 ):
     u, exact_values = analytic_shapley
     values = fun(u, n_iterations=int(n_iterations), progress=False, n_jobs=1, **kwargs)
-    assert values.status == ValuationStatus.Converged
+    assert values.status == Status.Converged
     check_values(values, exact_values, atol=atol)

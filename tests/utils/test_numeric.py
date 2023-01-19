@@ -6,6 +6,7 @@ from pydvl.utils.numeric import (
     random_matrix_with_condition_number,
     random_powerset,
     random_subset_of_size,
+    running_moments,
 )
 
 
@@ -106,3 +107,34 @@ def test_random_matrix_with_condition_number(n, cond, exception):
             np.linalg.cholesky(mat)
         except np.linalg.LinAlgError:
             pytest.fail("Matrix is not positive definite")
+
+
+def test_running_moments():
+    """Test that running moments are correct."""
+    n_samples, n_values = 15, 1000
+    max_init_values = 100
+    # Generate sequences of varying lengths and compute their moments
+    values = [
+        np.random.randn(np.random.randint(0, max_init_values)) for _ in range(n_samples)
+    ]
+    means = np.array([np.mean(v) for v in values])
+    variances = np.array([np.var(v) for v in values])
+    # Each of the n_samples values has been computed from a sequence of length counts[i]
+    counts = np.array([len(v) for v in values], dtype=np.int_)
+
+    # successively add values to the running moments
+    data = np.random.randn(n_samples, n_values)
+    for i in range(n_values):
+        new_values = data[:, i]
+        new_means, new_variances = running_moments(means, variances, new_values, counts)
+        means, variances = new_means, new_variances
+        counts += 1
+
+        values = [
+            np.concatenate([values[j], [new_values[j]]]) for j in range(n_samples)
+        ]
+
+        true_means = [np.mean(vv) for vv in values]
+        true_variances = [np.var(vv) for vv in values]
+        assert np.allclose(means, true_means)
+        assert np.allclose(variances, true_variances)

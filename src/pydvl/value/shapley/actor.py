@@ -13,11 +13,12 @@ from typing import Optional, Tuple, Union, cast
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import Utility, get_running_avg_variance, maybe_progress
-from pydvl.utils.config import ParallelConfig
-from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
-from pydvl.utils.parallel.backend import RayParallelBackend, init_parallel_backend
-from pydvl.value.results import ValuationStatus
+from ...utils import maybe_progress, running_moments
+from ...utils.config import ParallelConfig
+from ...utils.parallel.actor import Coordinator, RayActorWrapper, Worker
+from ...utils.parallel.backend import RayParallelBackend, init_parallel_backend
+from ...utils.status import Status
+from ...utils.utility import Utility
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
 
@@ -80,7 +81,7 @@ class ShapleyCoordinator(Coordinator):
             )
         self.value_tolerance = value_tolerance
         self.n_iterations = n_iterations
-        self._status = ValuationStatus.Pending
+        self._status = Status.Pending
 
     def get_results(self) -> Tuple["NDArray", "NDArray"]:
         """Aggregates the results of the different workers
@@ -139,17 +140,17 @@ class ShapleyCoordinator(Coordinator):
             ):
                 self._is_done = True
                 logger.info("Converged")
-                self._status = ValuationStatus.Converged
+                self._status = Status.Converged
             elif (
                 self.n_iterations is not None
                 and self._total_iterations > self.n_iterations
             ):
                 self._is_done = True
                 logger.info(f"Max iterations ({self.n_iterations}) reached")
-                self._status = ValuationStatus.MaxIterations
+                self._status = Status.MaxIterations
         return self._is_done
 
-    def status(self) -> ValuationStatus:
+    def status(self) -> Status:
         return self._status
 
 
@@ -169,7 +170,11 @@ class ShapleyWorker(Worker):
         progress: bool = False,
     ):
         """A worker calculates Shapley values using the permutation definition
-         and report the results to the coordinator.
+         and reports the results to the coordinator.
+
+         To implement early stopping, workers can be signaled by the
+         :class:`~pydvl.value.shapley.actor.ShapleyCoordinator` before they are
+         done with their work package
 
         :param u: Utility object with model, data, and scoring function
         :param coordinator: worker results will be pushed to this coordinator
@@ -227,7 +232,7 @@ class ShapleyWorker(Worker):
                     self._var_values = np.zeros_like(self._avg_values)
                     self._iteration_count = 1
                 else:
-                    self._avg_values, self._var_values = get_running_avg_variance(
+                    self._avg_values, self._var_values = running_moments(
                         self._avg_values,
                         self._var_values,
                         values,

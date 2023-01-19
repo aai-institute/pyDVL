@@ -9,7 +9,6 @@ indexing abilities, and conversion to `pandas DataFrames
 """
 import collections.abc
 from dataclasses import dataclass
-from enum import Enum
 from functools import total_ordering
 from typing import (
     Any,
@@ -26,21 +25,14 @@ from typing import (
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import Dataset
+from ..utils import Dataset, Status
 
 try:
     import pandas  # Try to import here for the benefit of mypy
 except ImportError:
     pass
 
-__all__ = ["ValuationResult", "ValuationStatus"]
-
-
-class ValuationStatus(Enum):
-    Pending = "pending"
-    Converged = "converged"
-    MaxIterations = "maximum number of iterations reached"
-    Failed = "failed"
+__all__ = ["ValuationResult"]
 
 
 @total_ordering
@@ -110,10 +102,10 @@ class ValuationResult(collections.abc.Sequence):
     _indices: NDArray[np.int_]
     _values: NDArray[np.float_]
     _data: Dataset
-    _names: Union[NDArray[np.int_], NDArray[np.str_]]
+    _names: NDArray[np.str_]
     _stderr: NDArray[np.float_]
     _algorithm: str  # TODO: BaseValuator
-    _status: ValuationStatus  # TODO: Maybe? BaseValuator.Status
+    _status: Status  # TODO: Maybe? BaseValuator.Status
     # None for unsorted, True for ascending, False for descending
     _sort_order: Optional[bool]
     _extra_values: dict
@@ -121,10 +113,10 @@ class ValuationResult(collections.abc.Sequence):
     def __init__(
         self,
         algorithm: str,  # BaseValuator,
-        status: ValuationStatus,  # Valuation.Status,
+        status: Status,  # Valuation.Status,
         values: NDArray[np.float_],
         stderr: Optional[NDArray[np.float_]] = None,
-        data_names: Optional[Sequence[str]] = None,
+        data_names: Optional[Union[Sequence[str], NDArray[np.str_]]] = None,
         sort: bool = True,
         **extra_values,
     ):
@@ -144,9 +136,8 @@ class ValuationResult(collections.abc.Sequence):
             self._indices = np.arange(0, len(self._values), dtype=np.int_)
 
         if data_names is None:
-            self._names = np.arange(0, len(values), dtype=np.int_)
-        else:
-            self._names = np.array(data_names)
+            data_names = [str(i) for i in range(len(self._values))]
+        self._names = np.array(data_names, dtype=np.str_)
         if len(self._names) != len(self._values):
             raise ValueError("Data names and data values have different lengths")
 
@@ -180,6 +171,12 @@ class ValuationResult(collections.abc.Sequence):
         return self._values
 
     @property
+    def stderr(self) -> NDArray[np.float_]:
+        """The raw standard errors, unsorted. Position `i` in the array
+        represents index `i` of the data."""
+        return self._stderr
+
+    @property
     def indices(self) -> NDArray[np.int_]:
         """The indices for the values, possibly sorted.
         If the object is unsorted, then this is the same as
@@ -188,7 +185,7 @@ class ValuationResult(collections.abc.Sequence):
         return self._indices
 
     @property
-    def status(self) -> ValuationStatus:
+    def status(self) -> Status:
         return self._status
 
     @property
@@ -248,12 +245,14 @@ class ValuationResult(collections.abc.Sequence):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ValuationResult):
-            return NotImplemented
+            raise NotImplementedError(
+                f"Cannot compare ValuationResult with {type(other)}"
+            )
         return bool(
             self._algorithm == other._algorithm
             and self._status == other._status
             and self._sort_order == other._sort_order
-            and np.all(self.values == other.values)
+            and np.all(self._values == other._values)
             and np.all(self._stderr == other._stderr)
             and np.all(self._names == other._names)
             # and np.all(self.indices == other.indices)  # Redundant
@@ -271,9 +270,57 @@ class ValuationResult(collections.abc.Sequence):
         repr_string += ")"
         return repr_string
 
+    def __add__(self, other) -> "ValuationResult":
+        """Adds two ValuationResults.
+
+        .. warning::
+           Abusing this will introduce numerical errors, since the sample means
+           and standard errors are "unwrapped" and recomputed again.
+
+        Means and standard errors are correctly handled. Statuses are added with
+        bit-wise ``&``, see :class:`~pydvl.value.results.Status`.
+        ``data_names`` are taken from the left summand, or if unavailable from
+        the right one. The ``algorithm`` string is carried over if both terms
+        have the same one or concatenated.
+
+        .. fixme::
+           Arbitrary extra arguments aren't handled.
+
+        """
+
+        if (
+            not isinstance(other, ValuationResult)
+            or not hasattr(self, "counts")
+            or not hasattr(other, "counts")
+        ):
+            raise NotImplementedError("Cannot add valuation results without count data")
+
+        n, m = self.counts, other.counts
+        xn, xm = self._values, other._values
+        sn, sm = n * self._stderr**2, m * other._stderr**2
+        # Sample mean of n+m samples from two means of n and m samples
+        xnm = (n * xn + m * xm) / (n + m)
+        # Sample variance of n+m samples from two sample variances of n and m samples
+        snm = (n * (sn + xn**2) + m * (sm + xm**2)) / (n + m) - xnm**2
+
+        algorithm = (
+            self._algorithm
+            if self._algorithm == other._algorithm
+            else self._algorithm + " + " + other._algorithm
+        )
+        return ValuationResult(
+            algorithm=algorithm,
+            status=self.status & other.status,
+            values=xnm,
+            stderr=np.sqrt(snm / (n + m)),
+            data_names=self._names if self._names is not None else other._names,
+            counts=n + m,
+            # FIXME: what about extra args?
+        )
+
     def to_dataframe(
         self, column: Optional[str] = None, use_names: bool = False
-    ) -> "pandas.DataFrame":
+    ) -> pandas.DataFrame:
         """Returns values as a dataframe.
 
         :param column: Name for the column holding the data value. Defaults to
@@ -312,6 +359,6 @@ class ValuationResult(collections.abc.Sequence):
         values = np.random.uniform(low=-1.0, high=1.0, size=size)
         return cls(
             algorithm="random",
-            status=ValuationStatus.Converged,
+            status=Status.Converged,
             values=values,
         )

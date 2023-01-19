@@ -19,7 +19,8 @@ reduce computation :func:`truncated_montecarlo_shapley`.
 
 .. seealso::
    It is also possible to use :func:`~pydvl.value.shapley.gt.group_testing_shapley`
-   to reduce the number of evaluations of the utility.
+   to reduce the number of evaluations of the utility. The method is however
+   typically outperformed by others in this module.
 
 .. seealso::
    Additionally, you can consider grouping your data points using
@@ -40,23 +41,21 @@ from warnings import warn
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import (
-    MapReduceJob,
-    ParallelConfig,
-    Utility,
-    get_running_avg_variance,
-    init_parallel_backend,
-    maybe_progress,
-    random_powerset,
-)
-from pydvl.value import ValuationResult, ValuationStatus
-
+from ...utils.config import ParallelConfig
+from ...utils.numeric import random_powerset, running_moments
+from ...utils.parallel import MapReduceJob, init_parallel_backend
+from ...utils.progress import maybe_progress
+from ...utils.status import Status
+from ...utils.utility import Utility
+from ..results import ValuationResult
 from .actor import get_shapley_coordinator, get_shapley_worker
 
 
 class MonteCarloResults(NamedTuple):
-    values: "NDArray[np.float_]"
-    stderr: "NDArray[np.float_]"
+    # TODO: remove this class and use Valuation
+    values: NDArray[np.float_]
+    stderr: NDArray[np.float_]
+    counts: NDArray[np.int_]
 
 
 logger = logging.getLogger(__name__)
@@ -243,7 +242,7 @@ def permutation_montecarlo_shapley(
 
     return ValuationResult(
         algorithm="permutation_montecarlo_shapley",
-        status=ValuationStatus.MaxIterations,
+        status=Status.MaxIterations,
         values=values,
         stderr=stderr,
         data_names=u.data.data_names,
@@ -282,21 +281,14 @@ def _combinatorial_montecarlo_shapley(
 
     values = np.zeros(n)
     variances = np.zeros(n)
-    counts = np.zeros(n)
+    counts = np.zeros(n, dtype=int)
     pbar = maybe_progress(indices, progress, position=job_id)
     for idx in pbar:
         # Randomly sample subsets of full dataset without idx
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
-        power_set = random_powerset(subset, max_subsets=n_iterations)
-        for s in maybe_progress(
-            power_set,
-            progress,
-            desc=f"Index {idx}",
-            total=n_iterations,
-            position=job_id,
-        ):
+        for s in random_powerset(subset, max_subsets=n_iterations):
             marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
-            values[idx], variances[idx] = get_running_avg_variance(
+            values[idx], variances[idx] = running_moments(
                 values[idx], variances[idx], marginal, counts[idx]
             )
             counts[idx] += 1
@@ -304,6 +296,7 @@ def _combinatorial_montecarlo_shapley(
     return MonteCarloResults(
         values=correction * values,
         stderr=np.sqrt(correction**2 * variances / np.maximum(1, counts)),
+        counts=counts,
     )
 
 
@@ -315,18 +308,20 @@ def disjoint_reducer(results_it: Iterable[MonteCarloResults]) -> MonteCarloResul
     :raises IndexError: If the argument is an empty iterable.
     """
     try:
-        val, std = next((x for x in results_it))
+        val, std, cnt = next((x for x in results_it))
         values = np.zeros_like(val)
         stderr = np.zeros_like(std)
+        counts = np.zeros_like(cnt)
     except StopIteration:
         raise IndexError("Empty results iterable cannot be reduced")
 
-    for val, std in results_it:
+    for val, std, cnt in results_it:
         if np.abs(values[val > 0]).sum() > 0:
             raise ValueError("Returned value sets are not disjoint")
         values += val
         stderr += std
-    return MonteCarloResults(values=values, stderr=stderr)
+        counts += cnt
+    return MonteCarloResults(values=values, stderr=stderr, counts=counts)
 
 
 def combinatorial_montecarlo_shapley(
@@ -378,9 +373,10 @@ def combinatorial_montecarlo_shapley(
 
     return ValuationResult(
         algorithm="combinatorial_montecarlo_shapley",
-        status=ValuationStatus.MaxIterations,
+        status=Status.MaxIterations,
         values=results.values,
         stderr=results.stderr,
+        counts=results.counts,
         data_names=u.data.data_names,
     )
 
@@ -440,7 +436,9 @@ def _owen_sampling_shapley(
         # Trapezoidal rule
         values[i] = (e[:-1] + e[1:]).sum() / (2 * max_q)
 
-    return MonteCarloResults(values=values, stderr=np.zeros_like(values))
+    return MonteCarloResults(
+        values=values, stderr=np.zeros_like(values), counts=np.ones_like(values)
+    )
 
 
 def owen_sampling_shapley(
@@ -523,7 +521,7 @@ def owen_sampling_shapley(
 
     return ValuationResult(
         algorithm="owen_sampling_shapley",
-        status=ValuationStatus.MaxIterations,
+        status=Status.MaxIterations,
         values=results.values,
         stderr=results.stderr,
         data_names=u.data.data_names,

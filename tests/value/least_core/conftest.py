@@ -4,8 +4,9 @@ import numpy as np
 import pytest
 
 from pydvl.utils import Utility
+from pydvl.utils.status import Status
 from pydvl.utils.utility import GlovesGameUtility, MinerGameUtility
-from pydvl.value.results import ValuationResult, ValuationStatus
+from pydvl.value.results import ValuationResult
 
 
 @pytest.fixture(scope="module")
@@ -24,6 +25,6 @@ def test_utility(request) -> Tuple[Utility, ValuationResult]:
         subsidy=subsidy,
         stderr=np.zeros_like(exact_values),
         data_names=np.arange(len(exact_values)),
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
     )
     return u, result

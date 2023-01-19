@@ -9,7 +9,8 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from pydvl.utils import Dataset, SupervisedModel, Utility
 from pydvl.utils.config import ParallelConfig
-from pydvl.value import ValuationResult, ValuationStatus
+from pydvl.utils.status import Status
+from pydvl.value import ValuationResult
 
 from . import polynomial
 
@@ -87,7 +88,7 @@ def analytic_shapley(dummy_utility):
         values=values,
         stderr=np.zeros_like(values),
         data_names=dummy_utility.data.indices,
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
     )
     return dummy_utility, result
 

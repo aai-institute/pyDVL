@@ -5,15 +5,17 @@ from typing import Iterable, Optional, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import Utility, maybe_progress
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import MapReduceJob
+from pydvl.utils.progress import maybe_progress
+from pydvl.utils.status import Status
+from pydvl.utils.utility import Utility
 from pydvl.value.least_core._common import (
     _solve_egalitarian_least_core_quadratic_program,
     _solve_least_core_linear_program,
 )
-from pydvl.value.results import ValuationResult, ValuationStatus
+from pydvl.value.results import ValuationResult
 
 logger = logging.getLogger(__name__)
 
@@ -173,7 +175,7 @@ def montecarlo_least_core(
 
     if subsidy is None:
         logger.debug("No values were found")
-        status = ValuationStatus.Failed
+        status = Status.Failed
         values = np.empty(n)
         values[:] = np.nan
         subsidy = np.nan
@@ -198,12 +200,12 @@ def montecarlo_least_core(
 
     if values is None:
         logger.debug("No values were found")
-        status = ValuationStatus.Failed
+        status = Status.Failed
         values = np.empty(n)
         values[:] = np.nan
         subsidy = np.nan
     else:
-        status = ValuationStatus.Converged
+        status = Status.Converged
 
     return ValuationResult(
         algorithm="montecarlo_least_core",
