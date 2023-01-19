@@ -37,7 +37,7 @@ class Utility:
     """Convenience wrapper with configurable memoization of the scoring function.
 
     An instance of `Utility` holds the triple of model, dataset and scoring
-    function which determines the value of data points. This is only used for
+    function which determines the value of data points. This is mosly used for
     the computation of :ref:`Shapley values<Shapley>` and
     :ref:`Least Core values<Least Core>`.
 
