@@ -1,5 +1,5 @@
 from functools import update_wrapper
-from typing import Callable, cast
+from typing import Callable, Optional, cast
 
 import numpy as np
 
@@ -99,7 +99,7 @@ def median_ratio(threshold: float) -> ConvergenceCheck:
     return ConvergenceCheck(median_ratio_check)
 
 
-def max_iterations(n_iterations: int) -> ConvergenceCheck:
+def max_iterations(n_iterations: Optional[int]) -> ConvergenceCheck:
     """Terminate if the number of iterations exceeds the given number.
 
     This checks the ``counts`` field of a
@@ -108,9 +108,13 @@ def max_iterations(n_iterations: int) -> ConvergenceCheck:
     with the maximum number of subsets sampled. For permutation samplers, it
     coincides with the number of permutations sampled.
 
-    :param n_iterations: threshold.
+    :param n_iterations: threshold. If ``None``, no check is performed,
+        effectively creating a convergence check that always returns ``Pending``.
     :return: The convergence check
     """
+    if n_iterations is None:
+        return ConvergenceCheck(lambda _: Status.Pending)
+
     _max_iterations = n_iterations
 
     def max_iterations_check(results: ValuationResult) -> Status:
