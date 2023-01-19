@@ -1,6 +1,7 @@
 import abc
 import inspect
 import logging
+from time import sleep
 from typing import Generic, List, Optional, Type, TypeVar, cast
 
 from ..config import ParallelConfig
@@ -66,7 +67,7 @@ class RayActorWrapper:
                 setattr(self, name, remote_caller(name))
 
 
-Result = TypeVar("Result")
+Result = TypeVar("Result")  # Avoids circular import with ValuationResult
 
 
 class Coordinator(Generic[Result], abc.ABC):
@@ -103,10 +104,8 @@ class Coordinator(Generic[Result], abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def check_done(self) -> bool:
-        """Checks whether the accuracy of the calculation or the total number
-        of iterations have crossed the set thresholds.
-        """
+    def check_convergence(self) -> bool:
+        """Evaluates the convergence criteria on the aggregated results."""
         raise NotImplementedError()
 
 

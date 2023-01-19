@@ -68,7 +68,6 @@ class Status(Enum):
     Failed = "failed"
 
     def __or__(self, other: "Status") -> "Status":
-        """ """
         if self == Status.Converged or other == Status.Converged:
             return Status.Converged
         if self == Status.Pending or other == Status.Pending:
@@ -79,6 +78,7 @@ class Status(Enum):
         raise RuntimeError(f"Unexpected statuses: {self} and {other}")
 
     def __and__(self, other: "Status") -> "Status":
+        # Careful, the order of tests matters here!
         if self == Status.Failed or other == Status.Failed:
             return Status.Failed
         if self == Status.Pending or other == Status.Pending:

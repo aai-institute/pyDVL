@@ -42,8 +42,8 @@ class Utility:
     :ref:`Least Core values<Least Core>`.
 
     The Utility expect the model to fulfill
-    the :class:`pydvl.utils.types.SupervisedModel` interface
-    i.e. to have a `fit()`, `predict()`, and `score()` methods.
+    the :class:`pydvl.utils.types.SupervisedModel` interface i.e. to have
+    ``fit()``, ``predict()``, and ``score()`` methods.
 
     When calling the utility, the model will be
     `cloned <https://scikit-learn.org/stable/modules/generated/sklearn.base.clone.html>`_
@@ -51,7 +51,7 @@ class Utility:
     from the builtin `copy <https://docs.python.org/3/library/copy.html>`_ module.
 
     Since evaluating the scoring function requires retraining the model
-    and that can be time consuming, this class wraps it and caches
+    and that can be time-consuming, this class wraps it and caches
     the results of each execution. Caching is available both locally
     and across nodes, but must always be enabled for your
     project first, see :ref:`how to set up the cache<caching setup>`.
@@ -68,11 +68,11 @@ class Utility:
     :param score_range: numerical range of the score function. Some Monte Carlo
         methods can use this to estimate the number of samples required for a
         certain quality of approximation.
-    :param catch_errors: set to True to catch the errors when fit() fails. This
-        could happen in several steps of the pipeline, e.g. when too little
-        training data is passed, which happens often during the Shapley value calculations.
-        When this happens, the default_score is returned as a score and value
-        calculation continues.
+    :param catch_errors: set to ``True`` to catch the errors when `fit()` fails.
+        This can happen in several steps of the pipeline, e.g. when too little
+        training data is used, something that happens often during Shapley value
+        calculations. In this case, the :attr:`default_score` is returned by
+        the utility.
     :param show_warnings: True for printing warnings fit fails.
     :param enable_cache: If True, use memcached for memoization.
     :param cache_options: Optional configuration object for memcached.
@@ -141,19 +141,20 @@ class Utility:
     def _utility(self, indices: FrozenSet) -> float:
         """Clones the model, fits it on a subset of the training data
         and scores it on the test data.
-        If the object is constructed with `enable_cache = True`,
-        results are memoized to avoid duplicate computation. This is useful in
-        particular when computing utilities of permutations of indices or when
-        randomly sampling from the powerset of indices.
+
+        If the object is constructed with ``enable_cache = True``, results are
+        memoized to avoid duplicate computation. This is useful in particular
+        when computing utilities of permutations of indices or when randomly
+        sampling from the powerset of indices.
 
         :param indices: a subset of valid indices for
             :attr:`~pydvl.utils.dataset.Dataset.x_train`. The type must be
             hashable for the caching to work, e.g. wrap the argument with
             `frozenset <https://docs.python.org/3/library/stdtypes.html#frozenset>`_
             (rather than `tuple` since order should not matter)
-        :return: 0 if no indices are passed, `default_score` if we fail to fit
-            the model or the scorer returns NaN, otherwise the score on the test
-            data.
+        :return: 0 if no indices are passed, :attr:`default_score`` if we fail
+            to fit the model or the scorer returns `NaN`. Otherwise, the score
+            of the model on the test data.
         """
         if not indices:
             return 0.0
