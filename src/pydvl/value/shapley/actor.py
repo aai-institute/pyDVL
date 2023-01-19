@@ -18,7 +18,6 @@ from ...utils.config import ParallelConfig
 from ...utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from ...utils.status import Status
 from ...utils.utility import Utility
-
 from ...value.results import ValuationResult
 from ..convergence import ConvergenceCheck, max_iterations
 from .types import PermutationBreaker

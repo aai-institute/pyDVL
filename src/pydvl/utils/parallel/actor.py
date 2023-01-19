@@ -1,7 +1,7 @@
 import abc
 import inspect
 import logging
-from typing import Generic, List, TypeVar, Optional, Type, cast
+from typing import Generic, List, Optional, Type, TypeVar, cast
 
 from ..config import ParallelConfig
 from ..status import Status
