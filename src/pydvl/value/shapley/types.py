@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Protocol
 
 import numpy as np
-from numpy._typing import NDArray
+from numpy.typing import NDArray
 
 
 class ShapleyMode(str, Enum):

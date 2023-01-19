@@ -162,7 +162,7 @@ class ShapleyWorker(Worker):
         :meth:`~pydvl.utils.parallel.actor.Coordinator.is_done` flag,
         terminating if it's ``True``.
         """
-        acc = None
+        acc = ValuationResult().empty()
         while not self.coordinator.is_done():
             start_time = time()
             while (time() - start_time) < self.update_period:
@@ -173,5 +173,5 @@ class ShapleyWorker(Worker):
                         RuntimeWarning,
                     )
                     continue
-                acc = results if acc is None else acc + results
+                acc += results
             self.coordinator.add_results(acc)
