@@ -1,9 +1,41 @@
 # TODO add more tests!
+import warnings
 
+import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
 from pydvl.utils import DataUtilityLearning, MemcachedConfig, Utility, powerset
+
+
+@pytest.mark.parametrize("show_warnings", [False, True])
+@pytest.mark.parametrize("num_points, num_features", [(4, 4)])
+def test_utility_show_warnings(housing_dataset, show_warnings, recwarn):
+    class WarningModel:
+        def fit(self, x, y):
+            warnings.warn("Warning model fit")
+            return self
+
+        def predict(self, x):
+            warnings.warn("Warning model predict")
+            return np.zeros_like(x)
+
+        def score(self, x, y):
+            warnings.warn("Warning model score")
+            return 0.0
+
+    utility = Utility(
+        model=WarningModel(),
+        data=housing_dataset,
+        enable_cache=False,
+        show_warnings=show_warnings,
+    )
+    utility([0])
+
+    if show_warnings:
+        assert len(recwarn) >= 1
+    else:
+        assert len(recwarn) == 0
 
 
 # noinspection PyUnresolvedReferences
@@ -49,9 +81,12 @@ def test_cache(linear_dataset, memcache_client_config):
 
 
 @pytest.mark.parametrize("a, b, num_points", [(2, 0, 8)])
-def test_different_cache(linear_dataset, memcache_client_config):
+@pytest.mark.parametrize("model_kwargs", [({}, {}), ({}, {"fit_intercept": False})])
+def test_different_cache_signature(
+    linear_dataset, memcache_client_config, model_kwargs
+):
     u1 = Utility(
-        model=LinearRegression(),
+        model=LinearRegression(**model_kwargs[0]),
         data=linear_dataset,
         scoring="r2",
         enable_cache=True,
@@ -60,7 +95,7 @@ def test_different_cache(linear_dataset, memcache_client_config):
         ),
     )
     u2 = Utility(
-        model=LinearRegression(fit_intercept=False),
+        model=LinearRegression(**model_kwargs[1]),
         data=linear_dataset,
         scoring="r2",
         enable_cache=True,
@@ -70,3 +105,5 @@ def test_different_cache(linear_dataset, memcache_client_config):
     )
 
     assert u1.signature != u2.signature
+    assert u1.signature == u1.signature
+    assert u2.signature == u2.signature

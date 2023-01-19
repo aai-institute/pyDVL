@@ -4,6 +4,12 @@
 
 - Operations on ValuationResults and Statuses and cleanup
   [PR #248](https://github.com/appliedAI-Initiative/pyDVL/pull/248)
+- **Bug fix and minor improvements**: Fixes bug in TMCS with remote Ray cluster,
+  raises an error for dummy sequential parallel backend with TMCS, clones model
+  inside `Utility` before fitting by default, with flag `clone_before_fit` 
+  to disable it, catches all warnings in `Utility` when `show_warnings` is 
+  `False`. Adds Miner and Gloves toy games utilities
+  [PR #247](https://github.com/appliedAI-Initiative/pyDVL/pull/247)
 
 ## 0.4.0 - 🏭💥 New algorithms and more breaking changes
 

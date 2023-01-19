@@ -94,6 +94,10 @@ def truncated_montecarlo_shapley(
        criterion detailed in
        :meth:`~pydvl.value.shapley.actor.ShapleyCoordinator.check_done`.
 
+    .. warning::
+
+       This function does not work with the sequential parallel backend.
+
     .. todo::
        Implement the original stopping criterion, maybe Robin-Gelman or some
        other more principled one.
@@ -121,6 +125,12 @@ def truncated_montecarlo_shapley(
     :return: Object with the data values.
 
     """
+    if config.backend == "sequential":
+        raise NotImplementedError(
+            "Truncated MonteCarlo Shapley does not work with "
+            "the Sequential parallel backend."
+        )
+
     parallel_backend = init_parallel_backend(config)
 
     n_jobs = parallel_backend.effective_n_jobs(n_jobs)
