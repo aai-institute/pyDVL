@@ -1,5 +1,4 @@
 import functools
-import logging
 import os
 from abc import ABCMeta, abstractmethod
 from dataclasses import asdict
@@ -113,14 +112,7 @@ class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
         return v, []
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
-        if n_jobs < 0:
-            if self.config["num_cpus"]:
-                eff_n_jobs: int = self.config["num_cpus"]
-            else:
-                eff_n_jobs = available_cpus()
-        else:
-            eff_n_jobs = n_jobs
-        return eff_n_jobs
+        return 1
 
 
 class RayParallelBackend(BaseParallelBackend, backend_name="ray"):

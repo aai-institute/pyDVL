@@ -1,12 +1,11 @@
 import abc
 import inspect
 import logging
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, List, TypeVar, Optional, Type, cast
 
-from ray import ObjectRef
-
+from ..config import ParallelConfig
 from ..status import Status
-from .backend import RayParallelBackend
+from .backend import RayParallelBackend, init_parallel_backend
 
 __all__ = ["RayActorWrapper", "Coordinator", "Worker"]
 
@@ -33,18 +32,15 @@ class RayActorWrapper:
     ...         return self.x
     ...
     >>> config = ParallelConfig(backend="ray")
-    >>> parallel_backend = init_parallel_backend(config)
-    >>> assert isinstance(parallel_backend, RayParallelBackend)
-    >>> actor_handle = parallel_backend.wrap(Actor).remote(5)
-    >>> parallel_backend.get(actor_handle.get.remote())
-    5
-    >>> wrapped_actor = RayActorWrapper(actor_handle, parallel_backend)
+    >>> wrapped_actor = RayActorWrapper(Actor, config, 5)
     >>> wrapped_actor.get()
     5
     """
 
-    def __init__(self, actor_handle: ObjectRef, parallel_backend: RayParallelBackend):
-        self.actor_handle = actor_handle
+    def __init__(self, actor_class: Type, config: ParallelConfig, *args, **kwargs):
+        parallel_backend = cast(RayParallelBackend, init_parallel_backend(config))
+        remote_cls = parallel_backend.wrap(actor_class)
+        self.actor_handle = remote_cls.remote(*args, **kwargs)
 
         def remote_caller(method_name: str):
             # Wrapper for remote class' methods to mimic local calls
@@ -63,7 +59,7 @@ class RayActorWrapper:
 
             return wrapper
 
-        for member in inspect.getmembers(self.actor_handle):
+        for member in inspect.getmembers(actor_class):
             name = member[0]
             if not name.startswith("__"):
                 # Wrap public methods for remote-as-local calls.

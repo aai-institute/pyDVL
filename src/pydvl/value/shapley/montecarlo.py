@@ -89,6 +89,10 @@ def truncated_montecarlo_shapley(
     over all possible permutations of the index set, with a double stopping
     criterion.
 
+    .. todo::
+       Think of how to add Robin-Gelman or some other more principled stopping
+       criterion.
+
     Instead of naively implementing the expectation, we sequentially add points
     to a dataset from a permutation. Once a marginal utility is close enough to
     the total utility we set all marginals to 0 for the remainder of the
@@ -109,6 +113,12 @@ def truncated_montecarlo_shapley(
     :return: Object with the data values.
 
     """
+    if config.backend == "sequential":
+        raise NotImplementedError(
+            "Truncated MonteCarlo Shapley does not work with "
+            "the Sequential parallel backend."
+        )
+
     parallel_backend = init_parallel_backend(config)
     n_jobs = parallel_backend.effective_n_jobs(n_jobs)
     u_id = parallel_backend.put(u)

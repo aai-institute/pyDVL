@@ -33,16 +33,24 @@ log = logging.getLogger(__name__)
         (12, permutation_montecarlo_shapley, 0.1, 10, {}),
         # FIXME! it should be enough with 2**(len(data)-1) samples
         (8, combinatorial_montecarlo_shapley, 0.2, 2**10, {}),
+        (12, truncated_montecarlo_shapley, 0.1, 10, {"coordinator_update_period": 1}),
         (12, owen_sampling_shapley, 0.1, 4, {"max_q": 200, "method": "antithetic"}),
         (12, owen_sampling_shapley, 0.1, 4, {"max_q": 200, "method": "standard"}),
     ],
 )
 def test_analytic_montecarlo_shapley(
-    num_samples, analytic_shapley, fun, rtol, n_iterations, kwargs
+    num_samples, analytic_shapley, fun, rtol, n_iterations, kwargs, parallel_config
 ):
     u, exact_values = analytic_shapley
 
-    values = fun(u, n_iterations=int(n_iterations), progress=False, n_jobs=1, **kwargs)
+    values = fun(
+        u,
+        n_iterations=int(n_iterations),
+        config=parallel_config,
+        progress=False,
+        n_jobs=1,
+        **kwargs,
+    )
 
     check_values(values, exact_values, rtol=rtol)
 
@@ -240,7 +248,7 @@ def test_grouped_linear_montecarlo_shapley(
     ],
 )
 def test_random_forest(
-    boston_dataset,
+    housing_dataset,
     regressor,
     scorer: str,
     n_iterations: float,
@@ -253,7 +261,7 @@ def test_random_forest(
     pipeline and was removed."""
     rf_utility = Utility(
         regressor,
-        data=boston_dataset,
+        data=housing_dataset,
         scoring=scorer,
         enable_cache=True,
         cache_options=MemcachedConfig(
