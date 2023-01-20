@@ -61,10 +61,10 @@ class ShapleyCoordinator(Coordinator):
     satisfied.
     """
 
-    def __init__(self, stopping_criterion: StoppingCriterion):
+    def __init__(self, stop: StoppingCriterion):
         super().__init__()
-        self.stopping_criterion = stopping_criterion
-        self.stopping_criterion.inplace = True
+        self.stop = stop
+        self.stop.inplace = True
 
     def accumulate(self) -> ValuationResult:
         """Accumulates all results received from the workers.
@@ -93,7 +93,7 @@ class ShapleyCoordinator(Coordinator):
         if self.is_done():
             return True
         if len(self.worker_results) > 0:
-            self._status = self.stopping_criterion(self.accumulate())
+            self._status = self.stop(self.accumulate())
         return self.is_done()
 
 

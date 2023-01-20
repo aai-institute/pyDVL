@@ -134,7 +134,7 @@ def max_iterations(n_iterations: Optional[int]) -> StoppingCriterion:
     return StoppingCriterion(max_iterations_check)
 
 
-def history_deviation(n_samples: int, n_steps: int, atol: float) -> StoppingCriterion:
+def history_deviation(n_samples: int, n_steps: int, rtol: float) -> StoppingCriterion:
     """Ghorbani et al.'s check for relative distance to a previous step in the
      computation.
 
@@ -146,7 +146,7 @@ def history_deviation(n_samples: int, n_steps: int, atol: float) -> StoppingCrit
     :param n_samples: Number of values in the result objects.
     :param n_steps: Checkpoint values every so many updates and use these saved
         values to compare.
-    :param atol: Absolute tolerance for convergence.
+    :param rtol: Relative tolerance for convergence.
     :return: The convergence check
     """
     # Yuk... using static vars just to avoid nonlocal
@@ -164,7 +164,7 @@ def history_deviation(n_samples: int, n_steps: int, atol: float) -> StoppingCrit
                 np.abs(
                     (r.values[ii] - history_deviation_check.memory[ii]) / r.values[ii]
                 ).mean()
-                < atol
+                < rtol
             ):
                 history_deviation_check.converged[ii] = True
                 if np.all(history_deviation_check.converged):

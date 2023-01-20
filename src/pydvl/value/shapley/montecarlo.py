@@ -50,8 +50,9 @@ from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
 from pydvl.utils.progress import maybe_progress
 from pydvl.utils.status import Status
 from pydvl.utils.utility import Utility
-from pydvl.value.stopping import StoppingCriterion
 from pydvl.value.results import ValuationResult
+from pydvl.value.stopping import StoppingCriterion
+
 from .actor import get_shapley_coordinator, get_shapley_worker
 from .types import PermutationBreaker
 
@@ -98,7 +99,7 @@ def truncated_montecarlo_shapley(
     to a dataset from a permutation. Once a marginal utility is close enough to
     the total utility we set all marginals to 0 for the remainder of the
     permutation. We keep sampling permutations and updating all shapley values
-    until the ``stopping_criterion`` returns ``True``.
+    until the stopping criterion returns ``True``.
 
     :param u: Utility object with model, data, and scoring function
     :param stop: Check on the results which decides when to stop
@@ -130,9 +131,7 @@ def truncated_montecarlo_shapley(
     n_jobs = parallel_backend.effective_n_jobs(n_jobs)
     u_id = parallel_backend.put(u)
 
-    coordinator = get_shapley_coordinator(  # type: ignore
-        config=config, stopping_criterion=stop
-    )
+    coordinator = get_shapley_coordinator(config=config, stop=stop)  # type: ignore
 
     total_utility = u(u.data.indices)
 
@@ -269,7 +268,7 @@ def permutation_montecarlo_shapley(
         reduce_func=lambda results: reduce(operator.add, results),
         map_kwargs=dict(
             algorithm_name="permutation_montecarlo_shapley",
-            stopping_criterion=stop,
+            stop=stop,
             permutation_breaker=None,  # permutation_breaker,
             progress=progress,
         ),
@@ -516,6 +515,7 @@ def owen_sampling_shapley(
     map_reduce_job: MapReduceJob[NDArray, ValuationResult] = MapReduceJob(
         u.data.indices,
         map_func=_owen_sampling_shapley,
+        reduce_func=lambda results: reduce(operator.or_, results),
         map_kwargs=dict(
             u=u,
             method=OwenAlgorithm(method),
@@ -523,7 +523,6 @@ def owen_sampling_shapley(
             max_q=max_q,
             progress=progress,
         ),
-        reduce_func=lambda results: reduce(operator.or_, results),
         n_jobs=n_jobs,
         config=config,
     )

@@ -5,10 +5,7 @@ interface to all methods defined in the modules.
 
 Please refer to :ref:`data valuation` for an overview of Shapley Data value.
 """
-from typing import Optional, cast
-
 from pydvl.utils import Utility
-from pydvl.value.stopping import StoppingCriterion, max_iterations
 from pydvl.value.results import ValuationResult
 from pydvl.value.shapley.gt import group_testing_shapley
 from pydvl.value.shapley.knn import knn_shapley
@@ -24,6 +21,7 @@ from pydvl.value.shapley.naive import (
     permutation_exact_shapley,
 )
 from pydvl.value.shapley.types import ShapleyMode
+from pydvl.value.stopping import StoppingCriterion, max_iterations
 
 __all__ = ["compute_shapley_values"]
 
