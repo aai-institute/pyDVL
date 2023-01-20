@@ -275,6 +275,20 @@ class ValuationResult(collections.abc.Sequence):
         repr_string += ")"
         return repr_string
 
+    def _check_compatible(self, other: "ValuationResult"):
+        if not isinstance(other, ValuationResult):
+            raise NotImplementedError(
+                f"Cannot combine ValuationResult with {type(other)}"
+            )
+        if self._algorithm != other._algorithm:
+            raise ValueError("Cannot combine results from different algorithms")
+        if self._status != other._status:
+            raise ValueError("Cannot combine results with different statuses")
+        if len(self.values) != len(other.values):
+            raise ValueError("Cannot combine results with different lengths")
+        if not hasattr(self, "counts") or not hasattr(other, "counts"):
+            raise ValueError("Cannot add valuation results without count data")
+
     def __add__(self, other: "ValuationResult") -> "ValuationResult":
         """Adds two ValuationResults.
 
@@ -297,24 +311,12 @@ class ValuationResult(collections.abc.Sequence):
 
         """
 
-        if not isinstance(other, ValuationResult):
-            raise NotImplementedError(f"Cannot add ValuationResult with {type(other)}")
         if self.algorithm == "" and len(self.values) == 0:  # empty result
             return other
         if other.algorithm == "" and len(other.values) == 0:  # empty result
             return self
-        if self.algorithm != other.algorithm:
-            raise ValueError(
-                f"Cannot add results from different algorithms: "
-                f"{self.algorithm} and {other.algorithm}"
-            )
-        if self.values.shape != other.values.shape:
-            raise ValueError(
-                f"Cannot add results with different shapes: "
-                f"{self.values.shape} and {other.values.shape}"
-            )
-        if not hasattr(self, "counts") or not hasattr(other, "counts"):
-            raise ValueError("Cannot add valuation results without count data")
+
+        self._check_compatible(other)
 
         n, m = self.counts, other.counts
         xn, xm = self._values, other._values
@@ -340,6 +342,23 @@ class ValuationResult(collections.abc.Sequence):
             data_names=self._names if self._names is not None else other._names,
             counts=n + m,
             # FIXME: what about extra args?
+        )
+
+    def __or__(self, other):
+        """Adds two **disjoint** ValuationResults.
+
+        Takes the values and stderr from the first argument for which the counts
+        are non-zero, otherwise takes those from the second one.
+        """
+        self._check_compatible(other)
+
+        return ValuationResult(
+            algorithm=self.algorithm or other.algorithm or "",
+            status=self.status | other.status,
+            values=np.where(self.counts > 0, self.values, other.values),
+            stderr=np.where(self.counts > 0, self.stderr, other.stderr),
+            data_names=self._names if self._names is not None else other._names,
+            counts=self.counts + other.counts,
         )
 
     def to_dataframe(
