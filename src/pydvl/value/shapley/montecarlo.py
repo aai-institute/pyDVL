@@ -50,7 +50,7 @@ from ...utils.parallel import MapReduceJob, init_parallel_backend
 from ...utils.progress import maybe_progress
 from ...utils.status import Status
 from ...utils.utility import Utility
-from ..convergence import StoppingCriterion
+from ..stopping import StoppingCriterion
 from ..results import ValuationResult
 from .actor import get_shapley_coordinator, get_shapley_worker
 from .types import PermutationBreaker

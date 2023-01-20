@@ -26,10 +26,10 @@ class StoppingCriterion:
         interface :ref:`StoppingCriterionCallable` and wrap it with this class
 
         For more realistic examples see
-        e.g. :func:`~pydvl.value.convergence.median_ratio`
-        or :func:`~pydvl.value.convergence.history_deviation`
+        e.g. :func:`~pydvl.value.stopping.median_ratio`
+        or :func:`~pydvl.value.stopping.history_deviation`
 
-        :Composing StoppingCriterions:
+        :Composing stopping criteria:
 
         Objects of this type can be composed with the binary operators ``&``
         (_and_), ``^`` (_xor_) and ``|`` (_or_),
