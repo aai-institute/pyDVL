@@ -75,8 +75,9 @@ __all__ = [
 
 def truncated_montecarlo_shapley(
     u: Utility,
-    convergence_check: ConvergenceCheck,
     *,
+    convergence_check: ConvergenceCheck,
+    permutation_tolerance: Optional[float] = None,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     coordinator_update_period: int = 10,
@@ -102,6 +103,10 @@ def truncated_montecarlo_shapley(
     :param u: Utility object with model, data, and scoring function
     :param convergence_check: Check on the results which decides when to stop
         sampling permutations.
+    :param permutation_tolerance: Tolerance for the interruption of computations
+        within a permutation. This is called "performance tolerance" in
+        :footcite:t:`ghorbani_data_2019`. Leave empty to set to
+        ``total_utility / len(u.data) / 100``.
     :param n_jobs: number of jobs processing permutations. If None, it will be
         set to :func:`available_cpus`.
     :param config: Object configuring parallel computation, with cluster address,
@@ -129,9 +134,6 @@ def truncated_montecarlo_shapley(
 
     total_utility = u(u.data.indices)
 
-    def permutation_breaker(idx: int, marginals: NDArray[np.float_]) -> bool:
-        return float(np.abs(marginals[idx] - total_utility)) < 0.01  # FIXME
-
     workers = [
         get_shapley_worker(  # type: ignore
             u=u_id,
@@ -139,17 +141,30 @@ def truncated_montecarlo_shapley(
             worker_id=worker_id,
             update_period=worker_update_period,
             config=config,
-            permutation_breaker=permutation_breaker,
+            total_utility=total_utility,
+            permutation_tolerance=permutation_tolerance,
         )
         for worker_id in range(n_jobs)
     ]
-    for worker_id in range(n_jobs):
-        workers[worker_id].run(block=False)
+    for worker in workers:
+        worker.run(block=False)
 
-    while not coordinator.check_done():
+    while not coordinator.check_convergence():
         sleep(coordinator_update_period)
 
     return coordinator.accumulate()
+
+    # Something like this would be nicer, but it doesn't seem to be possible
+    # to start the workers from the coordinator.
+    # coordinator.add_workers(
+    #     n_workers=n_jobs,
+    #     u=u_id,
+    #     update_period=worker_update_period,
+    #     config=config,
+    #     permutation_breaker=permutation_breaker,
+    # )
+    #
+    # return coordinator.run(delay=coordinator_update_period)
 
 
 def _permutation_montecarlo_shapley(
@@ -255,7 +270,7 @@ def permutation_montecarlo_shapley(
         map_kwargs=dict(
             algorithm_name="permutation_montecarlo_shapley",
             convergence_check=convergence_check,
-            permutation_breaker=permutation_breaker,
+            permutation_breaker=None,  # permutation_breaker,
             progress=progress,
         ),
         config=config,

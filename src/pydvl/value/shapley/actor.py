@@ -7,16 +7,15 @@ methods for pyDVL that use parallelization.
 
 import logging
 import operator
-import warnings
 from functools import reduce
 from time import time
 from typing import Optional, cast
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ...utils.config import ParallelConfig
 from ...utils.parallel.actor import Coordinator, RayActorWrapper, Worker
-from ...utils.status import Status
 from ...utils.utility import Utility
 from ...value.results import ValuationResult
 from ..convergence import ConvergenceCheck, max_iterations
@@ -66,6 +65,7 @@ class ShapleyCoordinator(Coordinator):
     def __init__(self, convergence_check: ConvergenceCheck):
         super().__init__()
         self.convergence_check = convergence_check
+        self.convergence_check.inplace = True
 
     def accumulate(self) -> ValuationResult:
         """Accumulates all results received from the workers.
@@ -83,25 +83,19 @@ class ShapleyCoordinator(Coordinator):
         self.worker_results = [totals]
         return totals
 
-    def check_done(self) -> bool:
-        """Checks whether the accuracy of the calculation or the total number
-        of iterations have crossed the set thresholds.
+    def check_convergence(self) -> bool:
+        """Evaluates the convergence criterion on the accumulated results.
 
-        If any of the thresholds have been reached, then calls to
-        :meth:`~Coordinator.is_done` return `True`.
+        If the convergence criterion is satisfied, calls to
+        :meth:`~Coordinator.is_done` return ``True``.
 
-        :return: True if converged or reached max iterations.
+        :return: ``True`` if converged and ``False`` otherwise.
         """
         if self.is_done():
             return True
-
         if len(self.worker_results) > 0:
             self._status = self.convergence_check(self.accumulate())
-
         return self.is_done()
-
-    def status(self) -> Status:
-        return self._status
 
 
 class ShapleyWorker(Worker):
@@ -116,8 +110,9 @@ class ShapleyWorker(Worker):
         coordinator: ShapleyCoordinator,
         *,
         worker_id: int,
-        permutation_breaker: Optional[PermutationBreaker] = None,
         update_period: int = 30,
+        total_utility: Optional[float] = None,
+        permutation_tolerance: Optional[float] = None,
     ):
         """A worker calculates Shapley values using the permutation definition
          and reports the results to the coordinator.
@@ -129,16 +124,28 @@ class ShapleyWorker(Worker):
         :param u: Utility object with model, data, and scoring function
         :param coordinator: worker results will be pushed to this coordinator
         :param worker_id: id used for reporting through maybe_progress
-        :param permutation_breaker: Stopping criteria to apply within
-            individual permutations.
         :param update_period: interval in seconds between different updates to
             and from the coordinator
+        :param total_utility: total utility of the utility function. Pass to
+            avoid recomputing in each worker.
+        :param permutation_tolerance: tolerance for the permutation breaking
+            algorithm ("performance tolerance" in :footcite:t:`ghorbani_data_2019`).
+            Leave empty to set to ``total_utility / len(u.data) / 100``
         """
         super().__init__(
             coordinator=coordinator, update_period=update_period, worker_id=worker_id
         )
         self.u = u
-        self.permutation_breaker = permutation_breaker
+        self.total_utility = total_utility or u(u.data.indices)
+        self.permutation_tolerance = (
+            permutation_tolerance or self.total_utility / len(self.u.data) / 100
+        )
+
+    def permutation_breaker(self, idx: int, marginals: NDArray[np.float_]) -> bool:
+        return (
+            float(np.abs(marginals[idx] - self.total_utility))
+            < self.permutation_tolerance
+        )
 
     def _compute_marginals(self) -> ValuationResult:
         # Import here to avoid errors with circular imports
@@ -155,23 +162,22 @@ class ShapleyWorker(Worker):
         """Computes marginal utilities in a loop until signalled to stop.
 
         This calls :meth:`_compute_marginals` repeatedly calculating Shapley
-        values on different permutations of the indices. After ``update_period``
+        values on different permutations of the indices. After :attr:`update_period`
         seconds have passed, it reports the results to the
         :class:`~pydvl.value.shapley.actor.ShapleyCoordinator`. Before starting
         the next iteration, it checks the coordinator's
         :meth:`~pydvl.utils.parallel.actor.Coordinator.is_done` flag,
         terminating if it's ``True``.
         """
-        acc = ValuationResult().empty()
-        while not self.coordinator.is_done():
+        while True:
+            acc = ValuationResult.empty()
             start_time = time()
             while (time() - start_time) < self.update_period:
+                if self.coordinator.is_done():
+                    return
                 results = self._compute_marginals()
                 if np.any(np.isnan(results.values)):
-                    warnings.warn(
-                        "NaN values in current permutation, ignoring",
-                        RuntimeWarning,
-                    )
+                    logger.warning("NaN values in current permutation, ignoring")
                     continue
                 acc += results
             self.coordinator.add_results(acc)
