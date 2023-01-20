@@ -13,12 +13,8 @@ from pydvl.utils.numeric import (
     squashed_r2,
     squashed_variance,
 )
-from pydvl.value.shapley.montecarlo import (
-    combinatorial_montecarlo_shapley,
-    owen_sampling_shapley,
-    permutation_montecarlo_shapley,
-    truncated_montecarlo_shapley,
-)
+from pydvl.value import compute_shapley_values
+from pydvl.value.shapley import ShapleyMode
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
 
 from .. import check_rank_correlation, check_total_value, check_values
@@ -30,12 +26,18 @@ log = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "num_samples, fun, rtol, n_iterations, kwargs",
     [
-        (12, permutation_montecarlo_shapley, 0.1, 10, {}),
+        (12, ShapleyMode.PermutationMontecarlo, 0.1, 10, {}),
         # FIXME! it should be enough with 2**(len(data)-1) samples
-        (8, combinatorial_montecarlo_shapley, 0.2, 2**10, {}),
-        (12, truncated_montecarlo_shapley, 0.1, 10, {"coordinator_update_period": 1}),
-        (12, owen_sampling_shapley, 0.1, 4, {"max_q": 200, "method": "antithetic"}),
-        (12, owen_sampling_shapley, 0.1, 4, {"max_q": 200, "method": "standard"}),
+        (8, ShapleyMode.CombinatorialMontecarlo, 0.2, 2**10, {}),
+        (
+            12,
+            ShapleyMode.TruncatedMontecarlo,
+            0.1,
+            10,
+            {"coordinator_update_period": 1},
+        ),
+        (12, ShapleyMode.Owen, 0.1, 4, {"max_q": 200}),
+        (12, ShapleyMode.OwenAntithetic, 0.1, 4, {"max_q": 200}),
     ],
 )
 def test_analytic_montecarlo_shapley(
@@ -43,12 +45,13 @@ def test_analytic_montecarlo_shapley(
 ):
     u, exact_values = analytic_shapley
 
-    values = fun(
+    values = compute_shapley_values(
         u,
+        mode=fun,
+        n_jobs=1,
         n_iterations=int(n_iterations),
         config=parallel_config,
         progress=False,
-        n_jobs=1,
         **kwargs,
     )
 
@@ -57,7 +60,7 @@ def test_analytic_montecarlo_shapley(
 
 @pytest.mark.parametrize("num_samples, delta, eps", [(8, 0.1, 0.1)])
 @pytest.mark.parametrize(
-    "fun", [permutation_montecarlo_shapley, combinatorial_montecarlo_shapley]
+    "fun", [ShapleyMode.PermutationMontecarlo, ShapleyMode.CombinatorialMontecarlo]
 )
 def test_hoeffding_bound_montecarlo(
     num_samples, analytic_shapley, fun, delta: float, eps: float, tolerate
@@ -68,7 +71,9 @@ def test_hoeffding_bound_montecarlo(
 
     for _ in range(10):
         with tolerate(max_failures=int(10 * delta)):
-            values = fun(u=u, n_iterations=n_iterations, n_jobs=1)
+            values = compute_shapley_values(
+                u=u, mode=fun, n_iterations=n_iterations, n_jobs=1
+            )
             # Trivial bound on total error using triangle inequality
             check_total_value(u, values, atol=len(u.data) * eps)
             check_rank_correlation(values, exact_values, threshold=0.8)
@@ -84,12 +89,12 @@ def test_hoeffding_bound_montecarlo(
     "fun, n_iterations, kwargs",
     [
         # FIXME: Hoeffding says 400 should be enough
-        (permutation_montecarlo_shapley, 600, {}),
-        (truncated_montecarlo_shapley, 500, {"coordinator_update_period": 1}),
-        (combinatorial_montecarlo_shapley, 2**11, {}),
-        (owen_sampling_shapley, 4, {"max_q": 300, "method": "standard"}),
+        (ShapleyMode.PermutationMontecarlo, 600, {}),
+        (ShapleyMode.TruncatedMontecarlo, 500, {"coordinator_update_period": 1}),
+        (ShapleyMode.CombinatorialMontecarlo, 2**11, {}),
+        (ShapleyMode.Owen, 4, {"max_q": 300}),
         # FIXME: antithetic breaks for non-deterministic u
-        # (owen_sampling_shapley, 4, {"max_q": 300, "method": "antithetic"}),
+        # (ShapleyMode.OwenAntithetic, 4, {"max_q": 300}),
     ],
 )
 def test_linear_montecarlo_shapley(
@@ -126,7 +131,9 @@ def test_linear_montecarlo_shapley(
     )
 
     exact_values = combinatorial_exact_shapley(u, progress=False)
-    values = fun(u, n_iterations=int(n_iterations), progress=False, n_jobs=1, **kwargs)
+    values = compute_shapley_values(
+        u, mode=fun, n_iterations=int(n_iterations), progress=False, n_jobs=1, **kwargs
+    )
 
     check_values(values, exact_values, rtol=rtol)
     check_total_value(u, values, rtol=rtol)  # FIXME, could be more than rtol
@@ -141,11 +148,15 @@ def test_linear_montecarlo_shapley(
 @pytest.mark.parametrize(
     "fun, n_iterations, kwargs",
     [
-        (permutation_montecarlo_shapley, 500, {}),
-        (truncated_montecarlo_shapley, 500, {"coordinator_update_period": 1}),
-        (owen_sampling_shapley, 4, {"max_q": 400, "method": "standard"}),
+        # (ShapleyMode.PermutationMontecarlo, 500, {}),
+        (
+            ShapleyMode.TruncatedMontecarlo,
+            500,
+            {"coordinator_update_period": 0.2, "worker_update_period": 0.1},
+        ),
+        # (ShapleyMode.Owen, 4, {"max_q": 400}),
         # FIXME: antithetic breaks for non-deterministic u
-        # (owen_sampling_shapley, 4, {"max_q": 400, "method": "antithetic"}),
+        # (ShapleyMode.OwenAntithetic, 4, {"max_q": 400}),
     ],
 )
 def test_linear_montecarlo_with_outlier(
@@ -175,14 +186,17 @@ def test_linear_montecarlo_with_outlier(
         scoring=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
-    values = fun(
+    values = compute_shapley_values(
         linear_utility,
+        mode=fun,
         n_iterations=int(n_iterations),
         progress=False,
         n_jobs=1,
         **kwargs,
     )
+    from pydvl.utils import Status
 
+    assert values.status == Status.Converged
     check_total_value(linear_utility, values, atol=total_atol)
     assert values[0].index == outlier_idx
 
@@ -194,11 +208,11 @@ def test_linear_montecarlo_with_outlier(
 @pytest.mark.parametrize(
     "fun, n_iterations, kwargs",
     [
-        (permutation_montecarlo_shapley, 700, {}),
-        (truncated_montecarlo_shapley, 500, {"coordinator_update_period": 1}),
-        (owen_sampling_shapley, 4, {"max_q": 300, "method": "standard"}),
+        (ShapleyMode.PermutationMontecarlo, 700, {}),
+        (ShapleyMode.TruncatedMontecarlo, 500, {"coordinator_update_period": 1}),
+        (ShapleyMode.Owen, 4, {"max_q": 300}),
         # FIXME: antithetic breaks for non-deterministic u
-        # (owen_sampling_shapley, 4, {"max_q": 300, "method": "antithetic"}),
+        # (ShapleyMode.OwenAntithetic, 4, {"max_q": 300}),
     ],
 )
 def test_grouped_linear_montecarlo_shapley(
@@ -228,8 +242,9 @@ def test_grouped_linear_montecarlo_shapley(
     )
     exact_values = combinatorial_exact_shapley(grouped_linear_utility, progress=False)
 
-    values = fun(
+    values = compute_shapley_values(
         grouped_linear_utility,
+        mode=fun,
         n_iterations=int(n_iterations),
         progress=False,
         n_jobs=1,
@@ -272,6 +287,10 @@ def test_random_forest(
         ),
     )
 
-    _, _ = truncated_montecarlo_shapley(
-        rf_utility, n_iterations=int(n_iterations), progress=False, n_jobs=n_jobs
+    _, _ = compute_shapley_values(
+        rf_utility,
+        mode=ShapleyMode.PermutationMontecarlo,
+        n_iterations=int(n_iterations),
+        progress=False,
+        n_jobs=n_jobs,
     )
