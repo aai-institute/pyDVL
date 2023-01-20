@@ -6,30 +6,30 @@ import numpy as np
 from pydvl.utils import Status
 from pydvl.value import ValuationResult
 
-__all__ = ["ConvergenceCheck", "median_ratio", "max_iterations", "history_deviation"]
+__all__ = ["StoppingCriterion", "median_ratio", "max_iterations", "history_deviation"]
 
-ConvergenceCheckCallable = Callable[[ValuationResult], Status]
+StoppingCriterionCallable = Callable[[ValuationResult], Status]
 
 
-class ConvergenceCheck:
-    _fun: ConvergenceCheckCallable
+class StoppingCriterion:
+    _fun: StoppingCriterionCallable
 
-    def __init__(self, fun: ConvergenceCheckCallable, inplace: bool = True):
+    def __init__(self, fun: StoppingCriterionCallable, inplace: bool = True):
         """A composable callable object to determine whether a computation must stop.
 
-        ``ConvergenceCheck``s take a :class:`~pydvl.value.results.ValuationResult`
+        ``StoppingCriterion``s take a :class:`~pydvl.value.results.ValuationResult`
         and return a :class:`~pydvl.value.results.Status~.
 
-        :Creating ConvergenceChecks:
+        :Creating StoppingCriterions:
 
         The easiest way is to declare a function implementing the
-        interface :ref:`ConvergenceCheckCallable` and wrap it with this class
+        interface :ref:`StoppingCriterionCallable` and wrap it with this class
 
         For more realistic examples see
         e.g. :func:`~pydvl.value.convergence.median_ratio`
         or :func:`~pydvl.value.convergence.history_deviation`
 
-        :Composing ConvergenceChecks:
+        :Composing StoppingCriterions:
 
         Objects of this type can be composed with the binary operators ``&``
         (_and_), ``^`` (_xor_) and ``|`` (_or_),
@@ -56,38 +56,38 @@ class ConvergenceCheck:
             results._status = status
         return status
 
-    def __and__(self, other: "ConvergenceCheck") -> "ConvergenceCheck":
+    def __and__(self, other: "StoppingCriterion") -> "StoppingCriterion":
         def fun(results: ValuationResult):
             return self(results) & other(results)
 
-        fun.__name__ = f"Composite ConvergenceCheck: {self.name} AND {other.name}"
-        return ConvergenceCheck(cast(ConvergenceCheckCallable, fun))
+        fun.__name__ = f"Composite StoppingCriterion: {self.name} AND {other.name}"
+        return StoppingCriterion(cast(StoppingCriterionCallable, fun))
 
-    def __or__(self, other: "ConvergenceCheck") -> "ConvergenceCheck":
+    def __or__(self, other: "StoppingCriterion") -> "StoppingCriterion":
         def fun(results: ValuationResult):
             return self(results) | other(results)
 
-        fun.__name__ = f"Composite ConvergenceCheck: {self.name} OR {other.name}"
-        return ConvergenceCheck(cast(ConvergenceCheckCallable, fun))
+        fun.__name__ = f"Composite StoppingCriterion: {self.name} OR {other.name}"
+        return StoppingCriterion(cast(StoppingCriterionCallable, fun))
 
-    def __invert__(self) -> "ConvergenceCheck":
+    def __invert__(self) -> "StoppingCriterion":
         def fun(results: ValuationResult):
             return ~self(results)
 
-        fun.__name__ = f"Composite ConvergenceCheck: NOT {self.name}"
-        return ConvergenceCheck(cast(ConvergenceCheckCallable, fun))
+        fun.__name__ = f"Composite StoppingCriterion: NOT {self.name}"
+        return StoppingCriterion(cast(StoppingCriterionCallable, fun))
 
-    def __xor__(self, other: "ConvergenceCheck") -> "ConvergenceCheck":
+    def __xor__(self, other: "StoppingCriterion") -> "StoppingCriterion":
         def fun(results: ValuationResult):
             a = self(results)
             b = other(results)
             return (a & ~b) | (~a & b)
 
-        fun.__name__ = f"Composite ConvergenceCheck: {self.name} XOR {other.name}"
-        return ConvergenceCheck(cast(ConvergenceCheckCallable, fun))
+        fun.__name__ = f"Composite StoppingCriterion: {self.name} XOR {other.name}"
+        return StoppingCriterion(cast(StoppingCriterionCallable, fun))
 
 
-def median_ratio(threshold: float) -> ConvergenceCheck:
+def median_ratio(threshold: float) -> StoppingCriterion:
     """Ratio of medians for convergence.
 
     :param threshold: Converged if the ratio of median standard
@@ -101,10 +101,10 @@ def median_ratio(threshold: float) -> ConvergenceCheck:
             return Status.Converged
         return Status.Pending
 
-    return ConvergenceCheck(median_ratio_check)
+    return StoppingCriterion(median_ratio_check)
 
 
-def max_iterations(n_iterations: Optional[int]) -> ConvergenceCheck:
+def max_iterations(n_iterations: Optional[int]) -> StoppingCriterion:
     """Terminate if the number of iterations exceeds the given number.
 
     This checks the ``counts`` field of a
@@ -118,7 +118,7 @@ def max_iterations(n_iterations: Optional[int]) -> ConvergenceCheck:
     :return: The convergence check
     """
     if n_iterations is None:
-        return ConvergenceCheck(lambda _: Status.Pending)
+        return StoppingCriterion(lambda _: Status.Pending)
 
     _max_iterations = n_iterations
 
@@ -131,10 +131,10 @@ def max_iterations(n_iterations: Optional[int]) -> ConvergenceCheck:
 
         return Status.Pending
 
-    return ConvergenceCheck(max_iterations_check)
+    return StoppingCriterion(max_iterations_check)
 
 
-def history_deviation(n_samples: int, n_steps: int, atol: float) -> ConvergenceCheck:
+def history_deviation(n_samples: int, n_steps: int, atol: float) -> StoppingCriterion:
     """Ghorbani et al.'s check for relative distance to a previous step in the
      computation.
 
@@ -168,4 +168,4 @@ def history_deviation(n_samples: int, n_steps: int, atol: float) -> ConvergenceC
             memory[ii] = r.values[ii]
         return Status.Pending
 
-    return ConvergenceCheck(history_deviation_check)
+    return StoppingCriterion(history_deviation_check)

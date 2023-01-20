@@ -50,7 +50,7 @@ from ...utils.parallel import MapReduceJob, init_parallel_backend
 from ...utils.progress import maybe_progress
 from ...utils.status import Status
 from ...utils.utility import Utility
-from ..convergence import ConvergenceCheck
+from ..convergence import StoppingCriterion
 from ..results import ValuationResult
 from .actor import get_shapley_coordinator, get_shapley_worker
 from .types import PermutationBreaker
@@ -76,7 +76,7 @@ __all__ = [
 def truncated_montecarlo_shapley(
     u: Utility,
     *,
-    convergence_check: ConvergenceCheck,
+    stopping_criterion: StoppingCriterion,
     permutation_tolerance: Optional[float] = None,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
@@ -98,10 +98,10 @@ def truncated_montecarlo_shapley(
     to a dataset from a permutation. Once a marginal utility is close enough to
     the total utility we set all marginals to 0 for the remainder of the
     permutation. We keep sampling permutations and updating all shapley values
-    until the ``convergence_check`` returns ``True``.
+    until the ``stopping_criterion`` returns ``True``.
 
     :param u: Utility object with model, data, and scoring function
-    :param convergence_check: Check on the results which decides when to stop
+    :param stopping_criterion: Check on the results which decides when to stop
         sampling permutations.
     :param permutation_tolerance: Tolerance for the interruption of computations
         within a permutation. This is called "performance tolerance" in
@@ -129,7 +129,7 @@ def truncated_montecarlo_shapley(
     u_id = parallel_backend.put(u)
 
     coordinator = get_shapley_coordinator(  # type: ignore
-        config=config, convergence_check=convergence_check
+        config=config, stopping_criterion=stopping_criterion
     )
 
     total_utility = u(u.data.indices)
@@ -170,7 +170,7 @@ def truncated_montecarlo_shapley(
 def _permutation_montecarlo_shapley(
     u: Utility,
     *,
-    convergence_check: ConvergenceCheck,
+    stopping_criterion: StoppingCriterion,
     permutation_breaker: Optional[PermutationBreaker] = None,
     algorithm_name: str = "permutation_montecarlo_shapley",
     progress: bool = False,
@@ -183,7 +183,7 @@ def _permutation_montecarlo_shapley(
     sampled permutations.
 
     :param u: Utility object with model, data, and scoring function
-    :param convergence_check: Check on the results which decides when to stop
+    :param stopping_criterion: Check on the results which decides when to stop
     :param permutation_breaker: A callable which decides whether to interrupt
         processing a permutation and set all subsequent marginals to zero.
     :param algorithm_name: For the results object. Used internally by different
@@ -228,14 +228,14 @@ def _permutation_montecarlo_shapley(
             counts=counts,
         )
 
-        if convergence_check(result):
+        if stopping_criterion(result):
             break
     return result
 
 
 def permutation_montecarlo_shapley(
     u: Utility,
-    convergence_check: ConvergenceCheck,
+    stopping_criterion: StoppingCriterion,
     *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
@@ -250,7 +250,7 @@ def permutation_montecarlo_shapley(
     See :ref:`data valuation` for details.
 
     :param u: Utility object with model, data, and scoring function.
-    :param convergence_check: function checking whether computation must stop.
+    :param stopping_criterion: function checking whether computation must stop.
     :param n_jobs: number of jobs across which to distribute the computation.
     :param config: Object configuring parallel computation, with cluster
     address,
@@ -269,7 +269,7 @@ def permutation_montecarlo_shapley(
         reduce_func=lambda results: reduce(operator.add, results),
         map_kwargs=dict(
             algorithm_name="permutation_montecarlo_shapley",
-            convergence_check=convergence_check,
+            stopping_criterion=stopping_criterion,
             permutation_breaker=None,  # permutation_breaker,
             progress=progress,
         ),
