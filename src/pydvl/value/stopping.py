@@ -149,23 +149,29 @@ def history_deviation(n_samples: int, n_steps: int, atol: float) -> StoppingCrit
     :param atol: Absolute tolerance for convergence.
     :return: The convergence check
     """
-    memory = np.zeros(n_samples)
-    converged = np.array([False] * n_samples)
-
+    # Yuk... using static vars just to avoid nonlocal
+    # An abstract class and maybe a factory would probably be better
     def history_deviation_check(r: ValuationResult) -> Status:
-        nonlocal memory
         if r.counts.max() == 0:  # safeguard against reuse of the criterion
-            memory = np.zeros(n_samples)
+            history_deviation_check.memory = np.zeros(n_samples)
+            history_deviation_check.converged = np.array([False] * n_samples)
             return Status.Pending
         # Look at indices that have been updated n_steps times since last save
         # For permutation samplers, this should be all indices, every n_steps
         ii = np.where(r.counts % n_steps == 0)
         if len(ii) > 0:
-            if np.abs((r.values[ii] - memory[ii]) / r.values[ii]).mean() < atol:
-                converged[ii] = True
-                if np.all(converged):
+            if (
+                np.abs(
+                    (r.values[ii] - history_deviation_check.memory[ii]) / r.values[ii]
+                ).mean()
+                < atol
+            ):
+                history_deviation_check.converged[ii] = True
+                if np.all(history_deviation_check.converged):
                     return Status.Converged
-            memory[ii] = r.values[ii]
+            history_deviation_check.memory[ii] = r.values[ii]
         return Status.Pending
 
+    history_deviation_check.memory = np.zeros(n_samples)
+    history_deviation_check.converged = np.array([False] * n_samples)
     return StoppingCriterion(history_deviation_check)
