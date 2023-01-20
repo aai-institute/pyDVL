@@ -18,8 +18,7 @@ from ...utils.config import ParallelConfig
 from ...utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from ...utils.utility import Utility
 from ...value.results import ValuationResult
-from ..convergence import StoppingCriterion, max_iterations
-from .types import PermutationBreaker
+from ..stopping import StoppingCriterion, max_iterations
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
 
@@ -153,7 +152,7 @@ class ShapleyWorker(Worker):
 
         return _permutation_montecarlo_shapley(
             self.u,
-            stopping_criterion=max_iterations(1),
+            stop=max_iterations(1),
             permutation_breaker=self.permutation_breaker,
             algorithm_name="truncated_montecarlo_shapley",
         )
