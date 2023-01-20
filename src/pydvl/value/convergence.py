@@ -14,7 +14,7 @@ ConvergenceCheckCallable = Callable[[ValuationResult], Status]
 class ConvergenceCheck:
     _fun: ConvergenceCheckCallable
 
-    def __init__(self, fun: ConvergenceCheckCallable):
+    def __init__(self, fun: ConvergenceCheckCallable, inplace: bool = True):
         """A composable callable object to determine whether a computation must stop.
 
         ``ConvergenceCheck``s take a :class:`~pydvl.value.results.ValuationResult`
@@ -39,8 +39,10 @@ class ConvergenceCheck:
         :param fun: A callable to wrap into a composable object. Use this to
             enable simpler functions to be composed with the operators described
             above.
-
+        :param inplace: If ``True`` the status of the input ValuationResult is
+            modified in place.
         """
+        self.inplace = inplace
         self._fun = fun
         update_wrapper(self, self._fun)
 
@@ -49,7 +51,10 @@ class ConvergenceCheck:
         return self._fun.__name__
 
     def __call__(self, results: ValuationResult) -> Status:
-        return self._fun(results)
+        status = self._fun(results)
+        if self.inplace:  # FIXME: this is not nice
+            results._status = status
+        return status
 
     def __and__(self, other: "ConvergenceCheck") -> "ConvergenceCheck":
         def fun(results: ValuationResult):
