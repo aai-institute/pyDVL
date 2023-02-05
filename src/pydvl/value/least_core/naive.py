@@ -8,8 +8,10 @@ from numpy.typing import NDArray
 from pydvl.utils import Utility, maybe_progress, powerset
 from pydvl.utils.status import Status
 from pydvl.value.least_core._common import (
+    LeastCoreProblem,
     _solve_egalitarian_least_core_quadratic_program,
     _solve_least_core_linear_program,
+    lc_solve_problem,
 )
 from pydvl.value.results import ValuationResult
 
@@ -80,54 +82,6 @@ def exact_least_core(
         A_lb[i, indices] = 1
         utility_values[i] = u(subset)
 
-    b_lb = utility_values
-    b_eq = utility_values[-1:]
-
-    _, subsidy = _solve_least_core_linear_program(
-        A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
-    )
-
-    values: Optional[NDArray[np.float_]]
-
-    if subsidy is None:
-        logger.debug("No values were found")
-        status = Status.Failed
-        values = np.empty(n)
-        values[:] = np.nan
-        subsidy = np.nan
-
-        return ValuationResult(
-            algorithm="exact_least_core",
-            status=status,
-            values=values,
-            subsidy=subsidy,
-            stderr=None,
-            data_names=u.data.data_names,
-        )
-
-    values = _solve_egalitarian_least_core_quadratic_program(
-        subsidy,
-        A_eq=A_eq,
-        b_eq=b_eq,
-        A_lb=A_lb,
-        b_lb=b_lb,
-        **options,
-    )
-
-    if values is None:
-        logger.debug("No values were found")
-        status = Status.Failed
-        values = np.empty(n)
-        values[:] = np.nan
-        subsidy = np.nan
-    else:
-        status = Status.Converged
-
-    return ValuationResult(
-        algorithm="exact_least_core",
-        status=status,
-        values=values,
-        subsidy=subsidy,
-        stderr=None,
-        data_names=u.data.data_names,
+    return lc_solve_problem(
+        u, LeastCoreProblem(utility_values, A_lb), "exact_least_core", **options
     )

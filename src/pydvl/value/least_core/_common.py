@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Optional, Tuple
+from typing import NamedTuple, Optional, Tuple
 
 import cvxpy as cp
 import numpy as np
@@ -9,9 +9,96 @@ from numpy.typing import NDArray
 __all__ = [
     "_solve_least_core_linear_program",
     "_solve_egalitarian_least_core_quadratic_program",
+    "lc_solve_problem",
+    "LeastCoreProblem",
 ]
 
+from pydvl.utils import Status, Utility
+from pydvl.value import ValuationResult
+
 logger = logging.getLogger(__name__)
+
+LeastCoreProblem = NamedTuple(
+    "LeastCoreProblem",
+    [("utility_values", NDArray[np.float_]), ("A_lb", NDArray[np.float_])],
+)
+
+
+def lc_solve_problem(
+    u: Utility, problem: LeastCoreProblem, algorithm: str, **options
+) -> ValuationResult:
+    """Solves a linear problem prepared by :func:`mclc_prepare_problem`.
+    Useful for parallel execution of multiple experiments by running this as a
+    remote task.
+
+    See :func:`montecarlo_least_core` for argument descriptions.
+    """
+    if options is None:
+        options = {}
+    n = len(u.data)
+
+    if np.any(np.isnan(problem.utility_values)):
+        warnings.warn(
+            f"Calculation returned "
+            f"{np.sum(np.isnan(problem.utility_values))} NaN "
+            f"values out of {problem.utility_values.size}",
+            RuntimeWarning,
+        )
+
+    logger.debug("Removing possible duplicate values in lower bound array")
+    b_lb = problem.utility_values
+    A_lb, unique_indices = np.unique(problem.A_lb, return_index=True, axis=0)
+    b_lb = b_lb[unique_indices]
+
+    logger.debug("Building equality constraint")
+    A_eq = np.ones((1, n))
+    # We might have already computed the total utility. That's the index of the
+    # row in A_lb with all ones.
+    total_utility_index = np.where(A_lb.sum(axis=1) == n)[0]
+    if len(total_utility_index) == 0:
+        b_eq = np.array([u(u.data.indices)])
+    else:
+        b_eq = problem.utility_values[total_utility_index[0]]
+
+    _, subsidy = _solve_least_core_linear_program(
+        A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
+    )
+
+    values: Optional[NDArray[np.float_]]
+
+    if subsidy is None:
+        logger.debug("No values were found")
+        status = Status.Failed
+        values = np.empty(n)
+        values[:] = np.nan
+        subsidy = np.nan
+    else:
+        values = _solve_egalitarian_least_core_quadratic_program(
+            subsidy,
+            A_eq=A_eq,
+            b_eq=b_eq,
+            A_lb=A_lb,
+            b_lb=b_lb,
+            **options,
+        )
+
+        if values is None:
+            logger.debug("No values were found")
+            status = Status.Failed
+            values = np.empty(n)
+            values[:] = np.nan
+            subsidy = np.nan
+        else:
+            status = Status.Converged
+
+    return ValuationResult(
+        algorithm=algorithm,
+        status=status,
+        values=values,
+        subsidy=subsidy,
+        stderr=None,
+        data_names=u.data.data_names,
+    )
 
 
 def _solve_least_core_linear_program(
