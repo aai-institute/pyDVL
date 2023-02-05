@@ -55,9 +55,6 @@ def compute_least_core_values(
     """
     progress: bool = kwargs.pop("progress", False)
 
-    if mode not in list(LeastCoreMode):
-        raise ValueError(f"Invalid value encountered in {mode=}")
-
     if mode == LeastCoreMode.MonteCarlo:
         # TODO fix progress showing and maybe_progress in remote case
         progress = False
@@ -72,3 +69,5 @@ def compute_least_core_values(
         )
     elif mode == LeastCoreMode.Exact:
         return exact_least_core(u=u, n_jobs=n_jobs, progress=progress, **kwargs)
+
+    raise ValueError(f"Invalid value encountered in {mode=}")
