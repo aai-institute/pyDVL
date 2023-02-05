@@ -10,7 +10,7 @@ from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import MapReduceJob
 from pydvl.utils.progress import maybe_progress
 from pydvl.utils.utility import Utility
-from pydvl.value.least_core._common import LeastCoreProblem, lc_solve_problem
+from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
 from pydvl.value.results import ValuationResult
 
 logger = logging.getLogger(__name__)
@@ -132,7 +132,7 @@ def mclc_prepare_problem(
 ) -> LeastCoreProblem:
     """Prepares a linear problem by sampling subsets of the data.
     Use this to separate the problem preparation from the solving with
-    :func:`~pydvl.value.least_core._common.lc_solve_problem`. Useful for
+    :func:`~pydvl.value.least_core.common.lc_solve_problem`. Useful for
     parallel execution of multiple experiments.
 
     See :func:`montecarlo_least_core` for argument descriptions.

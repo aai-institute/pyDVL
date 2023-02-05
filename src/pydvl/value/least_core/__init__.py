@@ -11,10 +11,10 @@ In addition to the standard interface via :func:`~pydvl.value.least_core.compute
 from enum import Enum
 from typing import Optional
 
+from ...utils import Utility
+from .. import ValuationResult
 from .montecarlo import *
 from .naive import *
-from .. import ValuationResult
-from ...utils import Utility
 
 
 class LeastCoreMode(Enum):
@@ -41,7 +41,10 @@ def compute_least_core_values(
     - ``exact``: uses the complete powerset of the training set for the constraints
       :func:`~pydvl.value.shapley.naive.combinatorial_exact_shapley`.
     - ``montecarlo``:  uses the approximate Monte Carlo Least Core algorithm.
-     Implemented in :func:`~pydvl.value.least_core.montecarlo.least_core_montecarlo`.
+      Implemented in :func:`~pydvl.value.least_core.montecarlo.least_core_montecarlo`.
+
+
+    .. versionadded:: 0.4.1
     """
     progress: bool = kwargs.pop("progress", False)
 

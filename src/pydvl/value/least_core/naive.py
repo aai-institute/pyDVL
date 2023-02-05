@@ -3,16 +3,9 @@ import warnings
 from typing import Optional
 
 import numpy as np
-from numpy.typing import NDArray
 
 from pydvl.utils import Utility, maybe_progress, powerset
-from pydvl.utils.status import Status
-from pydvl.value.least_core._common import (
-    LeastCoreProblem,
-    _solve_egalitarian_least_core_quadratic_program,
-    _solve_least_core_linear_program,
-    lc_solve_problem,
-)
+from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
 from pydvl.value.results import ValuationResult
 
 __all__ = ["exact_least_core"]
