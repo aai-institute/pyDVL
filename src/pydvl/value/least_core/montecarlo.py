@@ -80,10 +80,9 @@ def _reduce_func(
 def montecarlo_least_core(
     u: Utility,
     n_iterations: int,
+    *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
-    *,
-    epsilon: float = 0.0,
     options: Optional[dict] = None,
     progress: bool = False,
 ) -> ValuationResult:
@@ -93,7 +92,7 @@ def montecarlo_least_core(
     \begin{array}{lll}
     \text{minimize} & \displaystyle{e} & \\
     \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
-    & \displaystyle\sum_{i\in S} x_{i} + e + \epsilon \geq v(S) & ,
+    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) & ,
     \forall S \in \{S_1, S_2, \dots, S_m \overset{\mathrm{iid}}{\sim} U(2^N) \}
     \end{array}
     $$
@@ -101,16 +100,14 @@ def montecarlo_least_core(
     Where:
 
     * $U(2^N)$ is the uniform distribution over the powerset of $N$.
-    * $m$ is the number of subsets that will be sampled and whose utility will be computed
-      and used to compute the data values.
-    * $\epsilon \ge 0$ is an optional relaxation value.
+    * $m$ is the number of subsets that will be sampled and whose utility will
+      be computed and used to compute the data values.
 
     :param u: Utility object with model, data, and scoring function
     :param n_iterations: total number of iterations to use
     :param n_jobs: number of jobs across which to distribute the computation
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param epsilon: Relaxation value by which the subset utility is decreased.
     :param options: Keyword arguments that will be used to select a solver
         and to configure it. Refer to the following page for all possible options:
         https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
