@@ -5,7 +5,14 @@ This package holds all routines for the computation of Least Core data values.
 
 Please refer to :ref:`data valuation` for an overview.
 
-In addition to the standard interface via :func:`~pydvl.value.least_core.compute_least_core_values`,
+In addition to the standard interface via
+:func:`~pydvl.value.least_core.compute_least_core_values`, because computing the
+Least Core values requires the solution of a linear and a quadratic problem
+*after* computing all the utility values, there is the possibility of performing
+each step separately. This is useful when running multiple experiments: use
+:func:`~pydvl.value.least_core.montecarlo.mclc_prepare_problem` to prepare a
+list of problems to solve, then solve them in parallel with
+:func:`~pydvl.value.least_core.common.lc_solve_problems`.
 
 """
 from enum import Enum
@@ -41,7 +48,7 @@ def compute_least_core_values(
     - ``exact``: uses the complete powerset of the training set for the constraints
       :func:`~pydvl.value.shapley.naive.combinatorial_exact_shapley`.
     - ``montecarlo``:  uses the approximate Monte Carlo Least Core algorithm.
-      Implemented in :func:`~pydvl.value.least_core.montecarlo.least_core_montecarlo`.
+      Implemented in :func:`~pydvl.value.least_core.montecarlo.montecarlo_least_core`.
 
 
     .. versionadded:: 0.4.1
