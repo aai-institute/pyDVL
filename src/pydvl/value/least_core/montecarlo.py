@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional, Sequence, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -114,26 +114,48 @@ def montecarlo_least_core(
     :param progress: If True, shows a tqdm progress bar
     :return: Object with the data values and the least core value.
     """
+    problem = mclc_prepare_problem(
+        u, n_iterations, n_jobs=n_jobs, config=config, progress=progress
+    )
+    return mclc_solve_problem(u, problem, **(options or {}))
+
+
+# tuple of utility values, A_lb
+LinearProblem = Tuple[NDArray[np.float_], NDArray[np.float_]]
+
+
+def mclc_prepare_problem(
+    u: Utility,
+    n_iterations: int,
+    *,
+    n_jobs: int = 1,
+    config: ParallelConfig = ParallelConfig(),
+    progress: bool = False,
+) -> LinearProblem:
+    """Prepares a linear problem by sampling subsets of the data.
+    Use this to separate the problem preparation from the solving with
+    :func:`mclc_solve_problem`. Useful for parallel execution of multiple
+    experiments.
+
+    See :func:`montecarlo_least_core` for argument descriptions.
+    """
     n = len(u.data)
 
     if n_iterations < n:
         raise ValueError(
-            "Number of iterations should be greater than the size of the dataset"
+            "Number of iterations should be greater than the size of the " "dataset"
         )
 
     if n_iterations > 2**n:
         warnings.warn(
-            f"Passed n_iterations is greater than the number subsets! Setting it to 2^{n}",
+            f"Passed n_iterations is greater than the number subsets! "
+            f"Setting it to 2^{n}",
             RuntimeWarning,
         )
         n_iterations = 2**n
 
-    if options is None:
-        options = {}
-
     iterations_per_job = max(1, n_iterations // n_jobs)
 
-    logger.debug("Instantiating MapReduceJob")
     map_reduce_job: MapReduceJob["Utility", Tuple["NDArray", "NDArray"]] = MapReduceJob(
         inputs=u,
         map_func=_montecarlo_least_core,
@@ -145,8 +167,23 @@ def montecarlo_least_core(
         n_jobs=n_jobs,
         config=config,
     )
-    logger.debug("Calling MapReduceJob instance")
     utility_values, A_lb = map_reduce_job()
+
+    return utility_values, A_lb
+
+
+def mclc_solve_problem(u: Utility, data: LinearProblem, **options) -> ValuationResult:
+    """Solves a linear problem prepared by :func:`mclc_prepare_problem`.
+    Useful for parallel execution of multiple experiments by running this as a
+    remote task.
+
+    See :func:`montecarlo_least_core` for argument descriptions.
+    """
+    if options is None:
+        options = {}
+    n = len(u.data)
+
+    utility_values, A_lb = data
 
     if np.any(np.isnan(utility_values)):
         warnings.warn(
@@ -165,7 +202,7 @@ def montecarlo_least_core(
     b_lb = b_lb[unique_indices]
 
     _, subsidy = _solve_least_core_linear_program(
-        A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, epsilon=epsilon, **options
+        A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
     )
 
     values: Optional[NDArray[np.float_]]
@@ -212,3 +249,23 @@ def montecarlo_least_core(
         stderr=None,
         data_names=u.data.data_names,
     )
+
+
+def mclc_solve_linear_problems(
+    u: Utility, problems: Sequence[LinearProblem], n_jobs: int = 1, **options
+) -> Iterable[ValuationResult]:
+    """Solves a list of linear problems in parallel.
+
+    :param problems: List of linear problems to solve
+    :return: List of solutions
+    """
+    map_reduce_job: MapReduceJob["LinearProblem", "ValuationResult"] = MapReduceJob(
+        inputs=problems,
+        map_func=mclc_solve_problem,
+        map_kwargs=dict(u=u, options=options),
+        reduce_func=lambda x: x,  # type: ignore
+        n_jobs=n_jobs,
+    )
+    solutions = map_reduce_job()
+
+    return solutions
