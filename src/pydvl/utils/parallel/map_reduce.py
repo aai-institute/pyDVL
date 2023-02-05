@@ -83,11 +83,11 @@ def _(v: Iterable, *, timeout: Optional[float] = None) -> List[Any]:
 
 
 class MapReduceJob(Generic[T, R]):
-    """Takes an embarrassingly parallel fun and runs it in `n_jobs` parallel
+    """Takes an embarrassingly parallel fun and runs it in ``n_jobs`` parallel
     jobs, splitting the data evenly into a number of chunks equal to the number of jobs.
 
     Typing information for objects of this class requires the type of the inputs
-    that are split for `map_func` and the type of its output.
+    that are split for ``map_func`` and the type of its output.
 
     :param inputs: The input that will be split and passed to `map_func`.
         if it's not a sequence object. It will be repeat ``n_jobs`` number of times.
@@ -95,7 +95,7 @@ class MapReduceJob(Generic[T, R]):
     :param reduce_func: Function that will be applied to the results of
         ``map_func`` to reduce them.
     :param map_kwargs: Keyword arguments that will be passed to ``map_func`` in
-        each job. Alternatively, one can use `itertools.partial`.
+        each job. Alternatively, one can use ``itertools.partial``.
     :param reduce_kwargs: Keyword arguments that will be passed to ``reduce_func``
         in each job. Alternatively, one can use :func:`itertools.partial`.
     :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig`

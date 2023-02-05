@@ -2,7 +2,6 @@
 transformations. Some of it probably belongs elsewhere.
 """
 import inspect
-from enum import Enum
 from typing import Callable, Optional, Protocol, Type, Union
 
 from numpy import ndarray
