@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import NamedTuple, Optional, Tuple
+from typing import NamedTuple, Optional, Sequence, Tuple
 
 import cvxpy as cp
 import numpy as np
@@ -10,10 +10,11 @@ __all__ = [
     "_solve_least_core_linear_program",
     "_solve_egalitarian_least_core_quadratic_program",
     "lc_solve_problem",
+    "lc_solve_problems",
     "LeastCoreProblem",
 ]
 
-from pydvl.utils import Status, Utility
+from pydvl.utils import MapReduceJob, Status, Utility
 from pydvl.value import ValuationResult
 
 logger = logging.getLogger(__name__)
@@ -99,6 +100,29 @@ def lc_solve_problem(
         stderr=None,
         data_names=u.data.data_names,
     )
+
+
+def lc_solve_problems(
+    u: Utility, problems: Sequence[LeastCoreProblem], n_jobs: int = 1, **options
+) -> Sequence[ValuationResult]:
+    """Solves a list of linear problems in parallel.
+
+    :param u: Utility
+    :param n_jobs:
+    :param problems: Least Core problems to solve, as returned by
+        :func:`lc_prepare_problem`.
+    :return: List of solutions
+    """
+    map_reduce_job: MapReduceJob["LeastCoreProblem", "ValuationResult"] = MapReduceJob(
+        inputs=problems,
+        map_func=lc_solve_problem,
+        map_kwargs=dict(u=u, options=options),
+        reduce_func=lambda x: x,  # type: ignore
+        n_jobs=n_jobs,
+    )
+    solutions = map_reduce_job()
+
+    return solutions
 
 
 def _solve_least_core_linear_program(

@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Iterable, Optional, Sequence, Tuple
+from typing import Iterable, Optional, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "montecarlo_least_core",
     "mclc_prepare_problem",
-    "mclc_solve_problems",
 ]
 
 
@@ -168,23 +167,3 @@ def mclc_prepare_problem(
     )
 
     return map_reduce_job()
-
-
-def mclc_solve_problems(
-    u: Utility, problems: Sequence[LeastCoreProblem], n_jobs: int = 1, **options
-) -> Iterable[ValuationResult]:
-    """Solves a list of linear problems in parallel.
-
-    :param problems: List of linear problems to solve
-    :return: List of solutions
-    """
-    map_reduce_job: MapReduceJob["LeastCoreProblem", "ValuationResult"] = MapReduceJob(
-        inputs=problems,
-        map_func=lc_solve_problem,
-        map_kwargs=dict(u=u, options=options),
-        reduce_func=lambda x: x,  # type: ignore
-        n_jobs=n_jobs,
-    )
-    solutions = map_reduce_job()
-
-    return solutions
