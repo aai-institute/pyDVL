@@ -58,7 +58,7 @@ def lc_solve_problem(
     if len(total_utility_index) == 0:
         b_eq = np.array([u(u.data.indices)])
     else:
-        b_eq = problem.utility_values[total_utility_index[0]]
+        b_eq = b_lb[total_utility_index]
 
     _, subsidy = _solve_least_core_linear_program(
         A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
