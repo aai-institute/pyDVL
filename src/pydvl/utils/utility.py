@@ -36,22 +36,22 @@ logger = logging.getLogger(__name__)
 class Utility:
     """Convenience wrapper with configurable memoization of the scoring function.
 
-    An instance of `Utility` holds the triple of model, dataset and scoring
+    An instance of ``Utility`` holds the triple of model, dataset and scoring
     function which determines the value of data points. This is mosly used for
     the computation of :ref:`Shapley values<Shapley>` and
     :ref:`Least Core values<Least Core>`.
 
     The Utility expect the model to fulfill
     the :class:`pydvl.utils.types.SupervisedModel` interface
-    i.e. to have a `fit()`, `predict()`, and `score()` methods.
+    i.e. to have a ``fit()``, ``predict()``, and ``score()`` methods.
 
     When calling the utility, the model will be
     `cloned <https://scikit-learn.org/stable/modules/generated/sklearn.base.clone.html>`_
-    if it is a Sci-Kit Learn model, otherwise a copy is created using `deepcopy()`
+    if it is a Sci-Kit Learn model, otherwise a copy is created using ``deepcopy()``
     from the builtin `copy <https://docs.python.org/3/library/copy.html>`_ module.
 
     Since evaluating the scoring function requires retraining the model
-    and that can be time consuming, this class wraps it and caches
+    and that can be time-consuming, this class wraps it and caches
     the results of each execution. Caching is available both locally
     and across nodes, but must always be enabled for your
     project first, see :ref:`how to set up the cache<caching setup>`.
@@ -59,8 +59,8 @@ class Utility:
     :param model: Any supervised model. Typical choices can be found at
             https://scikit-learn.org/stable/supervised_learning.html
     :param data: :class:`Dataset` or :class:`GroupedDataset`.
-    :param scoring: Same as in sklearn's `cross_validate()`: a string,
-        a scorer callable or None for the default `model.score()`. Greater
+    :param scoring: Same as in sklearn's ``cross_validate()``: a string,
+        a scorer callable or None for the default ``model.score()``. Greater
         values must be better. If they are not, a negated version can be
         used (see `make_scorer`)
     :param default_score: score in the case of models that have not been fit,
@@ -68,15 +68,17 @@ class Utility:
     :param score_range: numerical range of the score function. Some Monte Carlo
         methods can use this to estimate the number of samples required for a
         certain quality of approximation.
-    :param catch_errors: set to True to catch the errors when fit() fails. This
-        could happen in several steps of the pipeline, e.g. when too little
-        training data is passed, which happens often during the Shapley value calculations.
-        When this happens, the default_score is returned as a score and value
-        calculation continues.
-    :param show_warnings: True for printing warnings fit fails.
-    :param enable_cache: If True, use memcached for memoization.
+    :param catch_errors: set to ``True`` to catch the errors when fit() fails.
+        This could happen in several steps of the pipeline, e.g. when too little
+        training data is passed, which happens often during Shapley value
+        calculations. When this happens, the ``default_score`` is returned as a
+        score and computation continues.
+    :param show_warnings: Set to ``False`` to suppress warnings thrown by
+        ``fit()``.
+    :param enable_cache: If ``True``, use memcached for memoization.
     :param cache_options: Optional configuration object for memcached.
-    :param clone_before_fit: If True, the model will be cloned before calling `fit()`.
+    :param clone_before_fit: If True, the model will be cloned before calling
+        ``fit()``.
 
     :Example:
 
