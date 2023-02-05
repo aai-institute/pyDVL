@@ -486,6 +486,28 @@ where $e^{*}$ is the optimal least core subsidy.
 
    ``n_iterations`` needs to be at least equal to the number of data points.
 
+Because computing the Least Core values requires the solution of a linear and a
+quadratic problem *after* computing all the utility values, we offer the
+possibility of splitting the latter from the former. This is useful when running
+multiple experiments: use
+:func:`~pydvl.value.least_core.montecarlo.mclc_prepare_problem` to prepare a
+list of problems to solve, then solve them in parallel with
+:func:`~pydvl.value.least_core.common.lc_solve_problems`.
+
+.. code-block:: python
+
+   from pydvl.utils import Dataset, Utility
+   from pydvl.value.least_core import mclc_prepare_problem, lc_solve_problems
+   model = ...
+   dataset = Dataset(...)
+   n_iterations = ...
+   utility = Utility(data, model)
+   n_experiments = 10
+   problems = [mclc_prepare_problem(utility, n_iterations=n_iterations)
+        for _ in range(n_experiments)]
+   values = lc_solve_problems(problems)
+
+
 Other methods
 =============
 
