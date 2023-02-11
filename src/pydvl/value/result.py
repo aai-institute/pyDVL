@@ -301,7 +301,7 @@ class ValuationResult(collections.abc.Sequence):
            and standard errors are "unwrapped" and recomputed again.
 
         Means and standard errors are correctly handled. Statuses are added with
-        bit-wise ``&``, see :class:`~pydvl.value.results.Status`.
+        bit-wise ``&``, see :class:`~pydvl.value.result.Status`.
         ``data_names`` are taken from the left summand, or if unavailable from
         the right one. The ``algorithm`` string is carried over if both terms
         have the same one or concatenated.
@@ -400,11 +400,7 @@ class ValuationResult(collections.abc.Sequence):
         :return: An instance of :class:`ValuationResult`
         """
         values = np.random.uniform(low=-1.0, high=1.0, size=size)
-        return cls(
-            algorithm="random",
-            status=Status.Converged,
-            values=values,
-        )
+        return cls(algorithm="random", status=Status.Converged, values=values)
 
     @classmethod
     def empty(cls, algorithm: str = "", n_samples: int = 0) -> "ValuationResult":

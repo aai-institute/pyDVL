@@ -15,7 +15,7 @@ from pydvl.value.least_core._common import (
     _solve_egalitarian_least_core_quadratic_program,
     _solve_least_core_linear_program,
 )
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 
 logger = logging.getLogger(__name__)
 
@@ -24,12 +24,7 @@ __all__ = ["montecarlo_least_core"]
 
 
 def _montecarlo_least_core(
-    u: Utility,
-    n_iterations: int,
-    *,
-    progress: bool = False,
-    job_id: int = 1,
-    **kwargs,
+    u: Utility, n_iterations: int, *, progress: bool = False, job_id: int = 1, **kwargs
 ) -> Tuple[NDArray[np.float_], NDArray[np.float_]]:
     """Computes utility values and the Least Core upper bound matrix for a given number of iterations.
 
@@ -44,20 +39,12 @@ def _montecarlo_least_core(
     utility_values = np.zeros(n_iterations)
 
     # Randomly sample subsets of full dataset
-    power_set = random_powerset(
-        u.data.indices,
-        max_subsets=n_iterations,
-    )
+    power_set = random_powerset(u.data.indices, n_samples=n_iterations)
 
     A_lb = np.zeros((n_iterations, n))
 
     for i, subset in enumerate(
-        maybe_progress(
-            power_set,
-            progress,
-            total=n_iterations,
-            position=job_id,
-        )
+        maybe_progress(power_set, progress, total=n_iterations, position=job_id)
     ):
         indices = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
@@ -141,10 +128,7 @@ def montecarlo_least_core(
         inputs=u,
         map_func=_montecarlo_least_core,
         reduce_func=_reduce_func,
-        map_kwargs=dict(
-            n_iterations=iterations_per_job,
-            progress=progress,
-        ),
+        map_kwargs=dict(n_iterations=iterations_per_job, progress=progress),
         n_jobs=n_jobs,
         config=config,
     )
@@ -190,12 +174,7 @@ def montecarlo_least_core(
         )
 
     values = _solve_egalitarian_least_core_quadratic_program(
-        subsidy,
-        A_eq=A_eq,
-        b_eq=b_eq,
-        A_lb=A_lb,
-        b_lb=b_lb,
-        **options,
+        subsidy, A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
     )
 
     if values is None:

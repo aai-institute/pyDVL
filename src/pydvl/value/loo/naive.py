@@ -2,7 +2,7 @@ import numpy as np
 
 from pydvl.utils import Utility, maybe_progress
 from pydvl.utils.status import Status
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 
 __all__ = ["naive_loo"]
 

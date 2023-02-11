@@ -16,7 +16,7 @@ from pydvl.utils.numeric import (
 from pydvl.value import compute_shapley_values
 from pydvl.value.shapley import ShapleyMode
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
-from pydvl.value.stopping import HistoryDeviation, MaxIterations
+from pydvl.value.stopping import HistoryDeviation, MaxUpdates
 
 from .. import check_rank_correlation, check_total_value, check_values
 
@@ -27,19 +27,14 @@ log = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "num_samples, fun, rtol, kwargs",
     [
-        (12, ShapleyMode.PermutationMontecarlo, 0.1, {"stop": MaxIterations(10)}),
+        (12, ShapleyMode.PermutationMontecarlo, 0.1, {"stop": MaxUpdates(10)}),
         # FIXME! it should be enough with 2**(len(data)-1) samples
-        (
-            8,
-            ShapleyMode.CombinatorialMontecarlo,
-            0.2,
-            {"stop": MaxIterations(2**10)},
-        ),
+        (8, ShapleyMode.CombinatorialMontecarlo, 0.2, {"stop": MaxUpdates(2**10)}),
         (
             12,
             ShapleyMode.TruncatedMontecarlo,
             0.1,
-            {"stop": MaxIterations(10), "coordinator_update_period": 1},
+            {"stop": MaxUpdates(10), "coordinator_update_period": 1},
         ),
         (12, ShapleyMode.Owen, 0.1, {"n_iterations": 4, "max_q": 200}),
         (12, ShapleyMode.OwenAntithetic, 0.1, {"n_iterations": 4, "max_q": 200}),
@@ -88,12 +83,12 @@ def test_hoeffding_bound_montecarlo(
     "fun, kwargs",
     [
         # FIXME: Hoeffding says 400 should be enough
-        (ShapleyMode.PermutationMontecarlo, dict(stop=MaxIterations(600))),
+        (ShapleyMode.PermutationMontecarlo, dict(stop=MaxUpdates(600))),
         (
             ShapleyMode.TruncatedMontecarlo,
-            dict(coordinator_update_period=1, stop=MaxIterations(500)),
+            dict(coordinator_update_period=1, stop=MaxUpdates(500)),
         ),
-        (ShapleyMode.CombinatorialMontecarlo, dict(stop=MaxIterations(2**11))),
+        (ShapleyMode.CombinatorialMontecarlo, dict(stop=MaxUpdates(2**11))),
         (ShapleyMode.Owen, dict(n_iterations=4, max_q=300)),
         # FIXME: antithetic breaks for non-deterministic u
         # (ShapleyMode.OwenAntithetic, dict(n_iterations=4, max_q=300)),
@@ -147,14 +142,14 @@ def test_linear_montecarlo_shapley(
 @pytest.mark.parametrize(
     "fun, kwargs",
     [
-        # (ShapleyMode.PermutationMontecarlo, {"stop": MaxIterations(500)}),
+        # (ShapleyMode.PermutationMontecarlo, {"stop": MaxUpdates(500)}),
         (
             ShapleyMode.TruncatedMontecarlo,
             dict(
                 coordinator_update_period=0.2,
                 worker_update_period=0.1,
                 stop=HistoryDeviation(n_samples=6, n_steps=10, rtol=0.1)
-                | MaxIterations(500),
+                | MaxUpdates(500),
             ),
         ),
         # (ShapleyMode.Owen, dict(n_iterations=4, max_q=400)),
@@ -189,11 +184,7 @@ def test_linear_montecarlo_with_outlier(
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     values = compute_shapley_values(
-        linear_utility,
-        mode=fun,
-        progress=False,
-        n_jobs=1,
-        **kwargs,
+        linear_utility, mode=fun, progress=False, n_jobs=1, **kwargs
     )
     from pydvl.utils import Status
 
@@ -209,10 +200,10 @@ def test_linear_montecarlo_with_outlier(
 @pytest.mark.parametrize(
     "fun, kwargs",
     [
-        (ShapleyMode.PermutationMontecarlo, dict(stop=MaxIterations(700))),
+        (ShapleyMode.PermutationMontecarlo, dict(stop=MaxUpdates(700))),
         (
             ShapleyMode.TruncatedMontecarlo,
-            dict(stop=MaxIterations(500), coordinator_update_period=0.5),
+            dict(stop=MaxUpdates(500), coordinator_update_period=0.5),
         ),
         (ShapleyMode.Owen, dict(n_iterations=4, max_q=300)),
         # FIXME: antithetic breaks for non-deterministic u
@@ -246,11 +237,7 @@ def test_grouped_linear_montecarlo_shapley(
     exact_values = combinatorial_exact_shapley(grouped_linear_utility, progress=False)
 
     values = compute_shapley_values(
-        grouped_linear_utility,
-        mode=fun,
-        progress=False,
-        n_jobs=1,
-        **kwargs,
+        grouped_linear_utility, mode=fun, progress=False, n_jobs=1, **kwargs
     )
 
     check_values(values, exact_values, rtol=rtol)

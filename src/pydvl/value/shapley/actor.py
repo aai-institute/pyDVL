@@ -17,8 +17,8 @@ from numpy.typing import NDArray
 from ...utils.config import ParallelConfig
 from ...utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from ...utils.utility import Utility
-from ...value.results import ValuationResult
-from ..stopping import MaxIterations, StoppingCriterion
+from ...value.result import ValuationResult
+from ..stopping import MaxUpdates, StoppingCriterion
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
 
@@ -64,13 +64,13 @@ class ShapleyCoordinator(Coordinator):
     def __init__(self, stop: StoppingCriterion):
         super().__init__()
         self.stop = stop
-        self.stop.modify_results = True
+        self.stop.modify_result = True
 
     def accumulate(self) -> ValuationResult:
         """Accumulates all results received from the workers.
 
         :return: Values and standard errors in a
-            :class:`~pydvl.value.results.ValuationResult`. If no worker has
+            :class:`~pydvl.value.result.ValuationResult`. If no worker has
             reported yet, returns ``None``.
         """
         if len(self.worker_results) == 0:
@@ -152,7 +152,7 @@ class ShapleyWorker(Worker):
 
         return _permutation_montecarlo_shapley(
             self.u,
-            stop=MaxIterations(1),
+            stop=MaxUpdates(1),
             permutation_breaker=self.permutation_breaker,
             algorithm_name="truncated_montecarlo_shapley",
         )

@@ -11,7 +11,7 @@ __all__ = [
     "make_criterion",
     "StoppingCriterion",
     "MedianRatio",
-    "MaxIterations",
+    "MaxUpdates",
     "MaxTime",
     "HistoryDeviation",
 ]
@@ -20,15 +20,15 @@ StoppingCriterionCallable = Callable[[ValuationResult], Status]
 
 
 class StoppingCriterion:
-    def __init__(self, modify_results: bool = True):
+    def __init__(self, modify_result: bool = True):
         """A composable callable object to determine whether a computation
         must stop.
 
         ``StoppingCriterion``s take a
-        :class:`~pydvl.value.results.ValuationResult`
-        and return a :class:`~pydvl.value.results.Status~.
+        :class:`~pydvl.value.result.ValuationResult`
+        and return a :class:`~pydvl.value.result.Status~.
 
-        :Creating StoppingCriterions:
+        :Creating stopping criteria:
 
         The easiest way is to declare a function implementing the interface
         :ref:`StoppingCriterionCallable` and wrap it with an instance
@@ -40,74 +40,63 @@ class StoppingCriterion:
 
         Objects of this type can be composed with the binary operators ``&``
         (_and_), ``^`` (_xor_) and ``|`` (_or_),
-        see :class:`~pydvl.value.results.Status` for the truth tables. The unary
+        see :class:`~pydvl.utils.status.Status` for the truth tables. The unary
         operator ``~`` (_not_) is also supported.
 
         :param fun: A callable to wrap into a composable object. Use this to
             enable simpler functions to be composed with the operators described
             above.
-        :param modify_results: If ``True`` the status of the input
-            :class:`~pydvl.value.results.ValuationResult` is modified in place.
+        :param modify_result: If ``True`` the status of the input
+            :class:`~pydvl.value.result.ValuationResult` is modified in place.
         """
-        self.modify_results = modify_results
+        self.modify_result = modify_result
 
-    def check(self, results: ValuationResult) -> Status:
+    def check(self, result: ValuationResult) -> Status:
         raise NotImplementedError
 
     @property
     def name(self):
         return type(self).__name__
 
-    def __call__(self, results: ValuationResult) -> Status:
-        status = self.check(results)
-        if self.modify_results:  # FIXME: this is not nice
-            results._status = status
+    def __call__(self, result: ValuationResult) -> Status:
+        status = self.check(result)
+        if self.modify_result:  # FIXME: this is not nice
+            result._status = status
         return status
 
     def __and__(self, other: "StoppingCriterion") -> "StoppingCriterion":
-        def fun(results: ValuationResult):
-            return self(results) & other(results)
+        def fun(result: ValuationResult):
+            return self(result) & other(result)
 
         fun.__name__ = f"Composite StoppingCriterion: {self.name} AND {other.name}"
         return make_criterion(fun)(
-            modify_results=self.modify_results or other.modify_results
+            modify_result=self.modify_result or other.modify_result
         )
 
     def __or__(self, other: "StoppingCriterion") -> "StoppingCriterion":
-        def fun(results: ValuationResult):
-            return self(results) | other(results)
+        def fun(result: ValuationResult):
+            return self(result) | other(result)
 
         fun.__name__ = f"Composite StoppingCriterion: {self.name} OR {other.name}"
         return make_criterion(fun)(
-            modify_results=self.modify_results or other.modify_results
+            modify_result=self.modify_result or other.modify_result
         )
 
     def __invert__(self) -> "StoppingCriterion":
-        def fun(results: ValuationResult):
-            return ~self(results)
+        def fun(result: ValuationResult):
+            return ~self(result)
 
         fun.__name__ = f"Composite StoppingCriterion: NOT {self.name}"
-        return make_criterion(fun)(modify_results=self.modify_results)
-
-    def __xor__(self, other: "StoppingCriterion") -> "StoppingCriterion":
-        def fun(results: ValuationResult):
-            a = self(results)
-            b = other(results)
-            return (a & ~b) | (~a & b)
-
-        fun.__name__ = f"Composite StoppingCriterion: {self.name} XOR {other.name}"
-        return make_criterion(fun)(
-            modify_results=self.modify_results or other.modify_results
-        )
+        return make_criterion(fun)(modify_result=self.modify_result)
 
 
 def make_criterion(fun: StoppingCriterionCallable) -> Type[StoppingCriterion]:
     """Create a new :class:`StoppingCriterion` from a function."""
 
     class WrappedCriterion(StoppingCriterion):
-        def __init__(self, modify_results: bool = True):
-            super().__init__(modify_results=modify_results)
-            self.check = fun
+        def __init__(self, modify_result: bool = True):
+            super().__init__(modify_result=modify_result)
+            setattr(self, "check", fun)  # mypy complains if we assign to self.check
             update_wrapper(self, self.check)
 
         @property
@@ -124,39 +113,69 @@ class MedianRatio(StoppingCriterion):
         error to median of value has dropped below this value.
     """
 
-    def __init__(self, threshold: float, modify_results: bool = True):
-        super().__init__(modify_results=modify_results)
+    def __init__(self, threshold: float, modify_result: bool = True):
+        super().__init__(modify_result=modify_result)
         self.threshold = threshold
 
-    def check(self, results: ValuationResult) -> Status:
-        ratio = np.median(results.stderr) / np.median(results.values)
+    def check(self, result: ValuationResult) -> Status:
+        ratio = np.median(result.stderr) / np.median(result.values)
         if ratio < self.threshold:
             return Status.Converged
         return Status.Pending
 
 
-class MaxIterations(StoppingCriterion):
-    """Terminate if the number of value updates exceeds the given number.
+class MaxUpdates(StoppingCriterion):
+    """Terminate if any number of value updates exceeds or equals the given
+    threshold.
 
     This checks the ``counts`` field of a
-    :class:`~pydvl.value.results.ValuationResult`, i.e. the number of times that
+    :class:`~pydvl.value.result.ValuationResult`, i.e. the number of times that
     each index has been updated. For powerset samplers, the maximum of this
     number coincides with the maximum number of subsets sampled. For
     permutation samplers, it coincides with the number of permutations sampled.
 
-    :param n_iterations: Threshold: if ``None``, no check is performed,
+    :param n_updates: Threshold: if ``None``, no check is performed,
         effectively creating a (never) stopping criterion that always returns
         ``Pending``.
     """
 
-    def __init__(self, n_iterations: Optional[int], modify_results: bool = True):
-        self.n_iterations = n_iterations
-        super().__init__(modify_results=modify_results)
+    def __init__(self, n_updates: Optional[int], modify_result: bool = True):
+        self.n_updates = n_updates
+        super().__init__(modify_result=modify_result)
 
-    def check(self, results: ValuationResult) -> Status:
-        if self.n_iterations is not None:
+    def check(self, result: ValuationResult) -> Status:
+        if self.n_updates is not None:
             try:
-                if np.max(results.counts) > self.n_iterations:
+                if np.max(result.counts) >= self.n_updates:
+                    return Status.Converged
+            except AttributeError:
+                raise ValueError("ValuationResult didn't contain a `counts` attribute")
+
+        return Status.Pending
+
+
+class MinUpdates(StoppingCriterion):
+    """Terminate as soon as all value updates exceed or equal the given threshold.
+
+    This checks the ``counts`` field of a
+    :class:`~pydvl.value.result.ValuationResult`, i.e. the number of times that
+    each index has been updated. For powerset samplers, the minimum of this
+    number is a lower bound for the number of subsets sampled. For
+    permutation samplers, it lower-bounds the amount of permutations sampled.
+
+    :param n_updates: Threshold: if ``None``, no check is performed,
+        effectively creating a (never) stopping criterion that always returns
+        ``Pending``.
+    """
+
+    def __init__(self, n_updates: Optional[int], modify_result: bool = True):
+        self.n_updates = n_updates
+        super().__init__(modify_result=modify_result)
+
+    def check(self, result: ValuationResult) -> Status:
+        if self.n_updates is not None:
+            try:
+                if np.min(result.counts) >= self.n_updates:
                     return Status.Converged
             except AttributeError:
                 raise ValueError("ValuationResult didn't contain a `counts` attribute")
@@ -175,12 +194,12 @@ class MaxTime(StoppingCriterion):
         that always returns ``Pending``.
     """
 
-    def __init__(self, seconds: Optional[float], modify_results: bool = True):
-        super().__init__(modify_results=modify_results)
+    def __init__(self, seconds: Optional[float], modify_result: bool = True):
+        super().__init__(modify_result=modify_result)
         self.max_seconds = seconds
         self.start = time()
 
-    def check(self, results: ValuationResult) -> Status:
+    def check(self, result: ValuationResult) -> Status:
         if self.max_seconds is not None and time() > self.start + self.max_seconds:
             return Status.Converged
         return Status.Pending
@@ -202,9 +221,9 @@ class HistoryDeviation(StoppingCriterion):
     """
 
     def __init__(
-        self, n_samples: int, n_steps: int, rtol: float, modify_results: bool = True
+        self, n_samples: int, n_steps: int, rtol: float, modify_result: bool = True
     ):
-        super().__init__(modify_results=modify_results)
+        super().__init__(modify_result=modify_result)
         self.n_samples = n_samples
         self.n_steps = n_steps
         self.rtol = rtol

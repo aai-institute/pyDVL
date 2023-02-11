@@ -6,7 +6,7 @@ interface to all methods defined in the modules.
 Please refer to :ref:`data valuation` for an overview of Shapley Data value.
 """
 from pydvl.utils import Utility
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.gt import group_testing_shapley
 from pydvl.value.shapley.knn import knn_shapley
 from pydvl.value.shapley.montecarlo import (
@@ -21,7 +21,7 @@ from pydvl.value.shapley.naive import (
     permutation_exact_shapley,
 )
 from pydvl.value.shapley.types import ShapleyMode
-from pydvl.value.stopping import MaxIterations, MaxTime, StoppingCriterion
+from pydvl.value.stopping import MaxUpdates, StoppingCriterion
 
 __all__ = ["compute_shapley_values"]
 
@@ -29,7 +29,7 @@ __all__ = ["compute_shapley_values"]
 def compute_shapley_values(
     u: Utility,
     *,
-    stop: StoppingCriterion = MaxIterations(100),
+    stop: StoppingCriterion = MaxUpdates(100),
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     n_jobs: int = 1,
     **kwargs,
@@ -73,7 +73,7 @@ def compute_shapley_values(
     - ``group_testing``: estimates differences of Shapley values and solves a
       constraint satisfaction problem. High sample complexity, not recommended.
       Implemented in :func:`~pydvl.value.shapley.gt.group_testing_shapley`. Only
-      accepts :class:`~pydvl.value.stopping.MaxIterations` (use
+      accepts :class:`~pydvl.value.stopping.MaxUpdates` (use
       :func:`~pydvl.value.shapley.gt.num_samples_eps_delta` to compute a bound)
       and :class:`~pydvl.value.stopping.MaxTime` as stopping criteria.
 
@@ -94,7 +94,7 @@ def compute_shapley_values(
     :param mode: Choose which shapley algorithm to use. See
         :class:`~pydvl.value.shapley.ShapleyMode` for a list of allowed value.
 
-    :return: A :class:`~pydvl.value.results.ValuationResult` object with the
+    :return: A :class:`~pydvl.value.result.ValuationResult` object with the
         results.
 
     """
@@ -104,12 +104,7 @@ def compute_shapley_values(
         raise ValueError(f"Invalid value encountered in {mode=}")
 
     if mode == ShapleyMode.TruncatedMontecarlo:
-        return truncated_montecarlo_shapley(
-            u=u,
-            stop=stop,
-            n_jobs=n_jobs,
-            **kwargs,
-        )
+        return truncated_montecarlo_shapley(u=u, stop=stop, n_jobs=n_jobs, **kwargs)
     elif mode == ShapleyMode.CombinatorialMontecarlo:
         return combinatorial_montecarlo_shapley(
             u, stop=stop, n_jobs=n_jobs, progress=progress
@@ -135,27 +130,22 @@ def compute_shapley_values(
         )
         return owen_sampling_shapley(
             u,
-            n_iterations=int(kwargs.get("n_iterations")),
-            max_q=int(kwargs.get("max_q")),
+            n_iterations=int(kwargs.get("n_samples", -1)),
+            max_q=int(kwargs.get("max_q", -1)),
             method=method,
             n_jobs=n_jobs,
         )
     elif mode == ShapleyMode.KNN:
         return knn_shapley(u, progress=progress)
     elif mode == ShapleyMode.GroupTesting:
-        if not isinstance(stop, MaxIterations) or not isinstance(stop, MaxTime):
-            raise ValueError(
-                "Group Testing requires a MaxIterations or MaxTime stopping criterion"
-            )
+        n_iterations = kwargs.get("n_iterations")
+        if n_iterations is None:
+            raise ValueError("n_iterations cannot be None for Group Testing")
         eps = kwargs.get("epsilon")
         if eps is None:
             raise ValueError("Group Testing requires error bound epsilon")
         return group_testing_shapley(
-            u,
-            eps=eps,
-            n_iterations=kwargs.get("n_iterations"),
-            n_jobs=n_jobs,
-            progress=progress,
+            u, eps=eps, n_iterations=n_iterations, n_jobs=n_jobs, progress=progress
         )
     else:
         raise ValueError(f"Invalid value encountered in {mode=}")

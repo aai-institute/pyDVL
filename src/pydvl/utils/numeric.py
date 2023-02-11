@@ -69,20 +69,22 @@ def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) 
 
 
 def random_powerset(
-    s: NDArray[T], max_subsets: Optional[int] = None, q: float = 0.5
+    s: NDArray[T], n_samples: Optional[int] = None, q: float = 0.5
 ) -> Generator[NDArray[T], None, None]:
     """Samples subsets from the power set of the argument, without
     pre-generating all subsets and in no order.
 
     See `powerset()` if you wish to deterministically generate all subsets.
 
-    To generate subsets, `len(s)` Bernoulli draws with probability `q` are drawn.
+    To generate subsets, `len(s)` Bernoulli draws with probability `q` are
+    drawn.
     The default value of `q = 0.5` provides a uniform distribution over the
     power set of `s`. Other choices can be used e.g. to implement
-    :func:`Owen sampling <pydvl.value.shapley.montecarlo.owen_sampling_shapley>`.
+    :func:`Owen sampling
+    <pydvl.value.shapley.montecarlo.owen_sampling_shapley>`.
 
     :param s: set to sample from
-    :param max_subsets: if set, stop the generator after this many steps.
+    :param n_samples: if set, stop the generator after this many steps.
         Defaults to `np.iinfo(np.int32).max`
     :param q: Sampling probability for elements. The default 0.5 yields a
         uniform distribution over the power set of s.
@@ -99,9 +101,9 @@ def random_powerset(
 
     rng = np.random.default_rng()
     total = 1
-    if max_subsets is None:
-        max_subsets = np.iinfo(np.int32).max
-    while total <= max_subsets:
+    if n_samples is None:
+        n_samples = np.iinfo(np.int32).max
+    while total <= n_samples:
         selection = rng.uniform(size=len(s)) > q
         subset = s[selection]
         yield subset

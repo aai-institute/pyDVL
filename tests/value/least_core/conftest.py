@@ -6,7 +6,7 @@ import pytest
 from pydvl.utils import Utility
 from pydvl.utils.status import Status
 from pydvl.utils.utility import GlovesGameUtility, MinerGameUtility
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 
 
 @pytest.fixture(scope="module")

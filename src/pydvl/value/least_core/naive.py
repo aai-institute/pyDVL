@@ -11,7 +11,7 @@ from pydvl.value.least_core._common import (
     _solve_egalitarian_least_core_quadratic_program,
     _solve_least_core_linear_program,
 )
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 
 __all__ = ["exact_least_core"]
 
@@ -69,10 +69,7 @@ def exact_least_core(
     utility_values = np.zeros(powerset_size)
     for i, subset in enumerate(
         maybe_progress(
-            powerset(u.data.indices),
-            progress,
-            total=powerset_size - 1,
-            position=0,
+            powerset(u.data.indices), progress, total=powerset_size - 1, position=0
         )
     ):
         indices = np.zeros(n, dtype=bool)
@@ -106,12 +103,7 @@ def exact_least_core(
         )
 
     values = _solve_egalitarian_least_core_quadratic_program(
-        subsidy,
-        A_eq=A_eq,
-        b_eq=b_eq,
-        A_lb=A_lb,
-        b_lb=b_lb,
-        **options,
+        subsidy, A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
     )
 
     if values is None:

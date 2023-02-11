@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from pydvl.utils import Utility, maybe_progress
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 
 __all__ = [
     "sort_values",
@@ -66,11 +66,7 @@ def compute_removal_score(
     # We sort in descending order if we want to remove the best values
     values.sort(reverse=remove_best)
 
-    for pct in maybe_progress(
-        percentages,
-        display=progress,
-        desc="Removal Scores",
-    ):
+    for pct in maybe_progress(percentages, display=progress, desc="Removal Scores"):
         n_removal = int(pct * len(u.data))
         indices = values.indices[n_removal:]
         score = u(indices)
