@@ -18,7 +18,7 @@ from ...utils.config import ParallelConfig
 from ...utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from ...utils.utility import Utility
 from ...value.results import ValuationResult
-from ..stopping import StoppingCriterion, max_iterations
+from ..stopping import MaxIterations, StoppingCriterion
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
 
@@ -64,7 +64,7 @@ class ShapleyCoordinator(Coordinator):
     def __init__(self, stop: StoppingCriterion):
         super().__init__()
         self.stop = stop
-        self.stop.inplace = True
+        self.stop.modify_results = True
 
     def accumulate(self) -> ValuationResult:
         """Accumulates all results received from the workers.
@@ -152,7 +152,7 @@ class ShapleyWorker(Worker):
 
         return _permutation_montecarlo_shapley(
             self.u,
-            stop=max_iterations(1),
+            stop=MaxIterations(1),
             permutation_breaker=self.permutation_breaker,
             algorithm_name="truncated_montecarlo_shapley",
         )

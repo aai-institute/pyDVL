@@ -21,7 +21,7 @@ from pydvl.value.shapley.naive import (
     permutation_exact_shapley,
 )
 from pydvl.value.shapley.types import ShapleyMode
-from pydvl.value.stopping import StoppingCriterion, max_iterations
+from pydvl.value.stopping import MaxIterations, MaxTime, StoppingCriterion
 
 __all__ = ["compute_shapley_values"]
 
@@ -29,7 +29,7 @@ __all__ = ["compute_shapley_values"]
 def compute_shapley_values(
     u: Utility,
     *,
-    stop: StoppingCriterion = max_iterations(100),
+    stop: StoppingCriterion = MaxIterations(100),
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     n_jobs: int = 1,
     **kwargs,
@@ -72,7 +72,10 @@ def compute_shapley_values(
       subdivisions of the interval [0,0.5] to use for integration.
     - ``group_testing``: estimates differences of Shapley values and solves a
       constraint satisfaction problem. High sample complexity, not recommended.
-      Implemented in :func:`~pydvl.value.shapley.gt.group_testing_shapley`.
+      Implemented in :func:`~pydvl.value.shapley.gt.group_testing_shapley`. Only
+      accepts :class:`~pydvl.value.stopping.MaxIterations` (use
+      :func:`~pydvl.value.shapley.gt.num_samples_eps_delta` to compute a bound)
+      and :class:`~pydvl.value.stopping.MaxTime` as stopping criteria.
 
     Additionally, one can use model-specific methods:
 
@@ -85,8 +88,8 @@ def compute_shapley_values(
         to determine when to stop the computation for Monte Carlo methods. The
         default is to stop after 100 iterations. See the available criteria in
         :mod:`~pydvl.value.stopping`. It is possible to combine several criteria
-        using boolean operators. Exact methods and Group Testing Shapley ignore
-        this argument.
+        using boolean operators. Some methods ignore this argument, others
+        require specific subtypes.
     :param n_jobs: Number of parallel jobs (available only to some methods)
     :param mode: Choose which shapley algorithm to use. See
         :class:`~pydvl.value.shapley.ShapleyMode` for a list of allowed value.
@@ -140,10 +143,9 @@ def compute_shapley_values(
     elif mode == ShapleyMode.KNN:
         return knn_shapley(u, progress=progress)
     elif mode == ShapleyMode.GroupTesting:
-        if kwargs.get("n_iterations") is None:
+        if not isinstance(stop, MaxIterations) or not isinstance(stop, MaxTime):
             raise ValueError(
-                "Group Testing requires a parameter n_iterations,"
-                "use num_samples_eps_delta() to compute them"
+                "Group Testing requires a MaxIterations or MaxTime stopping criterion"
             )
         eps = kwargs.get("epsilon")
         if eps is None:
