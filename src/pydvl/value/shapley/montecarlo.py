@@ -50,7 +50,7 @@ from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
 from pydvl.utils.progress import maybe_progress
 from pydvl.utils.status import Status
 from pydvl.utils.utility import Utility
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 from pydvl.value.stopping import StoppingCriterion
 
 from .actor import get_shapley_coordinator, get_shapley_worker
@@ -111,13 +111,11 @@ def truncated_montecarlo_shapley(
     :param n_jobs: number of jobs processing permutations. If None, it will be
         set to :func:`available_cpus`.
     :param config: Object configuring parallel computation, with cluster
-    address,
-        number of cpus, etc.
+        address, number of cpus, etc.
     :param coordinator_update_period: in seconds. Check status with the job
         coordinator every so often.
     :param worker_update_period: interval in seconds between different
-    updates to
-        and from the coordinator
+        updates to and from the coordinator
     :return: Object with the data values.
 
     """
@@ -199,10 +197,7 @@ def _permutation_montecarlo_shapley(
     variances = np.zeros_like(values)
     counts = np.zeros(shape=n, dtype=np.int_)
     result = ValuationResult(
-        algorithm=algorithm_name,
-        values=values,
-        stderr=stderr,
-        counts=counts,
+        algorithm=algorithm_name, values=values, stderr=stderr, counts=counts
     )
     for _ in maybe_progress(count(), progress, position=job_id):  # infinite loop
         prev_score = 0.0
@@ -252,8 +247,7 @@ def permutation_montecarlo_shapley(
     :param stop: function checking whether computation must stop.
     :param n_jobs: number of jobs across which to distribute the computation.
     :param config: Object configuring parallel computation, with cluster
-    address,
-        number of cpus, etc.
+        address, number of cpus, etc.
     :param progress: Whether to display progress bars for each job.
     :return: Object with the data values.
     """
@@ -432,7 +426,7 @@ def _owen_sampling_shapley(
         e = np.zeros(max_q)
         subset = np.array(list(index_set.difference({i})))
         for j, q in enumerate(q_steps):
-            for s in random_powerset(subset, max_subsets=n_iterations, q=q):
+            for s in random_powerset(subset, n_samples=n_iterations, q=q):
                 marginal = u({i}.union(s)) - u(s)
                 if method == OwenAlgorithm.Antithetic and q != 0.5:
                     s_complement = index_set.difference(s)
@@ -475,15 +469,19 @@ def owen_sampling_shapley(
     using one of two methods. The first one, selected with the argument ``mode =
     OwenAlgorithm.Standard``, approximates the integral with:
 
-    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m \cup \{i\}) - u(S^{(q_j)}_m)],$$
+    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m
+    \cup \{i\}) - u(S^{(q_j)}_m)],$$
 
     where $q_j = \frac{j}{Q} \in [0,1]$ and the sets $S^{(q_j)}$ are such that a
     sample $x \in S^{(q_j)}$ if a draw from a $Ber(q_j)$ distribution is 1.
 
-    The second method, selected with the argument ``mode = OwenAlgorithm.Anthithetic``,
+    The second method, selected with the argument ``mode =
+    OwenAlgorithm.Anthithetic``,
     uses correlated samples in the inner sum to reduce the variance:
 
-    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m \cup \{i\}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup \{i\}) - u((S^{(q_j)}_m)^c)],$$
+    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m
+    \cup \{i\}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup \{i\}) - u((S^{(
+    q_j)}_m)^c)],$$
 
     where now $q_j = \frac{j}{2Q} \in [0,\frac{1}{2}]$, and $S^c$ is the
     complement of $S$.

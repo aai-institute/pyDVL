@@ -1,9 +1,12 @@
+from time import sleep
+
 import numpy as np
 import pytest
 
 from pydvl.utils import Status
 from pydvl.value import ValuationResult
 from pydvl.value.stopping import (
+    MaxTime,
     MaxUpdates,
     MinUpdates,
     StoppingCriterion,
@@ -115,7 +118,11 @@ def test_minmax_updates():
 
 
 def test_max_time():
-    pass
+    v = ValuationResult.from_random(5)
+    stop = MaxTime(0.3)
+    assert stop(v) == Status.Pending
+    sleep(0.3)
+    assert stop(v) == Status.Converged
 
 
 def test_history_deviation():
