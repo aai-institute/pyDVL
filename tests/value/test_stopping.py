@@ -127,7 +127,7 @@ def test_max_time():
     assert done(v) == Status.Converged
 
 
-@pytest.mark.parametrize("n_steps", [1, 5, 53, 100])
+@pytest.mark.parametrize("n_steps", [1, 42, 100])
 @pytest.mark.parametrize("rtol", [0.01, 0.05])
 def test_history_deviation(n_steps, rtol):
     """Values are equal and set to 1/t. The criterion will be fulfilled after

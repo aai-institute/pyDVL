@@ -3,6 +3,7 @@ from time import time
 from typing import Callable, Optional, Type
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils import Status
 from pydvl.value import ValuationResult
@@ -234,6 +235,9 @@ class HistoryDeviation(StoppingCriterion):
     :param pin_converged: If ``True``, once an index has converged, it is pinned
     """
 
+    memory: NDArray[np.float_]
+    checked: NDArray[np.bool_]
+
     def __init__(
         self,
         n_steps: int,
@@ -250,8 +254,8 @@ class HistoryDeviation(StoppingCriterion):
         self.n_steps = n_steps
         self.rtol = rtol
         self.pin_converged = pin_converged
-        self.memory = None
-        self.checked = None
+        self.memory = None  # type: ignore
+        self.checked = None  # type: ignore
 
     def check(self, r: ValuationResult) -> Status:
         if self.memory is None:
