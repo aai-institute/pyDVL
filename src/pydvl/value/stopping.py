@@ -24,9 +24,8 @@ class StoppingCriterion:
         """A composable callable object to determine whether a computation
         must stop.
 
-        ``StoppingCriterion``s take a
-        :class:`~pydvl.value.result.ValuationResult`
-        and return a :class:`~pydvl.value.result.Status~.
+        A ``StoppingCriterion`` takes a :class:`~pydvl.value.result.ValuationResult`
+        and returns a :class:`~pydvl.value.result.Status~.
 
         :Creating stopping criteria:
 
@@ -109,8 +108,8 @@ def make_criterion(fun: StoppingCriterionCallable) -> Type[StoppingCriterion]:
 class MedianRatio(StoppingCriterion):
     """Compute a ratio of median errors to values to determine convergence.
 
-    :param threshold: Converged if the ratio of median standard
-        error to median of value has dropped below this value.
+    :param threshold: Converged if the ratio of median standard error to median
+        of value has dropped below this value.
     """
 
     def __init__(self, threshold: float, modify_result: bool = True):
@@ -128,8 +127,7 @@ class MaxUpdates(StoppingCriterion):
     """Terminate if any number of value updates exceeds or equals the given
     threshold.
 
-    This checks the ``counts`` field of a
-    :class:`~pydvl.value.result.ValuationResult`, i.e. the number of times that
+    This checks the ``counts`` field of a :class:`~pydvl.value.result.ValuationResult`, i.e. the number of times that
     each index has been updated. For powerset samplers, the maximum of this
     number coincides with the maximum number of subsets sampled. For
     permutation samplers, it coincides with the number of permutations sampled.
@@ -206,45 +204,89 @@ class MaxTime(StoppingCriterion):
 
 
 class HistoryDeviation(StoppingCriterion):
-    """Ghorbani et al.'s check for relative distance to a previous step in the
-     computation.
+    r"""A simple check for relative distance to a previous step in the
+    computation.
 
-    This is slightly generalised to allow for different number of updates to
-    individual indices, as happens with powerset samplers instead of
-    permutations. Every subset of indices that is found to converge is pinned to
-    that state. Once all indices have converged the method has converged.
+    The method used by :footcite:t:`ghorbani_data_2019` computes the relative
+    distances between the current values $v_i^t$ and the values at the previous
+    checkpoint $v_i^{t-\tau}$. If the sum is below a given threshold, the
+    computation is terminated.
 
-    :param n_samples: Number of values in the result objects.
+    $$\sum_{i=1}^n \frac{\left| v_i^t - v_i^{t-\tau} \right|}{v_i^t} <
+    \epsilon.$$
+
+    When the denominator is zero, the summand is set to the value of $v_i^{
+    t-\tau}$.
+
+    This implementation is slightly generalised to allow for different number of
+    updates to individual indices, as happens with powerset samplers instead of
+    permutations. Every subset of indices that is found to converge can be
+    pinned
+    to that state. Once all indices have converged the method has converged.
+
+    .. warning::
+       This criterion is meant for the reproduction of the results in the paper,
+       but we do not recommend using it in practice.
+
     :param n_steps: Checkpoint values every so many updates and use these saved
         values to compare.
-    :param rtol: Relative tolerance for convergence.
+    :param rtol: Relative tolerance for convergence ($\epsilon$ in the formula).
+    :param pin_converged: If ``True``, once an index has converged, it is pinned
     """
 
     def __init__(
-        self, n_samples: int, n_steps: int, rtol: float, modify_result: bool = True
+        self,
+        n_steps: int,
+        rtol: float,
+        pin_converged: bool = True,
+        modify_result: bool = True,
     ):
         super().__init__(modify_result=modify_result)
-        self.n_samples = n_samples
+        if n_steps < 1:
+            raise ValueError("n_steps must be at least 1")
+        if rtol <= 0 or rtol >= 1:
+            raise ValueError("rtol must be in (0, 1)")
+
         self.n_steps = n_steps
         self.rtol = rtol
-        self.memory = np.zeros(n_samples)
-        self.converged = np.array([False] * n_samples)
+        self.pin_converged = pin_converged
+        self.memory = None
+        self.checked = None
 
     def check(self, r: ValuationResult) -> Status:
-        if r.counts.max() == 0:  # safeguard against reuse of the criterion
-            self.memory = np.zeros(self.n_samples)
-            self.converged = np.array([False] * self.n_samples)
+        if self.memory is None:
+            self.memory = np.full((len(r.values), self.n_steps + 1), np.inf)
+            self.checked = np.full(len(r), False)
             return Status.Pending
-        # Look at indices that have been updated n_steps times since last save
-        # For permutation samplers, this should be all indices, every n_steps
-        ii = np.where(r.counts % self.n_steps == 0)
+
+        # shift left: last column is the last set of values
+        self.memory = np.concatenate(
+            [self.memory[:, 1:], r.values.reshape(-1, 1)], axis=1
+        )
+
+        # Look at indices that have been updated more than n_steps times
+        ii = np.where(r.counts > self.n_steps)
         if len(ii) > 0:
-            if (
-                np.abs((r.values[ii] - self.memory[ii]) / r.values[ii]).mean()
-                < self.rtol
-            ):
-                self.converged[ii] = True
-                if np.all(self.converged):
+            curr = self.memory[:, -1]
+            saved = self.memory[:, 0]
+            diffs = np.abs(curr[ii] - saved[ii])
+            quots = np.divide(diffs, curr[ii], out=diffs, where=curr[ii] != 0)
+            # quots holds the quotients when the denominator is non-zero, and
+            # the absolute difference, which is just the memory, otherwise.
+            if np.mean(quots) < self.rtol:
+                if not self.pin_converged:
+                    self.checked = np.full(len(r), False)
+                self.checked[ii] = True
+                if np.all(self.checked):
                     return Status.Converged
-            self.memory[ii] = r.values[ii]
         return Status.Pending
+
+    # def tmp(self):
+    #     # shift left: last column is the last set of values
+    #     memory = np.concatenate([memory[:, 1:], values.reshape(-1, 1)], axis=1)
+    #     if np.all(counts > n_steps):
+    #         diff = memory @ coefficients
+    #         passing_ratio = np.count_nonzero(diff < atol) / len(diff)
+    #         if passing_ratio >= values_ratio:
+    #             return ValuationStatus.Converged
+    #     return ValuationStatus.Pending

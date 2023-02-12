@@ -1,3 +1,4 @@
+import math
 from time import sleep
 
 import numpy as np
@@ -6,6 +7,7 @@ import pytest
 from pydvl.utils import Status
 from pydvl.value import ValuationResult
 from pydvl.value.stopping import (
+    HistoryDeviation,
     MaxTime,
     MaxUpdates,
     MinUpdates,
@@ -15,11 +17,11 @@ from pydvl.value.stopping import (
 
 
 def test_stopping_criterion():
-    stop = StoppingCriterion()
-    assert stop.name == "StoppingCriterion"
-    assert stop.modify_result is True
+    done = StoppingCriterion()
+    assert done.name == "StoppingCriterion"
+    assert done.modify_result is True
     with pytest.raises(NotImplementedError):
-        stop(ValuationResult.empty())
+        done(ValuationResult.empty())
 
 
 def test_stopping_criterion_composition():
@@ -119,11 +121,31 @@ def test_minmax_updates():
 
 def test_max_time():
     v = ValuationResult.from_random(5)
-    stop = MaxTime(0.3)
-    assert stop(v) == Status.Pending
+    done = MaxTime(0.3)
+    assert done(v) == Status.Pending
     sleep(0.3)
-    assert stop(v) == Status.Converged
+    assert done(v) == Status.Converged
 
 
-def test_history_deviation():
-    pass
+@pytest.mark.parametrize("n_steps", [1, 5, 53, 100])
+@pytest.mark.parametrize("rtol", [0.01, 0.05])
+def test_history_deviation(n_steps, rtol):
+    """Values are equal and set to 1/t. The criterion will be fulfilled after
+    t > (1+1/rtol) * n_steps iterations.
+    """
+    n = 5
+    done = HistoryDeviation(n_steps=n_steps, rtol=rtol)
+    threshold = math.ceil((1 + 1 / rtol) * n_steps)
+    for t in range(1, threshold):
+        v = ValuationResult(values=np.ones(n) / t, counts=np.full(n, t))
+        assert done(v) == Status.Pending
+
+    # FIXME: rounding errors mean that the threshold is not exactly as computed,
+    #  but might be off by 1, so we check a couple of iterations to be sure that
+    #  this works for any choice of n_steps and rtol
+    status = Status.Pending
+    for t in range(threshold, threshold + 2):
+        v = ValuationResult(values=np.ones(n) / t, counts=np.full(n, t))
+        status |= done(v)
+
+    assert status == Status.Converged
