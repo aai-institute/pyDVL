@@ -37,9 +37,6 @@ def test_sorting(values, names, ranks_asc, dummy_values):
     dummy_values.sort(reverse=True)
     assert np.alltrue([it.value for it in dummy_values] == sorted(values, reverse=True))
     assert np.alltrue(dummy_values.indices == list(reversed(ranks_asc)))
-    assert np.alltrue(
-        dummy_values.values[dummy_values.indices] == sorted(values, reverse=True)
-    )
 
 
 @pytest.mark.parametrize(
@@ -89,6 +86,9 @@ def test_todataframe(ranks_asc, dummy_values):
     assert "val" in df.columns
     assert "val_stderr" in df.columns
     assert np.alltrue(df.index.values == ranks_asc)
+
+    df = dummy_values.to_dataframe(use_names=True)
+    assert np.alltrue(df.index.values == [it.name for it in dummy_values])
 
 
 @pytest.mark.parametrize(

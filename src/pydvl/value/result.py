@@ -88,8 +88,11 @@ class ValuationResult(collections.abc.Sequence):
 
     :param values: An array of values, data indices correspond to positions in
         the array.
+    :param indices: An optional array of indices in the original dataset. If
+        ommitted, defaults to ``np.arange(len(values))``.
     :param stderr: An optional array of standard errors in the computation of
         each value.
+    :param counts: An optional array with the number of updates for each value.
     :param data_names: Names for the data points. Defaults to index numbers
         if not set.
     :param algorithm: The method used.
@@ -104,9 +107,10 @@ class ValuationResult(collections.abc.Sequence):
 
     _indices: NDArray[np.int_]
     _values: NDArray[np.float_]
+    _counts: NDArray[np.int_]
+    _stderr: NDArray[np.float_]
     _data: Dataset
     _names: NDArray[np.str_]
-    _stderr: NDArray[np.float_]
     _algorithm: str
     _status: Status
     # None for unsorted, True for ascending, False for descending
@@ -115,8 +119,11 @@ class ValuationResult(collections.abc.Sequence):
 
     def __init__(
         self,
+        *,
         values: NDArray[np.float_],
         stderr: Optional[NDArray[np.float_]] = None,
+        counts: Optional[NDArray[np.int_]] = None,
+        indices: NDArray[np.int_] = None,
         data_names: Optional[Union[Sequence[str], NDArray[np.str_]]] = None,
         algorithm: str = "",
         status: Status = Status.Pending,
@@ -127,18 +134,25 @@ class ValuationResult(collections.abc.Sequence):
             raise ValueError("Lengths of values and stderr do not match")
         if data_names is not None and len(data_names) != len(values):
             raise ValueError("Lengths of values and data_names do not match")
+        if indices is not None and len(indices) != len(values):
+            raise ValueError("Lengths of values and indices do not match")
 
         self._algorithm = algorithm
         self._status = status
         self._values = values
+        self._counts = np.ones_like(values) if counts is None else counts
         self._stderr = np.zeros_like(values) if stderr is None else stderr
         self._sort_order = None
         self._extra_values = extra_values or {}
 
+        if indices is None:
+            self._indices = np.arange(len(self._values), dtype=np.int_)
+        else:
+            self._indices = indices
+
+        self._sort_indices = np.arange(len(self._values), dtype=np.int_)
         if sort:
             self.sort()
-        else:
-            self._indices = np.arange(0, len(self._values), dtype=np.int_)
 
         if data_names is None:
             data_names = [str(i) for i in range(len(self._values))]
@@ -159,12 +173,12 @@ class ValuationResult(collections.abc.Sequence):
         if self._sort_order is not None:
             if self._sort_order == reverse:  # no change
                 return
-            self._indices = self._indices[::-1]  # flip order
+            self._sort_indices = self._sort_indices[::-1]  # flip order
         else:
             if reverse:
-                self._indices = np.argsort(self._values)[::-1]
+                self._sort_indices = np.argsort(self._values)[::-1]
             else:
-                self._indices = np.argsort(self._values)
+                self._sort_indices = np.argsort(self._values)
 
         self._sort_order = reverse
         return
@@ -182,12 +196,19 @@ class ValuationResult(collections.abc.Sequence):
         return self._stderr
 
     @property
+    def counts(self) -> NDArray[np.int_]:
+        """The raw counts, unsorted. Position `i` in the array
+        represents index `i` of the data."""
+        return self._counts
+
+    @property
     def indices(self) -> NDArray[np.int_]:
         """The indices for the values, possibly sorted.
-        If the object is unsorted, then this is the same as
-        `np.arange(len(values))`. Otherwise, the indices sort :meth:`values`
+
+        If the object is unsorted, then these are the same as declared at
+        construction or ``np.arange(len(values))`` if none were passed.
         """
-        return self._indices
+        return self._indices[self._sort_indices]
 
     @property
     def status(self) -> Status:
@@ -233,17 +254,25 @@ class ValuationResult(collections.abc.Sequence):
                 key += len(self)
             if key < 0 or key >= len(self):
                 raise IndexError(f"Index {key} out of range (0, {len(self)}).")
-            idx = self._indices[key]
+            idx = self._sort_indices[key]
             return ValueItem(
-                idx, self._names[idx], self._values[idx], self._stderr[idx]
+                self._indices[idx],
+                self._names[idx],
+                self._values[idx],
+                self._stderr[idx],
             )
         else:
             raise TypeError("Indices must be integers, iterable or slices")
 
     def __iter__(self) -> Generator[ValueItem, Any, None]:
         """Iterate over the results returning tuples `(index, value)`"""
-        for idx in self._indices:
-            yield ValueItem(idx, self._names[idx], self._values[idx], self._stderr[idx])
+        for idx in self._sort_indices:
+            yield ValueItem(
+                self._indices[idx],
+                self._names[idx],
+                self._values[idx],
+                self._stderr[idx],
+            )
 
     def __len__(self):
         return len(self._indices)
@@ -257,10 +286,11 @@ class ValuationResult(collections.abc.Sequence):
             self._algorithm == other._algorithm
             and self._status == other._status
             and self._sort_order == other._sort_order
+            and np.all(self._indices == other._indices)
             and np.all(self._values == other._values)
             and np.all(self._stderr == other._stderr)
             and np.all(self._names == other._names)
-            # and np.all(self.indices == other.indices)  # Redundant
+            and np.all(self._counts == other._counts)
         )
 
     def __repr__(self) -> str:
@@ -268,7 +298,9 @@ class ValuationResult(collections.abc.Sequence):
             f"{self.__class__.__name__}("
             f"algorithm='{self._algorithm}',"
             f"status='{self._status.value}',"
-            f"values={np.array_str(self.values, precision=4, suppress_small=True)}"
+            f"values={np.array_str(self.values, precision=4, suppress_small=True)},"
+            f"indices={np.array_str(self.indices)},"
+            f"counts={np.array_str(self.counts)},"
         )
         for k, v in self._extra_values.items():
             repr_string += f", {k}={v}"
@@ -280,16 +312,17 @@ class ValuationResult(collections.abc.Sequence):
             raise NotImplementedError(
                 f"Cannot combine ValuationResult with {type(other)}"
             )
-        if self._algorithm != other._algorithm:
+        if self.algorithm != other.algorithm:
             raise ValueError("Cannot combine results from different algorithms")
-        if self._status != other._status:
+        if self.status != other.status:
             raise ValueError("Cannot combine results with different statuses")
         if len(self.values) != len(other.values):
             raise ValueError("Cannot combine results with different lengths")
-        if not hasattr(self, "counts") or not hasattr(other, "counts"):
-            raise ValueError("Cannot add valuation results without count data")
+        if not set(self.indices) == set(other.indices):
+            raise ValueError("Cannot combine results with different indices")
 
     def __add__(self, other: "ValuationResult") -> "ValuationResult":
+
         """Adds two ValuationResults.
 
         The values must have been computed with the same algorithm. An exception
@@ -309,8 +342,10 @@ class ValuationResult(collections.abc.Sequence):
         .. warning::
            FIXME: Arbitrary ``extra_values`` aren't handled.
 
-        """
+        :To do:
+            Handle arbitrary sets of indices, adding zeros where necessary.
 
+        """
         if self.algorithm == "" and len(self.values) == 0:  # empty result
             return other
         if other.algorithm == "" and len(other.values) == 0:  # empty result
@@ -319,8 +354,8 @@ class ValuationResult(collections.abc.Sequence):
         self._check_compatible(other)
 
         n, m = self.counts, other.counts
-        xn, xm = self._values, other._values
-        sn, sm = n * self._stderr**2, m * other._stderr**2
+        xn, xm = self.values, other.values
+        sn, sm = n * self.stderr**2, m * other.stderr**2
         # Sample mean of n+m samples from two means of n and m samples
         xnm = (n * xn + m * xm) / (n + m)
         # Sample variance of n+m samples from two sample variances of n and m samples
@@ -339,8 +374,8 @@ class ValuationResult(collections.abc.Sequence):
             status=self.status & other.status,
             values=xnm,
             stderr=np.sqrt(snm / (n + m)),
-            data_names=self._names if self._names is not None else other._names,
             counts=n + m,
+            data_names=self._names if self._names is not None else other._names,
             # FIXME: what about extra args?
         )
 
@@ -379,8 +414,10 @@ class ValuationResult(collections.abc.Sequence):
             raise ImportError("Pandas required for DataFrame export")
         column = column or self._algorithm
         df = pandas.DataFrame(
-            self._values[self._indices],
-            index=self._names[self._indices] if use_names else self._indices,
+            self._values[self._sort_indices],
+            index=self._names[self._sort_indices]
+            if use_names
+            else self._indices[self._sort_indices],
             columns=[column],
         )
 
@@ -422,5 +459,5 @@ class ValuationResult(collections.abc.Sequence):
             status=Status.Pending,
             values=np.zeros(n_samples),
             stderr=np.zeros(n_samples),
-            counts=np.zeros(n_samples, dtype=int),
+            counts=np.zeros(n_samples, dtype=np.int_),
         )
