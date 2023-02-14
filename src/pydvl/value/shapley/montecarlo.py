@@ -374,7 +374,7 @@ def combinatorial_montecarlo_shapley(
     map_reduce_job: MapReduceJob[NDArray, ValuationResult] = MapReduceJob(
         u.data.indices,
         map_func=_combinatorial_montecarlo_shapley,
-        reduce_func=lambda results: reduce(operator.or_, results),
+        reduce_func=lambda results: reduce(operator.add, results),
         map_kwargs=dict(u=u, stop=stop, progress=progress),
         n_jobs=n_jobs,
         config=config,
@@ -513,7 +513,7 @@ def owen_sampling_shapley(
     map_reduce_job: MapReduceJob[NDArray, ValuationResult] = MapReduceJob(
         u.data.indices,
         map_func=_owen_sampling_shapley,
-        reduce_func=lambda results: reduce(operator.or_, results),
+        reduce_func=lambda results: reduce(operator.add, results),
         map_kwargs=dict(
             u=u,
             method=OwenAlgorithm(method),

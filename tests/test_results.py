@@ -198,7 +198,7 @@ def test_from_random_creation(size):
     assert len(result) == size
 
 
-def test_adding():
+def test_adding_random():
     """Test adding multiple valuation results together"""
     n_samples, n_values, n_subsets = 10, 1000, 12
     values = np.random.rand(n_samples, n_values)
@@ -221,3 +221,69 @@ def test_adding():
 
     assert np.allclose(true_means, result.values)
     assert np.allclose(true_stderr, result.stderr)
+
+
+@pytest.mark.parametrize(
+    "indices_1, names_1, values_1, indices_2, names_2, values_2,"
+    "expected_indices, expected_names, expected_values",
+    [  # Disjoint indices
+        (
+            [0, 1, 2],
+            ["a", "b", "c"],
+            [0, 1, 2],
+            [3, 4, 5],
+            ["d", "e", "f"],
+            [3, 4, 5],
+            [0, 1, 2, 3, 4, 5],
+            ["a", "b", "c", "d", "e", "f"],
+            [0, 1, 2, 3, 4, 5],
+        ),
+        # Overlapping indices (recall that values are running averages)
+        (
+            [0, 1, 2],
+            ["a", "b", "c"],
+            [0, 1, 2],
+            [1, 2, 3],
+            ["b", "c", "d"],
+            [3, 4, 5],
+            [0, 1, 2, 3],
+            ["a", "b", "c", "d"],
+            [0, 2, 3, 5],
+        ),
+        # Overlapping indices with different lengths
+        (
+            [0, 1, 2],
+            ["a", "b", "c"],
+            [0, 1, 2],
+            [1, 2],
+            ["b", "c"],
+            [3, 4],
+            [0, 1, 2],
+            ["a", "b", "c"],
+            [0, 2, 3],
+        ),
+    ],
+)
+def test_adding_different_indices(
+    indices_1,
+    names_1,
+    values_1,
+    indices_2,
+    names_2,
+    values_2,
+    expected_indices,
+    expected_names,
+    expected_values,
+):
+    """Test adding valuation results with disjoint indices"""
+    v1 = ValuationResult(
+        indices=np.array(indices_1), values=np.array(values_1), data_names=names_1
+    )
+    v2 = ValuationResult(
+        indices=np.array(indices_2), values=np.array(values_2), data_names=names_2
+    )
+    v3 = v1 + v2
+
+    assert np.allclose(v3.indices, np.array(expected_indices))
+    assert np.allclose(v3.values, np.array(expected_values))
+    assert np.all(v3.names == expected_names)

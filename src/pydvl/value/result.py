@@ -211,6 +211,11 @@ class ValuationResult(collections.abc.Sequence):
         return self._indices[self._sort_indices]
 
     @property
+    def names(self) -> NDArray[np.str_]:
+        """The names for the values, possibly sorted."""
+        return self._names[self._sort_indices]
+
+    @property
     def status(self) -> Status:
         return self._status
 
@@ -314,20 +319,13 @@ class ValuationResult(collections.abc.Sequence):
             )
         if self.algorithm != other.algorithm:
             raise ValueError("Cannot combine results from different algorithms")
-        if self.status != other.status:
-            raise ValueError("Cannot combine results with different statuses")
-        if len(self.values) != len(other.values):
-            raise ValueError("Cannot combine results with different lengths")
-        if not set(self.indices) == set(other.indices):
-            raise ValueError("Cannot combine results with different indices")
 
     def __add__(self, other: "ValuationResult") -> "ValuationResult":
-
         """Adds two ValuationResults.
 
         The values must have been computed with the same algorithm. An exception
-        to this is if the algorithm name is "" or the values are an empty array,
-        in which cases the values are taken from the second argument.
+        to this is if one argument has empty algorithm name and empty values, in
+        which case the values are taken from the other argument.
 
         .. warning::
            Abusing this will introduce numerical errors, since the sample means
@@ -339,11 +337,12 @@ class ValuationResult(collections.abc.Sequence):
         the right one. The ``algorithm`` string is carried over if both terms
         have the same one or concatenated.
 
+        It is possible to add ValuationResults of different lengths, and with
+        different or overlapping indices. The result will have the union of
+        indices, and the values.
+
         .. warning::
            FIXME: Arbitrary ``extra_values`` aren't handled.
-
-        :To do:
-            Handle arbitrary sets of indices, adding zeros where necessary.
 
         """
         if self.algorithm == "" and len(self.values) == 0:  # empty result
@@ -353,13 +352,37 @@ class ValuationResult(collections.abc.Sequence):
 
         self._check_compatible(other)
 
-        n, m = self.counts, other.counts
-        xn, xm = self.values, other.values
-        sn, sm = n * self.stderr**2, m * other.stderr**2
+        indices = np.union1d(self._indices, other._indices)
+        this_indices = np.searchsorted(indices, self._indices)
+        other_indices = np.searchsorted(indices, other._indices)
+
+        n = np.zeros_like(indices, dtype=int)
+        m = np.zeros_like(indices, dtype=int)
+        xn = np.zeros_like(indices, dtype=float)
+        xm = np.zeros_like(indices, dtype=float)
+        sn = np.zeros_like(indices, dtype=float)
+        sm = np.zeros_like(indices, dtype=float)
+
+        n[this_indices] = self.counts
+        xn[this_indices] = self.values
+        sn[this_indices] = self.counts * self.stderr**2
+        m[other_indices] = other.counts
+        xm[other_indices] = other.values
+        sm[other_indices] = other.counts * other.stderr**2
+
         # Sample mean of n+m samples from two means of n and m samples
         xnm = (n * xn + m * xm) / (n + m)
         # Sample variance of n+m samples from two sample variances of n and m samples
         snm = (n * (sn + xn**2) + m * (sm + xm**2)) / (n + m) - xnm**2
+
+        this_names = np.empty_like(indices, dtype=np.str_)
+        other_names = np.empty_like(indices, dtype=np.str_)
+        this_names[this_indices] = self._names
+        other_names[other_indices] = other._names
+        names = np.where(n > 0, this_names, other_names)
+        both = np.where((n > 0) & (m > 0))
+        if np.any(other_names[both] != this_names[both]):
+            raise ValueError(f"Mismatching names in ValuationResults")
 
         if np.any(snm < 0):
             if np.any(snm < -1e-6):
@@ -370,30 +393,14 @@ class ValuationResult(collections.abc.Sequence):
             snm[np.where(snm < 0)] = 0
 
         return ValuationResult(
-            algorithm=self.algorithm,
+            algorithm=self.algorithm or other.algorithm or "",
             status=self.status & other.status,
+            indices=indices,
             values=xnm,
             stderr=np.sqrt(snm / (n + m)),
             counts=n + m,
-            data_names=self._names if self._names is not None else other._names,
+            data_names=names,
             # FIXME: what about extra args?
-        )
-
-    def __or__(self, other):
-        """Adds two **disjoint** ValuationResults.
-
-        Takes the values and stderr from the first argument for which the counts
-        are non-zero, otherwise takes those from the second one.
-        """
-        self._check_compatible(other)
-
-        return ValuationResult(
-            algorithm=self.algorithm or other.algorithm or "",
-            status=self.status | other.status,
-            values=np.where(self.counts > 0, self.values, other.values),
-            stderr=np.where(self.counts > 0, self.stderr, other.stderr),
-            data_names=self._names if self._names is not None else other._names,
-            counts=self.counts + other.counts,
         )
 
     def to_dataframe(
