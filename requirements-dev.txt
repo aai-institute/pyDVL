@@ -1,5 +1,5 @@
 black[jupyter] == 22.10.0
-isort == 5.10.1
+isort == 5.12.0
 jupyter
 mypy == 0.982
 nbconvert
