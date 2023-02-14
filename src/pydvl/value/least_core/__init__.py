@@ -19,7 +19,7 @@ from enum import Enum
 from typing import Optional
 
 from ...utils import Utility
-from .. import ValuationResult
+from pydvl.value.results import ValuationResult
 from .montecarlo import *
 from .naive import *
 
