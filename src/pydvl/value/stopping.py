@@ -1,3 +1,33 @@
+"""
+Stopping criteria for value computations.
+
+This module provides a basic set of stopping criteria: :class:`StandardError`,
+:class:`MaxUpdates`, :class:`MinUpdates`, :class:`MaxTime`, and
+:class:`HistoryDeviation`. These can behave in different ways depending on the
+context. For example, the :class:`MaxUpdates` limits the number of updates to
+values, and different algorithms may different number of utility evaluations or
+other steps in order to perform a single step.
+
+.. rubric:: Creating stopping criteria
+
+The easiest way is to declare a function implementing the interface
+:data:`StoppingCriterionCallable` and wrap it with :func:`make_criterion`. This
+creates a :class:`StoppingCriterion` object that can be composed with other
+stopping criteria.
+
+Alternatively, and in particular if reporting of completion is required, one can
+inherit from this class and implement the abstract methods
+:meth:`~pydvl.value.stopping.StoppingCriterion.check` and
+:meth:`~pydvl.value.stopping.StoppingCriterion.completion`.
+
+.. rubric:: Composing stopping criteria
+
+Objects of type :class:`StoppingCriterion` can be composed with the binary
+operators ``&`` (*and*), and ``|`` (*or*), following the truth tables of
+:class:`~pydvl.utils.status.Status`. The unary operator ``~`` (*not*) is also
+supported.
+"""
+
 import abc
 from functools import update_wrapper
 from time import time
@@ -22,31 +52,24 @@ StoppingCriterionCallable = Callable[[ValuationResult], Status]
 
 
 class StoppingCriterion(abc.ABC):
+    # A boolean array indicating whether the corresponding element has converged
+    _converged: NDArray[np.bool_]
+
     def __init__(self, modify_result: bool = True):
         """A composable callable object to determine whether a computation
         must stop.
 
         A ``StoppingCriterion`` takes a :class:`~pydvl.value.result.ValuationResult`
-        and returns a :class:`~pydvl.value.result.Status~.
-
-        :Creating stopping criteria:
-
-        The easiest way is to declare a function implementing the interface
-        :ref:`StoppingCriterionCallable` and wrap it with an instance
-        of this class. Alternatively, one can inherit from this class. For some
-        examples see e.g. :func:`~pydvl.value.stopping.MedianRation` and
-        :func:`~pydvl.value.stopping.HistoryDeviation`
-
-        :Composing stopping criteria:
-
-        Objects of this type can be composed with the binary operators ``&``
-        (_and_), and ``|`` (_or_), see :class:`~pydvl.utils.status.Status` for
-        the truth tables. The unary operator ``~`` (_not_) is also supported.
+        and returns a :class:`~pydvl.value.result.Status~. Objects of this type
+        can be composed with the binary operators ``&`` (*and*), and ``|`` (*or*),
+        following the truth tables of :class:`~pydvl.utils.status.Status`. The
+        unary operator ``~`` (*not*) is also supported.
 
         :param modify_result: If ``True`` the status of the input
             :class:`~pydvl.value.result.ValuationResult` is modified in place.
         """
         self.modify_result = modify_result
+        self._converged = np.full(0, False)
 
     @abc.abstractmethod
     def check(self, result: ValuationResult) -> Status:
@@ -59,6 +82,12 @@ class StoppingCriterion(abc.ABC):
         computation.
         """
         ...
+
+    def converged(self) -> NDArray[np.bool_]:
+        """Returns a boolean array indicating whether the values have converged
+        for each data point.
+        """
+        return self._converged
 
     @property
     def name(self):
@@ -140,33 +169,38 @@ def make_criterion(fun: StoppingCriterionCallable) -> Type[StoppingCriterion]:
         def completion(self) -> float:
             return 0.0  # FIXME: not much we can do about this...
 
+        def converged(self) -> NDArray[np.bool_]:
+            raise NotImplementedError(
+                "Cannot determine individual sample convergence from a function"
+            )
+
     return WrappedCriterion
 
 
 class StandardError(StoppingCriterion):
     """Compute a ratio of standard errors to values to determine convergence.
 
+    If $s_i$ is the standard error for datum $i$ and $v_i$ its value, then this
+    criterion returns :attr:`~pydvl.utils.status.Status.Converged` if
+    $s_i / v_i < \\epsilon$ for all $i$ and a threshold value $\\epsilon \\gt 0$.
+
     :param threshold: A value is considered to have converged if the ratio of
         standard error to value has dropped below this value.
     """
 
-    converged: NDArray[np.bool_]
-    """A boolean array indicating whether the corresponding element has converged."""
-
     def __init__(self, threshold: float, modify_result: bool = True):
         super().__init__(modify_result=modify_result)
         self.threshold = threshold
-        self.converged = None  # type: ignore
 
     def check(self, result: ValuationResult) -> Status:
         ratios = result.stderr / result.values
-        self.converged = np.where(ratios < self.threshold)
-        if np.all(self.converged):
+        self._converged = np.where(ratios < self.threshold)
+        if np.all(self._converged):
             return Status.Converged
         return Status.Pending
 
     def completion(self) -> float:
-        return np.mean(self.converged or [0]).item()
+        return np.mean(self._converged or [0]).item()
 
 
 class MaxUpdates(StoppingCriterion):
@@ -191,6 +225,7 @@ class MaxUpdates(StoppingCriterion):
 
     def check(self, result: ValuationResult) -> Status:
         if self.n_updates:
+            self._converged = np.where(result.counts >= self.n_updates)
             self.last_max = np.max(result.counts)
             if self.last_max >= self.n_updates:
                 return Status.Converged
@@ -223,6 +258,7 @@ class MinUpdates(StoppingCriterion):
 
     def check(self, result: ValuationResult) -> Status:
         if self.n_updates is not None:
+            self._converged = np.where(result.counts >= self.n_updates)
             self.last_min = np.min(result.counts)
             if self.last_min >= self.n_updates:
                 return Status.Converged
@@ -253,7 +289,10 @@ class MaxTime(StoppingCriterion):
         self.start = time()
 
     def check(self, result: ValuationResult) -> Status:
+        if self._converged is None:
+            self._converged = np.full(result.values.shape, False)
         if self.max_seconds is not None and time() > self.start + self.max_seconds:
+            self._converged.fill(True)
             return Status.Converged
         return Status.Pending
 
@@ -294,8 +333,7 @@ class HistoryDeviation(StoppingCriterion):
     :param pin_converged: If ``True``, once an index has converged, it is pinned
     """
 
-    memory: NDArray[np.float_]
-    converged: NDArray[np.bool_]
+    _memory: NDArray[np.float_]
 
     def __init__(
         self,
@@ -313,34 +351,33 @@ class HistoryDeviation(StoppingCriterion):
         self.n_steps = n_steps
         self.rtol = rtol
         self.update_op = np.logical_or if pin_converged else np.logical_and
-        self.memory = None  # type: ignore
-        self.converged = None  # type: ignore
+        self._memory = None  # type: ignore
 
     def check(self, r: ValuationResult) -> Status:
-        if self.memory is None:
-            self.memory = np.full((len(r.values), self.n_steps + 1), np.inf)
-            self.converged = np.full(len(r), False)
+        if self._memory is None:
+            self._memory = np.full((len(r.values), self.n_steps + 1), np.inf)
+            self._converged = np.full(len(r), False)
             return Status.Pending
 
         # shift left: last column is the last set of values
-        self.memory = np.concatenate(
-            [self.memory[:, 1:], r.values.reshape(-1, 1)], axis=1
+        self._memory = np.concatenate(
+            [self._memory[:, 1:], r.values.reshape(-1, 1)], axis=1
         )
 
         # Look at indices that have been updated more than n_steps times
         ii = np.where(r.counts > self.n_steps)
         if len(ii) > 0:
-            curr = self.memory[:, -1]
-            saved = self.memory[:, 0]
+            curr = self._memory[:, -1]
+            saved = self._memory[:, 0]
             diffs = np.abs(curr[ii] - saved[ii])
             quots = np.divide(diffs, curr[ii], out=diffs, where=curr[ii] != 0)
             # quots holds the quotients when the denominator is non-zero, and
             # the absolute difference, which is just the memory, otherwise.
             if np.mean(quots) < self.rtol:
-                self.converged = self.update_op(self.converged, ii)
-                if np.all(self.converged):
+                self._converged = self.update_op(self._converged, ii)
+                if np.all(self._converged):
                     return Status.Converged
         return Status.Pending
 
     def completion(self) -> float:
-        return np.mean(self.converged or [0]).item()
+        return np.mean(self._converged or [0]).item()
