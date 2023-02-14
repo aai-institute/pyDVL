@@ -61,10 +61,10 @@ class ShapleyCoordinator(Coordinator):
     satisfied.
     """
 
-    def __init__(self, stop: StoppingCriterion):
+    def __init__(self, done: StoppingCriterion):
         super().__init__()
-        self.stop = stop
-        self.stop.modify_result = True
+        self.results_done = done
+        self.results_done.modify_result = True
 
     def accumulate(self) -> ValuationResult:
         """Accumulates all results received from the workers.
@@ -93,7 +93,7 @@ class ShapleyCoordinator(Coordinator):
         if self.is_done():
             return True
         if len(self.worker_results) > 0:
-            self._status = self.stop(self.accumulate())
+            self._status = self.results_done(self.accumulate())
         return self.is_done()
 
 
@@ -152,7 +152,7 @@ class ShapleyWorker(Worker):
 
         return _permutation_montecarlo_shapley(
             self.u,
-            stop=MaxUpdates(1),
+            done=MaxUpdates(1),
             permutation_breaker=self.permutation_breaker,
             algorithm_name="truncated_montecarlo_shapley",
         )

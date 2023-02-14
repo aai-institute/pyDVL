@@ -1,5 +1,5 @@
 import logging
-from typing import Union, cast
+from typing import Union
 
 import numpy as np
 import pytest
@@ -27,14 +27,14 @@ log = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "num_samples, fun, rtol, kwargs",
     [
-        (12, ShapleyMode.PermutationMontecarlo, 0.1, {"stop": MaxUpdates(10)}),
+        (12, ShapleyMode.PermutationMontecarlo, 0.1, {"done": MaxUpdates(10)}),
         # FIXME! it should be enough with 2**(len(data)-1) samples
-        (8, ShapleyMode.CombinatorialMontecarlo, 0.2, {"stop": MaxUpdates(2**10)}),
+        (8, ShapleyMode.CombinatorialMontecarlo, 0.2, {"done": MaxUpdates(2**10)}),
         (
             12,
             ShapleyMode.TruncatedMontecarlo,
             0.1,
-            {"stop": MaxUpdates(10), "coordinator_update_period": 1},
+            {"done": MaxUpdates(10), "coordinator_update_period": 1},
         ),
         (12, ShapleyMode.Owen, 0.1, {"n_iterations": 4, "max_q": 200}),
         (12, ShapleyMode.OwenAntithetic, 0.1, {"n_iterations": 4, "max_q": 200}),
@@ -83,12 +83,12 @@ def test_hoeffding_bound_montecarlo(
     "fun, kwargs",
     [
         # FIXME: Hoeffding says 400 should be enough
-        (ShapleyMode.PermutationMontecarlo, dict(stop=MaxUpdates(600))),
+        (ShapleyMode.PermutationMontecarlo, dict(done=MaxUpdates(600))),
         (
             ShapleyMode.TruncatedMontecarlo,
-            dict(coordinator_update_period=1, stop=MaxUpdates(500)),
+            dict(coordinator_update_period=1, done=MaxUpdates(500)),
         ),
-        (ShapleyMode.CombinatorialMontecarlo, dict(stop=MaxUpdates(2**11))),
+        (ShapleyMode.CombinatorialMontecarlo, dict(done=MaxUpdates(2**11))),
         (ShapleyMode.Owen, dict(n_iterations=4, max_q=300)),
         # FIXME: antithetic breaks for non-deterministic u
         # (ShapleyMode.OwenAntithetic, dict(n_iterations=4, max_q=300)),
@@ -142,14 +142,13 @@ def test_linear_montecarlo_shapley(
 @pytest.mark.parametrize(
     "fun, kwargs",
     [
-        # (ShapleyMode.PermutationMontecarlo, {"stop": MaxUpdates(500)}),
+        # (ShapleyMode.PermutationMontecarlo, {"done": MaxUpdates(500)}),
         (
             ShapleyMode.TruncatedMontecarlo,
             dict(
                 coordinator_update_period=0.2,
                 worker_update_period=0.1,
-                stop=HistoryDeviation(n_samples=6, n_steps=10, rtol=0.1)
-                | MaxUpdates(500),
+                done=HistoryDeviation(n_steps=10, rtol=0.1) | MaxUpdates(500),
             ),
         ),
         # (ShapleyMode.Owen, dict(n_iterations=4, max_q=400)),
@@ -200,10 +199,10 @@ def test_linear_montecarlo_with_outlier(
 @pytest.mark.parametrize(
     "fun, kwargs",
     [
-        (ShapleyMode.PermutationMontecarlo, dict(stop=MaxUpdates(700))),
+        (ShapleyMode.PermutationMontecarlo, dict(done=MaxUpdates(700))),
         (
             ShapleyMode.TruncatedMontecarlo,
-            dict(stop=MaxUpdates(500), coordinator_update_period=0.5),
+            dict(done=MaxUpdates(500), coordinator_update_period=0.5),
         ),
         (ShapleyMode.Owen, dict(n_iterations=4, max_q=300)),
         # FIXME: antithetic breaks for non-deterministic u

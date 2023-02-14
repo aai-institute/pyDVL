@@ -36,19 +36,19 @@ import math
 import operator
 from enum import Enum
 from functools import reduce
-from itertools import count
+from itertools import cycle, takewhile
 from time import sleep
 from typing import NamedTuple, Optional, Sequence
 from warnings import warn
 
 import numpy as np
 from numpy.typing import NDArray
+from tqdm import tqdm
 
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset, running_moments
 from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
 from pydvl.utils.progress import maybe_progress
-from pydvl.utils.status import Status
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
 from pydvl.value.stopping import StoppingCriterion
@@ -77,7 +77,7 @@ __all__ = [
 def truncated_montecarlo_shapley(
     u: Utility,
     *,
-    stop: StoppingCriterion,
+    done: StoppingCriterion,
     permutation_tolerance: Optional[float] = None,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
@@ -102,7 +102,7 @@ def truncated_montecarlo_shapley(
     until the stopping criterion returns ``True``.
 
     :param u: Utility object with model, data, and scoring function
-    :param stop: Check on the results which decides when to stop
+    :param done: Check on the results which decides when to stop
         sampling permutations.
     :param permutation_tolerance: Tolerance for the interruption of computations
         within a permutation. This is called "performance tolerance" in
@@ -129,7 +129,7 @@ def truncated_montecarlo_shapley(
     n_jobs = parallel_backend.effective_n_jobs(n_jobs)
     u_id = parallel_backend.put(u)
 
-    coordinator = get_shapley_coordinator(config=config, stop=stop)  # type: ignore
+    coordinator = get_shapley_coordinator(config=config, done=done)  # type: ignore
 
     total_utility = u(u.data.indices)
 
@@ -169,7 +169,7 @@ def truncated_montecarlo_shapley(
 def _permutation_montecarlo_shapley(
     u: Utility,
     *,
-    stop: StoppingCriterion,
+    done: StoppingCriterion,
     permutation_breaker: Optional[PermutationBreaker] = None,
     algorithm_name: str = "permutation_montecarlo_shapley",
     progress: bool = False,
@@ -182,7 +182,7 @@ def _permutation_montecarlo_shapley(
     sampled permutations.
 
     :param u: Utility object with model, data, and scoring function
-    :param stop: Check on the results which decides when to stop
+    :param done: Check on the results which decides when to stop
     :param permutation_breaker: A callable which decides whether to interrupt
         processing a permutation and set all subsequent marginals to zero.
     :param algorithm_name: For the results object. Used internally by different
@@ -192,14 +192,13 @@ def _permutation_montecarlo_shapley(
     :return: An object with the results
     """
     n = len(u.data)
-    values = np.zeros(shape=n)
-    stderr = np.zeros_like(values)
-    variances = np.zeros_like(values)
-    counts = np.zeros(shape=n, dtype=np.int_)
-    result = ValuationResult(
-        algorithm=algorithm_name, values=values, stderr=stderr, counts=counts
-    )
-    for _ in maybe_progress(count(), progress, position=job_id):  # infinite loop
+    result = ValuationResult.empty(algorithm_name, n)
+    variances = np.zeros(n)
+
+    pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
+    while not done(result):
+        pbar.n = 100 * done.completion()
+        pbar.refresh()
         prev_score = 0.0
         permutation = np.random.permutation(u.data.indices)
         permutation_done = False
@@ -209,27 +208,26 @@ def _permutation_montecarlo_shapley(
             else:
                 score = u(permutation[: i + 1])
             marginal = score - prev_score
-            values[idx], variances[idx] = running_moments(
-                values[idx], variances[idx], marginal, counts[idx]
+            result.values[idx], variances[idx] = running_moments(
+                result.values[idx], variances[idx], marginal, result.counts[idx]
             )
-            counts[idx] += 1
+            result.counts[idx] += 1
             prev_score = score
             if (
                 not permutation_done
                 and permutation_breaker
-                and permutation_breaker(idx, values)
+                and permutation_breaker(idx, result.values)
             ):
                 permutation_done = True
-        if stop(result):
-            break
+
     # Careful: update in place
-    stderr[:] = np.sqrt(variances / np.maximum(1, counts))
+    result.stderr[:] = np.sqrt(variances / np.maximum(1, result.counts))
     return result
 
 
 def permutation_montecarlo_shapley(
     u: Utility,
-    stop: StoppingCriterion,
+    done: StoppingCriterion,
     *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
@@ -244,7 +242,7 @@ def permutation_montecarlo_shapley(
     See :ref:`data valuation` for details.
 
     :param u: Utility object with model, data, and scoring function.
-    :param stop: function checking whether computation must stop.
+    :param done: function checking whether computation must stop.
     :param n_jobs: number of jobs across which to distribute the computation.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
@@ -262,7 +260,7 @@ def permutation_montecarlo_shapley(
         reduce_func=lambda results: reduce(operator.add, results),
         map_kwargs=dict(
             algorithm_name="permutation_montecarlo_shapley",
-            stop=stop,
+            done=done,
             permutation_breaker=None,  # permutation_breaker,
             progress=progress,
         ),
@@ -275,7 +273,7 @@ def permutation_montecarlo_shapley(
 def _combinatorial_montecarlo_shapley(
     indices: Sequence[int],
     u: Utility,
-    stop: StoppingCriterion,
+    done: StoppingCriterion,
     *,
     progress: bool = False,
     job_id: int = 1,
@@ -286,7 +284,7 @@ def _combinatorial_montecarlo_shapley(
     combinatorial definition.
 
     :param u: Utility object with model, data, and scoring function
-    :param stop: Check on the results which decides when to stop sampling
+    :param done: Check on the results which decides when to stop sampling
         subsets for an index.
     :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress
@@ -302,41 +300,32 @@ def _combinatorial_montecarlo_shapley(
     # powerset of a set with n-1 elements has mass 2^{n-1} over each subset. The
     # additional factor n corresponds to the one in the Shapley definition
     correction = 2 ** (n - 1) / n
+    variances = np.zeros(shape=n)
+    result = ValuationResult.empty("combinatorial_montecarlo_shapley", n)
 
-    values = np.zeros(n)
-    stderr = np.zeros(n)
-    variances = np.zeros(n)
-    counts = np.zeros(n, dtype=int)
-    results = ValuationResult(
-        algorithm="combinatorial_montecarlo_shapley",
-        values=values,
-        stderr=stderr,
-        vars=variances,
-        counts=counts,
-    )
-    pbar = maybe_progress(indices, progress, position=job_id)
-    for idx in pbar:
+    repeat_indices = takewhile(lambda _: not done(result), cycle(indices))
+    pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
+    for idx in repeat_indices:
+        pbar.n = 100 * done.completion()
+        pbar.refresh()
         # Randomly sample subsets of full dataset without idx
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
-        for s in random_powerset(subset):
-            marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
-            values[idx], variances[idx] = running_moments(
-                values[idx], variances[idx], marginal, counts[idx]
-            )
-            counts[idx] += 1
-            status = stop(results)
-            if status != Status.Pending:
-                break
+        s = next(random_powerset(subset, n_samples=1))
+        marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
+        result.values[idx], variances[idx] = running_moments(
+            result.values[idx], variances[idx], marginal, result.counts[idx]
+        )
+        result.counts[idx] += 1
 
-    values *= correction
+    result.values[:] = result.values * correction
     variances *= correction**2
-    stderr[:] = np.sqrt(variances / np.maximum(1, counts))
-    return results
+    result.stderr[:] = np.sqrt(variances / np.maximum(1, result.counts))
+    return result
 
 
 def combinatorial_montecarlo_shapley(
     u: Utility,
-    stop: StoppingCriterion,
+    done: StoppingCriterion,
     *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
@@ -361,7 +350,7 @@ def combinatorial_montecarlo_shapley(
     computing the sum over subsets $S \subseteq N \setminus \{i\}$ separately.
 
     :param u: Utility object with model, data, and scoring function
-    :param stop: Stopping criterion for the computation.
+    :param done: Stopping criterion for the computation.
     :param n_jobs: number of parallel jobs across which to distribute the
         computation. Each worker receives a chunk of
         :attr:`~pydvl.utils.dataset.Dataset.indices`
@@ -375,7 +364,7 @@ def combinatorial_montecarlo_shapley(
         u.data.indices,
         map_func=_combinatorial_montecarlo_shapley,
         reduce_func=lambda results: reduce(operator.add, results),
-        map_kwargs=dict(u=u, stop=stop, progress=progress),
+        map_kwargs=dict(u=u, done=done, progress=progress),
         n_jobs=n_jobs,
         config=config,
     )

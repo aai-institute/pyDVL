@@ -29,7 +29,7 @@ __all__ = ["compute_shapley_values"]
 def compute_shapley_values(
     u: Utility,
     *,
-    stop: StoppingCriterion = MaxUpdates(100),
+    done: StoppingCriterion = MaxUpdates(100),
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     n_jobs: int = 1,
     **kwargs,
@@ -84,7 +84,7 @@ def compute_shapley_values(
 
     :param u: :class:`~pydvl.utils.utility.Utility` object with model, data, and
         scoring function.
-    :param stop: :class:`~pydvl.value.stopping.StoppingCriterion` object, used
+    :param done: :class:`~pydvl.value.stopping.StoppingCriterion` object, used
         to determine when to stop the computation for Monte Carlo methods. The
         default is to stop after 100 iterations. See the available criteria in
         :mod:`~pydvl.value.stopping`. It is possible to combine several criteria
@@ -104,14 +104,14 @@ def compute_shapley_values(
         raise ValueError(f"Invalid value encountered in {mode=}")
 
     if mode == ShapleyMode.TruncatedMontecarlo:
-        return truncated_montecarlo_shapley(u=u, stop=stop, n_jobs=n_jobs, **kwargs)
+        return truncated_montecarlo_shapley(u=u, done=done, n_jobs=n_jobs, **kwargs)
     elif mode == ShapleyMode.CombinatorialMontecarlo:
         return combinatorial_montecarlo_shapley(
-            u, stop=stop, n_jobs=n_jobs, progress=progress
+            u, done=done, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.PermutationMontecarlo:
         return permutation_montecarlo_shapley(
-            u, stop=stop, n_jobs=n_jobs, progress=progress
+            u, done=done, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.CombinatorialExact:
         return combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)
@@ -130,7 +130,7 @@ def compute_shapley_values(
         )
         return owen_sampling_shapley(
             u,
-            n_iterations=int(kwargs.get("n_samples", -1)),
+            n_iterations=int(kwargs.get("n_iterations", -1)),
             max_q=int(kwargs.get("max_q", -1)),
             method=method,
             n_jobs=n_jobs,
