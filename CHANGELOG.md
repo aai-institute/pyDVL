@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Stopping criteria for valuation algorithms. Improved `ValuationResult` and
+  `Status` classes.
+  [PR #252](https://github.com/appliedAI-Initiative/pyDVL/pull/250)
 - Operations on ValuationResults and Statuses and cleanup
   [PR #248](https://github.com/appliedAI-Initiative/pyDVL/pull/248)
 - **Bug fix and minor improvements**: Fixes bug in TMCS with remote Ray cluster,
