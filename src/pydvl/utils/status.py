@@ -92,10 +92,10 @@ class Status(Enum):
         # Should be unreachable
         raise RuntimeError(f"Unexpected statuses: {self} and {other}")
 
-    def __invert__(self):
+    def __invert__(self) -> "Status":
         if self == Status.Converged:
             return Status.Failed
         return Status.Converged
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return self != Status.Pending
