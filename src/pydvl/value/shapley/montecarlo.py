@@ -38,7 +38,7 @@ from enum import Enum
 from functools import reduce
 from itertools import cycle, takewhile
 from time import sleep
-from typing import NamedTuple, Optional, Sequence
+from typing import NamedTuple, Optional, Sequence, cast
 from warnings import warn
 
 import numpy as np
@@ -163,7 +163,7 @@ def truncated_montecarlo_shapley(
     # return coordinator.run(delay=coordinator_update_period)
 
 
-def low_marginal_breaker(u: Utility, rtol: float) -> PermutationBreaker:
+def low_marginal_breaker(u: Utility, rtol: Optional[float]) -> PermutationBreaker:
     """Break a permutation if the marginal utility is too low.
 
     This is a helper function for :func:`permutation_montecarlo_shapley`.
@@ -171,16 +171,19 @@ def low_marginal_breaker(u: Utility, rtol: float) -> PermutationBreaker:
 
     :param u: Utility object with model, data, and scoring function
     :param rtol: Relative tolerance. The permutation is broken if the
-        marginal utility is less than ``total_utility * rtol``.
+        marginal utility is less than ``total_utility * rtol``. Leave empty to
+        set to ``total_utility / len(u.data) / 100``.
     :return: A function which decides whether to interrupt processing a
         permutation and set all subsequent marginals to zero.
     """
 
     logger.info("Computing total utility for low marginal permutation interruption.")
     total = u(u.data.indices)
+    if rtol is None:
+        rtol = total / len(u.data) / 100
 
     def _break(idx: int, marginals: NDArray[np.float_]) -> bool:
-        return abs(float(marginals[idx])) < total * rtol
+        return abs(float(marginals[idx])) < total * cast(float, rtol)
 
     return _break
 
@@ -435,9 +438,7 @@ def _owen_sampling_shapley(
         values[i] = (e[:-1] + e[1:]).sum() / (2 * max_q)
 
     return ValuationResult(
-        algorithm="owen_sampling_shapley_" + str(method),
-        values=values,
-        counts=np.ones_like(values, dtype=np.int_),
+        algorithm="owen_sampling_shapley_" + str(method), values=values
     )
 
 

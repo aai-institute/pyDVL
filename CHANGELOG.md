@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- Stopping criteria for valuation algorithms. Improved `ValuationResult` and
-  `Status` classes.
+- Generalised stopping criteria for valuation algorithms. Improved classes
+  `ValuationResult` and `Status` with more operations. Some minor issues fixed.
   [PR #252](https://github.com/appliedAI-Initiative/pyDVL/pull/250)
 - Operations on ValuationResults and Statuses and cleanup
   [PR #248](https://github.com/appliedAI-Initiative/pyDVL/pull/248)
