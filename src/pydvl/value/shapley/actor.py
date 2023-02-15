@@ -13,11 +13,11 @@ from typing import Optional, cast
 
 import numpy as np
 
-from .types import PermutationBreaker
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
+from pydvl.value.shapley.types import PermutationBreaker
 from pydvl.value.stopping import MaxUpdates, StoppingCriterion
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
