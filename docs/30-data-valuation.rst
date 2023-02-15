@@ -320,7 +320,7 @@ efficient enough to be useful in some applications.
    data = Dataset(...)
    utility = Utility(model, data)
    values = compute_shapley_values(
-       u=utility, mode="truncated_montecarlo", n_iterations=100
+       u=utility, mode="truncated_montecarlo", done=MaxUpdates(1000)
    )
 
 
