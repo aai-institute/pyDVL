@@ -12,13 +12,13 @@ from time import time
 from typing import Optional, cast
 
 import numpy as np
-from numpy.typing import NDArray
 
-from ...utils.config import ParallelConfig
-from ...utils.parallel.actor import Coordinator, RayActorWrapper, Worker
-from ...utils.utility import Utility
-from ...value.result import ValuationResult
-from ..stopping import MaxUpdates, StoppingCriterion
+from .types import PermutationBreaker
+from pydvl.utils.config import ParallelConfig
+from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
+from pydvl.utils.utility import Utility
+from pydvl.value.result import ValuationResult
+from pydvl.value.stopping import MaxUpdates, StoppingCriterion
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
 
@@ -110,8 +110,7 @@ class ShapleyWorker(Worker):
         *,
         worker_id: int,
         update_period: int = 30,
-        total_utility: Optional[float] = None,
-        permutation_tolerance: Optional[float] = None,
+        permutation_breaker: Optional[PermutationBreaker] = None,
     ):
         """A worker calculates Shapley values using the permutation definition
          and reports the results to the coordinator.
@@ -125,8 +124,9 @@ class ShapleyWorker(Worker):
         :param worker_id: id used for reporting through maybe_progress
         :param update_period: interval in seconds between different updates to
             and from the coordinator
-        :param total_utility: total utility of the utility function. Pass to
-            avoid recomputing in each worker.
+        :param permutation_breaker: function that decides whether to stop
+            computing marginals for a given permutation. If ``None``, all marginals
+            in a permutation are computed.
         :param permutation_tolerance: tolerance for the permutation breaking
             algorithm ("performance tolerance" in :footcite:t:`ghorbani_data_2019`).
             Leave empty to set to ``total_utility / len(u.data) / 100``
@@ -135,16 +135,7 @@ class ShapleyWorker(Worker):
             coordinator=coordinator, update_period=update_period, worker_id=worker_id
         )
         self.u = u
-        self.total_utility = total_utility or u(u.data.indices)
-        self.permutation_tolerance = (
-            permutation_tolerance or self.total_utility / len(self.u.data) / 100
-        )
-
-    def permutation_breaker(self, idx: int, marginals: NDArray[np.float_]) -> bool:
-        return (
-            float(np.abs(marginals[idx] - self.total_utility))
-            < self.permutation_tolerance
-        )
+        self.permutation_breaker = permutation_breaker
 
     def _compute_marginals(self) -> ValuationResult:
         # Import here to avoid errors with circular imports

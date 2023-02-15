@@ -131,8 +131,6 @@ def truncated_montecarlo_shapley(
 
     coordinator = get_shapley_coordinator(config=config, done=done)  # type: ignore
 
-    total_utility = u(u.data.indices)
-
     workers = [
         get_shapley_worker(  # type: ignore
             u=u_id,
@@ -140,8 +138,7 @@ def truncated_montecarlo_shapley(
             worker_id=worker_id,
             update_period=worker_update_period,
             config=config,
-            total_utility=total_utility,
-            permutation_tolerance=permutation_tolerance,
+            permutation_breaker=low_marginal_breaker(u, permutation_tolerance),
         )
         for worker_id in range(n_jobs)
     ]
@@ -164,6 +161,28 @@ def truncated_montecarlo_shapley(
     # )
     #
     # return coordinator.run(delay=coordinator_update_period)
+
+
+def low_marginal_breaker(u: Utility, rtol: float) -> PermutationBreaker:
+    """Break a permutation if the marginal utility is too low.
+
+    This is a helper function for :func:`permutation_montecarlo_shapley`.
+    It is used as a default value for the ``permutation_breaker`` argument.
+
+    :param u: Utility object with model, data, and scoring function
+    :param rtol: Relative tolerance. The permutation is broken if the
+        marginal utility is less than ``total_utility * rtol``.
+    :return: A function which decides whether to interrupt processing a
+        permutation and set all subsequent marginals to zero.
+    """
+
+    logger.info("Computing total utility for low marginal permutation interruption.")
+    total = u(u.data.indices)
+
+    def _break(idx: int, marginals: NDArray[np.float_]) -> bool:
+        return abs(float(marginals[idx])) < total * rtol
+
+    return _break
 
 
 def _permutation_montecarlo_shapley(
@@ -193,7 +212,6 @@ def _permutation_montecarlo_shapley(
     """
     n = len(u.data)
     result = ValuationResult.empty(algorithm_name, n)
-    variances = np.zeros(n)
 
     pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
     while not done(result):
@@ -223,6 +241,7 @@ def permutation_montecarlo_shapley(
     u: Utility,
     done: StoppingCriterion,
     *,
+    permutation_breaker: Optional[PermutationBreaker] = None,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -237,16 +256,15 @@ def permutation_montecarlo_shapley(
 
     :param u: Utility object with model, data, and scoring function.
     :param done: function checking whether computation must stop.
+    :param permutation_breaker: An optional callable which decides whether to
+        interrupt processing a permutation and set all subsequent marginals to
+        zero. Typically used to stop computation when the marginal is small.
     :param n_jobs: number of jobs across which to distribute the computation.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param progress: Whether to display progress bars for each job.
     :return: Object with the data values.
     """
-    total_utility = u(u.data.indices)
-
-    def permutation_breaker(idx: int, marginals: NDArray[np.float_]) -> bool:
-        return float(marginals[idx]) < 0.01 * total_utility
 
     map_reduce_job: MapReduceJob[Utility, ValuationResult] = MapReduceJob(
         u,
@@ -255,7 +273,7 @@ def permutation_montecarlo_shapley(
         map_kwargs=dict(
             algorithm_name="permutation_montecarlo_shapley",
             done=done,
-            permutation_breaker=None,  # permutation_breaker,
+            permutation_breaker=permutation_breaker,
             progress=progress,
         ),
         config=config,
