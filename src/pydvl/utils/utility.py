@@ -62,7 +62,8 @@ class Utility:
     :param scoring: Same as in sklearn's ``cross_validate()``: a string,
         a scorer callable or None for the default ``model.score()``. Greater
         values must be better. If they are not, a negated version can be
-        used (see `make_scorer`)
+        used (see scikit-learn's `make_scorer()
+        <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html>_`)
     :param default_score: score in the case of models that have not been fit,
         e.g. when too little data is passed, or errors arise.
     :param score_range: numerical range of the score function. Some Monte Carlo
