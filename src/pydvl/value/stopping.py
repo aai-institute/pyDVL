@@ -52,22 +52,24 @@ StoppingCriterionCallable = Callable[[ValuationResult], Status]
 
 
 class StoppingCriterion(abc.ABC):
+    """A composable callable object to determine whether a computation
+    must stop.
+
+    A ``StoppingCriterion`` takes a :class:`~pydvl.value.result.ValuationResult`
+    and returns a :class:`~pydvl.value.result.Status~. Objects of this type
+    can be composed with the binary operators ``&`` (*and*), and ``|`` (*or*),
+    following the truth tables of :class:`~pydvl.utils.status.Status`. The
+    unary operator ``~`` (*not*) is also supported.
+
+    :param modify_result: If ``True`` the status of the input
+        :class:`~pydvl.value.result.ValuationResult` is modified in place after
+        the call.
+    """
+
     # A boolean array indicating whether the corresponding element has converged
     _converged: NDArray[np.bool_]
 
     def __init__(self, modify_result: bool = True):
-        """A composable callable object to determine whether a computation
-        must stop.
-
-        A ``StoppingCriterion`` takes a :class:`~pydvl.value.result.ValuationResult`
-        and returns a :class:`~pydvl.value.result.Status~. Objects of this type
-        can be composed with the binary operators ``&`` (*and*), and ``|`` (*or*),
-        following the truth tables of :class:`~pydvl.utils.status.Status`. The
-        unary operator ``~`` (*not*) is also supported.
-
-        :param modify_result: If ``True`` the status of the input
-            :class:`~pydvl.value.result.ValuationResult` is modified in place.
-        """
         self.modify_result = modify_result
         self._converged = np.full(0, False)
 
@@ -86,6 +88,9 @@ class StoppingCriterion(abc.ABC):
     def converged(self) -> NDArray[np.bool_]:
         """Returns a boolean array indicating whether the values have converged
         for each data point.
+
+        Inheriting classes must set the ``_converged`` attribute in their
+        :meth:`check`.
         """
         return self._converged
 
@@ -94,80 +99,62 @@ class StoppingCriterion(abc.ABC):
         return type(self).__name__
 
     def __call__(self, result: ValuationResult) -> Status:
-        if result.status is not Status.Pending:
-            return result.status
         status = self.check(result)
         if self.modify_result:  # FIXME: this is not nice
             result._status = status
         return status
 
     def __and__(self, other: "StoppingCriterion") -> "StoppingCriterion":
-        class CompositeCriterion(StoppingCriterion):
-            def check(self, result: ValuationResult) -> Status:
-                return self(result) & other(result)
-
-            @property
-            def name(self):
-                return f"Composite StoppingCriterion: {self.name} AND {other.name}"
-
-            def completion(self) -> float:
-                return min(self.completion(), other.completion())
-
-        return CompositeCriterion(
-            modify_result=self.modify_result or other.modify_result
-        )
+        return make_criterion(
+            fun=lambda result: self.check(result) & other.check(result),
+            completion=lambda: min(self.completion(), other.completion()),
+            name=f"Composite StoppingCriterion: {self.name} AND {other.name}",
+        )(modify_result=self.modify_result or other.modify_result)
 
     def __or__(self, other: "StoppingCriterion") -> "StoppingCriterion":
-        class CompositeCriterion(StoppingCriterion):
-            def check(self, result: ValuationResult) -> Status:
-                return self(result) | other(result)
-
-            @property
-            def name(self):
-                return f"Composite StoppingCriterion: {self.name} OR {other.name}"
-
-            def completion(self) -> float:
-                return max(self.completion(), other.completion())
-
-        return CompositeCriterion(
-            modify_result=self.modify_result or other.modify_result
-        )
+        return make_criterion(
+            fun=lambda result: self.check(result) | other.check(result),
+            completion=lambda: max(self.completion(), other.completion()),
+            name=f"Composite StoppingCriterion: {self.name} OR {other.name}",
+        )(modify_result=self.modify_result or other.modify_result)
 
     def __invert__(self) -> "StoppingCriterion":
-        class CompositeCriterion(StoppingCriterion):
-            def check(self, result: ValuationResult) -> Status:
-                return cast(Status, ~self(result))  # mypy complains if we don't cast
-
-            @property
-            def name(self):
-                return f"Composite StoppingCriterion: NOT {self.name}"
-
-            def completion(self) -> float:
-                return 1 - self.completion()
-
-        return CompositeCriterion(modify_result=self.modify_result)
+        return make_criterion(
+            fun=lambda result: ~self.check(result),
+            completion=lambda: 1 - self.completion(),
+            name=f"Composite StoppingCriterion: NOT {self.name}",
+        )(modify_result=self.modify_result)
 
 
-def make_criterion(fun: StoppingCriterionCallable) -> Type[StoppingCriterion]:
+def make_criterion(
+    fun: StoppingCriterionCallable,
+    completion: Callable[[], float] = None,
+    name: str = None,
+) -> Type[StoppingCriterion]:
     """Create a new :class:`StoppingCriterion` from a function.
     Use this to enable simpler functions to be composed with bitwise operators
 
     :param fun: The callable to wrap.
+    :param completion: A callable that returns a value between 0 and 1.
+    :param name: The name of the new criterion. If ``None``, the ``__name__`` of
+        the function is used.
     :return: A new subclass of :class:`StoppingCriterion`.
     """
 
     class WrappedCriterion(StoppingCriterion):
         def __init__(self, modify_result: bool = True):
             super().__init__(modify_result=modify_result)
-            setattr(self, "check", fun)  # mypy complains if we assign to self.check
-            update_wrapper(self, self.check)
+            self._name = name or fun.__name__
+
+        def check(self, result: ValuationResult) -> Status:
+            return fun(result)
+
+        def completion(self) -> float:
+            return completion() if completion is not None else 0.0
 
         @property
         def name(self):
-            return fun.__name__
-
-        def completion(self) -> float:
-            return 0.0  # FIXME: not much we can do about this...
+            return self._name
 
         def converged(self) -> NDArray[np.bool_]:
             raise NotImplementedError(
@@ -374,7 +361,9 @@ class HistoryDeviation(StoppingCriterion):
             # quots holds the quotients when the denominator is non-zero, and
             # the absolute difference, which is just the memory, otherwise.
             if np.mean(quots) < self.rtol:
-                self._converged = self.update_op(self._converged, ii)  # type: ignore
+                self._converged = self.update_op(
+                    self._converged, r.counts > self.n_steps
+                )  # type: ignore
                 if np.all(self._converged):
                     return Status.Converged
         return Status.Pending

@@ -17,14 +17,18 @@ from pydvl.value.stopping import (
 
 
 def test_stopping_criterion():
+    with pytest.raises(TypeError):
+        StoppingCriterion()
+
+    StoppingCriterion.__abstractmethods__ = set()
     done = StoppingCriterion()
     assert done.name == "StoppingCriterion"
     assert done.modify_result is True
-    with pytest.raises(NotImplementedError):
-        done(ValuationResult.empty())
 
 
 def test_stopping_criterion_composition():
+    StoppingCriterion.__abstractmethods__ = set()
+
     c = Status.Converged
     p = Status.Pending
     f = Status.Failed
@@ -100,22 +104,22 @@ def test_minmax_updates():
     maxstop = MaxUpdates(10)
     assert maxstop.name == "MaxUpdates"
     v = ValuationResult.from_random(5)
-    v.counts = np.zeros(5)
+    v._counts = np.zeros(5)
     assert maxstop(v) == Status.Pending
-    v.counts += np.ones(5) * 9
+    v._counts += np.ones(5) * 9
     assert maxstop(v) == Status.Pending
-    v.counts[0] += 1
+    v._counts[0] += 1
     assert maxstop(v) == Status.Converged
 
     minstop = MinUpdates(10)
     assert minstop.name == "MinUpdates"
-    v.counts = np.zeros(5)
+    v._counts = np.zeros(5)
     assert minstop(v) == Status.Pending
-    v.counts += np.ones(5) * 9
+    v._counts += np.ones(5) * 9
     assert minstop(v) == Status.Pending
-    v.counts[0] += 1
+    v._counts[0] += 1
     assert minstop(v) == Status.Pending
-    v.counts += np.ones(5)
+    v._counts += np.ones(5)
     assert minstop(v) == Status.Converged
 
 
