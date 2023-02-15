@@ -320,7 +320,6 @@ def group_testing_shapley(
             algorithm="group_testing_shapley",
             status=Status.Converged,
             values=result.x,
-            stderr=None,
             data_names=u.data.data_names,
         )
     else:
@@ -328,6 +327,5 @@ def group_testing_shapley(
             algorithm="group_testing_shapley",
             status=Status.Failed,
             values=np.nan * np.ones_like(u.data.indices),
-            stderr=None,
             data_names=u.data.data_names,
         )

@@ -80,6 +80,5 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
         algorithm="knn_shapley",
         status=Status.Converged,
         values=values,
-        stderr=None,
         data_names=u.data.data_names,
     )

@@ -46,7 +46,7 @@ from numpy.typing import NDArray
 from tqdm import tqdm
 
 from pydvl.utils.config import ParallelConfig
-from pydvl.utils.numeric import random_powerset, running_moments
+from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
 from pydvl.utils.progress import maybe_progress
 from pydvl.utils.utility import Utility
@@ -208,10 +208,7 @@ def _permutation_montecarlo_shapley(
             else:
                 score = u(permutation[: i + 1])
             marginal = score - prev_score
-            result.values[idx], variances[idx] = running_moments(
-                result.values[idx], variances[idx], marginal, result.counts[idx]
-            )
-            result.counts[idx] += 1
+            result.update(idx, marginal)
             prev_score = score
             if (
                 not permutation_done
@@ -219,9 +216,6 @@ def _permutation_montecarlo_shapley(
                 and permutation_breaker(idx, result.values)
             ):
                 permutation_done = True
-
-    # Careful: update in place
-    result.stderr[:] = np.sqrt(variances / np.maximum(1, result.counts))
     return result
 
 
@@ -312,14 +306,10 @@ def _combinatorial_montecarlo_shapley(
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
         s = next(random_powerset(subset, n_samples=1))
         marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
-        result.values[idx], variances[idx] = running_moments(
-            result.values[idx], variances[idx], marginal, result.counts[idx]
-        )
-        result.counts[idx] += 1
+        result.update(idx, marginal)
 
     result.values[:] = result.values * correction
-    variances *= correction**2
-    result.stderr[:] = np.sqrt(variances / np.maximum(1, result.counts))
+    result.variances[:] = result.variances * correction**2
     return result
 
 
@@ -429,7 +419,6 @@ def _owen_sampling_shapley(
     return ValuationResult(
         algorithm="owen_sampling_shapley_" + str(method),
         values=values,
-        stderr=np.zeros_like(values),
         counts=np.ones_like(values, dtype=np.int_),
     )
 

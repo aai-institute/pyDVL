@@ -17,7 +17,7 @@ def dummy_values(values, names):
         algorithm="dummy_valuator",
         status=Status.Converged,
         values=np.array(values),
-        stderr=np.zeros_like(values),
+        variances=np.zeros_like(values),
         data_names=names,
         sort=True,
     )
@@ -111,6 +111,26 @@ def test_indexing(ranks_asc, dummy_values):
         assert ranks_asc[-2:] == [it.index for it in dummy_values[[-2, -1]]]
 
 
+def test_updating():
+    v = ValuationResult(values=np.array([1.0, 2.0]))
+    v.update(0, 1.0)
+    assert v.values[0] == 1.0
+    assert v.counts[0] == 2
+
+    v.update(1, 4.0)
+    assert v.values[1] == 3.0
+    assert v._variances[1] == 1.0
+
+    v.update(1, 3.0)
+    assert v.values[1] == 3.0
+    assert np.isclose(v._variances[1], 2 / 3)
+
+    v = ValuationResult(values=np.array([3.0, 1.0]))
+    v.sort()
+    v.update(0, 1.0)
+    assert v.values[0] == 2.0
+
+
 @pytest.mark.parametrize(
     "serialize, deserialize",
     [(pickle.dumps, pickle.loads), (cloudpickle.dumps, cloudpickle.loads)],
@@ -135,7 +155,7 @@ def test_equality(values, names, dummy_values):
         algorithm="dummy",
         status=c.status,
         values=c.values,
-        stderr=c._stderr,
+        variances=c._variances,
         data_names=c._names,
     )
     assert c != c2
@@ -144,16 +164,16 @@ def test_equality(values, names, dummy_values):
         algorithm=c._algorithm,
         status=Status.Failed,
         values=c.values,
-        stderr=c._stderr,
-        data_names=c._names,
+        variances=c.variances,
+        data_names=c.names,
     )
     assert c != c2
 
     c2 = ValuationResult(
         algorithm=c._algorithm,
-        status=c.status,
-        values=c.values,
-        stderr=c._stderr,
+        status=c._status,
+        values=c._values,
+        variances=c._variances,
         data_names=c._names,
     )
     c2.sort(c._sort_order)
@@ -163,9 +183,9 @@ def test_equality(values, names, dummy_values):
     if len(c) > 0:
         c2 = ValuationResult(
             algorithm=c._algorithm,
-            status=c.status,
-            values=c.values + 1.0,
-            stderr=c._stderr,
+            status=c._status,
+            values=c._values + 1.0,
+            variances=c._variances,
             data_names=c._names,
         )
         assert c != c2
@@ -209,7 +229,7 @@ def test_adding_random():
             algorithm="dummy",
             status=Status.Pending,
             values=np.average(s, axis=1),
-            stderr=np.sqrt(np.var(s, axis=1) / s.shape[1]),
+            variances=np.var(s, axis=1),
             counts=s.shape[1] * np.ones(n_samples),
         )
         for s in splits
@@ -217,10 +237,10 @@ def test_adding_random():
     result: ValuationResult = functools.reduce(operator.add, vv)
 
     true_means = values.mean(axis=1)
-    true_stderr = np.sqrt(values.var(axis=1) / n_values)
+    true_variances = values.var(axis=1)
 
-    assert np.allclose(true_means, result.values)
-    assert np.allclose(true_stderr, result.stderr)
+    assert np.allclose(true_means[result.indices], result.values)
+    assert np.allclose(true_variances[result.indices], result.variances)
 
 
 @pytest.mark.parametrize(

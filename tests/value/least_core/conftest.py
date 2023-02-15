@@ -23,7 +23,7 @@ def test_utility(request) -> Tuple[Utility, ValuationResult]:
         algorithm="exact",
         values=exact_values,
         subsidy=subsidy,
-        stderr=np.zeros_like(exact_values),
+        variances=np.zeros_like(exact_values),
         data_names=np.arange(len(exact_values)),
         status=Status.Converged,
     )

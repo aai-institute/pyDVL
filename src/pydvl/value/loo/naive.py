@@ -31,6 +31,5 @@ def naive_loo(u: Utility, *, progress: bool = True) -> ValuationResult:
         algorithm="naive_loo",
         status=Status.Converged,
         values=values,
-        stderr=None,
         data_names=u.data.data_names,
     )

@@ -169,7 +169,6 @@ def montecarlo_least_core(
             status=status,
             values=values,
             subsidy=subsidy,
-            stderr=None,
             data_names=u.data.data_names,
         )
 
@@ -191,6 +190,5 @@ def montecarlo_least_core(
         status=status,
         values=values,
         subsidy=subsidy,
-        stderr=None,
         data_names=u.data.data_names,
     )

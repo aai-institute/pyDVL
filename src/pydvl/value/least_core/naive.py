@@ -98,7 +98,6 @@ def exact_least_core(
             status=status,
             values=values,
             subsidy=subsidy,
-            stderr=None,
             data_names=u.data.data_names,
         )
 
@@ -120,6 +119,5 @@ def exact_least_core(
         status=status,
         values=values,
         subsidy=subsidy,
-        stderr=None,
         data_names=u.data.data_names,
     )

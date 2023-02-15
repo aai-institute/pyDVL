@@ -54,7 +54,6 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
         algorithm="permutation_exact_shapley",
         status=Status.Converged,
         values=values,
-        stderr=None,
         data_names=u.data.data_names,
     )
 
@@ -131,6 +130,5 @@ def combinatorial_exact_shapley(
         algorithm="combinatorial_exact_shapley",
         status=Status.Converged,
         values=values,
-        stderr=None,
         data_names=u.data.data_names,
     )

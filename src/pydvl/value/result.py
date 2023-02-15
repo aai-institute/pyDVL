@@ -26,7 +26,9 @@ from typing import (
 import numpy as np
 from numpy.typing import NDArray
 
-from ..utils import Dataset, Status
+from pydvl.utils.dataset import Dataset
+from pydvl.utils.numeric import running_moments
+from pydvl.utils.status import Status
 
 try:
     import pandas  # Try to import here for the benefit of mypy
@@ -48,17 +50,19 @@ class ValueItem:
 
     .. todo::
        Maybe have a mode of comparing similar to `np.isclose`, or taking the
-       :attribute:`stderr` into account.
+       :attribute:`variance` into account.
     """
 
     #: Index of the sample with this value in the original :class:`Dataset`
-    index: np.int_
+    index: int
     #: Name of the sample if it was provided. Otherwise, `str(index)`
     name: str
     #: The value
-    value: np.float_
-    #: Standard error of the value if it was computed with an approximate method
-    stderr: Optional[np.float_]
+    value: float
+    #: Variance of the value if it was computed with an approximate method
+    variance: Optional[float]
+    #: Number of updates for this value
+    count: Optional[int]
 
     def __lt__(self, other):
         return self.value < other.value
@@ -66,18 +70,25 @@ class ValueItem:
     def __eq__(self, other):
         return self.value == other.value
 
-    def __index__(self):
+    def __index__(self) -> int:
         return self.index
+
+    @property
+    def stderr(self) -> Optional[float]:
+        """Standard error of the value."""
+        if self.variance is None or self.count is None:
+            return None
+        return float(np.sqrt(self.variance / self.count).item())
 
 
 class ValuationResult(collections.abc.Sequence):
     """Objects of this class hold the results of valuation algorithms.
 
     These include indices in the original :class:`Dataset`, any data names (e.g.
-    group names in :class:`GroupedDataset`), the values themselves, and standard
-    errors in the case of Monte Carlo methods. These can iterated over like any
-    ``Sequence``: ``iter(valuation_result)`` returns a generator of
-    :class:`ValueItem` in the order in which the object is sorted.
+    group names in :class:`GroupedDataset`), the values themselves, and variance
+    of the computation in the case of Monte Carlo methods. These can iterated
+    over like any ``Sequence``: ``iter(valuation_result)`` returns a generator
+    of :class:`ValueItem` in the order in which the object is sorted.
 
     Results can be sorted in-place with :meth:`sort` or using python's standard
     ``sorted()`` and ``reversed()`` Note that sorting values affects how
@@ -89,9 +100,9 @@ class ValuationResult(collections.abc.Sequence):
     :param values: An array of values, data indices correspond to positions in
         the array.
     :param indices: An optional array of indices in the original dataset. If
-        ommitted, defaults to ``np.arange(len(values))``.
-    :param stderr: An optional array of standard errors in the computation of
-        each value.
+        omitted, defaults to ``np.arange(len(values))``.
+    :param variance: An optional array of variances in the computation of each
+        value.
     :param counts: An optional array with the number of updates for each value.
     :param data_names: Names for the data points. Defaults to index numbers
         if not set.
@@ -108,7 +119,7 @@ class ValuationResult(collections.abc.Sequence):
     _indices: NDArray[np.int_]
     _values: NDArray[np.float_]
     _counts: NDArray[np.int_]
-    _stderr: NDArray[np.float_]
+    _variances: NDArray[np.float_]
     _data: Dataset
     _names: NDArray[np.str_]
     _algorithm: str
@@ -121,7 +132,7 @@ class ValuationResult(collections.abc.Sequence):
         self,
         *,
         values: NDArray[np.float_],
-        stderr: Optional[NDArray[np.float_]] = None,
+        variances: Optional[NDArray[np.float_]] = None,
         counts: Optional[NDArray[np.int_]] = None,
         indices: NDArray[np.int_] = None,
         data_names: Optional[Union[Sequence[str], NDArray[np.str_]]] = None,
@@ -130,8 +141,8 @@ class ValuationResult(collections.abc.Sequence):
         sort: bool = True,
         **extra_values,
     ):
-        if stderr is not None and len(stderr) != len(values):
-            raise ValueError("Lengths of values and stderr do not match")
+        if variances is not None and len(variances) != len(values):
+            raise ValueError("Lengths of values and variances do not match")
         if data_names is not None and len(data_names) != len(values):
             raise ValueError("Lengths of values and data_names do not match")
         if indices is not None and len(indices) != len(values):
@@ -140,15 +151,18 @@ class ValuationResult(collections.abc.Sequence):
         self._algorithm = algorithm
         self._status = status
         self._values = values
+        self._variances = np.zeros_like(values) if variances is None else variances
         self._counts = np.ones_like(values) if counts is None else counts
-        self._stderr = np.zeros_like(values) if stderr is None else stderr
         self._sort_order = None
         self._extra_values = extra_values or {}
 
+        if data_names is None:
+            data_names = [str(i) for i in range(len(self._values))]
+        self._names = np.array(data_names, dtype=np.str_)
+
         if indices is None:
-            self._indices = np.arange(len(self._values), dtype=np.int_)
-        else:
-            self._indices = indices
+            indices = np.arange(len(self._values), dtype=np.int_)
+        self._indices = indices
 
         self._sort_indices = np.arange(len(self._values), dtype=np.int_)
         if sort:
@@ -185,21 +199,25 @@ class ValuationResult(collections.abc.Sequence):
 
     @property
     def values(self) -> NDArray[np.float_]:
-        """The raw values, unsorted. Position `i` in the array represents index
-        `i` of the data."""
-        return self._values
+        """The values, possibly sorted."""
+        return self._values[self._sort_indices]
+
+    @property
+    def variances(self) -> NDArray[np.float_]:
+        """The variances, possibly sorted."""
+        return self._variances[self._sort_indices]
 
     @property
     def stderr(self) -> NDArray[np.float_]:
-        """The raw standard errors, unsorted. Position `i` in the array
-        represents index `i` of the data."""
-        return self._stderr
+        """The raw standard errors, possibly sorted."""
+        return cast(
+            NDArray[np.float_], np.sqrt(self.variances / np.maximum(1, self.counts))
+        )
 
     @property
     def counts(self) -> NDArray[np.int_]:
-        """The raw counts, unsorted. Position `i` in the array
-        represents index `i` of the data."""
-        return self._counts
+        """The raw counts, possibly sorted."""
+        return self._counts[self._sort_indices]
 
     @property
     def indices(self) -> NDArray[np.int_]:
@@ -212,7 +230,10 @@ class ValuationResult(collections.abc.Sequence):
 
     @property
     def names(self) -> NDArray[np.str_]:
-        """The names for the values, possibly sorted."""
+        """The names for the values, possibly sorted.
+        If the object is unsorted, then these are the same as declared at
+        construction or ``np.arange(len(values))`` if none were passed.
+        """
         return self._names[self._sort_indices]
 
     @property
@@ -224,7 +245,7 @@ class ValuationResult(collections.abc.Sequence):
         return self._algorithm
 
     def __getattr__(self, attr: str) -> Any:
-        """This allows access to extra values as if they were properties of the instance."""
+        """Allows access to extra values as if they were properties of the instance."""
         # This is here to avoid a RecursionError when copying or pickling the object
         if attr == "_extra_values":
             raise AttributeError()
@@ -261,22 +282,59 @@ class ValuationResult(collections.abc.Sequence):
                 raise IndexError(f"Index {key} out of range (0, {len(self)}).")
             idx = self._sort_indices[key]
             return ValueItem(
-                self._indices[idx],
-                self._names[idx],
-                self._values[idx],
-                self._stderr[idx],
+                int(self._indices[idx]),
+                str(self._names[idx]),
+                float(self._values[idx]),
+                float(self._variances[idx]),
+                int(self._counts[idx]),
             )
         else:
             raise TypeError("Indices must be integers, iterable or slices")
 
+    @overload
+    def __setitem__(self, key: int, value: ValueItem) -> None:
+        ...
+
+    @overload
+    def __setitem__(self, key: slice, value: ValueItem) -> None:
+        ...
+
+    @overload
+    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None:
+        ...
+
+    def __setitem__(
+        self, key: Union[slice, Iterable[int], int], value: ValueItem
+    ) -> None:
+        if isinstance(key, slice):
+            for i in range(*key.indices(len(self))):
+                self[i] = value
+        elif isinstance(key, collections.abc.Iterable):
+            for i in key:
+                self[i] = value
+        elif isinstance(key, int):
+            if key < 0:
+                key += len(self)
+            if key < 0 or key >= len(self):
+                raise IndexError(f"Index {key} out of range (0, {len(self)}).")
+            idx = self._sort_indices[key]
+            self._indices[idx] = value.index
+            self._names[idx] = value.name
+            self._values[idx] = value.value
+            self._variances[idx] = value.variance
+            self._counts[idx] = value.count
+
     def __iter__(self) -> Generator[ValueItem, Any, None]:
-        """Iterate over the results returning tuples `(index, value)`"""
+        """Iterate over the results returning :class:`ValueItem` objects.
+        To sort in place before iteration, use :meth:`sort`.
+        """
         for idx in self._sort_indices:
             yield ValueItem(
                 self._indices[idx],
                 self._names[idx],
                 self._values[idx],
-                self._stderr[idx],
+                self._variances[idx],
+                self._counts[idx],
             )
 
     def __len__(self):
@@ -293,7 +351,7 @@ class ValuationResult(collections.abc.Sequence):
             and self._sort_order == other._sort_order
             and np.all(self._indices == other._indices)
             and np.all(self._values == other._values)
-            and np.all(self._stderr == other._stderr)
+            and np.all(self._variances == other._variances)
             and np.all(self._names == other._names)
             and np.all(self._counts == other._counts)
         )
@@ -328,8 +386,7 @@ class ValuationResult(collections.abc.Sequence):
         which case the values are taken from the other argument.
 
         .. warning::
-           Abusing this will introduce numerical errors, since the sample means
-           and standard errors are "unwrapped" and recomputed again.
+           Abusing this will introduce numerical errors.
 
         Means and standard errors are correctly handled. Statuses are added with
         bit-wise ``&``, see :class:`~pydvl.value.result.Status`.
@@ -360,20 +417,20 @@ class ValuationResult(collections.abc.Sequence):
         m = np.zeros_like(indices, dtype=int)
         xn = np.zeros_like(indices, dtype=float)
         xm = np.zeros_like(indices, dtype=float)
-        sn = np.zeros_like(indices, dtype=float)
-        sm = np.zeros_like(indices, dtype=float)
+        vn = np.zeros_like(indices, dtype=float)
+        vm = np.zeros_like(indices, dtype=float)
 
-        n[this_indices] = self.counts
-        xn[this_indices] = self.values
-        sn[this_indices] = self.counts * self.stderr**2
-        m[other_indices] = other.counts
-        xm[other_indices] = other.values
-        sm[other_indices] = other.counts * other.stderr**2
+        n[this_indices] = self._counts
+        xn[this_indices] = self._values
+        vn[this_indices] = self._variances
+        m[other_indices] = other._counts
+        xm[other_indices] = other._values
+        vm[other_indices] = other._variances
 
         # Sample mean of n+m samples from two means of n and m samples
         xnm = (n * xn + m * xm) / (n + m)
         # Sample variance of n+m samples from two sample variances of n and m samples
-        snm = (n * (sn + xn**2) + m * (sm + xm**2)) / (n + m) - xnm**2
+        vnm = (n * (vn + xn**2) + m * (vm + xm**2)) / (n + m) - xnm**2
 
         this_names = np.empty_like(indices, dtype=np.str_)
         other_names = np.empty_like(indices, dtype=np.str_)
@@ -384,24 +441,47 @@ class ValuationResult(collections.abc.Sequence):
         if np.any(other_names[both] != this_names[both]):
             raise ValueError(f"Mismatching names in ValuationResults")
 
-        if np.any(snm < 0):
-            if np.any(snm < -1e-6):
+        if np.any(vnm < 0):
+            if np.any(vnm < -1e-6):
                 logger.warning(
-                    "Numerical error in standard error computation. "
-                    f"Negative sample variances clipped to 0 in {snm}"
+                    "Numerical error in variance computation. "
+                    f"Negative sample variances clipped to 0 in {vnm}"
                 )
-            snm[np.where(snm < 0)] = 0
+            vnm[np.where(vnm < 0)] = 0
 
         return ValuationResult(
             algorithm=self.algorithm or other.algorithm or "",
             status=self.status & other.status,
             indices=indices,
             values=xnm,
-            stderr=np.sqrt(snm / (n + m)),
+            variances=vnm,
             counts=n + m,
             data_names=names,
             # FIXME: what about extra args?
         )
+
+    def update(self, idx: int, new_value: float) -> "ValuationResult":
+        """Updates the result in place with a new value, using running mean
+        and variance.
+
+        :param idx: Index of the value to update.
+        :param new_value: New value to add to the result.
+        :return: A reference to the same, modified result.
+        """
+        val, var = running_moments(
+            self._values[idx],
+            self._variances[idx],
+            new_value,
+            self._counts[idx],
+        )
+        self[idx] = ValueItem(idx, self._names[idx], val, var, self._counts[idx] + 1)
+        return self
+
+    def get(self, idx: int) -> ValueItem:
+        """Retrieves a ValueItem by data index, as opposed to sort index, like
+        the indexing operator.
+        """
+        raise NotImplementedError()
 
     def to_dataframe(
         self, column: Optional[str] = None, use_names: bool = False
@@ -427,11 +507,7 @@ class ValuationResult(collections.abc.Sequence):
             else self._indices[self._sort_indices],
             columns=[column],
         )
-
-        if self._stderr is None:
-            df[column + "_stderr"] = 0
-        else:
-            df[column + "_stderr"] = self._stderr[self._indices]
+        df[column + "_stderr"] = self.stderr[self._sort_indices]
         return df
 
     @classmethod
@@ -465,6 +541,6 @@ class ValuationResult(collections.abc.Sequence):
             algorithm=algorithm,
             status=Status.Pending,
             values=np.zeros(n_samples),
-            stderr=np.zeros(n_samples),
+            variances=np.zeros(n_samples),
             counts=np.zeros(n_samples, dtype=np.int_),
         )
