@@ -430,7 +430,7 @@ def _owen_sampling_shapley(
         algorithm="owen_sampling_shapley_" + str(method),
         values=values,
         stderr=np.zeros_like(values),
-        counts=np.ones_like(values),
+        counts=np.ones_like(values, dtype=np.int_),
     )
 
 

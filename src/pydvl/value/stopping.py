@@ -31,7 +31,7 @@ supported.
 import abc
 from functools import update_wrapper
 from time import time
-from typing import Callable, Optional, Type
+from typing import Callable, Optional, Type, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -136,7 +136,7 @@ class StoppingCriterion(abc.ABC):
     def __invert__(self) -> "StoppingCriterion":
         class CompositeCriterion(StoppingCriterion):
             def check(self, result: ValuationResult) -> Status:
-                return ~self(result)
+                return cast(Status, ~self(result))  # mypy complains if we don't cast
 
             @property
             def name(self):
@@ -194,7 +194,7 @@ class StandardError(StoppingCriterion):
 
     def check(self, result: ValuationResult) -> Status:
         ratios = result.stderr / result.values
-        self._converged = np.where(ratios < self.threshold)
+        self._converged = ratios < self.threshold
         if np.all(self._converged):
             return Status.Converged
         return Status.Pending
@@ -225,8 +225,8 @@ class MaxUpdates(StoppingCriterion):
 
     def check(self, result: ValuationResult) -> Status:
         if self.n_updates:
-            self._converged = np.where(result.counts >= self.n_updates)
-            self.last_max = np.max(result.counts)
+            self._converged = result.counts >= self.n_updates
+            self.last_max = int(np.max(result.counts))
             if self.last_max >= self.n_updates:
                 return Status.Converged
         return Status.Pending
@@ -234,7 +234,7 @@ class MaxUpdates(StoppingCriterion):
     def completion(self) -> float:
         if self.n_updates is None:
             return 0.0
-        return np.max(self.last_max) / self.n_updates
+        return float(np.max(self.last_max).item() / self.n_updates)
 
 
 class MinUpdates(StoppingCriterion):
@@ -258,8 +258,8 @@ class MinUpdates(StoppingCriterion):
 
     def check(self, result: ValuationResult) -> Status:
         if self.n_updates is not None:
-            self._converged = np.where(result.counts >= self.n_updates)
-            self.last_min = np.min(result.counts)
+            self._converged = result.counts >= self.n_updates
+            self.last_min = np.min(result.counts).item()
             if self.last_min >= self.n_updates:
                 return Status.Converged
         return Status.Pending
@@ -267,7 +267,7 @@ class MinUpdates(StoppingCriterion):
     def completion(self) -> float:
         if self.n_updates is None:
             return 0.0
-        return np.min(self.last_min) / self.n_updates
+        return float(np.min(self.last_min).item() / self.n_updates)
 
 
 class MaxTime(StoppingCriterion):
@@ -283,15 +283,15 @@ class MaxTime(StoppingCriterion):
 
     def __init__(self, seconds: Optional[float], modify_result: bool = True):
         super().__init__(modify_result=modify_result)
-        self.max_seconds = seconds
+        self.max_seconds = seconds or np.inf
         if self.max_seconds <= 0:
-            raise ValueError("Number of seconds for MaxTime must be positive")
+            raise ValueError("Number of seconds for MaxTime must be positive or None")
         self.start = time()
 
     def check(self, result: ValuationResult) -> Status:
         if self._converged is None:
             self._converged = np.full(result.values.shape, False)
-        if self.max_seconds is not None and time() > self.start + self.max_seconds:
+        if time() > self.start + self.max_seconds:
             self._converged.fill(True)
             return Status.Converged
         return Status.Pending
@@ -374,7 +374,7 @@ class HistoryDeviation(StoppingCriterion):
             # quots holds the quotients when the denominator is non-zero, and
             # the absolute difference, which is just the memory, otherwise.
             if np.mean(quots) < self.rtol:
-                self._converged = self.update_op(self._converged, ii)
+                self._converged = self.update_op(self._converged, ii)  # type: ignore
                 if np.all(self._converged):
                     return Status.Converged
         return Status.Pending
