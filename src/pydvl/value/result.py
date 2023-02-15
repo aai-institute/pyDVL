@@ -3,8 +3,8 @@ This module collects types and methods for the inspection of the results of
 valuation algorithms.
 
 The most important class is :class:`ValuationResult`, which provides access
-to raw values, as well as convenient behaviour as a Sequence with extended
-indexing abilities, and conversion to `pandas DataFrames
+to raw values, as well as convenient behaviour as a ``Sequence`` with extended
+indexing and updating abilities, and conversion to `pandas DataFrames
 <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
 """
 import collections.abc
@@ -16,6 +16,7 @@ from typing import (
     Generator,
     Iterable,
     List,
+    Literal,
     Optional,
     Sequence,
     Union,
@@ -97,6 +98,14 @@ class ValuationResult(collections.abc.Sequence):
     this object is sorted by descending or ascending value, respectively. If
     unsorted, ``values[0]`` returns a ``ValueItem`` for index 0.
 
+    The same applies to direct indexing of the ``ValuationResult``: the index
+    is positional, according to the sorting. It does not refer to the "data
+    index". To sort according to data index, use :meth:`sort` with
+    ``key="index"``.
+
+    In order to access :class:`ValueItem` objects by their data index, use
+    :meth:`get`.
+
     :param values: An array of values, data indices correspond to positions in
         the array.
     :param indices: An optional array of indices in the original dataset. If
@@ -138,7 +147,7 @@ class ValuationResult(collections.abc.Sequence):
         data_names: Optional[Union[Sequence[str], NDArray[np.str_]]] = None,
         algorithm: str = "",
         status: Status = Status.Pending,
-        sort: bool = True,
+        sort: bool = False,
         **extra_values,
     ):
         if variances is not None and len(variances) != len(values):
@@ -168,34 +177,29 @@ class ValuationResult(collections.abc.Sequence):
         if sort:
             self.sort()
 
-        if data_names is None:
-            data_names = [str(i) for i in range(len(self._values))]
-        self._names = np.array(data_names, dtype=np.str_)
-        if len(self._names) != len(self._values):
-            raise ValueError("Data names and data values have different lengths")
-
-    def sort(self, reverse: bool = False) -> None:
+    def sort(
+        self,
+        reverse: bool = False,
+        # Need a "Comparable" type here
+        key: Literal["value", "index", "name"] = "value",
+    ) -> None:
         """Sorts the indices in place by ascending value.
 
-        Repeated calls with the same sort order are no-ops. Once sorted,
-        iteration over the results will follow the order.
+        Once sorted, iteration over the results will follow the order.
 
         :param reverse: Whether to sort in descending order by value.
+        :param key: The key to sort by. Defaults to :attr:`ValueItem.value`.
         """
-
-        # Try to save time if we are already sorted in some way
-        if self._sort_order is not None:
-            if self._sort_order == reverse:  # no change
-                return
-            self._sort_indices = self._sort_indices[::-1]  # flip order
-        else:
-            if reverse:
-                self._sort_indices = np.argsort(self._values)[::-1]
-            else:
-                self._sort_indices = np.argsort(self._values)
-
+        keymap = {
+            "index": "_indices",
+            "value": "_values",
+            "variance": "_variances",
+            "name": "_names",
+        }
+        self._sort_indices = np.argsort(getattr(self, keymap[key]))
+        if reverse:
+            self._sort_indices = self._sort_indices[::-1]
         self._sort_order = reverse
-        return
 
     @property
     def values(self) -> NDArray[np.float_]:

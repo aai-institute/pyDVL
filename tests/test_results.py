@@ -28,6 +28,7 @@ def dummy_values(values, names):
 )
 def test_sorting(values, names, ranks_asc, dummy_values):
 
+    dummy_values.sort(key="value")
     assert np.alltrue([it.value for it in dummy_values] == sorted(values))
     assert np.alltrue(dummy_values.indices == ranks_asc)
     assert np.alltrue(
@@ -37,6 +38,10 @@ def test_sorting(values, names, ranks_asc, dummy_values):
     dummy_values.sort(reverse=True)
     assert np.alltrue([it.value for it in dummy_values] == sorted(values, reverse=True))
     assert np.alltrue(dummy_values.indices == list(reversed(ranks_asc)))
+
+    dummy_values.sort(key="index")
+    assert np.alltrue(dummy_values.indices == list(range(len(values))))
+    assert np.alltrue([it.value for it in dummy_values] == values)
 
 
 @pytest.mark.parametrize(
