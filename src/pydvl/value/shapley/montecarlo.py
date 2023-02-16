@@ -214,7 +214,7 @@ def _permutation_montecarlo_shapley(
     :return: An object with the results
     """
     n = len(u.data)
-    result = ValuationResult.empty(algorithm_name, n)
+    result = ValuationResult(algorithm=algorithm_name, indices=u.data.indices)
 
     pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
     while not done(result):
@@ -307,16 +307,14 @@ def _combinatorial_montecarlo_shapley(
     """
     n = len(u.data)
 
-    if len(np.unique(indices)) != len(indices):
-        raise ValueError("Repeated indices passed")
-
     # Correction coming from Monte Carlo integration so that the mean of the
     # marginals converges to the value: the uniform distribution over the
     # powerset of a set with n-1 elements has mass 2^{n-1} over each subset. The
     # additional factor n corresponds to the one in the Shapley definition
     correction = 2 ** (n - 1) / n
-    variances = np.zeros(shape=n)
-    result = ValuationResult.empty("combinatorial_montecarlo_shapley", n)
+    result = ValuationResult(
+        algorithm="combinatorial_montecarlo_shapley", indices=indices
+    )
 
     repeat_indices = takewhile(lambda _: not done(result), cycle(indices))
     pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")

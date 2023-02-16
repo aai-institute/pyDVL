@@ -74,7 +74,7 @@ class ShapleyCoordinator(Coordinator):
             reported yet, returns ``None``.
         """
         if len(self.worker_results) == 0:
-            return ValuationResult.empty()
+            return ValuationResult()
 
         # FIXME: inefficient, possibly unstable
         totals: ValuationResult = reduce(operator.add, self.worker_results)
@@ -102,6 +102,8 @@ class ShapleyWorker(Worker):
 
     It should work.
     """
+
+    algorithm: str = "truncated_montecarlo_shapley"
 
     def __init__(
         self,
@@ -145,7 +147,7 @@ class ShapleyWorker(Worker):
             self.u,
             done=MaxUpdates(1),
             permutation_breaker=self.permutation_breaker,
-            algorithm_name="truncated_montecarlo_shapley",
+            algorithm_name=self.algorithm,
         )
 
     def run(self, *args, **kwargs):
@@ -160,7 +162,7 @@ class ShapleyWorker(Worker):
         terminating if it's ``True``.
         """
         while True:
-            acc = ValuationResult.empty()
+            acc = ValuationResult(algorithm=self.algorithm)
             start_time = time()
             while (time() - start_time) < self.update_period:
                 if self.coordinator.is_done():

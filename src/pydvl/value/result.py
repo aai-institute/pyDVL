@@ -92,6 +92,8 @@ class ValuationResult(collections.abc.Sequence):
     over like any ``Sequence``: ``iter(valuation_result)`` returns a generator
     of :class:`ValueItem` in the order in which the object is sorted.
 
+    .. rubric:: Sorting
+
     Results can be sorted in-place with :meth:`sort` or using python's standard
     ``sorted()`` and ``reversed()`` Note that sorting values affects how
     iterators and the object itself as ``Sequence`` behave: ``values[0]``
@@ -123,7 +125,7 @@ class ValuationResult(collections.abc.Sequence):
     :param extra_values: Additional values that can be passed as keyword arguments.
         This can contain, for example, the least core value.
 
-    :raise ValueError: If data names and values have mismatching lengths.
+    :raise ValueError: If input arrays have mismatching lengths.
     """
 
     _indices: NDArray[np.int_]
@@ -141,7 +143,7 @@ class ValuationResult(collections.abc.Sequence):
     def __init__(
         self,
         *,
-        values: NDArray[np.float_],
+        values: Optional[NDArray[np.float_]] = None,
         variances: Optional[NDArray[np.float_]] = None,
         counts: Optional[NDArray[np.int_]] = None,
         indices: NDArray[np.int_] = None,
@@ -151,18 +153,26 @@ class ValuationResult(collections.abc.Sequence):
         sort: bool = False,
         **extra_values,
     ):
-        if variances is not None and len(variances) != len(values):
-            raise ValueError("Lengths of values and variances do not match")
-        if data_names is not None and len(data_names) != len(values):
-            raise ValueError("Lengths of values and data_names do not match")
-        if indices is not None and len(indices) != len(values):
-            raise ValueError("Lengths of values and indices do not match")
+        if values is not None:
+            if variances is not None and len(variances) != len(values):
+                raise ValueError("Lengths of values and variances do not match")
+            if data_names is not None and len(data_names) != len(values):
+                raise ValueError("Lengths of values and data_names do not match")
+            if indices is not None and len(indices) != len(values):
+                raise ValueError("Lengths of values and indices do not match")
+        if indices is not None and len(np.unique(indices)) != len(indices):
+            raise ValueError("Indices cannot repeat")
 
+        if values is None and indices is not None:
+            # Special init: create empty object with length of indices
+            values = np.zeros_like(indices, dtype=np.float_)
         self._algorithm = algorithm
         self._status = status
-        self._values = values
-        self._variances = np.zeros_like(values) if variances is None else variances
-        self._counts = np.ones_like(values) if counts is None else counts
+        self._values = np.array([]) if values is None else values
+        self._variances = (
+            np.zeros_like(self._values) if variances is None else variances
+        )
+        self._counts = np.ones_like(self._values) if counts is None else counts
         self._sort_order = None
         self._extra_values = extra_values or {}
 
@@ -317,7 +327,7 @@ class ValuationResult(collections.abc.Sequence):
         elif isinstance(key, collections.abc.Iterable):
             for i in key:
                 self[i] = value
-        elif isinstance(key, int):
+        elif isinstance(key, Integral):
             if key < 0:
                 key += len(self)
             if key < 0 or key >= len(self):
@@ -528,26 +538,3 @@ class ValuationResult(collections.abc.Sequence):
         """
         values = np.random.uniform(low=-1.0, high=1.0, size=size)
         return cls(algorithm="random", status=Status.Converged, values=values)
-
-    @classmethod
-    def empty(cls, algorithm: str = "", n_samples: int = 0) -> "ValuationResult":
-        """Creates an empty :class:`ValuationResult` object.
-
-        Empty results are characterised by having an empty array of values and
-        an empty algorithm name. When another result is added to an empty one,
-        the empty one is ignored. Alternatively, one can set the algorithm name
-        and length of the array of values in this function. This makes creating
-        subsequent ValuationResults to add to it a bit less verbose (since the
-        algorithm name does not have to be repeated).
-
-        :param algorithm: Name of the algorithm used to compute the values
-        :param n_samples: Number of samples used to compute the values
-        :return: An instance of :class:`ValuationResult`
-        """
-        return cls(
-            algorithm=algorithm,
-            status=Status.Pending,
-            values=np.zeros(n_samples),
-            variances=np.zeros(n_samples),
-            counts=np.zeros(n_samples, dtype=np.int_),
-        )
