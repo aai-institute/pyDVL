@@ -10,6 +10,7 @@ from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.gt import group_testing_shapley
 from pydvl.value.shapley.knn import knn_shapley
 from pydvl.value.shapley.montecarlo import (
+    NoTruncation,
     OwenAlgorithm,
     combinatorial_montecarlo_shapley,
     owen_sampling_shapley,
@@ -104,14 +105,23 @@ def compute_shapley_values(
         raise ValueError(f"Invalid value encountered in {mode=}")
 
     if mode == ShapleyMode.TruncatedMontecarlo:
-        return truncated_montecarlo_shapley(u=u, done=done, n_jobs=n_jobs, **kwargs)
+        truncation = kwargs.pop("truncation", NoTruncation())
+        return truncated_montecarlo_shapley(
+            u=u, done=done, n_jobs=n_jobs, truncation=truncation, **kwargs
+        )
     elif mode == ShapleyMode.CombinatorialMontecarlo:
         return combinatorial_montecarlo_shapley(
             u, done=done, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.PermutationMontecarlo:
+        truncation = kwargs.pop("truncation", NoTruncation())
         return permutation_montecarlo_shapley(
-            u, done=done, n_jobs=n_jobs, progress=progress
+            u,
+            done=done,
+            n_jobs=n_jobs,
+            progress=progress,
+            truncation=truncation,
+            **kwargs,
         )
     elif mode == ShapleyMode.CombinatorialExact:
         return combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)

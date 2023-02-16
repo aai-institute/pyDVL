@@ -30,7 +30,7 @@ reduce computation :func:`truncated_montecarlo_shapley`.
    the algorithms mentioned above, including Group Testing, can work to valuate
    groups of samples as units.
 """
-
+import abc
 import logging
 import math
 import operator
@@ -38,7 +38,7 @@ from enum import Enum
 from functools import reduce
 from itertools import cycle, takewhile
 from time import sleep
-from typing import NamedTuple, Optional, Sequence, cast
+from typing import Sequence
 from warnings import warn
 
 import numpy as np
@@ -46,22 +46,12 @@ from numpy.typing import NDArray
 from tqdm import tqdm
 
 from pydvl.utils.config import ParallelConfig
-from pydvl.utils.numeric import random_powerset
+from pydvl.utils.numeric import random_powerset, running_moments
 from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
 from pydvl.utils.progress import maybe_progress
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
 from pydvl.value.stopping import StoppingCriterion
-
-from .actor import get_shapley_coordinator, get_shapley_worker
-from .types import PermutationBreaker
-
-
-class MonteCarloResults(NamedTuple):
-    # TODO: remove this class and use Valuation
-    values: NDArray[np.float_]
-    stderr: NDArray[np.float_]
-    counts: NDArray[np.int_]
 
 
 logger = logging.getLogger(__name__)
@@ -74,11 +64,147 @@ __all__ = [
 ]
 
 
+class TruncationPolicy(abc.ABC):
+    """A policy for deciding whether to stop computing marginals in a
+    permutation.
+
+    Statistics are kept on the number of calls and truncations as :attr:`n_calls`
+    and :attr:`n_truncations` respectively.
+
+    .. todo::
+       Because the policy objects are copied to the workers, the statistics
+       are not accessible from the
+       :class:`~pydvl.value.shapley.actor.ShapleyCoordinator`. We need to add
+       methods for this.
+    """
+
+    def __init__(self):
+        self.n_calls: int = 0
+        self.n_truncations: int = 0
+
+    @abc.abstractmethod
+    def _check(self, idx: int, score: float) -> bool:
+        """Implement the policy."""
+        ...
+
+    @abc.abstractmethod
+    def reset(self):
+        """Reset the policy to a state ready for a new permutation."""
+        ...
+
+    def __call__(self, idx: int, score: float) -> bool:
+        """Check whether the computation should be interrupted.
+
+        :param idx: Position in the permutation currently being computed.
+        :param score: Last utility computed.
+        :return: ``True`` if the computation should be interrupted.
+        """
+        ret = self._check(idx, score)
+        self.n_calls += 1
+        self.n_truncations += 1 if ret else 0
+        return ret
+
+
+class NoTruncation(TruncationPolicy):
+    """A policy which never interrupts the computation."""
+
+    def _check(self, idx: int, score: float) -> bool:
+        return False
+
+    def reset(self):
+        pass
+
+
+class FixedTruncation(TruncationPolicy):
+    """Break a permutation after computing a fixed number of marginals.
+
+    :param u: Utility object with model, data, and scoring function
+    :param fraction: Fraction of marginals in a permutation to compute before
+        stopping (e.g. 0.5 to compute half of the marginals).
+    """
+
+    def __init__(self, u: Utility, fraction: float):
+        super().__init__()
+        if fraction <= 0 or fraction > 1:
+            raise ValueError("fraction must be in (0, 1]")
+        self.max_marginals = len(u.data) * fraction
+        self.count = 0
+
+    def _check(self, idx: int, score: float) -> bool:
+        self.count += 1
+        return self.count >= self.max_marginals
+
+    def reset(self):
+        self.count = 0
+
+
+class RelativeTruncation(TruncationPolicy):
+    """Break a permutation if the marginal utility is too low.
+
+    This is called "performance tolerance" in :footcite:t:`ghorbani_data_2019`.
+
+    :param u: Utility object with model, data, and scoring function
+    :param rtol: Relative tolerance. The permutation is broken if the
+        last computed utility is less than ``total_utility * rtol``.
+    """
+
+    def __init__(self, u: Utility, rtol: float):
+        super().__init__()
+        self.rtol = rtol
+        logger.info("Computing total utility for permutation truncation.")
+        self.total_utility = u(u.data.indices)
+
+    def _check(self, idx: int, score: float) -> bool:
+        return np.allclose(score, self.total_utility, rtol=self.rtol)
+
+    def reset(self):
+        pass
+
+
+class BootstrapTruncation(TruncationPolicy):
+    """Break a permutation if the last computed utility is close to the total
+    utility, measured as a multiple of the standard deviation of the utilities.
+
+    :param u: Utility object with model, data, and scoring function
+    :param n_samples: Number of bootstrap samples to use to compute the variance
+        of the utilities.
+    :param sigmas: Number of standard deviations to use as a threshold.
+    """
+
+    def __init__(self, u: Utility, n_samples: int, sigmas: float = 1):
+        super().__init__()
+        self.n_samples = n_samples
+        logger.info("Computing total utility for permutation truncation.")
+        self.total_utility = u(u.data.indices)
+        self.count: int = 0
+        self.variance: float = 0
+        self.mean: float = 0
+        self.sigmas: float = sigmas
+
+    def _check(self, idx: int, score: float) -> bool:
+        self.mean, self.variance = running_moments(
+            self.mean, self.variance, self.count, score
+        )
+        self.count += 1
+        logger.info(
+            f"Bootstrap truncation: {self.count} samples, {self.variance:.2f} variance"
+        )
+        if self.count < self.n_samples:
+            return False
+        return abs(score - self.total_utility) < float(
+            self.sigmas * np.sqrt(self.variance)
+        )
+
+    def reset(self):
+        self.count = 0
+        self.variance = self.mean = 0
+
+
 def truncated_montecarlo_shapley(
     u: Utility,
     *,
     done: StoppingCriterion,
-    permutation_tolerance: Optional[float] = None,
+    truncation: TruncationPolicy,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     coordinator_update_period: int = 10,
@@ -96,29 +222,37 @@ def truncated_montecarlo_shapley(
        criterion.
 
     Instead of naively implementing the expectation, we sequentially add points
-    to a dataset from a permutation. Once a marginal utility is close enough to
-    the total utility we set all marginals to 0 for the remainder of the
-    permutation. We keep sampling permutations and updating all shapley values
-    until the stopping criterion returns ``True``.
+    to a dataset from a permutation and incrementally compute marginal utilities.
+    We stop computing marginals for a given permutation based on a
+    :class:`TruncationPolicy`. :footcite:t:`ghorbani_data_2019` mention two
+    policies: one that stops after a certain fraction of marginals are computed,
+    implemented in :class:`FixedTruncation`, and one that stops if the last
+    computed utility ("score") is close to the total utility using the standard
+    deviation of the utility as a measure of proximity, implemented in
+    :class:`BootstrapTruncation`.
+
+    We keep sampling permutations and updating all shapley values
+    until the :class:`StoppingCriterion` returns ``True``.
 
     :param u: Utility object with model, data, and scoring function
     :param done: Check on the results which decides when to stop
         sampling permutations.
-    :param permutation_tolerance: Tolerance for the interruption of computations
-        within a permutation. This is called "performance tolerance" in
-        :footcite:t:`ghorbani_data_2019`. Leave empty to set to
-        ``total_utility / len(u.data) / 100``.
+    :param truncation: callable that decides whether to stop computing
+        marginals for a given permutation.
     :param n_jobs: number of jobs processing permutations. If None, it will be
         set to :func:`available_cpus`.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param coordinator_update_period: in seconds. Check status with the job
-        coordinator every so often.
+    :param coordinator_update_period: in seconds. How often to check the
+        accumulated results from the workers for convergence.
     :param worker_update_period: interval in seconds between different
         updates to and from the coordinator
     :return: Object with the data values.
 
     """
+    # Avoid circular imports
+    from .actor import get_shapley_coordinator, get_shapley_worker
+
     if config.backend == "sequential":
         raise NotImplementedError(
             "Truncated MonteCarlo Shapley does not work with "
@@ -135,10 +269,10 @@ def truncated_montecarlo_shapley(
         get_shapley_worker(  # type: ignore
             u=u_id,
             coordinator=coordinator,
+            truncation=truncation,
             worker_id=worker_id,
             update_period=worker_update_period,
             config=config,
-            permutation_breaker=low_marginal_breaker(u, permutation_tolerance),
         )
         for worker_id in range(n_jobs)
     ]
@@ -157,42 +291,17 @@ def truncated_montecarlo_shapley(
     #     u=u_id,
     #     update_period=worker_update_period,
     #     config=config,
-    #     permutation_breaker=permutation_breaker,
+    #     truncation=truncation,
     # )
     #
     # return coordinator.run(delay=coordinator_update_period)
-
-
-def low_marginal_breaker(u: Utility, rtol: Optional[float]) -> PermutationBreaker:
-    """Break a permutation if the marginal utility is too low.
-
-    This is a helper function for :func:`permutation_montecarlo_shapley`.
-    It is used as a default value for the ``permutation_breaker`` argument.
-
-    :param u: Utility object with model, data, and scoring function
-    :param rtol: Relative tolerance. The permutation is broken if the
-        marginal utility is less than ``total_utility * rtol``. Leave empty to
-        set to ``total_utility / len(u.data) / 100``.
-    :return: A function which decides whether to interrupt processing a
-        permutation and set all subsequent marginals to zero.
-    """
-
-    logger.info("Computing total utility for low marginal permutation interruption.")
-    total = u(u.data.indices)
-    if rtol is None:
-        rtol = total / len(u.data) / 100
-
-    def _break(idx: int, marginals: NDArray[np.float_]) -> bool:
-        return abs(float(marginals[idx])) < total * cast(float, rtol)
-
-    return _break
 
 
 def _permutation_montecarlo_shapley(
     u: Utility,
     *,
     done: StoppingCriterion,
-    permutation_breaker: Optional[PermutationBreaker] = None,
+    truncation: TruncationPolicy,
     algorithm_name: str = "permutation_montecarlo_shapley",
     progress: bool = False,
     job_id: int = 1,
@@ -205,7 +314,7 @@ def _permutation_montecarlo_shapley(
 
     :param u: Utility object with model, data, and scoring function
     :param done: Check on the results which decides when to stop
-    :param permutation_breaker: A callable which decides whether to interrupt
+    :param truncation: A callable which decides whether to interrupt
         processing a permutation and set all subsequent marginals to zero.
     :param algorithm_name: For the results object. Used internally by different
         variants of Shapley using this subroutine
@@ -222,6 +331,7 @@ def _permutation_montecarlo_shapley(
         prev_score = 0.0
         permutation = np.random.permutation(u.data.indices)
         permutation_done = False
+        truncation.reset()
         for i, idx in enumerate(permutation):
             if permutation_done:
                 score = prev_score
@@ -230,11 +340,7 @@ def _permutation_montecarlo_shapley(
             marginal = score - prev_score
             result.update(idx, marginal)
             prev_score = score
-            if (
-                not permutation_done
-                and permutation_breaker
-                and permutation_breaker(idx, result.values)
-            ):
+            if not permutation_done and truncation(i, score):
                 permutation_done = True
     return result
 
@@ -243,7 +349,7 @@ def permutation_montecarlo_shapley(
     u: Utility,
     done: StoppingCriterion,
     *,
-    permutation_breaker: Optional[PermutationBreaker] = None,
+    truncation: TruncationPolicy = NoTruncation(),
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -258,7 +364,7 @@ def permutation_montecarlo_shapley(
 
     :param u: Utility object with model, data, and scoring function.
     :param done: function checking whether computation must stop.
-    :param permutation_breaker: An optional callable which decides whether to
+    :param truncation: An optional callable which decides whether to
         interrupt processing a permutation and set all subsequent marginals to
         zero. Typically used to stop computation when the marginal is small.
     :param n_jobs: number of jobs across which to distribute the computation.
@@ -275,7 +381,7 @@ def permutation_montecarlo_shapley(
         map_kwargs=dict(
             algorithm_name="permutation_montecarlo_shapley",
             done=done,
-            permutation_breaker=permutation_breaker,
+            truncation=truncation,
             progress=progress,
         ),
         config=config,

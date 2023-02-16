@@ -9,7 +9,7 @@ import logging
 import operator
 from functools import reduce
 from time import time
-from typing import Optional, cast
+from typing import cast
 
 import numpy as np
 
@@ -17,7 +17,7 @@ from pydvl.utils.config import ParallelConfig
 from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
-from pydvl.value.shapley.types import PermutationBreaker
+from pydvl.value.shapley.montecarlo import TruncationPolicy
 from pydvl.value.stopping import MaxChecks, StoppingCriterion
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
@@ -110,9 +110,9 @@ class ShapleyWorker(Worker):
         u: Utility,
         coordinator: ShapleyCoordinator,
         *,
+        truncation: TruncationPolicy,
         worker_id: int,
         update_period: int = 30,
-        permutation_breaker: Optional[PermutationBreaker] = None,
     ):
         """A worker calculates Shapley values using the permutation definition
          and reports the results to the coordinator.
@@ -126,27 +126,23 @@ class ShapleyWorker(Worker):
         :param worker_id: id used for reporting through maybe_progress
         :param update_period: interval in seconds between different updates to
             and from the coordinator
-        :param permutation_breaker: function that decides whether to stop
-            computing marginals for a given permutation. If ``None``, all marginals
-            in a permutation are computed.
-        :param permutation_tolerance: tolerance for the permutation breaking
-            algorithm ("performance tolerance" in :footcite:t:`ghorbani_data_2019`).
-            Leave empty to set to ``total_utility / len(u.data) / 100``
+        :param truncation: callable that decides whether to stop computing
+            marginals for a given permutation.
         """
         super().__init__(
             coordinator=coordinator, update_period=update_period, worker_id=worker_id
         )
         self.u = u
-        self.permutation_breaker = permutation_breaker
+        self.truncation = truncation
 
     def _compute_marginals(self) -> ValuationResult:
-        # Import here to avoid errors with circular imports
+        # Avoid circular imports
         from .montecarlo import _permutation_montecarlo_shapley
 
         return _permutation_montecarlo_shapley(
             self.u,
             done=MaxChecks(1),
-            permutation_breaker=self.permutation_breaker,
+            truncation=self.truncation,
             algorithm_name=self.algorithm,
         )
 
