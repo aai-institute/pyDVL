@@ -74,7 +74,7 @@ class ShapleyCoordinator(Coordinator):
             reported yet, returns ``None``.
         """
         if len(self.worker_results) == 0:
-            return ValuationResult()
+            return ValuationResult.empty()
 
         # FIXME: inefficient, possibly unstable
         totals: ValuationResult = reduce(operator.add, self.worker_results)
