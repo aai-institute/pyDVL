@@ -10,21 +10,19 @@ from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.gt import group_testing_shapley
 from pydvl.value.shapley.knn import knn_shapley
 from pydvl.value.shapley.montecarlo import (
-    NoTruncation,
-    OwenAlgorithm,
     combinatorial_montecarlo_shapley,
-    owen_sampling_shapley,
     permutation_montecarlo_shapley,
-    truncated_montecarlo_shapley,
 )
 from pydvl.value.shapley.naive import (
     combinatorial_exact_shapley,
     permutation_exact_shapley,
 )
+from pydvl.value.shapley.owen import OwenAlgorithm, owen_sampling_shapley
+from pydvl.value.shapley.truncated import NoTruncation, truncated_montecarlo_shapley
 from pydvl.value.shapley.types import ShapleyMode
 from pydvl.value.stopping import MaxUpdates, StoppingCriterion
 
-__all__ = ["compute_shapley_values"]
+__all__ = ["compute_shapley_values", "ShapleyMode"]
 
 
 def compute_shapley_values(

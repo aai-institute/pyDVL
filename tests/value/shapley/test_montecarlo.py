@@ -15,8 +15,8 @@ from pydvl.utils.numeric import (
 )
 from pydvl.value import compute_shapley_values
 from pydvl.value.shapley import ShapleyMode
-from pydvl.value.shapley.montecarlo import NoTruncation
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
+from pydvl.value.shapley.truncated import NoTruncation
 from pydvl.value.stopping import HistoryDeviation, MaxChecks, MaxUpdates
 
 from .. import check_rank_correlation, check_total_value, check_values
