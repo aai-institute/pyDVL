@@ -327,6 +327,8 @@ class ValuationResult(collections.abc.Sequence):
             self._values[idx] = value.value
             self._variances[idx] = value.variance
             self._counts[idx] = value.count
+        else:
+            raise TypeError("Indices must be integers, iterable or slices")
 
     def __iter__(self) -> Generator[ValueItem, Any, None]:
         """Iterate over the results returning :class:`ValueItem` objects.
