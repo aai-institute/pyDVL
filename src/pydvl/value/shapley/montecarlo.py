@@ -327,10 +327,8 @@ def _combinatorial_montecarlo_shapley(
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
         s = next(random_powerset(subset, n_samples=1))
         marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
-        result.update(idx, marginal)
+        result.update(idx, correction * marginal)
 
-    result.values[:] = result.values * correction
-    result.variances[:] = result.variances * correction**2
     return result
 
 
