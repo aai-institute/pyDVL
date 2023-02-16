@@ -126,7 +126,7 @@ def test_running_moments():
     data = np.random.randn(n_samples, n_values)
     for i in range(n_values):
         new_values = data[:, i]
-        new_means, new_variances = running_moments(means, variances, new_values, counts)
+        new_means, new_variances = running_moments(means, variances, counts, new_values)
         means, variances = new_means, new_variances
         counts += 1
 

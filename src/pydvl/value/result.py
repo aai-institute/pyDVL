@@ -496,8 +496,8 @@ class ValuationResult(collections.abc.Sequence):
         val, var = running_moments(
             self._values[idx],
             self._variances[idx],
-            new_value,
             self._counts[idx],
+            new_value,
         )
         self[idx] = ValueItem(idx, self._names[idx], val, var, self._counts[idx] + 1)
         return self

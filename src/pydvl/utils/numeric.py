@@ -230,8 +230,8 @@ def linear_regression_analytical_derivative_d_x_d_theta(
 def running_moments(
     previous_avg: FloatOrArray,
     previous_variance: FloatOrArray,
-    new_value: FloatOrArray,
     count: IntOrArray,
+    new_value: FloatOrArray,
 ) -> Tuple:  # [FloatOrArray, FloatOrArray]:
     """Uses Welford's algorithm to calculate the running average and variance of
      a set of numbers.
@@ -250,8 +250,8 @@ def running_moments(
 
     :param previous_avg: average value at previous step
     :param previous_variance: variance at previous step
-    :param new_value: new value in the series of numbers
     :param count: number of points seen so far
+    :param new_value: new value in the series of numbers
     :return: new_average, new_variance, calculated with the new count
     """
     # broadcasted operations seem not to be supported by mypy, so we ignore the type
