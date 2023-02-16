@@ -109,8 +109,27 @@ class ValuationResult(collections.abc.Sequence):
     In order to access :class:`ValueItem` objects by their data index, use
     :meth:`get`.
 
-    :param values: An array of values, data indices correspond to positions in
-        the array.
+    .. rubric:: Operating on results
+
+    Results can be added to each other with the ``+`` operator. Means and
+    variances are correctly updated, using the ``counts`` attribute.
+
+    Results can also be updated with new values using :meth:`update`. Means and
+    variances are updated accordingly using the Welford algorithm.
+
+    Empty objects behave in a special way:
+
+    .. rubric:: Empty results
+
+    Empty results are characterised by having an empty array of values and
+    an empty algorithm name. When another result is added to an empty one,
+    the empty one is ignored. Alternatively, one can set the algorithm name
+    and length of the array of values in this function. This makes creating
+    subsequent ValuationResults to add to it a bit less verbose (since the
+    algorithm name does not have to be repeated).
+
+    :param values: An array of values. If omitted, defaults to an empty array
+        or to an array of zeros if ``indices`` are given.
     :param indices: An optional array of indices in the original dataset. If
         omitted, defaults to ``np.arange(len(values))``.
     :param variance: An optional array of variances in the computation of each
