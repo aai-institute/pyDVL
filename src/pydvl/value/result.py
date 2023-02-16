@@ -11,6 +11,7 @@ import collections.abc
 import logging
 from dataclasses import dataclass
 from functools import total_ordering
+from numbers import Integral
 from typing import (
     Any,
     Generator,
@@ -261,7 +262,7 @@ class ValuationResult(collections.abc.Sequence):
             ) from e
 
     @overload
-    def __getitem__(self, key: int) -> ValueItem:
+    def __getitem__(self, key: Integral) -> ValueItem:
         ...
 
     @overload
@@ -269,17 +270,17 @@ class ValuationResult(collections.abc.Sequence):
         ...
 
     @overload
-    def __getitem__(self, key: Iterable[int]) -> List[ValueItem]:
+    def __getitem__(self, key: Iterable[Integral]) -> List[ValueItem]:
         ...
 
     def __getitem__(
-        self, key: Union[slice, Iterable[int], int]
+        self, key: Union[slice, Iterable[Integral], Integral]
     ) -> Union[ValueItem, List[ValueItem]]:
         if isinstance(key, slice):
             return [cast(ValueItem, self[i]) for i in range(*key.indices(len(self)))]
         elif isinstance(key, collections.abc.Iterable):
             return [cast(ValueItem, self[i]) for i in key]
-        elif isinstance(key, int):
+        elif isinstance(key, Integral):
             if key < 0:
                 key += len(self)
             if key < 0 or key >= len(self):
@@ -296,7 +297,7 @@ class ValuationResult(collections.abc.Sequence):
             raise TypeError("Indices must be integers, iterable or slices")
 
     @overload
-    def __setitem__(self, key: int, value: ValueItem) -> None:
+    def __setitem__(self, key: Integral, value: ValueItem) -> None:
         ...
 
     @overload
@@ -304,11 +305,11 @@ class ValuationResult(collections.abc.Sequence):
         ...
 
     @overload
-    def __setitem__(self, key: Iterable[int], value: ValueItem) -> None:
+    def __setitem__(self, key: Iterable[Integral], value: ValueItem) -> None:
         ...
 
     def __setitem__(
-        self, key: Union[slice, Iterable[int], int], value: ValueItem
+        self, key: Union[slice, Iterable[Integral], Integral], value: ValueItem
     ) -> None:
         if isinstance(key, slice):
             for i in range(*key.indices(len(self))):
@@ -466,7 +467,7 @@ class ValuationResult(collections.abc.Sequence):
             # FIXME: what about extra args?
         )
 
-    def update(self, idx: int, new_value: float) -> "ValuationResult":
+    def update(self, idx: Integral, new_value: float) -> "ValuationResult":
         """Updates the result in place with a new value, using running mean
         and variance.
 
@@ -483,7 +484,7 @@ class ValuationResult(collections.abc.Sequence):
         self[idx] = ValueItem(idx, self._names[idx], val, var, self._counts[idx] + 1)
         return self
 
-    def get(self, idx: int) -> ValueItem:
+    def get(self, idx: Integral) -> ValueItem:
         """Retrieves a ValueItem by data index, as opposed to sort index, like
         the indexing operator.
         """
