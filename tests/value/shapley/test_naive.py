@@ -116,10 +116,11 @@ def test_linear_with_outlier(
         scoring=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
-    shapley_values = permutation_exact_shapley(linear_utility, progress=False)
-    check_total_value(linear_utility, shapley_values, atol=total_atol)
+    values = permutation_exact_shapley(linear_utility, progress=False)
+    values.sort()
+    check_total_value(linear_utility, values, atol=total_atol)
 
-    assert shapley_values.indices[0] == outlier_idx
+    assert values.indices[0] == outlier_idx
 
 
 @pytest.mark.parametrize(

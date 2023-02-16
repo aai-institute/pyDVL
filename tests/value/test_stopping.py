@@ -45,7 +45,7 @@ def test_stopping_criterion_composition():
         def _check(self, result: ValuationResult) -> Status:
             return f
 
-    v = ValuationResult()
+    v = ValuationResult.empty()
 
     assert (~C())(v) == f
     assert (~P())(v) == c
@@ -76,7 +76,7 @@ def test_make_criterion():
     def always_failed(result: ValuationResult) -> Status:
         return Status.Failed
 
-    v = ValuationResult()
+    v = ValuationResult.empty()
 
     C = make_criterion(always_converged)
     P = make_criterion(always_pending)

@@ -185,6 +185,7 @@ def test_linear_montecarlo_with_outlier(
     values = compute_shapley_values(
         linear_utility, mode=fun, progress=False, n_jobs=1, **kwargs
     )
+    values.sort()
     from pydvl.utils import Status
 
     assert values.status == Status.Converged
