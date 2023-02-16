@@ -18,7 +18,7 @@ from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.types import PermutationBreaker
-from pydvl.value.stopping import MaxUpdates, StoppingCriterion
+from pydvl.value.stopping import MaxChecks, StoppingCriterion
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
 
@@ -145,7 +145,7 @@ class ShapleyWorker(Worker):
 
         return _permutation_montecarlo_shapley(
             self.u,
-            done=MaxUpdates(1),
+            done=MaxChecks(1),
             permutation_breaker=self.permutation_breaker,
             algorithm_name=self.algorithm,
         )

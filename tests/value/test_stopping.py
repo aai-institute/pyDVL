@@ -34,15 +34,15 @@ def test_stopping_criterion_composition():
     f = Status.Failed
 
     class C(StoppingCriterion):
-        def check(self, result: ValuationResult) -> Status:
+        def _check(self, result: ValuationResult) -> Status:
             return c
 
     class P(StoppingCriterion):
-        def check(self, result: ValuationResult) -> Status:
+        def _check(self, result: ValuationResult) -> Status:
             return p
 
     class F(StoppingCriterion):
-        def check(self, result: ValuationResult) -> Status:
+        def _check(self, result: ValuationResult) -> Status:
             return f
 
     v = ValuationResult()

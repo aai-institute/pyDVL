@@ -17,7 +17,7 @@ stopping criteria.
 
 Alternatively, and in particular if reporting of completion is required, one can
 inherit from this class and implement the abstract methods
-:meth:`~pydvl.value.stopping.StoppingCriterion.check` and
+:meth:`~pydvl.value.stopping.StoppingCriterion._check` and
 :meth:`~pydvl.value.stopping.StoppingCriterion.completion`.
 
 .. rubric:: Composing stopping criteria
@@ -74,7 +74,7 @@ class StoppingCriterion(abc.ABC):
         self._converged = np.full(0, False)
 
     @abc.abstractmethod
-    def check(self, result: ValuationResult) -> Status:
+    def _check(self, result: ValuationResult) -> Status:
         """Check whether the computation should stop."""
         ...
 
@@ -90,7 +90,7 @@ class StoppingCriterion(abc.ABC):
         for each data point.
 
         Inheriting classes must set the ``_converged`` attribute in their
-        :meth:`check`.
+        :meth:`_check`.
         """
         return self._converged
 
@@ -99,28 +99,28 @@ class StoppingCriterion(abc.ABC):
         return type(self).__name__
 
     def __call__(self, result: ValuationResult) -> Status:
-        status = self.check(result)
+        status = self._check(result)
         if self.modify_result:  # FIXME: this is not nice
             result._status = status
         return status
 
     def __and__(self, other: "StoppingCriterion") -> "StoppingCriterion":
         return make_criterion(
-            fun=lambda result: self.check(result) & other.check(result),
+            fun=lambda result: self._check(result) & other._check(result),
             completion=lambda: min(self.completion(), other.completion()),
             name=f"Composite StoppingCriterion: {self.name} AND {other.name}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __or__(self, other: "StoppingCriterion") -> "StoppingCriterion":
         return make_criterion(
-            fun=lambda result: self.check(result) | other.check(result),
+            fun=lambda result: self._check(result) | other._check(result),
             completion=lambda: max(self.completion(), other.completion()),
             name=f"Composite StoppingCriterion: {self.name} OR {other.name}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __invert__(self) -> "StoppingCriterion":
         return make_criterion(
-            fun=lambda result: ~self.check(result),
+            fun=lambda result: ~self._check(result),
             completion=lambda: 1 - self.completion(),
             name=f"Composite StoppingCriterion: NOT {self.name}",
         )(modify_result=self.modify_result)
@@ -146,7 +146,7 @@ def make_criterion(
             super().__init__(modify_result=modify_result)
             self._name = name or fun.__name__
 
-        def check(self, result: ValuationResult) -> Status:
+        def _check(self, result: ValuationResult) -> Status:
             return fun(result)
 
         def completion(self) -> float:
@@ -179,7 +179,7 @@ class StandardError(StoppingCriterion):
         super().__init__(modify_result=modify_result)
         self.threshold = threshold
 
-    def check(self, result: ValuationResult) -> Status:
+    def _check(self, result: ValuationResult) -> Status:
         ratios = result.stderr / result.values
         self._converged = ratios < self.threshold
         if np.all(self._converged):
@@ -188,6 +188,36 @@ class StandardError(StoppingCriterion):
 
     def completion(self) -> float:
         return np.mean(self._converged or [0]).item()
+
+
+class MaxChecks(StoppingCriterion):
+    """Terminate as soon as the number of checks reaches the threshold.
+
+    A "check" is one call to the criterion.
+
+    :param n_checks: Threshold: if ``None``, no _check is performed,
+        effectively creating a (never) stopping criterion that always returns
+        ``Pending``.
+    """
+
+    def __init__(self, n_checks: Optional[int], modify_result: bool = True):
+        super().__init__(modify_result=modify_result)
+        if n_checks is not None and n_checks < 1:
+            raise ValueError("n_iterations must be at least 1 or None")
+        self.n_checks = n_checks
+        self._count = 0
+
+    def _check(self, result: ValuationResult) -> Status:
+        if self.n_checks:
+            if self._count >= self.n_checks:
+                return Status.Converged
+            self._count += 1
+        return Status.Pending
+
+    def completion(self) -> float:
+        if self.n_checks:
+            return min(1.0, self._count / self.n_checks)
+        return 0.0
 
 
 class MaxUpdates(StoppingCriterion):
@@ -200,17 +230,19 @@ class MaxUpdates(StoppingCriterion):
     number coincides with the maximum number of subsets sampled. For permutation
     samplers, it coincides with the number of permutations sampled.
 
-    :param n_updates: Threshold: if ``None``, no check is performed,
+    :param n_updates: Threshold: if ``None``, no _check is performed,
         effectively creating a (never) stopping criterion that always returns
         ``Pending``.
     """
 
     def __init__(self, n_updates: Optional[int], modify_result: bool = True):
         super().__init__(modify_result=modify_result)
+        if n_updates is not None and n_updates < 1:
+            raise ValueError("n_updates must be at least 1 or None")
         self.n_updates = n_updates
         self.last_max = 0
 
-    def check(self, result: ValuationResult) -> Status:
+    def _check(self, result: ValuationResult) -> Status:
         if self.n_updates:
             self._converged = result.counts >= self.n_updates
             self.last_max = int(np.max(result.counts))
@@ -219,9 +251,9 @@ class MaxUpdates(StoppingCriterion):
         return Status.Pending
 
     def completion(self) -> float:
-        if self.n_updates is None:
-            return 0.0
-        return float(np.max(self.last_max).item() / self.n_updates)
+        if self.n_updates:
+            return self.last_max / self.n_updates
+        return 0.0
 
 
 class MinUpdates(StoppingCriterion):
@@ -233,7 +265,7 @@ class MinUpdates(StoppingCriterion):
     number is a lower bound for the number of subsets sampled. For
     permutation samplers, it lower-bounds the amount of permutations sampled.
 
-    :param n_updates: Threshold: if ``None``, no check is performed,
+    :param n_updates: Threshold: if ``None``, no _check is performed,
         effectively creating a (never) stopping criterion that always returns
         ``Pending``.
     """
@@ -243,7 +275,7 @@ class MinUpdates(StoppingCriterion):
         self.n_updates = n_updates
         self.last_min = 0
 
-    def check(self, result: ValuationResult) -> Status:
+    def _check(self, result: ValuationResult) -> Status:
         if self.n_updates is not None:
             self._converged = result.counts >= self.n_updates
             self.last_min = np.min(result.counts).item()
@@ -252,9 +284,9 @@ class MinUpdates(StoppingCriterion):
         return Status.Pending
 
     def completion(self) -> float:
-        if self.n_updates is None:
-            return 0.0
-        return float(np.min(self.last_min).item() / self.n_updates)
+        if self.n_updates:
+            return self.last_min / self.n_updates
+        return 0.0
 
 
 class MaxTime(StoppingCriterion):
@@ -263,8 +295,8 @@ class MaxTime(StoppingCriterion):
     Checks the elapsed time since construction
 
     :param seconds: Threshold: The computation is terminated if the elapsed time
-        between object construction and a check exceeds this value. If ``None``,
-        no check is performed, effectively creating a (never) stopping criterion
+        between object construction and a _check exceeds this value. If ``None``,
+        no _check is performed, effectively creating a (never) stopping criterion
         that always returns ``Pending``.
     """
 
@@ -275,7 +307,7 @@ class MaxTime(StoppingCriterion):
             raise ValueError("Number of seconds for MaxTime must be positive or None")
         self.start = time()
 
-    def check(self, result: ValuationResult) -> Status:
+    def _check(self, result: ValuationResult) -> Status:
         if self._converged is None:
             self._converged = np.full(result.values.shape, False)
         if time() > self.start + self.max_seconds:
@@ -290,7 +322,7 @@ class MaxTime(StoppingCriterion):
 
 
 class HistoryDeviation(StoppingCriterion):
-    r"""A simple check for relative distance to a previous step in the
+    r"""A simple _check for relative distance to a previous step in the
     computation.
 
     The method used by :footcite:t:`ghorbani_data_2019` computes the relative
@@ -340,7 +372,7 @@ class HistoryDeviation(StoppingCriterion):
         self.update_op = np.logical_or if pin_converged else np.logical_and
         self._memory = None  # type: ignore
 
-    def check(self, r: ValuationResult) -> Status:
+    def _check(self, r: ValuationResult) -> Status:
         if self._memory is None:
             self._memory = np.full((len(r.values), self.n_steps + 1), np.inf)
             self._converged = np.full(len(r), False)
