@@ -43,7 +43,9 @@ __all__ = [
     "make_criterion",
     "StoppingCriterion",
     "StandardError",
+    "MaxChecks",
     "MaxUpdates",
+    "MinUpdates",
     "MaxTime",
     "HistoryDeviation",
 ]

@@ -53,7 +53,6 @@ from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
 from pydvl.value.stopping import StoppingCriterion
 
-
 logger = logging.getLogger(__name__)
 
 __all__ = [
