@@ -117,24 +117,19 @@ class ValuationResult(collections.abc.Sequence):
     Results can also be updated with new values using :meth:`update`. Means and
     variances are updated accordingly using the Welford algorithm.
 
-    Empty objects behave in a special way:
-
-    .. rubric:: Empty results
-
-    Empty results are characterised by having an empty array of values and
-    an empty algorithm name. When another result is added to an empty one,
-    the empty one is ignored. Alternatively, one can set the algorithm name
-    and length of the array of values in this function. This makes creating
-    subsequent ValuationResults to add to it a bit less verbose (since the
-    algorithm name does not have to be repeated).
+    Empty objects behave in a special way, see :meth:`empty`.
 
     :param values: An array of values. If omitted, defaults to an empty array
         or to an array of zeros if ``indices`` are given.
     :param indices: An optional array of indices in the original dataset. If
-        omitted, defaults to ``np.arange(len(values))``.
+        omitted, defaults to ``np.arange(len(values))``. **Warning:** It is
+        common to pass the indices of a :class:`Dataset` here. Attention must be
+        paid in a parallel context to copy them to the local process. Just do
+        ``indices=np.copy(data.indices)``.
     :param variance: An optional array of variances in the computation of each
         value.
     :param counts: An optional array with the number of updates for each value.
+        Defaults to an array of ones.
     :param data_names: Names for the data points. Defaults to index numbers
         if not set.
     :param algorithm: The method used.
@@ -162,36 +157,28 @@ class ValuationResult(collections.abc.Sequence):
     def __init__(
         self,
         *,
-        values: Optional[NDArray[np.float_]] = None,
+        values: NDArray[np.float_],
         variances: Optional[NDArray[np.float_]] = None,
         counts: Optional[NDArray[np.int_]] = None,
-        indices: NDArray[np.int_] = None,
+        indices: Optional[NDArray[np.int_]] = None,
         data_names: Optional[Union[Sequence[str], NDArray[np.str_]]] = None,
         algorithm: str = "",
         status: Status = Status.Pending,
         sort: bool = False,
         **extra_values,
     ):
-        if values is not None:
-            if variances is not None and len(variances) != len(values):
-                raise ValueError("Lengths of values and variances do not match")
-            if data_names is not None and len(data_names) != len(values):
-                raise ValueError("Lengths of values and data_names do not match")
-            if indices is not None and len(indices) != len(values):
-                raise ValueError("Lengths of values and indices do not match")
-        if indices is not None and len(np.unique(indices)) != len(indices):
-            raise ValueError("Indices cannot repeat")
+        if variances is not None and len(variances) != len(values):
+            raise ValueError("Lengths of values and variances do not match")
+        if data_names is not None and len(data_names) != len(values):
+            raise ValueError("Lengths of values and data_names do not match")
+        if indices is not None and len(indices) != len(values):
+            raise ValueError("Lengths of values and indices do not match")
 
-        if values is None and indices is not None:
-            # Special init: create empty object with length of indices
-            values = np.zeros_like(indices, dtype=np.float_)
         self._algorithm = algorithm
         self._status = status
-        self._values = np.array([]) if values is None else values
-        self._variances = (
-            np.zeros_like(self._values) if variances is None else variances
-        )
-        self._counts = np.ones_like(self._values) if counts is None else counts
+        self._values = values
+        self._variances = np.zeros_like(values) if variances is None else variances
+        self._counts = np.ones_like(values) if counts is None else counts
         self._sort_order = None
         self._extra_values = extra_values or {}
 
@@ -418,8 +405,8 @@ class ValuationResult(collections.abc.Sequence):
         """Adds two ValuationResults.
 
         The values must have been computed with the same algorithm. An exception
-        to this is if one argument has empty algorithm name and empty values, in
-        which case the values are taken from the other argument.
+        to this is if one argument has empty values, in which case the other
+        argument is returned.
 
         .. warning::
            Abusing this will introduce numerical errors.
@@ -438,9 +425,10 @@ class ValuationResult(collections.abc.Sequence):
            FIXME: Arbitrary ``extra_values`` aren't handled.
 
         """
-        if self.algorithm == "" and len(self.values) == 0:  # empty result
+        # empty results
+        if len(self.values) == 0:
             return other
-        if other.algorithm == "" and len(other.values) == 0:  # empty result
+        if len(other.values) == 0:
             return self
 
         self._check_compatible(other)
@@ -493,7 +481,8 @@ class ValuationResult(collections.abc.Sequence):
             variances=vnm,
             counts=n + m,
             data_names=names,
-            # FIXME: what about extra args?
+            # FIXME: What to do with extra_values? This is not commutative:
+            # extra_values=self._extra_values.update(other._extra_values),
         )
 
     def update(self, idx: Integral, new_value: float) -> "ValuationResult":
@@ -557,3 +546,35 @@ class ValuationResult(collections.abc.Sequence):
         """
         values = np.random.uniform(low=-1.0, high=1.0, size=size)
         return cls(algorithm="random", status=Status.Converged, values=values)
+
+    @classmethod
+    def empty(
+        cls,
+        algorithm: str = "",
+        indices: Optional[Sequence[Integral]] = None,
+        n_samples: int = 0,
+    ) -> "ValuationResult":
+        """Creates an empty :class:`ValuationResult` object.
+
+        Empty results are characterised by having an empty array of values. When
+        another result is added to an empty one, the latter is ignored.
+
+        :param algorithm: Name of the algorithm used to compute the values
+        :param indices: Data indices to use. A copy will be made. If not given,
+            the indices will be set to the range ``[0, n_samples)``.
+        :param n_samples: Number of data points whose values are computed. If
+            not given, the length of ``indices`` will be used.
+        :return: An instance of :class:`ValuationResult`
+        """
+        if indices is None:
+            indices = np.arange(n_samples, dtype=np.int_)
+        else:
+            indices = np.array(indices, dtype=np.int_)
+        return cls(
+            algorithm=algorithm,
+            status=Status.Pending,
+            indices=indices,
+            values=np.zeros(len(indices)),
+            variances=np.zeros(len(indices)),
+            counts=np.zeros(len(indices), dtype=np.int_),
+        )

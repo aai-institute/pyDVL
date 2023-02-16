@@ -162,7 +162,7 @@ class ShapleyWorker(Worker):
         terminating if it's ``True``.
         """
         while True:
-            acc = ValuationResult(algorithm=self.algorithm)
+            acc = ValuationResult.empty(algorithm=self.algorithm)
             start_time = time()
             while (time() - start_time) < self.update_period:
                 if self.coordinator.is_done():

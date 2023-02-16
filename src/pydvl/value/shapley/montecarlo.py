@@ -213,8 +213,7 @@ def _permutation_montecarlo_shapley(
     :param job_id: id to use for reporting progress (e.g. to place progres bars)
     :return: An object with the results
     """
-    n = len(u.data)
-    result = ValuationResult(algorithm=algorithm_name, indices=u.data.indices)
+    result = ValuationResult.empty(algorithm=algorithm_name, indices=u.data.indices)
 
     pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
     while not done(result):
@@ -312,7 +311,7 @@ def _combinatorial_montecarlo_shapley(
     # powerset of a set with n-1 elements has mass 2^{n-1} over each subset. The
     # additional factor n corresponds to the one in the Shapley definition
     correction = 2 ** (n - 1) / n
-    result = ValuationResult(
+    result = ValuationResult.empty(
         algorithm="combinatorial_montecarlo_shapley", indices=indices
     )
 
