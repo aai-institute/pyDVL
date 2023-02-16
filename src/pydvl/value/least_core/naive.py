@@ -89,8 +89,7 @@ def exact_least_core(
     if subsidy is None:
         logger.debug("No values were found")
         status = Status.Failed
-        values = np.empty(n)
-        values[:] = np.nan
+        values = np.full(n, np.nan)
         subsidy = np.nan
 
         return ValuationResult(
@@ -108,8 +107,7 @@ def exact_least_core(
     if values is None:
         logger.debug("No values were found")
         status = Status.Failed
-        values = np.empty(n)
-        values[:] = np.nan
+        values = np.full(n, np.nan)
         subsidy = np.nan
     else:
         status = Status.Converged
