@@ -10,6 +10,7 @@ from numpy._typing import NDArray
 from pydvl.utils import (
     MapReduceJob,
     ParallelConfig,
+    Status,
     Utility,
     maybe_progress,
     random_powerset,
@@ -73,7 +74,9 @@ def _owen_sampling_shapley(
         values[i] = (e[:-1] + e[1:]).sum() / (2 * max_q)
 
     return ValuationResult(
-        algorithm="owen_sampling_shapley_" + str(method), values=values
+        algorithm="owen_sampling_shapley_" + str(method),
+        status=Status.Converged,
+        values=values,
     )
 
 
