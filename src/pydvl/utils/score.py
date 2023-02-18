@@ -19,7 +19,6 @@ from sklearn.metrics import get_scorer
 
 from pydvl.utils.types import SupervisedModel
 
-
 __all__ = ["Scorer", "compose_score", "squashed_r2", "squashed_variance"]
 
 
