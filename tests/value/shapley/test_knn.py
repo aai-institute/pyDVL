@@ -34,7 +34,9 @@ def test_knn_montecarlo_match(seed):
         return np.mean(pred_proba)
 
     scorer = Scorer(
-        make_scorer(knn_loss_function, greater_is_better=True, needs_proba=True)
+        make_scorer(knn_loss_function, greater_is_better=True, needs_proba=True),
+        default=0.0,
+        range=(0.0, 1.0),
     )
 
     utility = Utility(
