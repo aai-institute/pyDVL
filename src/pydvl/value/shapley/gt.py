@@ -187,7 +187,8 @@ def _group_testing_shapley(
 def group_testing_shapley(
     u: Utility,
     n_iterations: int,
-    eps: float,
+    epsilon: float,
+    delta: float,
     *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
@@ -210,7 +211,9 @@ def group_testing_shapley(
     :param u: Utility object with model, data, and scoring function
     :param n_iterations: Number of tests to perform. Use
         :func:`num_samples_eps_delta` to estimate this.
-    :param eps: Epsilon in the (ε,δ) sample bound. Use the same as for the
+    :param epsilon: From the (ε,δ) sample bound. Use the same as for the
+        estimation of ``n_iterations``.
+    :param delta: From the (ε,δ) sample bound. Use the same as for the
         estimation of ``n_iterations``.
     :param n_jobs: Number of parallel jobs to use. Each worker performs a chunk
         of all tests (i.e. utility evaluations).
@@ -226,15 +229,15 @@ def group_testing_shapley(
     n = len(u.data.indices)
     const = _constants(
         n=n,
-        epsilon=eps,
-        delta=0.05,
+        epsilon=epsilon,
+        delta=delta,
         utility_range=u.score_range.max() - u.score_range.min(),
     )
     T = n_iterations
     if T < const.T:
         log.warning(
             f"max iterations of {T} are below the required {const.T} for the "
-            f"ε={eps:.02f} guarantee at .95 probability"
+            f"ε={epsilon:.02f} guarantee at δ={1 - delta:.02f} probability"
         )
 
     iterations_per_job = max(1, n_iterations // n_jobs)
@@ -277,7 +280,7 @@ def group_testing_shapley(
     ###########################################################################
     # Solution of the constraint problem with scipy
 
-    A_ub, b_ub = _build_gt_constraints(n, bound=eps / (2 * np.sqrt(n)), C=C)
+    A_ub, b_ub = _build_gt_constraints(n, bound=epsilon / (2 * np.sqrt(n)), C=C)
     c = np.zeros_like(u.data.indices)
     total_utility = u(u.data.indices)
     # A trivial bound for the values from the definition is max_utility * (n-1)

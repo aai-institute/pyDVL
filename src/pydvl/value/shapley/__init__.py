@@ -146,14 +146,21 @@ def compute_shapley_values(
     elif mode == ShapleyMode.KNN:
         return knn_shapley(u, progress=progress)
     elif mode == ShapleyMode.GroupTesting:
-        n_iterations = kwargs.get("n_iterations")
+        n_iterations = kwargs.pop("n_iterations")
         if n_iterations is None:
             raise ValueError("n_iterations cannot be None for Group Testing")
-        eps = kwargs.get("epsilon")
-        if eps is None:
+        epsilon = kwargs.pop("epsilon")
+        if epsilon is None:
             raise ValueError("Group Testing requires error bound epsilon")
+        delta = kwargs.pop("delta", 0.05)
         return group_testing_shapley(
-            u, eps=eps, n_iterations=n_iterations, n_jobs=n_jobs, progress=progress
+            u,
+            epsilon=epsilon,
+            delta=delta,
+            n_iterations=n_iterations,
+            n_jobs=n_jobs,
+            progress=progress,
+            **kwargs,
         )
     else:
         raise ValueError(f"Invalid value encountered in {mode=}")
