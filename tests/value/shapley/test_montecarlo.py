@@ -42,7 +42,7 @@ log = logging.getLogger(__name__)
         (12, ShapleyMode.Owen, 0.1, {"n_iterations": 4, "max_q": 200}),
         (12, ShapleyMode.OwenAntithetic, 0.1, {"n_iterations": 4, "max_q": 200}),
         (
-            5,
+            4,
             ShapleyMode.GroupTesting,
             0.2,
             dict(n_iterations=int(5e4), epsilon=0.2, delta=0.01),
@@ -108,7 +108,7 @@ def test_hoeffding_bound_montecarlo(
         # (ShapleyMode.OwenAntithetic, dict(n_iterations=4, max_q=300)),
         (
             ShapleyMode.GroupTesting,
-            dict(n_iterations=int(5e4), epsilon=0.2, delta=0.01),
+            dict(n_iterations=int(1e5), epsilon=0.2, delta=0.01),
         ),
     ],
 )
@@ -175,7 +175,7 @@ def test_linear_montecarlo_shapley(
         # (ShapleyMode.OwenAntithetic, dict(n_iterations=4, max_q=400)),
         (
             ShapleyMode.GroupTesting,
-            dict(n_iterations=int(5e4), epsilon=0.2, delta=0.01),
+            dict(n_iterations=int(1e5), epsilon=0.2, delta=0.01),
         ),
     ],
 )
