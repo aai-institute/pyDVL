@@ -154,7 +154,7 @@ def test_linear_montecarlo_shapley(
 @pytest.mark.parametrize(
     "fun, kwargs",
     [
-        # (ShapleyMode.PermutationMontecarlo, {"done": MaxUpdates(500)}),
+        (ShapleyMode.PermutationMontecarlo, {"done": MaxUpdates(500)}),
         (
             ShapleyMode.TruncatedMontecarlo,
             dict(
@@ -164,7 +164,7 @@ def test_linear_montecarlo_shapley(
                 truncation=NoTruncation(),
             ),
         ),
-        # (ShapleyMode.Owen, dict(n_iterations=4, max_q=400)),
+        (ShapleyMode.Owen, dict(n_iterations=4, max_q=400)),
         # FIXME: antithetic breaks for non-deterministic u
         # (ShapleyMode.OwenAntithetic, dict(n_iterations=4, max_q=400)),
     ],
