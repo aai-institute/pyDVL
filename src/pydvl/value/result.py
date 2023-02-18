@@ -6,6 +6,26 @@ The most important class is :class:`ValuationResult`, which provides access
 to raw values, as well as convenient behaviour as a ``Sequence`` with extended
 indexing and updating abilities, and conversion to `pandas DataFrames
 <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
+
+.. rubric:: Operating on results
+
+Results can be added together with the standard ``+`` operator. Because values
+are typically running averages of iterative algorithms, addition behaves like a
+weighted average of the two results, with the weights being the number of
+updates in each result: adding two results is the same as generating one result
+with the mean of the values of the two results as values. The variances are
+updated accordingly. See :class:`ValuationResult` for details.
+
+Results can also be sorted by value, variance or number of updates, see
+:meth:`ValuationResult.sort`. The arrays of :attr:`ValuationResult.values`,
+:attr:`ValuationResult.variances`, :attr:`ValuationResult.counts`,
+:attr:`ValuationResult.indices` and :attr:`ValuationResult.names` are sorted in
+the same way.
+
+Indexing and slicing of results is supported and :class:`ValueItem` objects are
+returned. These objects can be compared with the usual operators, which take
+only the :attr:`ValueItem.value` into account.
+
 """
 import collections.abc
 import logging
@@ -37,7 +57,7 @@ try:
 except ImportError:
     pass
 
-__all__ = ["ValuationResult"]
+__all__ = ["ValuationResult", "ValueItem"]
 
 logger = logging.getLogger(__name__)
 
@@ -47,15 +67,16 @@ logger = logging.getLogger(__name__)
 class ValueItem:
     """The result of a value computation for one datum.
 
-    ValueItems can be compared with the usual operators. These take only the
-    :attribute:`value` into account
+    ``ValueItems`` can be compared with the usual operators, forming a total
+    order. Comparisons take only the :attr:`value` into account.
 
     .. todo::
        Maybe have a mode of comparing similar to `np.isclose`, or taking the
-       :attribute:`variance` into account.
+       :attr:`variance` into account.
     """
 
-    #: Index of the sample with this value in the original :class:`Dataset`
+    #: Index of the sample with this value in the original
+    #  :class:`~pydvl.utils.dataset.Dataset`
     index: int
     #: Name of the sample if it was provided. Otherwise, `str(index)`
     name: str
@@ -198,11 +219,15 @@ class ValuationResult(collections.abc.Sequence):
         self,
         reverse: bool = False,
         # Need a "Comparable" type here
-        key: Literal["value", "index", "name"] = "value",
+        key: Literal["value", "variance", "index", "name"] = "value",
     ) -> None:
-        """Sorts the indices in place by ascending value.
+        """Sorts the indices in place by ``key``.
 
-        Once sorted, iteration over the results will follow the order.
+        Once sorted, iteration over the results, and indexing of all the
+        properties :attr:`ValuationResult.values`,
+        :attr:`ValuationResult.variances`, :attr:`ValuationResult.counts`,
+        :attr:`ValuationResult.indices` and :attr:`ValuationResult.names` will
+        follow the same order.
 
         :param reverse: Whether to sort in descending order by value.
         :param key: The key to sort by. Defaults to :attr:`ValueItem.value`.

@@ -326,7 +326,7 @@ class MaxTime(StoppingCriterion):
 
 
 class HistoryDeviation(StoppingCriterion):
-    r"""A simple _check for relative distance to a previous step in the
+    r"""A simple check for relative distance to a previous step in the
     computation.
 
     The method used by :footcite:t:`ghorbani_data_2019` computes the relative
