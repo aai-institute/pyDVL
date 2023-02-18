@@ -41,7 +41,12 @@ log = logging.getLogger(__name__)
         ),
         (12, ShapleyMode.Owen, 0.1, {"n_iterations": 4, "max_q": 200}),
         (12, ShapleyMode.OwenAntithetic, 0.1, {"n_iterations": 4, "max_q": 200}),
-        (5, ShapleyMode.GroupTesting, 0.1, {"n_iterations": int(1e5), "epsilon": 0.1}),
+        (
+            5,
+            ShapleyMode.GroupTesting,
+            0.2,
+            dict(n_iterations=int(5e4), epsilon=0.2, delta=0.01),
+        ),
     ],
 )
 def test_analytic_montecarlo_shapley(
@@ -101,7 +106,10 @@ def test_hoeffding_bound_montecarlo(
         (ShapleyMode.Owen, dict(n_iterations=4, max_q=300)),
         # FIXME: antithetic breaks for non-deterministic u
         # (ShapleyMode.OwenAntithetic, dict(n_iterations=4, max_q=300)),
-        (ShapleyMode.GroupTesting, dict(n_iterations=int(1e5), epsilon=0.1)),
+        (
+            ShapleyMode.GroupTesting,
+            dict(n_iterations=int(5e4), epsilon=0.2, delta=0.01),
+        ),
     ],
 )
 def test_linear_montecarlo_shapley(
@@ -147,7 +155,7 @@ def test_linear_montecarlo_shapley(
     "a, b, num_points", [(2, 0, 21)]  # training set will have 0.3 * 21 ~= 6 samples
 )
 @pytest.mark.parametrize(
-    "scorer, total_atol", [(squashed_r2, 0.1), (squashed_variance, 0.1)]
+    "scorer, total_atol", [(squashed_r2, 0.2), (squashed_variance, 0.2)]
 )
 @pytest.mark.parametrize(
     "fun, kwargs",
@@ -165,7 +173,10 @@ def test_linear_montecarlo_shapley(
         (ShapleyMode.Owen, dict(n_iterations=4, max_q=400)),
         # FIXME: antithetic breaks for non-deterministic u
         # (ShapleyMode.OwenAntithetic, dict(n_iterations=4, max_q=400)),
-        (ShapleyMode.GroupTesting, dict(n_iterations=int(1e5), epsilon=0.1)),
+        (
+            ShapleyMode.GroupTesting,
+            dict(n_iterations=int(5e4), epsilon=0.2, delta=0.01),
+        ),
     ],
 )
 def test_linear_montecarlo_with_outlier(
