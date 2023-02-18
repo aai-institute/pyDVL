@@ -189,7 +189,9 @@ class StandardError(StoppingCriterion):
         return Status.Pending
 
     def completion(self) -> float:
-        return np.mean(self._converged or [0]).item()
+        if self._converged.size == 0:
+            return 0.0
+        return np.mean(self._converged).item()
 
 
 class MaxChecks(StoppingCriterion):
@@ -211,9 +213,9 @@ class MaxChecks(StoppingCriterion):
 
     def _check(self, result: ValuationResult) -> Status:
         if self.n_checks:
+            self._count += 1
             if self._count >= self.n_checks:
                 return Status.Converged
-            self._count += 1
         return Status.Pending
 
     def completion(self) -> float:
