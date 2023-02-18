@@ -4,8 +4,8 @@ additional information.
 
 Scorers can be constructed in the same way as in scikit-learn: either from 
 known strings or from a callable. Greater values must be better. If they are not,
-a negated version can be used (see scikit-learn's `make_scorer() 
-<https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html>_`)
+a negated version can be used, see scikit-learn's `make_scorer()
+<https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html>`_.
 
 :class:`Scorer` provides additional information about the scoring function, like
 its range and default values.
@@ -18,6 +18,9 @@ from scipy.special import expit
 from sklearn.metrics import get_scorer
 
 from pydvl.utils.types import SupervisedModel
+
+
+__all__ = ["Scorer", "compose_score", "squashed_r2", "squashed_variance"]
 
 
 class ScorerCallable(Protocol):
@@ -43,6 +46,9 @@ class Scorer:
         constructed with :func:`~pydvl.utils.types.compose_score`.
     :param name: The name of the scorer. If not provided, the name of the
         function passed will be used.
+
+    .. versionadded:: 0.5.0
+
     """
 
     _name: str
@@ -105,12 +111,17 @@ def compose_score(
     return NewScorer(scorer, range=range, name=name)
 
 
-def sigmoid(x: float) -> float:
+def _sigmoid(x: float) -> float:
     result: float = expit(x).item()
     return result
 
 
-squashed_r2 = compose_score(Scorer("r2"), sigmoid, (0, 1), "squashed r2")
+squashed_r2 = compose_score(Scorer("r2"), _sigmoid, (0, 1), "squashed r2")
+""" A scorer that squashes the R² score into the range [0, 1] using a sigmoid."""
+
+
 squashed_variance = compose_score(
-    Scorer("explained_variance"), sigmoid, (0, 1), "squashed explained variance"
+    Scorer("explained_variance"), _sigmoid, (0, 1), "squashed explained variance"
 )
+""" A scorer that squashes the explained variance score into the range [0, 1] using
+    a sigmoid."""
