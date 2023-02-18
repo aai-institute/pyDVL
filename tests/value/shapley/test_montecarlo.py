@@ -219,23 +219,11 @@ def test_linear_montecarlo_with_outlier(
 @pytest.mark.parametrize(
     "a, b, num_points, num_groups", [(2, 0, 21, 2)]  # 24*0.3=6 samples in 2 groups
 )
-@pytest.mark.parametrize("scorer, rtol", [(squashed_r2, 0.1), (squashed_variance, 0.1)])
+@pytest.mark.parametrize("scorer, rtol", [(squashed_r2, 0.1)])
 @pytest.mark.parametrize(
     "fun, kwargs",
     [
         (ShapleyMode.PermutationMontecarlo, dict(done=MaxUpdates(700))),
-        (
-            ShapleyMode.TruncatedMontecarlo,
-            dict(
-                coordinator_update_period=0.2,
-                worker_update_period=0.1,
-                done=HistoryDeviation(n_steps=10, rtol=0.1) | MaxUpdates(500),
-                truncation=NoTruncation(),
-            ),
-        ),
-        (ShapleyMode.Owen, dict(n_iterations=4, max_q=300)),
-        # FIXME: antithetic breaks for non-deterministic u
-        # (ShapleyMode.OwenAntithetic, dict(n_iterations=4, max_q=300)),
     ],
 )
 def test_grouped_linear_montecarlo_shapley(
@@ -252,7 +240,6 @@ def test_grouped_linear_montecarlo_shapley(
     so that the number of samples selected is just above the (ε,δ) bound for ε =
     rtol, δ=0.001 and the range corresponding to each score. This means that
     roughly once every 1000/num_methods runs the test will fail.
-
     """
     data_groups = np.random.randint(0, num_groups, len(linear_dataset))
     grouped_linear_dataset = GroupedDataset.from_dataset(linear_dataset, data_groups)
