@@ -539,7 +539,7 @@ nature of every (non-trivial) ML problem can have an effect:
 
   pyDVL offers a dedicated :func:`function composition
   <pydvl.utils.types.compose_score>` for scorer functions which can be used to
-  squash a score. The following is defined in module :mod:`~pydvl.utils.numeric`:
+  squash a score. The following is defined in module :mod:`~pydvl.utils.scorer`:
 
   .. code-block:: python
 
