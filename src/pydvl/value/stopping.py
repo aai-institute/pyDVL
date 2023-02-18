@@ -195,7 +195,7 @@ class StandardError(StoppingCriterion):
 
 
 class MaxChecks(StoppingCriterion):
-    """Terminate as soon as the number of checks reaches the threshold.
+    """Terminate as soon as the number of checks exceeds the threshold.
 
     A "check" is one call to the criterion.
 
@@ -214,7 +214,7 @@ class MaxChecks(StoppingCriterion):
     def _check(self, result: ValuationResult) -> Status:
         if self.n_checks:
             self._count += 1
-            if self._count >= self.n_checks:
+            if self._count > self.n_checks:
                 return Status.Converged
         return Status.Pending
 
