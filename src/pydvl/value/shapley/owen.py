@@ -1,21 +1,17 @@
 import operator
 from enum import Enum
 from functools import reduce
+from itertools import cycle, takewhile
 from typing import Sequence
 
 import numpy as np
 from _warnings import warn
 from numpy._typing import NDArray
+from tqdm import tqdm
 
-from pydvl.utils import (
-    MapReduceJob,
-    ParallelConfig,
-    Status,
-    Utility,
-    maybe_progress,
-    random_powerset,
-)
+from pydvl.utils import MapReduceJob, ParallelConfig, Utility, random_powerset
 from pydvl.value import ValuationResult
+from pydvl.value.stopping import MinUpdates
 
 
 class OwenAlgorithm(Enum):
@@ -52,32 +48,34 @@ def _owen_sampling_shapley(
     :param job_id: For positioning of the progress bar
     :return: Object with the data values, errors.
     """
-    values = np.zeros(len(u.data))
-
     q_stop = {OwenAlgorithm.Standard: 1.0, OwenAlgorithm.Antithetic: 0.5}
     q_steps = np.linspace(start=0, stop=q_stop[method], num=max_q)
 
+    result = ValuationResult.empty(
+        algorithm="owen_sampling_shapley_" + str(method), indices=indices
+    )
     index_set = set(indices)
-    for i in maybe_progress(indices, progress, position=job_id):
+    done = MinUpdates(1)
+    repeat_indices = takewhile(lambda _: not done(result), cycle(indices))
+    pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
+    for idx in repeat_indices:
+        pbar.n = 100 * done.completion()
+        pbar.refresh()
         e = np.zeros(max_q)
-        subset = np.array(list(index_set.difference({i})))
+        subset = np.array(list(index_set.difference({idx})))
         for j, q in enumerate(q_steps):
             for s in random_powerset(subset, n_samples=n_iterations, q=q):
-                marginal = u({i}.union(s)) - u(s)
+                marginal = u({idx}.union(s)) - u(s)
                 if method == OwenAlgorithm.Antithetic and q != 0.5:
                     s_complement = index_set.difference(s)
-                    marginal += u({i}.union(s_complement)) - u(s_complement)
+                    marginal += u({idx}.union(s_complement)) - u(s_complement)
                 e[j] += marginal
         e /= n_iterations
-        # values[i] = e.mean()
+        # result.update(idx, e.mean())
         # Trapezoidal rule
-        values[i] = (e[:-1] + e[1:]).sum() / (2 * max_q)
+        result.update(idx, (e[:-1] + e[1:]).sum() / (2 * max_q))
 
-    return ValuationResult(
-        algorithm="owen_sampling_shapley_" + str(method),
-        status=Status.Converged,
-        values=values,
-    )
+    return result
 
 
 def owen_sampling_shapley(
@@ -139,9 +137,6 @@ def owen_sampling_shapley(
     .. versionadded:: 0.3.0
 
     """
-    if n_jobs > 1:
-        raise NotImplementedError("Parallel Owen sampling not implemented yet")
-
     if OwenAlgorithm(method) == OwenAlgorithm.Antithetic:
         warn("Owen antithetic sampling not tested and probably bogus")
 
