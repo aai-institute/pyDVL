@@ -44,6 +44,7 @@ log = logging.getLogger(__name__)
         ),
         (12, ShapleyMode.Owen, 0.1, {"n_iterations": 4, "max_q": 200}),
         (12, ShapleyMode.OwenAntithetic, 0.1, {"n_iterations": 4, "max_q": 200}),
+        (5, ShapleyMode.GroupTesting, 0.1, {"n_iterations": int(1e5), "epsilon": 0.1}),
     ],
 )
 def test_analytic_montecarlo_shapley(
