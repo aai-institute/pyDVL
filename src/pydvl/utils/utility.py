@@ -26,8 +26,8 @@ from sklearn.metrics import check_scoring
 from pydvl.utils import Dataset
 from pydvl.utils.caching import CacheStats, memcached, serialize
 from pydvl.utils.config import MemcachedConfig
-from pydvl.utils.types import SupervisedModel
 from pydvl.utils.score import Scorer
+from pydvl.utils.types import SupervisedModel
 
 __all__ = ["Utility", "DataUtilityLearning", "MinerGameUtility", "GlovesGameUtility"]
 

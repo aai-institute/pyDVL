@@ -23,9 +23,7 @@ from pydvl.utils import SupervisedModel
 class ScorerCallable(Protocol):
     """Signature for a scorer"""
 
-    def __call__(
-        self, model: SupervisedModel, X: NDArray, y: NDArray, **kwargs
-    ) -> float:
+    def __call__(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
         ...
 
 
@@ -47,7 +45,7 @@ class Scorer:
     """
 
     _name: str
-    range: NDArray[float]
+    range: NDArray[np.float_]
 
     def __init__(
         self,
@@ -63,7 +61,7 @@ class Scorer:
         self._name = getattr(self._scorer, "__name__", name or "scorer")
 
     def __call__(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
-        return self._scorer(model, X, y)
+        return self._scorer(model, X, y)  # type: ignore
 
     def __str__(self):
         return self._name
