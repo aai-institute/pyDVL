@@ -268,36 +268,6 @@ def group_testing_shapley(
     total_utility = u(u.data.indices)
 
     ###########################################################################
-    # Sanity check: Another way of building the constraints
-    # CC = np.zeros(shape=(n, n))
-    # for t in range(T):
-    #     # A matrix with n columns copies of beta[t]:
-    #     Bt = np.repeat(betas[t], repeats=n).reshape((n, n))
-    #     # C_ij += u_t * (β_i - β_j)
-    #     CC += uu[t] * (Bt - Bt.T)
-    # CC *= Z / T
-    # assert np.allclose(np.triu(C), np.triu(CC))
-
-    ###########################################################################
-    # Solution of the constraint problem with scipy
-    # DISABLED: highs fails to find solutions that SCS finds
-
-    # A_ub, b_ub = _build_gt_constraints(n, bound=epsilon / (2 * np.sqrt(n)), C=C)
-    # c = np.zeros_like(u.data.indices)
-    # # A trivial bound for the values from the definition is max_utility * (n-1)
-    # bounds = tuple(u.score_range * n)  # u.score_range defaults to (-inf, inf)
-    # result: sp.optimize.OptimizeResult = sp.optimize.linprog(
-    #     c,
-    #     A_ub=A_ub,
-    #     b_ub=b_ub,
-    #     A_eq=np.ones((1, n)),
-    #     b_eq=total_utility,
-    #     bounds=bounds,
-    #     method="highs",
-    #     options={},
-    # )
-
-    ###########################################################################
     # Solution of the constraint problem with cvxpy
 
     import cvxpy as cp
@@ -319,20 +289,50 @@ def group_testing_shapley(
             if not hasattr(v.value, "__len__")
             else v.value
         )
-        return ValuationResult(
-            algorithm="group_testing_shapley",
-            status=Status.Failed,
-            values=values,
-            data_names=u.data.data_names,
-            solver_status=problem.status,
-        )
+        status = Status.Failed
+    else:
+        status = Status.Converged
+        values = v.value
 
     return ValuationResult(
         algorithm="group_testing_shapley",
-        status=Status.Converged,
-        values=v.value,
+        status=status,
+        values=values,
         data_names=u.data.data_names,
+        solver_status=problem.status,
     )
+
+    ###########################################################################
+    # Sanity check: Another way of building the constraints
+    # CC = np.zeros(shape=(n, n))
+    # for t in range(T):
+    #     # A matrix with n columns copies of beta[t]:
+    #     Bt = np.repeat(betas[t], repeats=n).reshape((n, n))
+    #     # C_ij += u_t * (β_i - β_j)
+    #     CC += uu[t] * (Bt - Bt.T)
+    # CC *= Z / T
+    # assert np.allclose(np.triu(C), np.triu(CC))
+
+    ###########################################################################
+    # Solution of the constraint problem with scipy
+    # DISABLED: highs fails to find solutions that SCS finds
+
+    # A_ub, b_ub = _build_gt_constraints(n, bound=epsilon / (2 * np.sqrt(n)),
+    # C=C)
+    # c = np.zeros_like(u.data.indices)
+    # # A trivial bound for the values from the definition is max_utility * (
+    # n-1)
+    # bounds = tuple(u.score_range * n)  # u.score_range defaults to (-inf, inf)
+    # result: sp.optimize.OptimizeResult = sp.optimize.linprog(
+    #     c,
+    #     A_ub=A_ub,
+    #     b_ub=b_ub,
+    #     A_eq=np.ones((1, n)),
+    #     b_eq=total_utility,
+    #     bounds=bounds,
+    #     method="highs",
+    #     options={},
+    # )
 
     ###########################################################################
     # Sanity check: compare the solutions by scipy and cvxpy
