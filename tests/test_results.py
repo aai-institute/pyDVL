@@ -224,7 +224,13 @@ def test_from_random_creation(size):
 
 
 def test_adding_random():
-    """Test adding multiple valuation results together"""
+    """Test adding multiple valuation results together.
+
+    First we generate a matrix of values, then we split it into multiple subsets
+    and create a valuation result for each subset. Then we add all the valuation
+    results together and check that the resulting means and variances match with
+    those of the original matrix.
+    """
     n_samples, n_values, n_subsets = 10, 1000, 12
     values = np.random.rand(n_samples, n_values)
     split_indices = np.sort(np.random.randint(1, n_values, size=n_subsets - 1))
