@@ -265,6 +265,7 @@ def group_testing_shapley(
         for j in range(i + 1, n):
             C[i, j] = np.dot(uu, betas[:, i] - betas[:, j])
     C *= const.Z / T
+    total_utility = u(u.data.indices)
 
     ###########################################################################
     # Sanity check: Another way of building the constraints
@@ -279,36 +280,62 @@ def group_testing_shapley(
 
     ###########################################################################
     # Solution of the constraint problem with scipy
+    # DISABLED: highs fails to find solutions that SCS finds
 
-    A_ub, b_ub = _build_gt_constraints(n, bound=epsilon / (2 * np.sqrt(n)), C=C)
-    c = np.zeros_like(u.data.indices)
-    total_utility = u(u.data.indices)
-    # A trivial bound for the values from the definition is max_utility * (n-1)
-    bounds = tuple(u.score_range * n)  # u.score_range defaults to (-inf, inf)
-    result: sp.optimize.OptimizeResult = sp.optimize.linprog(
-        c,
-        A_ub=A_ub,
-        b_ub=b_ub,
-        A_eq=np.ones((1, n)),
-        b_eq=total_utility,
-        bounds=bounds,
-        method="highs",
-        options={},
+    # A_ub, b_ub = _build_gt_constraints(n, bound=epsilon / (2 * np.sqrt(n)), C=C)
+    # c = np.zeros_like(u.data.indices)
+    # # A trivial bound for the values from the definition is max_utility * (n-1)
+    # bounds = tuple(u.score_range * n)  # u.score_range defaults to (-inf, inf)
+    # result: sp.optimize.OptimizeResult = sp.optimize.linprog(
+    #     c,
+    #     A_ub=A_ub,
+    #     b_ub=b_ub,
+    #     A_eq=np.ones((1, n)),
+    #     b_eq=total_utility,
+    #     bounds=bounds,
+    #     method="highs",
+    #     options={},
+    # )
+
+    ###########################################################################
+    # Solution of the constraint problem with cvxpy
+
+    import cvxpy as cp
+
+    v = cp.Variable(n)
+    constraints = [cp.sum(v) == total_utility]
+    for i in range(n):
+        for j in range(i + 1, n):
+            constraints.append(v[i] - v[j] <= epsilon + C[i, j])
+            constraints.append(v[j] - v[i] <= epsilon - C[i, j])
+
+    problem = cp.Problem(cp.Minimize(0), constraints)
+    problem.solve(solver=cp.SCS)
+
+    if problem.status != "optimal":
+        log.warning(f"cvxpy returned status {problem.status}")
+        values = (
+            np.nan * np.ones_like(u.data.indices)
+            if not hasattr(v.value, "__len__")
+            else v.value
+        )
+        return ValuationResult(
+            algorithm="group_testing_shapley",
+            status=Status.Failed,
+            values=values,
+            data_names=u.data.data_names,
+            solver_status=problem.status,
+        )
+
+    return ValuationResult(
+        algorithm="group_testing_shapley",
+        status=Status.Converged,
+        values=v.value,
+        data_names=u.data.data_names,
     )
 
     ###########################################################################
-    # Sanity check: Solution of the constraint problem with cvxpy
-    #
-    # import cvxpy as cp
-    #
-    # v = cp.Variable(n)
-    # constraints = [cp.sum(v) == total_utility]
-    # for i in range(n):
-    #     for j in range(i + 1, n):
-    #         constraints.append(v[i] - v[j] <= eps + C[i, j])
-    #         constraints.append(v[j] - v[i] <= eps - C[i, j])
-    #
-    # cp_result = cp.Problem(cp.Minimize(0), constraints).solve(solver=cp.SCS)
+    # Sanity check: compare the solutions by scipy and cvxpy
     #
     # if not np.allclose(result.x, v.value, rtol=0.01):
     #     diff = result.x - v.value
@@ -316,19 +343,3 @@ def group_testing_shapley(
     #         f"Mismatch > 1% between the solutions by scipy and cvxpy: "
     #         f"mean={diff.mean()}, stdev={diff.std()}"
     #     )
-    ###########################################################################
-
-    if result.status == 0:
-        return ValuationResult(
-            algorithm="group_testing_shapley",
-            status=Status.Converged,
-            values=result.x,
-            data_names=u.data.data_names,
-        )
-    else:
-        return ValuationResult(
-            algorithm="group_testing_shapley",
-            status=Status.Failed,
-            values=np.nan * np.ones_like(u.data.indices),
-            data_names=u.data.data_names,
-        )

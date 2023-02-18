@@ -397,14 +397,15 @@ $$
    but we don't advocate its use because of the speed and memory cost. Despite
    our best efforts, the number of samples required in practice for convergence
    can be several orders of magnitude worse than with e.g. Truncated Monte Carlo.
+   Additionally, the CSP can sometimes turn out to be infeasible.
 
 Usage follows the same pattern as every other Shapley method, but with the
-addition of an ``eps`` parameter required for the solution of the CSP. It should
-be the same value used to compute the minimum number of samples required. This
-can be done with :func:`~pydvl.value.shapley.gt.num_samples_eps_delta`, but note
-that the number returned will be huge! In practice, fewer samples can be enough,
-but the actual number will strongly depend on the utility, in particular its
-variance.
+addition of an ``epsilon`` parameter required for the solution of the CSP. It
+shouldbe the same value used to compute the minimum number of samples required.
+This can be done with :func:`~pydvl.value.shapley.gt.num_samples_eps_delta`, but
+note that the number returned will be huge! In practice, fewer samples can be
+enough, but the actual number will strongly depend on the utility, in particular
+its variance.
 
 .. code-block:: python
 
