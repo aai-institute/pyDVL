@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `Scorer` class for a cleaner interface. Fix minor bugs.
+  [PR #2..](https://github.com/appliedAI-Initiative/pyDVL/pull/2..)
 - Generalised stopping criteria for valuation algorithms. Improved classes
   `ValuationResult` and `Status` with more operations. Some minor issues fixed.
   [PR #252](https://github.com/appliedAI-Initiative/pyDVL/pull/250)
