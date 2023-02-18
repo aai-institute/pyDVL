@@ -130,7 +130,7 @@ def test_hoeffding_bound_montecarlo(
     ],
 )
 def test_linear_montecarlo_shapley(
-    linear_dataset,
+    linear_shapley,
     n_jobs,
     memcache_client_config,
     scorer: Scorer,
@@ -155,14 +155,9 @@ def test_linear_montecarlo_shapley(
        samples
 
     """
-    u = Utility(
-        LinearRegression(),
-        data=linear_dataset,
-        scorer=scorer,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
-    )
+    u, exact_values = linear_shapley
+    check_total_value(u, exact_values, rtol=rtol)
 
-    exact_values = combinatorial_exact_shapley(u, progress=False)
     values = compute_shapley_values(
         u, mode=fun, progress=False, n_jobs=n_jobs, **kwargs
     )
@@ -227,7 +222,6 @@ def test_linear_montecarlo_with_outlier(
         linear_utility, mode=fun, progress=False, n_jobs=n_jobs, **kwargs
     )
     values.sort()
-    from pydvl.utils import Status
 
     assert values.status == Status.Converged
     check_total_value(linear_utility, values, atol=total_atol)

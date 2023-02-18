@@ -5,8 +5,7 @@ from itertools import cycle, takewhile
 from typing import Sequence
 
 import numpy as np
-from _warnings import warn
-from numpy._typing import NDArray
+from numpy.typing import NDArray
 from tqdm import tqdm
 
 from pydvl.utils import MapReduceJob, ParallelConfig, Utility, random_powerset
@@ -71,9 +70,11 @@ def _owen_sampling_shapley(
                     marginal += u({idx}.union(s_complement)) - u(s_complement)
                 e[j] += marginal
         e /= n_iterations
-        # result.update(idx, e.mean())
+        result.update(idx, e.mean())
         # Trapezoidal rule
-        result.update(idx, (e[:-1] + e[1:]).sum() / (2 * max_q))
+        # TODO: investigate whether this or other quadrature rules are better
+        #  than a simple average
+        # result.update(idx, (e[:-1] + e[1:]).sum() / (2 * max_q))
 
     return result
 
@@ -91,9 +92,6 @@ def owen_sampling_shapley(
     r"""Owen sampling of Shapley values as described in
     :footcite:t:`okhrati_multilinear_2021`.
 
-    .. warning::
-       Antithetic sampling is unstable and not properly tested
-
     This function computes a Monte Carlo approximation to
 
     $$v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{i\}})}
@@ -109,8 +107,8 @@ def owen_sampling_shapley(
     sample $x \in S^{(q_j)}$ if a draw from a $Ber(q_j)$ distribution is 1.
 
     The second method, selected with the argument ``mode =
-    OwenAlgorithm.Anthithetic``,
-    uses correlated samples in the inner sum to reduce the variance:
+    OwenAlgorithm.Antithetic``, uses correlated samples in the inner sum to
+    reduce the variance:
 
     $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m
     \cup \{i\}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup \{i\}) - u((S^{(
@@ -118,6 +116,9 @@ def owen_sampling_shapley(
 
     where now $q_j = \frac{j}{2Q} \in [0,\frac{1}{2}]$, and $S^c$ is the
     complement of $S$.
+
+    .. note::
+       The outer integration could be done instead with a quadrature rule.
 
     :param u: :class:`~pydvl.utils.utility.Utility` object holding data, model
         and scoring function.
@@ -136,10 +137,10 @@ def owen_sampling_shapley(
 
     .. versionadded:: 0.3.0
 
-    """
-    if OwenAlgorithm(method) == OwenAlgorithm.Antithetic:
-        warn("Owen antithetic sampling not tested and probably bogus")
+    .. versionchanged:: 0.5.0
+       Support for parallel computation and testing of antithetic sampling.
 
+    """
     map_reduce_job: MapReduceJob[NDArray, ValuationResult] = MapReduceJob(
         u.data.indices,
         map_func=_owen_sampling_shapley,
