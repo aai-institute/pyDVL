@@ -32,7 +32,8 @@ class Scorer:
     scalar.
 
     :param scoring: Either a string or callable that can be passed to
-        `get_scorer <>`_.
+        `get_scorer
+        <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.get_scorer.html>`_.
     :param default: score to be used when a model cannot be fit, e.g. when too
         little data is passed, or errors arise.
     :param range: numerical range of the score function. Some Monte Carlo

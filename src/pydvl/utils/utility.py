@@ -67,8 +67,10 @@ class Utility:
     :param scorer: A scoring object. If None, the ``score()`` method of the model
         will be used. See :mod:`~pydvl.utils.scorer` for ways to create
         and compose scorers, in particular how to set default values and ranges.
-    :param default_score: As a convenience when no ``scorer`` object is passed,
-        where a default value can be provided, this argument also allows to set
+        For convenience, a string can be passed, which will be used to construct
+        a :class:`~pydvl.utils.scorer.Scorer`.
+    :param default_score: As a convenience when no ``scorer`` object is passed
+        (where a default value can be provided), this argument also allows to set
         the default score for models that have not been fit, e.g. when too little
         data is passed, or errors arise.
     :param score_range: As with ``default_score``, this is a convenience argument
@@ -107,7 +109,7 @@ class Utility:
         self,
         model: SupervisedModel,
         data: Dataset,
-        scorer: Optional[Scorer] = None,
+        scorer: Optional[Union[str, Scorer]] = None,
         *,
         default_score: float = 0.0,
         score_range: Tuple[float, float] = (-np.inf, np.inf),
@@ -119,6 +121,9 @@ class Utility:
     ):
         self.model = self._clone_model(model)
         self.data = data
+        if isinstance(scorer, str):
+            scorer = Scorer(scorer, default=default_score, range=score_range)
+        self.scorer = check_scoring(self.model, scorer)
         self.default_score = scorer.default if scorer is not None else default_score
         # TODO: auto-fill from known scorers ?
         self.score_range = scorer.range if scorer is not None else np.array(score_range)
@@ -128,7 +133,6 @@ class Utility:
         self.cache_options: MemcachedConfig = cache_options or MemcachedConfig()
         self.clone_before_fit = clone_before_fit
         self._signature = serialize((hash(self.model), hash(data), hash(scorer)))
-        self.scorer = check_scoring(self.model, scorer)
         self._initialize_utility_wrapper()
 
         # FIXME: can't modify docstring of methods. Instead, I could use a

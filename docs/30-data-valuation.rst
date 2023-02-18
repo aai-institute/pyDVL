@@ -118,6 +118,27 @@ is implemented, it is important not to reuse `Utility` objects for different
 datasets. You can read more about :ref:`caching setup` in the installation guide
 and the documentation of the :mod:`pydvl.utils.caching` module.
 
+
+Using custom scorers
+^^^^^^^^^^^^^^^^^^^^
+
+The `scoring` argument of :class:`~pydvl.utils.utility.Utility` can be used to
+specify a custom :class:`~pydvl.utils.utility.Scorer` object. This is a simple
+wrapper for a callable that takes a model, and test data and returns a score.
+
+More importantly, the object provides information about the range of the score,
+which is used by some methods by estimate the number of samples necessary, and
+about what default value to use when the model fails to train.
+
+However, it is possible to skip the construction of the Scorer. The two following
+calls are equivalent:
+
+.. code-block:: python
+
+   utility = Utility(model, dataset, "explained_variance", score_range=(-np.inf, 1))
+   utility = Utility(model, dataset, Scorer("explained_variance", range=(-np.inf, 1)))
+
+
 Learning the utility
 ^^^^^^^^^^^^^^^^^^^^
 
