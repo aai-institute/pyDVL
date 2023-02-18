@@ -48,7 +48,7 @@ def test_linear(
     linear_utility = Utility(
         LinearRegression(),
         data=linear_dataset,
-        scoring=scorer,
+        scorer=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
 
@@ -80,7 +80,7 @@ def test_grouped_linear(
     grouped_linear_utility = Utility(
         LinearRegression(),
         data=grouped_linear_dataset,
-        scoring=scorer,
+        scorer=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     values_combinatorial = combinatorial_exact_shapley(
@@ -113,7 +113,7 @@ def test_linear_with_outlier(
     linear_utility = Utility(
         LinearRegression(),
         data=linear_dataset,
-        scoring=scorer,
+        scorer=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     values = permutation_exact_shapley(linear_utility, progress=False)
@@ -143,7 +143,7 @@ def test_polynomial(
     poly_utility = Utility(
         polynomial_pipeline,
         dataset,
-        scoring=scorer,
+        scorer=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
 
@@ -177,7 +177,7 @@ def test_polynomial_with_outlier(
     poly_utility = Utility(
         polynomial_pipeline,
         dataset,
-        scoring=scorer,
+        scorer=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
 

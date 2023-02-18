@@ -13,11 +13,11 @@ its range and default values.
 from typing import Callable, Optional, Protocol, Tuple, Union
 
 import numpy as np
-from numpy._typing import NDArray
+from numpy.typing import NDArray
 from scipy.special import expit
 from sklearn.metrics import get_scorer
 
-from pydvl.utils import SupervisedModel
+from pydvl.utils.types import SupervisedModel
 
 
 class ScorerCallable(Protocol):

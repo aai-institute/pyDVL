@@ -99,6 +99,3 @@ def maybe_add_argument(fun: Callable, new_arg: str):
         return fun(*args, **kwargs)
 
     return wrapper
-
-
-# FIXME: This probably should be somewhere else

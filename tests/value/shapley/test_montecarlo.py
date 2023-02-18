@@ -7,12 +7,9 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 
-from pydvl.utils import GroupedDataset, MemcachedConfig, Scorer, Utility
-from pydvl.utils.numeric import (
-    num_samples_permutation_hoeffding,
-    squashed_r2,
-    squashed_variance,
-)
+from pydvl.utils import GroupedDataset, MemcachedConfig, Utility
+from pydvl.utils.numeric import num_samples_permutation_hoeffding
+from pydvl.utils.score import Scorer, squashed_r2, squashed_variance
 from pydvl.value import compute_shapley_values
 from pydvl.value.shapley import ShapleyMode
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
@@ -104,6 +101,7 @@ def test_hoeffding_bound_montecarlo(
         (ShapleyMode.Owen, dict(n_iterations=4, max_q=300)),
         # FIXME: antithetic breaks for non-deterministic u
         # (ShapleyMode.OwenAntithetic, dict(n_iterations=4, max_q=300)),
+        (ShapleyMode.GroupTesting, dict(n_iterations=int(1e5), epsilon=0.1)),
     ],
 )
 def test_linear_montecarlo_shapley(
@@ -134,7 +132,7 @@ def test_linear_montecarlo_shapley(
     u = Utility(
         LinearRegression(),
         data=linear_dataset,
-        scoring=scorer,
+        scorer=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
 
@@ -167,11 +165,12 @@ def test_linear_montecarlo_shapley(
         (ShapleyMode.Owen, dict(n_iterations=4, max_q=400)),
         # FIXME: antithetic breaks for non-deterministic u
         # (ShapleyMode.OwenAntithetic, dict(n_iterations=4, max_q=400)),
+        (ShapleyMode.GroupTesting, dict(n_iterations=int(1e5), epsilon=0.1)),
     ],
 )
 def test_linear_montecarlo_with_outlier(
     linear_dataset,
-    scorer: Union[str, Scorer],
+    scorer: Scorer,
     total_atol: float,
     fun,
     kwargs: dict,
@@ -192,7 +191,7 @@ def test_linear_montecarlo_with_outlier(
     linear_utility = Utility(
         LinearRegression(),
         data=linear_dataset,
-        scoring=scorer,
+        scorer=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     values = compute_shapley_values(
@@ -232,7 +231,7 @@ def test_grouped_linear_montecarlo_shapley(
     linear_dataset,
     num_groups,
     fun,
-    scorer: str,
+    scorer: Scorer,
     rtol: float,
     kwargs: dict,
     memcache_client_config: "MemcachedClientConfig",
@@ -249,7 +248,7 @@ def test_grouped_linear_montecarlo_shapley(
     grouped_linear_utility = Utility(
         LinearRegression(),
         data=grouped_linear_dataset,
-        scoring=scorer,
+        scorer=scorer,
         cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
     exact_values = combinatorial_exact_shapley(grouped_linear_utility, progress=False)
@@ -265,14 +264,14 @@ def test_grouped_linear_montecarlo_shapley(
 @pytest.mark.parametrize(
     "num_points, num_features, regressor, scorer, n_iterations",
     [
-        (10, 3, RandomForestRegressor(n_estimators=2), "r2", 20),
-        (10, 3, DecisionTreeRegressor(), "r2", 20),
+        (10, 3, RandomForestRegressor(n_estimators=2), Scorer("r2"), 20),
+        (10, 3, DecisionTreeRegressor(), Scorer("r2"), 20),
     ],
 )
 def test_random_forest(
     housing_dataset,
     regressor,
-    scorer: str,
+    scorer: Scorer,
     n_iterations: float,
     memcache_client_config: "MemcachedClientConfig",
     n_jobs: int,
@@ -284,7 +283,7 @@ def test_random_forest(
     rf_utility = Utility(
         regressor,
         data=housing_dataset,
-        scoring=scorer,
+        scorer=scorer,
         enable_cache=True,
         cache_options=MemcachedConfig(
             client_config=memcache_client_config,
