@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="value" href="../value.html" /><link rel="prev" title="types" href="types.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
@@ -228,6 +228,7 @@
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../value.html">value</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../value/least_core/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/least_core/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/least_core/naive.html">naive</a></li>
 </ul>
@@ -304,30 +305,30 @@ for testing and for demonstration purposes.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Utility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="dataset.html#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><span class="pre">Dataset</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">scoring</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(-inf,</span> <span class="pre">inf)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catch_errors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_warnings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="config.html#pydvl.utils.config.MemcachedConfig" title="pydvl.utils.config.MemcachedConfig"><span class="pre">MemcachedConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clone_before_fit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/utility.py#L36"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.Utility" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Convenience wrapper with configurable memoization of the scoring function.</p>
-<p>An instance of <cite>Utility</cite> holds the triple of model, dataset and scoring
+<p>An instance of <code class="docutils literal notranslate"><span class="pre">Utility</span></code> holds the triple of model, dataset and scoring
 function which determines the value of data points. This is mosly used for
 the computation of <a class="reference internal" href="../../30-data-valuation.html#shapley"><span class="std std-ref">Shapley values</span></a> and
 <a class="reference internal" href="../../30-data-valuation.html#least-core"><span class="std std-ref">Least Core values</span></a>.</p>
 <p>The Utility expect the model to fulfill
 the <a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">pydvl.utils.types.SupervisedModel</span></code></a> interface
-i.e. to have a <cite>fit()</cite>, <cite>predict()</cite>, and <cite>score()</cite> methods.</p>
+i.e. to have a <code class="docutils literal notranslate"><span class="pre">fit()</span></code>, <code class="docutils literal notranslate"><span class="pre">predict()</span></code>, and <code class="docutils literal notranslate"><span class="pre">score()</span></code> methods.</p>
 <p>When calling the utility, the model will be
 <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.clone.html">cloned</a>
-if it is a Sci-Kit Learn model, otherwise a copy is created using <cite>deepcopy()</cite>
+if it is a Sci-Kit Learn model, otherwise a copy is created using <code class="docutils literal notranslate"><span class="pre">deepcopy()</span></code>
 from the builtin <a class="reference external" href="https://docs.python.org/3/library/copy.html">copy</a> module.</p>
 <p>Since evaluating the scoring function requires retraining the model
-and that can be time consuming, this class wraps it and caches
+and that can be time-consuming, this class wraps it and caches
 the results of each execution. Caching is available both locally
 and across nodes, but must always be enabled for your
 project first, see <a class="reference internal" href="../../20-install.html#caching-setup"><span class="std std-ref">how to set up the cache</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> – Any supervised model. Typical choices can be found at
 <a class="reference external" href="https://scikit-learn.org/stable/supervised_learning.html">https://scikit-learn.org/stable/supervised_learning.html</a></p></li>
 <li><p><strong>data</strong> – <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedDataset</span></code>.</p></li>
-<li><p><strong>scoring</strong> – Same as in sklearn’s <cite>cross_validate()</cite>: a string,
-a scorer callable or None for the default <cite>model.score()</cite>. Greater
+<li><p><strong>scoring</strong> – Same as in sklearn’s <code class="docutils literal notranslate"><span class="pre">cross_validate()</span></code>: a string,
+a scorer callable or None for the default <code class="docutils literal notranslate"><span class="pre">model.score()</span></code>. Greater
 values must be better. If they are not, a negated version can be
 used (see <cite>make_scorer</cite>)</p></li>
 <li><p><strong>default_score</strong> – score in the case of models that have not been fit,
@@ -335,18 +336,20 @@ e.g. when too little data is passed, or errors arise.</p></li>
 <li><p><strong>score_range</strong> – numerical range of the score function. Some Monte Carlo
 methods can use this to estimate the number of samples required for a
 certain quality of approximation.</p></li>
-<li><p><strong>catch_errors</strong> – set to True to catch the errors when fit() fails. This
-could happen in several steps of the pipeline, e.g. when too little
-training data is passed, which happens often during the Shapley value calculations.
-When this happens, the default_score is returned as a score and value
-calculation continues.</p></li>
-<li><p><strong>show_warnings</strong> – True for printing warnings fit fails.</p></li>
-<li><p><strong>enable_cache</strong> – If True, use memcached for memoization.</p></li>
+<li><p><strong>catch_errors</strong> – set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to catch the errors when fit() fails.
+This could happen in several steps of the pipeline, e.g. when too little
+training data is passed, which happens often during Shapley value
+calculations. When this happens, the <code class="docutils literal notranslate"><span class="pre">default_score</span></code> is returned as a
+score and computation continues.</p></li>
+<li><p><strong>show_warnings</strong> – Set to <code class="docutils literal notranslate"><span class="pre">False</span></code> to suppress warnings thrown by
+<code class="docutils literal notranslate"><span class="pre">fit()</span></code>.</p></li>
+<li><p><strong>enable_cache</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, use memcached for memoization.</p></li>
 <li><p><strong>cache_options</strong> – Optional configuration object for memcached.</p></li>
-<li><p><strong>clone_before_fit</strong> – If True, the model will be cloned before calling <cite>fit()</cite>.</p></li>
+<li><p><strong>clone_before_fit</strong> – If True, the model will be cloned before calling
+<code class="docutils literal notranslate"><span class="pre">fit()</span></code>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Example</dt>
+<dt class="field-even">Example<span class="colon">:</span></dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Utility</span><span class="p">,</span> <span class="n">DataUtilityLearning</span><span class="p">,</span> <span class="n">Dataset</span>
@@ -390,10 +393,10 @@ See <code class="xref py py-class docutils literal notranslate"><span class="pre
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.utils.utility.DataUtilityLearning">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataUtilityLearning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_budget</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/utility.py#L228"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.DataUtilityLearning" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataUtilityLearning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_budget</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/utility.py#L230"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.DataUtilityLearning" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Implementation of Data Utility Learning algorithm
-Wang <em>et al.</em><a class="footnote-reference brackets" href="#footcite-wang-improving-2022" id="id1">1</a>.</p>
+Wang <em>et al.</em><a class="footnote-reference brackets" href="#footcite-wang-improving-2022" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
 <p>This object wraps a <a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> and delegates
 calls to it, up until a given budget (number of iterations). Every tuple
 of input and output (a so-called <em>utility sample</em>) is stored. Once the
@@ -401,7 +404,7 @@ budget is exhausted, <cite>DataUtilityLearning</cite> fits the given model to th
 utility samples. Subsequent calls will use the learned model to predict the
 utility instead of delegating.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> – The <a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> to learn.</p></li>
 <li><p><strong>training_budget</strong> – Number of utility samples to collect before fitting
@@ -409,7 +412,7 @@ the given model</p></li>
 <li><p><strong>model</strong> – A supervised regression model</p></li>
 </ul>
 </dd>
-<dt class="field-even">Example</dt>
+<dt class="field-even">Example<span class="colon">:</span></dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Utility</span><span class="p">,</span> <span class="n">DataUtilityLearning</span><span class="p">,</span> <span class="n">Dataset</span>
@@ -435,7 +438,7 @@ the given model</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.utils.utility.MinerGameUtility">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MinerGameUtility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_miners</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/utility.py#L302"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.MinerGameUtility" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MinerGameUtility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_miners</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/utility.py#L304"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.MinerGameUtility" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a></p>
 <p>Toy game utility that is used for testing and demonstration purposes.</p>
 <p>Consider a group of n miners, who have discovered large bars of gold.</p>
@@ -456,7 +459,7 @@ then the core consists of the single payoff where each miner gets 1/2.</p>
 <p>If there is an odd number of miners, then the core is empty.</p>
 <p>Taken from: <a class="reference external" href="https://en.wikipedia.org/wiki/Core_(game_theory">https://en.wikipedia.org/wiki/Core_(game_theory</a>)</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>n_miners</strong> – Number of miners that participate in the game.</p>
 </dd>
 </dl>
@@ -489,7 +492,7 @@ then the core consists of the single payoff where each miner gets 1/2.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.utils.utility.GlovesGameUtility">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GlovesGameUtility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/utility.py#L360"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.GlovesGameUtility" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GlovesGameUtility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/utility.py#L362"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.GlovesGameUtility" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a></p>
 <p>Toy game utility that is used for testing and demonstration purposes.</p>
 <p>In this game, some players have a left glove and others a right glove.
@@ -505,7 +508,7 @@ v(S) = \min( \mid S \cap L \mid, \mid S \cap R \mid )
 <p>Where <span class="math notranslate nohighlight">\(L\)</span>, respectively <span class="math notranslate nohighlight">\(R\)</span>, is the set of players with left gloves,
 respectively right gloves.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>left</strong> – Number of players with a left glove.</p></li>
 <li><p><strong>right</strong> – Number of player with a right glove.</p></li>
@@ -544,11 +547,12 @@ respectively right gloves.</p>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h2>
 </section>
-<dl class="footnote brackets">
-<dt class="label" id="footcite-wang-improving-2022"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p>Tianhao Wang, Yu Yang, and Ruoxi Jia. Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning. In <em>International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning</em>. arXiv, April 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2107.06336v2">http://arxiv.org/abs/2107.06336v2</a> (visited on 2022-05-19), <a class="reference external" href="https://arxiv.org/abs/2107.06336v2">arXiv:2107.06336v2</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2107.06336">doi:10.48550/arXiv.2107.06336</a>.</p>
-</dd>
-</dl>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="footcite-wang-improving-2022" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Tianhao Wang, Yu Yang, and Ruoxi Jia. Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning. In <em>International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning</em>. arXiv, April 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2107.06336v2">http://arxiv.org/abs/2107.06336v2</a> (visited on 2022-05-19), <a class="reference external" href="https://arxiv.org/abs/2107.06336v2">arXiv:2107.06336v2</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2107.06336">doi:10.48550/arXiv.2107.06336</a>.</p>
+</aside>
+</aside>
 </div>
 </section>
 

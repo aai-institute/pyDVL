@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="least_core" href="value/least_core.html" /><link rel="prev" title="utility" href="utils/utility.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
@@ -228,6 +228,7 @@
 </li>
 <li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">value</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="value/least_core/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/least_core/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/least_core/naive.html">naive</a></li>
 </ul>
@@ -293,9 +294,29 @@ implemented here.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="value/least_core.html">least_core</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="value/least_core.html#pydvl.value.least_core.LeastCoreMode"><code class="docutils literal notranslate"><span class="pre">LeastCoreMode</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/least_core.html#pydvl.value.least_core.LeastCoreMode.MonteCarlo"><code class="docutils literal notranslate"><span class="pre">LeastCoreMode.MonteCarlo</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="value/least_core.html#pydvl.value.least_core.LeastCoreMode.Exact"><code class="docutils literal notranslate"><span class="pre">LeastCoreMode.Exact</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="value/least_core.html#pydvl.value.least_core.compute_least_core_values"><code class="docutils literal notranslate"><span class="pre">compute_least_core_values()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/least_core/common.html">common</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/least_core/common.html#module-members">Module members</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="value/least_core/common.html#pydvl.value.least_core.common.lc_solve_problem"><code class="docutils literal notranslate"><span class="pre">lc_solve_problem()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="value/least_core/common.html#pydvl.value.least_core.common.lc_solve_problems"><code class="docutils literal notranslate"><span class="pre">lc_solve_problems()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="value/least_core/common.html#pydvl.value.least_core.common.LeastCoreProblem"><code class="docutils literal notranslate"><span class="pre">LeastCoreProblem</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="value/least_core/common.html#pydvl.value.least_core.common.LeastCoreProblem.A_lb"><code class="docutils literal notranslate"><span class="pre">LeastCoreProblem.A_lb</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="value/least_core/common.html#pydvl.value.least_core.common.LeastCoreProblem.utility_values"><code class="docutils literal notranslate"><span class="pre">LeastCoreProblem.utility_values</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="value/least_core/montecarlo.html">montecarlo</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="value/least_core/montecarlo.html#module-members">Module members</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="value/least_core/montecarlo.html#pydvl.value.least_core.montecarlo.montecarlo_least_core"><code class="docutils literal notranslate"><span class="pre">montecarlo_least_core()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="value/least_core/montecarlo.html#pydvl.value.least_core.montecarlo.mclc_prepare_problem"><code class="docutils literal notranslate"><span class="pre">mclc_prepare_problem()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -303,6 +324,7 @@ implemented here.</p>
 <li class="toctree-l2"><a class="reference internal" href="value/least_core/naive.html">naive</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="value/least_core/naive.html#module-members">Module members</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="value/least_core/naive.html#pydvl.value.least_core.naive.exact_least_core"><code class="docutils literal notranslate"><span class="pre">exact_least_core()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="value/least_core/naive.html#pydvl.value.least_core.naive.lc_prepare_problem"><code class="docutils literal notranslate"><span class="pre">lc_prepare_problem()</span></code></a></li>
 </ul>
 </li>
 </ul>

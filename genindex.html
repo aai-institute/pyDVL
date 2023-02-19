@@ -226,6 +226,7 @@
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="pydvl/value.html">value</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/least_core/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/least_core/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/least_core/naive.html">naive</a></li>
 </ul>
@@ -290,12 +291,14 @@
   <h2>A</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="pydvl/utils/parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.add_results">add_results() (Coordinator method)</a>
+        <li><a href="pydvl/value/least_core/common.html#pydvl.value.least_core.common.LeastCoreProblem.A_lb">A_lb (LeastCoreProblem attribute)</a>
 </li>
-        <li><a href="pydvl/utils/config.html#pydvl.utils.config.ParallelConfig.address">address (ParallelConfig attribute)</a>
+        <li><a href="pydvl/utils/parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.add_results">add_results() (Coordinator method)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/utils/config.html#pydvl.utils.config.ParallelConfig.address">address (ParallelConfig attribute)</a>
+</li>
         <li><a href="pydvl/value/results.html#pydvl.value.results.ValuationResult.algorithm">algorithm (ValuationResult property)</a>
 </li>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations">allow_repeated_evaluations (MemcachedConfig attribute)</a>
@@ -353,6 +356,8 @@
         <li><a href="pydvl/utils/types.html#pydvl.utils.types.compose_score">compose_score() (in module pydvl.utils.types)</a>
 </li>
         <li><a href="pydvl/influence/general.html#pydvl.influence.general.compute_influences">compute_influences() (in module pydvl.influence.general)</a>
+</li>
+        <li><a href="pydvl/value/least_core.html#pydvl.value.least_core.compute_least_core_values">compute_least_core_values() (in module pydvl.value.least_core)</a>
 </li>
         <li><a href="pydvl/influence/linear.html#pydvl.influence.linear.compute_linear_influences">compute_linear_influences() (in module pydvl.influence.linear)</a>
 </li>
@@ -412,10 +417,12 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheStats.errors">errors (CacheStats attribute)</a>
 </li>
-        <li><a href="pydvl/value/least_core/naive.html#pydvl.value.least_core.naive.exact_least_core">exact_least_core() (in module pydvl.value.least_core.naive)</a>
+        <li><a href="pydvl/value/least_core.html#pydvl.value.least_core.LeastCoreMode.Exact">Exact (LeastCoreMode attribute)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/least_core/naive.html#pydvl.value.least_core.naive.exact_least_core">exact_least_core() (in module pydvl.value.least_core.naive)</a>
+</li>
         <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.GlovesGameUtility.exact_least_core_values">exact_least_core_values() (GlovesGameUtility method)</a>
 
         <ul>
@@ -574,14 +581,24 @@
   <h2>L</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/least_core/naive.html#pydvl.value.least_core.naive.lc_prepare_problem">lc_prepare_problem() (in module pydvl.value.least_core.naive)</a>
+</li>
+        <li><a href="pydvl/value/least_core/common.html#pydvl.value.least_core.common.lc_solve_problem">lc_solve_problem() (in module pydvl.value.least_core.common)</a>
+</li>
+        <li><a href="pydvl/value/least_core/common.html#pydvl.value.least_core.common.lc_solve_problems">lc_solve_problems() (in module pydvl.value.least_core.common)</a>
+</li>
+        <li><a href="pydvl/value/least_core.html#pydvl.value.least_core.LeastCoreMode">LeastCoreMode (class in pydvl.value.least_core)</a>
+</li>
+        <li><a href="pydvl/value/least_core/common.html#pydvl.value.least_core.common.LeastCoreProblem">LeastCoreProblem (class in pydvl.value.least_core.common)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.linear_regression_analytical_derivative_d2_theta">linear_regression_analytical_derivative_d2_theta() (in module pydvl.utils.numeric)</a>
 </li>
         <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.linear_regression_analytical_derivative_d_theta">linear_regression_analytical_derivative_d_theta() (in module pydvl.utils.numeric)</a>
 </li>
         <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.linear_regression_analytical_derivative_d_x_d_theta">linear_regression_analytical_derivative_d_x_d_theta() (in module pydvl.utils.numeric)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.load_spotify_dataset">load_spotify_dataset() (in module pydvl.utils.dataset)</a>
 </li>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.load_wine_dataset">load_wine_dataset() (in module pydvl.utils.dataset)</a>
@@ -603,6 +620,8 @@
         <li><a href="pydvl/utils/status.html#pydvl.utils.status.Status.MaxIterations">MaxIterations (Status attribute)</a>
 </li>
         <li><a href="pydvl/utils/progress.html#pydvl.utils.progress.maybe_progress">maybe_progress() (in module pydvl.utils.progress)</a>
+</li>
+        <li><a href="pydvl/value/least_core/montecarlo.html#pydvl.value.least_core.montecarlo.mclc_prepare_problem">mclc_prepare_problem() (in module pydvl.value.least_core.montecarlo)</a>
 </li>
         <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.memcached">memcached() (in module pydvl.utils.caching)</a>
 </li>
@@ -684,6 +703,8 @@
 </li>
           <li><a href="pydvl/value/least_core.html#module-pydvl.value.least_core">pydvl.value.least_core</a>
 </li>
+          <li><a href="pydvl/value/least_core/common.html#module-pydvl.value.least_core.common">pydvl.value.least_core.common</a>
+</li>
           <li><a href="pydvl/value/least_core/montecarlo.html#module-pydvl.value.least_core.montecarlo">pydvl.value.least_core.montecarlo</a>
 </li>
           <li><a href="pydvl/value/least_core/naive.html#module-pydvl.value.least_core.naive">pydvl.value.least_core.naive</a>
@@ -711,6 +732,8 @@
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/least_core.html#pydvl.value.least_core.LeastCoreMode.MonteCarlo">MonteCarlo (LeastCoreMode attribute)</a>
+</li>
         <li><a href="pydvl/value/least_core/montecarlo.html#pydvl.value.least_core.montecarlo.montecarlo_least_core">montecarlo_least_core() (in module pydvl.value.least_core.montecarlo)</a>
 </li>
         <li><a href="pydvl/influence/frameworks.html#pydvl.influence.frameworks.TorchTwiceDifferentiable.mvp">mvp() (TorchTwiceDifferentiable method)</a>, <a href="pydvl/influence/frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable.mvp">[1]</a>
@@ -914,8 +937,6 @@
           <li><a href="pydvl/utils/dataset.html#module-pydvl.utils.dataset">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     pydvl.utils.numeric
 
@@ -923,6 +944,8 @@
           <li><a href="pydvl/utils/numeric.html#module-pydvl.utils.numeric">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     pydvl.utils.parallel
 
@@ -991,6 +1014,13 @@
 
         <ul>
           <li><a href="pydvl/value/least_core.html#module-pydvl.value.least_core">module</a>
+</li>
+        </ul></li>
+        <li>
+    pydvl.value.least_core.common
+
+        <ul>
+          <li><a href="pydvl/value/least_core/common.html#module-pydvl.value.least_core.common">module</a>
 </li>
         </ul></li>
         <li>
@@ -1246,6 +1276,8 @@
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility">Utility (class in pydvl.utils.utility)</a>
+</li>
+        <li><a href="pydvl/value/least_core/common.html#pydvl.value.least_core.common.LeastCoreProblem.utility_values">utility_values (LeastCoreProblem attribute)</a>
 </li>
     </ul></td>
   </tr></table>

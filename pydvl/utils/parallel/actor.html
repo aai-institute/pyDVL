@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="backend" href="backend.html" /><link rel="prev" title="parallel" href="../parallel.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
@@ -228,6 +228,7 @@
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../value.html">value</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../value/least_core/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/least_core/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/least_core/naive.html">naive</a></li>
 </ul>
@@ -297,7 +298,7 @@
 <p>Taken almost verbatim from:
 <a class="reference external" href="https://github.com/JaneliaSciComp/ray-janelia/blob/main/remote_as_local_wrapper.py">https://github.com/JaneliaSciComp/ray-janelia/blob/main/remote_as_local_wrapper.py</a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.parallel.backend</span> <span class="kn">import</span> <span class="n">RayParallelBackend</span><span class="p">,</span> <span class="n">init_parallel_backend</span>
@@ -326,7 +327,7 @@
 workers and terminating the process once a certain accuracy or total
 number of iterations is reached.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>progress</strong> – Whether to display a progress bar</p>
 </dd>
 </dl>
@@ -336,7 +337,7 @@ number of iterations is reached.</p>
 <dd><p>Used by workers to report their results. Stores the results directly
 into the <cite>worker_status</cite> dictionary.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>worker_id</strong> – id of the worker</p></li>
 <li><p><strong>results</strong> – results of worker calculations</p></li>
@@ -350,7 +351,7 @@ into the <cite>worker_status</cite> dictionary.</p>
 <span class="sig-name descname"><span class="pre">is_done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#pydvl.utils.parallel.actor.Coordinator.is_done" title="Permalink to this definition"></a></dt>
 <dd><p>Used by workers to check whether to terminate their process.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><cite>True</cite> if workers must terminate, <cite>False</cite> otherwise.</p>
 </dd>
 </dl>

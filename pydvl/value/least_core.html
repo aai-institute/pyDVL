@@ -2,8 +2,8 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="montecarlo" href="least_core/montecarlo.html" /><link rel="prev" title="value" href="../value.html" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="common" href="least_core/common.html" /><link rel="prev" title="value" href="../value.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
         <title>least_core - pyDVL 0.4.1.dev0 documentation</title>
@@ -147,7 +147,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -228,6 +228,7 @@
 </li>
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../value.html">value</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">least_core</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="least_core/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="least_core/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="least_core/naive.html">naive</a></li>
 </ul>
@@ -278,7 +279,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -291,12 +292,91 @@
 </div>
 <p>This package holds all routines for the computation of Least Core data values.</p>
 <p>Please refer to <a class="reference internal" href="../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for an overview.</p>
+<p>In addition to the standard interface via
+<a class="reference internal" href="#pydvl.value.least_core.compute_least_core_values" title="pydvl.value.least_core.compute_least_core_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_least_core_values()</span></code></a>, because computing the
+Least Core values requires the solution of a linear and a quadratic problem
+<em>after</em> computing all the utility values, there is the possibility of performing
+each step separately. This is useful when running multiple experiments: use
+<a class="reference internal" href="least_core/naive.html#pydvl.value.least_core.naive.lc_prepare_problem" title="pydvl.value.least_core.naive.lc_prepare_problem"><code class="xref py py-func docutils literal notranslate"><span class="pre">lc_prepare_problem()</span></code></a> or
+<a class="reference internal" href="least_core/montecarlo.html#pydvl.value.least_core.montecarlo.mclc_prepare_problem" title="pydvl.value.least_core.montecarlo.mclc_prepare_problem"><code class="xref py py-func docutils literal notranslate"><span class="pre">mclc_prepare_problem()</span></code></a> to prepare a
+list of problems to solve, then solve them in parallel with
+<a class="reference internal" href="least_core/common.html#pydvl.value.least_core.common.lc_solve_problems" title="pydvl.value.least_core.common.lc_solve_problems"><code class="xref py py-func docutils literal notranslate"><span class="pre">lc_solve_problems()</span></code></a>.</p>
+<p>Note that <a class="reference internal" href="least_core/montecarlo.html#pydvl.value.least_core.montecarlo.mclc_prepare_problem" title="pydvl.value.least_core.montecarlo.mclc_prepare_problem"><code class="xref py py-func docutils literal notranslate"><span class="pre">mclc_prepare_problem()</span></code></a> is
+parallelized itself, so preparing the problems should be done in sequence in this
+case. The solution of the linear systems can then be done in parallel.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.value.least_core.LeastCoreMode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LeastCoreMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/least_core/__init__.py#L32"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.least_core.LeastCoreMode" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Available Least Core algorithms.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.least_core.LeastCoreMode.MonteCarlo">
+<span class="sig-name descname"><span class="pre">MonteCarlo</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'montecarlo'</span></em><a class="headerlink" href="#pydvl.value.least_core.LeastCoreMode.MonteCarlo" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.value.least_core.LeastCoreMode.Exact">
+<span class="sig-name descname"><span class="pre">Exact</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'exact'</span></em><a class="headerlink" href="#pydvl.value.least_core.LeastCoreMode.Exact" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pydvl.value.least_core.compute_least_core_values">
+<span class="sig-name descname"><span class="pre">compute_least_core_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.value.least_core.LeastCoreMode" title="pydvl.value.least_core.LeastCoreMode"><span class="pre">LeastCoreMode</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">LeastCoreMode.MonteCarlo</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="results.html#pydvl.value.results.ValuationResult" title="pydvl.value.results.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/least_core/__init__.py#L39"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.least_core.compute_least_core_values" title="Permalink to this definition"></a></dt>
+<dd><p>Umbrella method to compute Least Core values with any of the available
+algorithms.</p>
+<p>See <a class="reference internal" href="../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for an overview.</p>
+<p>The following algorithms are available. Note that the exact method can only
+work with very small datasets and is thus intended only for testing.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">exact</span></code>: uses the complete powerset of the training set for the constraints
+<a class="reference internal" href="shapley/naive.html#pydvl.value.shapley.naive.combinatorial_exact_shapley" title="pydvl.value.shapley.naive.combinatorial_exact_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">combinatorial_exact_shapley()</span></code></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">montecarlo</span></code>:  uses the approximate Monte Carlo Least Core algorithm.
+Implemented in <a class="reference internal" href="least_core/montecarlo.html#pydvl.value.least_core.montecarlo.montecarlo_least_core" title="pydvl.value.least_core.montecarlo.montecarlo_least_core"><code class="xref py py-func docutils literal notranslate"><span class="pre">montecarlo_least_core()</span></code></a>.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
+<li><p><strong>n_jobs</strong> – Number of jobs to run in parallel. Only used for Monte Carlo
+Least Core.</p></li>
+<li><p><strong>n_iterations</strong> – Number of subsets to sample and evaluate the utility on.
+Only used for Monte Carlo Least Core.</p></li>
+<li><p><strong>mode</strong> – Algorithm to use. See <a class="reference internal" href="#pydvl.value.least_core.LeastCoreMode" title="pydvl.value.least_core.LeastCoreMode"><code class="xref py py-class docutils literal notranslate"><span class="pre">LeastCoreMode</span></code></a> for available
+options.</p></li>
+<li><p><strong>kwargs</strong> – Additional keyword arguments passed to the solver.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>ValuationResult object with the computed values.</p>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.4.1.</span></p>
+</div>
+</dd></dl>
+
 <p class="rubric">Modules in this package</p>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="least_core/common.html">common</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="least_core/common.html#module-members">Module members</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="least_core/common.html#pydvl.value.least_core.common.lc_solve_problem"><code class="docutils literal notranslate"><span class="pre">lc_solve_problem()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="least_core/common.html#pydvl.value.least_core.common.lc_solve_problems"><code class="docutils literal notranslate"><span class="pre">lc_solve_problems()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="least_core/common.html#pydvl.value.least_core.common.LeastCoreProblem"><code class="docutils literal notranslate"><span class="pre">LeastCoreProblem</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="least_core/common.html#pydvl.value.least_core.common.LeastCoreProblem.A_lb"><code class="docutils literal notranslate"><span class="pre">LeastCoreProblem.A_lb</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="least_core/common.html#pydvl.value.least_core.common.LeastCoreProblem.utility_values"><code class="docutils literal notranslate"><span class="pre">LeastCoreProblem.utility_values</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="least_core/montecarlo.html">montecarlo</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="least_core/montecarlo.html#module-members">Module members</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="least_core/montecarlo.html#pydvl.value.least_core.montecarlo.montecarlo_least_core"><code class="docutils literal notranslate"><span class="pre">montecarlo_least_core()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="least_core/montecarlo.html#pydvl.value.least_core.montecarlo.mclc_prepare_problem"><code class="docutils literal notranslate"><span class="pre">mclc_prepare_problem()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -304,6 +384,7 @@
 <li class="toctree-l1"><a class="reference internal" href="least_core/naive.html">naive</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="least_core/naive.html#module-members">Module members</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="least_core/naive.html#pydvl.value.least_core.naive.exact_least_core"><code class="docutils literal notranslate"><span class="pre">exact_least_core()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="least_core/naive.html#pydvl.value.least_core.naive.lc_prepare_problem"><code class="docutils literal notranslate"><span class="pre">lc_prepare_problem()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -317,12 +398,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="least_core/montecarlo.html">
+          <a class="next-page" href="least_core/common.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">montecarlo</div>
+                <div class="title">common</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -362,8 +443,32 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">least_core</a><ul>
+<li><a class="reference internal" href="#pydvl.value.least_core.LeastCoreMode"><code class="docutils literal notranslate"><span class="pre">LeastCoreMode</span></code></a><ul>
+<li><a class="reference internal" href="#pydvl.value.least_core.LeastCoreMode.MonteCarlo"><code class="docutils literal notranslate"><span class="pre">LeastCoreMode.MonteCarlo</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.least_core.LeastCoreMode.Exact"><code class="docutils literal notranslate"><span class="pre">LeastCoreMode.Exact</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pydvl.value.least_core.compute_least_core_values"><code class="docutils literal notranslate"><span class="pre">compute_least_core_values()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
