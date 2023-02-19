@@ -25,8 +25,9 @@ from typing import Protocol
 import numpy as np
 import scipy as sp
 
-from pydvl.utils import Utility, get_running_avg_variance, maybe_progress
-from pydvl.value import ValuationResult, ValuationStatus
+from pydvl.utils import Utility, maybe_progress, running_moments
+from pydvl.utils.status import Status
+from pydvl.value import ValuationResult
 from pydvl.value.sampler import OwenSampler, PermutationSampler, Sampler, UniformSampler
 from pydvl.value.stopping import StoppingCriterion, StoppingCriterionCallable
 
@@ -78,18 +79,18 @@ def _semivalues(
     values = np.zeros(n, dtype=np.float_)
     variances = np.zeros(n, dtype=np.float_)
     counts = np.zeros(n, dtype=np.int_)
-    status = ValuationStatus.Pending
+    status = Status.Pending
 
     for step, (idx, s) in maybe_progress(enumerate(sampler), progress, position=job_id):
         marginal = (
             (u({idx}.union(s)) - u(s)) * coefficient(n, len(s)) * sampler.weight(s)
         )
-        values[idx], variances[idx] = get_running_avg_variance(
+        values[idx], variances[idx] = running_moments(
             values[idx], variances[idx], marginal, counts[idx]
         )
         counts[idx] += 1
         status = stop(step, values, variances, counts)
-        if status != ValuationStatus.Pending:
+        if status != Status.Pending:
             break
 
     return ValuationResult(

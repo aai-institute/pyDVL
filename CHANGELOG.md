@@ -1,6 +1,20 @@
 # Changelog
 
-## Unreleased - 💥 More breaking changes!
+## Unreleased
+
+- Splitting of problem preparation and solution in Least Core computation.
+  Umbrella function for LC methods.
+  [PR #257](https://github.com/appliedAI-Initiative/pyDVL/pull/257) 
+- Operations on ValuationResults and Statuses and cleanup
+  [PR #248](https://github.com/appliedAI-Initiative/pyDVL/pull/248)
+- **Bug fix and minor improvements**: Fixes bug in TMCS with remote Ray cluster,
+  raises an error for dummy sequential parallel backend with TMCS, clones model
+  inside `Utility` before fitting by default, with flag `clone_before_fit` 
+  to disable it, catches all warnings in `Utility` when `show_warnings` is 
+  `False`. Adds Miner and Gloves toy games utilities
+  [PR #247](https://github.com/appliedAI-Initiative/pyDVL/pull/247)
+
+## 0.4.0 - 🏭💥 New algorithms and more breaking changes
 
 - GH action to mark issues as stale
   [PR #201](https://github.com/appliedAI-Initiative/pyDVL/pull/201)
@@ -15,18 +29,25 @@
   new example notebook
   [PR #195](https://github.com/appliedAI-Initiative/pyDVL/pull/195)
 - **Breaking change**: Passes the input to `MapReduceJob` at initialization,
-  removes `chunkify_inputs` argument from `MapReduceJob`,
-  removes `n_runs` argument from `MapReduceJob`,
-  calls the parallel backend's `put()` method for each generated chunk in `_chunkify()`,
-  renames ParallelConfig's `num_workers` attribute to `n_local_workers`,
-  fixes a bug in `MapReduceJob`'s chunkification when `n_runs` >= `n_jobs`,
-  and defines a sequential parallel backend to run all jobs in the current thread
+  removes `chunkify_inputs` argument from `MapReduceJob`, removes `n_runs`
+  argument from `MapReduceJob`, calls the parallel backend's `put()` method for
+  each generated chunk in `_chunkify()`, renames ParallelConfig's `num_workers`
+  attribute to `n_local_workers`, fixes a bug in `MapReduceJob`'s chunkification
+  when `n_runs` >= `n_jobs`, and defines a sequential parallel backend to run
+  all jobs in the current thread
   [PR #232](https://github.com/appliedAI-Initiative/pyDVL/pull/232)
 - **New method**: Implements exact and monte carlo Least Core for data valuation,
-  adds `from_arrays()` class method to the `Dataset` and `GroupedDataset` classes,
-  adds `extra_values` argument to `ValuationResult`,
-  adds `compute_removal_score()` and `compute_random_removal_score()` helper functions
+  adds `from_arrays()` class method to the `Dataset` and `GroupedDataset`
+  classes, adds `extra_values` argument to `ValuationResult`, adds
+  `compute_removal_score()` and `compute_random_removal_score()` helper functions
   [PR #237](https://github.com/appliedAI-Initiative/pyDVL/pull/237)
+- **New method**: Group Testing Shapley for valuation, from _Jia et al. 2019_
+  [PR #240](https://github.com/appliedAI-Initiative/pyDVL/pull/240)
+- Fixes bug in ray initialization in `RayParallelBackend` class
+  [PR #239](https://github.com/appliedAI-Initiative/pyDVL/pull/239)
+- Implements "Egalitarian Least Core", adds [cvxpy](https://www.cvxpy.org/) as a
+  dependency and uses it instead of scipy as optimizer
+  [PR #243](https://github.com/appliedAI-Initiative/pyDVL/pull/243)
 
 ## 0.3.0 - 💥 Breaking changes
 

@@ -2,8 +2,8 @@ from enum import Enum
 from typing import Any, Generator, Generic, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
-
 from numpy.typing import NDArray
+
 from pydvl.utils import powerset, random_powerset
 
 T = TypeVar("T")

@@ -44,11 +44,16 @@ methods from the following papers:
   Proceedings of the VLDB Endowment 12, no. 11 (1 July 2019): 1610–23.
 - Okhrati, Ramin, and Aldo Lipani.
   [A Multilinear Sampling Algorithm to Estimate Shapley Values](https://doi.org/10.1109/ICPR48806.2021.9412511).
-  In 2020 25th International Conference on Pattern Recognition (ICPR), 7992–99.
+  In 25th International Conference on Pattern Recognition (ICPR 2020), 7992–99.
   IEEE, 2021.
-- Yan, T., & Procaccia, A. D. 
+- Yan, T., & Procaccia, A. D.
   [If You Like Shapley Then You’ll Love the Core]().
   Proceedings of the AAAI Conference on Artificial Intelligence, 35(6) (2021): 5751-5759.
+- Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nick Hynes, Nezihe Merve
+  Gürel, Bo Li, Ce Zhang, Dawn Song, and Costas J. Spanos.
+  [Towards Efficient Data Valuation Based on the Shapley Value](http://proceedings.mlr.press/v89/jia19a.html).
+  In 22nd International Conference on Artificial Intelligence and Statistics,
+  1167–76. PMLR, 2019.
 - Wang, Jiachen T., and Ruoxi Jia. 
   [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://doi.org/10.48550/arXiv.2205.15466).
   arXiv, October 22, 2022.
@@ -113,7 +118,7 @@ dataset = Dataset(X_train, y_train, X_test, y_test)
 model = LinearRegression()
 utility = Utility(model, dataset)
 values = compute_shapley_values(
-    u=utility, max_iterations=100, mode="truncated_montecarlo"
+    u=utility, n_iterations=100, mode="truncated_montecarlo"
 )
 ```
 

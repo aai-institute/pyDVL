@@ -1,13 +1,14 @@
 import math
 import warnings
 from itertools import permutations
-from typing import List
+from typing import List, Sequence
 
 import numpy as np
 from numpy.typing import NDArray
 
 from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress, powerset
-from pydvl.value.results import ValuationResult, ValuationStatus
+from pydvl.utils.status import Status
+from pydvl.value.results import ValuationResult
 
 __all__ = ["permutation_exact_shapley", "combinatorial_exact_shapley"]
 
@@ -26,7 +27,7 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 
     :param u: Utility object with model, data, and scoring function
     :param progress: Whether to display progress bars for each job.
-    :return: OrderedDict of exact Shapley values
+    :return: Object with the data values.
     """
 
     n = len(u.data)
@@ -51,7 +52,7 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 
     return ValuationResult(
         algorithm="permutation_exact_shapley",
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
         values=values,
         steps=math.factorial(n),
         stderr=None,
@@ -60,7 +61,7 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 
 
 def _combinatorial_exact_shapley(
-    indices: np.ndarray, u: Utility, progress: bool
+    indices: Sequence[int], u: Utility, progress: bool
 ) -> NDArray:
     """Helper function for :func:`combinatorial_exact_shapley`.
 
@@ -70,7 +71,7 @@ def _combinatorial_exact_shapley(
     n = len(u.data)
     local_values = np.zeros(n)
     for i in indices:
-        subset = np.setxor1d(u.data.indices, [i], assume_unique=True)
+        subset = np.setxor1d(u.data.indices, [i], assume_unique=True).astype(np.int_)
         for s in maybe_progress(
             powerset(subset),
             progress,
@@ -95,11 +96,12 @@ def combinatorial_exact_shapley(
 
     See :ref:`data valuation` for details.
 
-    If the length of the training set is > n_jobs*20 this prints a warning
-    because the computation is very expensive. Used mostly for internal testing
-    and simple use cases. Please refer to the
-    :mod:`Monte Carlo <pydvl.shapley.montecarlo>` approximations for practical
-    applications.
+    .. note::
+       If the length of the training set is > n_jobs*20 this prints a warning
+       because the computation is very expensive. Used mostly for internal testing
+       and simple use cases. Please refer to the
+       :mod:`Monte Carlo <pydvl.shapley.montecarlo>` approximations for practical
+       applications.
 
     :param u: Utility object with model, data, and scoring function
     :param n_jobs: Number of parallel jobs to use
@@ -128,7 +130,7 @@ def combinatorial_exact_shapley(
     values = map_reduce_job()
     return ValuationResult(
         algorithm="combinatorial_exact_shapley",
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
         values=values,
         steps=int(2 ** len(u.data)),
         stderr=None,

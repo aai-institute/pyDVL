@@ -1,3 +1,5 @@
+import functools
+import operator
 import pickle
 from copy import deepcopy
 
@@ -5,14 +7,15 @@ import cloudpickle
 import numpy as np
 import pytest
 
-from pydvl.value import ValuationResult, ValuationStatus
+from pydvl.utils.status import Status
+from pydvl.value import ValuationResult
 
 
 @pytest.fixture
 def dummy_values(values, names):
     return ValuationResult(
         algorithm="dummy_valuator",
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
         values=np.array(values),
         steps=1,
         stderr=np.zeros_like(values),
@@ -141,7 +144,7 @@ def test_equality(values, names, dummy_values):
 
     c2 = ValuationResult(
         algorithm=c._algorithm,
-        status=ValuationStatus.Failed,
+        status=Status.Failed,
         values=c.values,
         steps=c.steps,
         stderr=c._stderr,
@@ -179,7 +182,7 @@ def test_equality(values, names, dummy_values):
 def test_extra_values(extra_values):
     kwargs = dict(
         algorithm="test",
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
         values=np.random.rand(10),
         sort=True,
         test_value=1.2,
@@ -198,3 +201,28 @@ def test_extra_values(extra_values):
 def test_from_random_creation(size):
     result = ValuationResult.from_random(size)
     assert len(result) == size
+
+
+def test_adding():
+    """Test adding multiple valuation results together"""
+    n_samples, n_values, n_subsets = 10, 1000, 12
+    values = np.random.rand(n_samples, n_values)
+    split_indices = np.sort(np.random.randint(1, n_values, size=n_subsets - 1))
+    splits = np.split(values, split_indices, axis=1)
+    vv = [
+        ValuationResult(
+            algorithm="dummy",
+            status=Status.Pending,
+            values=np.average(s, axis=1),
+            stderr=np.sqrt(np.var(s, axis=1) / s.shape[1]),
+            counts=s.shape[1] * np.ones(n_samples),
+        )
+        for s in splits
+    ]
+    result: ValuationResult = functools.reduce(operator.add, vv)
+
+    true_means = values.mean(axis=1)
+    true_stderr = np.sqrt(values.var(axis=1) / n_values)
+
+    assert np.allclose(true_means, result.values)
+    assert np.allclose(true_stderr, result.stderr)

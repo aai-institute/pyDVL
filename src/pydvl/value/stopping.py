@@ -8,10 +8,11 @@ from typing import Callable, cast
 import numpy as np
 from numpy._typing import NDArray
 
-from pydvl.value import ValuationStatus
+from pydvl.utils.status import Status
 
 StoppingCriterionCallable = Callable[
-    [int, NDArray[np.float_], NDArray[np.float_], NDArray[np.int_]], ValuationStatus,
+    [int, NDArray[np.float_], NDArray[np.float_], NDArray[np.int_]],
+    Status,
 ]
 
 
@@ -24,7 +25,7 @@ class StoppingCriterion:
 
         Stopping criteria can be composed with the binary
         operators ``&`` (_and_), ``^`` (_xor_) and ``|`` (_or_),
-        see :class:`~pydvl.value.results.ValuationStatus` for the truth tables.
+        see :class:`~pydvl.utils.status.Status` for the truth tables.
 
         :param fun: A callable to wrap into a composable object.
 
@@ -38,7 +39,7 @@ class StoppingCriterion:
         values: NDArray[np.float_],
         variances: NDArray[np.float_],
         counts: NDArray[np.int_],
-    ) -> ValuationStatus:
+    ) -> Status:
         return self._fun(step, values, variances, counts)
 
     def __and__(self, other: "StoppingCriterion") -> "StoppingCriterion":
@@ -80,10 +81,10 @@ class StoppingCriterion:
 
 
 def max_samples_criterion(max_samples: np.int_) -> StoppingCriterion:
-    def check_max_samples(step: int, *args, **kwargs) -> ValuationStatus:
+    def check_max_samples(step: int, *args, **kwargs) -> Status:
         if step >= max_samples:
-            return ValuationStatus.Converged
-        return ValuationStatus.Pending
+            return Status.Converged
+        return Status.Pending
 
     return StoppingCriterion(cast(StoppingCriterionCallable, check_max_samples))
 
@@ -94,17 +95,17 @@ def min_updates_criterion(min_updates: int, values_ratio: float) -> StoppingCrit
 
     :param min_updates: Maximal amount of updates for each value
     :param values_ratio: Amount of values that must fulfill the criterion
-    :return: :attr:`~pydvl.value.results.ValuationStatus.Converged` if at least
+    :return: :attr:`~pydvl.utils.status.Status.Converged` if at least
     a fraction of ``values_ratio`` of the values has been updated
-    ``min_updates`` times, :attr:`~pydvl.value.results.ValuationStatus.Pending`
+    ``min_updates`` times, :attr:`~pydvl.utils.status.Status.Pending`
     otherwise.
 
     """
 
-    def check_min_updates(*args, counts: NDArray[np.int_], **kwargs) -> ValuationStatus:
+    def check_min_updates(*args, counts: NDArray[np.int_], **kwargs) -> Status:
         if np.count_nonzero(counts >= min_updates) / len(counts) >= values_ratio:
-            return ValuationStatus.Converged
-        return ValuationStatus.Pending
+            return Status.Converged
+        return Status.Pending
 
     return StoppingCriterion(cast(StoppingCriterionCallable, check_min_updates))
 
@@ -129,7 +130,7 @@ def stderr_criterion(eps: float, values_ratio: float) -> StoppingCriterion:
     :param eps: Threshold multiplier for the values
     :param values_ratio: Amount of values that must fulfill the criterion
     :return: A convergence criterion
-        returning :attr:`~pydvl.value.results.ValuationStatus.Converged` if at
+        returning :attr:`~pydvl.utils.status.Status.Converged` if at
         least a fraction of `values_ratio` of the values has standard error
         below the threshold.
     """
@@ -139,21 +140,21 @@ def stderr_criterion(eps: float, values_ratio: float) -> StoppingCriterion:
         values: NDArray[np.float_],
         variances: NDArray[np.float_],
         counts: NDArray[np.int_],
-    ) -> ValuationStatus:
+    ) -> Status:
         if len(values) == 0:
             raise ValueError("Empty values array")
         if len(values) != len(variances) or len(values) != len(counts):
             raise ValueError("Mismatching array lengths")
 
         if np.any(counts == 0):
-            return ValuationStatus.Pending
+            return Status.Pending
 
         passing_ratio = np.count_nonzero(
             np.sqrt(variances / counts) <= np.abs(eps * values)
         ) / len(values)
         if passing_ratio >= values_ratio:
-            return ValuationStatus.Converged
-        return ValuationStatus.Pending
+            return Status.Converged
+        return Status.Pending
 
     return StoppingCriterion(check_stderr)
 
@@ -188,7 +189,7 @@ def finite_difference_criterion(
         values: NDArray[np.float_],
         variances: NDArray[np.float_],
         counts: NDArray[np.int_],
-    ) -> ValuationStatus:
+    ) -> Status:
         nonlocal memory
         if step == 0:  # safeguard against reuse of the criterion
             memory = np.zeros(shape=(n_values, n_steps))
@@ -198,8 +199,8 @@ def finite_difference_criterion(
             diff = memory @ coefficients
             passing_ratio = np.count_nonzero(diff < atol) / len(diff)
             if passing_ratio >= values_ratio:
-                return ValuationStatus.Converged
-        return ValuationStatus.Pending
+                return Status.Converged
+        return Status.Pending
 
     return StoppingCriterion(check_finite_differences)
 
@@ -222,15 +223,15 @@ def ghorbani_criterion(
         values: NDArray[np.float_],
         variances: NDArray[np.float_],
         counts: NDArray[np.int_],
-    ) -> ValuationStatus:
+    ) -> Status:
         nonlocal memory
         if step == 0:  # safeguard against reuse of the criterion
             memory = np.zeros(shape=(n,))
-            return ValuationStatus.Pending
+            return Status.Pending
         if step % 100 == 0:
             if np.abs((values - memory) / values).mean() < atol:
-                return ValuationStatus.Converged
+                return Status.Converged
             memory[:] = values[:]
-        return ValuationStatus.Pending
+        return Status.Pending
 
     return StoppingCriterion(check_ghorbani_criterion)

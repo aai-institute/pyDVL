@@ -8,19 +8,17 @@ methods for pyDVL that use parallelization.
 import logging
 import warnings
 from time import time
-from typing import TYPE_CHECKING, Optional, Tuple, Union, cast
+from typing import Optional, Tuple, Union, cast
 
 import numpy as np
+from numpy.typing import NDArray
 
-from pydvl.utils import Utility, get_running_avg_variance, maybe_progress
-from pydvl.utils.config import ParallelConfig
-from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
-from pydvl.utils.parallel.backend import RayParallelBackend, init_parallel_backend
-from pydvl.value.results import ValuationStatus
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
-
+from ...utils import maybe_progress, running_moments
+from ...utils.config import ParallelConfig
+from ...utils.parallel.actor import Coordinator, RayActorWrapper, Worker
+from ...utils.parallel.backend import RayParallelBackend, init_parallel_backend
+from ...utils.status import Status
+from ...utils.utility import Utility
 
 __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
 
@@ -32,11 +30,9 @@ def get_shapley_coordinator(
     *args, config: ParallelConfig = ParallelConfig(), **kwargs
 ) -> "ShapleyCoordinator":
     if config.backend == "ray":
-        parallel_backend = cast(RayParallelBackend, init_parallel_backend(config))
-        remote_cls = parallel_backend.wrap(ShapleyCoordinator)
-        handle = remote_cls.remote(*args, **kwargs)
         coordinator = cast(
-            ShapleyCoordinator, RayActorWrapper(handle, parallel_backend)
+            ShapleyCoordinator,
+            RayActorWrapper(ShapleyCoordinator, config, *args, **kwargs),
         )
     elif config.backend == "sequential":
         coordinator = ShapleyCoordinator(*args, **kwargs)
@@ -49,10 +45,9 @@ def get_shapley_worker(
     *args, config: ParallelConfig = ParallelConfig(), **kwargs
 ) -> "ShapleyWorker":
     if config.backend == "ray":
-        parallel_backend = cast(RayParallelBackend, init_parallel_backend(config))
-        remote_cls = parallel_backend.wrap(ShapleyWorker)
-        handle = remote_cls.remote(*args, **kwargs)
-        worker = cast(ShapleyWorker, RayActorWrapper(handle, parallel_backend))
+        worker = cast(
+            ShapleyWorker, RayActorWrapper(ShapleyWorker, config, *args, **kwargs)
+        )
     elif config.backend == "sequential":
         worker = ShapleyWorker(*args, **kwargs)
     else:
@@ -67,7 +62,7 @@ class ShapleyCoordinator(Coordinator):
 
     :param value_tolerance: Terminate all workers if the ratio of median
         standard error to median of value has dropped below this value.
-    :param max_iterations: Terminate if the current number of permutations
+    :param n_iterations: Terminate if the current number of permutations
         has exceeded this threshold.
      :param progress: Whether to display progress bars for each job.
     """
@@ -75,18 +70,18 @@ class ShapleyCoordinator(Coordinator):
     def __init__(
         self,
         value_tolerance: Optional[float] = None,
-        max_iterations: Optional[int] = None,
+        n_iterations: Optional[int] = None,
         progress: Optional[bool] = True,
     ):
         super().__init__(progress=progress)
-        if value_tolerance is None and max_iterations is None:
+        if value_tolerance is None and n_iterations is None:
             raise ValueError(
-                "Either value_tolerance or max_iterations must be set as a"
+                "Either value_tolerance or n_iterations must be set as a"
                 "stopping criterion"
             )
         self.value_tolerance = value_tolerance
-        self.max_iterations = max_iterations
-        self._status = ValuationStatus.Pending
+        self.n_iterations = n_iterations
+        self._status = Status.Pending
 
     def get_results(self) -> Tuple["NDArray", "NDArray"]:
         """Aggregates the results of the different workers
@@ -145,17 +140,17 @@ class ShapleyCoordinator(Coordinator):
             ):
                 self._is_done = True
                 logger.info("Converged")
-                self._status = ValuationStatus.Converged
+                self._status = Status.Converged
             elif (
-                self.max_iterations is not None
-                and self._total_iterations > self.max_iterations
+                self.n_iterations is not None
+                and self._total_iterations > self.n_iterations
             ):
                 self._is_done = True
-                logger.info(f"Max iterations ({self.max_iterations}) reached")
-                self._status = ValuationStatus.MaxIterations
+                logger.info(f"Max iterations ({self.n_iterations}) reached")
+                self._status = Status.MaxIterations
         return self._is_done
 
-    def status(self) -> ValuationStatus:
+    def status(self) -> Status:
         return self._status
 
 
@@ -175,7 +170,11 @@ class ShapleyWorker(Worker):
         progress: bool = False,
     ):
         """A worker calculates Shapley values using the permutation definition
-         and report the results to the coordinator.
+         and reports the results to the coordinator.
+
+         To implement early stopping, workers can be signaled by the
+         :class:`~pydvl.value.shapley.actor.ShapleyCoordinator` before they are
+         done with their work package
 
         :param u: Utility object with model, data, and scoring function
         :param coordinator: worker results will be pushed to this coordinator
@@ -233,7 +232,7 @@ class ShapleyWorker(Worker):
                     self._var_values = np.zeros_like(self._avg_values)
                     self._iteration_count = 1
                 else:
-                    self._avg_values, self._var_values = get_running_avg_variance(
+                    self._avg_values, self._var_values = running_moments(
                         self._avg_values,
                         self._var_values,
                         values,

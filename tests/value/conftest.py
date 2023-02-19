@@ -1,11 +1,16 @@
 import numpy as np
 import pytest
+import ray
+from numpy.typing import NDArray
+from ray.cluster_utils import Cluster
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
-from pydvl.utils import Dataset, Utility
-from pydvl.value import ValuationResult, ValuationStatus
+from pydvl.utils import Dataset, SupervisedModel, Utility
+from pydvl.utils.config import ParallelConfig
+from pydvl.utils.status import Status
+from pydvl.value import ValuationResult
 
 from . import polynomial
 
@@ -35,10 +40,6 @@ def polynomial_pipeline(coefficients):
 
 @pytest.fixture(scope="function")
 def dummy_utility(num_samples):
-    from numpy import ndarray
-
-    from pydvl.utils import SupervisedModel
-
     # Indices match values
     x = np.arange(0, num_samples, 1).reshape(-1, 1)
     nil = np.zeros_like(x)
@@ -48,22 +49,32 @@ def dummy_utility(num_samples):
 
     class DummyModel(SupervisedModel):
         """Under this model each data point receives a score of index / max,
-        assuming that the values of training samples match their indices."""
+        assuming that the values of training samples match their indices.
+
+        The utility of a set is the sum of the utilities.
+        """
 
         def __init__(self, data: Dataset):
             self.m = max(data.x_train)
             self.utility = 0
 
-        def fit(self, x: ndarray, y: ndarray):
+        def fit(self, x: NDArray, y: NDArray):
             self.utility = np.sum(x) / self.m
 
-        def predict(self, x: ndarray) -> ndarray:
+        def predict(self, x: NDArray) -> NDArray:
             return x
 
-        def score(self, x: ndarray, y: ndarray) -> float:
+        def score(self, x: NDArray, y: NDArray) -> float:
             return self.utility
 
-    return Utility(DummyModel(data), data, enable_cache=False)
+    return Utility(
+        DummyModel(data),
+        data,
+        score_range=(0, x.sum() / x.max()),
+        catch_errors=False,
+        show_warnings=True,
+        enable_cache=False,
+    )
 
 
 @pytest.fixture(scope="function")
@@ -78,6 +89,27 @@ def analytic_shapley(dummy_utility):
         steps=1,
         stderr=np.zeros_like(values),
         data_names=dummy_utility.data.indices,
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
     )
     return dummy_utility, result
+
+
+@pytest.fixture(scope="module", params=["sequential", "ray-local", "ray-external"])
+def parallel_config(request):
+    if request.param == "sequential":
+        pytest.skip("Skipping 'sequential' because it doesn't work with TMC")
+        yield ParallelConfig(backend=request.param)
+    elif request.param == "ray-local":
+        yield ParallelConfig(backend="ray")
+        ray.shutdown()
+    elif request.param == "ray-external":
+        # Starts a head-node for the cluster.
+        cluster = Cluster(
+            initialize_head=True,
+            head_node_args={
+                "num_cpus": 4,
+            },
+        )
+        yield ParallelConfig(backend="ray", address=cluster.address)
+        ray.shutdown()
+        cluster.shutdown()

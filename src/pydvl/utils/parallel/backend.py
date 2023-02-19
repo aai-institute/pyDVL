@@ -1,5 +1,4 @@
 import functools
-import logging
 import os
 from abc import ABCMeta, abstractmethod
 from dataclasses import asdict
@@ -113,14 +112,7 @@ class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
         return v, []
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
-        if n_jobs < 0:
-            if self.config["num_cpus"]:
-                eff_n_jobs: int = self.config["num_cpus"]
-            else:
-                eff_n_jobs = available_cpus()
-        else:
-            eff_n_jobs = n_jobs
-        return eff_n_jobs
+        return 1
 
 
 class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
@@ -136,9 +128,8 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         config_dict.pop("backend")
         config_dict["num_cpus"] = config_dict.pop("n_local_workers")
         self.config = config_dict
-        if self.config["address"] is None:
-            self.config["ignore_reinit_error"] = True
-        ray.init(**self.config)
+        if not ray.is_initialized():
+            ray.init(**self.config)
 
     def get(
         self,
@@ -200,7 +191,7 @@ def init_parallel_backend(
     >>> config = ParallelConfig(backend="ray")
     >>> parallel_backend = init_parallel_backend(config)
     >>> parallel_backend
-    <RayParallelBackend: {'address': None, 'logging_level': 30, 'num_cpus': None, 'ignore_reinit_error': True}>
+    <RayParallelBackend: {'address': None, 'logging_level': 30, 'num_cpus': None}>
 
     """
     try:

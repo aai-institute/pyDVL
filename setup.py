@@ -11,7 +11,7 @@ setup(
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     include_package_data=True,
-    version="0.3.1.dev0",
+    version="0.4.1.dev0",
     description="The Python Data Valuation Library",
     install_requires=[
         line
@@ -20,9 +20,7 @@ setup(
     ],
     setup_requires=["wheel"],
     tests_require=["pytest"],
-    extras_require={
-        "influence": ["torch"],
-    },
+    extras_require={"influence": ["torch"]},
     author="appliedAI Institute gGmbH",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -41,8 +39,8 @@ setup(
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
     ],
     project_urls={
-        "Source": "https://appliedAI-Initiative/pydvl",
-        "Documentation": "https://appliedai-initiative.github.io/pyDVL/",
+        "Source": "https://github.com/appliedAI-Initiative/pydvl",
+        "Documentation": "https://appliedai-initiative.github.io/pyDVL",
         "TransferLab": "https://transferlab.appliedai.de",
     },
 )

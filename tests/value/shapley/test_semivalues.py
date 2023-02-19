@@ -2,13 +2,13 @@ import math
 
 import numpy as np
 import pytest
-from value import check_values
 from numpy.typing import NDArray
+from value import check_values
 
-from pydvl.value import ValuationStatus
+from pydvl.utils.status import Status
 from pydvl.value.semivalues import (
-    SVCoefficient,
     SemiValue,
+    SVCoefficient,
     banzhaf_coefficient,
     beta_coefficient,
     beta_shapley,
@@ -39,7 +39,7 @@ from pydvl.value.stopping import (
 def test_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
     u, exact_values = analytic_shapley
     values = fun(u, criterion)
-    assert values.status == ValuationStatus.Converged
+    assert values.status == Status.Converged
     check_values(values, exact_values, rtol=0.1)
 
 
@@ -61,7 +61,7 @@ def test_shapley_convergence(
     u, exact_values = analytic_shapley
     values = fun(u, criterion)
     check_values(values, exact_values, rtol=0.1)
-    assert values.status == ValuationStatus.Converged
+    assert values.status == Status.Converged
 
 
 @pytest.mark.parametrize("num_samples", [10])
@@ -76,23 +76,23 @@ def test_shapley_convergence(
 def test_beta_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
     u, exact_values = analytic_shapley
     values = fun(u, criterion, alpha=1, beta=1)
-    assert values.status == ValuationStatus.Converged
+    assert values.status == Status.Converged
     check_values(values, exact_values, rtol=0.1)
 
 
 @pytest.mark.parametrize(
     "values, variances, counts, eps, values_ratio, status",
     [
-        ([1, 1, 1], [0, 0, 0], [1, 1, 1], 1e-4, 1.0, ValuationStatus.Converged),
-        ([1, 2, 3], [0.01, 0.03, 0.08], [1, 1, 1], 0.1, 1.0, ValuationStatus.Converged),
-        ([1, 2, 3], [0.01, 0.03, 0.8], [1, 1, 1], 0.1, 1.0, ValuationStatus.Pending),
+        ([1, 1, 1], [0, 0, 0], [1, 1, 1], 1e-4, 1.0, Status.Converged),
+        ([1, 2, 3], [0.01, 0.03, 0.08], [1, 1, 1], 0.1, 1.0, Status.Converged),
+        ([1, 2, 3], [0.01, 0.03, 0.8], [1, 1, 1], 0.1, 1.0, Status.Pending),
         (
             [1, 2, 3],
             [0.01, 0.03, 0.8],
             [1, 1, 1],
             0.1,
             2 / 3,
-            ValuationStatus.Converged,
+            Status.Converged,
         ),
     ],
 )
@@ -102,7 +102,7 @@ def test_stderr_criterion(
     counts: NDArray[np.int],
     eps: float,
     values_ratio: float,
-    status: ValuationStatus,
+    status: Status,
 ):
     assert (
         stderr_criterion(eps, values_ratio)(

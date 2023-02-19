@@ -11,7 +11,8 @@ import numpy as np
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
 from pydvl.utils import Utility, maybe_progress
-from pydvl.value.results import ValuationResult, ValuationStatus
+from pydvl.utils.status import Status
+from pydvl.value.results import ValuationResult
 
 __all__ = ["knn_shapley"]
 
@@ -31,10 +32,6 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     :return: Object with the data values.
     :raises TypeError: If the model in the utility is not a `KNeighborsClassifier
         <https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html>`_
-
-    . rubric:: References
-
-    .. footbibliography::
 
     .. versionadded:: 0.1.0
 
@@ -81,7 +78,7 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
 
     return ValuationResult(
         algorithm="knn_shapley",
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
         values=values,
         steps=len(indices),
         stderr=None,

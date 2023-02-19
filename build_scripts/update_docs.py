@@ -22,6 +22,14 @@ def module_template(module_qualname: str):
 .. automodule:: {module_qualname}
    :members:
    :undoc-members:
+   
+   ----
+   
+   Module members
+   ==============
+ 
+.. footbibliography::
+
 """
     return template
 
