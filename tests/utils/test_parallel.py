@@ -1,4 +1,6 @@
 import operator
+import os
+import time
 from functools import partial, reduce
 
 import numpy as np
@@ -188,3 +190,27 @@ def test_map_reduce_get_value(x, expected_x, parallel_config):
     parallel_backend = init_parallel_backend(parallel_config)
     x_id = parallel_backend.put(x)
     assert np.all(_get_value(x_id) == expected_x)
+
+
+def test_wrap_function(parallel_config, num_workers):
+    def fun(x, **kwargs):
+        return dict(x=x * x, **kwargs)
+
+    parallel_backend = init_parallel_backend(parallel_config)
+    # Try two kwargs for @ray.remote. Should be ignored in the sequential backend
+    wrapped_func = parallel_backend.wrap(fun, num_cpus=1, max_calls=1)
+    x = parallel_backend.put(2)
+    ret = parallel_backend.get(wrapped_func(x))
+
+    assert ret["x"] == 4
+    assert len(ret) == 1  # Ensure that kwargs are not passed to the function
+
+    if parallel_config.backend != "sequential":
+        # Test that the function is executed in different processes
+        def get_pid():
+            time.sleep(2)  # FIXME: waiting less means fewer processes are used?!
+            return os.getpid()
+
+        wrapped_func = parallel_backend.wrap(get_pid, num_cpus=1)
+        pids = parallel_backend.get([wrapped_func() for _ in range(num_workers)])
+        assert len(set(pids)) == num_workers
