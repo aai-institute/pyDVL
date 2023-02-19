@@ -29,6 +29,7 @@ def test_effective_n_jobs(parallel_config, num_workers):
         assert parallel_backend.effective_n_jobs(n_jobs) == effective_n_jobs(
             n_jobs, parallel_config
         )
+        assert effective_n_jobs(n_jobs, parallel_config) > 0
 
     with pytest.raises(ValueError):
         parallel_backend.effective_n_jobs(0)

@@ -244,8 +244,13 @@ def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> 
         CPUs is returned.
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
         cluster address, number of cpus, etc.
-
-    :return: the effective number of jobs
+    :return: the effective number of jobs, guaranteed to be >= 1.
+    :raises RuntimeError: if the effective number of jobs returned by the backend
+        is < 1.
     """
     parallel_backend = init_parallel_backend(config)
-    return parallel_backend.effective_n_jobs(n_jobs)
+    if (eff_n_jobs := parallel_backend.effective_n_jobs(n_jobs)) < 1:
+        raise RuntimeError(
+            f"Invalid number of jobs {eff_n_jobs} obtained from parallel backend {config.backend}"
+        )
+    return eff_n_jobs
