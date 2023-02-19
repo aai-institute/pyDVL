@@ -18,10 +18,10 @@ list of problems to solve, then solve them in parallel with
 from enum import Enum
 from typing import Optional
 
-from ...utils import Utility
+from pydvl.utils.utility import Utility
+from pydvl.value.least_core.montecarlo import *
+from pydvl.value.least_core.naive import *
 from pydvl.value.results import ValuationResult
-from .montecarlo import *
-from .naive import *
 
 
 class LeastCoreMode(Enum):

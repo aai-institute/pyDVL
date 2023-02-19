@@ -6,6 +6,9 @@ import cvxpy as cp
 import numpy as np
 from numpy.typing import NDArray
 
+from pydvl.utils import MapReduceJob, Status, Utility
+from pydvl.value import ValuationResult
+
 __all__ = [
     "_solve_least_core_linear_program",
     "_solve_egalitarian_least_core_quadratic_program",
@@ -13,9 +16,6 @@ __all__ = [
     "lc_solve_problems",
     "LeastCoreProblem",
 ]
-
-from pydvl.utils import MapReduceJob, Status, Utility
-from pydvl.value import ValuationResult
 
 logger = logging.getLogger(__name__)
 
