@@ -9,28 +9,22 @@ from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import MapReduceJob
 from pydvl.utils.progress import maybe_progress
-from pydvl.utils.status import Status
 from pydvl.utils.utility import Utility
-from pydvl.value.least_core._common import (
-    _solve_egalitarian_least_core_quadratic_program,
-    _solve_least_core_linear_program,
-)
+from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
 from pydvl.value.results import ValuationResult
 
 logger = logging.getLogger(__name__)
 
 
-__all__ = ["montecarlo_least_core"]
+__all__ = [
+    "montecarlo_least_core",
+    "mclc_prepare_problem",
+]
 
 
 def _montecarlo_least_core(
-    u: Utility,
-    n_iterations: int,
-    *,
-    progress: bool = False,
-    job_id: int = 1,
-    **kwargs,
-) -> Tuple[NDArray[np.float_], NDArray[np.float_]]:
+    u: Utility, n_iterations: int, *, progress: bool = False, job_id: int = 1
+) -> LeastCoreProblem:
     """Computes utility values and the Least Core upper bound matrix for a given number of iterations.
 
     :param u: Utility object with model, data, and scoring function
@@ -64,26 +58,24 @@ def _montecarlo_least_core(
         A_lb[i, indices] = 1
         utility_values[i] = u(subset)
 
-    return utility_values, A_lb
+    return LeastCoreProblem(utility_values, A_lb)
 
 
-def _reduce_func(
-    results: Iterable[Tuple[NDArray[np.float_], NDArray[np.float_]]]
-) -> Tuple[NDArray[np.float_], NDArray[np.float_]]:
-    """Combines the results from different parallel runs of the `_montecarlo_least_core` function"""
+def _reduce_func(results: Iterable[LeastCoreProblem]) -> LeastCoreProblem:
+    """Combines the results from different parallel runs of
+    :func:`_montecarlo_least_core`"""
     utility_values_list, A_lb_list = zip(*results)
     utility_values = np.concatenate(utility_values_list)
     A_lb = np.concatenate(A_lb_list)
-    return utility_values, A_lb
+    return LeastCoreProblem(utility_values, A_lb)
 
 
 def montecarlo_least_core(
     u: Utility,
     n_iterations: int,
+    *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
-    *,
-    epsilon: float = 0.0,
     options: Optional[dict] = None,
     progress: bool = False,
 ) -> ValuationResult:
@@ -93,7 +85,7 @@ def montecarlo_least_core(
     \begin{array}{lll}
     \text{minimize} & \displaystyle{e} & \\
     \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
-    & \displaystyle\sum_{i\in S} x_{i} + e + \epsilon \geq v(S) & ,
+    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) & ,
     \forall S \in \{S_1, S_2, \dots, S_m \overset{\mathrm{iid}}{\sim} U(2^N) \}
     \end{array}
     $$
@@ -101,43 +93,61 @@ def montecarlo_least_core(
     Where:
 
     * $U(2^N)$ is the uniform distribution over the powerset of $N$.
-    * $m$ is the number of subsets that will be sampled and whose utility will be computed
-      and used to compute the data values.
-    * $\epsilon \ge 0$ is an optional relaxation value.
+    * $m$ is the number of subsets that will be sampled and whose utility will
+      be computed and used to compute the data values.
 
     :param u: Utility object with model, data, and scoring function
     :param n_iterations: total number of iterations to use
     :param n_jobs: number of jobs across which to distribute the computation
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param epsilon: Relaxation value by which the subset utility is decreased.
     :param options: Keyword arguments that will be used to select a solver
         and to configure it. Refer to the following page for all possible options:
         https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
     :param progress: If True, shows a tqdm progress bar
     :return: Object with the data values and the least core value.
     """
+    problem = mclc_prepare_problem(
+        u, n_iterations, n_jobs=n_jobs, config=config, progress=progress
+    )
+    return lc_solve_problem(
+        problem, u=u, algorithm="montecarlo_least_core", **(options or {})
+    )
+
+
+def mclc_prepare_problem(
+    u: Utility,
+    n_iterations: int,
+    *,
+    n_jobs: int = 1,
+    config: ParallelConfig = ParallelConfig(),
+    progress: bool = False,
+) -> LeastCoreProblem:
+    """Prepares a linear problem by sampling subsets of the data.
+    Use this to separate the problem preparation from the solving with
+    :func:`~pydvl.value.least_core.common.lc_solve_problem`. Useful for
+    parallel execution of multiple experiments.
+
+    See :func:`montecarlo_least_core` for argument descriptions.
+    """
     n = len(u.data)
 
     if n_iterations < n:
         raise ValueError(
-            "Number of iterations should be greater than the size of the dataset"
+            "Number of iterations should be greater than the size of the " "dataset"
         )
 
     if n_iterations > 2**n:
         warnings.warn(
-            f"Passed n_iterations is greater than the number subsets! Setting it to 2^{n}",
+            f"Passed n_iterations is greater than the number subsets! "
+            f"Setting it to 2^{n}",
             RuntimeWarning,
         )
         n_iterations = 2**n
 
-    if options is None:
-        options = {}
-
     iterations_per_job = max(1, n_iterations // n_jobs)
 
-    logger.debug("Instantiating MapReduceJob")
-    map_reduce_job: MapReduceJob["Utility", Tuple["NDArray", "NDArray"]] = MapReduceJob(
+    map_reduce_job: MapReduceJob["Utility", "LeastCoreProblem"] = MapReduceJob(
         inputs=u,
         map_func=_montecarlo_least_core,
         reduce_func=_reduce_func,
@@ -148,70 +158,5 @@ def montecarlo_least_core(
         n_jobs=n_jobs,
         config=config,
     )
-    logger.debug("Calling MapReduceJob instance")
-    utility_values, A_lb = map_reduce_job()
 
-    if np.any(np.isnan(utility_values)):
-        warnings.warn(
-            f"Calculation returned {np.sum(np.isnan(utility_values))} nan values out of {utility_values.size}",
-            RuntimeWarning,
-        )
-
-    logger.debug("Building vectors and matrices for linear programming problem")
-    b_lb = utility_values
-    A_eq = np.ones((1, n))
-    # We explicitly add the utility value for the entire dataset
-    b_eq = np.array([u(u.data.indices)])
-
-    logger.debug("Removing possible duplicate values in lower bound array")
-    A_lb, unique_indices = np.unique(A_lb, return_index=True, axis=0)
-    b_lb = b_lb[unique_indices]
-
-    _, subsidy = _solve_least_core_linear_program(
-        A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, epsilon=epsilon, **options
-    )
-
-    values: Optional[NDArray[np.float_]]
-
-    if subsidy is None:
-        logger.debug("No values were found")
-        status = Status.Failed
-        values = np.empty(n)
-        values[:] = np.nan
-        subsidy = np.nan
-
-        return ValuationResult(
-            algorithm="montecarlo_least_core",
-            status=status,
-            values=values,
-            subsidy=subsidy,
-            stderr=None,
-            data_names=u.data.data_names,
-        )
-
-    values = _solve_egalitarian_least_core_quadratic_program(
-        subsidy,
-        A_eq=A_eq,
-        b_eq=b_eq,
-        A_lb=A_lb,
-        b_lb=b_lb,
-        **options,
-    )
-
-    if values is None:
-        logger.debug("No values were found")
-        status = Status.Failed
-        values = np.empty(n)
-        values[:] = np.nan
-        subsidy = np.nan
-    else:
-        status = Status.Converged
-
-    return ValuationResult(
-        algorithm="montecarlo_least_core",
-        status=status,
-        values=values,
-        subsidy=subsidy,
-        stderr=None,
-        data_names=u.data.data_names,
-    )
+    return map_reduce_job()

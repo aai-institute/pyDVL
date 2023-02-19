@@ -71,7 +71,7 @@ def _(v: np.ndarray, *, timeout: Optional[float] = None) -> NDArray:
 
 
 @_get_value.register
-def _(v: Iterable, *, timeout: Optional[float] = None) -> List[Any]:
+def _(v: list, *, timeout: Optional[float] = None) -> List[Any]:
     return [_get_value(x, timeout=timeout) for x in v]
 
 
