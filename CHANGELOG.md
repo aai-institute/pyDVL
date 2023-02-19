@@ -2,10 +2,12 @@
 
 ## Unreleased
 
-- Splitting of problem preparation and solution in Least Core computation.
+- Bugfix in `RayParallelBackend`: wrong semantics for `kwargs`.
+  [PR #268](https://github.com/appliedAI-Initiative/pyDVL/pull/268)
+- Splitting of problem preparation and solution in Least-Core computation.
   Umbrella function for LC methods.
   [PR #257](https://github.com/appliedAI-Initiative/pyDVL/pull/257) 
-- Operations on ValuationResults and Statuses and cleanup
+- Operations on `ValuationResult` and `Status` and some cleanup
   [PR #248](https://github.com/appliedAI-Initiative/pyDVL/pull/248)
 - **Bug fix and minor improvements**: Fixes bug in TMCS with remote Ray cluster,
   raises an error for dummy sequential parallel backend with TMCS, clones model
@@ -25,8 +27,8 @@
 - **Breaking change:** Introduces a class ValuationResult to gather and inspect
   results from all valuation algorithms
   [PR #214](https://github.com/appliedAI-Initiative/pyDVL/pull/214)
-- Fixes bug in Influence calculation with multi-dimensional input and adds
-  new example notebook
+- Fixes bug in Influence calculation with multidimensional input and adds new
+  example notebook
   [PR #195](https://github.com/appliedAI-Initiative/pyDVL/pull/195)
 - **Breaking change**: Passes the input to `MapReduceJob` at initialization,
   removes `chunkify_inputs` argument from `MapReduceJob`, removes `n_runs`

@@ -1,8 +1,18 @@
-import functools
 import os
 from abc import ABCMeta, abstractmethod
 from dataclasses import asdict
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import ray
 from ray import ObjectRef
@@ -63,7 +73,7 @@ class BaseParallelBackend(metaclass=NoPublicConstructor):
         ...
 
     @abstractmethod
-    def wrap(self, *args, **kwargs) -> Any:
+    def wrap(self, fun: Callable, **kwargs) -> Callable:
         ...
 
     @abstractmethod
@@ -104,9 +114,11 @@ class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
     def put(self, v: Any, *args, **kwargs) -> Any:
         return v
 
-    def wrap(self, *args, **kwargs) -> Any:
-        assert len(args) == 1
-        return functools.partial(args[0], **kwargs)
+    def wrap(self, fun: Callable, **kwargs) -> Callable:
+        """Wraps a function for sequential execution.
+
+        This is a noop and kwargs are ignored."""
+        return fun
 
     def wait(self, v: Any, *args, **kwargs) -> Tuple[list, list]:
         return v, []
@@ -151,8 +163,17 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         except TypeError:
             return v  # type: ignore
 
-    def wrap(self, *args, **kwargs) -> RemoteFunction:
-        return ray.remote(*args, **kwargs)  # type: ignore
+    def wrap(self, fun: Callable, **kwargs) -> Callable:
+        """Wraps a function as a ray remote.
+
+        :param fun: the function to wrap
+        :param kwargs: keyword arguments to pass to @ray.remote
+
+        :return: The `.remote` method of the ray `RemoteFunction`.
+        """
+        if len(kwargs) > 1:
+            return ray.remote(**kwargs)(fun).remote  # type: ignore
+        return ray.remote(fun).remote  # type: ignore
 
     def wait(
         self,
