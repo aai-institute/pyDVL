@@ -212,7 +212,7 @@ class ValuationResult(collections.abc.Sequence):
             raise ValueError("Lengths of values and indices do not match")
 
         self._algorithm = algorithm
-        self._status = status
+        self._status = Status(status)  # Just in case we are given a string
         self._values = values
         self._variances = np.zeros_like(values) if variances is None else variances
         self._counts = np.ones_like(values) if counts is None else counts
@@ -476,8 +476,8 @@ class ValuationResult(collections.abc.Sequence):
         self._check_compatible(other)
 
         indices = np.union1d(self._indices, other._indices)
-        this_indices = np.searchsorted(indices, self._indices)
-        other_indices = np.searchsorted(indices, other._indices)
+        this_pos = np.searchsorted(indices, self._indices)
+        other_pos = np.searchsorted(indices, other._indices)
 
         n = np.zeros_like(indices, dtype=int)
         m = np.zeros_like(indices, dtype=int)
@@ -486,12 +486,12 @@ class ValuationResult(collections.abc.Sequence):
         vn = np.zeros_like(indices, dtype=float)
         vm = np.zeros_like(indices, dtype=float)
 
-        n[this_indices] = self._counts
-        xn[this_indices] = self._values
-        vn[this_indices] = self._variances
-        m[other_indices] = other._counts
-        xm[other_indices] = other._values
-        vm[other_indices] = other._variances
+        n[this_pos] = self._counts
+        xn[this_pos] = self._values
+        vn[this_pos] = self._variances
+        m[other_pos] = other._counts
+        xm[other_pos] = other._values
+        vm[other_pos] = other._variances
 
         # Sample mean of n+m samples from two means of n and m samples
         xnm = (n * xn + m * xm) / (n + m)
@@ -500,8 +500,8 @@ class ValuationResult(collections.abc.Sequence):
 
         this_names = np.empty_like(indices, dtype=np.str_)
         other_names = np.empty_like(indices, dtype=np.str_)
-        this_names[this_indices] = self._names
-        other_names[other_indices] = other._names
+        this_names[this_pos] = self._names
+        other_names[other_pos] = other._names
         names = np.where(n > 0, this_names, other_names)
         both = np.where((n > 0) & (m > 0))
         if np.any(other_names[both] != this_names[both]):

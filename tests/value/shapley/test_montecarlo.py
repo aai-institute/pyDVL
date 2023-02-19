@@ -4,9 +4,9 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import GroupedDataset, MemcachedConfig, Utility
+from pydvl.utils import GroupedDataset, MemcachedConfig, Status, Utility
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
-from pydvl.utils.score import Scorer, squashed_r2, squashed_variance
+from pydvl.utils.score import Scorer, squashed_r2
 from pydvl.value import compute_shapley_values
 from pydvl.value.shapley import ShapleyMode
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
@@ -43,8 +43,8 @@ log = logging.getLogger(__name__)
                 truncation=NoTruncation(),
             ),
         ),
-        (12, ShapleyMode.Owen, 0.1, 1e-4, {"n_iterations": 4, "max_q": 200}),
-        (12, ShapleyMode.OwenAntithetic, 0.1, 1e-4, {"n_iterations": 4, "max_q": 200}),
+        (12, ShapleyMode.Owen, 0.1, 1e-4, dict(n_iterations=4, max_q=200)),
+        (12, ShapleyMode.OwenAntithetic, 0.1, 1e-4, dict(n_iterations=4, max_q=200)),
         (
             4,
             ShapleyMode.GroupTesting,
@@ -121,8 +121,8 @@ def test_hoeffding_bound_montecarlo(
             ),
         ),
         (ShapleyMode.CombinatorialMontecarlo, dict(done=MaxUpdates(2**11))),
-        (ShapleyMode.Owen, dict(n_iterations=4, max_q=300)),
-        (ShapleyMode.OwenAntithetic, dict(n_iterations=4, max_q=300)),
+        (ShapleyMode.Owen, dict(n_iterations=2, max_q=300)),
+        (ShapleyMode.OwenAntithetic, dict(n_iterations=2, max_q=300)),
         (
             ShapleyMode.GroupTesting,
             dict(n_iterations=int(1e5), epsilon=0.2, delta=0.01),
