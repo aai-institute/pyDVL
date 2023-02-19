@@ -1,12 +1,12 @@
 from enum import Enum
-from typing import Any, Generator, Generic, Optional, Sequence, Tuple, TypeVar
+from typing import Any, Collection, Generator, Generic, Sequence, Tuple, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
 
 from pydvl.utils import powerset, random_powerset
 
-T = TypeVar("T")
+T = TypeVar("T", bound=np.generic)
 
 
 class Sampler(Generic[T]):
@@ -92,9 +92,9 @@ class DeterministicSampler(Sampler[T]):
         """
         super().__init__(indices, Sampler.IndexIteration.Sequential)
 
-    def __iter__(self) -> Generator[T, Any, None]:
+    def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
         for idx in self.indices():
-            for subset in powerset(self.complement(idx)):
+            for subset in powerset(self.complement([idx])):
                 yield idx, subset
 
     def weight(self, subset: Sequence[T]) -> float:
@@ -104,7 +104,7 @@ class DeterministicSampler(Sampler[T]):
 
 
 class UniformSampler(Sampler[T]):
-    def __iter__(self) -> Generator[Tuple[T], Any, None]:
+    def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
         while True:
             for idx in self.indices():
                 for subset in random_powerset(self.complement([idx]), max_subsets=1):
@@ -115,19 +115,25 @@ class UniformSampler(Sampler[T]):
         the marginals converges to the value: the uniform distribution over the
         powerset of a set with n-1 elements has mass 2^{n-1} over each subset.
         The factor 1 / n corresponds to the one in the Shapley definition."""
-        return 2 ** (self._n - 1) / self._n
+        return float(2 ** (self._n - 1) / self._n) if self._n > 0 else 1.0
 
 
 class AntitheticSampler(Sampler[T]):
-    def complement(
-        self, exclude: Sequence[T], exclude_idx: Optional[T] = None, *args, **kwargs
-    ) -> NDArray[np.int_]:
+    def complement(self, exclude: Sequence[T], *args, **kwargs) -> NDArray[T]:
+        """
+
+        :param exclude:
+        :param args:
+        :param kwargs: Additional keyword arguments, including:
+            - exclude_idx: index to exclude from the complement
+        :return:
+        """
         tmp = super().complement(exclude)
-        if exclude_idx is None:
+        if exclude_idx := kwargs.get("exclude_idx") is None:
             return tmp
         return np.setxor1d(tmp, [exclude_idx])
 
-    def __iter__(self) -> Generator[Tuple[T], Any, None]:
+    def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
         while True:
             for idx in self.indices():
                 for subset in random_powerset(self.complement([idx]), max_subsets=1):
@@ -148,7 +154,7 @@ class PermutationSampler(Sampler[T]):
 
     """
 
-    def __iter__(self) -> Generator[Tuple[T], Any, None]:
+    def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
         while True:
             permutation = np.random.permutation(self._indices)
             for i, idx in enumerate(permutation):
@@ -166,7 +172,7 @@ class HierarchicalSampler(Sampler[T]):
 
     """
 
-    def __iter__(self) -> Generator[Tuple[T], Any, None]:
+    def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
         while True:
             for idx in self.indices():
                 k = np.random.choice(np.arange(len(self._indices)), size=1).item()
@@ -195,7 +201,7 @@ class OwenSampler(Sampler[T]):
     def complement(self, exclude: Sequence[T], *args, **kwargs):
         return np.setxor1d(self._indices, exclude)
 
-    def __iter__(self) -> Generator[Tuple[np.float_, T, T], Any, None]:
+    def __iter__(self) -> Generator[Tuple[np.float_, T, Collection[T]], Any, None]:
         while True:
             for idx in self.indices():
                 for j, q in enumerate(self.q_steps):
