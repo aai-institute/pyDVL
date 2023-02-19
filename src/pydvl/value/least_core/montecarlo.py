@@ -23,12 +23,7 @@ __all__ = [
 
 
 def _montecarlo_least_core(
-    u: Utility,
-    n_iterations: int,
-    *,
-    progress: bool = False,
-    job_id: int = 1,
-    **kwargs,
+    u: Utility, n_iterations: int, *, progress: bool = False, job_id: int = 1
 ) -> LeastCoreProblem:
     """Computes utility values and the Least Core upper bound matrix for a given number of iterations.
 
@@ -66,9 +61,7 @@ def _montecarlo_least_core(
     return LeastCoreProblem(utility_values, A_lb)
 
 
-def _reduce_func(
-    results: Iterable[Tuple[NDArray[np.float_], NDArray[np.float_]]]
-) -> LeastCoreProblem:
+def _reduce_func(results: Iterable[LeastCoreProblem]) -> LeastCoreProblem:
     """Combines the results from different parallel runs of
     :func:`_montecarlo_least_core`"""
     utility_values_list, A_lb_list = zip(*results)
@@ -118,7 +111,7 @@ def montecarlo_least_core(
         u, n_iterations, n_jobs=n_jobs, config=config, progress=progress
     )
     return lc_solve_problem(
-        u, problem, algorithm="montecarlo_least_core", **(options or {})
+        problem, u=u, algorithm="montecarlo_least_core", **(options or {})
     )
 
 

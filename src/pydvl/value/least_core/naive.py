@@ -8,13 +8,16 @@ from pydvl.utils import Utility, maybe_progress, powerset
 from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
 from pydvl.value.results import ValuationResult
 
-__all__ = ["exact_least_core"]
+__all__ = ["exact_least_core", "lc_prepare_problem"]
 
 logger = logging.getLogger(__name__)
 
 
 def exact_least_core(
-    u: Utility, *, options: Optional[dict] = None, progress: bool = True, **kwargs
+    u: Utility,
+    *,
+    options: Optional[dict] = None,
+    progress: bool = True,
 ) -> ValuationResult:
     r"""Computes the exact Least Core values.
 
@@ -46,18 +49,28 @@ def exact_least_core(
     :return: Object with the data values and the least core value.
     """
     n = len(u.data)
-
-    # Arbitrary choice, will depend on time required, caching, etc.
-    if n > 20:
+    if n > 20:  # Arbitrary choice, will depend on time required, caching, etc.
         warnings.warn(f"Large dataset! Computation requires 2^{n} calls to model.fit()")
 
-    if options is None:
-        options = {}
+    problem = lc_prepare_problem(u, progress=progress)
+    return lc_solve_problem(
+        problem=problem, u=u, algorithm="exact_least_core", **(options or {})
+    )
 
-    powerset_size = 2**n
+
+def lc_prepare_problem(u: Utility, progress: bool = False) -> LeastCoreProblem:
+    """Prepares a linear problem with all subsets of the data
+    Use this to separate the problem preparation from the solving with
+    :func:`~pydvl.value.least_core.common.lc_solve_problem`. Useful for
+    parallel execution of multiple experiments.
+
+    See :func:`~pydvl.value.least_core.naive.exact_least_core` for argument
+    descriptions.
+    """
+    n = len(u.data)
 
     logger.debug("Building vectors and matrices for linear programming problem")
-    A_eq = np.ones((1, n))
+    powerset_size = 2**n
     A_lb = np.zeros((powerset_size, n))
 
     logger.debug("Iterating over all subsets")
@@ -75,6 +88,4 @@ def exact_least_core(
         A_lb[i, indices] = 1
         utility_values[i] = u(subset)
 
-    return lc_solve_problem(
-        u, LeastCoreProblem(utility_values, A_lb), "exact_least_core", **options
-    )
+    return LeastCoreProblem(utility_values, A_lb)

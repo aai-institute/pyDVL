@@ -1,12 +1,13 @@
+import itertools
 import logging
 import warnings
-from typing import NamedTuple, Optional, Sequence, Tuple
+from typing import List, NamedTuple, Optional, Sequence, Tuple
 
 import cvxpy as cp
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import MapReduceJob, Status, Utility
+from pydvl.utils import MapReduceJob, ParallelConfig, Status, Utility
 from pydvl.value import ValuationResult
 
 __all__ = [
@@ -26,13 +27,15 @@ LeastCoreProblem = NamedTuple(
 
 
 def lc_solve_problem(
-    u: Utility, problem: LeastCoreProblem, algorithm: str, **options
+    problem: LeastCoreProblem, *, u: Utility, algorithm: str, **options
 ) -> ValuationResult:
     """Solves a linear problem prepared by :func:`mclc_prepare_problem`.
     Useful for parallel execution of multiple experiments by running this as a
     remote task.
 
-    See :func:`montecarlo_least_core` for argument descriptions.
+    See :func:`~pydvl.value.least_core.naive.exact_least_core` or
+    :func:`~pydvl.value.least_core.montecarlo.montecarlo_least_core` for
+    argument descriptions.
     """
     if options is None:
         options = {}
@@ -103,21 +106,39 @@ def lc_solve_problem(
 
 
 def lc_solve_problems(
-    u: Utility, problems: Sequence[LeastCoreProblem], n_jobs: int = 1, **options
-) -> Sequence[ValuationResult]:
+    problems: Sequence[LeastCoreProblem],
+    u: Utility,
+    algorithm: str,
+    config: ParallelConfig = ParallelConfig(),
+    n_jobs: int = 1,
+    **options,
+) -> List[ValuationResult]:
     """Solves a list of linear problems in parallel.
 
-    :param u: Utility
-    :param n_jobs:
+    :param u: Utility.
     :param problems: Least Core problems to solve, as returned by
-        :func:`lc_prepare_problem`.
-    :return: List of solutions
+        :func:`~pydvl.value.least_core.montecarlo.mclc_prepare_problem`.
+    :param algorithm: Name of the valuation algorithm.
+    :param config: Object configuring parallel computation, with cluster
+        address, number of cpus, etc.
+    :param n_jobs: Number of parallel jobs to run.
+    :param options: Additional options to pass to the solver.
+    :return: List of solutions.
     """
-    map_reduce_job: MapReduceJob["LeastCoreProblem", "ValuationResult"] = MapReduceJob(
+
+    def _map_func(
+        problems: List[LeastCoreProblem], *args, **kwargs
+    ) -> List[ValuationResult]:
+        return [lc_solve_problem(p, *args, **kwargs) for p in problems]
+
+    map_reduce_job: MapReduceJob[
+        "LeastCoreProblem", "List[ValuationResult]"
+    ] = MapReduceJob(
         inputs=problems,
-        map_func=lc_solve_problem,
-        map_kwargs=dict(u=u, options=options),
-        reduce_func=lambda x: x,  # type: ignore
+        map_func=_map_func,
+        map_kwargs=dict(u=u, algorithm=algorithm, **options),
+        reduce_func=lambda x: list(itertools.chain(*x)),
+        config=config,
         n_jobs=n_jobs,
     )
     solutions = map_reduce_job()
