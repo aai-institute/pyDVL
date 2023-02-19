@@ -13,6 +13,9 @@
   [PR #252](https://github.com/appliedAI-Initiative/pyDVL/pull/250)
 - Operations on `ValuationResult` and `Status` and cleanup
   [PR #248](https://github.com/appliedAI-Initiative/pyDVL/pull/248)
+- Splitting of problem preparation and solution in Least Core computation.
+  Umbrella function for LC methods.
+  [PR #257](https://github.com/appliedAI-Initiative/pyDVL/pull/257)
 - **Bug fix and minor improvements**: Fixes bug in TMCS with remote Ray cluster,
   raises an error for dummy sequential parallel backend with TMCS, clones model
   inside `Utility` before fitting by default, with flag `clone_before_fit` 
