@@ -20,7 +20,7 @@ from ray.remote_function import RemoteFunction
 
 from ..config import ParallelConfig
 
-__all__ = ["init_parallel_backend", "effective_n_jobs"]
+__all__ = ["init_parallel_backend", "effective_n_jobs", "available_cpus"]
 
 T = TypeVar("T")
 

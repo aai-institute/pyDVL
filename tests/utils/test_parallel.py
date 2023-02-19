@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
-from pydvl.utils.parallel.backend import available_cpus
+from pydvl.utils.parallel.backend import available_cpus, effective_n_jobs
 from pydvl.utils.parallel.map_reduce import _get_value
 
 
@@ -24,6 +24,14 @@ def test_effective_n_jobs(parallel_config, num_workers):
             assert parallel_backend.effective_n_jobs(-1) == available_cpus()
         else:
             assert parallel_backend.effective_n_jobs(-1) == num_workers
+
+    for n_jobs in [-1, 1, 2]:
+        assert parallel_backend.effective_n_jobs(n_jobs) == effective_n_jobs(
+            n_jobs, parallel_config
+        )
+
+    with pytest.raises(ValueError):
+        parallel_backend.effective_n_jobs(0)
 
 
 @pytest.fixture()
