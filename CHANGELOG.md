@@ -5,6 +5,9 @@
 - Generalised stopping criteria for valuation algorithms. Improved classes
   `ValuationResult` and `Status` with more operations. Some minor issues fixed.
   [PR #252](https://github.com/appliedAI-Initiative/pyDVL/pull/250)
+- Splitting of problem preparation and solution in Least Core computation.
+  Umbrella function for LC methods.
+  [PR #257](https://github.com/appliedAI-Initiative/pyDVL/pull/257)
 - Operations on ValuationResults and Statuses and cleanup
   [PR #248](https://github.com/appliedAI-Initiative/pyDVL/pull/248)
 - **Bug fix and minor improvements**: Fixes bug in TMCS with remote Ray cluster,
