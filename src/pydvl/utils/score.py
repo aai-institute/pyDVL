@@ -60,6 +60,8 @@ class Scorer:
         range: Tuple = (-np.inf, np.inf),
         name: Optional[str] = None,
     ):
+        if name is None and isinstance(scoring, str):
+            name = scoring
         self._scorer = get_scorer(scoring)
         self.default = default
         # TODO: auto-fill from known scorers ?
