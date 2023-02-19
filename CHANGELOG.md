@@ -2,13 +2,16 @@
 
 ## Unreleased
 
+- Fixed parallel and antithetic Owen sampling for Shapley values. Simplified
+  and extended tests.
+  [PR #267](https://github.com/appliedAI-Initiative/pyDVL/pull/267)
 - Added `Scorer` class for a cleaner interface. Fix minor bugs around
-  Group-Testing Shapley.
+  Group-Testing Shapley and add more tests.
   [PR #264](https://github.com/appliedAI-Initiative/pyDVL/pull/264)
 - Generalised stopping criteria for valuation algorithms. Improved classes
   `ValuationResult` and `Status` with more operations. Some minor issues fixed.
   [PR #252](https://github.com/appliedAI-Initiative/pyDVL/pull/250)
-- Operations on ValuationResults and Statuses and cleanup
+- Operations on `ValuationResult` and `Status` and cleanup
   [PR #248](https://github.com/appliedAI-Initiative/pyDVL/pull/248)
 - **Bug fix and minor improvements**: Fixes bug in TMCS with remote Ray cluster,
   raises an error for dummy sequential parallel backend with TMCS, clones model
