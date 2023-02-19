@@ -44,6 +44,7 @@ from numpy.typing import NDArray
 from ...utils.config import ParallelConfig
 from ...utils.numeric import random_powerset, running_moments
 from ...utils.parallel import MapReduceJob, init_parallel_backend
+from ...utils.parallel.backend import effective_n_jobs
 from ...utils.progress import maybe_progress
 from ...utils.status import Status
 from ...utils.utility import Utility
@@ -224,7 +225,7 @@ def permutation_montecarlo_shapley(
     :param progress: Whether to display progress bars for each job.
     :return: Object with the data values.
     """
-    iterations_per_job = max(1, n_iterations // n_jobs)
+    iterations_per_job = max(1, n_iterations // effective_n_jobs(n_jobs, config))
 
     map_reduce_job: MapReduceJob[Utility, "NDArray"] = MapReduceJob(
         u,
