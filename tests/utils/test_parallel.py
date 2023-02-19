@@ -9,7 +9,7 @@ from pydvl.utils.parallel.backend import available_cpus
 from pydvl.utils.parallel.map_reduce import _get_value
 
 
-def test_effective_n_jobs(parallel_config):
+def test_effective_n_jobs(parallel_config, num_workers):
     parallel_backend = init_parallel_backend(parallel_config)
     if parallel_config.backend == "sequential":
         assert parallel_backend.effective_n_jobs(1) == 1
@@ -21,7 +21,7 @@ def test_effective_n_jobs(parallel_config):
         if parallel_config.address is None:
             assert parallel_backend.effective_n_jobs(-1) == available_cpus()
         else:
-            assert parallel_backend.effective_n_jobs(-1) == 4
+            assert parallel_backend.effective_n_jobs(-1) == num_workers
 
 
 @pytest.fixture()

@@ -189,7 +189,7 @@ def seed_numpy(seed=42):
     np.random.seed(seed)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def num_workers():
     return max(1, available_cpus() - 1)
 
