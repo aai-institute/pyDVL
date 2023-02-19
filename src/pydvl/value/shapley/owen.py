@@ -53,7 +53,7 @@ def _owen_sampling_shapley(
     result = ValuationResult.empty(
         algorithm="owen_sampling_shapley_" + str(method), indices=indices
     )
-    index_set = set(indices)
+
     done = MinUpdates(1)
     repeat_indices = takewhile(lambda _: not done(result), cycle(indices))
     pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
@@ -61,13 +61,14 @@ def _owen_sampling_shapley(
         pbar.n = 100 * done.completion()
         pbar.refresh()
         e = np.zeros(max_q)
-        subset = np.array(list(index_set.difference({idx})))
+        subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
         for j, q in enumerate(q_steps):
             for s in random_powerset(subset, n_samples=n_iterations, q=q):
                 marginal = u({idx}.union(s)) - u(s)
                 if method == OwenAlgorithm.Antithetic and q != 0.5:
-                    s_complement = index_set.difference(s)
+                    s_complement = np.setxor1d(subset, s, assume_unique=True)
                     marginal += u({idx}.union(s_complement)) - u(s_complement)
+                    marginal /= 2
                 e[j] += marginal
         e /= n_iterations
         result.update(idx, e.mean())
@@ -110,7 +111,7 @@ def owen_sampling_shapley(
     OwenAlgorithm.Antithetic``, uses correlated samples in the inner sum to
     reduce the variance:
 
-    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m
+    $$\hat{v}_u(i) = \frac{1}{2 Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m
     \cup \{i\}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup \{i\}) - u((S^{(
     q_j)}_m)^c)],$$
 
@@ -138,7 +139,7 @@ def owen_sampling_shapley(
     .. versionadded:: 0.3.0
 
     .. versionchanged:: 0.5.0
-       Support for parallel computation and testing of antithetic sampling.
+       Support for parallel computation and enable antithetic sampling.
 
     """
     map_reduce_job: MapReduceJob[NDArray, ValuationResult] = MapReduceJob(
