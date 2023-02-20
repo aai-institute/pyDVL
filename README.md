@@ -97,21 +97,19 @@ This is how it looks for *Truncated Montecarlo Shapley*, an efficient method for
 Data Shapley values:
 
 ```python
-import numpy as np
-from pydvl.utils import Dataset, Utility
-from pydvl.value.shapley import compute_shapley_values
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
+from sklearn.datasets import load_breast_cancer
+from sklearn.linear_model import LogisticRegression
+from pydvl.utils import Dataset, Utility, Scorer
+from pydvl.value import *
 
-X, y = np.arange(100).reshape((50, 2)), np.arange(50)
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.5, random_state=16
-)
-dataset = Dataset(X_train, y_train, X_test, y_test)
-model = LinearRegression()
-utility = Utility(model, dataset)
+data = Dataset.from_sklearn(load_breast_cancer(), train_size=0.7)
+model = LogisticRegression()
+u = Utility(model, data, Scorer("accuracy", default=0.0))
 values = compute_shapley_values(
-    u=utility, n_iterations=100, mode="truncated_montecarlo"
+    u,
+    mode=ShapleyMode.TruncatedMontecarlo,
+    done=MaxUpdates(100), 
+    truncation=RelativeTruncation(u, rtol=0.01),
 )
 ```
 
