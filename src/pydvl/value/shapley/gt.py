@@ -19,8 +19,8 @@ import logging
 from collections import namedtuple
 from typing import Iterable, Tuple, TypeVar, cast
 
+import cvxpy as cp
 import numpy as np
-import scipy as sp
 from numpy.typing import NDArray
 
 from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress
@@ -91,68 +91,6 @@ def num_samples_eps_delta(
     log.warning("This may be bogus. Do not use.")
     constants = _constants(n=n, epsilon=eps, delta=delta, utility_range=utility_range)
     return int(constants.T)
-
-
-def _build_gt_constraints(
-    n: int, bound: float, C: NDArray[np.float_]
-) -> Tuple[NDArray[np.float_], NDArray[np.float_]]:
-    r"""Builds a matrix and vector modelling the pairwise constraints:
-
-    $$ | s_i - s_j - C_{i j}| \leq \rho, $$
-
-    where $\rho = \epsilon/(2 \sqrt{N})$ in the paper and
-
-    $$C_{i j} = \frac{Z}{T} \sum_{t=1}^T U(S_t) (\beta_{t i} - \beta_{t j}),$$
-
-    for $i, j \in [N], j \gte i$.
-
-    For every $i$, each such constraint is converted into two:
-
-    $$ s_i - s_j \leq \rho + C_{i j}, $$
-    $$ s_j - s_i \leq \rho - C_{i j}, $$
-
-    and there are $N-i$ of these, for $j \in \{i, i+1, ..., N\}$. We build
-    matrices $A^{(i)} \in \mathbb{R}^{N-i \times N}$ representing the first set
-    of constraints $\leq \rho + C_{i j}$ for every $j \geq i$ and stack them
-    vertically.
-
-    The second set of constraints is just the negation of the first.
-
-    :param n: Number of samples
-    :param bound: Upper bound, typically $\rho = \epsilon/(2 \sqrt{N})$
-    :param C: Monte Carlo estimate of the pair-wise differences of values
-    :return: Constraint matrix ``A_ub`` and vector ``b_ub`` for
-        ``sp.optimize.linprog``
-    """
-    A = -np.identity(n)
-    A[:, 0] = 1
-    A = A[1:, :]
-    assert A.shape == (n - 1, n)
-
-    assert C.shape == (n, n)
-    c = C[0, 1:]
-    assert c.shape == (n - 1,)
-
-    def rshift(M: NDArray, copy: bool = True):
-        if copy:
-            M = np.copy(M)
-        M[:, 1:] = M[:, :-1]
-        M[:, 0] = 0
-        return M
-
-    chunk = A.copy()
-    for k in range(1, n - 1):
-        chunk = rshift(chunk, copy=True)[:-1]
-        A = np.row_stack((A, chunk))
-        c = np.concatenate((c, C[k, k + 1 :]))
-
-    assert A.shape[0] == c.shape[0]
-
-    # Append lower bound constraints:
-    A = np.row_stack((A, -A))
-    c = np.concatenate((c, -c))
-
-    return A, bound + c
 
 
 def _group_testing_shapley(
@@ -269,39 +207,7 @@ def group_testing_shapley(
     total_utility = u(u.data.indices)
 
     ###########################################################################
-    # Sanity check: Another way of building the constraints
-    # CC = np.zeros(shape=(n, n))
-    # for t in range(T):
-    #     # A matrix with n columns copies of beta[t]:
-    #     Bt = np.repeat(betas[t], repeats=n).reshape((n, n))
-    #     # C_ij += u_t * (β_i - β_j)
-    #     CC += uu[t] * (Bt - Bt.T)
-    # CC *= Z / T
-    # assert np.allclose(np.triu(C), np.triu(CC))
-
-    ###########################################################################
-    # Solution of the constraint problem with scipy
-    # DISABLED: highs fails to find solutions that SCS finds
-
-    # A_ub, b_ub = _build_gt_constraints(n, bound=epsilon / (2 * np.sqrt(n)), C=C)
-    # c = np.zeros_like(u.data.indices)
-    # # A trivial bound for the values from the definition is max_utility * (n-1)
-    # bounds = tuple(u.score_range * n)  # u.score_range defaults to (-inf, inf)
-    # result: sp.optimize.OptimizeResult = sp.optimize.linprog(
-    #     c,
-    #     A_ub=A_ub,
-    #     b_ub=b_ub,
-    #     A_eq=np.ones((1, n)),
-    #     b_eq=total_utility,
-    #     bounds=bounds,
-    #     method="highs",
-    #     options={},
-    # )
-
-    ###########################################################################
     # Solution of the constraint problem with cvxpy
-
-    import cvxpy as cp
 
     v = cp.Variable(n)
     constraints = [cp.sum(v) == total_utility]
@@ -334,13 +240,3 @@ def group_testing_shapley(
         values=v.value,
         data_names=u.data.data_names,
     )
-
-    ###########################################################################
-    # Sanity check: compare the solutions by scipy and cvxpy
-    #
-    # if not np.allclose(result.x, v.value, rtol=0.01):
-    #     diff = result.x - v.value
-    #     raise RuntimeError(
-    #         f"Mismatch > 1% between the solutions by scipy and cvxpy: "
-    #         f"mean={diff.mean()}, stdev={diff.std()}"
-    #     )
