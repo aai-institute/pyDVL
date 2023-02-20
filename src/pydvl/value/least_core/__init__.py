@@ -71,7 +71,7 @@ def compute_least_core_values(
 
     :return: ValuationResult object with the computed values.
 
-    .. versionadded:: 0.4.1
+    .. versionadded:: 0.5.0
     """
     progress: bool = kwargs.pop("progress", False)
 
