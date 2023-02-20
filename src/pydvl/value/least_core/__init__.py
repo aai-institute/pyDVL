@@ -29,6 +29,9 @@ from pydvl.value.least_core.naive import *
 from pydvl.value.result import ValuationResult
 
 
+__all__ = ["compute_least_core_values", "LeastCoreMode"]
+
+
 class LeastCoreMode(Enum):
     """Available Least Core algorithms."""
 

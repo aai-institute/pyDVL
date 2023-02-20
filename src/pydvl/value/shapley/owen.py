@@ -13,6 +13,9 @@ from pydvl.value import ValuationResult
 from pydvl.value.stopping import MinUpdates
 
 
+__all__ = ["OwenAlgorithm", "owen_sampling_shapley"]
+
+
 class OwenAlgorithm(Enum):
     Standard = "standard"
     Antithetic = "antithetic"
