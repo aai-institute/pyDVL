@@ -221,6 +221,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../utils/progress.html">progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../utils/score.html">score</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../utils/status.html">status</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../utils/types.html">types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../utils/utility.html">utility</a></li>
@@ -293,7 +294,7 @@
 <hr class="docutils" />
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.value.shapley.owen.OwenAlgorithm">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OwenAlgorithm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/owen.py#L20"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.owen.OwenAlgorithm" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OwenAlgorithm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/owen.py#L16"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.owen.OwenAlgorithm" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>An enumeration.</p>
 <dl class="py attribute">
@@ -310,13 +311,9 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.value.shapley.owen.owen_sampling_shapley">
-<span class="sig-name descname"><span class="pre">owen_sampling_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.value.shapley.owen.OwenAlgorithm" title="pydvl.value.shapley.owen.OwenAlgorithm"><span class="pre">OwenAlgorithm</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">OwenAlgorithm.Standard</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">n_local_workers=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/owen.py#L80"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.owen.owen_sampling_shapley" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">owen_sampling_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.value.shapley.owen.OwenAlgorithm" title="pydvl.value.shapley.owen.OwenAlgorithm"><span class="pre">OwenAlgorithm</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">OwenAlgorithm.Standard</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">n_local_workers=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/owen.py#L83"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.owen.owen_sampling_shapley" title="Permalink to this definition"></a></dt>
 <dd><p>Owen sampling of Shapley values as described in
 Okhrati and Lipani<a class="footnote-reference brackets" href="#footcite-okhrati-multilinear-2021" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Antithetic sampling is unstable and not properly tested</p>
-</div>
 <p>This function computes a Monte Carlo approximation to</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
@@ -335,23 +332,27 @@ Okhrati and Lipani<a class="footnote-reference brackets" href="#footcite-okhrati
 <p>where <span class="math notranslate nohighlight">\(q_j = \frac{j}{Q} \in [0,1]\)</span> and the sets <span class="math notranslate nohighlight">\(S^{(q_j)}\)</span> are such that a
 sample <span class="math notranslate nohighlight">\(x \in S^{(q_j)}\)</span> if a draw from a <span class="math notranslate nohighlight">\(Ber(q_j)\)</span> distribution is 1.</p>
 <p>The second method, selected with the argument <code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">=</span>
-<span class="pre">OwenAlgorithm.Anthithetic</span></code>,
-uses correlated samples in the inner sum to reduce the variance:</p>
+<span class="pre">OwenAlgorithm.Antithetic</span></code>, uses correlated samples in the inner sum to
+reduce the variance:</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m
+\[\hat{v}_u(i) = \frac{1}{2 Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m
 \cup \{i\}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup \{i\}) - u((S^{(
 q_j)}_m)^c)],\]</div>
 </div>
 </p>
 <p>where now <span class="math notranslate nohighlight">\(q_j = \frac{j}{2Q} \in [0,\frac{1}{2}]\)</span>, and <span class="math notranslate nohighlight">\(S^c\)</span> is the
 complement of <span class="math notranslate nohighlight">\(S\)</span>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The outer integration could be done instead with a quadrature rule.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> – <a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> object holding data, model
 and scoring function.</p></li>
-<li><p><strong>n_iterations</strong> – Numer of sets to sample for each value of q</p></li>
+<li><p><strong>n_samples</strong> – Numer of sets to sample for each value of q</p></li>
 <li><p><strong>max_q</strong> – Number of subdivisions for q ∈ [0,1] (the element sampling
 probability) used to approximate the outer integral.</p></li>
 <li><p><strong>method</strong> – Selects the algorithm to use, see the description. Either
@@ -370,6 +371,9 @@ address, number of cpus, etc.</p></li>
 </dl>
 <div class="versionadded">
 <p><span class="versionmodified added">New in version 0.3.0.</span></p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.5.0: </span>Support for parallel computation and enable antithetic sampling.</p>
 </div>
 </dd></dl>
 

@@ -221,6 +221,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../utils/progress.html">progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../utils/score.html">score</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../utils/status.html">status</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../utils/types.html">types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../utils/utility.html">utility</a></li>
@@ -296,7 +297,7 @@ done in such a way that an approximation to the true Shapley values can be
 computed with guarantees.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>This method is extremely inefficient. Potential improvements to the
+<p>This method is very inefficient. Potential improvements to the
 implementation notwithstanding, convergence seems to be very slow (in terms
 of evaluations of the utility required). We recommend other Monte Carlo
 methods instead.</p>
@@ -308,13 +309,13 @@ methods instead.</p>
 <hr class="docutils" />
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.value.shapley.gt.group_testing_shapley">
-<span class="sig-name descname"><span class="pre">group_testing_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">n_local_workers=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/gt.py#L188"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.gt.group_testing_shapley" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">group_testing_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">n_local_workers=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/gt.py#L145"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.gt.group_testing_shapley" title="Permalink to this definition"></a></dt>
 <dd><p>Implements group testing for approximation of Shapley values as described
 in Jia <em>et al.</em><a class="footnote-reference brackets" href="#footcite-jia-efficient-2019" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>This method is extremely inefficient. It requires several orders of
-magnitude more evaluations of the utility than others in
+<p>This method is very inefficient. It requires several orders of magnitude
+more evaluations of the utility than others in
 <a class="reference internal" href="montecarlo.html#module-pydvl.value.shapley.montecarlo" title="pydvl.value.shapley.montecarlo"><code class="xref py py-mod docutils literal notranslate"><span class="pre">montecarlo</span></code></a>. It also uses several intermediate
 objects like the results from the runners and the constraint matrices
 which can become rather large.</p>
@@ -326,15 +327,20 @@ solve for the individual values in a feasibility problem.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
-<li><p><strong>n_iterations</strong> – Number of tests to perform. Use
+<li><p><strong>n_samples</strong> – Number of tests to perform. Use
 <a class="reference internal" href="#pydvl.value.shapley.gt.num_samples_eps_delta" title="pydvl.value.shapley.gt.num_samples_eps_delta"><code class="xref py py-func docutils literal notranslate"><span class="pre">num_samples_eps_delta()</span></code></a> to estimate this.</p></li>
-<li><p><strong>eps</strong> – Epsilon in the (ε,δ) sample bound. Use the same as for the
+<li><p><strong>epsilon</strong> – From the (ε,δ) sample bound. Use the same as for the
+estimation of <code class="docutils literal notranslate"><span class="pre">n_iterations</span></code>.</p></li>
+<li><p><strong>delta</strong> – From the (ε,δ) sample bound. Use the same as for the
 estimation of <code class="docutils literal notranslate"><span class="pre">n_iterations</span></code>.</p></li>
 <li><p><strong>n_jobs</strong> – Number of parallel jobs to use. Each worker performs a chunk
 of all tests (i.e. utility evaluations).</p></li>
 <li><p><strong>config</strong> – Object configuring parallel computation, with cluster
 address, number of cpus, etc.</p></li>
 <li><p><strong>progress</strong> – Whether to display progress bars for each job.</p></li>
+<li><p><strong>options</strong> – Additional options to pass to <a class="reference external" href="https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options">cvxpy.Problem.solve()</a>.
+E.g. to change the solver (which defaults to <cite>cvxpy.SCS</cite>) pass
+<cite>solver=cvxpy.CVXOPT</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -344,11 +350,15 @@ address, number of cpus, etc.</p></li>
 <div class="versionadded">
 <p><span class="versionmodified added">New in version 0.4.0.</span></p>
 </div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.5.0: </span>Changed the solver to cvxpy instead of scipy’s linprog. Added the ability
+to pass arbitrary options to it.</p>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.value.shapley.gt.num_samples_eps_delta">
-<span class="sig-name descname"><span class="pre">num_samples_eps_delta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utility_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/gt.py#L71"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.gt.num_samples_eps_delta" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">num_samples_eps_delta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utility_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/gt.py#L93"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.gt.num_samples_eps_delta" title="Permalink to this definition"></a></dt>
 <dd><p>Implements the formula in Theorem 3 of Jia <em>et al.</em><a class="footnote-reference brackets" href="#footcite-jia-efficient-2019" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>
 which gives a lower bound on the number of samples required to obtain an
 (ε/√n,δ/(N(N-1))-approximation to all pair-wise differences of Shapley
@@ -358,7 +368,7 @@ values, wrt. <span class="math notranslate nohighlight">\(\ell_2\)</span> norm.<
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>eps</strong> – ε</p></li>
 <li><p><strong>delta</strong> – δ</p></li>
-<li><p><strong>n</strong> – Number of samples</p></li>
+<li><p><strong>n</strong> – Number of data points</p></li>
 <li><p><strong>utility_range</strong> – Range of the <a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a>
 function</p></li>
 </ul>

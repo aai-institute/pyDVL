@@ -221,6 +221,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/utils/progress.html">progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/utils/score.html">score</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/utils/status.html">status</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/utils/types.html">types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/utils/utility.html">utility</a></li>
@@ -387,6 +388,31 @@ greatly reduces computation times of Monte Carlo methods. Because of how caching
 is implemented, it is important not to reuse <cite>Utility</cite> objects for different
 datasets. You can read more about <a class="reference internal" href="20-install.html#caching-setup"><span class="std std-ref">Setting up the cache</span></a> in the installation guide
 and the documentation of the <a class="reference internal" href="pydvl/utils/caching.html#module-pydvl.utils.caching" title="pydvl.utils.caching"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.utils.caching</span></code></a> module.</p>
+<section id="using-custom-scorers">
+<h3>Using custom scorers<a class="headerlink" href="#using-custom-scorers" title="Permalink to this heading"></a></h3>
+<p>The <cite>scoring</cite> argument of <a class="reference internal" href="pydvl/utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> can be used to
+specify a custom <code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code> object. This is a simple
+wrapper for a callable that takes a model, and test data and returns a score.</p>
+<p>More importantly, the object provides information about the range of the score,
+which is used by some methods by estimate the number of samples necessary, and
+about what default value to use when the model fails to train.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The most important property of a <cite>Scorer</cite> is its default value. Because many
+models will fail to fit on small subsets of the data, it is important to
+provide a sensible default value for the score.</p>
+</div>
+<p>It is possible to skip the construction of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code>
+when constructing the <cite>Utility</cite> object. The two following calls are equivalent:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="s2">&quot;explained_variance&quot;</span><span class="p">,</span> <span class="n">score_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">default_score</span><span class="o">=</span><span class="mf">0.0</span>
+<span class="p">)</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">Scorer</span><span class="p">(</span><span class="s2">&quot;explained_variance&quot;</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
 <section id="learning-the-utility">
 <h3>Learning the utility<a class="headerlink" href="#learning-the-utility" title="Permalink to this heading"></a></h3>
 <p>Because each evaluation of the utility entails a full retrain of the model with
@@ -603,15 +629,16 @@ infer the final values:</p>
 <p>We have reproduced this method in pyDVL for completeness and benchmarking,
 but we don’t advocate its use because of the speed and memory cost. Despite
 our best efforts, the number of samples required in practice for convergence
-can be several orders of magnitude worse than with e.g. Truncated Monte Carlo.</p>
+can be several orders of magnitude worse than with e.g. Truncated Monte Carlo.
+Additionally, the CSP can sometimes turn out to be infeasible.</p>
 </div>
 <p>Usage follows the same pattern as every other Shapley method, but with the
-addition of an <code class="docutils literal notranslate"><span class="pre">eps</span></code> parameter required for the solution of the CSP. It should
-be the same value used to compute the minimum number of samples required. This
-can be done with <a class="reference internal" href="pydvl/value/shapley/gt.html#pydvl.value.shapley.gt.num_samples_eps_delta" title="pydvl.value.shapley.gt.num_samples_eps_delta"><code class="xref py py-func docutils literal notranslate"><span class="pre">num_samples_eps_delta()</span></code></a>, but note
-that the number returned will be huge! In practice, fewer samples can be enough,
-but the actual number will strongly depend on the utility, in particular its
-variance.</p>
+addition of an <code class="docutils literal notranslate"><span class="pre">epsilon</span></code> parameter required for the solution of the CSP. It
+should be the same value used to compute the minimum number of samples required.
+This can be done with <a class="reference internal" href="pydvl/value/shapley/gt.html#pydvl.value.shapley.gt.num_samples_eps_delta" title="pydvl.value.shapley.gt.num_samples_eps_delta"><code class="xref py py-func docutils literal notranslate"><span class="pre">num_samples_eps_delta()</span></code></a>, but
+note that the number returned will be huge! In practice, fewer samples can be
+enough, but the actual number will strongly depend on the utility, in particular
+its variance.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
 <span class="kn">from</span> <span class="nn">pydvl.value.shapley</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
 
@@ -776,8 +803,8 @@ utility for low sample sizes, and hence unreliable Monte Carlo approximations
 to the values. Nevertheless, in practice it is only the ranking of samples
 that matters, and this tends to be accurate (wrt. to the true ranking) despite
 inaccurate values.</p>
-<p>pyDVL offers a dedicated <a class="reference internal" href="pydvl/utils/types.html#pydvl.utils.types.compose_score" title="pydvl.utils.types.compose_score"><code class="xref py py-func docutils literal notranslate"><span class="pre">function</span> <span class="pre">composition</span></code></a> for scorer functions which can be used to
-squash a score. The following is defined in module <a class="reference internal" href="pydvl/utils/numeric.html#module-pydvl.utils.numeric" title="pydvl.utils.numeric"><code class="xref py py-mod docutils literal notranslate"><span class="pre">numeric</span></code></a>:</p>
+<p>pyDVL offers a dedicated <code class="xref py py-func docutils literal notranslate"><span class="pre">function</span> <span class="pre">composition</span></code> for scorer functions which can be used to
+squash a score. The following is defined in module <code class="xref py py-mod docutils literal notranslate"><span class="pre">scorer</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)))</span>
 
@@ -929,6 +956,7 @@ require cross-validating the whole value computation).</p></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#creating-a-utility">Creating a Utility</a><ul>
+<li><a class="reference internal" href="#using-custom-scorers">Using custom scorers</a></li>
 <li><a class="reference internal" href="#learning-the-utility">Learning the utility</a></li>
 </ul>
 </li>

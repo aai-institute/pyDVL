@@ -221,6 +221,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../utils/progress.html">progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../utils/score.html">score</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../utils/status.html">status</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../utils/types.html">types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../utils/utility.html">utility</a></li>
@@ -323,20 +324,23 @@ Implemented in
 <code class="xref py py-func docutils literal notranslate"><span class="pre">truncated_montecarlo_shapley()</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">owen_sampling</span></code>: Uses the Owen continuous extension of the utility
 function to the unit cube. Implemented in
-<code class="xref py py-func docutils literal notranslate"><span class="pre">owen_sampling_shapley()</span></code>.
-This method requires an additional parameter <cite>q_max</cite> for the number of
-subdivisions of the unit interval to use for integration.</p></li>
+<code class="xref py py-func docutils literal notranslate"><span class="pre">owen_sampling_shapley()</span></code>. This
+method does not take a <a class="reference internal" href="stopping.html#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code></a>
+but instead requires a parameter <code class="docutils literal notranslate"><span class="pre">q_max</span></code> for the number of subdivisions
+of the unit interval to use for integration, and another parameter
+<code class="docutils literal notranslate"><span class="pre">n_samples</span></code> for the number of subsets to sample for each <span class="math notranslate nohighlight">\(q\)</span>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">owen_halved</span></code>: Same as ‘owen_sampling’ but uses correlated samples in the
 expectation. Implemented in
 <code class="xref py py-func docutils literal notranslate"><span class="pre">owen_sampling_shapley()</span></code>.
 This method  requires an additional parameter <cite>q_max</cite> for the number of
-subdivisions of the interval [0,0.5] to use for integration.</p></li>
+subdivisions of the interval [0,0.5] to use for integration, and another
+parameter <code class="docutils literal notranslate"><span class="pre">n_samples</span></code> for the number of subsets to sample for each <span class="math notranslate nohighlight">\(q\)</span>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">group_testing</span></code>: estimates differences of Shapley values and solves a
 constraint satisfaction problem. High sample complexity, not recommended.
-Implemented in <a class="reference internal" href="shapley/gt.html#pydvl.value.shapley.gt.group_testing_shapley" title="pydvl.value.shapley.gt.group_testing_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">group_testing_shapley()</span></code></a>. Only
-accepts <a class="reference internal" href="stopping.html#pydvl.value.stopping.MaxUpdates" title="pydvl.value.stopping.MaxUpdates"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxUpdates</span></code></a> (use
-<a class="reference internal" href="shapley/gt.html#pydvl.value.shapley.gt.num_samples_eps_delta" title="pydvl.value.shapley.gt.num_samples_eps_delta"><code class="xref py py-func docutils literal notranslate"><span class="pre">num_samples_eps_delta()</span></code></a> to compute a bound)
-and <a class="reference internal" href="stopping.html#pydvl.value.stopping.MaxTime" title="pydvl.value.stopping.MaxTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxTime</span></code></a> as stopping criteria.</p></li>
+Implemented in <a class="reference internal" href="shapley/gt.html#pydvl.value.shapley.gt.group_testing_shapley" title="pydvl.value.shapley.gt.group_testing_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">group_testing_shapley()</span></code></a>. This
+method does not take a <a class="reference internal" href="stopping.html#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code></a>
+but instead requires a parameter <code class="docutils literal notranslate"><span class="pre">n_samples</span></code> for the number of
+iterations to run.</p></li>
 </ul>
 <p>Additionally, one can use model-specific methods:</p>
 <ul class="simple">

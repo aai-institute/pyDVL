@@ -219,6 +219,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/utils/progress.html">progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/utils/score.html">score</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/utils/status.html">status</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/utils/types.html">types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/utils/utility.html">utility</a></li>
@@ -380,7 +381,7 @@
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="pydvl/utils/types.html#pydvl.utils.types.compose_score">compose_score() (in module pydvl.utils.types)</a>
+        <li><a href="pydvl/utils/score.html#pydvl.utils.score.compose_score">compose_score() (in module pydvl.utils.score)</a>
 </li>
         <li><a href="pydvl/influence/general.html#pydvl.influence.general.compute_influences">compute_influences() (in module pydvl.influence.general)</a>
 </li>
@@ -401,6 +402,8 @@
         <li><a href="pydvl/value/stopping.html#pydvl.value.stopping.StoppingCriterion.converged">converged() (StoppingCriterion method)</a>
 </li>
         <li><a href="pydvl/utils/parallel/actor.html#pydvl.utils.parallel.actor.Coordinator">Coordinator (class in pydvl.utils.parallel.actor)</a>
+</li>
+        <li><a href="pydvl/value/result.html#pydvl.value.result.ValueItem.count">count (ValueItem attribute)</a>
 </li>
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.counts">counts (ValuationResult property)</a>
 </li>
@@ -570,6 +573,8 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedConfig.ignore_args">ignore_args (MemcachedConfig attribute)</a>
 </li>
+        <li><a href="pydvl/value/result.html#pydvl.value.result.ValueItem.index">index (ValueItem attribute)</a>
+</li>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset.indices">indices (Dataset property)</a>
 
         <ul>
@@ -578,10 +583,10 @@
           <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.indices">(ValuationResult property)</a>
 </li>
         </ul></li>
-        <li><a href="pydvl/influence/general.html#pydvl.influence.general.InfluenceType">InfluenceType (class in pydvl.influence.general)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/influence/general.html#pydvl.influence.general.InfluenceType">InfluenceType (class in pydvl.influence.general)</a>
+</li>
         <li><a href="pydvl/utils/parallel/backend.html#pydvl.utils.parallel.backend.init_parallel_backend">init_parallel_backend() (in module pydvl.utils.parallel.backend)</a>
 </li>
         <li><a href="pydvl/influence/general.html#pydvl.influence.general.InversionMethod">InversionMethod (class in pydvl.influence.general)</a>
@@ -742,6 +747,8 @@
 </li>
           <li><a href="pydvl/utils/progress.html#module-pydvl.utils.progress">pydvl.utils.progress</a>
 </li>
+          <li><a href="pydvl/utils/score.html#module-pydvl.utils.score">pydvl.utils.score</a>
+</li>
           <li><a href="pydvl/utils/status.html#module-pydvl.utils.status">pydvl.utils.status</a>
 </li>
           <li><a href="pydvl/utils/types.html#module-pydvl.utils.types">pydvl.utils.types</a>
@@ -812,7 +819,11 @@
         <li><a href="pydvl/value/loo/naive.html#pydvl.value.loo.naive.naive_loo">naive_loo() (in module pydvl.value.loo.naive)</a>
 </li>
         <li><a href="pydvl/value/stopping.html#pydvl.value.stopping.StoppingCriterion.name">name (StoppingCriterion property)</a>
+
+        <ul>
+          <li><a href="pydvl/value/result.html#pydvl.value.result.ValueItem.name">(ValueItem attribute)</a>
 </li>
+        </ul></li>
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.names">names (ValuationResult property)</a>
 </li>
     </ul></td>
@@ -1012,8 +1023,6 @@
           <li><a href="pydvl/utils/parallel.html#module-pydvl.utils.parallel">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     pydvl.utils.parallel.actor
 
@@ -1021,6 +1030,8 @@
           <li><a href="pydvl/utils/parallel/actor.html#module-pydvl.utils.parallel.actor">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     pydvl.utils.parallel.backend
 
@@ -1040,6 +1051,13 @@
 
         <ul>
           <li><a href="pydvl/utils/progress.html#module-pydvl.utils.progress">module</a>
+</li>
+        </ul></li>
+        <li>
+    pydvl.utils.score
+
+        <ul>
+          <li><a href="pydvl/utils/score.html#module-pydvl.utils.score">module</a>
 </li>
         </ul></li>
         <li>
@@ -1203,6 +1221,8 @@
 </li>
         <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.random_subset_of_size">random_subset_of_size() (in module pydvl.utils.numeric)</a>
 </li>
+        <li><a href="pydvl/utils/score.html#pydvl.utils.score.Scorer.range">range (Scorer attribute)</a>
+</li>
         <li><a href="pydvl/utils/parallel/actor.html#pydvl.utils.parallel.actor.RayActorWrapper">RayActorWrapper (class in pydvl.utils.parallel.actor)</a>
 </li>
         <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheStats.reconnects">reconnects (CacheStats attribute)</a>
@@ -1241,6 +1261,8 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/types.html#pydvl.utils.types.SupervisedModel.score">score() (SupervisedModel method)</a>
 </li>
+        <li><a href="pydvl/utils/score.html#pydvl.utils.score.Scorer">Scorer (class in pydvl.utils.score)</a>
+</li>
         <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.GlovesGameUtility.scorer">scorer (GlovesGameUtility attribute)</a>
 
         <ul>
@@ -1267,10 +1289,10 @@
           <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode">(class in pydvl.value.shapley.types)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility.signature">signature (Utility property)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.sort">sort() (ValuationResult method)</a>
 </li>
         <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.spearman_correlation">spearman_correlation() (in module pydvl.reporting.plots)</a>
@@ -1281,6 +1303,10 @@
           <li><a href="pydvl/influence/types.html#pydvl.influence.types.TwiceDifferentiable.split_grad">(TwiceDifferentiable method)</a>
 </li>
         </ul></li>
+        <li><a href="pydvl/utils/score.html#pydvl.utils.score.squashed_r2">squashed_r2 (in module pydvl.utils.score)</a>
+</li>
+        <li><a href="pydvl/utils/score.html#pydvl.utils.score.squashed_variance">squashed_variance (in module pydvl.utils.score)</a>
+</li>
         <li><a href="pydvl/value/shapley/owen.html#pydvl.value.shapley.owen.OwenAlgorithm.Standard">Standard (OwenAlgorithm attribute)</a>
 </li>
         <li><a href="pydvl/value/stopping.html#pydvl.value.stopping.StandardError">StandardError (class in pydvl.value.stopping)</a>
@@ -1290,7 +1316,11 @@
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.status">status (ValuationResult property)</a>
 </li>
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.stderr">stderr (ValuationResult property)</a>
+
+        <ul>
+          <li><a href="pydvl/value/result.html#pydvl.value.result.ValueItem.stderr">(ValueItem property)</a>
 </li>
+        </ul></li>
         <li><a href="pydvl/value/stopping.html#pydvl.value.stopping.StoppingCriterion">StoppingCriterion (class in pydvl.value.stopping)</a>
 </li>
         <li><a href="pydvl/utils/types.html#pydvl.utils.types.SupervisedModel">SupervisedModel (class in pydvl.utils.types)</a>
@@ -1393,9 +1423,15 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult">ValuationResult (class in pydvl.value.result)</a>
 </li>
+        <li><a href="pydvl/value/result.html#pydvl.value.result.ValueItem.value">value (ValueItem attribute)</a>
+</li>
+        <li><a href="pydvl/value/result.html#pydvl.value.result.ValueItem">ValueItem (class in pydvl.value.result)</a>
+</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.values">values (ValuationResult property)</a>
+</li>
+        <li><a href="pydvl/value/result.html#pydvl.value.result.ValueItem.variance">variance (ValueItem attribute)</a>
 </li>
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.variances">variances (ValuationResult property)</a>
 </li>
