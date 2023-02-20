@@ -292,7 +292,7 @@
 <h2>Module members<a class="headerlink" href="#module-members" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.utils.parallel.backend.init_parallel_backend">
-<span class="sig-name descname"><span class="pre">init_parallel_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseParallelBackend</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L201"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.init_parallel_backend" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_parallel_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseParallelBackend</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L199"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.init_parallel_backend" title="Permalink to this definition"></a></dt>
 <dd><p>Initializes the parallel backend and returns an instance of it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -309,6 +309,39 @@
 <span class="go">&lt;RayParallelBackend: {&#39;address&#39;: None, &#39;logging_level&#39;: 30, &#39;num_cpus&#39;: None}&gt;</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pydvl.utils.parallel.backend.effective_n_jobs">
+<span class="sig-name descname"><span class="pre">effective_n_jobs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">n_local_workers=None,</span> <span class="pre">logging_level=30)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L237"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.effective_n_jobs" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the effective number of jobs.</p>
+<p>This number may vary depending on the parallel backend and the resources
+available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_jobs</strong> – the number of jobs requested. If -1, the number of available
+CPUs is returned.</p></li>
+<li><p><strong>config</strong> – instance of <a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelConfig</span></code></a> with
+cluster address, number of cpus, etc.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the effective number of jobs, guaranteed to be &gt;= 1.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – if the effective number of jobs returned by the backend
+is &lt; 1.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pydvl.utils.parallel.backend.available_cpus">
+<span class="sig-name descname"><span class="pre">available_cpus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L224"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.available_cpus" title="Permalink to this definition"></a></dt>
+<dd><p>Platform-independent count of available cores.</p>
+<p>FIXME: do we really need this or is <cite>os.cpu_count</cite> enough? Is this portable?
+:return: Number of cores, or 1 if it is not possible to determine.</p>
 </dd></dl>
 
 </section>
@@ -379,6 +412,8 @@
 <li><a class="reference internal" href="#">backend</a><ul>
 <li><a class="reference internal" href="#module-members">Module members</a><ul>
 <li><a class="reference internal" href="#pydvl.utils.parallel.backend.init_parallel_backend"><code class="docutils literal notranslate"><span class="pre">init_parallel_backend()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.utils.parallel.backend.effective_n_jobs"><code class="docutils literal notranslate"><span class="pre">effective_n_jobs()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.utils.parallel.backend.available_cpus"><code class="docutils literal notranslate"><span class="pre">available_cpus()</span></code></a></li>
 </ul>
 </li>
 </ul>
