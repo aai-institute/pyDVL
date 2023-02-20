@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Added `Scorer` class for a cleaner interface. Fix minor bugs around
-  Group-Testing Shapley.
+  Group-Testing Shapley and switched to cvxpy for the constraint solver.
   [PR #264](https://github.com/appliedAI-Initiative/pyDVL/pull/264)
 - Generalised stopping criteria for valuation algorithms. Improved classes
   `ValuationResult` and `Status` with more operations. Some minor issues fixed.
