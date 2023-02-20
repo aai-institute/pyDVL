@@ -26,7 +26,8 @@ from sklearn.metrics import check_scoring
 from pydvl.utils import Dataset
 from pydvl.utils.caching import CacheStats, memcached, serialize
 from pydvl.utils.config import MemcachedConfig
-from pydvl.utils.types import Scorer, SupervisedModel
+from pydvl.utils.score import Scorer
+from pydvl.utils.types import SupervisedModel
 
 __all__ = ["Utility", "DataUtilityLearning", "MinerGameUtility", "GlovesGameUtility"]
 
@@ -34,7 +35,8 @@ logger = logging.getLogger(__name__)
 
 
 class Utility:
-    """Convenience wrapper with configurable memoization of the scoring function.
+    """Convenience wrapper with configurable memoization of the scoring
+    function.
 
     An instance of ``Utility`` holds the triple of model, dataset and scoring
     function which determines the value of data points. This is mosly used for
@@ -46,9 +48,12 @@ class Utility:
     ``fit()``, ``predict()``, and ``score()`` methods.
 
     When calling the utility, the model will be
-    `cloned <https://scikit-learn.org/stable/modules/generated/sklearn.base.clone.html>`_
-    if it is a Sci-Kit Learn model, otherwise a copy is created using ``deepcopy()``
-    from the builtin `copy <https://docs.python.org/3/library/copy.html>`_ module.
+    `cloned <https://scikit-learn.org/stable/modules/generated/sklearn.base
+    .clone.html>`_
+    if it is a Sci-Kit Learn model, otherwise a copy is created using
+    ``deepcopy()``
+    from the builtin `copy <https://docs.python.org/3/library/copy.html>`_
+    module.
 
     Since evaluating the scoring function requires retraining the model
     and that can be time-consuming, this class wraps it and caches
@@ -59,16 +64,19 @@ class Utility:
     :param model: Any supervised model. Typical choices can be found at
             https://scikit-learn.org/stable/supervised_learning.html
     :param data: :class:`Dataset` or :class:`GroupedDataset`.
-    :param scoring: Same as in sklearn's ``cross_validate()``: a string,
-        a scorer callable or None for the default ``model.score()``. Greater
-        values must be better. If they are not, a negated version can be
-        used (see scikit-learn's `make_scorer()
-        <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html>_`)
-    :param default_score: score in the case of models that have not been fit,
-        e.g. when too little data is passed, or errors arise.
-    :param score_range: numerical range of the score function. Some Monte Carlo
-        methods can use this to estimate the number of samples required for a
-        certain quality of approximation.
+    :param scorer: A scoring object. If None, the ``score()`` method of the model
+        will be used. See :mod:`~pydvl.utils.scorer` for ways to create
+        and compose scorers, in particular how to set default values and ranges.
+        For convenience, a string can be passed, which will be used to construct
+        a :class:`~pydvl.utils.scorer.Scorer`.
+    :param default_score: As a convenience when no ``scorer`` object is passed
+        (where a default value can be provided), this argument also allows to set
+        the default score for models that have not been fit, e.g. when too little
+        data is passed, or errors arise.
+    :param score_range: As with ``default_score``, this is a convenience argument
+        for when no ``scorer`` argument is provided, to set the numerical range
+        of the score function. Some Monte Carlo methods can use this to estimate
+        the number of samples required for a certain quality of approximation.
     :param catch_errors: set to ``True`` to catch the errors when fit() fails.
         This could happen in several steps of the pipeline, e.g. when too little
         training data is passed, which happens often during Shapley value
@@ -101,7 +109,7 @@ class Utility:
         self,
         model: SupervisedModel,
         data: Dataset,
-        scoring: Optional[Union[str, Scorer]] = None,
+        scorer: Optional[Union[str, Scorer]] = None,
         *,
         default_score: float = 0.0,
         score_range: Tuple[float, float] = (-np.inf, np.inf),
@@ -113,16 +121,18 @@ class Utility:
     ):
         self.model = self._clone_model(model)
         self.data = data
-        self.default_score = default_score
+        if isinstance(scorer, str):
+            scorer = Scorer(scorer, default=default_score, range=score_range)
+        self.scorer = check_scoring(self.model, scorer)
+        self.default_score = scorer.default if scorer is not None else default_score
         # TODO: auto-fill from known scorers ?
-        self.score_range = np.array(score_range)
+        self.score_range = scorer.range if scorer is not None else np.array(score_range)
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
         self.enable_cache = enable_cache
         self.cache_options: MemcachedConfig = cache_options or MemcachedConfig()
         self.clone_before_fit = clone_before_fit
-        self._signature = serialize((hash(self.model), hash(data), hash(scoring)))
-        self.scorer = check_scoring(self.model, scoring)
+        self._signature = serialize((hash(self.model), hash(data), hash(scorer)))
         self._initialize_utility_wrapper()
 
         # FIXME: can't modify docstring of methods. Instead, I could use a

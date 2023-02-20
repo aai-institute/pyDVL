@@ -118,6 +118,34 @@ is implemented, it is important not to reuse `Utility` objects for different
 datasets. You can read more about :ref:`caching setup` in the installation guide
 and the documentation of the :mod:`pydvl.utils.caching` module.
 
+Using custom scorers
+^^^^^^^^^^^^^^^^^^^^
+
+The `scoring` argument of :class:`~pydvl.utils.utility.Utility` can be used to
+specify a custom :class:`~pydvl.utils.utility.Scorer` object. This is a simple
+wrapper for a callable that takes a model, and test data and returns a score.
+
+More importantly, the object provides information about the range of the score,
+which is used by some methods by estimate the number of samples necessary, and
+about what default value to use when the model fails to train.
+
+.. note::
+   The most important property of a `Scorer` is its default value. Because many
+   models will fail to fit on small subsets of the data, it is important to
+   provide a sensible default value for the score.
+
+It is possible to skip the construction of the :class:`~pydvl.utils.utility.Scorer`
+when constructing the `Utility` object. The two following calls are equivalent:
+
+.. code-block:: python
+
+   utility = Utility(
+       model, dataset, "explained_variance", score_range=(-np.inf, 1), default_score=0.0
+   )
+   utility = Utility(
+       model, dataset, Scorer("explained_variance", range=(-np.inf, 1), default=0.0)
+   )
+
 Learning the utility
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -369,14 +397,15 @@ $$
    but we don't advocate its use because of the speed and memory cost. Despite
    our best efforts, the number of samples required in practice for convergence
    can be several orders of magnitude worse than with e.g. Truncated Monte Carlo.
+   Additionally, the CSP can sometimes turn out to be infeasible.
 
 Usage follows the same pattern as every other Shapley method, but with the
-addition of an ``eps`` parameter required for the solution of the CSP. It should
-be the same value used to compute the minimum number of samples required. This
-can be done with :func:`~pydvl.value.shapley.gt.num_samples_eps_delta`, but note
-that the number returned will be huge! In practice, fewer samples can be enough,
-but the actual number will strongly depend on the utility, in particular its
-variance.
+addition of an ``epsilon`` parameter required for the solution of the CSP. It
+should be the same value used to compute the minimum number of samples required.
+This can be done with :func:`~pydvl.value.shapley.gt.num_samples_eps_delta`, but
+note that the number returned will be huge! In practice, fewer samples can be
+enough, but the actual number will strongly depend on the utility, in particular
+its variance.
 
 .. code-block:: python
 
@@ -550,7 +579,7 @@ nature of every (non-trivial) ML problem can have an effect:
 
   pyDVL offers a dedicated :func:`function composition
   <pydvl.utils.types.compose_score>` for scorer functions which can be used to
-  squash a score. The following is defined in module :mod:`~pydvl.utils.numeric`:
+  squash a score. The following is defined in module :mod:`~pydvl.utils.scorer`:
 
   .. code-block:: python
 

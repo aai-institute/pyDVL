@@ -5,11 +5,12 @@ from typing import Sequence
 
 import numpy as np
 from _warnings import warn
-from numpy._typing import NDArray
+from numpy.typing import NDArray
 
 from pydvl.utils import (
     MapReduceJob,
     ParallelConfig,
+    Status,
     Utility,
     maybe_progress,
     random_powerset,
@@ -26,7 +27,7 @@ def _owen_sampling_shapley(
     indices: Sequence[int],
     u: Utility,
     method: OwenAlgorithm,
-    n_iterations: int,
+    n_samples: int,
     max_q: int,
     *,
     progress: bool = False,
@@ -45,7 +46,7 @@ def _owen_sampling_shapley(
     :param u: Utility object with model, data, and scoring function
     :param method: Either :attr:`~OwenAlgorithm.Full` for $q \in [0,1]$ or
         :attr:`~OwenAlgorithm.Halved` for $q \in [0,0.5]$ and correlated samples
-    :param n_iterations: Number of subsets to sample to estimate the integrand
+    :param n_samples: Number of subsets to sample to estimate the integrand
     :param max_q: number of subdivisions for the integration over $q$
     :param progress: Whether to display progress bars for each job
     :param job_id: For positioning of the progress bar
@@ -61,25 +62,27 @@ def _owen_sampling_shapley(
         e = np.zeros(max_q)
         subset = np.array(list(index_set.difference({i})))
         for j, q in enumerate(q_steps):
-            for s in random_powerset(subset, n_samples=n_iterations, q=q):
+            for s in random_powerset(subset, n_samples=n_samples, q=q):
                 marginal = u({i}.union(s)) - u(s)
                 if method == OwenAlgorithm.Antithetic and q != 0.5:
                     s_complement = index_set.difference(s)
                     marginal += u({i}.union(s_complement)) - u(s_complement)
                 e[j] += marginal
-        e /= n_iterations
+        e /= n_samples
         # values[i] = e.mean()
         # Trapezoidal rule
         values[i] = (e[:-1] + e[1:]).sum() / (2 * max_q)
 
     return ValuationResult(
-        algorithm="owen_sampling_shapley_" + str(method), values=values
+        algorithm="owen_sampling_shapley_" + str(method),
+        status=Status.Converged,
+        values=values,
     )
 
 
 def owen_sampling_shapley(
     u: Utility,
-    n_iterations: int,
+    n_samples: int,
     max_q: int,
     *,
     method: OwenAlgorithm = OwenAlgorithm.Standard,
@@ -120,7 +123,7 @@ def owen_sampling_shapley(
 
     :param u: :class:`~pydvl.utils.utility.Utility` object holding data, model
         and scoring function.
-    :param n_iterations: Numer of sets to sample for each value of q
+    :param n_samples: Numer of sets to sample for each value of q
     :param max_q: Number of subdivisions for q ∈ [0,1] (the element sampling
         probability) used to approximate the outer integral.
     :param method: Selects the algorithm to use, see the description. Either
@@ -149,7 +152,7 @@ def owen_sampling_shapley(
         map_kwargs=dict(
             u=u,
             method=OwenAlgorithm(method),
-            n_iterations=n_iterations,
+            n_samples=n_samples,
             max_q=max_q,
             progress=progress,
         ),

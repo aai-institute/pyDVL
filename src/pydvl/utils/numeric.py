@@ -4,13 +4,10 @@ library.
 """
 
 from itertools import chain, combinations
-from typing import Collection, Generator, Iterator, Optional, Tuple, TypeVar, overload
+from typing import Collection, Generator, Iterator, Optional, Tuple, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.special import expit
-
-from pydvl.utils.types import compose_score
 
 FloatOrArray = TypeVar("FloatOrArray", float, NDArray[np.float_])
 IntOrArray = TypeVar("IntOrArray", int, NDArray[np.int_])
@@ -26,8 +23,6 @@ __all__ = [
     "random_powerset",
     "random_subset_of_size",
     "top_k_value_accuracy",
-    "squashed_r2",
-    "squashed_variance",
 ]
 
 T = TypeVar("T", bound=np.generic)
@@ -277,14 +272,3 @@ def top_k_value_accuracy(
     top_k_pred_values = np.argsort(y_pred)[-k:]
     top_k_accuracy = len(np.intersect1d(top_k_exact_values, top_k_pred_values)) / k
     return top_k_accuracy
-
-
-def sigmoid(x: float) -> float:
-    result: float = expit(x).item()
-    return result
-
-
-squashed_r2 = compose_score("r2", sigmoid, "squashed r2")
-squashed_variance = compose_score(
-    "explained_variance", sigmoid, "squashed explained variance"
-)

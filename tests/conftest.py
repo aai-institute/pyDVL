@@ -196,7 +196,7 @@ def num_workers():
 
 @pytest.fixture
 def n_jobs(num_workers):
-    return num_workers
+    return 1
 
 
 ################################################################################

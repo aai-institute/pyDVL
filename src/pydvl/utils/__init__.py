@@ -4,6 +4,7 @@ from .dataset import *
 from .numeric import *
 from .parallel import *
 from .progress import *
+from .score import *
 from .status import *
 from .types import *
 from .utility import *
