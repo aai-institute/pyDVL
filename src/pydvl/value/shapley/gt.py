@@ -256,17 +256,15 @@ def group_testing_shapley(
             if not hasattr(v.value, "__len__")
             else v.value
         )
-        return ValuationResult(
-            algorithm="group_testing_shapley",
-            status=Status.Failed,
-            values=values,
-            data_names=u.data.data_names,
-            solver_status=problem.status,
-        )
+        status = Status.Failed
+    else:
+        values = v.value
+        status = Status.Converged
 
     return ValuationResult(
         algorithm="group_testing_shapley",
-        status=Status.Converged,
-        values=v.value,
+        status=status,
+        values=values,
         data_names=u.data.data_names,
+        solver_status=problem.status,
     )

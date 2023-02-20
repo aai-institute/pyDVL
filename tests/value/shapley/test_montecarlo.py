@@ -4,9 +4,9 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import GroupedDataset, MemcachedConfig, Utility
+from pydvl.utils import GroupedDataset, MemcachedConfig, Status, Utility
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
-from pydvl.utils.score import Scorer, squashed_r2, squashed_variance
+from pydvl.utils.score import Scorer, squashed_r2
 from pydvl.value import compute_shapley_values
 from pydvl.value.shapley import ShapleyMode
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
@@ -121,8 +121,8 @@ def test_hoeffding_bound_montecarlo(
             ),
         ),
         (ShapleyMode.CombinatorialMontecarlo, dict(done=MaxUpdates(2**11))),
-        (ShapleyMode.Owen, dict(n_samples=4, max_q=300)),
-        (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=300)),
+        (ShapleyMode.Owen, dict(n_samples=2, max_q=300)),
+        (ShapleyMode.OwenAntithetic, dict(n_samples=2, max_q=300)),
         (
             ShapleyMode.GroupTesting,
             dict(n_samples=int(1e5), epsilon=0.2, delta=0.01),
@@ -130,7 +130,7 @@ def test_hoeffding_bound_montecarlo(
     ],
 )
 def test_linear_montecarlo_shapley(
-    linear_dataset,
+    linear_shapley,
     n_jobs,
     memcache_client_config,
     scorer: Scorer,
@@ -155,14 +155,9 @@ def test_linear_montecarlo_shapley(
        samples
 
     """
-    u = Utility(
-        LinearRegression(),
-        data=linear_dataset,
-        scorer=scorer,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
-    )
+    u, exact_values = linear_shapley
+    check_total_value(u, exact_values, rtol=rtol)
 
-    exact_values = combinatorial_exact_shapley(u, progress=False)
     values = compute_shapley_values(
         u, mode=fun, progress=False, n_jobs=n_jobs, **kwargs
     )
@@ -227,7 +222,6 @@ def test_linear_montecarlo_with_outlier(
         linear_utility, mode=fun, progress=False, n_jobs=n_jobs, **kwargs
     )
     values.sort()
-    from pydvl.utils import Status
 
     assert values.status == Status.Converged
     check_total_value(linear_utility, values, atol=total_atol)

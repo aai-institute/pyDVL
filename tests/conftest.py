@@ -1,4 +1,5 @@
 import functools
+import os
 from collections import defaultdict
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
 
@@ -191,7 +192,11 @@ def seed_numpy(seed=42):
 
 @pytest.fixture(scope="session")
 def num_workers():
-    return max(1, available_cpus() - 1)
+    # Run with 2 CPUs inside GitHub actions
+    if os.getenv("CI"):
+        return 2
+    # And a maximum of 8 CPUs locally (most tests don't really benefit from more)
+    return max(1, min(available_cpus() - 1, 8))
 
 
 @pytest.fixture

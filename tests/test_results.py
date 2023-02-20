@@ -116,7 +116,22 @@ def test_indexing(ranks_asc, dummy_values):
         assert ranks_asc[-2:] == [it.index for it in dummy_values[[-2, -1]]]
 
 
+def test_get_idx():
+    """Test getting by data index"""
+    values = np.array([5.0, 2.0, 3.0])
+    indices = np.array([3, 4, 2])
+    result = ValuationResult(values=values, indices=indices)
+    with pytest.raises(IndexError):
+        result.get(5)
+    for v, idx in zip(values, indices):
+        assert v == result.get(idx).value
+    result.sort()
+    for v, idx in zip(values, indices):
+        assert v == result.get(idx).value
+
+
 def test_updating():
+    # Test simple updating
     v = ValuationResult(values=np.array([1.0, 2.0]))
     v.update(0, 1.0)
     assert v.values[0] == 1.0
@@ -124,16 +139,23 @@ def test_updating():
 
     v.update(1, 4.0)
     assert v.values[1] == 3.0
-    assert v._variances[1] == 1.0
+    assert v.variances[1] == 1.0
 
     v.update(1, 3.0)
     assert v.values[1] == 3.0
-    assert np.isclose(v._variances[1], 2 / 3)
+    assert np.isclose(v.variances[1], 2 / 3)
 
+    # Test after sorting
     v = ValuationResult(values=np.array([3.0, 1.0]))
     v.sort()
     v.update(0, 1.0)
     assert v.values[0] == 2.0
+
+    # Test data indexing
+    v = ValuationResult(values=np.array([3.0, 1.0]), indices=np.array([3, 4]))
+    v.update(4, 1.0)
+    assert v.values[1] == 1.0
+    assert v.counts[1] == 2
 
 
 @pytest.mark.parametrize(
@@ -224,7 +246,13 @@ def test_from_random_creation(size):
 
 
 def test_adding_random():
-    """Test adding multiple valuation results together"""
+    """Test adding multiple valuation results together.
+
+    First we generate a matrix of values, then we split it into multiple subsets
+    and create a valuation result for each subset. Then we add all the valuation
+    results together and check that the resulting means and variances match with
+    those of the original matrix.
+    """
     n_samples, n_values, n_subsets = 10, 1000, 12
     values = np.random.rand(n_samples, n_values)
     split_indices = np.sort(np.random.randint(1, n_values, size=n_subsets - 1))

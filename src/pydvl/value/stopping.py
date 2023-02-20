@@ -189,11 +189,13 @@ class StandardError(StoppingCriterion):
         return Status.Pending
 
     def completion(self) -> float:
-        return np.mean(self._converged or [0]).item()
+        if self._converged.size == 0:
+            return 0.0
+        return np.mean(self._converged).item()
 
 
 class MaxChecks(StoppingCriterion):
-    """Terminate as soon as the number of checks reaches the threshold.
+    """Terminate as soon as the number of checks exceeds the threshold.
 
     A "check" is one call to the criterion.
 
@@ -211,9 +213,9 @@ class MaxChecks(StoppingCriterion):
 
     def _check(self, result: ValuationResult) -> Status:
         if self.n_checks:
-            if self._count >= self.n_checks:
-                return Status.Converged
             self._count += 1
+            if self._count > self.n_checks:
+                return Status.Converged
         return Status.Pending
 
     def completion(self) -> float:
@@ -324,7 +326,7 @@ class MaxTime(StoppingCriterion):
 
 
 class HistoryDeviation(StoppingCriterion):
-    r"""A simple _check for relative distance to a previous step in the
+    r"""A simple check for relative distance to a previous step in the
     computation.
 
     The method used by :footcite:t:`ghorbani_data_2019` computes the relative

@@ -8,7 +8,9 @@ a negated version can be used, see scikit-learn's `make_scorer()
 <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html>`_.
 
 :class:`Scorer` provides additional information about the scoring function, like
-its range and default values.
+its range and default values, which can be used by some data valuation
+methods (like :func:`~pydvl.value.shapley.gt.group_testing_shapley`) to estimate
+the number of samples required for a certain quality of approximation.
 """
 from typing import Callable, Optional, Protocol, Tuple, Union
 
@@ -60,6 +62,8 @@ class Scorer:
         range: Tuple = (-np.inf, np.inf),
         name: Optional[str] = None,
     ):
+        if name is None and isinstance(scoring, str):
+            name = scoring
         self._scorer = get_scorer(scoring)
         self.default = default
         # TODO: auto-fill from known scorers ?
@@ -102,12 +106,12 @@ def compose_score(
     :return: The composite :class:`Scorer`.
     """
 
-    class NewScorer(Scorer):
+    class CompositeScorer(Scorer):
         def __call__(self, model: SupervisedModel, X: NDArray, y: NDArray) -> float:
             score = self._scorer(model=model, X=X, y=y)
             return transformation(score)
 
-    return NewScorer(scorer, range=range, name=name)
+    return CompositeScorer(scorer, range=range, name=name)
 
 
 def _sigmoid(x: float) -> float:
