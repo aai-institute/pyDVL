@@ -28,7 +28,6 @@ from pydvl.value.least_core.montecarlo import *
 from pydvl.value.least_core.naive import *
 from pydvl.value.result import ValuationResult
 
-
 __all__ = ["compute_least_core_values", "LeastCoreMode"]
 
 
