@@ -62,8 +62,16 @@ def _constants(
     #     / h(2 * epsilon / Z / r / (1 - q_tot**2))
     #     * np.log(n * (n - 1) / (2 * delta))
     # )
-    min_iter = 8 * np.log(n * (n - 1) / (2 * delta)) / (1 - q_tot**2)
-    min_iter /= h(2 * epsilon / (np.sqrt(n) * Z * r * (1 - q_tot**2)))
+    if r == np.inf:
+        log.warning(
+            "Group Testing: cannot estimate minimum number of iterations for "
+            "unbounded utilities. Please specify a range in the Scorer if "
+            "you need this estimate."
+        )
+        min_iter = -1
+    else:
+        min_iter = 8 * np.log(n * (n - 1) / (2 * delta)) / (1 - q_tot**2)
+        min_iter /= h(2 * epsilon / (np.sqrt(n) * Z * r * (1 - q_tot**2)))
 
     return GTConstants(kk=kk, Z=Z, q=q, q_tot=q_tot, T=int(min_iter))
 
@@ -87,8 +95,6 @@ def num_samples_eps_delta(
     .. versionadded:: 0.4.0
 
     """
-
-    log.warning("This may be bogus. Do not use.")
     constants = _constants(n=n, epsilon=eps, delta=delta, utility_range=utility_range)
     return int(constants.T)
 
