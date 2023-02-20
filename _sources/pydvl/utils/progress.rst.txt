@@ -6,9 +6,6 @@ progress
    :undoc-members:
    
    ----
-   
-   Module members
-   ==============
  
 .. footbibliography::
 

@@ -6,9 +6,6 @@ knn
    :undoc-members:
    
    ----
-   
-   Module members
-   ==============
  
 .. footbibliography::
 

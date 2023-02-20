@@ -6,9 +6,6 @@ gt
    :undoc-members:
    
    ----
-   
-   Module members
-   ==============
  
 .. footbibliography::
 

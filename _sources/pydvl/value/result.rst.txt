@@ -1,7 +1,7 @@
-general
-=======
+result
+======
 
-.. automodule:: pydvl.influence.general
+.. automodule:: pydvl.value.result
    :members:
    :undoc-members:
    

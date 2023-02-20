@@ -6,9 +6,6 @@ dataset
    :undoc-members:
    
    ----
-   
-   Module members
-   ==============
  
 .. footbibliography::
 

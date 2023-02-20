@@ -237,16 +237,19 @@
 <li class="toctree-l4"><a class="reference internal" href="../value/loo/naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../value/results.html">results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/naive.html">naive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../value/shapley/owen.html">owen</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../value/shapley/truncated.html">truncated</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/types.html">types</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../value/stopping.html">stopping</a></li>
 </ul>
 </li>
 </ul>
@@ -288,8 +291,6 @@
           <section id="module-pydvl.utils.config">
 <span id="config"></span><h1>config<a class="headerlink" href="#module-pydvl.utils.config" title="Permalink to this heading"></a></h1>
 <hr class="docutils" />
-<section id="module-members">
-<h2>Module members<a class="headerlink" href="#module-members" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.utils.config.ParallelConfig">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ParallelConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'sequential'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ray'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_local_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/config.py#L15"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.config.ParallelConfig" title="Permalink to this definition"></a></dt>
@@ -471,7 +472,6 @@ hashing the wrapped function for usage as key in memcached.</p></li>
 </dd></dl>
 
 </section>
-</section>
 
         </article>
       </div>
@@ -536,7 +536,6 @@ hashing the wrapped function for usage as key in memcached.</p></li>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">config</a><ul>
-<li><a class="reference internal" href="#module-members">Module members</a><ul>
 <li><a class="reference internal" href="#pydvl.utils.config.ParallelConfig"><code class="docutils literal notranslate"><span class="pre">ParallelConfig</span></code></a><ul>
 <li><a class="reference internal" href="#pydvl.utils.config.ParallelConfig.backend"><code class="docutils literal notranslate"><span class="pre">ParallelConfig.backend</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.utils.config.ParallelConfig.address"><code class="docutils literal notranslate"><span class="pre">ParallelConfig.address</span></code></a></li>
@@ -565,8 +564,6 @@ hashing the wrapped function for usage as key in memcached.</p></li>
 <li><a class="reference internal" href="#pydvl.utils.config.MemcachedConfig.items"><code class="docutils literal notranslate"><span class="pre">MemcachedConfig.items()</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.utils.config.MemcachedConfig.keys"><code class="docutils literal notranslate"><span class="pre">MemcachedConfig.keys()</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.utils.config.MemcachedConfig.update"><code class="docutils literal notranslate"><span class="pre">MemcachedConfig.update()</span></code></a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>

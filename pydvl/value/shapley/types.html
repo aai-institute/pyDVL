@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="prev" title="naive" href="naive.html" />
+<link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="stopping" href="../stopping.html" /><link rel="prev" title="truncated" href="truncated.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
         <title>types - pyDVL 0.4.1.dev0 documentation</title>
@@ -237,16 +237,19 @@
 <li class="toctree-l4"><a class="reference internal" href="../loo/naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../results.html">results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../result.html">result</a></li>
 <li class="toctree-l3 current has-children"><a class="reference internal" href="../shapley.html">shapley</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="naive.html">naive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="owen.html">owen</a></li>
+<li class="toctree-l4"><a class="reference internal" href="truncated.html">truncated</a></li>
 <li class="toctree-l4 current current-page"><a class="current reference internal" href="#">types</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../stopping.html">stopping</a></li>
 </ul>
 </li>
 </ul>
@@ -288,11 +291,9 @@
           <section id="module-pydvl.value.shapley.types">
 <span id="types"></span><h1>types<a class="headerlink" href="#module-pydvl.value.shapley.types" title="Permalink to this heading"></a></h1>
 <hr class="docutils" />
-<section id="module-members">
-<h2>Module members<a class="headerlink" href="#module-members" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ShapleyMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/types.py#L8"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ShapleyMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/types.py#L4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>Supported algorithms for the computation of Shapley values.</p>
 <div class="admonition-todo admonition" id="id1">
@@ -346,19 +347,6 @@
 
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="pydvl.value.shapley.types.PermutationBreaker">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PermutationBreaker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/types.py#L26"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.types.PermutationBreaker" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="pydvl.value.shapley.types.ValueStopper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ValueStopper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/types.py#L31"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.types.ValueStopper" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
-</dd></dl>
-
-</section>
 </section>
 
         </article>
@@ -366,15 +354,23 @@
       <footer>
         
         <div class="related-pages">
-          
-          <a class="prev-page" href="naive.html">
+          <a class="next-page" href="../stopping.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">stopping</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="truncated.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">naive</div>
+                <div class="title">truncated</div>
                 
               </div>
             </a>
@@ -416,7 +412,6 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">types</a><ul>
-<li><a class="reference internal" href="#module-members">Module members</a><ul>
 <li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode"><code class="docutils literal notranslate"><span class="pre">ShapleyMode</span></code></a><ul>
 <li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.CombinatorialExact"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.CombinatorialExact</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.CombinatorialMontecarlo"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.CombinatorialMontecarlo</span></code></a></li>
@@ -427,10 +422,6 @@
 <li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.PermutationExact"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.PermutationExact</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.PermutationMontecarlo"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.PermutationMontecarlo</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.value.shapley.types.ShapleyMode.TruncatedMontecarlo"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.TruncatedMontecarlo</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#pydvl.value.shapley.types.PermutationBreaker"><code class="docutils literal notranslate"><span class="pre">PermutationBreaker</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.value.shapley.types.ValueStopper"><code class="docutils literal notranslate"><span class="pre">ValueStopper</span></code></a></li>
 </ul>
 </li>
 </ul>

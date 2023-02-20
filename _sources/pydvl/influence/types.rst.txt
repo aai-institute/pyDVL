@@ -6,9 +6,6 @@ types
    :undoc-members:
    
    ----
-   
-   Module members
-   ==============
  
 .. footbibliography::
 

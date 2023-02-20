@@ -237,16 +237,19 @@
 <li class="toctree-l4"><a class="reference internal" href="../../value/loo/naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../value/results.html">results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/naive.html">naive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../value/shapley/owen.html">owen</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../value/shapley/truncated.html">truncated</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/types.html">types</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../value/stopping.html">stopping</a></li>
 </ul>
 </li>
 </ul>
@@ -288,8 +291,6 @@
           <section id="module-pydvl.utils.parallel.map_reduce">
 <span id="map-reduce"></span><h1>map_reduce<a class="headerlink" href="#module-pydvl.utils.parallel.map_reduce" title="Permalink to this heading"></a></h1>
 <hr class="docutils" />
-<section id="module-members">
-<h2>Module members<a class="headerlink" href="#module-members" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.utils.parallel.map_reduce.MapReduceJob">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MapReduceJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">R</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">R</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">R</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">n_local_workers=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_parallel_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/map_reduce.py#L78"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.map_reduce.MapReduceJob" title="Permalink to this definition"></a></dt>
@@ -374,7 +375,6 @@ by passing them to a wrapped <code class="xref py py-func docutils literal notra
 </dd></dl>
 
 </section>
-</section>
 
         </article>
       </div>
@@ -439,13 +439,10 @@ by passing them to a wrapped <code class="xref py py-func docutils literal notra
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">map_reduce</a><ul>
-<li><a class="reference internal" href="#module-members">Module members</a><ul>
 <li><a class="reference internal" href="#pydvl.utils.parallel.map_reduce.MapReduceJob"><code class="docutils literal notranslate"><span class="pre">MapReduceJob</span></code></a><ul>
 <li><a class="reference internal" href="#pydvl.utils.parallel.map_reduce.MapReduceJob.map"><code class="docutils literal notranslate"><span class="pre">MapReduceJob.map()</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.utils.parallel.map_reduce.MapReduceJob.reduce"><code class="docutils literal notranslate"><span class="pre">MapReduceJob.reduce()</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.utils.parallel.map_reduce.MapReduceJob.n_jobs"><code class="docutils literal notranslate"><span class="pre">MapReduceJob.n_jobs</span></code></a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>

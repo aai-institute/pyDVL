@@ -6,9 +6,6 @@ numeric
    :undoc-members:
    
    ----
-   
-   Module members
-   ==============
  
 .. footbibliography::
 

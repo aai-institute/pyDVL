@@ -237,16 +237,19 @@
 <li class="toctree-l4"><a class="reference internal" href="../../value/loo/naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../value/results.html">results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/naive.html">naive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../value/shapley/owen.html">owen</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../value/shapley/truncated.html">truncated</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../value/shapley/types.html">types</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../../value/stopping.html">stopping</a></li>
 </ul>
 </li>
 </ul>
@@ -288,8 +291,6 @@
           <section id="module-pydvl.influence.model_wrappers.torch_wrappers">
 <span id="torch-wrappers"></span><h1>torch_wrappers<a class="headerlink" href="#module-pydvl.influence.model_wrappers.torch_wrappers" title="Permalink to this heading"></a></h1>
 <hr class="docutils" />
-<section id="module-members">
-<h2>Module members<a class="headerlink" href="#module-members" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.influence.model_wrappers.torch_wrappers.TorchLinearRegression">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TorchLinearRegression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">np.float_</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">np.float_</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/model_wrappers/torch_wrappers.py#L139"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.model_wrappers.torch_wrappers.TorchLinearRegression" title="Permalink to this definition"></a></dt>
@@ -363,7 +364,6 @@ K layers and K - 2 hidden layers. It holds that K &gt;= 2, because every network
 </dd></dl>
 
 </section>
-</section>
 
         </article>
       </div>
@@ -428,7 +428,6 @@ K layers and K - 2 hidden layers. It holds that K &gt;= 2, because every network
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">torch_wrappers</a><ul>
-<li><a class="reference internal" href="#module-members">Module members</a><ul>
 <li><a class="reference internal" href="#pydvl.influence.model_wrappers.torch_wrappers.TorchLinearRegression"><code class="docutils literal notranslate"><span class="pre">TorchLinearRegression</span></code></a><ul>
 <li><a class="reference internal" href="#pydvl.influence.model_wrappers.torch_wrappers.TorchLinearRegression.forward"><code class="docutils literal notranslate"><span class="pre">TorchLinearRegression.forward()</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.influence.model_wrappers.torch_wrappers.TorchLinearRegression.training"><code class="docutils literal notranslate"><span class="pre">TorchLinearRegression.training</span></code></a></li>
@@ -446,8 +445,6 @@ K layers and K - 2 hidden layers. It holds that K &gt;= 2, because every network
 </li>
 <li><a class="reference internal" href="#pydvl.influence.model_wrappers.torch_wrappers.TorchModel"><code class="docutils literal notranslate"><span class="pre">TorchModel</span></code></a><ul>
 <li><a class="reference internal" href="#pydvl.influence.model_wrappers.torch_wrappers.TorchModel.forward"><code class="docutils literal notranslate"><span class="pre">TorchModel.forward()</span></code></a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>

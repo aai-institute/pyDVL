@@ -6,9 +6,6 @@ torch\_differentiable
    :undoc-members:
    
    ----
-   
-   Module members
-   ==============
  
 .. footbibliography::
 

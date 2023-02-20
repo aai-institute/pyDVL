@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="knn" href="knn.html" /><link rel="prev" title="actor" href="actor.html" />
+<link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="types" href="types.html" /><link rel="prev" title="owen" href="owen.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
-        <title>gt - pyDVL 0.4.1.dev0 documentation</title>
+        <title>truncated - pyDVL 0.4.1.dev0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.custom.css" />
@@ -240,12 +240,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../result.html">result</a></li>
 <li class="toctree-l3 current has-children"><a class="reference internal" href="../shapley.html">shapley</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="actor.html">actor</a></li>
-<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">gt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="naive.html">naive</a></li>
 <li class="toctree-l4"><a class="reference internal" href="owen.html">owen</a></li>
-<li class="toctree-l4"><a class="reference internal" href="truncated.html">truncated</a></li>
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">truncated</a></li>
 <li class="toctree-l4"><a class="reference internal" href="types.html">types</a></li>
 </ul>
 </li>
@@ -288,100 +288,171 @@
           </label>
         </div>
         <article role="main">
-          <section id="module-pydvl.value.shapley.gt">
-<span id="gt"></span><h1>gt<a class="headerlink" href="#module-pydvl.value.shapley.gt" title="Permalink to this heading"></a></h1>
-<p>This module implements Group Testing for the approximation of Shapley values, as
-introduced in Jia <em>et al.</em><a class="footnote-reference brackets" href="#footcite-jia-efficient-2019" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>. The sampling of index subsets is
-done in such a way that an approximation to the true Shapley values can be
-computed with guarantees.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This method is extremely inefficient. Potential improvements to the
-implementation notwithstanding, convergence seems to be very slow (in terms
-of evaluations of the utility required). We recommend other Monte Carlo
-methods instead.</p>
-</div>
-<p>You can read more <a class="reference internal" href="../../../30-data-valuation.html#data-valuation"><span class="std std-ref">in the documentation</span></a>.</p>
-<div class="versionadded">
-<p><span class="versionmodified added">New in version 0.4.0.</span></p>
-</div>
+          <section id="module-pydvl.value.shapley.truncated">
+<span id="truncated"></span><h1>truncated<a class="headerlink" href="#module-pydvl.value.shapley.truncated" title="Permalink to this heading"></a></h1>
 <hr class="docutils" />
-<dl class="py function">
-<dt class="sig sig-object py" id="pydvl.value.shapley.gt.group_testing_shapley">
-<span class="sig-name descname"><span class="pre">group_testing_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">n_local_workers=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/gt.py#L188"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.gt.group_testing_shapley" title="Permalink to this definition"></a></dt>
-<dd><p>Implements group testing for approximation of Shapley values as described
-in Jia <em>et al.</em><a class="footnote-reference brackets" href="#footcite-jia-efficient-2019" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This method is extremely inefficient. It requires several orders of
-magnitude more evaluations of the utility than others in
-<a class="reference internal" href="montecarlo.html#module-pydvl.value.shapley.montecarlo" title="pydvl.value.shapley.montecarlo"><code class="xref py py-mod docutils literal notranslate"><span class="pre">montecarlo</span></code></a>. It also uses several intermediate
-objects like the results from the runners and the constraint matrices
-which can become rather large.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.value.shapley.truncated.TruncationPolicy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TruncationPolicy</span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/truncated.py#L24"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.truncated.TruncationPolicy" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>A policy for deciding whether to stop computing marginals in a
+permutation.</p>
+<p>Statistics are kept on the number of calls and truncations as <code class="xref py py-attr docutils literal notranslate"><span class="pre">n_calls</span></code>
+and <code class="xref py py-attr docutils literal notranslate"><span class="pre">n_truncations</span></code> respectively.</p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>Because the policy objects are copied to the workers, the statistics
+are not accessible from the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ShapleyCoordinator</span></code>. We need to add
+methods for this.</p>
 </div>
-<p>By picking a specific distribution over subsets, the differences in Shapley
-values can be approximated with a Monte Carlo sum. These are then used to
-solve for the individual values in a feasibility problem.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pydvl.value.shapley.truncated.TruncationPolicy.reset">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydvl.value.shapley.truncated.TruncationPolicy.reset" title="Permalink to this definition"></a></dt>
+<dd><p>Reset the policy to a state ready for a new permutation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.value.shapley.truncated.NoTruncation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NoTruncation</span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/truncated.py#L65"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.truncated.NoTruncation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pydvl.value.shapley.truncated.TruncationPolicy" title="pydvl.value.shapley.truncated.TruncationPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">TruncationPolicy</span></code></a></p>
+<p>A policy which never interrupts the computation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pydvl.value.shapley.truncated.NoTruncation.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydvl.value.shapley.truncated.NoTruncation.reset" title="Permalink to this definition"></a></dt>
+<dd><p>Reset the policy to a state ready for a new permutation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.value.shapley.truncated.FixedTruncation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FixedTruncation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/truncated.py#L75"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.truncated.FixedTruncation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pydvl.value.shapley.truncated.TruncationPolicy" title="pydvl.value.shapley.truncated.TruncationPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">TruncationPolicy</span></code></a></p>
+<p>Break a permutation after computing a fixed number of marginals.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
-<li><p><strong>n_iterations</strong> – Number of tests to perform. Use
-<a class="reference internal" href="#pydvl.value.shapley.gt.num_samples_eps_delta" title="pydvl.value.shapley.gt.num_samples_eps_delta"><code class="xref py py-func docutils literal notranslate"><span class="pre">num_samples_eps_delta()</span></code></a> to estimate this.</p></li>
-<li><p><strong>eps</strong> – Epsilon in the (ε,δ) sample bound. Use the same as for the
-estimation of <code class="docutils literal notranslate"><span class="pre">n_iterations</span></code>.</p></li>
-<li><p><strong>n_jobs</strong> – Number of parallel jobs to use. Each worker performs a chunk
-of all tests (i.e. utility evaluations).</p></li>
+<li><p><strong>fraction</strong> – Fraction of marginals in a permutation to compute before
+stopping (e.g. 0.5 to compute half of the marginals).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pydvl.value.shapley.truncated.FixedTruncation.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydvl.value.shapley.truncated.FixedTruncation.reset" title="Permalink to this definition"></a></dt>
+<dd><p>Reset the policy to a state ready for a new permutation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.value.shapley.truncated.BootstrapTruncation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BootstrapTruncation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/truncated.py#L121"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.truncated.BootstrapTruncation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pydvl.value.shapley.truncated.TruncationPolicy" title="pydvl.value.shapley.truncated.TruncationPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">TruncationPolicy</span></code></a></p>
+<p>Break a permutation if the last computed utility is close to the total
+utility, measured as a multiple of the standard deviation of the utilities.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
+<li><p><strong>n_samples</strong> – Number of bootstrap samples to use to compute the variance
+of the utilities.</p></li>
+<li><p><strong>sigmas</strong> – Number of standard deviations to use as a threshold.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pydvl.value.shapley.truncated.BootstrapTruncation.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydvl.value.shapley.truncated.BootstrapTruncation.reset" title="Permalink to this definition"></a></dt>
+<dd><p>Reset the policy to a state ready for a new permutation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.value.shapley.truncated.RelativeTruncation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RelativeTruncation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/truncated.py#L98"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.truncated.RelativeTruncation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pydvl.value.shapley.truncated.TruncationPolicy" title="pydvl.value.shapley.truncated.TruncationPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">TruncationPolicy</span></code></a></p>
+<p>Break a permutation if the marginal utility is too low.</p>
+<p>This is called “performance tolerance” in Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
+<li><p><strong>rtol</strong> – Relative tolerance. The permutation is broken if the
+last computed utility is less than <code class="docutils literal notranslate"><span class="pre">total_utility</span> <span class="pre">*</span> <span class="pre">rtol</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pydvl.value.shapley.truncated.RelativeTruncation.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pydvl.value.shapley.truncated.RelativeTruncation.reset" title="Permalink to this definition"></a></dt>
+<dd><p>Reset the policy to a state ready for a new permutation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pydvl.value.shapley.truncated.truncated_montecarlo_shapley">
+<span class="sig-name descname"><span class="pre">truncated_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../stopping.html#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><span class="pre">StoppingCriterion</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.value.shapley.truncated.TruncationPolicy" title="pydvl.value.shapley.truncated.TruncationPolicy"><span class="pre">TruncationPolicy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">n_local_workers=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinator_update_period</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_update_period</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/truncated.py#L160"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.truncated.truncated_montecarlo_shapley" title="Permalink to this definition"></a></dt>
+<dd><p>Monte Carlo approximation to the Shapley value of data points.</p>
+<p>This implements the permutation-based method described in
+Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>. It is a Monte Carlo estimate of the sum
+over all possible permutations of the index set, with a double stopping
+criterion.</p>
+<div class="admonition-todo admonition" id="id4">
+<p class="admonition-title">Todo</p>
+<p>Think of how to add Robin-Gelman or some other more principled stopping
+criterion.</p>
+</div>
+<p>Instead of naively implementing the expectation, we sequentially add points
+to a dataset from a permutation and incrementally compute marginal utilities.
+We stop computing marginals for a given permutation based on a
+<a class="reference internal" href="#pydvl.value.shapley.truncated.TruncationPolicy" title="pydvl.value.shapley.truncated.TruncationPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">TruncationPolicy</span></code></a>. Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id5" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> mention two
+policies: one that stops after a certain fraction of marginals are computed,
+implemented in <a class="reference internal" href="#pydvl.value.shapley.truncated.FixedTruncation" title="pydvl.value.shapley.truncated.FixedTruncation"><code class="xref py py-class docutils literal notranslate"><span class="pre">FixedTruncation</span></code></a>, and one that stops if the last
+computed utility (“score”) is close to the total utility using the standard
+deviation of the utility as a measure of proximity, implemented in
+<a class="reference internal" href="#pydvl.value.shapley.truncated.BootstrapTruncation" title="pydvl.value.shapley.truncated.BootstrapTruncation"><code class="xref py py-class docutils literal notranslate"><span class="pre">BootstrapTruncation</span></code></a>.</p>
+<p>We keep sampling permutations and updating all shapley values
+until the <code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code> returns <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
+<li><p><strong>done</strong> – Check on the results which decides when to stop
+sampling permutations.</p></li>
+<li><p><strong>truncation</strong> – callable that decides whether to stop computing
+marginals for a given permutation.</p></li>
+<li><p><strong>n_jobs</strong> – number of jobs processing permutations. If None, it will be
+set to <code class="xref py py-func docutils literal notranslate"><span class="pre">available_cpus()</span></code>.</p></li>
 <li><p><strong>config</strong> – Object configuring parallel computation, with cluster
 address, number of cpus, etc.</p></li>
-<li><p><strong>progress</strong> – Whether to display progress bars for each job.</p></li>
+<li><p><strong>coordinator_update_period</strong> – in seconds. How often to check the
+accumulated results from the workers for convergence.</p></li>
+<li><p><strong>worker_update_period</strong> – interval in seconds between different
+updates to and from the coordinator</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Object with the data values.</p>
 </dd>
 </dl>
-<div class="versionadded">
-<p><span class="versionmodified added">New in version 0.4.0.</span></p>
-</div>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="pydvl.value.shapley.gt.num_samples_eps_delta">
-<span class="sig-name descname"><span class="pre">num_samples_eps_delta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utility_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/gt.py#L71"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.gt.num_samples_eps_delta" title="Permalink to this definition"></a></dt>
-<dd><p>Implements the formula in Theorem 3 of Jia <em>et al.</em><a class="footnote-reference brackets" href="#footcite-jia-efficient-2019" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>
-which gives a lower bound on the number of samples required to obtain an
-(ε/√n,δ/(N(N-1))-approximation to all pair-wise differences of Shapley
-values, wrt. <span class="math notranslate nohighlight">\(\ell_2\)</span> norm.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>eps</strong> – ε</p></li>
-<li><p><strong>delta</strong> – δ</p></li>
-<li><p><strong>n</strong> – Number of samples</p></li>
-<li><p><strong>utility_range</strong> – Range of the <a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a>
-function</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Number of samples from <span class="math notranslate nohighlight">\(2^{[n]}\)</span> guaranteeing ε/√n-correct Shapley
-pair-wise differences of values with probability 1-δ/(N(N-1)).</p>
-</dd>
-</dl>
-<div class="versionadded">
-<p><span class="versionmodified added">New in version 0.4.0.</span></p>
-</div>
-</dd></dl>
-
-<div class="docutils container" id="id4">
+<div class="docutils container" id="id6">
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h2>
 </section>
 <aside class="footnote-list brackets">
-<aside class="footnote brackets" id="footcite-jia-efficient-2019" role="note">
+<aside class="footnote brackets" id="footcite-ghorbani-data-2019" role="note">
 <span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id2">2</a>,<a role="doc-backlink" href="#id3">3</a>)</span>
-<p>Ruoxi Jia, David Dao, Boxin Wang, Frances Ann Hubis, Nick Hynes, Nezihe Merve Gürel, Bo Li, Ce Zhang, Dawn Song, and Costas J. Spanos. Towards Efficient Data Valuation Based on the Shapley Value. In <em>Proceedings of the 22nd International Conference on Artificial Intelligence and Statistics</em>, 1167–1176. PMLR, April 2019. URL: <a class="reference external" href="http://proceedings.mlr.press/v89/jia19a.html">http://proceedings.mlr.press/v89/jia19a.html</a> (visited on 2021-02-12).</p>
+<span class="backrefs">(<a role="doc-backlink" href="#id2">1</a>,<a role="doc-backlink" href="#id3">2</a>,<a role="doc-backlink" href="#id5">3</a>)</span>
+<p>Amirata Ghorbani and James Zou. Data Shapley: Equitable Valuation of Data for Machine Learning. In <em>Proceedings of the 36th International Conference on Machine Learning, PMLR</em>, 2242–2251. PMLR, May 2019. URL: <a class="reference external" href="http://proceedings.mlr.press/v97/ghorbani19c.html">http://proceedings.mlr.press/v97/ghorbani19c.html</a> (visited on 2020-11-01), <a class="reference external" href="https://arxiv.org/abs/1904.02868">arXiv:1904.02868</a>.</p>
 </aside>
 </aside>
 </div>
@@ -392,23 +463,23 @@ pair-wise differences of values with probability 1-δ/(N(N-1)).</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="knn.html">
+          <a class="next-page" href="types.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">knn</div>
+                <div class="title">types</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="actor.html">
+          <a class="prev-page" href="owen.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">actor</div>
+                <div class="title">owen</div>
                 
               </div>
             </a>
@@ -449,9 +520,28 @@ pair-wise differences of values with probability 1-δ/(N(N-1)).</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">gt</a><ul>
-<li><a class="reference internal" href="#pydvl.value.shapley.gt.group_testing_shapley"><code class="docutils literal notranslate"><span class="pre">group_testing_shapley()</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.value.shapley.gt.num_samples_eps_delta"><code class="docutils literal notranslate"><span class="pre">num_samples_eps_delta()</span></code></a></li>
+<li><a class="reference internal" href="#">truncated</a><ul>
+<li><a class="reference internal" href="#pydvl.value.shapley.truncated.TruncationPolicy"><code class="docutils literal notranslate"><span class="pre">TruncationPolicy</span></code></a><ul>
+<li><a class="reference internal" href="#pydvl.value.shapley.truncated.TruncationPolicy.reset"><code class="docutils literal notranslate"><span class="pre">TruncationPolicy.reset()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pydvl.value.shapley.truncated.NoTruncation"><code class="docutils literal notranslate"><span class="pre">NoTruncation</span></code></a><ul>
+<li><a class="reference internal" href="#pydvl.value.shapley.truncated.NoTruncation.reset"><code class="docutils literal notranslate"><span class="pre">NoTruncation.reset()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pydvl.value.shapley.truncated.FixedTruncation"><code class="docutils literal notranslate"><span class="pre">FixedTruncation</span></code></a><ul>
+<li><a class="reference internal" href="#pydvl.value.shapley.truncated.FixedTruncation.reset"><code class="docutils literal notranslate"><span class="pre">FixedTruncation.reset()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pydvl.value.shapley.truncated.BootstrapTruncation"><code class="docutils literal notranslate"><span class="pre">BootstrapTruncation</span></code></a><ul>
+<li><a class="reference internal" href="#pydvl.value.shapley.truncated.BootstrapTruncation.reset"><code class="docutils literal notranslate"><span class="pre">BootstrapTruncation.reset()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pydvl.value.shapley.truncated.RelativeTruncation"><code class="docutils literal notranslate"><span class="pre">RelativeTruncation</span></code></a><ul>
+<li><a class="reference internal" href="#pydvl.value.shapley.truncated.RelativeTruncation.reset"><code class="docutils literal notranslate"><span class="pre">RelativeTruncation.reset()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pydvl.value.shapley.truncated.truncated_montecarlo_shapley"><code class="docutils literal notranslate"><span class="pre">truncated_montecarlo_shapley()</span></code></a></li>
 </ul>
 </li>
 </ul>

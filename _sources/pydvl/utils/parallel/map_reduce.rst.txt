@@ -6,9 +6,6 @@ map\_reduce
    :undoc-members:
    
    ----
-   
-   Module members
-   ==============
  
 .. footbibliography::
 

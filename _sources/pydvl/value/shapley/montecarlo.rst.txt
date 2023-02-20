@@ -6,9 +6,6 @@ montecarlo
    :undoc-members:
    
    ----
-   
-   Module members
-   ==============
  
 .. footbibliography::
 

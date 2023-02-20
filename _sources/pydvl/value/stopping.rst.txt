@@ -1,7 +1,7 @@
-general
-=======
+stopping
+========
 
-.. automodule:: pydvl.influence.general
+.. automodule:: pydvl.value.stopping
    :members:
    :undoc-members:
    

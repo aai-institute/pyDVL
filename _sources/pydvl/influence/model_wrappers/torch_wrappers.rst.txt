@@ -6,9 +6,6 @@ torch\_wrappers
    :undoc-members:
    
    ----
-   
-   Module members
-   ==============
  
 .. footbibliography::
 

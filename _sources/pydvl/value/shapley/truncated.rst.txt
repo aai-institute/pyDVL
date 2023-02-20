@@ -1,7 +1,7 @@
-general
-=======
+truncated
+=========
 
-.. automodule:: pydvl.influence.general
+.. automodule:: pydvl.value.shapley.truncated
    :members:
    :undoc-members:
    

@@ -237,16 +237,19 @@
 <li class="toctree-l4"><a class="reference internal" href="../value/loo/naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../value/results.html">results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/naive.html">naive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../value/shapley/owen.html">owen</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../value/shapley/truncated.html">truncated</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/types.html">types</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../value/stopping.html">stopping</a></li>
 </ul>
 </li>
 </ul>
@@ -290,8 +293,6 @@
 <p>This module contains all functions for the closed form computation of influences
 for standard linear regression.</p>
 <hr class="docutils" />
-<section id="module-members">
-<h2>Module members<a class="headerlink" href="#module-members" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.influence.linear.compute_linear_influences">
 <span class="sig-name descname"><span class="pre">compute_linear_influences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">influence_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="general.html#pydvl.influence.general.InfluenceType" title="pydvl.influence.general.InfluenceType"><span class="pre">InfluenceType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">InfluenceType.Up</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/linear.py#L23"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.linear.compute_linear_influences" title="Permalink to this definition"></a></dt>
@@ -318,7 +319,6 @@ points on the test data.</p>
 </dl>
 </dd></dl>
 
-</section>
 </section>
 
         </article>
@@ -384,10 +384,7 @@ points on the test data.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">linear</a><ul>
-<li><a class="reference internal" href="#module-members">Module members</a><ul>
 <li><a class="reference internal" href="#pydvl.influence.linear.compute_linear_influences"><code class="docutils literal notranslate"><span class="pre">compute_linear_influences()</span></code></a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>

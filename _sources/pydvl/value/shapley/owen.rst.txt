@@ -1,7 +1,7 @@
-general
-=======
+owen
+====
 
-.. automodule:: pydvl.influence.general
+.. automodule:: pydvl.value.shapley.owen
    :members:
    :undoc-members:
    

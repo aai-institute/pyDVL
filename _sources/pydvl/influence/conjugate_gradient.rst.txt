@@ -6,9 +6,6 @@ conjugate\_gradient
    :undoc-members:
    
    ----
-   
-   Module members
-   ==============
  
 .. footbibliography::
 

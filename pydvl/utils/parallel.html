@@ -237,16 +237,19 @@
 <li class="toctree-l4"><a class="reference internal" href="../value/loo/naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../value/results.html">results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/naive.html">naive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../value/shapley/owen.html">owen</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../value/shapley/truncated.html">truncated</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/types.html">types</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../value/stopping.html">stopping</a></li>
 </ul>
 </li>
 </ul>
@@ -291,40 +294,31 @@
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="parallel/actor.html">actor</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="parallel/actor.html#module-members">Module members</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.RayActorWrapper"><code class="docutils literal notranslate"><span class="pre">RayActorWrapper</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator"><code class="docutils literal notranslate"><span class="pre">Coordinator</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.add_results"><code class="docutils literal notranslate"><span class="pre">Coordinator.add_results()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.is_done"><code class="docutils literal notranslate"><span class="pre">Coordinator.is_done()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.get_results"><code class="docutils literal notranslate"><span class="pre">Coordinator.get_results()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.check_done"><code class="docutils literal notranslate"><span class="pre">Coordinator.check_done()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.RayActorWrapper"><code class="docutils literal notranslate"><span class="pre">RayActorWrapper</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator"><code class="docutils literal notranslate"><span class="pre">Coordinator</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.add_results"><code class="docutils literal notranslate"><span class="pre">Coordinator.add_results()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.is_done"><code class="docutils literal notranslate"><span class="pre">Coordinator.is_done()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.accumulate"><code class="docutils literal notranslate"><span class="pre">Coordinator.accumulate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.check_convergence"><code class="docutils literal notranslate"><span class="pre">Coordinator.check_convergence()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Worker"><code class="docutils literal notranslate"><span class="pre">Worker</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Worker.run"><code class="docutils literal notranslate"><span class="pre">Worker.run()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Worker"><code class="docutils literal notranslate"><span class="pre">Worker</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="parallel/actor.html#pydvl.utils.parallel.actor.Worker.run"><code class="docutils literal notranslate"><span class="pre">Worker.run()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="parallel/backend.html">backend</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="parallel/backend.html#module-members">Module members</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="parallel/backend.html#pydvl.utils.parallel.backend.init_parallel_backend"><code class="docutils literal notranslate"><span class="pre">init_parallel_backend()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="parallel/backend.html#pydvl.utils.parallel.backend.effective_n_jobs"><code class="docutils literal notranslate"><span class="pre">effective_n_jobs()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="parallel/backend.html#pydvl.utils.parallel.backend.available_cpus"><code class="docutils literal notranslate"><span class="pre">available_cpus()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="parallel/backend.html#pydvl.utils.parallel.backend.init_parallel_backend"><code class="docutils literal notranslate"><span class="pre">init_parallel_backend()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallel/backend.html#pydvl.utils.parallel.backend.effective_n_jobs"><code class="docutils literal notranslate"><span class="pre">effective_n_jobs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallel/backend.html#pydvl.utils.parallel.backend.available_cpus"><code class="docutils literal notranslate"><span class="pre">available_cpus()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="parallel/map_reduce.html">map_reduce</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="parallel/map_reduce.html#module-members">Module members</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob"><code class="docutils literal notranslate"><span class="pre">MapReduceJob</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.map"><code class="docutils literal notranslate"><span class="pre">MapReduceJob.map()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.reduce"><code class="docutils literal notranslate"><span class="pre">MapReduceJob.reduce()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.n_jobs"><code class="docutils literal notranslate"><span class="pre">MapReduceJob.n_jobs</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob"><code class="docutils literal notranslate"><span class="pre">MapReduceJob</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.map"><code class="docutils literal notranslate"><span class="pre">MapReduceJob.map()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.reduce"><code class="docutils literal notranslate"><span class="pre">MapReduceJob.reduce()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.n_jobs"><code class="docutils literal notranslate"><span class="pre">MapReduceJob.n_jobs</span></code></a></li>
 </ul>
 </li>
 </ul>

@@ -174,7 +174,7 @@ definitions, but other methods are typically preferable.
    values = naive_loo(utility)
 
 The return value of all valuation functions is an object of type
-:class:`~pydvl.value.results.ValuationResult`. This can be iterated over,
+:class:`~pydvl.value.result.ValuationResult`. This can be iterated over,
 indexed with integers, slices and Iterables, as well as converted to a
 `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
 
@@ -217,11 +217,11 @@ v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}}
    values = compute_shapley_values(utility, mode="combinatorial_exact")
    df = values.to_dataframe(column='value')
 
-We convert the return value to a
+We can convert the return value to a
 `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_
 and name the column with the results as `value`. Please refer to the
 documentation in :mod:`pydvl.value.shapley` and
-:class:`~pydvl.value.results.ValuationResult` for more information.
+:class:`~pydvl.value.result.ValuationResult` for more information.
 
 Monte Carlo Combinatorial Shapley
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -240,11 +240,18 @@ same pattern:
    model = ...
    data = Dataset(...)
    utility = Utility(model, data)
-   values = compute_shapley_values(utility, mode="combinatorial_montecarlo")
+   values = compute_shapley_values(
+       utility, mode="combinatorial_montecarlo", done=MaxUpdates(1000)
+   )
    df = values.to_dataframe(column='cmc')
 
 The DataFrames returned by most Monte Carlo methods will contain approximate
 standard errors as an additional column, in this case named `cmc_stderr`.
+
+Note the usage of the object :class:`~pydvl.value.stopping.MaxUpdates` as the
+stop condition. This is an instance of a
+:class:`~pydvl.value.stopping.StoppingCriterion`. Other examples are
+:class:`~pydvl.value.stopping.MaxTime` and :class:`~pydvl.value.stopping.StandardError`.
 
 
 Owen sampling
@@ -281,6 +288,10 @@ sampling, and its variant *Antithetic Owen Sampling* in the documentation for th
 function doing the work behind the scenes:
 :func:`~pydvl.value.shapley.montecarlo.owen_sampling_shapley`.
 
+Note that in this case we do not pass a
+:class:`~pydvl.value.stopping.StoppingCriterion` to the function, but instead
+the number of iterations and the maximum number of samples to use in the
+integration.
 
 Permutation Shapley
 ^^^^^^^^^^^^^^^^^^^
@@ -309,7 +320,7 @@ efficient enough to be useful in some applications.
    data = Dataset(...)
    utility = Utility(model, data)
    values = compute_shapley_values(
-       u=utility, mode="truncated_montecarlo", n_iterations=100
+       u=utility, mode="truncated_montecarlo", done=MaxUpdates(1000)
    )
 
 
