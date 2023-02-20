@@ -4,8 +4,11 @@ from time import sleep
 
 import numpy as np
 
-from pydvl.utils import ParallelConfig, Utility, init_parallel_backend, running_moments
-from pydvl.value import ValuationResult
+from pydvl.utils.config import ParallelConfig
+from pydvl.utils.numeric import running_moments
+from pydvl.utils.parallel import init_parallel_backend
+from pydvl.utils.utility import Utility
+from pydvl.value.result import ValuationResult
 from pydvl.value.stopping import StoppingCriterion
 
 __all__ = [

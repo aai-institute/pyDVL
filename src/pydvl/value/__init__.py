@@ -9,3 +9,4 @@ from .result import *  # isort: skip
 from .least_core import *
 from .loo import *
 from .shapley import *
+from .stopping import *

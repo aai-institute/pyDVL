@@ -29,9 +29,8 @@ supported.
 """
 
 import abc
-from functools import update_wrapper
 from time import time
-from typing import Callable, Optional, Type, cast
+from typing import Callable, Optional, Type
 
 import numpy as np
 from numpy.typing import NDArray
