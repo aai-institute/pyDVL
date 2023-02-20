@@ -5,7 +5,7 @@ done in such a way that an approximation to the true Shapley values can be
 computed with guarantees.
 
 .. warning::
-   This method is extremely inefficient. Potential improvements to the
+   This method is very inefficient. Potential improvements to the
    implementation notwithstanding, convergence seems to be very slow (in terms
    of evaluations of the utility required). We recommend other Monte Carlo
    methods instead.
@@ -43,6 +43,20 @@ def _constants(
     """A helper function returning the constants for the algorithm. Pretty ugly,
     yes.
 
+    :param n: The number of data points.
+    :param epsilon: The error tolerance.
+    :param delta: The confidence level.
+    :param utility_range: The range of the utility function.
+
+    :return: A namedtuple with the constants. The fields are the same as in the
+        paper:
+        - kk: the sample sizes (i.e. an array of 1, 2, ..., n - 1)
+        - Z: the normalization constant
+        - q: the probability of drawing a sample of size k
+        - q_tot: another normalization constant
+        - T: the number of iterations. This will be -1 if the utility_range is
+            infinite. E.g. because the :class:`~pydvl.utils.score.Scorer` does
+            not define a range.
     """
     r = utility_range
 
@@ -86,7 +100,7 @@ def num_samples_eps_delta(
 
     :param eps: ε
     :param delta: δ
-    :param n: Number of samples
+    :param n: Number of data points
     :param utility_range: Range of the :class:`~pydvl.utils.utility.Utility`
         function
     :return: Number of samples from $2^{[n]}$ guaranteeing ε/√n-correct Shapley
@@ -110,8 +124,7 @@ def _group_testing_shapley(
     :param u: Utility object with model, data, and scoring function.
     :param n_samples: total number of samples (subsets) to use.
     :param progress: Whether to display progress bars for each job.
-    :param job_id: id to use for reporting progress (e.g. to place
-    progres bars)
+    :param job_id: id to use for reporting progress (e.g. to place progres bars)
     :return:
     """
     rng = np.random.default_rng()
@@ -144,8 +157,8 @@ def group_testing_shapley(
     in :footcite:t:`jia_efficient_2019`.
 
     .. warning::
-       This method is extremely inefficient. It requires several orders of
-       magnitude more evaluations of the utility than others in
+       This method is very inefficient. It requires several orders of magnitude
+       more evaluations of the utility than others in
        :mod:`~pydvl.value.shapley.montecarlo`. It also uses several intermediate
        objects like the results from the runners and the constraint matrices
        which can become rather large.
@@ -179,6 +192,7 @@ def group_testing_shapley(
     """
 
     n = len(u.data.indices)
+
     const = _constants(
         n=n,
         epsilon=epsilon,
