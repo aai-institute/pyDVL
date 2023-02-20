@@ -52,7 +52,7 @@ log = logging.getLogger(__name__)
             # Because of the inaccuracy of GTS, a high atol is required for the
             # value 0, for which the rtol has no effect.
             1e-2,
-            dict(n_iterations=int(4e5), epsilon=0.2, delta=0.01),
+            dict(n_samples=int(4e5), epsilon=0.2, delta=0.01),
         ),
     ],
 )
@@ -125,7 +125,7 @@ def test_hoeffding_bound_montecarlo(
         (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=300)),
         (
             ShapleyMode.GroupTesting,
-            dict(n_iterations=int(1e5), epsilon=0.2, delta=0.01),
+            dict(n_samples=int(1e5), epsilon=0.2, delta=0.01),
         ),
     ],
 )
@@ -192,7 +192,7 @@ def test_linear_montecarlo_shapley(
         (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=400)),
         (
             ShapleyMode.GroupTesting,
-            dict(n_iterations=int(1e5), epsilon=0.2, delta=0.01),
+            dict(n_samples=int(1e5), epsilon=0.2, delta=0.01),
         ),
     ],
 )

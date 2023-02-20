@@ -100,15 +100,15 @@ def num_samples_eps_delta(
 
 
 def _group_testing_shapley(
-    u: Utility, n_iterations: int, progress: bool = False, job_id: int = 1
+    u: Utility, n_samples: int, progress: bool = False, job_id: int = 1
 ):
     """Helper function for :func:`group_testing_shapley`.
 
     Computes utilities of sets sampled using the strategy for estimating the
     differences in Shapley values.
 
-    :param u: Utility object with model, data, and scoring function
-    :param n_iterations: total number of permutations to use
+    :param u: Utility object with model, data, and scoring function.
+    :param n_samples: total number of samples (subsets) to use.
     :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress (e.g. to place
     progres bars)
@@ -118,10 +118,10 @@ def _group_testing_shapley(
     n = len(u.data.indices)
     const = _constants(n, 1, 1, 1)  # don't care about eps,delta,range
 
-    betas = np.zeros(shape=(n_iterations, n), dtype=np.int_)  # indicator vars
-    uu = np.empty(n_iterations)  # utilities
+    betas = np.zeros(shape=(n_samples, n), dtype=np.int_)  # indicator vars
+    uu = np.empty(n_samples)  # utilities
 
-    for t in maybe_progress(n_iterations, progress=progress, position=job_id):
+    for t in maybe_progress(n_samples, progress=progress, position=job_id):
         k = rng.choice(const.kk, size=1, p=const.q).item()
         s = random_subset_of_size(u.data.indices, k)
         uu[t] = u(s)
@@ -131,7 +131,7 @@ def _group_testing_shapley(
 
 def group_testing_shapley(
     u: Utility,
-    n_iterations: int,
+    n_samples: int,
     epsilon: float,
     delta: float,
     *,
@@ -155,7 +155,7 @@ def group_testing_shapley(
     solve for the individual values in a feasibility problem.
 
     :param u: Utility object with model, data, and scoring function
-    :param n_iterations: Number of tests to perform. Use
+    :param n_samples: Number of tests to perform. Use
         :func:`num_samples_eps_delta` to estimate this.
     :param epsilon: From the (ε,δ) sample bound. Use the same as for the
         estimation of ``n_iterations``.
@@ -185,14 +185,14 @@ def group_testing_shapley(
         delta=delta,
         utility_range=u.score_range.max() - u.score_range.min(),
     )
-    T = n_iterations
+    T = n_samples
     if T < const.T:
         log.warning(
-            f"max iterations of {T} are below the required {const.T} for the "
+            f"n_samples of {T} are below the required {const.T} for the "
             f"ε={epsilon:.02f} guarantee at δ={1 - delta:.02f} probability"
         )
 
-    iterations_per_job = max(1, n_iterations // effective_n_jobs(n_jobs, config))
+    samples_per_job = max(1, n_samples // effective_n_jobs(n_jobs, config))
 
     def reducer(
         results_it: Iterable[Tuple[NDArray, NDArray]]
@@ -205,7 +205,7 @@ def group_testing_shapley(
         u,
         map_func=_group_testing_shapley,
         reduce_func=reducer,
-        map_kwargs=dict(n_iterations=iterations_per_job, progress=progress),
+        map_kwargs=dict(n_samples=samples_per_job, progress=progress),
         config=config,
         n_jobs=n_jobs,
     )

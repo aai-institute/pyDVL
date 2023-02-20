@@ -74,10 +74,10 @@ def compute_shapley_values(
        parameter ``n_samples`` for the number of subsets to sample for each $q$.
     - ``group_testing``: estimates differences of Shapley values and solves a
       constraint satisfaction problem. High sample complexity, not recommended.
-      Implemented in :func:`~pydvl.value.shapley.gt.group_testing_shapley`. Only
-      accepts :class:`~pydvl.value.stopping.MaxUpdates` (use
-      :func:`~pydvl.value.shapley.gt.num_samples_eps_delta` to compute a bound)
-      and :class:`~pydvl.value.stopping.MaxTime` as stopping criteria.
+      Implemented in :func:`~pydvl.value.shapley.gt.group_testing_shapley`. This
+      method does not take a :class:`~pydvl.value.stopping.StoppingCriterion`
+      but instead requires a parameter ``n_samples`` for the number of
+      iterations to run.
 
     Additionally, one can use model-specific methods:
 
@@ -149,9 +149,9 @@ def compute_shapley_values(
     elif mode == ShapleyMode.KNN:
         return knn_shapley(u, progress=progress)
     elif mode == ShapleyMode.GroupTesting:
-        n_iterations = kwargs.pop("n_iterations")
-        if n_iterations is None:
-            raise ValueError("n_iterations cannot be None for Group Testing")
+        n_samples = kwargs.pop("n_samples")
+        if n_samples is None:
+            raise ValueError("n_samples cannot be None for Group Testing")
         epsilon = kwargs.pop("epsilon")
         if epsilon is None:
             raise ValueError("Group Testing requires error bound epsilon")
@@ -160,7 +160,7 @@ def compute_shapley_values(
             u,
             epsilon=epsilon,
             delta=delta,
-            n_iterations=n_iterations,
+            n_samples=n_samples,
             n_jobs=n_jobs,
             progress=progress,
             **kwargs,
