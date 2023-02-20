@@ -61,20 +61,23 @@ def compute_shapley_values(
       :func:`~pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley`.
     - ``owen_sampling``: Uses the Owen continuous extension of the utility
       function to the unit cube. Implemented in
-      :func:`~pydvl.value.shapley.montecarlo.owen_sampling_shapley`.
-      This method requires an additional parameter `q_max` for the number of
-      subdivisions of the unit interval to use for integration.
+      :func:`~pydvl.value.shapley.montecarlo.owen_sampling_shapley`. This
+      method does not take a :class:`~pydvl.value.stopping.StoppingCriterion`
+      but instead requires a parameter ``q_max`` for the number of subdivisions
+      of the unit interval to use for integration, and another parameter
+      ``n_samples`` for the number of subsets to sample for each $q$.
     - ``owen_halved``: Same as 'owen_sampling' but uses correlated samples in the
       expectation. Implemented in
       :func:`~pydvl.value.shapley.montecarlo.owen_sampling_shapley`.
       This method  requires an additional parameter `q_max` for the number of
-      subdivisions of the interval [0,0.5] to use for integration.
+      subdivisions of the interval [0,0.5] to use for integration, and another
+       parameter ``n_samples`` for the number of subsets to sample for each $q$.
     - ``group_testing``: estimates differences of Shapley values and solves a
       constraint satisfaction problem. High sample complexity, not recommended.
-      Implemented in :func:`~pydvl.value.shapley.gt.group_testing_shapley`. Only
-      accepts :class:`~pydvl.value.stopping.MaxUpdates` (use
-      :func:`~pydvl.value.shapley.gt.num_samples_eps_delta` to compute a bound)
-      and :class:`~pydvl.value.stopping.MaxTime` as stopping criteria.
+      Implemented in :func:`~pydvl.value.shapley.gt.group_testing_shapley`. This
+      method does not take a :class:`~pydvl.value.stopping.StoppingCriterion`
+      but instead requires a parameter ``n_samples`` for the number of
+      iterations to run.
 
     Additionally, one can use model-specific methods:
 
@@ -126,8 +129,8 @@ def compute_shapley_values(
     elif mode == ShapleyMode.PermutationExact:
         return permutation_exact_shapley(u, progress=progress)
     elif mode == ShapleyMode.Owen or mode == ShapleyMode.OwenAntithetic:
-        if kwargs.get("n_iterations") is None:
-            raise ValueError("n_iterations cannot be None for Owen methods")
+        if kwargs.get("n_samples") is None:
+            raise ValueError("n_samples cannot be None for Owen methods")
         if kwargs.get("max_q") is None:
             raise ValueError("Owen Sampling requires max_q for the outer integral")
 
@@ -138,7 +141,7 @@ def compute_shapley_values(
         )
         return owen_sampling_shapley(
             u,
-            n_iterations=int(kwargs.get("n_iterations", -1)),
+            n_samples=int(kwargs.get("n_samples", -1)),
             max_q=int(kwargs.get("max_q", -1)),
             method=method,
             n_jobs=n_jobs,
@@ -146,9 +149,9 @@ def compute_shapley_values(
     elif mode == ShapleyMode.KNN:
         return knn_shapley(u, progress=progress)
     elif mode == ShapleyMode.GroupTesting:
-        n_iterations = kwargs.pop("n_iterations")
-        if n_iterations is None:
-            raise ValueError("n_iterations cannot be None for Group Testing")
+        n_samples = kwargs.pop("n_samples")
+        if n_samples is None:
+            raise ValueError("n_samples cannot be None for Group Testing")
         epsilon = kwargs.pop("epsilon")
         if epsilon is None:
             raise ValueError("Group Testing requires error bound epsilon")
@@ -157,7 +160,7 @@ def compute_shapley_values(
             u,
             epsilon=epsilon,
             delta=delta,
-            n_iterations=n_iterations,
+            n_samples=n_samples,
             n_jobs=n_jobs,
             progress=progress,
             **kwargs,

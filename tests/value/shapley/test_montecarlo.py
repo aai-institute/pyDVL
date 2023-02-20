@@ -43,8 +43,8 @@ log = logging.getLogger(__name__)
                 truncation=NoTruncation(),
             ),
         ),
-        (12, ShapleyMode.Owen, 0.1, 1e-4, dict(n_iterations=4, max_q=200)),
-        (12, ShapleyMode.OwenAntithetic, 0.1, 1e-4, dict(n_iterations=4, max_q=200)),
+        (12, ShapleyMode.Owen, 0.1, 1e-4, dict(n_samples=4, max_q=200)),
+        (12, ShapleyMode.OwenAntithetic, 0.1, 1e-4, dict(n_samples=4, max_q=200)),
         (
             4,
             ShapleyMode.GroupTesting,
@@ -52,7 +52,7 @@ log = logging.getLogger(__name__)
             # Because of the inaccuracy of GTS, a high atol is required for the
             # value 0, for which the rtol has no effect.
             1e-2,
-            dict(n_iterations=int(4e5), epsilon=0.2, delta=0.01),
+            dict(n_samples=int(4e5), epsilon=0.2, delta=0.01),
         ),
     ],
 )
@@ -90,12 +90,12 @@ def test_hoeffding_bound_montecarlo(
 ):
     u, exact_values = analytic_shapley
 
-    n_iterations = num_samples_permutation_hoeffding(delta=delta, eps=eps, u_range=1)
+    n_samples = num_samples_permutation_hoeffding(delta=delta, eps=eps, u_range=1)
 
     for _ in range(10):
         with tolerate(max_failures=int(10 * delta)):
             values = compute_shapley_values(
-                u=u, mode=fun, done=MaxChecks(n_iterations), n_jobs=n_jobs
+                u=u, mode=fun, done=MaxChecks(n_samples), n_jobs=n_jobs
             )
             # Trivial bound on total error using triangle inequality
             check_total_value(u, values, atol=len(u.data) * eps)
@@ -121,11 +121,11 @@ def test_hoeffding_bound_montecarlo(
             ),
         ),
         (ShapleyMode.CombinatorialMontecarlo, dict(done=MaxUpdates(2**11))),
-        (ShapleyMode.Owen, dict(n_iterations=2, max_q=300)),
-        (ShapleyMode.OwenAntithetic, dict(n_iterations=2, max_q=300)),
+        (ShapleyMode.Owen, dict(n_samples=2, max_q=300)),
+        (ShapleyMode.OwenAntithetic, dict(n_samples=2, max_q=300)),
         (
             ShapleyMode.GroupTesting,
-            dict(n_iterations=int(1e5), epsilon=0.2, delta=0.01),
+            dict(n_samples=int(1e5), epsilon=0.2, delta=0.01),
         ),
     ],
 )
@@ -183,11 +183,11 @@ def test_linear_montecarlo_shapley(
                 truncation=NoTruncation(),
             ),
         ),
-        (ShapleyMode.Owen, dict(n_iterations=4, max_q=400)),
-        (ShapleyMode.OwenAntithetic, dict(n_iterations=4, max_q=400)),
+        (ShapleyMode.Owen, dict(n_samples=4, max_q=400)),
+        (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=400)),
         (
             ShapleyMode.GroupTesting,
-            dict(n_iterations=int(1e5), epsilon=0.2, delta=0.01),
+            dict(n_samples=int(1e5), epsilon=0.2, delta=0.01),
         ),
     ],
 )

@@ -190,7 +190,7 @@ def seed_numpy(seed=42):
     np.random.seed(seed)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def num_workers():
     # Run with 2 CPUs inside GitHub actions
     if os.getenv("CI"):
