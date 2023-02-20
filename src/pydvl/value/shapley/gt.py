@@ -179,16 +179,18 @@ def group_testing_shapley(
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param progress: Whether to display progress bars for each job.
-    :param options: Additional options to pass to cvxpy. E.g. to change the
-        solver (which defaults to `cvxpy.SCS`) pass `options={
-        "solver":cp.CVXOPT}`.
+    :param options: Additional options to pass to `cvxpy.Problem.solve()
+        <https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options>`_.
+        E.g. to change the solver (which defaults to `cvxpy.SCS`) pass
+        `solver=cvxpy.CVXOPT`.
 
     :return: Object with the data values.
 
     .. versionadded:: 0.4.0
 
     .. versionchanged:: 0.5.0
-       Changed the solver to cvxpy instead of scipy's linprog. Added options.
+       Changed the solver to cvxpy instead of scipy's linprog. Added the ability
+       to pass arbitrary options to it.
     """
 
     n = len(u.data.indices)
@@ -244,7 +246,8 @@ def group_testing_shapley(
             constraints.append(v[j] - v[i] <= epsilon - C[i, j])
 
     problem = cp.Problem(cp.Minimize(0), constraints)
-    problem.solve(dict(solver=cp.SCS).update(options))
+    solver = options.pop("solver", cp.SCS)
+    problem.solve(solver=solver, **options)
 
     if problem.status != "optimal":
         log.warning(f"cvxpy returned status {problem.status}")
