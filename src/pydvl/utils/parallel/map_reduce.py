@@ -1,5 +1,4 @@
 import inspect
-from collections.abc import Iterable
 from functools import singledispatch, update_wrapper
 from itertools import accumulate, repeat
 from typing import (
@@ -70,17 +69,18 @@ def _(v: np.ndarray, *, timeout: Optional[float] = None) -> NDArray:
     return v
 
 
+# Careful to use list as hint. The dispatch does not work with typing generics
 @_get_value.register
-def _(v: Iterable, *, timeout: Optional[float] = None) -> List[Any]:
+def _(v: list, *, timeout: Optional[float] = None) -> List[Any]:
     return [_get_value(x, timeout=timeout) for x in v]
 
 
 class MapReduceJob(Generic[T, R]):
-    """Takes an embarrassingly parallel fun and runs it in `n_jobs` parallel
+    """Takes an embarrassingly parallel fun and runs it in ``n_jobs`` parallel
     jobs, splitting the data evenly into a number of chunks equal to the number of jobs.
 
     Typing information for objects of this class requires the type of the inputs
-    that are split for `map_func` and the type of its output.
+    that are split for ``map_func`` and the type of its output.
 
     :param inputs: The input that will be split and passed to `map_func`.
         if it's not a sequence object. It will be repeat ``n_jobs`` number of times.
@@ -88,7 +88,7 @@ class MapReduceJob(Generic[T, R]):
     :param reduce_func: Function that will be applied to the results of
         ``map_func`` to reduce them.
     :param map_kwargs: Keyword arguments that will be passed to ``map_func`` in
-        each job. Alternatively, one can use `itertools.partial`.
+        each job. Alternatively, one can use ``itertools.partial``.
     :param reduce_kwargs: Keyword arguments that will be passed to ``reduce_func``
         in each job. Alternatively, one can use :func:`itertools.partial`.
     :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig`
@@ -219,10 +219,19 @@ class MapReduceJob(Generic[T, R]):
         return result  # type: ignore
 
     def _wrap_function(self, func: Callable, **kwargs) -> Callable:
-        remote_func = self.parallel_backend.wrap(
+        """Wraps a function with a timeout and remote arguments and puts it on
+        the remote backend.
+
+        :param func: Function to wrap
+        :param kwargs: Additional keyword arguments to pass to the backend
+            wrapper. These are *not* arguments for the wrapped function.
+        :return: Remote function that can be called with the same arguments as
+            the wrapped function. Depending on the backend, this may simply be
+            the function itself.
+        """
+        return self.parallel_backend.wrap(
             _wrap_func_with_remote_args(func, timeout=self.timeout), **kwargs
         )
-        return getattr(remote_func, "remote", remote_func)  # type: ignore
 
     def _backpressure(
         self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int

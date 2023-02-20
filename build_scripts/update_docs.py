@@ -24,9 +24,6 @@ def module_template(module_qualname: str):
    :undoc-members:
    
    ----
-   
-   Module members
-   ==============
  
 .. footbibliography::
 

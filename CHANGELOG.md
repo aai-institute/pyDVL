@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.5.0 - 💥 Fixes, nicer interfaces and... more breaking changes 😒
+
+- Fixed parallel and antithetic Owen sampling for Shapley values. Simplified
+  and extended tests.
+  [PR #267](https://github.com/appliedAI-Initiative/pyDVL/pull/267)
+- Added `Scorer` class for a cleaner interface. Fixed minor bugs around
+  Group-Testing Shapley, added more tests and switched to cvxpy for the solver.
+  [PR #264](https://github.com/appliedAI-Initiative/pyDVL/pull/264)
+- Generalised stopping criteria for valuation algorithms. Improved classes
+  `ValuationResult` and `Status` with more operations. Some minor issues fixed.
+  [PR #252](https://github.com/appliedAI-Initiative/pyDVL/pull/250)
+- Fixed a bug whereby `compute_shapley_values` would only spawn one process when
+  using `n_jobs=-1` and Monte Carlo methods.
+  [PR #270](https://github.com/appliedAI-Initiative/pyDVL/pull/270)
+- Bugfix in `RayParallelBackend`: wrong semantics for `kwargs`.
+  [PR #268](https://github.com/appliedAI-Initiative/pyDVL/pull/268)
+- Splitting of problem preparation and solution in Least-Core computation.
+  Umbrella function for LC methods.
+  [PR #257](https://github.com/appliedAI-Initiative/pyDVL/pull/257) 
+- Operations on `ValuationResult` and `Status` and some cleanup
+  [PR #248](https://github.com/appliedAI-Initiative/pyDVL/pull/248)
+- **Bug fix and minor improvements**: Fixes bug in TMCS with remote Ray cluster,
+  raises an error for dummy sequential parallel backend with TMCS, clones model
+  inside `Utility` before fitting by default, with flag `clone_before_fit` 
+  to disable it, catches all warnings in `Utility` when `show_warnings` is 
+  `False`. Adds Miner and Gloves toy games utilities
+  [PR #247](https://github.com/appliedAI-Initiative/pyDVL/pull/247)
+
 ## 0.4.0 - 🏭💥 New algorithms and more breaking changes
 
 - GH action to mark issues as stale
@@ -11,8 +39,8 @@
 - **Breaking change:** Introduces a class ValuationResult to gather and inspect
   results from all valuation algorithms
   [PR #214](https://github.com/appliedAI-Initiative/pyDVL/pull/214)
-- Fixes bug in Influence calculation with multi-dimensional input and adds
-  new example notebook
+- Fixes bug in Influence calculation with multidimensional input and adds new
+  example notebook
   [PR #195](https://github.com/appliedAI-Initiative/pyDVL/pull/195)
 - **Breaking change**: Passes the input to `MapReduceJob` at initialization,
   removes `chunkify_inputs` argument from `MapReduceJob`, removes `n_runs`

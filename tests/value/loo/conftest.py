@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from pydvl.value import ValuationResult, ValuationStatus
+from pydvl.utils.status import Status
+from pydvl.value import ValuationResult
 
 
 @pytest.fixture(scope="function")
@@ -14,8 +15,8 @@ def analytic_loo(dummy_utility):
     result = ValuationResult(
         algorithm="exact",
         values=values,
-        stderr=np.zeros_like(values),
+        variances=np.zeros_like(values),
         data_names=dummy_utility.data.indices,
-        status=ValuationStatus.Converged,
+        status=Status.Converged,
     )
     return dummy_utility, result

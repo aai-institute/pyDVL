@@ -8,14 +8,12 @@ from typing import Collection, Generator, Iterator, Optional, Tuple, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.special import expit
-
-from pydvl.utils.types import compose_score
 
 FloatOrArray = TypeVar("FloatOrArray", float, NDArray[np.float_])
+IntOrArray = TypeVar("IntOrArray", int, NDArray[np.int_])
 
 __all__ = [
-    "get_running_avg_variance",
+    "running_moments",
     "linear_regression_analytical_derivative_d2_theta",
     "linear_regression_analytical_derivative_d_theta",
     "linear_regression_analytical_derivative_d_x_d_theta",
@@ -25,8 +23,6 @@ __all__ = [
     "random_powerset",
     "random_subset_of_size",
     "top_k_value_accuracy",
-    "squashed_r2",
-    "squashed_variance",
 ]
 
 T = TypeVar("T", bound=np.generic)
@@ -68,20 +64,22 @@ def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) 
 
 
 def random_powerset(
-    s: NDArray[T], max_subsets: Optional[int] = None, q: float = 0.5
+    s: NDArray[T], n_samples: Optional[int] = None, q: float = 0.5
 ) -> Generator[NDArray[T], None, None]:
     """Samples subsets from the power set of the argument, without
     pre-generating all subsets and in no order.
 
     See `powerset()` if you wish to deterministically generate all subsets.
 
-    To generate subsets, `len(s)` Bernoulli draws with probability `q` are drawn.
+    To generate subsets, `len(s)` Bernoulli draws with probability `q` are
+    drawn.
     The default value of `q = 0.5` provides a uniform distribution over the
     power set of `s`. Other choices can be used e.g. to implement
-    :func:`Owen sampling <pydvl.value.shapley.montecarlo.owen_sampling_shapley>`.
+    :func:`Owen sampling
+    <pydvl.value.shapley.montecarlo.owen_sampling_shapley>`.
 
     :param s: set to sample from
-    :param max_subsets: if set, stop the generator after this many steps.
+    :param n_samples: if set, stop the generator after this many steps.
         Defaults to `np.iinfo(np.int32).max`
     :param q: Sampling probability for elements. The default 0.5 yields a
         uniform distribution over the power set of s.
@@ -98,9 +96,9 @@ def random_powerset(
 
     rng = np.random.default_rng()
     total = 1
-    if max_subsets is None:
-        max_subsets = np.iinfo(np.int32).max
-    while total <= max_subsets:
+    if n_samples is None:
+        n_samples = np.iinfo(np.int32).max
+    while total <= n_samples:
         selection = rng.uniform(size=len(s)) > q
         subset = s[selection]
         yield subset
@@ -223,25 +221,36 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     return full_derivative / N  # type: ignore
 
 
-def get_running_avg_variance(
+# FIXME: FloatOrArray doesn't really work
+def running_moments(
     previous_avg: FloatOrArray,
     previous_variance: FloatOrArray,
+    count: IntOrArray,
     new_value: FloatOrArray,
-    count: int,
-) -> Tuple[FloatOrArray, FloatOrArray]:
+) -> Tuple:  # [FloatOrArray, FloatOrArray]:
     """Uses Welford's algorithm to calculate the running average and variance of
      a set of numbers.
 
     See `Welford's algorithm in wikipedia
     <https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm>`_
 
+    .. warning::
+       This is not really using Welford's correction for numerical stability
+       for the variance. (FIXME)
+
+    .. todo::
+       This could be generalised to arbitrary moments. See `this paper
+       <https://www.osti.gov/biblio/1028931>`_
+
+
     :param previous_avg: average value at previous step
     :param previous_variance: variance at previous step
-    :param new_value: new value in the series of numbers
     :param count: number of points seen so far
-    :return: new_average, new_variance, calculated with the new number
+    :param new_value: new value in the series of numbers
+    :return: new_average, new_variance, calculated with the new count
     """
-    new_average = (new_value + count * previous_avg) / (count + 1)
+    # broadcasted operations seem not to be supported by mypy, so we ignore the type
+    new_average = (new_value + count * previous_avg) / (count + 1)  # type: ignore
     new_variance = previous_variance + (
         (new_value - previous_avg) * (new_value - new_average) - previous_variance
     ) / (count + 1)
@@ -263,14 +272,3 @@ def top_k_value_accuracy(
     top_k_pred_values = np.argsort(y_pred)[-k:]
     top_k_accuracy = len(np.intersect1d(top_k_exact_values, top_k_pred_values)) / k
     return top_k_accuracy
-
-
-def sigmoid(x: float) -> float:
-    result: float = expit(x).item()
-    return result
-
-
-squashed_r2 = compose_score("r2", sigmoid, "squashed r2")
-squashed_variance = compose_score(
-    "explained_variance", sigmoid, "squashed explained variance"
-)

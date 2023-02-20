@@ -1,4 +1,5 @@
 import functools
+import os
 from collections import defaultdict
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
 
@@ -6,6 +7,8 @@ import numpy as np
 import pytest
 import ray
 from pymemcache.client import Client
+from sklearn import datasets
+from sklearn.utils import Bunch
 
 from pydvl.utils import Dataset, MemcachedClientConfig
 from pydvl.utils.parallel.backend import available_cpus
@@ -150,10 +153,8 @@ def memcached_client(memcache_client_config) -> Tuple[Client, MemcachedClientCon
 
 
 @pytest.fixture(scope="function")
-def boston_dataset(num_points, num_features) -> Dataset:
-    from sklearn import datasets
-
-    dataset = datasets.load_boston()
+def housing_dataset(num_points, num_features) -> Dataset:
+    dataset = datasets.fetch_california_housing()
     dataset.data = dataset.data[:num_points, :num_features]
     dataset.feature_names = dataset.feature_names[:num_features]
     dataset.target = dataset.target[:num_points]
@@ -172,8 +173,6 @@ def linear_dataset(a: float, b: float, num_points: int):
 
     :return: Dataset with train/test split. call str() on it to see the parameters
     """
-    from sklearn.utils import Bunch
-
     step = 2 / num_points
     stddev = 0.1
     x = np.arange(-1, 1, step)
@@ -191,9 +190,13 @@ def seed_numpy(seed=42):
     np.random.seed(seed)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def num_workers():
-    return max(1, available_cpus() - 1)
+    # Run with 2 CPUs inside GitHub actions
+    if os.getenv("CI"):
+        return 2
+    # And a maximum of 8 CPUs locally (most tests don't really benefit from more)
+    return max(1, min(available_cpus() - 1, 8))
 
 
 @pytest.fixture
