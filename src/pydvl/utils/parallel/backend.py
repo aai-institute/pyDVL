@@ -20,9 +20,7 @@ from ray.remote_function import RemoteFunction
 
 from ..config import ParallelConfig
 
-__all__ = [
-    "init_parallel_backend",
-]
+__all__ = ["init_parallel_backend", "effective_n_jobs", "available_cpus"]
 
 T = TypeVar("T")
 
@@ -234,3 +232,25 @@ def available_cpus() -> int:
     if system() != "Linux":
         return os.cpu_count() or 1
     return len(os.sched_getaffinity(0))
+
+
+def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> int:
+    """Returns the effective number of jobs.
+
+    This number may vary depending on the parallel backend and the resources
+    available.
+
+    :param n_jobs: the number of jobs requested. If -1, the number of available
+        CPUs is returned.
+    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
+        cluster address, number of cpus, etc.
+    :return: the effective number of jobs, guaranteed to be >= 1.
+    :raises RuntimeError: if the effective number of jobs returned by the backend
+        is < 1.
+    """
+    parallel_backend = init_parallel_backend(config)
+    if (eff_n_jobs := parallel_backend.effective_n_jobs(n_jobs)) < 1:
+        raise RuntimeError(
+            f"Invalid number of jobs {eff_n_jobs} obtained from parallel backend {config.backend}"
+        )
+    return eff_n_jobs

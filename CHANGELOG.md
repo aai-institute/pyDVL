@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fixed a bug whereby `compute_shapley_values` would only spawn one process when
+  using `n_jobs=-1` and Monte Carlo methods.
+  [PR #270](https://github.com/appliedAI-Initiative/pyDVL/pull/270)
 - Bugfix in `RayParallelBackend`: wrong semantics for `kwargs`.
   [PR #268](https://github.com/appliedAI-Initiative/pyDVL/pull/268)
 - Splitting of problem preparation and solution in Least-Core computation.
