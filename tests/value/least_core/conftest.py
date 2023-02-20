@@ -6,7 +6,7 @@ import pytest
 from pydvl.utils import Utility
 from pydvl.utils.status import Status
 from pydvl.utils.utility import GlovesGameUtility, MinerGameUtility
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 
 
 @pytest.fixture(scope="module")
@@ -23,7 +23,7 @@ def test_utility(request) -> Tuple[Utility, ValuationResult]:
         algorithm="exact",
         values=exact_values,
         subsidy=subsidy,
-        stderr=np.zeros_like(exact_values),
+        variances=np.zeros_like(exact_values),
         data_names=np.arange(len(exact_values)),
         status=Status.Converged,
     )

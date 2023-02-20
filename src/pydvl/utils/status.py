@@ -54,44 +54,48 @@ class Status(Enum):
 
     :Boolean casting:
 
-    A Status evaluates to ``True`` iff it's ``Converged`` or ``MaxIterations``
+    A Status evaluates to ``True`` iff it's ``Converged`` or ``Failed``:
 
         bool(Status.Pending) == False
         bool(Status.Converged) == True
-        bool(Status.Failed) == False
+        bool(Status.Failed) == True
+
+    .. warning::
+       These truth values are **inconsistent** with the usual boolean operations.
+       In particular the XOR of two instances of ``Status`` is not the same as
+       the XOR of their boolean values.
 
     """
 
     Pending = "pending"
     Converged = "converged"
-    MaxIterations = "maximum number of iterations reached"
     Failed = "failed"
 
     def __or__(self, other: "Status") -> "Status":
-        """ """
         if self == Status.Converged or other == Status.Converged:
             return Status.Converged
         if self == Status.Pending or other == Status.Pending:
             return Status.Pending
         if self == Status.Failed and other == Status.Failed:
             return Status.Failed
-        # TODO: Should be unreachable after deleting MaxIterations:
+        # Should be unreachable
         raise RuntimeError(f"Unexpected statuses: {self} and {other}")
 
     def __and__(self, other: "Status") -> "Status":
+        # Careful, the order of tests matters here!
         if self == Status.Failed or other == Status.Failed:
             return Status.Failed
         if self == Status.Pending or other == Status.Pending:
             return Status.Pending
         if self == Status.Converged and other == Status.Converged:
             return Status.Converged
-        # TODO: Should be unreachable after deleting MaxIterations:
+        # Should be unreachable
         raise RuntimeError(f"Unexpected statuses: {self} and {other}")
 
-    def __invert__(self):
+    def __invert__(self) -> "Status":
         if self == Status.Converged:
             return Status.Failed
         return Status.Converged
 
-    def __bool__(self):
-        return self == Status.Converged or self == Status.MaxIterations
+    def __bool__(self) -> bool:
+        return self != Status.Pending

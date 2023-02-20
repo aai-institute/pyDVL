@@ -6,7 +6,7 @@ import numpy as np
 
 from pydvl.utils import Utility, maybe_progress, powerset
 from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 
 __all__ = ["exact_least_core", "lc_prepare_problem"]
 
@@ -14,10 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def exact_least_core(
-    u: Utility,
-    *,
-    options: Optional[dict] = None,
-    progress: bool = True,
+    u: Utility, *, options: Optional[dict] = None, progress: bool = True
 ) -> ValuationResult:
     r"""Computes the exact Least Core values.
 
@@ -77,10 +74,7 @@ def lc_prepare_problem(u: Utility, progress: bool = False) -> LeastCoreProblem:
     utility_values = np.zeros(powerset_size)
     for i, subset in enumerate(
         maybe_progress(
-            powerset(u.data.indices),
-            progress,
-            total=powerset_size - 1,
-            position=0,
+            powerset(u.data.indices), progress, total=powerset_size - 1, position=0
         )
     ):
         indices = np.zeros(n, dtype=bool)

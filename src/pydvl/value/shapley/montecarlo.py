@@ -7,7 +7,7 @@ Monte Carlo approximations to Shapley Data values.
    the functions in this module.
 
 Because exact computation of Shapley values requires $\mathcal{O}(2^n)$
-re0trainings of the model, several Monte Carlo approximations are available.
+re-trainings of the model, several Monte Carlo approximations are available.
 The first two sample from the powerset of the training data directly:
 :func:`combinatorial_montecarlo_shapley` and :func:`owen_sampling_shapley`. The
 latter uses a reformulation in terms of a continuous extension of the utility.
@@ -30,34 +30,28 @@ reduce computation :func:`truncated_montecarlo_shapley`.
    the algorithms mentioned above, including Group Testing, can work to valuate
    groups of samples as units.
 """
-
+import abc
 import logging
 import math
+import operator
 from enum import Enum
+from functools import reduce
+from itertools import cycle, takewhile
 from time import sleep
-from typing import Iterable, NamedTuple, Optional, Sequence
+from typing import Sequence
 from warnings import warn
 
 import numpy as np
 from numpy.typing import NDArray
+from tqdm import tqdm
 
-from ...utils.config import ParallelConfig
-from ...utils.numeric import random_powerset, running_moments
-from ...utils.parallel import MapReduceJob, init_parallel_backend
-from ...utils.parallel.backend import effective_n_jobs
-from ...utils.progress import maybe_progress
-from ...utils.status import Status
-from ...utils.utility import Utility
-from ..results import ValuationResult
-from .actor import get_shapley_coordinator, get_shapley_worker
-
-
-class MonteCarloResults(NamedTuple):
-    # TODO: remove this class and use Valuation
-    values: NDArray[np.float_]
-    stderr: NDArray[np.float_]
-    counts: NDArray[np.int_]
-
+from pydvl.utils.config import ParallelConfig
+from pydvl.utils.numeric import random_powerset, running_moments
+from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
+from pydvl.utils.progress import maybe_progress
+from pydvl.utils.utility import Utility
+from pydvl.value.result import ValuationResult
+from pydvl.value.stopping import StoppingCriterion
 
 logger = logging.getLogger(__name__)
 
@@ -69,14 +63,149 @@ __all__ = [
 ]
 
 
+class TruncationPolicy(abc.ABC):
+    """A policy for deciding whether to stop computing marginals in a
+    permutation.
+
+    Statistics are kept on the number of calls and truncations as :attr:`n_calls`
+    and :attr:`n_truncations` respectively.
+
+    .. todo::
+       Because the policy objects are copied to the workers, the statistics
+       are not accessible from the
+       :class:`~pydvl.value.shapley.actor.ShapleyCoordinator`. We need to add
+       methods for this.
+    """
+
+    def __init__(self):
+        self.n_calls: int = 0
+        self.n_truncations: int = 0
+
+    @abc.abstractmethod
+    def _check(self, idx: int, score: float) -> bool:
+        """Implement the policy."""
+        ...
+
+    @abc.abstractmethod
+    def reset(self):
+        """Reset the policy to a state ready for a new permutation."""
+        ...
+
+    def __call__(self, idx: int, score: float) -> bool:
+        """Check whether the computation should be interrupted.
+
+        :param idx: Position in the permutation currently being computed.
+        :param score: Last utility computed.
+        :return: ``True`` if the computation should be interrupted.
+        """
+        ret = self._check(idx, score)
+        self.n_calls += 1
+        self.n_truncations += 1 if ret else 0
+        return ret
+
+
+class NoTruncation(TruncationPolicy):
+    """A policy which never interrupts the computation."""
+
+    def _check(self, idx: int, score: float) -> bool:
+        return False
+
+    def reset(self):
+        pass
+
+
+class FixedTruncation(TruncationPolicy):
+    """Break a permutation after computing a fixed number of marginals.
+
+    :param u: Utility object with model, data, and scoring function
+    :param fraction: Fraction of marginals in a permutation to compute before
+        stopping (e.g. 0.5 to compute half of the marginals).
+    """
+
+    def __init__(self, u: Utility, fraction: float):
+        super().__init__()
+        if fraction <= 0 or fraction > 1:
+            raise ValueError("fraction must be in (0, 1]")
+        self.max_marginals = len(u.data) * fraction
+        self.count = 0
+
+    def _check(self, idx: int, score: float) -> bool:
+        self.count += 1
+        return self.count >= self.max_marginals
+
+    def reset(self):
+        self.count = 0
+
+
+class RelativeTruncation(TruncationPolicy):
+    """Break a permutation if the marginal utility is too low.
+
+    This is called "performance tolerance" in :footcite:t:`ghorbani_data_2019`.
+
+    :param u: Utility object with model, data, and scoring function
+    :param rtol: Relative tolerance. The permutation is broken if the
+        last computed utility is less than ``total_utility * rtol``.
+    """
+
+    def __init__(self, u: Utility, rtol: float):
+        super().__init__()
+        self.rtol = rtol
+        logger.info("Computing total utility for permutation truncation.")
+        self.total_utility = u(u.data.indices)
+
+    def _check(self, idx: int, score: float) -> bool:
+        return np.allclose(score, self.total_utility, rtol=self.rtol)
+
+    def reset(self):
+        pass
+
+
+class BootstrapTruncation(TruncationPolicy):
+    """Break a permutation if the last computed utility is close to the total
+    utility, measured as a multiple of the standard deviation of the utilities.
+
+    :param u: Utility object with model, data, and scoring function
+    :param n_samples: Number of bootstrap samples to use to compute the variance
+        of the utilities.
+    :param sigmas: Number of standard deviations to use as a threshold.
+    """
+
+    def __init__(self, u: Utility, n_samples: int, sigmas: float = 1):
+        super().__init__()
+        self.n_samples = n_samples
+        logger.info("Computing total utility for permutation truncation.")
+        self.total_utility = u(u.data.indices)
+        self.count: int = 0
+        self.variance: float = 0
+        self.mean: float = 0
+        self.sigmas: float = sigmas
+
+    def _check(self, idx: int, score: float) -> bool:
+        self.mean, self.variance = running_moments(
+            self.mean, self.variance, self.count, score
+        )
+        self.count += 1
+        logger.info(
+            f"Bootstrap truncation: {self.count} samples, {self.variance:.2f} variance"
+        )
+        if self.count < self.n_samples:
+            return False
+        return abs(score - self.total_utility) < float(
+            self.sigmas * np.sqrt(self.variance)
+        )
+
+    def reset(self):
+        self.count = 0
+        self.variance = self.mean = 0
+
+
 def truncated_montecarlo_shapley(
     u: Utility,
-    value_tolerance: Optional[float] = None,
-    n_iterations: Optional[int] = None,
     *,
+    done: StoppingCriterion,
+    truncation: TruncationPolicy,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
-    progress: bool = False,
     coordinator_update_period: int = 10,
     worker_update_period: int = 5,
 ) -> ValuationResult:
@@ -87,45 +216,42 @@ def truncated_montecarlo_shapley(
     over all possible permutations of the index set, with a double stopping
     criterion.
 
-    .. warning::
-
-       This function does not exactly reproduce the stopping criterion of
-       :footcite:t:`ghorbani_data_2019` which uses a hardcoded time delay in the
-       sequence of values. Instead, we use a moving average and the stopping
-       criterion detailed in
-       :meth:`~pydvl.value.shapley.actor.ShapleyCoordinator.check_done`.
-
-    .. warning::
-
-       This function does not work with the sequential parallel backend.
-
     .. todo::
-       Implement the original stopping criterion, maybe Robin-Gelman or some
-       other more principled one.
+       Think of how to add Robin-Gelman or some other more principled stopping
+       criterion.
 
     Instead of naively implementing the expectation, we sequentially add points
-    to a dataset from a permutation. We keep sampling permutations and updating
-    all shapley values until the std/value score in the moving average falls
-    below a given threshold (value_tolerance) or when the number of iterations
-    exceeds a certain number (n_iterations).
+    to a dataset from a permutation and incrementally compute marginal utilities.
+    We stop computing marginals for a given permutation based on a
+    :class:`TruncationPolicy`. :footcite:t:`ghorbani_data_2019` mention two
+    policies: one that stops after a certain fraction of marginals are computed,
+    implemented in :class:`FixedTruncation`, and one that stops if the last
+    computed utility ("score") is close to the total utility using the standard
+    deviation of the utility as a measure of proximity, implemented in
+    :class:`BootstrapTruncation`.
+
+    We keep sampling permutations and updating all shapley values
+    until the :class:`StoppingCriterion` returns ``True``.
 
     :param u: Utility object with model, data, and scoring function
-    :param value_tolerance: Terminate if the standard deviation of the
-        average value for every sample has dropped below this value
-    :param n_iterations: Terminate if the total number of permutations exceeds
-        this number.
+    :param done: Check on the results which decides when to stop
+        sampling permutations.
+    :param truncation: callable that decides whether to stop computing
+        marginals for a given permutation.
     :param n_jobs: number of jobs processing permutations. If None, it will be
         set to :func:`available_cpus`.
-    :param config: Object configuring parallel computation, with cluster address,
-        number of cpus, etc.
-    :param progress: Whether to display progress bars for each job.
-    :param coordinator_update_period: in seconds. Check status with the job
-        coordinator every so often.
-    :param worker_update_period: interval in seconds between different updates to
-        and from the coordinator
+    :param config: Object configuring parallel computation, with cluster
+        address, number of cpus, etc.
+    :param coordinator_update_period: in seconds. How often to check the
+        accumulated results from the workers for convergence.
+    :param worker_update_period: interval in seconds between different
+        updates to and from the coordinator
     :return: Object with the data values.
 
     """
+    # Avoid circular imports
+    from .actor import get_shapley_coordinator, get_shapley_worker
+
     if config.backend == "sequential":
         raise NotImplementedError(
             "Truncated MonteCarlo Shapley does not work with "
@@ -133,45 +259,52 @@ def truncated_montecarlo_shapley(
         )
 
     parallel_backend = init_parallel_backend(config)
-
     n_jobs = parallel_backend.effective_n_jobs(n_jobs)
-
     u_id = parallel_backend.put(u)
 
-    coordinator = get_shapley_coordinator(  # type: ignore
-        value_tolerance, n_iterations, progress, config=config
-    )
+    coordinator = get_shapley_coordinator(config=config, done=done)  # type: ignore
+
     workers = [
         get_shapley_worker(  # type: ignore
             u=u_id,
             coordinator=coordinator,
+            truncation=truncation,
             worker_id=worker_id,
-            progress=progress,
             update_period=worker_update_period,
             config=config,
         )
         for worker_id in range(n_jobs)
     ]
-    for worker_id in range(n_jobs):
-        workers[worker_id].run(block=False)
+    for worker in workers:
+        worker.run(block=False)
 
-    while not coordinator.check_done():
+    while not coordinator.check_convergence():
         sleep(coordinator_update_period)
 
-    values, stderr = coordinator.get_results()
+    return coordinator.accumulate()
 
-    return ValuationResult(
-        algorithm="truncated_montecarlo_shapley",
-        status=coordinator.status(),
-        values=values,
-        stderr=stderr,
-        data_names=u.data.data_names,
-    )
+    # Something like this would be nicer, but it doesn't seem to be possible
+    # to start the workers from the coordinator.
+    # coordinator.add_workers(
+    #     n_workers=n_jobs,
+    #     u=u_id,
+    #     update_period=worker_update_period,
+    #     config=config,
+    #     truncation=truncation,
+    # )
+    #
+    # return coordinator.run(delay=coordinator_update_period)
 
 
-def _permutation_montecarlo_marginals(
-    u: Utility, max_permutations: int, progress: bool = False, job_id: int = 1
-) -> "NDArray":
+def _permutation_montecarlo_shapley(
+    u: Utility,
+    *,
+    done: StoppingCriterion,
+    truncation: TruncationPolicy,
+    algorithm_name: str = "permutation_montecarlo_shapley",
+    progress: bool = False,
+    job_id: int = 1,
+) -> ValuationResult:
     """Helper function for :func:`permutation_montecarlo_shapley`.
 
     Computes marginal utilities of each training sample in
@@ -179,31 +312,43 @@ def _permutation_montecarlo_marginals(
     sampled permutations.
 
     :param u: Utility object with model, data, and scoring function
-    :param max_permutations: total number of permutations to use
+    :param done: Check on the results which decides when to stop
+    :param truncation: A callable which decides whether to interrupt
+        processing a permutation and set all subsequent marginals to zero.
+    :param algorithm_name: For the results object. Used internally by different
+        variants of Shapley using this subroutine
     :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress (e.g. to place progres bars)
-    :return: a matrix with each row being a different permutation and each
-        column being the score of a different data point
+    :return: An object with the results
     """
-    n = len(u.data)
-    values = np.zeros(shape=(max_permutations, n))
-    pbar = maybe_progress(max_permutations, progress, position=job_id)
-    for iter_idx in pbar:
+    result = ValuationResult.empty(algorithm=algorithm_name, indices=u.data.indices)
+
+    pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
+    while not done(result):
+        pbar.n = 100 * done.completion()
+        pbar.refresh()
         prev_score = 0.0
         permutation = np.random.permutation(u.data.indices)
-        marginals = np.zeros(shape=n)
+        permutation_done = False
+        truncation.reset()
         for i, idx in enumerate(permutation):
-            score = u(permutation[: i + 1])
-            marginals[idx] = score - prev_score
+            if permutation_done:
+                score = prev_score
+            else:
+                score = u(permutation[: i + 1])
+            marginal = score - prev_score
+            result.update(idx, marginal)
             prev_score = score
-        values[iter_idx] = marginals
-    return values
+            if not permutation_done and truncation(i, score):
+                permutation_done = True
+    return result
 
 
 def permutation_montecarlo_shapley(
     u: Utility,
-    n_iterations: int,
+    done: StoppingCriterion,
     *,
+    truncation: TruncationPolicy = NoTruncation(),
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -217,117 +362,81 @@ def permutation_montecarlo_shapley(
     See :ref:`data valuation` for details.
 
     :param u: Utility object with model, data, and scoring function.
-    :param n_iterations: total number of iterations (permutations) to use
-        across all jobs.
+    :param done: function checking whether computation must stop.
+    :param truncation: An optional callable which decides whether to
+        interrupt processing a permutation and set all subsequent marginals to
+        zero. Typically used to stop computation when the marginal is small.
     :param n_jobs: number of jobs across which to distribute the computation.
-    :param config: Object configuring parallel computation, with cluster address,
-        number of cpus, etc.
+    :param config: Object configuring parallel computation, with cluster
+        address, number of cpus, etc.
     :param progress: Whether to display progress bars for each job.
     :return: Object with the data values.
     """
-    iterations_per_job = max(1, n_iterations // effective_n_jobs(n_jobs, config))
 
-    map_reduce_job: MapReduceJob[Utility, "NDArray"] = MapReduceJob(
+    map_reduce_job: MapReduceJob[Utility, ValuationResult] = MapReduceJob(
         u,
-        map_func=_permutation_montecarlo_marginals,
-        reduce_func=np.concatenate,  # type: ignore
-        map_kwargs=dict(max_permutations=iterations_per_job, progress=progress),
-        reduce_kwargs=dict(axis=0),
+        map_func=_permutation_montecarlo_shapley,
+        reduce_func=lambda results: reduce(operator.add, results),
+        map_kwargs=dict(
+            algorithm_name="permutation_montecarlo_shapley",
+            done=done,
+            truncation=truncation,
+            progress=progress,
+        ),
         config=config,
         n_jobs=n_jobs,
     )
-    full_results = map_reduce_job()
-
-    values = np.mean(full_results, axis=0)
-    stderr = np.std(full_results, axis=0) / np.sqrt(full_results.shape[0])
-
-    return ValuationResult(
-        algorithm="permutation_montecarlo_shapley",
-        status=Status.MaxIterations,
-        values=values,
-        stderr=stderr,
-        data_names=u.data.data_names,
-    )
+    return map_reduce_job()
 
 
 def _combinatorial_montecarlo_shapley(
     indices: Sequence[int],
     u: Utility,
-    n_iterations: int,
+    done: StoppingCriterion,
     *,
     progress: bool = False,
     job_id: int = 1,
-) -> MonteCarloResults:
+) -> ValuationResult:
     """Helper function for :func:`combinatorial_montecarlo_shapley`.
 
     This is the code that is sent to workers to compute values using the
     combinatorial definition.
 
     :param u: Utility object with model, data, and scoring function
-    :param n_iterations: total number of subsets to sample.
+    :param done: Check on the results which decides when to stop sampling
+        subsets for an index.
     :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress
     :return: A tuple of ndarrays with estimated values and standard errors
     """
     n = len(u.data)
 
-    if len(np.unique(indices)) != len(indices):
-        raise ValueError("Repeated indices passed")
-
     # Correction coming from Monte Carlo integration so that the mean of the
     # marginals converges to the value: the uniform distribution over the
     # powerset of a set with n-1 elements has mass 2^{n-1} over each subset. The
     # additional factor n corresponds to the one in the Shapley definition
     correction = 2 ** (n - 1) / n
-
-    values = np.zeros(n)
-    variances = np.zeros(n)
-    counts = np.zeros(n, dtype=int)
-    pbar = maybe_progress(indices, progress, position=job_id)
-    for idx in pbar:
-        # Randomly sample subsets of full dataset without idx
-        subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
-        for s in random_powerset(subset, max_subsets=n_iterations):
-            marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
-            values[idx], variances[idx] = running_moments(
-                values[idx], variances[idx], marginal, counts[idx]
-            )
-            counts[idx] += 1
-
-    return MonteCarloResults(
-        values=correction * values,
-        stderr=np.sqrt(correction**2 * variances / np.maximum(1, counts)),
-        counts=counts,
+    result = ValuationResult.empty(
+        algorithm="combinatorial_montecarlo_shapley", indices=indices
     )
 
+    repeat_indices = takewhile(lambda _: not done(result), cycle(indices))
+    pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
+    for idx in repeat_indices:
+        pbar.n = 100 * done.completion()
+        pbar.refresh()
+        # Randomly sample subsets of full dataset without idx
+        subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
+        s = next(random_powerset(subset, n_samples=1))
+        marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
+        result.update(idx, correction * marginal)
 
-def disjoint_reducer(results_it: Iterable[MonteCarloResults]) -> MonteCarloResults:
-    """A reducer of results that assumes non-zero indices in the result arrays
-    to be disjoint, so that it is ok to simply add everything
-
-    :raises ValueError: If the values in the argument iterable are not disjoint.
-    :raises IndexError: If the argument is an empty iterable.
-    """
-    try:
-        val, std, cnt = next((x for x in results_it))
-        values = np.zeros_like(val)
-        stderr = np.zeros_like(std)
-        counts = np.zeros_like(cnt)
-    except StopIteration:
-        raise IndexError("Empty results iterable cannot be reduced")
-
-    for val, std, cnt in results_it:
-        if np.abs(values[val > 0]).sum() > 0:
-            raise ValueError("Returned value sets are not disjoint")
-        values += val
-        stderr += std
-        counts += cnt
-    return MonteCarloResults(values=values, stderr=stderr, counts=counts)
+    return result
 
 
 def combinatorial_montecarlo_shapley(
     u: Utility,
-    n_iterations: int,
+    done: StoppingCriterion,
     *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
@@ -343,15 +452,16 @@ def combinatorial_montecarlo_shapley(
     indices in :attr:`~pydvl.utils.utility.Utility.data`, and computing their
     marginal utilities. See :ref:`data valuation` for details.
 
+    Note that because sampling is done with replacement, the approximation is
+    poor even for $2^{m}$ subsets with $m>n$, even though there are $2^{n-1}$
+    subsets for each $i$. Prefer
+    :func:`~pydvl.shapley.montecarlo.permutation_montecarlo_shapley`.
+
     Parallelization is done by splitting the set of indices across processes and
     computing the sum over subsets $S \subseteq N \setminus \{i\}$ separately.
 
     :param u: Utility object with model, data, and scoring function
-    :param n_iterations: total number of subsets to use **for each index**.
-        Note that this has different semantics from the homonymous parameter for
-        :func:`~pydvl.shapley.montecarlo.permutation_montecarlo_shapley`.Because
-        sampling is done with replacement, the approximation is poor even for
-        $2^{m}$  with $m>n$, even though there are $2^{n-1}$ subsets for each $i$.
+    :param done: Stopping criterion for the computation.
     :param n_jobs: number of parallel jobs across which to distribute the
         computation. Each worker receives a chunk of
         :attr:`~pydvl.utils.dataset.Dataset.indices`
@@ -361,25 +471,15 @@ def combinatorial_montecarlo_shapley(
     :return: Object with the data values.
     """
 
-    # FIXME? n_iterations has different semantics in permutation-based methods
-    map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
+    map_reduce_job: MapReduceJob[NDArray, ValuationResult] = MapReduceJob(
         u.data.indices,
         map_func=_combinatorial_montecarlo_shapley,
-        reduce_func=disjoint_reducer,
-        map_kwargs=dict(u=u, n_iterations=n_iterations, progress=progress),
+        reduce_func=lambda results: reduce(operator.add, results),
+        map_kwargs=dict(u=u, done=done, progress=progress),
         n_jobs=n_jobs,
         config=config,
     )
-    results = map_reduce_job()
-
-    return ValuationResult(
-        algorithm="combinatorial_montecarlo_shapley",
-        status=Status.MaxIterations,
-        values=results.values,
-        stderr=results.stderr,
-        counts=results.counts,
-        data_names=u.data.data_names,
-    )
+    return map_reduce_job()
 
 
 class OwenAlgorithm(Enum):
@@ -396,7 +496,7 @@ def _owen_sampling_shapley(
     *,
     progress: bool = False,
     job_id: int = 1,
-) -> MonteCarloResults:
+) -> ValuationResult:
     r"""This is the algorithm as detailed in the paper: to compute the outer
     integral over q ∈ [0,1], use uniformly distributed points for evaluation
     of the integrand. For the integrand (the expected marginal utility over the
@@ -414,7 +514,7 @@ def _owen_sampling_shapley(
     :param max_q: number of subdivisions for the integration over $q$
     :param progress: Whether to display progress bars for each job
     :param job_id: For positioning of the progress bar
-    :return: Values and standard errors
+    :return: Object with the data values, errors.
     """
     values = np.zeros(len(u.data))
 
@@ -426,7 +526,7 @@ def _owen_sampling_shapley(
         e = np.zeros(max_q)
         subset = np.array(list(index_set.difference({i})))
         for j, q in enumerate(q_steps):
-            for s in random_powerset(subset, max_subsets=n_iterations, q=q):
+            for s in random_powerset(subset, n_samples=n_iterations, q=q):
                 marginal = u({i}.union(s)) - u(s)
                 if method == OwenAlgorithm.Antithetic and q != 0.5:
                     s_complement = index_set.difference(s)
@@ -437,8 +537,8 @@ def _owen_sampling_shapley(
         # Trapezoidal rule
         values[i] = (e[:-1] + e[1:]).sum() / (2 * max_q)
 
-    return MonteCarloResults(
-        values=values, stderr=np.zeros_like(values), counts=np.ones_like(values)
+    return ValuationResult(
+        algorithm="owen_sampling_shapley_" + str(method), values=values
     )
 
 
@@ -466,15 +566,19 @@ def owen_sampling_shapley(
     using one of two methods. The first one, selected with the argument ``mode =
     OwenAlgorithm.Standard``, approximates the integral with:
 
-    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m \cup \{i\}) - u(S^{(q_j)}_m)],$$
+    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m
+    \cup \{i\}) - u(S^{(q_j)}_m)],$$
 
     where $q_j = \frac{j}{Q} \in [0,1]$ and the sets $S^{(q_j)}$ are such that a
     sample $x \in S^{(q_j)}$ if a draw from a $Ber(q_j)$ distribution is 1.
 
-    The second method, selected with the argument ``mode = OwenAlgorithm.Anthithetic``,
+    The second method, selected with the argument ``mode =
+    OwenAlgorithm.Anthithetic``,
     uses correlated samples in the inner sum to reduce the variance:
 
-    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m \cup \{i\}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup \{i\}) - u((S^{(q_j)}_m)^c)],$$
+    $$\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m
+    \cup \{i\}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup \{i\}) - u((S^{(
+    q_j)}_m)^c)],$$
 
     where now $q_j = \frac{j}{2Q} \in [0,\frac{1}{2}]$, and $S^c$ is the
     complement of $S$.
@@ -503,9 +607,10 @@ def owen_sampling_shapley(
     if OwenAlgorithm(method) == OwenAlgorithm.Antithetic:
         warn("Owen antithetic sampling not tested and probably bogus")
 
-    map_reduce_job: MapReduceJob["NDArray", MonteCarloResults] = MapReduceJob(
+    map_reduce_job: MapReduceJob[NDArray, ValuationResult] = MapReduceJob(
         u.data.indices,
         map_func=_owen_sampling_shapley,
+        reduce_func=lambda results: reduce(operator.add, results),
         map_kwargs=dict(
             u=u,
             method=OwenAlgorithm(method),
@@ -513,17 +618,8 @@ def owen_sampling_shapley(
             max_q=max_q,
             progress=progress,
         ),
-        reduce_func=disjoint_reducer,
         n_jobs=n_jobs,
         config=config,
     )
 
-    results = map_reduce_job()
-
-    return ValuationResult(
-        algorithm="owen_sampling_shapley",
-        status=Status.MaxIterations,
-        values=results.values,
-        stderr=results.stderr,
-        data_names=u.data.data_names,
-    )
+    return map_reduce_job()

@@ -17,7 +17,7 @@ def dummy_values(values, names):
         algorithm="dummy_valuator",
         status=Status.Converged,
         values=np.array(values),
-        stderr=np.zeros_like(values),
+        variances=np.zeros_like(values),
         data_names=names,
         sort=True,
     )
@@ -28,6 +28,7 @@ def dummy_values(values, names):
 )
 def test_sorting(values, names, ranks_asc, dummy_values):
 
+    dummy_values.sort(key="value")
     assert np.alltrue([it.value for it in dummy_values] == sorted(values))
     assert np.alltrue(dummy_values.indices == ranks_asc)
     assert np.alltrue(
@@ -37,9 +38,10 @@ def test_sorting(values, names, ranks_asc, dummy_values):
     dummy_values.sort(reverse=True)
     assert np.alltrue([it.value for it in dummy_values] == sorted(values, reverse=True))
     assert np.alltrue(dummy_values.indices == list(reversed(ranks_asc)))
-    assert np.alltrue(
-        dummy_values.values[dummy_values.indices] == sorted(values, reverse=True)
-    )
+
+    dummy_values.sort(key="index")
+    assert np.alltrue(dummy_values.indices == list(range(len(values))))
+    assert np.alltrue([it.value for it in dummy_values] == values)
 
 
 @pytest.mark.parametrize(
@@ -90,6 +92,9 @@ def test_todataframe(ranks_asc, dummy_values):
     assert "val_stderr" in df.columns
     assert np.alltrue(df.index.values == ranks_asc)
 
+    df = dummy_values.to_dataframe(use_names=True)
+    assert np.alltrue(df.index.values == [it.name for it in dummy_values])
+
 
 @pytest.mark.parametrize(
     "values, names, ranks_asc",
@@ -109,6 +114,26 @@ def test_indexing(ranks_asc, dummy_values):
         assert ranks_asc[:-2] == [it.index for it in dummy_values[:-2]]
         assert ranks_asc[-2:] == [it.index for it in dummy_values[-2:]]
         assert ranks_asc[-2:] == [it.index for it in dummy_values[[-2, -1]]]
+
+
+def test_updating():
+    v = ValuationResult(values=np.array([1.0, 2.0]))
+    v.update(0, 1.0)
+    assert v.values[0] == 1.0
+    assert v.counts[0] == 2
+
+    v.update(1, 4.0)
+    assert v.values[1] == 3.0
+    assert v._variances[1] == 1.0
+
+    v.update(1, 3.0)
+    assert v.values[1] == 3.0
+    assert np.isclose(v._variances[1], 2 / 3)
+
+    v = ValuationResult(values=np.array([3.0, 1.0]))
+    v.sort()
+    v.update(0, 1.0)
+    assert v.values[0] == 2.0
 
 
 @pytest.mark.parametrize(
@@ -135,7 +160,7 @@ def test_equality(values, names, dummy_values):
         algorithm="dummy",
         status=c.status,
         values=c.values,
-        stderr=c._stderr,
+        variances=c._variances,
         data_names=c._names,
     )
     assert c != c2
@@ -144,16 +169,16 @@ def test_equality(values, names, dummy_values):
         algorithm=c._algorithm,
         status=Status.Failed,
         values=c.values,
-        stderr=c._stderr,
-        data_names=c._names,
+        variances=c.variances,
+        data_names=c.names,
     )
     assert c != c2
 
     c2 = ValuationResult(
         algorithm=c._algorithm,
-        status=c.status,
-        values=c.values,
-        stderr=c._stderr,
+        status=c._status,
+        values=c._values,
+        variances=c._variances,
         data_names=c._names,
     )
     c2.sort(c._sort_order)
@@ -163,9 +188,9 @@ def test_equality(values, names, dummy_values):
     if len(c) > 0:
         c2 = ValuationResult(
             algorithm=c._algorithm,
-            status=c.status,
-            values=c.values + 1.0,
-            stderr=c._stderr,
+            status=c._status,
+            values=c._values + 1.0,
+            variances=c._variances,
             data_names=c._names,
         )
         assert c != c2
@@ -198,7 +223,7 @@ def test_from_random_creation(size):
     assert len(result) == size
 
 
-def test_adding():
+def test_adding_random():
     """Test adding multiple valuation results together"""
     n_samples, n_values, n_subsets = 10, 1000, 12
     values = np.random.rand(n_samples, n_values)
@@ -209,7 +234,7 @@ def test_adding():
             algorithm="dummy",
             status=Status.Pending,
             values=np.average(s, axis=1),
-            stderr=np.sqrt(np.var(s, axis=1) / s.shape[1]),
+            variances=np.var(s, axis=1),
             counts=s.shape[1] * np.ones(n_samples),
         )
         for s in splits
@@ -217,7 +242,73 @@ def test_adding():
     result: ValuationResult = functools.reduce(operator.add, vv)
 
     true_means = values.mean(axis=1)
-    true_stderr = np.sqrt(values.var(axis=1) / n_values)
+    true_variances = values.var(axis=1)
 
-    assert np.allclose(true_means, result.values)
-    assert np.allclose(true_stderr, result.stderr)
+    assert np.allclose(true_means[result.indices], result.values)
+    assert np.allclose(true_variances[result.indices], result.variances)
+
+
+@pytest.mark.parametrize(
+    "indices_1, names_1, values_1, indices_2, names_2, values_2,"
+    "expected_indices, expected_names, expected_values",
+    [  # Disjoint indices
+        (
+            [0, 1, 2],
+            ["a", "b", "c"],
+            [0, 1, 2],
+            [3, 4, 5],
+            ["d", "e", "f"],
+            [3, 4, 5],
+            [0, 1, 2, 3, 4, 5],
+            ["a", "b", "c", "d", "e", "f"],
+            [0, 1, 2, 3, 4, 5],
+        ),
+        # Overlapping indices (recall that values are running averages)
+        (
+            [0, 1, 2],
+            ["a", "b", "c"],
+            [0, 1, 2],
+            [1, 2, 3],
+            ["b", "c", "d"],
+            [3, 4, 5],
+            [0, 1, 2, 3],
+            ["a", "b", "c", "d"],
+            [0, 2, 3, 5],
+        ),
+        # Overlapping indices with different lengths
+        (
+            [0, 1, 2],
+            ["a", "b", "c"],
+            [0, 1, 2],
+            [1, 2],
+            ["b", "c"],
+            [3, 4],
+            [0, 1, 2],
+            ["a", "b", "c"],
+            [0, 2, 3],
+        ),
+    ],
+)
+def test_adding_different_indices(
+    indices_1,
+    names_1,
+    values_1,
+    indices_2,
+    names_2,
+    values_2,
+    expected_indices,
+    expected_names,
+    expected_values,
+):
+    """Test adding valuation results with disjoint indices"""
+    v1 = ValuationResult(
+        indices=np.array(indices_1), values=np.array(values_1), data_names=names_1
+    )
+    v2 = ValuationResult(
+        indices=np.array(indices_2), values=np.array(values_2), data_names=names_2
+    )
+    v3 = v1 + v2
+
+    assert np.allclose(v3.indices, np.array(expected_indices))
+    assert np.allclose(v3.values, np.array(expected_values))
+    assert np.all(v3.names == expected_names)

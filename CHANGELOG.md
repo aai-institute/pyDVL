@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Generalised stopping criteria for valuation algorithms. Improved classes
+  `ValuationResult` and `Status` with more operations. Some minor issues fixed.
+  [PR #252](https://github.com/appliedAI-Initiative/pyDVL/pull/250)
 - Fixed a bug whereby `compute_shapley_values` would only spawn one process when
   using `n_jobs=-1` and Monte Carlo methods.
   [PR #270](https://github.com/appliedAI-Initiative/pyDVL/pull/270)

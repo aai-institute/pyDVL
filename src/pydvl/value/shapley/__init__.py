@@ -5,13 +5,12 @@ interface to all methods defined in the modules.
 
 Please refer to :ref:`data valuation` for an overview of Shapley Data value.
 """
-from typing import Optional, cast
-
 from pydvl.utils import Utility
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.gt import group_testing_shapley
 from pydvl.value.shapley.knn import knn_shapley
 from pydvl.value.shapley.montecarlo import (
+    NoTruncation,
     OwenAlgorithm,
     combinatorial_montecarlo_shapley,
     owen_sampling_shapley,
@@ -23,15 +22,17 @@ from pydvl.value.shapley.naive import (
     permutation_exact_shapley,
 )
 from pydvl.value.shapley.types import ShapleyMode
+from pydvl.value.stopping import MaxUpdates, StoppingCriterion
 
 __all__ = ["compute_shapley_values"]
 
 
 def compute_shapley_values(
     u: Utility,
-    n_jobs: int = 1,
-    n_iterations: Optional[int] = None,
+    *,
+    done: StoppingCriterion = MaxUpdates(100),
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
+    n_jobs: int = 1,
     **kwargs,
 ) -> ValuationResult:
     """Umbrella method to compute Shapley values with any of the available
@@ -72,25 +73,29 @@ def compute_shapley_values(
       subdivisions of the interval [0,0.5] to use for integration.
     - ``group_testing``: estimates differences of Shapley values and solves a
       constraint satisfaction problem. High sample complexity, not recommended.
-      Implemented in :func:`~pydvl.value.shapley.gt.group_testing_shapley`.
+      Implemented in :func:`~pydvl.value.shapley.gt.group_testing_shapley`. Only
+      accepts :class:`~pydvl.value.stopping.MaxUpdates` (use
+      :func:`~pydvl.value.shapley.gt.num_samples_eps_delta` to compute a bound)
+      and :class:`~pydvl.value.stopping.MaxTime` as stopping criteria.
 
     Additionally, one can use model-specific methods:
 
-    - 'knn': use only with K-Nearest neighbour models. Implemented in
+    - ``knn``: Exact method for K-Nearest neighbour models. Implemented in
       :func:`~pydvl.value.shapley.knn.knn_shapley`.
 
     :param u: :class:`~pydvl.utils.utility.Utility` object with model, data, and
         scoring function.
-    :param n_iterations: total number of iterations, used for Monte Carlo
-        methods. **Note:** power set-based methods interpret this differently
-        to permutation-based methods. For the former, this is the number of
-        subsets to sample for each index or process, whereas for the latter it
-        is the total number of permutations to sample.
+    :param done: :class:`~pydvl.value.stopping.StoppingCriterion` object, used
+        to determine when to stop the computation for Monte Carlo methods. The
+        default is to stop after 100 iterations. See the available criteria in
+        :mod:`~pydvl.value.stopping`. It is possible to combine several criteria
+        using boolean operators. Some methods ignore this argument, others
+        require specific subtypes.
     :param n_jobs: Number of parallel jobs (available only to some methods)
     :param mode: Choose which shapley algorithm to use. See
         :class:`~pydvl.value.shapley.ShapleyMode` for a list of allowed value.
 
-    :return: A :class:`~pydvl.value.results.ValuationResult` object with the
+    :return: A :class:`~pydvl.value.result.ValuationResult` object with the
         results.
 
     """
@@ -100,37 +105,30 @@ def compute_shapley_values(
         raise ValueError(f"Invalid value encountered in {mode=}")
 
     if mode == ShapleyMode.TruncatedMontecarlo:
-        # TODO fix progress showing and maybe_progress in remote case
-        progress = False
+        truncation = kwargs.pop("truncation", NoTruncation())
         return truncated_montecarlo_shapley(
-            u=u,
-            n_iterations=n_iterations,
-            n_jobs=n_jobs,
-            progress=progress,
-            **kwargs,
+            u=u, done=done, n_jobs=n_jobs, truncation=truncation, **kwargs
         )
     elif mode == ShapleyMode.CombinatorialMontecarlo:
-        if n_iterations is None:
-            raise ValueError(
-                "n_iterations cannot be None for Combinatorial Montecarlo Shapley"
-            )
         return combinatorial_montecarlo_shapley(
-            u, n_iterations=n_iterations, n_jobs=n_jobs, progress=progress
+            u, done=done, n_jobs=n_jobs, progress=progress
         )
     elif mode == ShapleyMode.PermutationMontecarlo:
-        if n_iterations is None:
-            raise ValueError(
-                "n_iterations cannot be None for Permutation Montecarlo Shapley"
-            )
+        truncation = kwargs.pop("truncation", NoTruncation())
         return permutation_montecarlo_shapley(
-            u, n_iterations=n_iterations, n_jobs=n_jobs, progress=progress
+            u,
+            done=done,
+            n_jobs=n_jobs,
+            progress=progress,
+            truncation=truncation,
+            **kwargs,
         )
     elif mode == ShapleyMode.CombinatorialExact:
         return combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)
     elif mode == ShapleyMode.PermutationExact:
         return permutation_exact_shapley(u, progress=progress)
     elif mode == ShapleyMode.Owen or mode == ShapleyMode.OwenAntithetic:
-        if n_iterations is None:
+        if kwargs.get("n_iterations") is None:
             raise ValueError("n_iterations cannot be None for Owen methods")
         if kwargs.get("max_q") is None:
             raise ValueError("Owen Sampling requires max_q for the outer integral")
@@ -142,19 +140,17 @@ def compute_shapley_values(
         )
         return owen_sampling_shapley(
             u,
-            n_iterations=n_iterations,
-            max_q=cast(int, kwargs.get("max_q")),
+            n_iterations=int(kwargs.get("n_iterations", -1)),
+            max_q=int(kwargs.get("max_q", -1)),
             method=method,
             n_jobs=n_jobs,
         )
     elif mode == ShapleyMode.KNN:
         return knn_shapley(u, progress=progress)
     elif mode == ShapleyMode.GroupTesting:
+        n_iterations = kwargs.get("n_iterations")
         if n_iterations is None:
-            raise ValueError(
-                "n_iterations cannot be None for Group Testing,"
-                "use num_samples_eps_delta() to compute them"
-            )
+            raise ValueError("n_iterations cannot be None for Group Testing")
         eps = kwargs.get("epsilon")
         if eps is None:
             raise ValueError("Group Testing requires error bound epsilon")

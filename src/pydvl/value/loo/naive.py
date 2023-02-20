@@ -2,7 +2,7 @@ import numpy as np
 
 from pydvl.utils import Utility, maybe_progress
 from pydvl.utils.status import Status
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 
 __all__ = ["naive_loo"]
 
@@ -31,6 +31,5 @@ def naive_loo(u: Utility, *, progress: bool = True) -> ValuationResult:
         algorithm="naive_loo",
         status=Status.Converged,
         values=values,
-        stderr=None,
         data_names=u.data.data_names,
     )

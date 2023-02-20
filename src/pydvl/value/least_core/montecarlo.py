@@ -11,7 +11,7 @@ from pydvl.utils.parallel.backend import effective_n_jobs
 from pydvl.utils.progress import maybe_progress
 from pydvl.utils.utility import Utility
 from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 
 logger = logging.getLogger(__name__)
 
@@ -38,20 +38,12 @@ def _montecarlo_least_core(
     utility_values = np.zeros(n_iterations)
 
     # Randomly sample subsets of full dataset
-    power_set = random_powerset(
-        u.data.indices,
-        max_subsets=n_iterations,
-    )
+    power_set = random_powerset(u.data.indices, n_samples=n_iterations)
 
     A_lb = np.zeros((n_iterations, n))
 
     for i, subset in enumerate(
-        maybe_progress(
-            power_set,
-            progress,
-            total=n_iterations,
-            position=job_id,
-        )
+        maybe_progress(power_set, progress, total=n_iterations, position=job_id)
     ):
         indices = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
@@ -134,7 +126,7 @@ def mclc_prepare_problem(
 
     if n_iterations < n:
         raise ValueError(
-            "Number of iterations should be greater than the size of the " "dataset"
+            "Number of iterations should be greater than the size of the dataset"
         )
 
     if n_iterations > 2**n:

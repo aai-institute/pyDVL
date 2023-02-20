@@ -1,5 +1,4 @@
 import inspect
-from collections.abc import Iterable
 from functools import singledispatch, update_wrapper
 from itertools import accumulate, repeat
 from typing import (
@@ -70,6 +69,7 @@ def _(v: np.ndarray, *, timeout: Optional[float] = None) -> NDArray:
     return v
 
 
+# Careful to use list as hint. The dispatch does not work with typing generics
 @_get_value.register
 def _(v: list, *, timeout: Optional[float] = None) -> List[Any]:
     return [_get_value(x, timeout=timeout) for x in v]
