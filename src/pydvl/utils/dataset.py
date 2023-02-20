@@ -524,7 +524,7 @@ def load_spotify_dataset(
     if file_path.exists():
         data = pd.read_csv(file_path)
     else:
-        url = "https://github.com/appliedAI-Initiative/pyDVL/blob/develop/data/top_hits_spotify_dataset.csv"
+        url = "https://raw.githubusercontent.com/appliedAI-Initiative/pyDVL/develop/data/top_hits_spotify_dataset.csv"
         data = pd.read_csv(url)
         data.to_csv(file_path, index=False)
 

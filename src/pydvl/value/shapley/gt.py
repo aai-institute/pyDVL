@@ -25,6 +25,7 @@ from numpy.typing import NDArray
 
 from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress
 from pydvl.utils.numeric import random_subset_of_size
+from pydvl.utils.parallel.backend import effective_n_jobs
 from pydvl.utils.status import Status
 from pydvl.value import ValuationResult
 
@@ -237,7 +238,7 @@ def group_testing_shapley(
             f"ε={eps:.02f} guarantee at .95 probability"
         )
 
-    iterations_per_job = max(1, n_iterations // n_jobs)
+    iterations_per_job = max(1, n_iterations // effective_n_jobs(n_jobs, config))
 
     def reducer(
         results_it: Iterable[Tuple[NDArray, NDArray]]

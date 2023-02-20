@@ -1,8 +1,18 @@
-import functools
 import os
 from abc import ABCMeta, abstractmethod
 from dataclasses import asdict
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import ray
 from ray import ObjectRef
@@ -10,9 +20,7 @@ from ray.remote_function import RemoteFunction
 
 from ..config import ParallelConfig
 
-__all__ = [
-    "init_parallel_backend",
-]
+__all__ = ["init_parallel_backend", "effective_n_jobs", "available_cpus"]
 
 T = TypeVar("T")
 
@@ -63,7 +71,7 @@ class BaseParallelBackend(metaclass=NoPublicConstructor):
         ...
 
     @abstractmethod
-    def wrap(self, *args, **kwargs) -> Any:
+    def wrap(self, fun: Callable, **kwargs) -> Callable:
         ...
 
     @abstractmethod
@@ -104,9 +112,11 @@ class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
     def put(self, v: Any, *args, **kwargs) -> Any:
         return v
 
-    def wrap(self, *args, **kwargs) -> Any:
-        assert len(args) == 1
-        return functools.partial(args[0], **kwargs)
+    def wrap(self, fun: Callable, **kwargs) -> Callable:
+        """Wraps a function for sequential execution.
+
+        This is a noop and kwargs are ignored."""
+        return fun
 
     def wait(self, v: Any, *args, **kwargs) -> Tuple[list, list]:
         return v, []
@@ -151,8 +161,17 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         except TypeError:
             return v  # type: ignore
 
-    def wrap(self, *args, **kwargs) -> RemoteFunction:
-        return ray.remote(*args, **kwargs)  # type: ignore
+    def wrap(self, fun: Callable, **kwargs) -> Callable:
+        """Wraps a function as a ray remote.
+
+        :param fun: the function to wrap
+        :param kwargs: keyword arguments to pass to @ray.remote
+
+        :return: The `.remote` method of the ray `RemoteFunction`.
+        """
+        if len(kwargs) > 1:
+            return ray.remote(**kwargs)(fun).remote  # type: ignore
+        return ray.remote(fun).remote  # type: ignore
 
     def wait(
         self,
@@ -213,3 +232,25 @@ def available_cpus() -> int:
     if system() != "Linux":
         return os.cpu_count() or 1
     return len(os.sched_getaffinity(0))
+
+
+def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> int:
+    """Returns the effective number of jobs.
+
+    This number may vary depending on the parallel backend and the resources
+    available.
+
+    :param n_jobs: the number of jobs requested. If -1, the number of available
+        CPUs is returned.
+    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
+        cluster address, number of cpus, etc.
+    :return: the effective number of jobs, guaranteed to be >= 1.
+    :raises RuntimeError: if the effective number of jobs returned by the backend
+        is < 1.
+    """
+    parallel_backend = init_parallel_backend(config)
+    if (eff_n_jobs := parallel_backend.effective_n_jobs(n_jobs)) < 1:
+        raise RuntimeError(
+            f"Invalid number of jobs {eff_n_jobs} obtained from parallel backend {config.backend}"
+        )
+    return eff_n_jobs

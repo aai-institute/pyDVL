@@ -41,7 +41,7 @@ class RayActorWrapper:
     def __init__(self, actor_class: Type, config: ParallelConfig, *args, **kwargs):
         parallel_backend = cast(RayParallelBackend, init_parallel_backend(config))
         remote_cls = parallel_backend.wrap(actor_class)
-        self.actor_handle = remote_cls.remote(*args, **kwargs)
+        self.actor_handle = remote_cls(*args, **kwargs)
 
         def remote_caller(method_name: str):
             # Wrapper for remote class' methods to mimic local calls
