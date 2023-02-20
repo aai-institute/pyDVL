@@ -71,7 +71,7 @@ def compute_shapley_values(
       :func:`~pydvl.value.shapley.montecarlo.owen_sampling_shapley`.
       This method  requires an additional parameter `q_max` for the number of
       subdivisions of the interval [0,0.5] to use for integration, and another
-       parameter ``n_samples`` for the number of subsets to sample for each $q$.
+      parameter ``n_samples`` for the number of subsets to sample for each $q$.
     - ``group_testing``: estimates differences of Shapley values and solves a
       constraint satisfaction problem. High sample complexity, not recommended.
       Implemented in :func:`~pydvl.value.shapley.gt.group_testing_shapley`. This
