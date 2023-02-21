@@ -4,18 +4,18 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 
+from pydvl.utils.numeric import (
+    linear_regression_analytical_derivative_d2_theta,
+    linear_regression_analytical_derivative_d_theta,
+    linear_regression_analytical_derivative_d_x_d_theta,
+)
+
 from .conftest import create_mock_dataset
 
 try:
     import torch.nn.functional as F
-    from torch.optim import Adam, lr_scheduler
 
-    from pydvl.influence.general import compute_influences
-    from pydvl.influence.linear import (
-        compute_linear_influences,
-        influences_perturbation_linear_regression_analytical,
-        influences_up_linear_regression_analytical,
-    )
+    from pydvl.influence.general import InfluenceType, compute_influences
     from pydvl.influence.model_wrappers import TorchLinearRegression, TorchMLP
     from pydvl.utils.dataset import load_wine_dataset
 except ImportError:
@@ -59,6 +59,53 @@ def lmb_test_case_to_str(packed_i_test_case):
 
 
 test_case_ids = list(map(lmb_test_case_to_str, zip(range(len(test_cases)), test_cases)))
+
+
+def influences_perturbation_linear_regression_analytical(
+    linear_model: Tuple["NDArray", "NDArray"],
+    x: "NDArray",
+    y: "NDArray",
+    x_test: "NDArray",
+    y_test: "NDArray",
+):
+    """Calculate the influences of each training sample onto the
+    validation set for a linear model Ax+b=y.
+
+    :param linear_model: A tuple of np.ndarray' of shape (N, M) and (N)
+        representing A and b respectively.
+    :param x: An array of shape (M, K) containing the features of the
+        input data.
+    :param y: An array of shape (M, L) containing the targets of the input
+        data.
+    :param x_test: An array of shape (N, K) containing the features of the test
+        set.
+    :param y_test: An array of shape (N, L) containing the targets of the test
+        set.
+    :returns: An array of shape (B, C, M) with the influences of the training
+        points on the test points for each feature.
+    """
+
+    test_grads_analytical = linear_regression_analytical_derivative_d_theta(
+        linear_model,
+        x_test,
+        y_test,
+    )
+    train_second_deriv_analytical = linear_regression_analytical_derivative_d_x_d_theta(
+        linear_model,
+        x,
+        y,
+    )
+
+    hessian_analytical = linear_regression_analytical_derivative_d2_theta(
+        linear_model,
+        x,
+        y,
+    )
+    s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
+    result: "NDArray" = np.einsum(
+        "ia,jab->ijb", s_test_analytical, train_second_deriv_analytical
+    )
+    return result
 
 
 @pytest.mark.torch
@@ -210,17 +257,14 @@ def test_perturbation_influences_lr_analytical_cg(
 
 @pytest.mark.torch
 @pytest.mark.parametrize(
-    "train_set_size,test_set_size,problem_dimension,condition_number,n_jobs",
+    "train_set_size,test_set_size",
     test_cases,
     ids=test_case_ids,
 )
 def test_perturbation_influences_lr_analytical(
     train_set_size: int,
     test_set_size: int,
-    problem_dimension: int,
-    condition_number: float,
     linear_model: Tuple[np.ndarray, np.ndarray],
-    n_jobs: int,
 ):
     train_data, test_data = create_mock_dataset(
         linear_model, train_set_size, test_set_size
@@ -258,81 +302,3 @@ def test_perturbation_influences_lr_analytical(
     assert (
         influences_max_abs_diff < InfluenceTestSettings.ACCEPTABLE_ABS_TOL_INFLUENCE
     ), "Perturbation influence values were wrong."
-
-
-@pytest.mark.torch
-@pytest.mark.parametrize(
-    "train_set_size,test_set_size,problem_dimension,condition_number",
-    itertools.product(
-        InfluenceTestSettings.INFLUENCE_TRAINING_SET_SIZE,
-        InfluenceTestSettings.INFLUENCE_TEST_SET_SIZE,
-        InfluenceTestSettings.INFLUENCE_DIMENSIONS,
-        InfluenceTestSettings.INFLUENCE_TEST_CONDITION_NUMBERS,
-    ),
-)
-def test_linear_influences_up_perturbations_analytical(
-    train_set_size: int,
-    test_set_size: int,
-    problem_dimension: int,
-    condition_number: float,
-    linear_model: Tuple[np.ndarray, np.ndarray],
-):
-    train_data, test_data = create_mock_dataset(
-        linear_model, train_set_size, test_set_size
-    )
-    up_influences = compute_linear_influences(
-        *train_data,
-        *test_data,
-        influence_type="up",
-    )
-    assert np.logical_not(np.any(np.isnan(up_influences)))
-    assert up_influences.shape == (len(test_data[0]), len(train_data[0]))
-
-    pert_influences = compute_linear_influences(
-        *train_data,
-        *test_data,
-        influence_type="perturbation",
-    )
-    assert np.logical_not(np.any(np.isnan(pert_influences)))
-    assert pert_influences.shape == (
-        len(test_data[0]),
-        len(train_data[0]),
-        train_data[0].shape[1],
-    )
-
-
-@pytest.mark.torch
-def test_influences_with_neural_network_explicit_hessian():
-    train_ds, val_ds, test_ds, feature_names = load_wine_dataset(
-        train_size=0.3, test_size=0.6
-    )
-    feature_dimension = train_ds[0].shape[1]
-    unique_classes = np.unique(np.concatenate((train_ds[1], test_ds[1])))
-    num_classes = len(unique_classes)
-    num_epochs = 300
-    network_size = [16, 16]
-    nn = TorchMLP(feature_dimension, num_classes, network_size)
-    optimizer = Adam(params=nn.parameters(), lr=0.001, weight_decay=0.001)
-    loss = F.cross_entropy
-    nn.fit(
-        *train_ds,
-        *test_ds,
-        num_epochs=num_epochs,
-        batch_size=32,
-        loss=loss,
-        optimizer=optimizer,
-        scheduler=lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs),
-    )
-
-    model = nn
-    loss = loss
-
-    train_influences = compute_influences(
-        model,
-        loss,
-        *train_ds,
-        *test_ds,
-        inversion_method="direct",
-    )
-
-    assert np.all(np.logical_not(np.isnan(train_influences)))

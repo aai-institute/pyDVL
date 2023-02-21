@@ -1,8 +1,20 @@
+import logging
 import os
 import pickle as pkl
 from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -13,11 +25,14 @@ from PIL.JpegImagePlugin import JpegImageFile
 from torch.optim import Adam
 from torchvision.models import ResNet18_Weights, resnet18
 
-from pydvl.influence.model_wrappers import TorchModel
-from pydvl.utils import Dataset
+from pydvl.utils import Dataset, maybe_progress
 
 try:
     import torch
+    import torch.nn as nn
+    from torch.optim import Optimizer
+    from torch.optim.lr_scheduler import _LRScheduler
+    from torch.utils.data import DataLoader, TensorDataset
 
     _TORCH_INSTALLED = True
 except ImportError:
@@ -28,8 +43,73 @@ if TYPE_CHECKING:
 
 MODEL_PATH = Path().resolve().parent / "data" / "models"
 
+logger = logging.getLogger(__name__)
 
-def new_resnet_model(output_size: int) -> TorchModel:
+
+def fit_torch_model(
+    model: nn.Module,
+    x_train: Union["NDArray[np.float_]", torch.tensor],
+    y_train: Union["NDArray[np.float_]", torch.tensor],
+    x_val: Union["NDArray[np.float_]", torch.tensor],
+    y_val: Union["NDArray[np.float_]", torch.tensor],
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    optimizer: Optimizer,
+    scheduler: Optional[_LRScheduler] = None,
+    num_epochs: int = 1,
+    batch_size: int = 64,
+    progress: bool = True,
+) -> Tuple["NDArray[np.float_]", "NDArray[np.float_]"]:
+    """
+    Method that fits a pytorch model to the supplied data.
+    It represents a simple machine learning loop, iterating over a number of
+    epochs, sampling data with a certain batch size, calculating gradients and updating the parameters through a
+    loss function.
+    :param x: Matrix of shape [NxD] representing the features x_i.
+    :param y: Matrix of shape [NxK] representing the prediction targets y_i.
+    :param optimizer: Select either ADAM or ADAM_W.
+    :param scheduler: A pytorch scheduler. If None, no scheduler is used.
+    :param num_epochs: Number of epochs to repeat training.
+    :param batch_size: Batch size to use in training.
+    :param progress: True, iff progress shall be printed.
+    :param tensor_type: accuracy of tensors. Typically 'float' or 'long'
+    """
+    x_train = torch.as_tensor(x_train).clone()
+    y_train = torch.as_tensor(y_train).clone()
+    x_val = torch.as_tensor(x_val).clone()
+    y_val = torch.as_tensor(y_val).clone()
+
+    dataset = TensorDataset(x_train, y_train)
+    dataloader = DataLoader(dataset, batch_size=batch_size)
+    train_loss = []
+    val_loss = []
+
+    for epoch in maybe_progress(range(num_epochs), progress, desc="Model fitting"):
+        batch_loss = []
+        for train_batch in dataloader:
+            batch_x, batch_y = train_batch
+            pred_y = model(batch_x)
+            loss_value = loss(torch.squeeze(pred_y), torch.squeeze(batch_y))
+            batch_loss.append(loss_value.item())
+
+            logger.debug(f"Epoch: {epoch} ---> Training loss: {loss_value.item()}")
+            loss_value.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+
+            if scheduler:
+                scheduler.step()
+        pred_val = model(x_val)
+        epoch_val_loss = loss(torch.squeeze(pred_val), torch.squeeze(y_val)).item()
+        mean_epoch_train_loss = np.mean(batch_loss)
+        val_loss.append(epoch_val_loss)
+        train_loss.append(mean_epoch_train_loss)
+        logger.info(
+            f"Epoch: {epoch} ---> Training loss: {mean_epoch_train_loss}, Validation loss: {epoch_val_loss}"
+        )
+    return np.array(train_loss), np.array(val_loss)
+
+
+def new_resnet_model(output_size: int) -> nn.Module:
     model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
 
     for param in model.parameters():
@@ -42,7 +122,7 @@ def new_resnet_model(output_size: int) -> TorchModel:
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    return TorchModel(model)
+    return model
 
 
 class TrainingManager:
@@ -53,7 +133,7 @@ class TrainingManager:
     def __init__(
         self,
         name: str,
-        model: TorchModel,
+        model: nn.Module,
         loss: torch.nn.modules.loss._Loss,
         train_x: "NDArray[np.float_]",
         train_y: "NDArray[np.float_]",
@@ -62,16 +142,12 @@ class TrainingManager:
         data_dir: Path,
     ):
         self.name = name
-        self.model_wrapper = model
+        self.model = model
         self.loss = loss
         self.train_x, self.train_y = train_x, train_y
         self.val_x, self.val_y = val_x, val_y
         self.data_dir = data_dir
         os.makedirs(self.data_dir, exist_ok=True)
-
-    @property
-    def model(self) -> nn.Module:
-        return self.model_wrapper.model
 
     def train(
         self,
@@ -93,7 +169,8 @@ class TrainingManager:
 
         optimizer = Adam(self.model.parameters(), lr=lr)
 
-        training_loss, validation_loss = self.model_wrapper.fit(
+        training_loss, validation_loss = fit_torch_model(
+            model=self.model,
             x_train=self.train_x,
             y_train=self.train_y,
             x_val=self.val_x,
