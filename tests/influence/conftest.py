@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from sklearn.preprocessing import MinMaxScaler
 
+from pydvl.influence.general import InfluenceType
 from pydvl.utils import Dataset, random_matrix_with_condition_number
 
 try:
@@ -41,36 +42,6 @@ def condition_number(request) -> float:
     return request.param
 
 
-@pytest.fixture(scope="function")
-def quadratic_linear_equation_system(quadratic_matrix: np.ndarray, batch_size: int):
-    A = quadratic_matrix
-    problem_dimension = A.shape[0]
-    b = np.random.random([batch_size, problem_dimension])
-    return A, b
-
-
-@pytest.fixture(scope="function")
-def quadratic_matrix(problem_dimension: int, condition_number: float):
-    return random_matrix_with_condition_number(problem_dimension, condition_number)
-
-
-@pytest.fixture(scope="function")
-def singular_quadratic_linear_equation_system(
-    quadratic_matrix: np.ndarray, batch_size: int
-):
-    A = quadratic_matrix
-    problem_dimension = A.shape[0]
-    i, j = tuple(np.random.choice(problem_dimension, replace=False, size=2))
-    if j < i:
-        i, j = j, i
-
-    v = (A[i] + A[j]) / 2
-    A[i], A[j] = v, v
-    b = np.random.random([batch_size, problem_dimension])
-    return A, b
-
-
-@pytest.fixture(scope="function")
 def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
     output_dimension, input_dimension = problem_dimension
     A = random_matrix_with_condition_number(
@@ -128,7 +99,7 @@ class TorchSimpleNN(nn.Module):
         return self.layers(x)
 
 
-def linear_regression_analytical_derivative_d_theta(
+def linear_derivative_analytical(
     linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
 ) -> "NDArray":
     """
@@ -144,16 +115,19 @@ def linear_regression_analytical_derivative_d_theta(
     kron_product = np.expand_dims(residuals, axis=2) * np.expand_dims(x, axis=1)
     test_grads = np.reshape(kron_product, [-1, n * m])
     full_grads = np.concatenate((test_grads, residuals), axis=1)
-    return full_grads / n  # type: ignore
+    return 2 * full_grads / n  # type: ignore
 
 
-def linear_regression_analytical_derivative_d2_theta(
-    linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
+def linear_hessian_analytical(
+    linear_model: Tuple["NDArray", "NDArray"],
+    x: "NDArray",
+    lam: float,
 ) -> "NDArray":
     """
     :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
     :param x: A np.ndarray of shape [BxM],
     :param y: A np.nparray of shape [BxN].
+    :param lam: hessian regularization parameter
     :returns: A np.ndarray of shape [((N+1)*M)x((N+1)*M)], representing the Hessian. It gets averaged over all samples.
     """
     A, b = linear_model
@@ -167,10 +141,10 @@ def linear_regression_analytical_derivative_d2_theta(
     top_matrix = np.concatenate((d2_theta, d_theta_d_b.T), axis=1)
     bottom_matrix = np.concatenate((d_theta_d_b, d2_b), axis=1)
     full_matrix = np.concatenate((top_matrix, bottom_matrix), axis=0)
-    return full_matrix / n  # type: ignore
+    return 2 * full_matrix / n + lam * np.identity(len(full_matrix))  # type: ignore
 
 
-def linear_regression_analytical_derivative_d_x_d_theta(
+def linear_mixed_second_derivative_analytical(
     linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
 ) -> "NDArray":
     """
@@ -192,7 +166,28 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     )
     b_part_derivative = np.tile(np.expand_dims(A, axis=0), [B, 1, 1])
     full_derivative = np.concatenate((outer_product_matrix, b_part_derivative), axis=1)
-    return full_derivative / N  # type: ignore
+    return 2 * full_derivative / N  # type: ignore
+
+
+def linear_analytical_influence_factors(
+    linear_model: Tuple["NDArray", "NDArray"],
+    x: "NDArray",
+    y: "NDArray",
+    x_test: "NDArray",
+    y_test: "NDArray",
+    hessian_regularization: float = 0,
+) -> "NDArray":
+    test_grads_analytical = linear_derivative_analytical(
+        linear_model,
+        x_test,
+        y_test,
+    )
+    hessian_analytical = linear_hessian_analytical(
+        linear_model,
+        x,
+        hessian_regularization,
+    )
+    return np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
 
 
 def analytical_linear_influences(
@@ -202,6 +197,7 @@ def analytical_linear_influences(
     x_test: "NDArray",
     y_test: "NDArray",
     influence_type: InfluenceType = InfluenceType.Up,
+    hessian_regularization: float = 0,
 ):
     """Calculates analytically the influence of each training sample on the
      test samples for an ordinary least squares model (Ax+b=y with quadratic
@@ -218,24 +214,17 @@ def analytical_linear_influences(
     :param y_test: An array of shape (N, L) containing the targets of the test
         set.
     :param influence_type: the type of the influence.
+    :param hessian_retularization: regularization value for the hessian
     :returns: An array of shape (B, C) with the influences of the training points
         on the test points if influence_type is "up", an array of shape (K, L,
         M) if influence_type is "perturbation".
     """
 
-    test_grads_analytical = linear_regression_analytical_derivative_d_theta(
-        linear_model,
-        x_test,
-        y_test,
+    s_test_analytical = linear_analytical_influence_factors(
+        linear_model, x, y, x_test, y_test, hessian_regularization
     )
-    hessian_analytical = linear_regression_analytical_derivative_d2_theta(
-        linear_model,
-        x,
-        y,
-    )
-    s_test_analytical = np.linalg.solve(hessian_analytical, test_grads_analytical.T).T
-    if influence_type == "up":
-        train_grads_analytical = linear_regression_analytical_derivative_d_theta(
+    if influence_type == InfluenceType.Up:
+        train_grads_analytical = linear_derivative_analytical(
             linear_model,
             x,
             y,
@@ -243,13 +232,11 @@ def analytical_linear_influences(
         result: "NDArray" = np.einsum(
             "ia,ja->ij", s_test_analytical, train_grads_analytical
         )
-    elif influence_type == "perturbation":
-        train_second_deriv_analytical = (
-            linear_regression_analytical_derivative_d_x_d_theta(
-                linear_model,
-                x,
-                y,
-            )
+    elif influence_type == InfluenceType.Perturbation:
+        train_second_deriv_analytical = linear_mixed_second_derivative_analytical(
+            linear_model,
+            x,
+            y,
         )
         result: "NDArray" = np.einsum(
             "ia,jab->ijb", s_test_analytical, train_second_deriv_analytical

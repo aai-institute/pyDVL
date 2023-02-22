@@ -14,9 +14,6 @@ IntOrArray = TypeVar("IntOrArray", int, NDArray[np.int_])
 
 __all__ = [
     "running_moments",
-    "linear_regression_analytical_derivative_d2_theta",
-    "linear_regression_analytical_derivative_d_theta",
-    "linear_regression_analytical_derivative_d_x_d_theta",
     "num_samples_permutation_hoeffding",
     "powerset",
     "random_matrix_with_condition_number",

@@ -8,11 +8,8 @@ import numpy as np
 from scipy.sparse.linalg import LinearOperator
 
 from ..utils import maybe_progress
-from .conjugate_gradient import (
-    batched_preconditioned_conjugate_gradient,
-    conjugate_gradient,
-)
 from .frameworks import TorchTwiceDifferentiable
+from .inversion_methods import InversionMethod, conjugate_gradient
 from .types import MatrixVectorProductInversionAlgorithm, TwiceDifferentiable
 
 try:
@@ -37,16 +34,6 @@ class InfluenceType(str, Enum):
 
     Up = "up"
     Perturbation = "perturbation"
-
-
-class InversionMethod(str, Enum):
-    """
-    Different inversion methods types.
-    """
-
-    Direct = "direct"
-    Cg = "cg"
-    BatchedCg = "batched_cg"
 
 
 def calculate_influence_factors(
@@ -155,7 +142,6 @@ def compute_influences(
     progress: bool = False,
     inversion_method: InversionMethod = InversionMethod.Direct,
     influence_type: InfluenceType = InfluenceType.Up,
-    inversion_method_kwargs: Optional[Dict] = None,
     hessian_regularization: float = 0,
 ) -> "NDArray":
     """
@@ -176,12 +162,6 @@ def compute_influences(
         (and explicit construction of the Hessian) or 'cg' for conjugate gradient.
     :param influence_type: Which algorithm to use to calculate influences.
         Currently supported options: 'up' or 'perturbation'. For details refer to https://arxiv.org/pdf/1703.04730.pdf
-    :param inversion_method_kwargs: kwargs for the inversion method selected.
-        If using the direct method no kwargs are needed. If inversion_method='cg', the following kwargs can be passed:
-        - rtol: relative tolerance to be achieved before terminating computation
-        - max_iterations: maximum conjugate gradient iterations
-        - max_step_size: step size of conjugate gradient
-        - verify_assumptions: True to run tests on convexity of the model.
     :param hessian_regularization: lambda to use in Hessian regularization, i.e. H_reg = H + lambda * 1, with 1 the identity matrix \
         and H the (simple and regularized) Hessian. Typically used with more complex models to make sure the Hessian \
         is positive definite.
@@ -192,18 +172,11 @@ def compute_influences(
     if not _TORCH_INSTALLED:
         raise RuntimeWarning("This function requires PyTorch.")
 
-    if inversion_method_kwargs is None:
-        inversion_method_kwargs = dict()
     differentiable_model = TorchTwiceDifferentiable(model, loss)
     n_params = differentiable_model.num_params()
     dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
         "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,  # type: ignore
         "cg": lambda hvp, x: conjugate_gradient(LinearOperator((n_params, n_params), matvec=hvp), x, progress),  # type: ignore
-        "batched_cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(  # type: ignore
-            hvp, x, **inversion_method_kwargs
-        )[
-            0
-        ],
     }
 
     influence_factors = calculate_influence_factors(
