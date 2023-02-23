@@ -52,53 +52,6 @@ def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
     return A, b
 
 
-class TorchSimpleNN(nn.Module):
-    """
-    Creates a simple pytorch neural network. It needs input features, number of layers
-    """
-
-    def __init__(
-        self,
-        n_input: int,
-        n_hidden_layers: int,
-        n_neurons_per_layer: List[int],
-        output_layer: nn.Module,
-        init: List[Tuple["NDArray[np.float_]", "NDArray[np.float_]"]] = None,
-    ):
-        """
-        :param n_input: Number of feature in input.
-        :param n_output: Output length.
-        :param n_neurons_per_layer: Each integer represents the size of a hidden
-            layer. Overall this list has K - 2
-        :param output_layer: output layer of the neural network
-        number of outputs reduce to 1.
-        :param init: A list of tuple of np.ndarray representing the internal weights.
-        """
-        super().__init__()
-
-        layers = [nn.Linear(n_input, n_neurons_per_layer)]
-        for num_layer in range(n_hidden_layers):
-            linear_layer = nn.Linear(n_neurons_per_layer, n_neurons_per_layer)
-
-            if init is not None:
-                A, b = init[num_layer]
-                linear_layer.weight.data = A
-                linear_layer.bias.data = b
-
-            layers.append(linear_layer)
-        layers.append(output_layer)
-
-        self.layers = nn.Sequential(*layers)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Perform forward-pass through the network.
-        :param x: Tensor input of shape [NxD].
-        :returns: Tensor output of shape[NxK].
-        """
-        return self.layers(x)
-
-
 def linear_derivative_analytical(
     linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
 ) -> "NDArray":
@@ -121,7 +74,7 @@ def linear_derivative_analytical(
 def linear_hessian_analytical(
     linear_model: Tuple["NDArray", "NDArray"],
     x: "NDArray",
-    lam: float,
+    lam: float = 0,
 ) -> "NDArray":
     """
     :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
@@ -244,7 +197,7 @@ def analytical_linear_influences(
     return result
 
 
-def create_mock_dataset(
+def add_noise_to_linear_model(
     linear_model: Tuple["NDArray[np.float_]", "NDArray[np.float_]"],
     train_set_size: int,
     test_set_size: int,

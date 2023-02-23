@@ -10,31 +10,29 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 
-from pydvl.utils import (
-    linear_regression_analytical_derivative_d2_theta,
-    linear_regression_analytical_derivative_d_theta,
-    linear_regression_analytical_derivative_d_x_d_theta,
+from .conftest import (
+    linear_derivative_analytical,
+    linear_hessian_analytical,
+    linear_mixed_second_derivative_analytical,
+    linear_model,
 )
 
 try:
+    import torch
     import torch.nn.functional as F
+    from torch import nn
 
     from pydvl.influence.frameworks import TorchTwiceDifferentiable
-    from pydvl.influence.model_wrappers import TorchLinearRegression
 except ImportError:
     pass
 
 
 class ModelTestSettings:
     DATA_OUTPUT_NOISE: float = 0.01
-    ACCEPTABLE_ABS_TOL_MODEL: float = (
-        0.04  # TODO: Reduce bound if tests are running with fixed seeds.
-    )
-    ACCEPTABLE_ABS_TOL_DERIVATIVE: float = 1e-5
 
     TEST_CONDITION_NUMBERS: List[int] = [5]
     TEST_SET_SIZE: List[int] = [20]
-    TRAINING_SET_SIZE: List[int] = [500]
+    TRAINING_SET_SIZE: List[int] = [50]
     PROBLEM_DIMENSIONS: List[Tuple[int, int]] = [
         (2, 2),
         (5, 10),
@@ -106,13 +104,13 @@ correctness_test_case_ids = list(
     test_cases_linear_regression_derivatives,
     ids=correctness_test_case_ids,
 )
-def test_linear_regression_model_grad(
+def test_linear_grad(
     train_set_size: int,
+    problem_dimension: Tuple[int, int],
     condition_number: float,
-    linear_model: Tuple[np.ndarray, np.ndarray],
 ):
     # some settings
-    A, b = linear_model
+    A, b = linear_model(problem_dimension, condition_number)
     output_dimension, input_dimension = tuple(A.shape)
 
     # generate datasets
@@ -122,18 +120,15 @@ def test_linear_regression_model_grad(
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
 
-    model = TorchLinearRegression(input_dimension, output_dimension, init=linear_model)
+    model = nn.Linear(input_dimension, output_dimension)
+    model.weight.data = torch.as_tensor(A)
+    model.bias.data = torch.as_tensor(b)
     loss = F.mse_loss
     mvp_model = TorchTwiceDifferentiable(model=model, loss=loss)
 
-    train_grads_analytical = 2 * linear_regression_analytical_derivative_d_theta(
-        (A, b), train_x, train_y
-    )
+    train_grads_analytical = linear_derivative_analytical((A, b), train_x, train_y)
     train_grads_autograd = mvp_model.split_grad(train_x, train_y)
-    train_grads_max_diff = np.max(np.abs(train_grads_analytical - train_grads_autograd))
-    assert (
-        train_grads_max_diff < ModelTestSettings.ACCEPTABLE_ABS_TOL_DERIVATIVE
-    ), "training set produces wrong gradients."
+    assert np.allclose(train_grads_analytical, train_grads_autograd, rtol=1e-5)
 
 
 @pytest.mark.torch
@@ -142,13 +137,13 @@ def test_linear_regression_model_grad(
     test_cases_linear_regression_derivatives,
     ids=correctness_test_case_ids,
 )
-def test_linear_regression_model_hessian(
+def test_linear_hessian(
     train_set_size: int,
+    problem_dimension: Tuple[int, int],
     condition_number: float,
-    linear_model: Tuple[np.ndarray, np.ndarray],
 ):
     # some settings
-    A, b = linear_model
+    A, b = linear_model(problem_dimension, condition_number)
     output_dimension, input_dimension = tuple(A.shape)
 
     # generate datasets
@@ -157,21 +152,18 @@ def test_linear_regression_model_hessian(
     )
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
-    model = TorchLinearRegression(input_dimension, output_dimension, init=linear_model)
+    model = nn.Linear(input_dimension, output_dimension)
+    model.weight.data = torch.as_tensor(A)
+    model.bias.data = torch.as_tensor(b)
     loss = F.mse_loss
     mvp_model = TorchTwiceDifferentiable(model=model, loss=loss)
 
-    test_hessian_analytical = 2 * linear_regression_analytical_derivative_d2_theta(
-        (A, b), train_x, train_y
-    )
+    test_hessian_analytical = linear_hessian_analytical((A, b), train_x)
     grad_xy, _ = mvp_model.grad(train_x, train_y)
     estimated_hessian = mvp_model.mvp(
         grad_xy, np.eye((input_dimension + 1) * output_dimension)
     )
-    test_hessian_max_diff = np.max(np.abs(test_hessian_analytical - estimated_hessian))
-    assert (
-        test_hessian_max_diff < ModelTestSettings.ACCEPTABLE_ABS_TOL_DERIVATIVE
-    ), "Hessian was wrong."
+    assert np.allclose(test_hessian_analytical, estimated_hessian, rtol=1e-5)
 
 
 @pytest.mark.torch
@@ -180,13 +172,13 @@ def test_linear_regression_model_hessian(
     test_cases_linear_regression_derivatives,
     ids=correctness_test_case_ids,
 )
-def test_linear_regression_model_d_x_d_theta(
+def test_linear_mixed_derivative(
     train_set_size: int,
+    problem_dimension: Tuple[int, int],
     condition_number: float,
-    linear_model: Tuple[np.ndarray, np.ndarray],
 ):
     # some settings
-    A, b = linear_model
+    A, b = linear_model(problem_dimension, condition_number)
     output_dimension, input_dimension = tuple(A.shape)
 
     # generate datasets
@@ -195,11 +187,13 @@ def test_linear_regression_model_d_x_d_theta(
     )
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
-    model = TorchLinearRegression(input_dimension, output_dimension, init=(A, b))
+    model = nn.Linear(input_dimension, output_dimension)
+    model.weight.data = torch.as_tensor(A)
+    model.bias.data = torch.as_tensor(b)
     loss = F.mse_loss
     mvp_model = TorchTwiceDifferentiable(model=model, loss=loss)
 
-    test_derivative = 2 * linear_regression_analytical_derivative_d_x_d_theta(
+    test_derivative = linear_mixed_second_derivative_analytical(
         (A, b),
         train_x,
         train_y,
@@ -215,7 +209,4 @@ def test_linear_regression_model_d_x_d_theta(
             )
         )
     estimated_derivative = np.stack(model_mvp, axis=0)
-    test_hessian_max_diff = np.max(np.abs(test_derivative - estimated_derivative))
-    assert (
-        test_hessian_max_diff < ModelTestSettings.ACCEPTABLE_ABS_TOL_DERIVATIVE
-    ), "Hessian was wrong."
+    assert np.allclose(test_derivative, estimated_derivative, rtol=1e-7)
