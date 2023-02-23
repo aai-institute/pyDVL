@@ -38,10 +38,10 @@ def conjugate_gradient(
     to Ax = y for each y in batch_y.
 
     :param A: a real, symmetric and positive-definite matrix of shape [NxN]
-    :param batch_y: a matrix of shape [NxP], with P the size of the batch.
+    :param batch_y: a matrix of shape [PxN], with P the size of the batch.
     :param progress: True, iff progress shall be printed.
 
-    :return: A NDArray of shape [NxP] representing x, the solution of Ax=b.
+    :return: A NDArray of shape [PxN] with each line being a solution of Ax=b.
     """
     batch_cg = []
     for y in maybe_progress(batch_y, progress, desc="Conjugate gradient"):

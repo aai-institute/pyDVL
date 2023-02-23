@@ -46,6 +46,30 @@ MODEL_PATH = Path().resolve().parent / "data" / "models"
 logger = logging.getLogger(__name__)
 
 
+class TorchLogisticRegression(nn.Module):
+    """
+    A simple binary logistic regression model.
+    """
+
+    def __init__(
+        self,
+        n_input: int,
+    ):
+        """
+        :param n_input: Number of feature in input.
+        """
+        super().__init__()
+        self.fc1 = nn.Linear(n_input, 1, bias=True, dtype=float)
+
+    def forward(self, x):
+        """
+        :param x: Tensor [NxD] representing the features x_i.
+        :returns: A tensor [N] representing the probabilities for p(y_i).
+        """
+        x = torch.as_tensor(x)
+        return torch.sigmoid(self.fc1(x))
+
+
 def fit_torch_model(
     model: nn.Module,
     x_train: Union["NDArray[np.float_]", torch.tensor],
