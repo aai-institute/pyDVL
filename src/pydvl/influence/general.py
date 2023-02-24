@@ -2,7 +2,7 @@
 Contains parallelized influence calculation functions for general models.
 """
 from enum import Enum
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Union
 
 import numpy as np
 
@@ -35,12 +35,15 @@ class InfluenceType(str, Enum):
     Perturbation = "perturbation"
 
 
+TensorType = Union["NDArray", torch.TensorType]
+
+
 def calculate_influence_factors(
     model: TwiceDifferentiable,
-    x: "NDArray",
-    y: "NDArray",
-    x_test: "NDArray",
-    y_test: "NDArray",
+    x: TensorType,
+    y: TensorType,
+    x_test: TensorType,
+    y_test: TensorType,
     inversion_method: InversionMethod,
     lam: float = 0,
     progress: bool = False,
@@ -76,8 +79,8 @@ def calculate_influence_factors(
 
 def _calculate_influences_up(
     model: TwiceDifferentiable,
-    x: "NDArray",
-    y: "NDArray",
+    x: TensorType,
+    y: TensorType,
     influence_factors: "NDArray",
     progress: bool = False,
 ) -> "NDArray":
@@ -98,8 +101,8 @@ def _calculate_influences_up(
 
 def _calculate_influences_pert(
     model: TwiceDifferentiable,
-    x: "NDArray",
-    y: "NDArray",
+    x: TensorType,
+    y: TensorType,
     influence_factors: "NDArray",
     progress: bool = False,
 ) -> "NDArray":
@@ -141,10 +144,10 @@ influence_type_registry = {
 def compute_influences(
     model: "nn.Module",
     loss: Callable[["torch.Tensor", "torch.Tensor"], "torch.Tensor"],
-    x: "NDArray",
-    y: "NDArray",
-    x_test: "NDArray",
-    y_test: "NDArray",
+    x: TensorType,
+    y: TensorType,
+    x_test: TensorType,
+    y_test: TensorType,
     progress: bool = False,
     inversion_method: InversionMethod = InversionMethod.Direct,
     influence_type: InfluenceType = InfluenceType.Up,
