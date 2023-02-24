@@ -3,6 +3,7 @@
 ## 0.6.0 - Refactorings
 
 - Refactoring of influence functions and removal of torch wrappers
+  [PR #278](https://github.com/appliedAI-Initiative/pyDVL/pull/278)
 
 ## 0.5.0 - 💥 Fixes, nicer interfaces and... more breaking changes 😒
 
