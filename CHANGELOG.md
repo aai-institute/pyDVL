@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0 - Refactorings
+
+- Refactoring of influence functions and removal of torch wrappers
+
 ## 0.5.0 - 💥 Fixes, nicer interfaces and... more breaking changes 😒
 
 - Fixed parallel and antithetic Owen sampling for Shapley values. Simplified

@@ -24,6 +24,7 @@ except ImportError:
     pass
 
 
+@pytest.mark.torch
 class InfluenceTestSettings:
     INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [3]
     INFLUENCE_TRAINING_SET_SIZE: List[int] = [50, 30]
