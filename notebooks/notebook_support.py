@@ -70,6 +70,52 @@ class TorchLogisticRegression(nn.Module):
         return torch.sigmoid(self.fc1(x))
 
 
+class TorchMLP(nn.Module):
+    """
+    A simple fully-connected neural network f(x)
+    """
+
+    def __init__(
+        self,
+        n_input: int,
+        n_output: int,
+        n_neurons_per_layer: List[int],
+    ):
+        """
+        :param n_input: Number of feature in input.
+        :param n_output: Output length.
+        :param n_neurons_per_layer: Each integer represents the size of a hidden layer. Overall this list has K - 2
+        :param init: A list of tuple of np.ndarray representing the internal weights.
+        """
+        super().__init__()
+        self.n_input = n_input
+
+        self.n_hidden_layers = n_neurons_per_layer
+
+        if n_neurons_per_layer == []:
+            layers = [nn.Linear(n_input, n_output)]
+        else:
+            layers = [nn.Linear(n_input, n_neurons_per_layer[0]), nn.Tanh()]
+            for idx, n_neurons in enumerate(n_neurons_per_layer):
+                if idx == 0:
+                    continue
+                layers.append(nn.Linear(n_neurons_per_layer[idx - 1], n_neurons))
+                layers.append(nn.Tanh())
+            layers.append(nn.Linear(n_neurons_per_layer[-1], n_output))
+
+        layers.append(nn.Softmax(dim=-1))
+
+        self.layers = nn.Sequential(*layers)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Perform forward-pass through the network.
+        :param x: Tensor input of shape [NxD].
+        :returns: Tensor output of shape[NxK].
+        """
+        return self.layers(x)
+
+
 def fit_torch_model(
     model: nn.Module,
     x_train: Union["NDArray[np.float_]", torch.tensor],
@@ -206,7 +252,7 @@ class TrainingManager:
         )
         if use_cache:
             self.save(training_loss, validation_loss)
-
+        self.model.eval()
         return training_loss, validation_loss
 
     def save(
@@ -228,8 +274,23 @@ class TrainingManager:
         self.model.load_state_dict(
             torch.load(self.data_dir / f"{self.name}_weights.pth")
         )
+        self.model.eval()
         with open(self.data_dir / f"{self.name}_train_val_loss.pkl", "rb") as file:
             return pkl.load(file)
+
+
+def process_imgnet_io(
+    df: pd.DataFrame, labels: dict
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    x = df["normalized_images"]
+    y = df["labels"]
+    ds_label_to_model_label = {
+        ds_label: idx for idx, ds_label in enumerate(labels.values())
+    }
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    x_nn = torch.stack(x.tolist()).to(device)
+    y_nn = torch.tensor([ds_label_to_model_label[yi] for yi in y], device=device)
+    return x_nn, y_nn
 
 
 def plot_dataset(
@@ -535,6 +596,14 @@ def load_preprocess_imagenet(
                     processed_ds["labels"].append(item["label"])
         return pd.DataFrame.from_dict(processed_ds)
 
+    def split_ds_by_size(dataset, split_size):
+        split_ds = dataset.train_test_split(
+            train_size=split_size,
+            seed=random_state,
+            stratify_by_column="label",
+        )
+        return split_ds
+
     if os.environ.get("CI"):
         tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="valid")
         if keep_labels is not None:
@@ -561,14 +630,10 @@ def load_preprocess_imagenet(
             lambda item: item["label"] in keep_labels.keys()
         )
 
-    split_ds = tiny_imagenet.train_test_split(
-        train_size=1 - test_size, seed=random_state
-    )
+    split_ds = split_ds_by_size(tiny_imagenet, 1 - test_size)
     test_ds = _process_dataset(split_ds["test"])
 
-    split_ds = split_ds["train"].train_test_split(
-        train_size=train_size, seed=random_state
-    )
+    split_ds = split_ds_by_size(split_ds["train"], train_size)
     train_ds = _process_dataset(split_ds["train"])
     val_ds = _process_dataset(split_ds["test"])
 
@@ -754,12 +819,8 @@ def plot_corrupted_influences_distribution(
         non_corrupted_infl = class_influences[
             ~class_influences.index.isin(corrupted_indices[label])
         ]
-        axes[idx].hist(
-            non_corrupted_infl, label="Non corrupted", density=True, alpha=0.7
-        )
-        axes[idx].hist(
-            corrupted_infl, label="Corrupted", density=True, alpha=0.7, color="green"
-        )
+        axes[idx].hist(non_corrupted_infl, label="Non corrupted", alpha=0.7)
+        axes[idx].hist(corrupted_infl, label="Corrupted", alpha=0.7, color="green")
         axes[idx].set_xlabel("Influence values")
         axes[idx].set_ylabel("Distribution")
         axes[idx].set_title(f"Influences for {label=}")
