@@ -1,19 +1,14 @@
 from abc import ABC
-from typing import TYPE_CHECKING, Iterable, Optional, Tuple, Union
-
-from numpy import ndarray
+from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 try:
     import torch
-    import torch.nn as nn
 
     _TORCH_INSTALLED = True
 except ImportError:
     _TORCH_INSTALLED = False
 
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
-
+from numpy.typing import NDArray
 
 __all__ = ["TwiceDifferentiable", "TensorType"]
 
