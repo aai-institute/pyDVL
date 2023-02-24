@@ -4,6 +4,8 @@ from typing import Dict, List, Tuple
 import numpy as np
 import pytest
 
+from pydvl.influence.general import InfluenceType, InversionMethod, compute_influences
+
 from .conftest import (
     add_noise_to_linear_model,
     analytical_linear_influences,
@@ -14,17 +16,10 @@ try:
     import torch
     import torch.nn.functional as F
     from torch import nn
-
-    from pydvl.influence.general import (
-        InfluenceType,
-        InversionMethod,
-        compute_influences,
-    )
 except ImportError:
     pass
 
 
-@pytest.mark.torch
 class InfluenceTestSettings:
     INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [3]
     INFLUENCE_TRAINING_SET_SIZE: List[int] = [50, 30]

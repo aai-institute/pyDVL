@@ -2,7 +2,7 @@
 Contains parallelized influence calculation functions for general models.
 """
 from enum import Enum
-from typing import TYPE_CHECKING, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 
