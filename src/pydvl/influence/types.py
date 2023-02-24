@@ -1,12 +1,10 @@
 from abc import ABC
-from typing import Callable, Iterable, Optional, Tuple
+from typing import Iterable, Optional, Tuple
 
 from numpy import ndarray
 
 __all__ = [
     "TwiceDifferentiable",
-    "MatrixVectorProduct",
-    "MatrixVectorProductInversionAlgorithm",
 ]
 
 
@@ -39,10 +37,3 @@ class TwiceDifferentiable(ABC):
         Calculate the hessian vector product over the loss with all input parameters x and y with the vector v.
         """
         pass
-
-
-MatrixVectorProduct = Callable[[ndarray], ndarray]
-
-MatrixVectorProductInversionAlgorithm = Callable[
-    [MatrixVectorProduct, ndarray], ndarray
-]

@@ -1,6 +1,7 @@
 """
 Contains all parts of pyTorch based machine learning model.
 """
+import logging
 from typing import TYPE_CHECKING, Callable, Optional, Tuple, Union
 
 import numpy as np
@@ -24,6 +25,7 @@ if TYPE_CHECKING:
 __all__ = [
     "TorchTwiceDifferentiable",
 ]
+logger = logging.getLogger(__name__)
 
 
 def flatten_gradient(grad):
@@ -49,7 +51,12 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         """
         if not _TORCH_INSTALLED:
             raise RuntimeWarning("This function requires PyTorch.")
-
+        if model.training:
+            logger.warning(
+                "Passed model not in eval mode. This can create several issues in influence "
+                "computation, e.g. due batch normalization. Please call model.eval() before computing"
+                "influences."
+            )
         self.model = model
         self.loss = loss
 

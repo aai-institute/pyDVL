@@ -5,12 +5,11 @@ from enum import Enum
 from typing import TYPE_CHECKING, Callable, Dict, Optional
 
 import numpy as np
-from scipy.sparse.linalg import LinearOperator
 
 from ..utils import maybe_progress
 from .frameworks import TorchTwiceDifferentiable
-from .inversion_methods import InversionMethod, conjugate_gradient
-from .types import MatrixVectorProductInversionAlgorithm, TwiceDifferentiable
+from .inversion_methods import InversionMethod, matrix_inversion_algorithm
+from .types import TwiceDifferentiable
 
 try:
     import torch
@@ -24,7 +23,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-__all__ = ["compute_influences", "InfluenceType", "InversionMethod"]
+__all__ = ["compute_influences", "InfluenceType", "calculate_influence_factors"]
 
 
 class InfluenceType(str, Enum):
@@ -42,7 +41,7 @@ def calculate_influence_factors(
     y: "NDArray",
     x_test: "NDArray",
     y_test: "NDArray",
-    inversion_func: MatrixVectorProductInversionAlgorithm,
+    inversion_method: InversionMethod,
     lam: float = 0,
     progress: bool = False,
 ) -> "NDArray":
@@ -64,8 +63,12 @@ def calculate_influence_factors(
         raise RuntimeWarning("This function requires PyTorch.")
     grad_xy, _ = model.grad(x, y)
     hvp = lambda v: model.mvp(grad_xy, v) + lam * v
+    n_params = model.num_params()
+    invert_hvp = matrix_inversion_algorithm(
+        inversion_method, hvp, (n_params, n_params), progress
+    )
     test_grads = model.split_grad(x_test, y_test, progress)
-    return inversion_func(hvp, test_grads)
+    return invert_hvp(test_grads)
 
 
 def _calculate_influences_up(
@@ -126,9 +129,9 @@ def _calculate_influences_pert(
     return np.stack(all_pert_influences, axis=1)
 
 
-influence_type_function_dict = {
-    "up": _calculate_influences_up,
-    "perturbation": _calculate_influences_pert,
+influence_type_registry = {
+    InfluenceType.Up: _calculate_influences_up,
+    InfluenceType.Perturbation: _calculate_influences_pert,
 }
 
 
@@ -173,25 +176,20 @@ def compute_influences(
         raise RuntimeWarning("This function requires PyTorch.")
 
     differentiable_model = TorchTwiceDifferentiable(model, loss)
-    n_params = differentiable_model.num_params()
-    dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
-        "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,  # type: ignore
-        "cg": lambda hvp, x: conjugate_gradient(LinearOperator((n_params, n_params), matvec=hvp), x, progress),  # type: ignore
-    }
 
-    influence_factors = calculate_influence_factors(
+    influence_factors: "NDArray" = calculate_influence_factors(
         differentiable_model,
         x,
         y,
         x_test,
         y_test,
-        dict_fact_algos[inversion_method],
+        inversion_method,
         lam=hessian_regularization,
         progress=progress,
     )
-    influence_function = influence_type_function_dict[influence_type]
+    compute_influence_type = influence_type_registry[influence_type]
 
-    return influence_function(
+    return compute_influence_type(
         differentiable_model,
         x,
         y,

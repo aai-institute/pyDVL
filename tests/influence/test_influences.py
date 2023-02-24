@@ -78,6 +78,7 @@ def test_influence_linear_model(
     )
 
     linear_layer = nn.Linear(A.shape[0], A.shape[1])
+    linear_layer.eval()
     linear_layer.weight.data = torch.as_tensor(A)
     linear_layer.bias.data = torch.as_tensor(b)
     loss = F.mse_loss
@@ -194,6 +195,7 @@ def test_influences_nn(
     y_train = torch.rand((batch_size, output_dim))
     x_test = torch.rand((test_data_len, *input_dim))
     y_test = torch.rand((test_data_len, output_dim))
+    nn_architecture.eval()
 
     multiple_influences = []
     for inversion_method in InversionMethod:

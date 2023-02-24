@@ -121,6 +121,7 @@ def test_linear_grad(
     train_y = data_model(train_x)
 
     model = nn.Linear(input_dimension, output_dimension)
+    model.eval()
     model.weight.data = torch.as_tensor(A)
     model.bias.data = torch.as_tensor(b)
     loss = F.mse_loss
@@ -153,6 +154,7 @@ def test_linear_hessian(
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
     model = nn.Linear(input_dimension, output_dimension)
+    model.eval()
     model.weight.data = torch.as_tensor(A)
     model.bias.data = torch.as_tensor(b)
     loss = F.mse_loss
@@ -188,6 +190,7 @@ def test_linear_mixed_derivative(
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
     model = nn.Linear(input_dimension, output_dimension)
+    model.eval()
     model.weight.data = torch.as_tensor(A)
     model.bias.data = torch.as_tensor(b)
     loss = F.mse_loss
