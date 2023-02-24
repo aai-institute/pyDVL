@@ -132,12 +132,6 @@ def _calculate_influences_pert(
     return np.stack(all_pert_influences, axis=1)
 
 
-influence_type_registry = {
-    InfluenceType.Up: _calculate_influences_up,
-    InfluenceType.Perturbation: _calculate_influences_pert,
-}
-
-
 def compute_influences(
     model: "nn.Module",
     loss: Callable[["torch.Tensor", "torch.Tensor"], "torch.Tensor"],
@@ -178,10 +172,10 @@ def compute_influences(
     if not _TORCH_INSTALLED:
         raise RuntimeWarning("This function requires PyTorch.")
 
-    differentiable_model = TorchTwiceDifferentiable(model, loss)
+    diffable_model = TorchTwiceDifferentiable(model, loss)
 
-    influence_factors: "NDArray" = calculate_influence_factors(
-        differentiable_model,
+    infl_factors: "NDArray" = calculate_influence_factors(
+        diffable_model,
         x,
         y,
         x_test,
@@ -190,12 +184,19 @@ def compute_influences(
         lam=hessian_regularization,
         progress=progress,
     )
-    compute_influence_type = influence_type_registry[influence_type]
-
-    return compute_influence_type(
-        differentiable_model,
-        x,
-        y,
-        influence_factors,
-        progress,
-    )
+    if influence_type == InfluenceType.Up:
+        return _calculate_influences_up(
+            diffable_model,
+            x,
+            y,
+            infl_factors,
+            progress,
+        )
+    elif influence_type == InfluenceType.Perturbation:
+        return _calculate_influences_pert(
+            diffable_model,
+            x,
+            y,
+            infl_factors,
+            progress,
+        )
