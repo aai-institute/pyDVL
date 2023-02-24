@@ -7,12 +7,6 @@ from sklearn.preprocessing import MinMaxScaler
 from pydvl.influence.general import InfluenceType
 from pydvl.utils import Dataset, random_matrix_with_condition_number
 
-try:
-    import torch
-    from torch import nn
-except ImportError:
-    pass
-
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 

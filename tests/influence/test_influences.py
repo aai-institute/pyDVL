@@ -1,4 +1,5 @@
 import itertools
+import sys
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -114,8 +115,7 @@ def test_influence_linear_model(
     assert np.allclose(cg_influences, analytical_influences, rtol=1e-1)
 
 
-@pytest.mark.torch
-class NNArchitectures:
+if "torch" in sys.modules:
     conv3d_nn = nn.Sequential(
         nn.Conv3d(in_channels=5, out_channels=3, kernel_size=2),
         nn.Flatten(),
@@ -183,8 +183,8 @@ class NNArchitectures:
 @pytest.mark.torch
 @pytest.mark.parametrize(
     "nn_architecture, batch_size, input_dim, output_dim, loss, influence_type",
-    NNArchitectures.test_cases.values(),
-    ids=NNArchitectures.test_cases.keys(),
+    test_cases.values(),
+    ids=test_cases.keys(),
 )
 def test_influences_nn(
     nn_architecture: nn.Module,
