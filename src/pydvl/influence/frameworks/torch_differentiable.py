@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Callable, Optional, Tuple, Union
 import numpy as np
 
 from ...utils import maybe_progress
-from ..types import TwiceDifferentiable
+from ..types import TensorType, TwiceDifferentiable
 
 try:
     import torch
@@ -70,8 +70,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
     def split_grad(
         self,
-        x: Union["NDArray", "torch.Tensor"],
-        y: Union["NDArray", "torch.Tensor"],
+        x: TensorType,
+        y: TensorType,
         progress: bool = False,
     ) -> "NDArray":
         """
@@ -112,8 +112,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
     def grad(
         self,
-        x: Union["NDArray", "torch.Tensor"],
-        y: Union["NDArray", "torch.Tensor"],
+        x: TensorType,
+        y: TensorType,
     ) -> Tuple["NDArray", "torch.Tensor"]:
         """
         Calculates gradient of model parameters wrt x and y.
@@ -138,8 +138,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
     def mvp(
         self,
-        grad_xy: Union["NDArray", "torch.Tensor"],
-        v: Union["NDArray", "torch.Tensor"],
+        grad_xy: TensorType,
+        v: TensorType,
         progress: bool = False,
         backprop_on: Optional["torch.Tensor"] = None,
     ) -> "NDArray":

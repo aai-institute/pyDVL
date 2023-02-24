@@ -9,7 +9,7 @@ import numpy as np
 from ..utils import maybe_progress
 from .frameworks import TorchTwiceDifferentiable
 from .inversion_methods import InversionMethod, invert_matrix
-from .types import TwiceDifferentiable
+from .types import TensorType, TwiceDifferentiable
 
 try:
     import torch
@@ -33,9 +33,6 @@ class InfluenceType(str, Enum):
 
     Up = "up"
     Perturbation = "perturbation"
-
-
-TensorType = Union["NDArray", torch.TensorType]
 
 
 def calculate_influence_factors(
