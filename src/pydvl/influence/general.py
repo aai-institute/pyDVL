@@ -8,7 +8,7 @@ import numpy as np
 
 from ..utils import maybe_progress
 from .frameworks import TorchTwiceDifferentiable
-from .inversion_methods import InversionMethod, matrix_inversion_algorithm
+from .inversion_methods import InversionMethod, invert_matrix
 from .types import TwiceDifferentiable
 
 try:
@@ -64,11 +64,14 @@ def calculate_influence_factors(
     grad_xy, _ = model.grad(x, y)
     hvp = lambda v: model.mvp(grad_xy, v) + lam * v
     n_params = model.num_params()
-    invert_hvp = matrix_inversion_algorithm(
-        inversion_method, hvp, (n_params, n_params), progress
-    )
     test_grads = model.split_grad(x_test, y_test, progress)
-    return invert_hvp(test_grads)
+    return invert_matrix(
+        inversion_method,
+        hvp,
+        (n_params, n_params),
+        test_grads,
+        progress,
+    )
 
 
 def _calculate_influences_up(
