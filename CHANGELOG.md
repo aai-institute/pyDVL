@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Bug fix**: Warn instead of raise an error when `n_iterations`
+  is less than the size of the dataset in Monte Carlo Least Core
+  [PR #279](https://github.com/appliedAI-Initiative/pyDVL/pull/279)
+
 ## 0.5.0 - 💥 Fixes, nicer interfaces and... more breaking changes 😒
 
 - Fixed parallel and antithetic Owen sampling for Shapley values. Simplified
