@@ -125,8 +125,10 @@ def mclc_prepare_problem(
     n = len(u.data)
 
     if n_iterations < n:
-        raise ValueError(
-            "Number of iterations should be greater than the size of the dataset"
+        warnings.warn(
+            f"Number of iterations '{n_iterations}' is smaller the size of the dataset '{n}'. "
+            f"This is not optimal because in the worst case we need at least '{n}' constraints "
+            "to satisfy the individual rationality condition."
         )
 
     if n_iterations > 2**n:
