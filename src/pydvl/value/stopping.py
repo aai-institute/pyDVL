@@ -176,16 +176,21 @@ class StandardErrorRatio(StoppingCriterion):
 
     :param threshold: A value is considered to have converged if the ratio of
         standard error to value has dropped below this value.
+    :param fraction: The fraction of values that must have converged for the
+        criterion to return :attr:`~pydvl.utils.status.Status.Converged`.
     """
 
-    def __init__(self, threshold: float, modify_result: bool = True):
+    def __init__(
+        self, threshold: float, fraction: float = 1.0, modify_result: bool = True
+    ):
         super().__init__(modify_result=modify_result)
         self.threshold = threshold
+        self.fraction = fraction
 
     def _check(self, result: ValuationResult) -> Status:
         ratios = result.stderr / result.values
         self._converged = ratios < self.threshold
-        if np.all(self._converged):
+        if np.mean(self._converged) >= self.fraction:
             return Status.Converged
         return Status.Pending
 
