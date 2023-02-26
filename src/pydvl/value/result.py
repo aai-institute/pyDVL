@@ -642,7 +642,9 @@ class ValuationResult(collections.abc.Sequence):
             algorithm=algorithm,
             status=Status.Pending,
             indices=indices,
-            data_names=data_names or indices.astype(np.str_),
+            data_names=data_names
+            if data_names is not None
+            else indices.astype(np.str_),
             values=np.zeros(len(indices)),
             variances=np.zeros(len(indices)),
             counts=np.zeros(len(indices), dtype=np.int_),
