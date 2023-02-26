@@ -43,7 +43,6 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx_math_dollar",
     "sphinx.ext.todo",
-    "sphinx_rtd_theme",
     "hoverxref.extension",  # This only works on read the docs
     "sphinx_design",
     "sphinxcontrib.bibtex",
