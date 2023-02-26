@@ -99,7 +99,6 @@ Data Shapley values:
 ```python
 from sklearn.datasets import load_breast_cancer
 from sklearn.linear_model import LogisticRegression
-from pydvl.utils import Dataset, Utility, Scorer
 from pydvl.value import *
 
 data = Dataset.from_sklearn(load_breast_cancer(), train_size=0.7)
