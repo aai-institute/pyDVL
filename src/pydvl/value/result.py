@@ -430,6 +430,7 @@ class ValuationResult(collections.abc.Sequence):
             f"status='{self._status.value}',"
             f"values={np.array_str(self.values, precision=4, suppress_small=True)},"
             f"indices={np.array_str(self.indices)},"
+            f"names={np.array_str(self.names)},"
             f"counts={np.array_str(self.counts)},"
         )
         for k, v in self._extra_values.items():
@@ -500,12 +501,12 @@ class ValuationResult(collections.abc.Sequence):
         # Sample variance of n+m samples from two sample variances of n and m samples
         vnm = (n * (vn + xn**2) + m * (vm + xm**2)) / (n + m) - xnm**2
 
-        this_names = np.empty_like(indices, dtype=np.str_)
-        other_names = np.empty_like(indices, dtype=np.str_)
+        this_names = np.empty_like(indices, dtype=object)
+        other_names = np.empty_like(indices, dtype=object)
         this_names[this_pos] = self._names
         other_names[other_pos] = other._names
-        names = np.where(n > 0, this_names, other_names)
-        both = np.where((n > 0) & (m > 0))
+        names = np.where(this_names, this_names, other_names)
+        both = np.where((this_names != None) & (other_names != None))
         if np.any(other_names[both] != this_names[both]):
             raise ValueError(f"Mismatching names in ValuationResults")
 
