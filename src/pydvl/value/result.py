@@ -545,7 +545,13 @@ class ValuationResult(collections.abc.Sequence):
         val, var = running_moments(
             self._values[pos], self._variances[pos], self._counts[pos], new_value
         )
-        self[pos] = ValueItem(idx, self._names[pos], val, var, self._counts[pos] + 1)
+        self[pos] = ValueItem(
+            index=idx,
+            name=self._names[pos],
+            value=val,
+            variance=var,
+            count=self._counts[pos] + 1,
+        )
         return self
 
     def get(self, idx: Integral) -> ValueItem:
