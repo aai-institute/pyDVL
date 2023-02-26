@@ -98,6 +98,16 @@ nbsphinx_prolog = r"""
         .nboutput .prompt {
             display: none;
         }
+        @media not print {
+            [data-theme='dark'] .output_area img {
+                filter: invert(0.9);
+            }
+            @media (prefers-color-scheme: dark) {
+                :root:not([data-theme="light"]) .output_area img {
+                    filter: invert(0.9);
+                }
+            }
+        }
     </style>
 """
 
