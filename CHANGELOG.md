@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Shuffling code around to allow for simpler user imports
+  [PR #284](https://github.com/appliedAI-Initiative/pyDVL/pull/284)
+
 ## 0.5.0 - 💥 Fixes, nicer interfaces and... more breaking changes 😒
 
 - Fixed parallel and antithetic Owen sampling for Shapley values. Simplified
