@@ -222,6 +222,8 @@ class ValuationResult(collections.abc.Sequence):
         if data_names is None:
             data_names = [str(i) for i in range(len(self._values))]
         self._names = np.array(data_names, dtype=np.str_)
+        if len(np.unique(self._names)) != len(self._names):
+            raise ValueError("Data names must be unique")
 
         if indices is None:
             indices = np.arange(len(self._values), dtype=np.int_)
