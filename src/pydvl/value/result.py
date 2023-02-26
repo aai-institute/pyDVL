@@ -608,6 +608,7 @@ class ValuationResult(collections.abc.Sequence):
         cls,
         algorithm: str = "",
         indices: Optional[Union[Sequence[int], NDArray[np.int_]]] = None,
+        data_names: Optional[Union[Sequence[str], NDArray[np.str_]]] = None,
         n_samples: int = 0,
     ) -> "ValuationResult":
         """Creates an empty :class:`ValuationResult` object.
@@ -618,6 +619,8 @@ class ValuationResult(collections.abc.Sequence):
         :param algorithm: Name of the algorithm used to compute the values
         :param indices: Data indices to use. A copy will be made. If not given,
             the indices will be set to the range ``[0, n_samples)``.
+        :param data_names: Data names to use. A copy will be made. If not given,
+            the names will be set to the string representation of the indices.
         :param n_samples: Number of data points whose values are computed. If
             not given, the length of ``indices`` will be used.
         :return: An instance of :class:`ValuationResult`
@@ -630,6 +633,7 @@ class ValuationResult(collections.abc.Sequence):
             algorithm=algorithm,
             status=Status.Pending,
             indices=indices,
+            data_names=data_names or indices.astype(np.str_),
             values=np.zeros(len(indices)),
             variances=np.zeros(len(indices)),
             counts=np.zeros(len(indices), dtype=np.int_),
