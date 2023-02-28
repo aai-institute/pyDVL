@@ -1,309 +1,33 @@
 import logging
 import os
-import pickle as pkl
+from collections import namedtuple
 from copy import deepcopy
-from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import torch.nn as nn
+from numpy.typing import NDArray
 from PIL.JpegImagePlugin import JpegImageFile
-from torch.optim import Adam
-from torchvision.models import ResNet18_Weights, resnet18
 
-from pydvl.utils import Dataset, maybe_progress
-
-try:
-    import torch
-    import torch.nn as nn
-    from torch.optim import Optimizer
-    from torch.optim.lr_scheduler import _LRScheduler
-    from torch.utils.data import DataLoader, TensorDataset
-
-    _TORCH_INSTALLED = True
-except ImportError:
-    _TORCH_INSTALLED = False
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
-
-MODEL_PATH = Path().resolve().parent / "data" / "models"
+from pydvl.utils import Dataset
 
 logger = logging.getLogger(__name__)
+Losses = namedtuple("Losses", "training val")
 
 
-class TorchLogisticRegression(nn.Module):
-    """
-    A simple binary logistic regression model.
-    """
-
-    def __init__(
-        self,
-        n_input: int,
-    ):
-        """
-        :param n_input: Number of feature in input.
-        """
-        super().__init__()
-        self.fc1 = nn.Linear(n_input, 1, bias=True, dtype=float)
-
-    def forward(self, x):
-        """
-        :param x: Tensor [NxD] representing the features x_i.
-        :returns: A tensor [N] representing the probabilities for p(y_i).
-        """
-        x = torch.as_tensor(x)
-        return torch.sigmoid(self.fc1(x))
-
-
-class TorchMLP(nn.Module):
-    """
-    A simple fully-connected neural network f(x)
-    """
-
-    def __init__(
-        self,
-        n_input: int,
-        n_output: int,
-        n_neurons_per_layer: List[int],
-    ):
-        """
-        :param n_input: Number of feature in input.
-        :param n_output: Output length.
-        :param n_neurons_per_layer: Each integer represents the size of a hidden layer. Overall this list has K - 2
-        :param init: A list of tuple of np.ndarray representing the internal weights.
-        """
-        super().__init__()
-        self.n_input = n_input
-
-        self.n_hidden_layers = n_neurons_per_layer
-
-        if n_neurons_per_layer == []:
-            layers = [nn.Linear(n_input, n_output)]
-        else:
-            layers = [nn.Linear(n_input, n_neurons_per_layer[0]), nn.Tanh()]
-            for idx, n_neurons in enumerate(n_neurons_per_layer):
-                if idx == 0:
-                    continue
-                layers.append(nn.Linear(n_neurons_per_layer[idx - 1], n_neurons))
-                layers.append(nn.Tanh())
-            layers.append(nn.Linear(n_neurons_per_layer[-1], n_output))
-
-        layers.append(nn.Softmax(dim=-1))
-
-        self.layers = nn.Sequential(*layers)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Perform forward-pass through the network.
-        :param x: Tensor input of shape [NxD].
-        :returns: Tensor output of shape[NxK].
-        """
-        return self.layers(x)
-
-
-def fit_torch_model(
-    model: nn.Module,
-    x_train: Union["NDArray[np.float_]", torch.tensor],
-    y_train: Union["NDArray[np.float_]", torch.tensor],
-    x_val: Union["NDArray[np.float_]", torch.tensor],
-    y_val: Union["NDArray[np.float_]", torch.tensor],
-    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-    optimizer: Optimizer,
-    scheduler: Optional[_LRScheduler] = None,
-    num_epochs: int = 1,
-    batch_size: int = 64,
-    progress: bool = True,
-) -> Tuple["NDArray[np.float_]", "NDArray[np.float_]"]:
-    """
-    Method that fits a pytorch model to the supplied data.
-    It represents a simple machine learning loop, iterating over a number of
-    epochs, sampling data with a certain batch size, calculating gradients and updating the parameters through a
-    loss function.
-    :param x: Matrix of shape [NxD] representing the features x_i.
-    :param y: Matrix of shape [NxK] representing the prediction targets y_i.
-    :param optimizer: Select either ADAM or ADAM_W.
-    :param scheduler: A pytorch scheduler. If None, no scheduler is used.
-    :param num_epochs: Number of epochs to repeat training.
-    :param batch_size: Batch size to use in training.
-    :param progress: True, iff progress shall be printed.
-    :param tensor_type: accuracy of tensors. Typically 'float' or 'long'
-    """
-    x_train = torch.as_tensor(x_train).clone()
-    y_train = torch.as_tensor(y_train).clone()
-    x_val = torch.as_tensor(x_val).clone()
-    y_val = torch.as_tensor(y_val).clone()
-
-    dataset = TensorDataset(x_train, y_train)
-    dataloader = DataLoader(dataset, batch_size=batch_size)
-    train_loss = []
-    val_loss = []
-
-    for epoch in maybe_progress(range(num_epochs), progress, desc="Model fitting"):
-        batch_loss = []
-        for train_batch in dataloader:
-            batch_x, batch_y = train_batch
-            pred_y = model(batch_x)
-            loss_value = loss(torch.squeeze(pred_y), torch.squeeze(batch_y))
-            batch_loss.append(loss_value.item())
-
-            logger.debug(f"Epoch: {epoch} ---> Training loss: {loss_value.item()}")
-            loss_value.backward()
-            optimizer.step()
-            optimizer.zero_grad()
-
-            if scheduler:
-                scheduler.step()
-        pred_val = model(x_val)
-        epoch_val_loss = loss(torch.squeeze(pred_val), torch.squeeze(y_val)).item()
-        mean_epoch_train_loss = np.mean(batch_loss)
-        val_loss.append(epoch_val_loss)
-        train_loss.append(mean_epoch_train_loss)
-        logger.info(
-            f"Epoch: {epoch} ---> Training loss: {mean_epoch_train_loss}, Validation loss: {epoch_val_loss}"
-        )
-    return np.array(train_loss), np.array(val_loss)
-
-
-def new_resnet_model(output_size: int) -> nn.Module:
-    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-
-    for param in model.parameters():
-        param.requires_grad = False
-
-    # Fine-tune final few layers
-    model.avgpool = nn.AdaptiveAvgPool2d(1)
-    n_features = model.fc.in_features
-    model.fc = nn.Linear(n_features, output_size)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-
-    return model
-
-
-class TrainingManager:
-    """A simple class to handle persistence of the model for the notebook
-    `influence_imagenet.ipynb`
-    """
-
-    def __init__(
-        self,
-        name: str,
-        model: nn.Module,
-        loss: torch.nn.modules.loss._Loss,
-        train_x: "NDArray[np.float_]",
-        train_y: "NDArray[np.float_]",
-        val_x: "NDArray[np.float_]",
-        val_y: "NDArray[np.float_]",
-        data_dir: Path,
-    ):
-        self.name = name
-        self.model = model
-        self.loss = loss
-        self.train_x, self.train_y = train_x, train_y
-        self.val_x, self.val_y = val_x, val_y
-        self.data_dir = data_dir
-        os.makedirs(self.data_dir, exist_ok=True)
-
-    def train(
-        self,
-        n_epochs: int,
-        lr: float = 0.001,
-        batch_size: int = 1000,
-        use_cache: bool = True,
-    ) -> Tuple["NDArray[np.float_]", "NDArray[np.float_]"]:
-        """
-        :return: Tuple of training_loss, validation_loss
-        """
-        if use_cache:
-            try:
-                training_loss, validation_loss = self.load()
-                print("Cached model found, loading...")
-                return training_loss, validation_loss
-            except:
-                print(f"No pretrained model found. Training for {n_epochs} epochs:")
-
-        optimizer = Adam(self.model.parameters(), lr=lr)
-
-        training_loss, validation_loss = fit_torch_model(
-            model=self.model,
-            x_train=self.train_x,
-            y_train=self.train_y,
-            x_val=self.val_x,
-            y_val=self.val_y,
-            loss=self.loss,
-            optimizer=optimizer,
-            num_epochs=n_epochs,
-            batch_size=batch_size,
-        )
-        if use_cache:
-            self.save(training_loss, validation_loss)
-        self.model.eval()
-        return training_loss, validation_loss
-
-    def save(
-        self, training_loss: "NDArray[np.float_]", validation_loss: "NDArray[np.float_]"
-    ):
-        """Saves the model weights and training and validation losses.
-
-        :param training_loss: list of training losses, one per epoch
-        :param validation_loss: list of validation losses, also one per epoch
-        """
-        torch.save(self.model.state_dict(), self.data_dir / f"{self.name}_weights.pth")
-        with open(self.data_dir / f"{self.name}_train_val_loss.pkl", "wb") as file:
-            pkl.dump([training_loss, validation_loss], file)
-
-    def load(self) -> Tuple["NDArray[np.float_]", "NDArray[np.float_]"]:
-        """Loads model weights and training and validation losses.
-        :return: two arrays, one with training and one with validation losses.
-        """
-        self.model.load_state_dict(
-            torch.load(self.data_dir / f"{self.name}_weights.pth")
-        )
-        self.model.eval()
-        with open(self.data_dir / f"{self.name}_train_val_loss.pkl", "rb") as file:
-            return pkl.load(file)
-
-
-def process_imgnet_io(
-    df: pd.DataFrame, labels: dict
-) -> Tuple[torch.Tensor, torch.Tensor]:
-    x = df["normalized_images"]
-    y = df["labels"]
-    ds_label_to_model_label = {
-        ds_label: idx for idx, ds_label in enumerate(labels.values())
-    }
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    x_nn = torch.stack(x.tolist()).to(device)
-    y_nn = torch.tensor([ds_label_to_model_label[yi] for yi in y], device=device)
-    return x_nn, y_nn
-
-
-def plot_dataset(
-    train_ds: Tuple["NDArray[np.float_]", "NDArray[np.int_]"],
-    test_ds: Tuple["NDArray[np.float_]", "NDArray[np.int_]"],
-    x_min: Optional["NDArray[np.float_]"] = None,
-    x_max: Optional["NDArray[np.float_]"] = None,
+def plot_gaussian_blobs(
+    train_ds: Tuple[NDArray[np.float_], NDArray[np.int_]],
+    test_ds: Tuple[NDArray[np.float_], NDArray[np.int_]],
+    x_min: Optional[NDArray[np.float_]] = None,
+    x_max: Optional[NDArray[np.float_]] = None,
     *,
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     legend_title: Optional[str] = None,
     vline: Optional[float] = None,
-    line: Optional["NDArray[np.float_]"] = None,
+    line: Optional[NDArray[np.float_]] = None,
     suptitle: Optional[str] = None,
     s: Optional[float] = None,
     figsize: Tuple[int, int] = (20, 10),
@@ -376,15 +100,15 @@ def plot_dataset(
 
 
 def plot_influences(
-    x: "NDArray[np.float_]",
-    influences: "NDArray[np.float_]",
+    x: NDArray[np.float_],
+    influences: NDArray[np.float_],
     corrupted_indices: Optional[List[int]] = None,
     *,
     ax: Optional[plt.Axes] = None,
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     legend_title: Optional[str] = None,
-    line: Optional["NDArray[np.float_]"] = None,
+    line: Optional[NDArray[np.float_]] = None,
     suptitle: Optional[str] = None,
     colorbar_limits: Optional[Tuple] = None,
 ) -> plt.Axes:
@@ -663,7 +387,7 @@ def plot_sample_images(dataset: pd.DataFrame, n_images_per_class: int = 3):
 
 
 def plot_lowest_highest_influence_images(
-    subset_influences: "NDArray[np.float_]",
+    subset_influences: NDArray[np.float_],
     subset_images: List[JpegImageFile],
     num_to_plot: int,
 ):
@@ -694,17 +418,15 @@ def plot_lowest_highest_influence_images(
     plt.show()
 
 
-def plot_losses(
-    training_loss: "NDArray[np.float_]", validation_loss: "NDArray[np.float_]"
-):
+def plot_losses(losses: Losses):
     """Plots the train and validation loss
 
     :param training_loss: list of training losses, one per epoch
     :param validation_loss: list of validation losses, one per epoch
     """
     _, ax = plt.subplots()
-    ax.plot(training_loss, label="Train")
-    ax.plot(validation_loss, label="Val")
+    ax.plot(losses.training, label="Train")
+    ax.plot(losses.val, label="Val")
     ax.set_ylabel("Loss")
     ax.set_xlabel("Train epoch")
     ax.legend()
@@ -714,7 +436,7 @@ def plot_losses(
 def corrupt_imagenet(
     dataset: pd.DataFrame,
     fraction_to_corrupt: float,
-    avg_influences: "NDArray[np.float_]",
+    avg_influences: NDArray[np.float_],
 ) -> Tuple[pd.DataFrame, Dict[Any, List[int]]]:
     """Given the preprocessed tiny imagenet dataset (or a subset of it), 
     it takes a fraction of the images with the highest influence and (randomly)
@@ -752,10 +474,10 @@ def corrupt_imagenet(
 def compute_mean_corrupted_influences(
     corrupted_dataset: pd.DataFrame,
     corrupted_indices: Dict[Any, List[int]],
-    avg_corrupted_influences: "NDArray[np.float_]",
+    avg_corrupted_influences: NDArray[np.float_],
 ) -> pd.DataFrame:
-    """Given a corrupted dataset, it returns a dataframe with average influence for each class
-    and separately for corrupted (and non) point.
+    """Given a corrupted dataset, it returns a dataframe with average influence for each class,
+    separating corrupted and original points.
 
     :param corrupted_dataset: corrupted dataset as returned by get_corrupted_imagenet
     :param corrupted_indices: list of corrupted indices, as returned by get_corrupted_imagenet
@@ -789,7 +511,7 @@ def compute_mean_corrupted_influences(
 def plot_corrupted_influences_distribution(
     corrupted_dataset: pd.DataFrame,
     corrupted_indices: Dict[Any, List[int]],
-    avg_corrupted_influences: "NDArray[np.float_]",
+    avg_corrupted_influences: NDArray[np.float_],
     figsize: Tuple[int, int] = (16, 8),
 ):
     """Given a corrupted dataset, plots the histogram with the distribution of

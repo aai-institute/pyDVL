@@ -6,15 +6,13 @@ Contains
 """
 import logging
 from enum import Enum
-from typing import TYPE_CHECKING, Callable, Tuple
+from typing import Callable, Tuple
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.sparse.linalg import LinearOperator, cg
 
 from ..utils import maybe_progress
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
 
 __all__ = ["matrix_inversion_algorithm", "conjugate_gradient"]
 
@@ -32,11 +30,11 @@ class InversionMethod(str, Enum):
 
 def invert_matrix(
     inversion_method: InversionMethod,
-    mvp: Callable[["NDArray"], "NDArray"],
+    mvp: Callable[[NDArray], NDArray],
     mvp_dimensions: Tuple[int, int],
-    b: "NDArray",
+    b: NDArray,
     progress: bool = False,
-) -> "NDArray":
+) -> NDArray:
     """
     It solves the problem of finding x such that Ax = b, where A is a matrix (of
     size mvp_dimensions), and b a vector.
@@ -65,8 +63,8 @@ def invert_matrix(
 
 
 def conjugate_gradient(
-    A: "NDArray[np.float_]", batch_y: "NDArray[np.float_]", progress: bool = False
-) -> "NDArray[np.float_]":
+    A: NDArray[np.float_], batch_y: NDArray[np.float_], progress: bool = False
+) -> NDArray[np.float_]:
     """
     Given a matrix and a batch of vectors, it uses conjugate gradient to calculate the solution
     to Ax = y for each y in batch_y.

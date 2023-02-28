@@ -17,14 +17,12 @@ from .conftest import (
     linear_model,
 )
 
-try:
-    import torch
-    import torch.nn.functional as F
-    from torch import nn
+torch = pytest.importorskip("torch")
+import torch
+import torch.nn.functional as F
+from torch import nn
 
-    from pydvl.influence.frameworks import TorchTwiceDifferentiable
-except ImportError:
-    pass
+from pydvl.influence.frameworks import TorchTwiceDifferentiable
 
 
 class ModelTestSettings:

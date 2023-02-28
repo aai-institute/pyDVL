@@ -116,7 +116,7 @@ def random_subset_of_size(s: NDArray[T], size: int) -> NDArray[T]:
     return rng.choice(s, size=size, replace=False)
 
 
-def random_matrix_with_condition_number(n: int, condition_number: float) -> "NDArray":
+def random_matrix_with_condition_number(n: int, condition_number: float) -> NDArray:
     """Constructs a square matrix with a given condition number.
 
     Taken from:

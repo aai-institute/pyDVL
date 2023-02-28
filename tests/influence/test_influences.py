@@ -1,6 +1,5 @@
 import itertools
-import sys
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
 import pytest
@@ -13,12 +12,11 @@ from .conftest import (
     linear_model,
 )
 
-try:
-    import torch
-    import torch.nn.functional as F
-    from torch import nn
-except ImportError:
-    pass
+torch = pytest.importorskip("torch")
+
+import torch
+import torch.nn.functional as F
+from torch import nn
 
 
 class InfluenceTestSettings:
@@ -115,71 +113,68 @@ def test_influence_linear_model(
     assert np.allclose(cg_influences, analytical_influences, rtol=1e-1)
 
 
-if "torch" in sys.modules:
-    conv3d_nn = nn.Sequential(
-        nn.Conv3d(in_channels=5, out_channels=3, kernel_size=2),
-        nn.Flatten(),
-        nn.Linear(24, 3),
-    )
-    conv2d_nn = nn.Sequential(
-        nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
-        nn.Flatten(),
-        nn.Linear(27, 3),
-    )
-    conv1d_nn = nn.Sequential(
-        nn.Conv1d(in_channels=5, out_channels=3, kernel_size=2),
-        nn.Flatten(),
-        nn.Linear(6, 3),
-    )
-    simple_nn_regr = nn.Sequential(nn.Linear(10, 10), nn.Linear(10, 3), nn.Linear(3, 1))
+conv3d_nn = nn.Sequential(
+    nn.Conv3d(in_channels=5, out_channels=3, kernel_size=2),
+    nn.Flatten(),
+    nn.Linear(24, 3),
+)
+conv2d_nn = nn.Sequential(
+    nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
+    nn.Flatten(),
+    nn.Linear(27, 3),
+)
+conv1d_nn = nn.Sequential(
+    nn.Conv1d(in_channels=5, out_channels=3, kernel_size=2),
+    nn.Flatten(),
+    nn.Linear(6, 3),
+)
+simple_nn_regr = nn.Sequential(nn.Linear(10, 10), nn.Linear(10, 3), nn.Linear(3, 1))
 
-    test_cases = {
-        "conv3d_nn_up": [
-            conv3d_nn,
-            10,
-            (5, 3, 3, 3),
-            3,
-            nn.MSELoss(),
-            InfluenceType.Up,
-        ],
-        "conv3d_nn_pert": [
-            conv3d_nn,
-            10,
-            (5, 3, 3, 3),
-            3,
-            nn.SmoothL1Loss(),
-            InfluenceType.Perturbation,
-        ],
-        "conv_2d_nn_up": [conv2d_nn, 10, (5, 5, 5), 3, nn.MSELoss(), InfluenceType.Up],
-        "conv_2d_nn_pert": [
-            conv2d_nn,
-            10,
-            (5, 5, 5),
-            3,
-            nn.MSELoss(),
-            InfluenceType.Perturbation,
-        ],
-        "conv_1d_nn_up": [conv1d_nn, 10, (5, 3), 3, nn.MSELoss(), InfluenceType.Up],
-        "conv_1d_pert": [
-            conv1d_nn,
-            10,
-            (5, 3),
-            3,
-            nn.SmoothL1Loss(),
-            InfluenceType.Perturbation,
-        ],
-        "simple_nn_up": [simple_nn_regr, 10, (10,), 1, nn.MSELoss(), InfluenceType.Up],
-        "simple_nn_pert": [
-            simple_nn_regr,
-            10,
-            (10,),
-            1,
-            nn.MSELoss(),
-            InfluenceType.Perturbation,
-        ],
-    }
-else:
-    test_cases = {}
+test_cases = {
+    "conv3d_nn_up": [
+        conv3d_nn,
+        10,
+        (5, 3, 3, 3),
+        3,
+        nn.MSELoss(),
+        InfluenceType.Up,
+    ],
+    "conv3d_nn_pert": [
+        conv3d_nn,
+        10,
+        (5, 3, 3, 3),
+        3,
+        nn.SmoothL1Loss(),
+        InfluenceType.Perturbation,
+    ],
+    "conv_2d_nn_up": [conv2d_nn, 10, (5, 5, 5), 3, nn.MSELoss(), InfluenceType.Up],
+    "conv_2d_nn_pert": [
+        conv2d_nn,
+        10,
+        (5, 5, 5),
+        3,
+        nn.MSELoss(),
+        InfluenceType.Perturbation,
+    ],
+    "conv_1d_nn_up": [conv1d_nn, 10, (5, 3), 3, nn.MSELoss(), InfluenceType.Up],
+    "conv_1d_pert": [
+        conv1d_nn,
+        10,
+        (5, 3),
+        3,
+        nn.SmoothL1Loss(),
+        InfluenceType.Perturbation,
+    ],
+    "simple_nn_up": [simple_nn_regr, 10, (10,), 1, nn.MSELoss(), InfluenceType.Up],
+    "simple_nn_pert": [
+        simple_nn_regr,
+        10,
+        (10,),
+        1,
+        nn.MSELoss(),
+        InfluenceType.Perturbation,
+    ],
+}
 
 
 @pytest.mark.torch

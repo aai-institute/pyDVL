@@ -1,13 +1,11 @@
-from typing import TYPE_CHECKING, Any, List, Optional, OrderedDict, Sequence
+from typing import Any, List, Optional, OrderedDict, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy as sp
 from matplotlib.axes import Axes
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
+from numpy.typing import NDArray
 
 
 def shaded_mean_std(
@@ -196,8 +194,8 @@ def plot_shapley(
 
 
 def plot_influence_distribution_by_label(
-    influences: "NDArray[np.float_]",
-    labels: "NDArray[np.float_]",
+    influences: NDArray[np.float_],
+    labels: NDArray[np.float_],
     title_extra: str = "",
 ):
     """Plots the histogram of the influence that all samples in the training set

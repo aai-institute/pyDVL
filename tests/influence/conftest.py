@@ -1,14 +1,12 @@
-from typing import TYPE_CHECKING, List, Tuple
+from typing import Tuple
 
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 from sklearn.preprocessing import MinMaxScaler
 
 from pydvl.influence.general import InfluenceType
 from pydvl.utils import Dataset, random_matrix_with_condition_number
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
 
 
 @pytest.fixture
@@ -47,13 +45,21 @@ def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
 
 
 def linear_derivative_analytical(
-    linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
-) -> "NDArray":
+    linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
+    x: NDArray[np.float_],
+    y: NDArray[np.float_],
+) -> NDArray[np.float_]:
     """
-    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
-    :param x: A np.ndarray of shape [BxM].
-    :param y: A np.nparray of shape [BxN].
-    :returns: A np.ndarray of shape [Bx((N+1)*M)], where each row vector is [d_theta L(x, y), d_b L(x, y)]
+    Given a linear model it returns the first order derivative wrt its parameters.
+    More precisely, given a couple of matrices $A(\theta)$ and $b(\theta')$, with
+    $\theta$, $\theta'$ representing their generic entry, it calculates the
+    derivative wrt. $\theta$ and $\theta'$ of the linear model with the
+    following quadratic loss: $L(x,y) = (Ax +b - y)^2$.
+    :param linear_model: A tuple of arrays representing the linear model.
+    :param x: array, input to the linear model
+    :param y: array, output of the linear model
+    :returns: An array where each row holds $[\partial_\theta L(x, y),
+        \partial_{\theta'} L(x, y)]$
     """
 
     A, b = linear_model
@@ -66,16 +72,21 @@ def linear_derivative_analytical(
 
 
 def linear_hessian_analytical(
-    linear_model: Tuple["NDArray", "NDArray"],
-    x: "NDArray",
+    linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
+    x: NDArray[np.float_],
     lam: float = 0,
-) -> "NDArray":
+) -> NDArray[np.float_]:
     """
-    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
-    :param x: A np.ndarray of shape [BxM],
-    :param y: A np.nparray of shape [BxN].
+    Given a linear model it returns the hessian wrt. its parameters.
+    More precisely, given a couple of matrices $A(\theta)$ and $b(\theta')$, with
+    $\theta$, $\theta'$ representing their generic entry, it calculates the
+    second derivative wrt. $\theta$ and $\theta'$ of the linear model with the
+    following quadratic loss: $L(x,y) = (Ax +b - y)^2$.
+    :param linear_model: A tuple of arrays representing the linear model.
+    :param x: array, input to the linear model
+    :param y: array, output of the linear model
     :param lam: hessian regularization parameter
-    :returns: A np.ndarray of shape [((N+1)*M)x((N+1)*M)], representing the Hessian. It gets averaged over all samples.
+    :returns: An matrix where each entry i,j holds $\partial_{\theta_i} \ \partial_{\theta_j} L(x, y)$
     """
     A, b = linear_model
     n, m = tuple(A.shape)
@@ -92,13 +103,21 @@ def linear_hessian_analytical(
 
 
 def linear_mixed_second_derivative_analytical(
-    linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
-) -> "NDArray":
+    linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
+    x: NDArray[np.float_],
+    y: NDArray[np.float_],
+) -> NDArray[np.float_]:
     """
-    :param linear_model: A tuple of np.ndarray of shape [NxM] and [N] representing A and b respectively.
-    :param x: A np.ndarray of shape [BxM].
-    :param y: A np.nparray of shape [BxN].
-    :returns: A np.ndarray of shape [Bx((N+1)*M)xM], representing the derivative.
+    Given a linear model it returns a second order partial derivative wrt its
+    parameters .
+    More precisely, given a couple of matrices $A(\theta)$ and $b(\theta')$, with
+    $\theta$, $\theta'$ representing their generic entry, it calculates the
+    second derivative wrt. $\theta$ and $\theta'$ of the linear model with the
+    following quadratic loss: $L(x,y) = (Ax +b - y)^2$.
+    :param linear_model: A tuple of arrays representing the linear model.
+    :param x: array, input to the linear model
+    :param y: array, output of the linear model
+    :returns: An matrix where each entry i,j holds $\partial_{\theta_i} \ \partial_{x_j} L(x, y)$
     """
 
     A, b = linear_model
@@ -117,13 +136,20 @@ def linear_mixed_second_derivative_analytical(
 
 
 def linear_analytical_influence_factors(
-    linear_model: Tuple["NDArray", "NDArray"],
-    x: "NDArray",
-    y: "NDArray",
-    x_test: "NDArray",
-    y_test: "NDArray",
+    linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
+    x: NDArray[np.float_],
+    y: NDArray[np.float_],
+    x_test: NDArray[np.float_],
+    y_test: NDArray[np.float_],
     hessian_regularization: float = 0,
-) -> "NDArray":
+) -> NDArray[np.float_]:
+    """
+    Given a linear model it calculates its influence factors.
+    :param linear_model: A tuple of arrays representing the linear model.
+    :param x: array, input to the linear model
+    :param y: array, output of the linear model
+    :returns: An array with analytical influence factors.
+    """
     test_grads_analytical = linear_derivative_analytical(
         linear_model,
         x_test,
@@ -138,11 +164,11 @@ def linear_analytical_influence_factors(
 
 
 def analytical_linear_influences(
-    linear_model: Tuple["NDArray", "NDArray"],
-    x: "NDArray",
-    y: "NDArray",
-    x_test: "NDArray",
-    y_test: "NDArray",
+    linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
+    x: NDArray[np.float_],
+    y: NDArray[np.float_],
+    x_test: NDArray[np.float_],
+    y_test: NDArray[np.float_],
     influence_type: InfluenceType = InfluenceType.Up,
     hessian_regularization: float = 0,
 ):
@@ -176,7 +202,7 @@ def analytical_linear_influences(
             x,
             y,
         )
-        result: "NDArray" = np.einsum(
+        result: NDArray = np.einsum(
             "ia,ja->ij", s_test_analytical, train_grads_analytical
         )
     elif influence_type == InfluenceType.Perturbation:
@@ -185,20 +211,20 @@ def analytical_linear_influences(
             x,
             y,
         )
-        result: "NDArray" = np.einsum(
+        result: NDArray = np.einsum(
             "ia,jab->ijb", s_test_analytical, train_second_deriv_analytical
         )
     return result
 
 
 def add_noise_to_linear_model(
-    linear_model: Tuple["NDArray[np.float_]", "NDArray[np.float_]"],
+    linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
     train_set_size: int,
     test_set_size: int,
     noise: float = 0.01,
 ) -> Tuple[
-    Tuple["NDArray[np.float_]", "NDArray[np.float_]"],
-    Tuple["NDArray[np.float_]", "NDArray[np.float_]"],
+    Tuple[NDArray[np.float_], NDArray[np.float_]],
+    Tuple[NDArray[np.float_], NDArray[np.float_]],
 ]:
     A, b = linear_model
     o_d, i_d = tuple(A.shape)

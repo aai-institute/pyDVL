@@ -2,7 +2,7 @@
 Contains parallelized influence calculation functions for general models.
 """
 from enum import Enum
-from typing import TYPE_CHECKING, Callable, Union
+from typing import Callable
 
 import numpy as np
 
@@ -19,9 +19,7 @@ try:
 except ImportError:
     _TORCH_INSTALLED = False
 
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
-
+from numpy.typing import NDArray
 
 __all__ = ["compute_influences", "InfluenceType", "calculate_influence_factors"]
 
@@ -44,7 +42,7 @@ def calculate_influence_factors(
     inversion_method: InversionMethod,
     lam: float = 0,
     progress: bool = False,
-) -> "NDArray":
+) -> NDArray:
     """
     Calculates the influence factors. For more info, see https://arxiv.org/pdf/1703.04730.pdf, paragraph 3.
 
@@ -78,9 +76,9 @@ def _calculate_influences_up(
     model: TwiceDifferentiable,
     x: TensorType,
     y: TensorType,
-    influence_factors: "NDArray",
+    influence_factors: NDArray,
     progress: bool = False,
-) -> "NDArray":
+) -> NDArray:
     """
     Calculates the influence from the influence factors and the scores of the training points.
     Uses the upweighting method, as described in section 2.1 of https://arxiv.org/pdf/1703.04730.pdf
@@ -100,9 +98,9 @@ def _calculate_influences_pert(
     model: TwiceDifferentiable,
     x: TensorType,
     y: TensorType,
-    influence_factors: "NDArray",
+    influence_factors: NDArray,
     progress: bool = False,
-) -> "NDArray":
+) -> NDArray:
     """
     Calculates the influence from the influence factors and the scores of the training points.
     Uses the perturbation method, as described in section 2.2 of https://arxiv.org/pdf/1703.04730.pdf
@@ -149,7 +147,7 @@ def compute_influences(
     inversion_method: InversionMethod = InversionMethod.Direct,
     influence_type: InfluenceType = InfluenceType.Up,
     hessian_regularization: float = 0,
-) -> "NDArray":
+) -> NDArray:
     """
     Calculates the influence of the training points j on the test points i. First it calculates
     the influence factors for all test points with respect to the training points, and then uses them to

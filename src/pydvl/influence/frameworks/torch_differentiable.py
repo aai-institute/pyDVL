@@ -2,7 +2,7 @@
 Contains all parts of pyTorch based machine learning model.
 """
 import logging
-from typing import TYPE_CHECKING, Callable, Optional, Tuple, Union
+from typing import Callable, Optional, Tuple, Union
 
 import numpy as np
 
@@ -19,8 +19,7 @@ try:
 except ImportError:
     _TORCH_INSTALLED = False
 
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
+from numpy.typing import NDArray
 
 __all__ = [
     "TorchTwiceDifferentiable",
@@ -53,9 +52,9 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
             raise RuntimeWarning("This function requires PyTorch.")
         if model.training:
             logger.warning(
-                "Passed model not in eval mode. This can create several issues in influence "
-                "computation, e.g. due batch normalization. Please call model.eval() before computing"
-                "influences."
+                "Passed model not in evaluation mode. This can create several issues in influence "
+                "computation, e.g. due to batch normalization. Please call model.eval() before "
+                "computing influences."
             )
         self.model = model
         self.loss = loss
@@ -73,7 +72,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         x: TensorType,
         y: TensorType,
         progress: bool = False,
-    ) -> "NDArray":
+    ) -> NDArray:
         """
         Calculates gradient of model parameters wrt each x[i] and y[i] and then
         returns a array of size [N, P] with N number of points (length of x and y) and P
@@ -114,7 +113,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         self,
         x: TensorType,
         y: TensorType,
-    ) -> Tuple["NDArray", "torch.Tensor"]:
+    ) -> Tuple[NDArray, "torch.Tensor"]:
         """
         Calculates gradient of model parameters wrt x and y.
         :param x: A np.ndarray [NxD] representing the features x_i.
@@ -142,7 +141,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         v: TensorType,
         progress: bool = False,
         backprop_on: Optional["torch.Tensor"] = None,
-    ) -> "NDArray":
+    ) -> NDArray:
         """
         Calculates second order derivative of the model along directions v.
         This second order derivative can be on the model parameters or on another input parameter, 
