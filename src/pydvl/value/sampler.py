@@ -13,7 +13,7 @@ class Sampler(Generic[T]):
     """Samplers iterate over subsets.
 
     For each element in the whole set, the complementary set is considered, and
-    at most ``max_subsets`` from its power set are generated.
+    at most ``n_samples`` from its power set are generated.
 
 
     :Example:
@@ -107,7 +107,7 @@ class UniformSampler(Sampler[T]):
     def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
         while True:
             for idx in self.indices():
-                for subset in random_powerset(self.complement([idx]), max_subsets=1):
+                for subset in random_powerset(self.complement([idx]), n_samples=1):
                     yield idx, subset
 
     def weight(self, subset: Sequence[T]) -> float:
@@ -136,7 +136,7 @@ class AntitheticSampler(Sampler[T]):
     def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
         while True:
             for idx in self.indices():
-                for subset in random_powerset(self.complement([idx]), max_subsets=1):
+                for subset in random_powerset(self.complement([idx]), n_samples=1):
                     yield idx, subset
                     yield idx, self.complement(subset, idx)
 
@@ -177,7 +177,7 @@ class HierarchicalSampler(Sampler[T]):
             for idx in self.indices():
                 k = np.random.choice(np.arange(len(self._indices)), size=1).item()
                 for subset in random_powerset(  # FIXME: not implemented
-                    self.complement([idx]), size=k, max_subsets=1
+                    self.complement([idx]), size=k, n_samples=1
                 ):
                     yield idx, subset
 
@@ -206,7 +206,7 @@ class OwenSampler(Sampler[T]):
             for idx in self.indices():
                 for j, q in enumerate(self.q_steps):
                     for subset in random_powerset(
-                        self.complement([idx]), q=q, max_subsets=1
+                        self.complement([idx]), q=q, n_samples=1
                     ):
                         yield q, idx, subset
 

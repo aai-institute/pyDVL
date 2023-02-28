@@ -20,13 +20,13 @@ semi-value. The interface is :class:`SemiValue`. The coefficients implement
 
 import math
 from functools import lru_cache
+from itertools import takewhile
 from typing import Protocol
 
-import numpy as np
 import scipy as sp
+from tqdm import tqdm
 
-from pydvl.utils import Utility, maybe_progress, running_moments
-from pydvl.utils.status import Status
+from pydvl.utils import Utility
 from pydvl.value import ValuationResult
 from pydvl.value.sampler import OwenSampler, PermutationSampler, Sampler, UniformSampler
 from pydvl.value.stopping import StoppingCriterion, StoppingCriterionCallable
@@ -54,7 +54,7 @@ def _semivalues(
     u: Utility,
     sampler: Sampler,
     coefficient: SVCoefficient,
-    stop: StoppingCriterion,
+    done: StoppingCriterion,
     *,
     progress: bool = False,
     job_id: int = 1,
@@ -70,36 +70,27 @@ def _semivalues(
     :param u: Utility object with model, data, and scoring function.
     :param sampler: The subset sampler to use for utility computations.
     :param coefficient: The semivalue coefficient
-
+    :param done: Stopping criterion.
     :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress.
     :return: Object with valuation results.
     """
     n = len(u.data)
-    values = np.zeros(n, dtype=np.float_)
-    variances = np.zeros(n, dtype=np.float_)
-    counts = np.zeros(n, dtype=np.int_)
-    status = Status.Pending
+    result = ValuationResult.empty(
+        algorithm=f"semivalue-{str(sampler)}-{str(coefficient)}", indices=u.data.indices
+    )
 
-    for step, (idx, s) in maybe_progress(enumerate(sampler), progress, position=job_id):
+    samples = takewhile(lambda _: not done(result), sampler)
+    pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
+    for idx, s in samples:
+        pbar.n = 100 * done.completion()
+        pbar.refresh()
         marginal = (
             (u({idx}.union(s)) - u(s)) * coefficient(n, len(s)) * sampler.weight(s)
         )
-        values[idx], variances[idx] = running_moments(
-            values[idx], variances[idx], marginal, counts[idx]
-        )
-        counts[idx] += 1
-        status = stop(step, values, variances, counts)
-        if status != Status.Pending:
-            break
+        result.update(idx, marginal)
 
-    return ValuationResult(
-        algorithm=f"semivalue_{coefficient.__name__}_{sampler.__class__.__name__}",
-        status=status,
-        values=values,
-        steps=counts.sum(),
-        stderr=np.sqrt(variances / np.maximum(1, counts)),
-    )
+    return result
 
 
 @lru_cache
@@ -108,11 +99,11 @@ def combinatorial_coefficient(n: int, k: int) -> float:
 
 
 @lru_cache
-def banzhaf_coefficient(n: int, _: int) -> float:
+def banzhaf_coefficient(n: int, k: int) -> float:
     return n / 2 ** (n - 1)
 
 
-def permutation_coefficient(_: int, __: int) -> float:
+def permutation_coefficient(n: int, k: int) -> float:
     return 1.0
 
 

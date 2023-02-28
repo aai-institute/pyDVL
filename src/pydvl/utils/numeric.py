@@ -4,7 +4,16 @@ library.
 """
 
 from itertools import chain, combinations
-from typing import Collection, Generator, Iterator, Optional, Tuple, TypeVar, overload
+from typing import (
+    Collection,
+    Generator,
+    Iterator,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    overload,
+)
 
 import numpy as np
 from numpy.typing import NDArray
