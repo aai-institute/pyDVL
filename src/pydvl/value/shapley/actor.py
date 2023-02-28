@@ -167,8 +167,12 @@ class ShapleyWorker(Worker):
                 if self.coordinator.is_done():
                     return
                 results = self._compute_marginals()
-                if np.any(np.isnan(results.values)):
-                    logger.warning("NaN values in current permutation, ignoring")
+                nans = np.isnan(results.values).sum()
+                if nans > 0:
+                    logger.warning(
+                        f"{nans} NaN values in current permutation, ignoring. "
+                        "Consider setting a default value for the Scorer"
+                    )
                     continue
                 acc += results
             self.coordinator.add_results(acc)

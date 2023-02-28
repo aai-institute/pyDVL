@@ -29,9 +29,9 @@ supported.
 """
 
 import abc
-from functools import update_wrapper
+import logging
 from time import time
-from typing import Callable, Optional, Type, cast
+from typing import Callable, Optional, Type
 
 import numpy as np
 from numpy.typing import NDArray
@@ -49,6 +49,8 @@ __all__ = [
     "MaxTime",
     "HistoryDeviation",
 ]
+
+logger = logging.getLogger(__name__)
 
 StoppingCriterionCallable = Callable[[ValuationResult], Status]
 
@@ -101,6 +103,11 @@ class StoppingCriterion(abc.ABC):
         return type(self).__name__
 
     def __call__(self, result: ValuationResult) -> Status:
+        if len(result) == 0:
+            logger.warning(
+                "At least one iteration finished but no results where generated. "
+                "Please check that your scorer and utility return valid numbers."
+            )
         status = self._check(result)
         if self.modify_result:  # FIXME: this is not nice
             result._status = status
@@ -249,9 +256,12 @@ class MaxUpdates(StoppingCriterion):
     def _check(self, result: ValuationResult) -> Status:
         if self.n_updates:
             self._converged = result.counts >= self.n_updates
-            self.last_max = int(np.max(result.counts))
-            if self.last_max >= self.n_updates:
-                return Status.Converged
+            try:
+                self.last_max = int(np.max(result.counts))
+                if self.last_max >= self.n_updates:
+                    return Status.Converged
+            except ValueError:  # empty counts array. This should not happen
+                pass
         return Status.Pending
 
     def completion(self) -> float:
@@ -282,9 +292,12 @@ class MinUpdates(StoppingCriterion):
     def _check(self, result: ValuationResult) -> Status:
         if self.n_updates is not None:
             self._converged = result.counts >= self.n_updates
-            self.last_min = np.min(result.counts).item()
-            if self.last_min >= self.n_updates:
-                return Status.Converged
+            try:
+                self.last_min = int(np.min(result.counts))
+                if self.last_min >= self.n_updates:
+                    return Status.Converged
+            except ValueError:  # empty counts array. This should not happen
+                pass
         return Status.Pending
 
     def completion(self) -> float:
