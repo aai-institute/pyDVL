@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Shuffling code around to allow for simpler user imports
+- Shuffling code around to allow for simpler user imports, some cleanup and
+  documentation fixes.
   [PR #284](https://github.com/appliedAI-Initiative/pyDVL/pull/284)
 
 ## 0.5.0 - 💥 Fixes, nicer interfaces and... more breaking changes 😒
