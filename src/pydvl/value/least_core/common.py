@@ -37,8 +37,6 @@ def lc_solve_problem(
     :func:`~pydvl.value.least_core.montecarlo.montecarlo_least_core` for
     argument descriptions.
     """
-    if options is None:
-        options = {}
     n = len(u.data)
 
     if np.any(np.isnan(problem.utility_values)):

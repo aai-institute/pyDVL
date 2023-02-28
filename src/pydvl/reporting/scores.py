@@ -1,43 +1,18 @@
-from collections import OrderedDict
-from operator import itemgetter
-from typing import Dict, Iterable, Mapping, Sequence, TypeVar, Union
+from typing import Dict, Iterable, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
 from pydvl.utils import Utility, maybe_progress
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 
-__all__ = [
-    "sort_values",
-    "sort_values_array",
-    "sort_values_history",
-    "compute_removal_score",
-]
-
-KT = TypeVar("KT")
-VT = TypeVar("VT")
-
-
-def sort_values_array(values: np.ndarray) -> Dict[int, "NDArray"]:
-    vals = np.mean(values, axis=1)
-    return OrderedDict(sorted(enumerate(vals), key=itemgetter(1)))
-
-
-def sort_values_history(values: Mapping[KT, Sequence[VT]]) -> Dict[KT, Sequence[VT]]:
-    """Sorts a dict of sample_id: [values] by the last item in each list."""
-    return OrderedDict(sorted(values.items(), key=itemgetter(1, -1)))
-
-
-def sort_values(values: Mapping[KT, VT]) -> Dict[KT, VT]:
-    """Sorts a dict of sample_id: value_float by value."""
-    return OrderedDict(sorted(values.items(), key=itemgetter(1)))
+__all__ = ["compute_removal_score"]
 
 
 def compute_removal_score(
     u: Utility,
     values: ValuationResult,
-    percentages: Union["NDArray", Iterable[float]],
+    percentages: Union[NDArray[np.float_], Iterable[float]],
     *,
     remove_best: bool = False,
     progress: bool = False,
@@ -66,11 +41,7 @@ def compute_removal_score(
     # We sort in descending order if we want to remove the best values
     values.sort(reverse=remove_best)
 
-    for pct in maybe_progress(
-        percentages,
-        display=progress,
-        desc="Removal Scores",
-    ):
+    for pct in maybe_progress(percentages, display=progress, desc="Removal Scores"):
         n_removal = int(pct * len(u.data))
         indices = values.indices[n_removal:]
         score = u(indices)

@@ -1,5 +1,4 @@
 import inspect
-from collections.abc import Iterable
 from functools import singledispatch, update_wrapper
 from itertools import accumulate, repeat
 from typing import (
@@ -70,6 +69,7 @@ def _(v: np.ndarray, *, timeout: Optional[float] = None) -> NDArray:
     return v
 
 
+# Careful to use list as hint. The dispatch does not work with typing generics
 @_get_value.register
 def _(v: list, *, timeout: Optional[float] = None) -> List[Any]:
     return [_get_value(x, timeout=timeout) for x in v]
@@ -219,10 +219,19 @@ class MapReduceJob(Generic[T, R]):
         return result  # type: ignore
 
     def _wrap_function(self, func: Callable, **kwargs) -> Callable:
-        remote_func = self.parallel_backend.wrap(
+        """Wraps a function with a timeout and remote arguments and puts it on
+        the remote backend.
+
+        :param func: Function to wrap
+        :param kwargs: Additional keyword arguments to pass to the backend
+            wrapper. These are *not* arguments for the wrapped function.
+        :return: Remote function that can be called with the same arguments as
+            the wrapped function. Depending on the backend, this may simply be
+            the function itself.
+        """
+        return self.parallel_backend.wrap(
             _wrap_func_with_remote_args(func, timeout=self.timeout), **kwargs
         )
-        return getattr(remote_func, "remote", remote_func)  # type: ignore
 
     def _backpressure(
         self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int

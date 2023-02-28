@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import DataUtilityLearning, MemcachedConfig, Utility, powerset
+from pydvl.utils import DataUtilityLearning, MemcachedConfig, Scorer, Utility, powerset
 
 
 @pytest.mark.parametrize("show_warnings", [False, True])
@@ -45,7 +45,7 @@ def test_data_utility_learning_wrapper(linear_dataset, training_budget):
     u = Utility(
         model=LinearRegression(),
         data=linear_dataset,
-        scoring="r2",
+        scorer=Scorer("r2"),
         enable_cache=False,
     )
     wrapped_u = DataUtilityLearning(u, training_budget, LinearRegression())
@@ -63,7 +63,7 @@ def test_cache(linear_dataset, memcache_client_config):
     u = Utility(
         model=LinearRegression(),
         data=linear_dataset,
-        scoring="r2",
+        scorer=Scorer("r2"),
         enable_cache=True,
         cache_options=MemcachedConfig(
             client_config=memcache_client_config, time_threshold=0
@@ -88,7 +88,7 @@ def test_different_cache_signature(
     u1 = Utility(
         model=LinearRegression(**model_kwargs[0]),
         data=linear_dataset,
-        scoring="r2",
+        scorer=Scorer("r2"),
         enable_cache=True,
         cache_options=MemcachedConfig(
             client_config=memcache_client_config, time_threshold=0
@@ -97,7 +97,7 @@ def test_different_cache_signature(
     u2 = Utility(
         model=LinearRegression(**model_kwargs[1]),
         data=linear_dataset,
-        scoring="r2",
+        scorer=Scorer("r2"),
         enable_cache=True,
         cache_options=MemcachedConfig(
             client_config=memcache_client_config, time_threshold=0

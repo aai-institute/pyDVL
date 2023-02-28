@@ -106,7 +106,7 @@ Data Shapley values:
 ```python
 import numpy as np
 from pydvl.utils import Dataset, Utility
-from pydvl.value.shapley import compute_shapley_values
+from pydvl.value import *
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
@@ -118,7 +118,7 @@ dataset = Dataset(X_train, y_train, X_test, y_test)
 model = LinearRegression()
 utility = Utility(model, dataset)
 values = compute_shapley_values(
-    u=utility, n_iterations=100, mode="truncated_montecarlo"
+    u=utility, mode="truncated_montecarlo", done=MaxUpdates(100)
 )
 ```
 

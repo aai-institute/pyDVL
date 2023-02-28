@@ -26,7 +26,9 @@ from typing import Optional
 from pydvl.utils.utility import Utility
 from pydvl.value.least_core.montecarlo import *
 from pydvl.value.least_core.naive import *
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
+
+__all__ = ["compute_least_core_values", "LeastCoreMode"]
 
 
 class LeastCoreMode(Enum):
@@ -68,7 +70,7 @@ def compute_least_core_values(
 
     :return: ValuationResult object with the computed values.
 
-    .. versionadded:: 0.4.1
+    .. versionadded:: 0.5.0
     """
     progress: bool = kwargs.pop("progress", False)
 

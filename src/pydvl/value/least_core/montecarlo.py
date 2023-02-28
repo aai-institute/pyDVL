@@ -1,17 +1,17 @@
 import logging
 import warnings
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional
 
 import numpy as np
-from numpy.typing import NDArray
 
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import MapReduceJob
+from pydvl.utils.parallel.backend import effective_n_jobs
 from pydvl.utils.progress import maybe_progress
 from pydvl.utils.utility import Utility
 from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
-from pydvl.value.results import ValuationResult
+from pydvl.value.result import ValuationResult
 
 logger = logging.getLogger(__name__)
 
@@ -38,20 +38,12 @@ def _montecarlo_least_core(
     utility_values = np.zeros(n_iterations)
 
     # Randomly sample subsets of full dataset
-    power_set = random_powerset(
-        u.data.indices,
-        max_subsets=n_iterations,
-    )
+    power_set = random_powerset(u.data.indices, n_samples=n_iterations)
 
     A_lb = np.zeros((n_iterations, n))
 
     for i, subset in enumerate(
-        maybe_progress(
-            power_set,
-            progress,
-            total=n_iterations,
-            position=job_id,
-        )
+        maybe_progress(power_set, progress, total=n_iterations, position=job_id)
     ):
         indices = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
@@ -134,7 +126,7 @@ def mclc_prepare_problem(
 
     if n_iterations < n:
         raise ValueError(
-            "Number of iterations should be greater than the size of the " "dataset"
+            "Number of iterations should be greater than the size of the dataset"
         )
 
     if n_iterations > 2**n:
@@ -145,16 +137,13 @@ def mclc_prepare_problem(
         )
         n_iterations = 2**n
 
-    iterations_per_job = max(1, n_iterations // n_jobs)
+    iterations_per_job = max(1, n_iterations // effective_n_jobs(n_jobs, config))
 
     map_reduce_job: MapReduceJob["Utility", "LeastCoreProblem"] = MapReduceJob(
         inputs=u,
         map_func=_montecarlo_least_core,
         reduce_func=_reduce_func,
-        map_kwargs=dict(
-            n_iterations=iterations_per_job,
-            progress=progress,
-        ),
+        map_kwargs=dict(n_iterations=iterations_per_job, progress=progress),
         n_jobs=n_jobs,
         config=config,
     )

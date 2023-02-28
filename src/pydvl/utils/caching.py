@@ -271,7 +271,7 @@ def memcached(
                     ):
                         new_value = fun(*args, **kwargs)
                         new_avg, new_var = running_moments(
-                            value, variance, cast(float, new_value), int(count)
+                            value, variance, int(count), cast(float, new_value)
                         )
                         result_dict["value"] = new_avg
                         result_dict["count"] = count + 1
