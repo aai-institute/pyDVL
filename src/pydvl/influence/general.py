@@ -34,18 +34,20 @@ def calculate_influence_factors(
     progress: bool = False,
 ) -> NDArray:
     """
-    Calculates the influence factors. For more info, see https://arxiv.org/pdf/1703.04730.pdf, paragraph 3.
+    Calculates the influence factors. For more info, see
+    https://arxiv.org/pdf/1703.04730.pdf, paragraph 3.
 
     :param model: A model which has to implement the TwiceDifferentiable interface.
     :param x_train: A matrix of shape [MxK] containing the features of the input data points.
     :param y_train: A matrix of shape [MxL] containing the targets of the input data points.
     :param x_test: A matrix of shape [NxK] containing the features of the test set of data points.
     :param y_test: A matrix of shape [NxL] containing the targets of the test set of data points.
-    :param inversion_func: function to use to invert the product of hvp (hessian vector product) and the gradient
-        of the loss (s_test in the paper).
+    :param inversion_func: function to use to invert the product of hvp (hessian
+        vector product) and the gradient of the loss (s_test in the paper).
     :param lam: regularization of the hessian
     :param progress: If True, display progress bars.
-    :returns: A matrix of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
+    :returns: A matrix of size (N, D) containing the influence factors for each
+        dimension (D) and test sample (N).
     """
     grad_xy, _ = model.grad(x, y)
     hvp = lambda v: model.mvp(grad_xy, v) + lam * v
@@ -68,15 +70,19 @@ def _calculate_influences_up(
     progress: bool = False,
 ) -> NDArray:
     """
-    Calculates the influence from the influence factors and the scores of the training points.
-    Uses the upweighting method, as described in section 2.1 of https://arxiv.org/pdf/1703.04730.pdf
+    Calculates the influence from the influence factors and the scores of the
+    training points. Uses the upweighting method, as described in section 2.1 of
+    https://arxiv.org/pdf/1703.04730.pdf
 
     :param model: A model which has to implement the TwiceDifferentiable interface.
-    :param x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
-    :param y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
+    :param x_train: A np.ndarray of shape [MxK] containing the features of the
+        input data points.
+    :param y_train: A np.ndarray of shape [MxL] containing the targets of the
+        input data points.
     :param influence_factors: np.ndarray containing influence factors
     :param progress: If True, display progress bars.
-    :returns: A np.ndarray of size [NxM], where N is number of test points and M number of train points.
+    :returns: A np.ndarray of size [NxM], where N is number of test points and M
+        number of train points.
     """
     train_grads = model.split_grad(x, y, progress)
     return np.einsum("ta,va->tv", influence_factors, train_grads)  # type: ignore
@@ -90,16 +96,19 @@ def _calculate_influences_pert(
     progress: bool = False,
 ) -> NDArray:
     """
-    Calculates the influence from the influence factors and the scores of the training points.
-    Uses the perturbation method, as described in section 2.2 of https://arxiv.org/pdf/1703.04730.pdf
+    Calculates the influence from the influence factors and the scores of the
+    training points. Uses the perturbation method, as described in section 2.2
+    of https://arxiv.org/pdf/1703.04730.pdf
 
     :param model: A model which has to implement the TwiceDifferentiable interface.
-    :param x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
-    :param y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
+    :param x_train: A np.ndarray of shape [MxK] containing the features of the
+        input data points.
+    :param y_train: A np.ndarray of shape [MxL] containing the targets of the
+        input data points.
     :param influence_factors: np.ndarray containing influence factors
     :param progress: If True, display progress bars.
-    :returns: A np.ndarray of size [NxMxP], where N is number of test points, M number of train points,
-        and P the number of features.
+    :returns: A np.ndarray of size [NxMxP], where N is number of test points, M
+        number of train points, and P the number of features.
     """
     all_pert_influences = []
     for i in maybe_progress(
@@ -136,9 +145,10 @@ def compute_influences(
     hessian_regularization: float = 0,
 ) -> NDArray:
     """
-    Calculates the influence of the training points j on the test points i. First it calculates
-    the influence factors for all test points with respect to the training points, and then uses them to
-    get the influences over the complete training set. Points with low influence values are (on average)
+    Calculates the influence of the training points j on the test points i.
+    First it calculates the influence factors for all test points with respect
+    to the training points, and then uses them to get the influences over the
+    complete training set. Points with low influence values are (on average)
     less important for model training than points with high influences.
 
     :param differentiable_model: A model wrapped with its loss in TwiceDifferentiable.
@@ -147,16 +157,20 @@ def compute_influences(
     :param x_test: model input for testing
     :param y_test: test labels
     :param progress: whether to display progress bars.
-    :param inversion_method: Set the inversion method to a specific one, can be 'direct' for direct inversion
-        (and explicit construction of the Hessian) or 'cg' for conjugate gradient.
+    :param inversion_method: Set the inversion method to a specific one, can be
+        'direct' for direct inversion (and explicit construction of the Hessian)
+        or 'cg' for conjugate gradient.
     :param influence_type: Which algorithm to use to calculate influences.
-        Currently supported options: 'up' or 'perturbation'. For details refer to https://arxiv.org/pdf/1703.04730.pdf
-    :param hessian_regularization: lambda to use in Hessian regularization, i.e. H_reg = H + lambda * 1, with 1 the identity matrix \
-        and H the (simple and regularized) Hessian. Typically used with more complex models to make sure the Hessian \
-        is positive definite.
-    :returns: A np.ndarray specifying the influences. Shape is [NxM] if influence_type is'up', where N is number of test points and
-        M number of train points. If instead influence_type is 'perturbation', output shape is [NxMxP], with P the number of input
-        features.
+        Currently supported options: 'up' or 'perturbation'. For details refer
+        to https://arxiv.org/pdf/1703.04730.pdf
+    :param hessian_regularization: lambda to use in Hessian regularization, i.e.
+        H_reg = H + lambda * 1, with 1 the identity matrix and H the (simple and
+        regularized) Hessian. Typically used with more complex models to make
+        sure the Hessian is positive definite.
+    :returns: A np.ndarray specifying the influences. Shape is [NxM] if
+        influence_type is'up', where N is number of test points and M number of
+        train points. If instead influence_type is 'perturbation', output shape
+        is [NxMxP], with P the number of input features.
     """
 
     influence_factors = calculate_influence_factors(

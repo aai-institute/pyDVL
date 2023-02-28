@@ -68,7 +68,8 @@ def conjugate_gradient(
 ) -> NDArray[np.float_]:
     """
     Given a matrix and a batch of vectors, it uses conjugate gradient to calculate the solution
-    to $Ax = y$ for each $y$ in ``batch_y``.
+    to $Ax = y$ for each $y$ in ``batch_y``. For more info:
+    https://en.wikipedia.org/wiki/Conjugate_gradient_method
 
     :param A: a real, symmetric and positive-definite matrix of shape [NxN]
     :param batch_y: a matrix of shape [PxN], with P the size of the batch.

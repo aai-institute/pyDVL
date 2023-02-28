@@ -5,6 +5,7 @@ import pytest
 from numpy.typing import NDArray
 from sklearn.preprocessing import MinMaxScaler
 
+torch = pytest.importorskip("torch")
 from pydvl.influence.general import InfluenceType
 from pydvl.utils import Dataset, random_matrix_with_condition_number
 
