@@ -544,7 +544,7 @@ def plot_corrupted_influences_distribution(
         axes[idx].hist(non_corrupted_infl, label="Non corrupted", alpha=0.7)
         axes[idx].hist(corrupted_infl, label="Corrupted", alpha=0.7, color="green")
         axes[idx].set_xlabel("Influence values")
-        axes[idx].set_ylabel("Distribution")
+        axes[idx].set_ylabel("Number of samples")
         axes[idx].set_title(f"Influences for {label=}")
         axes[idx].legend()
     plt.show()

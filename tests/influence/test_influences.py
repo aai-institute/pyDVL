@@ -4,7 +4,8 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 
-from pydvl.influence.general import InfluenceType, InversionMethod, compute_influences
+from pydvl.influence import TwiceDifferentiable, compute_influences
+from pydvl.influence.general import InfluenceType, InversionMethod
 
 from .conftest import (
     add_noise_to_linear_model,
@@ -87,8 +88,7 @@ def test_influence_linear_model(
     )
 
     direct_influences = compute_influences(
-        linear_layer,
-        loss,
+        TwiceDifferentiable(linear_layer, loss),
         *train_data,
         *test_data,
         progress=True,
@@ -98,8 +98,7 @@ def test_influence_linear_model(
     )
 
     cg_influences = compute_influences(
-        linear_layer,
-        loss,
+        TwiceDifferentiable(linear_layer, loss),
         *train_data,
         *test_data,
         progress=True,
@@ -202,8 +201,7 @@ def test_influences_nn(
     multiple_influences = []
     for inversion_method in InversionMethod:
         influences = compute_influences(
-            nn_architecture,
-            loss,
+            TwiceDifferentiable(nn_architecture, loss),
             x_train,
             y_train,
             x_test,

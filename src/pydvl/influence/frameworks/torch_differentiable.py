@@ -2,24 +2,17 @@
 Contains all parts of pyTorch based machine learning model.
 """
 import logging
-from typing import Callable, Optional, Tuple, Union
+from typing import Callable, Optional, Tuple
 
 import numpy as np
+import torch
+import torch.nn as nn
+from numpy.typing import NDArray
+from torch import autograd
+from torch.autograd import Variable
 
 from ...utils import maybe_progress
-from ..types import TensorType, TwiceDifferentiable
-
-try:
-    import torch
-    import torch.nn as nn
-    from torch import autograd
-    from torch.autograd import Variable
-
-    _TORCH_INSTALLED = True
-except ImportError:
-    _TORCH_INSTALLED = False
-
-from numpy.typing import NDArray
+from .base_twice_differentiable import BaseTwiceDifferentiable
 
 __all__ = [
     "TorchTwiceDifferentiable",
@@ -34,22 +27,20 @@ def flatten_gradient(grad):
     return torch.cat([el.reshape(-1) for el in grad])
 
 
-class TorchTwiceDifferentiable(TwiceDifferentiable):
+class TorchTwiceDifferentiable(BaseTwiceDifferentiable[torch.Tensor]):
     """
     Calculates second-derivative matrix vector products (Mvp) of a pytorch torch.nn.Module
     """
 
     def __init__(
         self,
-        model: "nn.Module",
-        loss: Callable[["torch.Tensor", "torch.Tensor"], "torch.Tensor"],
+        model: nn.Module,
+        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     ):
         """
         :param model: A torch.nn.Module representing a (differentiable) function f(x).
         :param loss: Loss function L(f(x), y) maps a prediction and a target to a single value.
         """
-        if not _TORCH_INSTALLED:
-            raise RuntimeWarning("This function requires PyTorch.")
         if model.training:
             logger.warning(
                 "Passed model not in evaluation mode. This can create several issues in influence "
@@ -69,8 +60,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
     def split_grad(
         self,
-        x: TensorType,
-        y: TensorType,
+        x: torch.Tensor,
+        y: torch.Tensor,
         progress: bool = False,
     ) -> NDArray:
         """
@@ -111,9 +102,9 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
     def grad(
         self,
-        x: TensorType,
-        y: TensorType,
-    ) -> Tuple[NDArray, "torch.Tensor"]:
+        x: torch.Tensor,
+        y: torch.Tensor,
+    ) -> Tuple[NDArray, torch.Tensor]:
         """
         Calculates gradient of model parameters wrt x and y.
         :param x: A np.ndarray [NxD] representing the features x_i.
@@ -137,10 +128,10 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
 
     def mvp(
         self,
-        grad_xy: TensorType,
-        v: TensorType,
+        grad_xy: torch.Tensor,
+        v: torch.Tensor,
         progress: bool = False,
-        backprop_on: Optional["torch.Tensor"] = None,
+        backprop_on: Optional[torch.Tensor] = None,
     ) -> NDArray:
         """
         Calculates second order derivative of the model along directions v.

@@ -1,7 +1,6 @@
 import logging
 import os
 import pickle as pkl
-from collections import namedtuple
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple, Union
 
@@ -16,11 +15,12 @@ from torchvision.models import ResNet18_Weights, resnet18
 
 from pydvl.utils import maybe_progress
 
+from .types import Losses
+
 logger = logging.getLogger(__name__)
 
 from numpy.typing import NDArray
 
-Losses = namedtuple("Losses", "training val")
 MODEL_PATH = Path().resolve().parent / "data" / "models"
 
 
@@ -202,9 +202,9 @@ class TrainingManager:
         """
         if use_cache:
             try:
-                training_loss, validation_loss = self.load()
+                losses = self.load()
                 print("Cached model found, loading...")
-                return training_loss, validation_loss
+                return losses
             except:
                 print(f"No pretrained model found. Training for {n_epochs} epochs:")
 

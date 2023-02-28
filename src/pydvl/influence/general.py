@@ -5,21 +5,11 @@ from enum import Enum
 from typing import Callable
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..utils import maybe_progress
-from .frameworks import TorchTwiceDifferentiable
+from .frameworks import TensorType, TwiceDifferentiable
 from .inversion_methods import InversionMethod, invert_matrix
-from .types import TensorType, TwiceDifferentiable
-
-try:
-    import torch
-    import torch.nn as nn
-
-    _TORCH_INSTALLED = True
-except ImportError:
-    _TORCH_INSTALLED = False
-
-from numpy.typing import NDArray
 
 __all__ = ["compute_influences", "InfluenceType", "calculate_influence_factors"]
 
@@ -47,18 +37,16 @@ def calculate_influence_factors(
     Calculates the influence factors. For more info, see https://arxiv.org/pdf/1703.04730.pdf, paragraph 3.
 
     :param model: A model which has to implement the TwiceDifferentiable interface.
-    :param x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
-    :param y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
-    :param x_test: A np.ndarray of shape [NxK] containing the features of the test set of data points.
-    :param y_test: A np.ndarray of shape [NxL] containing the targets of the test set of data points.
+    :param x_train: A matrix of shape [MxK] containing the features of the input data points.
+    :param y_train: A matrix of shape [MxL] containing the targets of the input data points.
+    :param x_test: A matrix of shape [NxK] containing the features of the test set of data points.
+    :param y_test: A matrix of shape [NxL] containing the targets of the test set of data points.
     :param inversion_func: function to use to invert the product of hvp (hessian vector product) and the gradient
         of the loss (s_test in the paper).
     :param lam: regularization of the hessian
     :param progress: If True, display progress bars.
-    :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
+    :returns: A matrix of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
     """
-    if not _TORCH_INSTALLED:
-        raise RuntimeWarning("This function requires PyTorch.")
     grad_xy, _ = model.grad(x, y)
     hvp = lambda v: model.mvp(grad_xy, v) + lam * v
     n_params = model.num_params()
@@ -137,8 +125,7 @@ influence_type_registry = {
 
 
 def compute_influences(
-    model: "nn.Module",
-    loss: Callable[["torch.Tensor", "torch.Tensor"], "torch.Tensor"],
+    differentiable_model: TwiceDifferentiable,
     x: TensorType,
     y: TensorType,
     x_test: TensorType,
@@ -154,9 +141,7 @@ def compute_influences(
     get the influences over the complete training set. Points with low influence values are (on average)
     less important for model training than points with high influences.
 
-    :param model: A supervised model from a supported framework. Currently, only pytorch nn.Module is supported.
-    :param loss: loss of the model, a callable that, given prediction of the model and real labels, returns a
-        tensor with the loss value.
+    :param differentiable_model: A model wrapped with its loss in TwiceDifferentiable.
     :param x: model input for training
     :param y: input labels
     :param x_test: model input for testing
@@ -173,10 +158,6 @@ def compute_influences(
         M number of train points. If instead influence_type is 'perturbation', output shape is [NxMxP], with P the number of input
         features.
     """
-    if not _TORCH_INSTALLED:
-        raise RuntimeWarning("This function requires PyTorch.")
-
-    differentiable_model = TorchTwiceDifferentiable(model, loss)
 
     influence_factors = calculate_influence_factors(
         differentiable_model,

@@ -22,7 +22,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from pydvl.influence.frameworks import TorchTwiceDifferentiable
+from pydvl.influence.frameworks.torch_differentiable import TorchTwiceDifferentiable
 
 
 class ModelTestSettings:
