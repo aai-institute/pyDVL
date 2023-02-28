@@ -1,12 +1,20 @@
 from abc import ABC
-from typing import Generic, Optional, Tuple, TypeVar
+from typing import Callable, Generic, Optional, Tuple, TypeVar
 
 from numpy.typing import NDArray
 
 TensorType = TypeVar("TensorType")
+ModelType = TypeVar("ModelType")
 
 
-class BaseTwiceDifferentiable(ABC, Generic[TensorType]):
+class BaseTwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
+    def __init__(
+        self,
+        model: ModelType,
+        loss: Callable[[TensorType, TensorType], TensorType],
+    ):
+        pass
+
     def num_params(self) -> int:
         pass
 

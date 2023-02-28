@@ -27,7 +27,7 @@ def flatten_gradient(grad):
     return torch.cat([el.reshape(-1) for el in grad])
 
 
-class TorchTwiceDifferentiable(BaseTwiceDifferentiable[torch.Tensor]):
+class TorchTwiceDifferentiable(BaseTwiceDifferentiable[torch.Tensor, nn.Module]):
     """
     Calculates second-derivative matrix vector products (Mvp) of a pytorch torch.nn.Module
     """
