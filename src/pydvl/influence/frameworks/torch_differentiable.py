@@ -72,7 +72,7 @@ class TorchTwiceDifferentiable(BaseTwiceDifferentiable[torch.Tensor, nn.Module])
         :param y: A np.ndarray [NxK] representing the predicted target values $y_i$.
         :param progress: True, iff progress shall be printed.
         :returns: A np.ndarray [NxP] representing the gradients with respect to
-            all parameters of the model.
+        all parameters of the model.
         """
         x = torch.as_tensor(x).unsqueeze(1)
         y = torch.as_tensor(y)

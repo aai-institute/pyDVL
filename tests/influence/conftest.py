@@ -59,8 +59,7 @@ def linear_derivative_analytical(
     :param linear_model: A tuple of arrays representing the linear model.
     :param x: array, input to the linear model
     :param y: array, output of the linear model
-    :returns: An array where each row holds $[\partial_\theta L(x, y),
-        \partial_{\theta'} L(x, y)]$
+    :returns: An array where each row holds the derivative over $\theta$ of $L(x, y)]$
     """
 
     A, b = linear_model
@@ -87,7 +86,8 @@ def linear_hessian_analytical(
     :param x: array, input to the linear model
     :param y: array, output of the linear model
     :param lam: hessian regularization parameter
-    :returns: An matrix where each entry i,j holds $\partial_{\theta_i} \ \partial_{\theta_j} L(x, y)$
+    :returns: An matrix where each entry i,j holds the second derivatives over $\theta$
+    of $L(x, y)$
     """
     A, b = linear_model
     n, m = tuple(A.shape)
@@ -118,7 +118,8 @@ def linear_mixed_second_derivative_analytical(
     :param linear_model: A tuple of arrays representing the linear model.
     :param x: array, input to the linear model
     :param y: array, output of the linear model
-    :returns: An matrix where each entry i,j holds $\partial_{\theta_i} \ \partial_{x_j} L(x, y)$
+    :returns: An matrix where each entry i,j holds the mixed second derivatives
+    over $\theta$ and $x$ of $L(x, y)$
     """
 
     A, b = linear_model
