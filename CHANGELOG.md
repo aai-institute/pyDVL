@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **Bug fix**: Warn instead of raise an error when `n_iterations`
+- **Bug fix**: Warn instead of raising an error when `n_iterations`
   is less than the size of the dataset in Monte Carlo Least Core
   [PR #281](https://github.com/appliedAI-Initiative/pyDVL/pull/281)
 
