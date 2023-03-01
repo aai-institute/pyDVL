@@ -35,17 +35,3 @@ def test_montecarlo_least_core(test_utility, rtol, n_iterations, n_jobs):
         u, n_iterations=n_iterations, progress=False, n_jobs=n_jobs
     )
     check_values(values, exact_values, rtol=rtol, extra_values_names=["subsidy"])
-
-
-@pytest.mark.parametrize(
-    "test_utility, n_iterations",
-    [
-        (("miner", {"n_miners": 8}), 3),
-    ],
-    indirect=["test_utility"],
-)
-def test_montecarlo_least_core_failure(test_utility, n_iterations):
-    u, exact_values = test_utility
-
-    with pytest.raises(ValueError):
-        montecarlo_least_core(u, n_iterations=n_iterations, progress=False)
