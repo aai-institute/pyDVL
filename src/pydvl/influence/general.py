@@ -37,7 +37,7 @@ def calculate_influence_factors(
     points. Given a test point $z_test = (x_{test}, y_{test})$, a loss
     $L(z_{test}, \theta)$ ($\theta$ being the parameters of the model) and the
     Hessian of the model $H_{\theta}$, influence factors are defined as
-    $s_{test} = H_{\theta}^{-1} \nabla_{\theta} L(z_{test}, \theta)$. They are
+    $s_{test} = H_{\theta}^{-1} \grad_{\theta} L(z_{test}, \theta)$. They are
     used for efficient influence calculation. This method first
     (implicitly) calculates the Hessian and then (explicitly) finds the
     influence factors for the model using the given inversion method. The
@@ -79,7 +79,7 @@ def _calculate_influences_up(
     """
     Given the model, the training points and the influence factors, calculates the
     influences using the upweighting method. More precisely, first it calculates
-    the gradients of the model wrt. each training sample ($\nabla_{\theta} L$,
+    the gradients of the model wrt. each training sample ($\grad_{\theta} L$,
     with $L$ the loss of a single point and $\theta$ the parameters of the
     model) and then multiplies each with the influence factors. For more
     details, refer to section 2.1 of :footcite:t:`koh_understanding_2017`.
@@ -108,10 +108,10 @@ def _calculate_influences_pert(
     """
     Calculates the influence values from the influence factors and the training
     points using the perturbation method. More precisely, for each training sample it
-    calculates $\nabla_{\theta} L$ (with L the loss of the model over the single
+    calculates $\grad_{\theta} L$ (with L the loss of the model over the single
     point and $\theta$ the parameters of the model) and then uses the method
     TwiceDifferentiable.mvp to efficiently calculate the product of the
-    influence factors and $\nabla_x \nabla_{\theta} L$. For more details, refer
+    influence factors and $\grad_x \grad_{\theta} L$. For more details, refer
     to section 2.2 of :footcite:t:`koh_understanding_2017`.
 
     :param model: A model which has to implement the TwiceDifferentiable interface.
