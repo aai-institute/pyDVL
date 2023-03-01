@@ -239,11 +239,11 @@ test_cases = {
     ids=test_cases.keys(),
 )
 def test_influences_nn(
-    nn_architecture: "nn.Module",
+    nn_architecture: nn.Module,
     batch_size: int,
     input_dim: Tuple[int],
     output_dim: int,
-    loss: "nn.modules.loss._Loss",
+    loss: nn.modules.loss._Loss,
     influence_type: InfluenceType,
     hessian_reg: float = 100,
     test_data_len: int = 10,
