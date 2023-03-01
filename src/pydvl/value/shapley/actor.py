@@ -14,6 +14,7 @@ from typing import cast
 import numpy as np
 
 from pydvl.utils.config import ParallelConfig
+from pydvl.utils.parallel import init_parallel_backend
 from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
@@ -42,14 +43,16 @@ def get_shapley_coordinator(
 
 
 def get_shapley_worker(
-    *args, config: ParallelConfig = ParallelConfig(), **kwargs
+    u: Utility, *args, config: ParallelConfig = ParallelConfig(), **kwargs
 ) -> "ShapleyWorker":
+    parallel_backend = init_parallel_backend(config)
+    u_id = parallel_backend.put(u)
     if config.backend == "ray":
         worker = cast(
-            ShapleyWorker, RayActorWrapper(ShapleyWorker, config, *args, **kwargs)
+            ShapleyWorker, RayActorWrapper(ShapleyWorker, config, u_id, *args, **kwargs)
         )
     elif config.backend == "sequential":
-        worker = ShapleyWorker(*args, **kwargs)
+        worker = ShapleyWorker(u_id, *args, **kwargs)
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
     return worker
