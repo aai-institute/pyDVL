@@ -5,6 +5,9 @@
 - Shuffling code around to allow for simpler user imports, some cleanup and
   documentation fixes.
   [PR #284](https://github.com/appliedAI-Initiative/pyDVL/pull/284)
+- **Bug fix**: Warn instead of raising an error when `n_iterations`
+  is less than the size of the dataset in Monte Carlo Least Core
+  [PR #281](https://github.com/appliedAI-Initiative/pyDVL/pull/281)
 
 ## 0.5.0 - 💥 Fixes, nicer interfaces and... more breaking changes 😒
 

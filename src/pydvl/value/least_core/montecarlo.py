@@ -22,46 +22,6 @@ __all__ = [
 ]
 
 
-def _montecarlo_least_core(
-    u: Utility, n_iterations: int, *, progress: bool = False, job_id: int = 1
-) -> LeastCoreProblem:
-    """Computes utility values and the Least Core upper bound matrix for a given number of iterations.
-
-    :param u: Utility object with model, data, and scoring function
-    :param n_iterations: total number of iterations to use
-    :param progress: If True, shows a tqdm progress bar
-    :param job_id: Integer id used to determine the position of the progress bar
-    :return:
-    """
-    n = len(u.data)
-
-    utility_values = np.zeros(n_iterations)
-
-    # Randomly sample subsets of full dataset
-    power_set = random_powerset(u.data.indices, n_samples=n_iterations)
-
-    A_lb = np.zeros((n_iterations, n))
-
-    for i, subset in enumerate(
-        maybe_progress(power_set, progress, total=n_iterations, position=job_id)
-    ):
-        indices = np.zeros(n, dtype=bool)
-        indices[list(subset)] = True
-        A_lb[i, indices] = 1
-        utility_values[i] = u(subset)
-
-    return LeastCoreProblem(utility_values, A_lb)
-
-
-def _reduce_func(results: Iterable[LeastCoreProblem]) -> LeastCoreProblem:
-    """Combines the results from different parallel runs of
-    :func:`_montecarlo_least_core`"""
-    utility_values_list, A_lb_list = zip(*results)
-    utility_values = np.concatenate(utility_values_list)
-    A_lb = np.concatenate(A_lb_list)
-    return LeastCoreProblem(utility_values, A_lb)
-
-
 def montecarlo_least_core(
     u: Utility,
     n_iterations: int,
@@ -125,8 +85,10 @@ def mclc_prepare_problem(
     n = len(u.data)
 
     if n_iterations < n:
-        raise ValueError(
-            "Number of iterations should be greater than the size of the dataset"
+        warnings.warn(
+            f"Number of iterations '{n_iterations}' is smaller the size of the dataset '{n}'. "
+            f"This is not optimal because in the worst case we need at least '{n}' constraints "
+            "to satisfy the individual rationality condition."
         )
 
     if n_iterations > 2**n:
@@ -149,3 +111,43 @@ def mclc_prepare_problem(
     )
 
     return map_reduce_job()
+
+
+def _montecarlo_least_core(
+    u: Utility, n_iterations: int, *, progress: bool = False, job_id: int = 1
+) -> LeastCoreProblem:
+    """Computes utility values and the Least Core upper bound matrix for a given number of iterations.
+
+    :param u: Utility object with model, data, and scoring function
+    :param n_iterations: total number of iterations to use
+    :param progress: If True, shows a tqdm progress bar
+    :param job_id: Integer id used to determine the position of the progress bar
+    :return:
+    """
+    n = len(u.data)
+
+    utility_values = np.zeros(n_iterations)
+
+    # Randomly sample subsets of full dataset
+    power_set = random_powerset(u.data.indices, n_samples=n_iterations)
+
+    A_lb = np.zeros((n_iterations, n))
+
+    for i, subset in enumerate(
+        maybe_progress(power_set, progress, total=n_iterations, position=job_id)
+    ):
+        indices = np.zeros(n, dtype=bool)
+        indices[list(subset)] = True
+        A_lb[i, indices] = 1
+        utility_values[i] = u(subset)
+
+    return LeastCoreProblem(utility_values, A_lb)
+
+
+def _reduce_func(results: Iterable[LeastCoreProblem]) -> LeastCoreProblem:
+    """Combines the results from different parallel runs of
+    :func:`_montecarlo_least_core`"""
+    utility_values_list, A_lb_list = zip(*results)
+    utility_values = np.concatenate(utility_values_list)
+    A_lb = np.concatenate(A_lb_list)
+    return LeastCoreProblem(utility_values, A_lb)
