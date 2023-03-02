@@ -4,7 +4,7 @@ from time import sleep
 
 import numpy as np
 
-from pydvl.utils import ParallelConfig, Utility, init_parallel_backend, running_moments
+from pydvl.utils import ParallelConfig, Utility, running_moments
 from pydvl.value import ValuationResult
 from pydvl.value.stopping import StoppingCriterion
 
@@ -216,15 +216,11 @@ def truncated_montecarlo_shapley(
             "the Sequential parallel backend."
         )
 
-    parallel_backend = init_parallel_backend(config)
-    n_jobs = parallel_backend.effective_n_jobs(n_jobs)
-    u_id = parallel_backend.put(u)
-
     coordinator = get_shapley_coordinator(config=config, done=done)  # type: ignore
 
     workers = [
         get_shapley_worker(  # type: ignore
-            u=u_id,
+            u,
             coordinator=coordinator,
             truncation=truncation,
             worker_id=worker_id,
