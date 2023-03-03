@@ -82,7 +82,9 @@ def _permutation_montecarlo_shapley(
     :param job_id: id to use for reporting progress (e.g. to place progres bars)
     :return: An object with the results
     """
-    result = ValuationResult.empty(algorithm=algorithm_name, indices=u.data.indices)
+    result = ValuationResult.empty(
+        algorithm=algorithm_name, indices=u.data.indices, data_names=u.data.data_names
+    )
 
     pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
     while not done(result):
@@ -178,7 +180,9 @@ def _combinatorial_montecarlo_shapley(
     # additional factor n corresponds to the one in the Shapley definition
     correction = 2 ** (n - 1) / n
     result = ValuationResult.empty(
-        algorithm="combinatorial_montecarlo_shapley", indices=indices
+        algorithm="combinatorial_montecarlo_shapley",
+        indices=indices,
+        data_names=u.data.data_names,
     )
 
     repeat_indices = takewhile(lambda _: not done(result), cycle(indices))

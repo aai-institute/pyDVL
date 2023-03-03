@@ -222,6 +222,8 @@ class ValuationResult(collections.abc.Sequence):
         if data_names is None:
             data_names = [str(i) for i in range(len(self._values))]
         self._names = np.array(data_names, dtype=np.str_)
+        if len(np.unique(self._names)) != len(self._names):
+            raise ValueError("Data names must be unique")
 
         if indices is None:
             indices = np.arange(len(self._values), dtype=np.int_)
@@ -428,6 +430,7 @@ class ValuationResult(collections.abc.Sequence):
             f"status='{self._status.value}',"
             f"values={np.array_str(self.values, precision=4, suppress_small=True)},"
             f"indices={np.array_str(self.indices)},"
+            f"names={np.array_str(self.names)},"
             f"counts={np.array_str(self.counts)},"
         )
         for k, v in self._extra_values.items():
@@ -498,12 +501,12 @@ class ValuationResult(collections.abc.Sequence):
         # Sample variance of n+m samples from two sample variances of n and m samples
         vnm = (n * (vn + xn**2) + m * (vm + xm**2)) / (n + m) - xnm**2
 
-        this_names = np.empty_like(indices, dtype=np.str_)
-        other_names = np.empty_like(indices, dtype=np.str_)
+        this_names = np.empty_like(indices, dtype=object)
+        other_names = np.empty_like(indices, dtype=object)
         this_names[this_pos] = self._names
         other_names[other_pos] = other._names
-        names = np.where(n > 0, this_names, other_names)
-        both = np.where((n > 0) & (m > 0))
+        names = np.where(this_names, this_names, other_names)
+        both = np.where((this_names != None) & (other_names != None))
         if np.any(other_names[both] != this_names[both]):
             raise ValueError(f"Mismatching names in ValuationResults")
 
@@ -543,7 +546,13 @@ class ValuationResult(collections.abc.Sequence):
         val, var = running_moments(
             self._values[pos], self._variances[pos], self._counts[pos], new_value
         )
-        self[pos] = ValueItem(idx, self._names[pos], val, var, self._counts[pos] + 1)
+        self[pos] = ValueItem(
+            index=idx,
+            name=self._names[pos],
+            value=val,
+            variance=var,
+            count=self._counts[pos] + 1,
+        )
         return self
 
     def get(self, idx: Integral) -> ValueItem:
@@ -608,6 +617,7 @@ class ValuationResult(collections.abc.Sequence):
         cls,
         algorithm: str = "",
         indices: Optional[Union[Sequence[int], NDArray[np.int_]]] = None,
+        data_names: Optional[Union[Sequence[str], NDArray[np.str_]]] = None,
         n_samples: int = 0,
     ) -> "ValuationResult":
         """Creates an empty :class:`ValuationResult` object.
@@ -618,6 +628,8 @@ class ValuationResult(collections.abc.Sequence):
         :param algorithm: Name of the algorithm used to compute the values
         :param indices: Data indices to use. A copy will be made. If not given,
             the indices will be set to the range ``[0, n_samples)``.
+        :param data_names: Data names to use. A copy will be made. If not given,
+            the names will be set to the string representation of the indices.
         :param n_samples: Number of data points whose values are computed. If
             not given, the length of ``indices`` will be used.
         :return: An instance of :class:`ValuationResult`
@@ -630,6 +642,9 @@ class ValuationResult(collections.abc.Sequence):
             algorithm=algorithm,
             status=Status.Pending,
             indices=indices,
+            data_names=data_names
+            if data_names is not None
+            else indices.astype(np.str_),
             values=np.zeros(len(indices)),
             variances=np.zeros(len(indices)),
             counts=np.zeros(len(indices), dtype=np.int_),
