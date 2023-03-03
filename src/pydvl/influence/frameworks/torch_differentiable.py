@@ -5,14 +5,19 @@ import logging
 from typing import Callable, Optional, Tuple
 
 import numpy as np
-import torch
-import torch.nn as nn
 from numpy.typing import NDArray
-from torch import autograd
-from torch.autograd import Variable
 
 from ...utils import maybe_progress
-from .base_twice_differentiable import BaseTwiceDifferentiable
+from .twice_differentiable import TwiceDifferentiable
+
+try:
+    import torch
+    import torch.nn as nn
+    from torch import autograd
+    from torch.autograd import Variable
+
+except ImportError:
+    pass
 
 __all__ = [
     "TorchTwiceDifferentiable",
@@ -27,7 +32,7 @@ def flatten_gradient(grad):
     return torch.cat([el.reshape(-1) for el in grad])
 
 
-class TorchTwiceDifferentiable(BaseTwiceDifferentiable[torch.Tensor, nn.Module]):
+class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
     """
     Calculates second-derivative matrix vector products (Mvp) of a pytorch torch.nn.Module
     """

@@ -7,7 +7,7 @@ TensorType = TypeVar("TensorType")
 ModelType = TypeVar("ModelType")
 
 
-class BaseTwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
+class TwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
     def __init__(
         self,
         model: ModelType,
@@ -19,7 +19,10 @@ class BaseTwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
         pass
 
     def split_grad(
-        self, x: TensorType, y: TensorType, progress: bool = False
+        self,
+        x: TensorType,
+        y: TensorType,
+        progress: bool = False,
     ) -> NDArray:
         """
         Calculate the gradient of the model wrt each input x and labels y.
