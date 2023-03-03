@@ -54,7 +54,7 @@ def invert_matrix(
         i.e. it returns $x$ such that $Ax = b$
     """
     if inversion_method == InversionMethod.Direct:
-        return (np.linalg.inv(mvp(np.eye(mvp_dimensions[1]))) @ b.T).T
+        return (np.linalg.inv(mvp(np.eye(mvp_dimensions[1]))) @ b.T).T  # type: ignore
     elif inversion_method == InversionMethod.Cg:
         return conjugate_gradient(
             LinearOperator(mvp_dimensions, matvec=mvp), b, progress

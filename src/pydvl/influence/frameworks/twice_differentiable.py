@@ -1,9 +1,9 @@
 from abc import ABC
-from typing import Callable, Generic, Optional, Tuple, TypeVar
+from typing import Callable, Generic, Optional, Sequence, Tuple, TypeVar
 
 from numpy.typing import NDArray
 
-TensorType = TypeVar("TensorType")
+TensorType = TypeVar("TensorType", bound=Sequence)
 ModelType = TypeVar("ModelType")
 
 
