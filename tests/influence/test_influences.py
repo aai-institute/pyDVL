@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from numpy.typing import NDArray
 from torch import nn
 
-from pydvl.influence import TwiceDifferentiable, compute_influences
+from pydvl.influence import TorchTwiceDifferentiable, compute_influences
 from pydvl.influence.general import InfluenceType, InversionMethod
 
 from .conftest import (
@@ -144,7 +144,7 @@ def test_influence_linear_model(
     )
 
     direct_influences = compute_influences(
-        TwiceDifferentiable(linear_layer, loss),
+        TorchTwiceDifferentiable(linear_layer, loss),
         *train_data,
         *test_data,
         progress=True,
@@ -154,7 +154,7 @@ def test_influence_linear_model(
     )
 
     cg_influences = compute_influences(
-        TwiceDifferentiable(linear_layer, loss),
+        TorchTwiceDifferentiable(linear_layer, loss),
         *train_data,
         *test_data,
         progress=True,
@@ -257,7 +257,7 @@ def test_influences_nn(
     multiple_influences = []
     for inversion_method in InversionMethod:
         influences = compute_influences(
-            TwiceDifferentiable(nn_architecture, loss),
+            TorchTwiceDifferentiable(nn_architecture, loss),
             x_train,
             y_train,
             x_test,
