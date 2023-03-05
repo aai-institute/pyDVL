@@ -18,16 +18,7 @@ logger = logging.getLogger(__name__)
     ],
     indirect=["test_utility"],
 )
-@pytest.mark.parametrize(
-    "n_jobs",
-    [
-        1,
-        4,
-        pytest.param(
-            -1, marks=pytest.mark.skip("Skipping n_jobs=-1 until it is fixed")
-        ),
-    ],
-)
+@pytest.mark.parametrize("n_jobs", [1, 4, -1])
 def test_montecarlo_least_core(test_utility, rtol, n_iterations, n_jobs):
     u, exact_values = test_utility
 
