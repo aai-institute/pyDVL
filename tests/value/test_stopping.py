@@ -3,10 +3,12 @@ from time import sleep
 
 import numpy as np
 import pytest
+from scipy.stats import norm
 
 from pydvl.utils import Status
 from pydvl.value import ValuationResult
 from pydvl.value.stopping import (
+    ConfidenceIntervalSeparation,
     HistoryDeviation,
     MaxChecks,
     MaxTime,
@@ -182,6 +184,46 @@ def test_standard_error():
     for _ in range(10):
         v.update(0, 1)
     assert done(v)
+
+
+def test_confidence_interval_separation():
+    """Test the ConfidenceIntervalSeparation criterion"""
+
+    alpha = 0.05
+    values_range = 1
+    n = 5
+
+    done = ConfidenceIntervalSeparation(alpha=alpha, values_range=values_range)
+
+    # Trivial case: no variance.
+    v = ValuationResult(values=np.ones(n), variances=np.zeros(n))
+    assert done(v)
+
+    # Reduce the variance until the criterion is triggered.
+    v = ValuationResult(values=np.ones(n), variances=np.ones(n))
+    assert not done(v)
+
+    # One value is being left out
+    for _ in range(20):
+        for idx in range(1, n):
+            v.update(idx, 1)
+    assert not done(v)
+
+    # Update the final value
+    for _ in range(20):
+        v.update(0, 1)
+    assert done(v)
+
+    # Check that the bound is correct
+    v = ValuationResult(values=np.ones(n), variances=np.ones(n))
+    while not done(v):
+        for idx in range(n):
+            v.update(idx, 1)
+
+    true_alpha = 1 - (1 - alpha) ** (1 / n)
+    zeta = norm.ppf(1 - true_alpha / 2)
+    bound = values_range / (2 * (n - 1) * zeta)
+    assert np.allclose(v.stderr, 0, atol=bound)
 
 
 def test_max_checks():
