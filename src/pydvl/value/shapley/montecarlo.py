@@ -51,10 +51,7 @@ from pydvl.value.stopping import StoppingCriterion
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "permutation_montecarlo_shapley",
-    "combinatorial_montecarlo_shapley",
-]
+__all__ = ["permutation_montecarlo_shapley", "combinatorial_montecarlo_shapley"]
 
 
 def _permutation_montecarlo_shapley(
@@ -165,6 +162,7 @@ def _combinatorial_montecarlo_shapley(
     This is the code that is sent to workers to compute values using the
     combinatorial definition.
 
+    :param indices: Indices of the samples to compute values for.
     :param u: Utility object with model, data, and scoring function
     :param done: Check on the results which decides when to stop sampling
         subsets for an index.
@@ -182,7 +180,7 @@ def _combinatorial_montecarlo_shapley(
     result = ValuationResult.empty(
         algorithm="combinatorial_montecarlo_shapley",
         indices=indices,
-        data_names=u.data.data_names,
+        data_names=[u.data.data_names[i] for i in indices],
     )
 
     repeat_indices = takewhile(lambda _: not done(result), cycle(indices))
