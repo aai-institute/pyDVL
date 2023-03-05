@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fixed problem with `StandardError` stopping criterion and added new adhoc
+  criterion based on normal confidence intervals `ConfidenceIntervalSeparation`.
+  [PR #300](https://github.com/appliedAI-Initiative/pyDVL/pull/300)
 - Shuffling code around to allow for simpler user imports, some cleanup and
   documentation fixes.
   [PR #284](https://github.com/appliedAI-Initiative/pyDVL/pull/284)
