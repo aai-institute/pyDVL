@@ -224,6 +224,72 @@ class StandardError(RelativeStandardError):
     pass
 
 
+class ConfidenceIntervalSeparation(StoppingCriterion):
+    r"""Terminates if normal confidence intervals around maximally separated
+    values do not overlap.
+
+    .. note::
+       This is a very ad-hoc way of picking a constant threshold for the
+       standard errors of values, and as such, YMMV. For a threshold relative to
+       the magnitude of the values, use :class:`RelativeStandardError`.
+
+    Imagine that the $n$ values are distributed uniformly across the range $r$.
+    The maximal separation between two values is $r / (n - 1)$. Place normal
+    confidence intervals of level $\tilde{\alpha}$ around a value $v_{i}$:
+
+    $$C_{i} := (v_{i} - z_{\tilde{\alpha} / 2}  \hat{s}_{i}, v_{i} + z_{\tilde{\alpha} / 2}  \hat{s}_{i}),$$
+
+    where $\hat{s}_{i}$ is the estimate of the standard error for value
+    $v_{i}$ and $z_{\tilde{\alpha} / 2}$ is the $1 - \tilde{\alpha} / 2$
+    quantile of the standard normal distribution (i.e. $\approx 1.96$ for level
+    0.95). For a fixed level $\tilde{\alpha}$, these intervals do not overlap
+    iff $\hat{s}_{i} < \frac{r}{2 (n - 1) z_{\alpha / 2}}$.
+
+    Now, because there are $n$ (independent) confidence intervals, we apply a
+    simple Bonferroni-type correction: the probability that _all_ $n$ contain
+    their respective values simultaneously is $\mathbb{P} (v_{i} \in C_{i},
+    \forall i) = (1 - \tilde{\alpha})^n$, and we want this to be equal to $1 -
+    \alpha$ for a given $\alpha$. Therefore we must pick $\alpha = 1-(1 -
+    \tilde{\alpha})^{1 / n}$.
+
+    The criterion returns :attr:`~pydvl.utils.status.Status.Converged` if $s_{i}
+    < \frac{r}{2 (n - 1) z_{\alpha / 2}}$ for all $i$, where $\alpha = 1 -
+    (1 - \tilde{\alpha})^{1 / \lceil \rho n \rceil}$, and $\rho \in (0, 1]$ is
+    the fraction of values that must fulfill the criterion.
+
+    :param alpha: The overall level of confidence desired.
+    :param values_range: The maximum possible difference between two values.
+        Because this is unknown, a good rule of thumb is twice the total utility.
+    :param fraction: The fraction of values that must have converged for the
+        criterion to return :attr:`~pydvl.utils.status.Status.Converged`.
+    """
+
+    def __init__(
+        self,
+        alpha: float,
+        values_range: float,
+        fraction: float = 1.0,
+        modify_result: bool = True,
+    ):
+        super().__init__(modify_result=modify_result)
+        self.level = lambda n: 1 - (1 - alpha) ** (1 / n)
+        self.range = values_range
+        self.fraction = fraction
+
+    def _check(self, result: ValuationResult) -> Status:
+        n = np.ceil(self.fraction * result.values.size)
+        bound = self.range / (2 * (n - 1) * norm.ppf(1 - self.level(n) / 2))
+        self._converged = np.abs(result.stderr) < bound
+        if np.mean(self._converged) >= self.fraction:
+            return Status.Converged
+        return Status.Pending
+
+    def completion(self) -> float:
+        if self._converged.size == 0:
+            return 0.0
+        return np.mean(self._converged).item()
+
+
 class MaxChecks(StoppingCriterion):
     """Terminate as soon as the number of checks exceeds the threshold.
 
