@@ -177,12 +177,12 @@ def make_criterion(
 
 
 class RelativeStandardError(StoppingCriterion):
-    """Compute a ratio of standard errors to values to determine convergence.
+    r"""Compute a ratio of standard errors to values to determine convergence.
 
     If $s_i$ is the standard error for datum $i$ and $v_i$ its value, then this
     criterion returns :attr:`~pydvl.utils.status.Status.Converged` if
-    $|s_i| < \\epsilon |v_i|$ for all $i$ and a threshold value
-    $\\epsilon \\gt 0$.
+    $ | s_i | < \epsilon | v_i | $ for all $i$ and a threshold value
+    $\epsilon \gt 0$.
 
     .. warning::
        Because the test is relative to the magnitude of the value, this criterion
