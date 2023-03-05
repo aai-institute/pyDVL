@@ -9,7 +9,7 @@ from pydvl.utils import powerset, random_powerset
 T = TypeVar("T", bound=np.generic)
 
 
-class Sampler(Generic[T]):
+class PowersetSampler(Generic[T]):
     """Samplers iterate over subsets.
 
     For each element in the whole set, the complementary set is considered, and
@@ -73,15 +73,15 @@ class Sampler(Generic[T]):
         FIXME: this is probably not very useful, but I couldn't decide
           which method is better
         """
-        if self._index_iteration is Sampler.IndexIteration.Sequential:
+        if self._index_iteration is PowersetSampler.IndexIteration.Sequential:
             for idx in self._indices:
                 yield idx
-        elif self._index_iteration is Sampler.IndexIteration.Random:
+        elif self._index_iteration is PowersetSampler.IndexIteration.Random:
             while True:
                 yield np.random.choice(self._indices, size=1).item()
 
 
-class DeterministicSampler(Sampler[T]):
+class DeterministicSampler(PowersetSampler[T]):
     def __init__(self, indices: NDArray[T]):
         """Uniform deterministic sampling of subsets.
 
@@ -90,7 +90,7 @@ class DeterministicSampler(Sampler[T]):
 
         :param indices: The set of items (indices) to sample from.
         """
-        super().__init__(indices, Sampler.IndexIteration.Sequential)
+        super().__init__(indices, PowersetSampler.IndexIteration.Sequential)
 
     def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
         for idx in self.indices():
@@ -103,7 +103,7 @@ class DeterministicSampler(Sampler[T]):
         return 1.0
 
 
-class UniformSampler(Sampler[T]):
+class UniformSampler(PowersetSampler[T]):
     def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
         while True:
             for idx in self.indices():
@@ -118,7 +118,7 @@ class UniformSampler(Sampler[T]):
         return float(2 ** (self._n - 1) / self._n) if self._n > 0 else 1.0
 
 
-class AntitheticSampler(Sampler[T]):
+class AntitheticSampler(PowersetSampler[T]):
     def complement(self, exclude: Sequence[T], *args, **kwargs) -> NDArray[T]:
         """
 
@@ -144,7 +144,7 @@ class AntitheticSampler(Sampler[T]):
         return 2 ** (self._n - 1) / self._n
 
 
-class PermutationSampler(Sampler[T]):
+class PermutationSampler(PowersetSampler[T]):
     """Sample permutations of indices and iterate through each returning sets,
     as required for the permutation definition of Shapley value.
 
@@ -164,7 +164,7 @@ class PermutationSampler(Sampler[T]):
         return 1.0
 
 
-class HierarchicalSampler(Sampler[T]):
+class HierarchicalSampler(PowersetSampler[T]):
     """Sample a set size, then a set of that size.
 
     .. todo::
@@ -185,7 +185,7 @@ class HierarchicalSampler(Sampler[T]):
         return 2 ** (self._n - 1) / self._n
 
 
-class OwenSampler(Sampler[T]):
+class OwenSampler(PowersetSampler[T]):
     class Algorithm(Enum):
         Standard = "standard"
         Antithetic = "antithetic"

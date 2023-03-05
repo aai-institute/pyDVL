@@ -28,7 +28,12 @@ from tqdm import tqdm
 
 from pydvl.utils import Utility
 from pydvl.value import ValuationResult
-from pydvl.value.sampler import OwenSampler, PermutationSampler, Sampler, UniformSampler
+from pydvl.value.sampler import (
+    OwenSampler,
+    PermutationSampler,
+    PowersetSampler,
+    UniformSampler,
+)
 from pydvl.value.stopping import StoppingCriterion, StoppingCriterionCallable
 
 
@@ -52,7 +57,7 @@ class SemiValue(Protocol):
 
 def _semivalues(
     u: Utility,
-    sampler: Sampler,
+    sampler: PowersetSampler,
     coefficient: SVCoefficient,
     done: StoppingCriterion,
     *,
