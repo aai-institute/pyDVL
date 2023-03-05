@@ -43,6 +43,7 @@ from pydvl.value import ValuationResult
 
 __all__ = [
     "make_criterion",
+    "ConfidenceIntervalSeparation",
     "StoppingCriterion",
     "StandardError",
     "RelativeStandardError",
@@ -181,7 +182,7 @@ class RelativeStandardError(StoppingCriterion):
 
     If $s_i$ is the standard error for datum $i$ and $v_i$ its value, then this
     criterion returns :attr:`~pydvl.utils.status.Status.Converged` if
-    $ | s_i | < \epsilon | v_i | $ for all $i$ and a threshold value
+    $| s_i | < \epsilon | v_i | $ for all $i$ and a threshold value
     $\epsilon \gt 0$.
 
     .. warning::
