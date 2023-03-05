@@ -241,6 +241,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../pydvl/value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
@@ -563,8 +564,18 @@ div.rendered_html tbody tr:hover {
     .nboutput .prompt {
         display: none;
     }
+    @media not print {
+        [data-theme='dark'] .output_area img {
+            filter: invert(0.9);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .output_area img {
+                filter: invert(0.9);
+            }
+        }
+    }
 </style><section id="Shapley-for-data-valuation">
-<h1>Shapley for data valuation<a class="headerlink" href="#Shapley-for-data-valuation" title="Permalink to this heading"></a></h1>
+<h1>Shapley for data valuation<a class="headerlink" href="#Shapley-for-data-valuation" title="Permalink to this heading">#</a></h1>
 <p>This notebook introduces Shapley methods for the computation of data value using pyDVL.</p>
 <p>In order to illustrate the practical advantages, we will predict the popularity of songs in the dataset <a class="reference external" href="https://www.kaggle.com/datasets/paradisejoy/top-hits-spotify-from-20002019">Top Hits Spotify from 2000-2019</a>, and highlight how data valuation can help investigate and boost the performance of the models. In doing so, we will describe the basic usage patterns of pyDVL.</p>
 <p>Recall that data value is a function of three things:</p>
@@ -575,31 +586,25 @@ div.rendered_html tbody tr:hover {
 </ol>
 <p>Below we will describe how to instantiate each one of these objects and how to use them for data valuation. Please also see the <a class="reference internal" href="../30-data-valuation.html"><span class="doc">documentation on data valuation</span></a>.</p>
 <section id="Setup">
-<h2>Setup<a class="headerlink" href="#Setup" title="Permalink to this heading"></a></h2>
+<h2>Setup<a class="headerlink" href="#Setup" title="Permalink to this heading">#</a></h2>
 <p>We begin by importing the main libraries and setting some defaults.</p>
 <div class="admonition note">
 <p>If you are reading this in the documentation, some boilerplate has been omitted for convenience.</p>
 </div>
-<p>We will be using the following functions from pyDVL. The main entry point is the function <a class="reference internal" href="../pydvl/value/shapley.html#pydvl.value.shapley.compute_shapley_values"><span class="std std-ref">compute_shapley_values()</span></a>, which provides a facade to all Shapley methods. In order to use it we need the classes <a class="reference internal" href="../pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset"><span class="std std-ref">Dataset</span></a> and <a class="reference internal" href="../pydvl/utils/utility.html#pydvl.utils.utility.Utility"><span class="std std-ref">Utility</span></a>.</p>
+<p>We will be using the following functions from pyDVL. The main entry point is the function <a class="reference internal" href="../pydvl/value/shapley/common.html#pydvl.value.shapley.common.compute_shapley_values"><span class="std std-ref">compute_shapley_values()</span></a>, which provides a facade to all Shapley methods. In order to use it we need the classes <a class="reference internal" href="../pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset"><span class="std std-ref">Dataset</span></a>, <a class="reference internal" href="../pydvl/utils/utility.html#pydvl.utils.utility.Utility"><span class="std std-ref">Utility</span></a> and <a class="reference internal" href="../pydvl/utils/score.html#pydvl.utils.score.Scorer"><span class="std std-ref">Scorer</span></a>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.reporting.plots</span> <span class="kn">import</span> <span class="n">plot_shapley</span>
-<span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">load_spotify_dataset</span><span class="p">,</span>
-    <span class="n">Dataset</span><span class="p">,</span>
-    <span class="n">GroupedDataset</span><span class="p">,</span>
-    <span class="n">Utility</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">pydvl.utils.parallel.backend</span> <span class="kn">import</span> <span class="n">available_cpus</span>
-<span class="kn">from</span> <span class="nn">pydvl.value.shapley</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
+<span class="kn">from</span> <span class="nn">pydvl.utils.dataset</span> <span class="kn">import</span> <span class="n">GroupedDataset</span><span class="p">,</span> <span class="n">load_spotify_dataset</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="Loading-and-grouping-the-dataset">
-<h2>Loading and grouping the dataset<a class="headerlink" href="#Loading-and-grouping-the-dataset" title="Permalink to this heading"></a></h2>
+<h2>Loading and grouping the dataset<a class="headerlink" href="#Loading-and-grouping-the-dataset" title="Permalink to this heading">#</a></h2>
 <p>pyDVL provides a convenience function <a class="reference internal" href="../pydvl/utils/dataset.html#pydvl.utils.dataset.load_spotify_dataset"><span class="std std-ref">load_spotify_dataset()</span></a> which downloads data on songs published after 2014, and splits 30% of data for testing, and 30% of the remaining data for validation. The return value is a triple of training, validation and test data as lists of the form <code class="docutils literal notranslate"><span class="pre">[X_input,</span> <span class="pre">Y_label]</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -802,43 +807,48 @@ grouping of data to calculate group Shapley values instead of single data points
 </div>
 </section>
 <section id="Creating-the-utility-and-computing-values">
-<h2>Creating the utility and computing values<a class="headerlink" href="#Creating-the-utility-and-computing-values" title="Permalink to this heading"></a></h2>
+<h2>Creating the utility and computing values<a class="headerlink" href="#Creating-the-utility-and-computing-values" title="Permalink to this heading">#</a></h2>
 <p>Now we can calculate the contribution of each group to the model performance.</p>
 <p>As a model, we use scikit-learn’s <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html">GradientBoostingRegressor</a>, but pyDVL can work with any model from sklearn, xgboost or lightgbm. More precisely, any model that implements the protocol <a class="reference internal" href="../pydvl/utils/types.html#pydvl.utils.types.SupervisedModel"><span class="std std-ref">pydvl.utils.types.SupervisedModel</span></a>, which is just the standard sklearn interface of <code class="docutils literal notranslate"><span class="pre">fit()</span></code>,<code class="docutils literal notranslate"><span class="pre">predict()</span></code> and <code class="docutils literal notranslate"><span class="pre">score()</span></code> can be used to
 construct the utility.</p>
 <p>The third and final component is the scoring function. It can be anything like accuracy or <span class="math notranslate nohighlight">\(R^2\)</span>, and is set with a string from the <a class="reference external" href="https://scikit-learn.org/stable/modules/model_evaluation.html">standard sklearn scoring methods</a>. Please refer to that documentation on information on how to define your own scoring function.</p>
 <p>We group dataset, model and scoring function into an instance of <a class="reference internal" href="../pydvl/utils/utility.html#pydvl.utils.utility.Utility"><span class="std std-ref">Utility</span></a>.</p>
-<div class="admonition note">
-<p>If you plan to use the cache (<code class="docutils literal notranslate"><span class="pre">enable_cache</span> <span class="pre">=</span> <span class="pre">True</span></code>), make sure to restart (or simply start if it is not already running) the caching server. See the documentation on <a class="reference internal" href="../20-install.html#setting-up-the-cache"><span class="std std-ref">setting up caching</span></a> for details.</p>
-</div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">GradientBoostingRegressor</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
     <span class="n">data</span><span class="o">=</span><span class="n">grouped_dataset</span><span class="p">,</span>
-    <span class="n">scoring</span><span class="o">=</span><span class="s2">&quot;neg_mean_absolute_error&quot;</span><span class="p">,</span>
+    <span class="n">scorer</span><span class="o">=</span><span class="n">Scorer</span><span class="p">(</span><span class="s2">&quot;neg_mean_absolute_error&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span>
     <span class="n">enable_cache</span><span class="o">=</span><span class="n">enable_cache</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">dvl_df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
-    <span class="n">utility</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">available_cpus</span><span class="p">(),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;truncated_montecarlo&quot;</span>
-<span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;data_value&quot;</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
+    <span class="n">utility</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="n">ShapleyMode</span><span class="o">.</span><span class="n">TruncatedMontecarlo</span><span class="p">,</span>
+    <span class="n">done</span><span class="o">=</span><span class="n">StandardErrorRatio</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span> <span class="o">|</span> <span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">200</span><span class="p">),</span>
+    <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">worker_update_period</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">coordinator_update_period</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">values</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;data_value&quot;</span><span class="p">,</span> <span class="n">use_names</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<p>The function <a class="reference internal" href="../pydvl/value/shapley.html#pydvl.value.shapley.compute_shapley_values"><span class="std std-ref">compute_shapley_values()</span></a> serves as a common access point to all Shapley methods.</p>
+<p>The function <a class="reference internal" href="../pydvl/value/shapley/common.html#pydvl.value.shapley.common.compute_shapley_values"><span class="std std-ref">compute_shapley_values()</span></a> serves as a common access point to all Shapley methods. For several of them, we choose a <code class="docutils literal notranslate"><span class="pre">StoppingCriterion</span></code> with the argument <code class="docutils literal notranslate"><span class="pre">done=</span></code>. In this case we choose to stop when the ratio of standard error to value is below 0.3 for at least 90% of the training points, or if the number of updates of any index exceeds 200. The <code class="docutils literal notranslate"><span class="pre">mode</span></code> argument specifies the Shapley method
+to use. In this case, we use the <a class="reference internal" href="../pydvl/value/shapley/truncated.html#pydvl.value.shapley.truncated.truncated_montecarlo_shapley"><span class="std std-ref">Truncated Monte Carlo approximation</span></a>, which is the fastest of the Monte Carlo methods.</p>
 <p>Let’s take a look at the returned dataframe:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dvl_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -861,46 +871,46 @@ construct the utility.</p>
     <tr style="text-align: right;">
       <th></th>
       <th>data_value</th>
-      <th>data_value_std</th>
+      <th>data_value_stderr</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>Kendrick Lamar</th>
-      <td>-1.533921</td>
-      <td>0.229574</td>
-    </tr>
-    <tr>
-      <th>Maroon 5</th>
-      <td>-1.447347</td>
-      <td>0.301023</td>
-    </tr>
-    <tr>
-      <th>BLACKPINK</th>
-      <td>-1.437098</td>
-      <td>0.301758</td>
+      <th>5 Seconds of Summer</th>
+      <td>-1.583986</td>
+      <td>0.175742</td>
     </tr>
     <tr>
       <th>Little Mix</th>
-      <td>-1.376034</td>
-      <td>0.307337</td>
+      <td>-1.378706</td>
+      <td>0.064739</td>
     </tr>
     <tr>
-      <th>Liam Payne</th>
-      <td>-1.342012</td>
-      <td>0.290655</td>
+      <th>CNCO</th>
+      <td>-1.371991</td>
+      <td>0.098652</td>
+    </tr>
+    <tr>
+      <th>Astrid S</th>
+      <td>-1.323620</td>
+      <td>0.131028</td>
+    </tr>
+    <tr>
+      <th>AlunaGeorge</th>
+      <td>-1.309662</td>
+      <td>0.086501</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-<p>The first thing to notice is that the results are sorted in ascending order of Shapley values. The index holds the labels for each data group: in this case, artist names. The column <code class="docutils literal notranslate"><span class="pre">data_value</span></code> is just that: the Shapley Data value, and <code class="docutils literal notranslate"><span class="pre">data_value_std</span></code> is its estimated standard error because we are using a Monte Carlo approximation.</p>
+<p>The first thing to notice is that we sorted the results in ascending order of Shapley value. The index holds the labels for each data group: in this case, artist names. The column <code class="docutils literal notranslate"><span class="pre">data_value</span></code> is just that: the Shapley Data value, and <code class="docutils literal notranslate"><span class="pre">data_value_stderr</span></code> is its estimated standard error because we are using a Monte Carlo approximation.</p>
 <p>Let us plot the results. In the next cell we will take the 30 artists with the lowest score and plot their values with (approximate) error bars. Keep in mind that Monte Carlo Shapley is typically very noisy, so it may take several steps to arrive at a clean estimate.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span>
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
 <span class="n">plot_shapley</span><span class="p">(</span>
     <span class="n">low_dvl</span><span class="p">,</span>
@@ -917,16 +927,16 @@ construct the utility.</p>
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_shapley_basic_spotify_24_0.png" src="../_images/examples_shapley_basic_spotify_24_0.png" />
+<img alt="../_images/examples_shapley_basic_spotify_23_0.png" src="../_images/examples_shapley_basic_spotify_23_0.png" />
 </div>
 </div>
 <p>We can immediately see that many artists (groups of samples) have very low, even negative value, which means that they tend to decrease the total score of the model when present in the training set! What happens if we remove them?</p>
 <p>In the next cell we create a new training set excluding the artists with the lowest scores:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl_artists</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl_artists</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
 <span class="n">artist_filter</span> <span class="o">=</span> <span class="o">~</span><span class="n">artist</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">low_dvl_artists</span><span class="p">)</span>
 <span class="n">X_train_good_dvl</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">artist_filter</span><span class="p">]</span>
 <span class="n">y_train_good_dvl</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">artist_filter</span><span class="p">]</span>
@@ -935,7 +945,7 @@ construct the utility.</p>
 </div>
 <p>Now we will use this “cleaned” dataset to retrain the same model and compare its mean absolute error to the one trained on the full dataset. Notice that the score now is calculated using the test set, while in the calculation of the Shapley values we were using the validation set.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_good_data</span> <span class="o">=</span> <span class="n">GradientBoostingRegressor</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
@@ -959,23 +969,23 @@ construct the utility.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Improvement: 13.915896%
+Improvement: 14.601513%
 </pre></div></div>
 </div>
-<p>The score has improved by almost 15%! This is quite an important result, as it shows a self-consistent process to improve the performance of a model by excluding data points from its training set.</p>
+<p>The score has improved by almost 15%! This is quite an important result, as it shows a consistent process to improve the performance of a model by excluding data points from its training set.</p>
 <div class="admonition warning">
 <p>One must however proceed with caution instead of simply throwing away data. For one, <code class="docutils literal notranslate"><span class="pre">mean_absolute_error</span></code> is an estimate of generalization error on unseen data, so the improvement we see on the test set might not be as large upon deployment. It would be advisable to cross-validate this whole process to obtain more conservative estimates. It is also advisable to manually inspect the artists with low value and to try to understand the reason why the model behaves like it does. Finally, remember
 that <strong>the value depends on the model chosen</strong>! Artists that are detrimental to the Gradient Boosting Regressor might be informative for a different model (although it is likely that the worst ones share some characteristic making them “bad” for other regressors).</p>
 </div>
 </section>
 <section id="Evaluation-on-anomalous-data">
-<h2>Evaluation on anomalous data<a class="headerlink" href="#Evaluation-on-anomalous-data" title="Permalink to this heading"></a></h2>
+<h2>Evaluation on anomalous data<a class="headerlink" href="#Evaluation-on-anomalous-data" title="Permalink to this heading">#</a></h2>
 <p>One interesting test is to corrupt some data and to monitor how their value changes. To do this, we will take one of the artists with the highest value and set the popularity of all their songs to 0.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">high_dvl</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">30</span><span class="p">:]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">high_dvl</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">30</span><span class="p">:]</span>
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
 <span class="n">plot_shapley</span><span class="p">(</span>
     <span class="n">high_dvl</span><span class="p">,</span>
@@ -993,7 +1003,7 @@ that <strong>the value depends on the model chosen</strong>! Artists that are de
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_shapley_basic_spotify_32_0.png" src="../_images/examples_shapley_basic_spotify_32_0.png" />
+<img alt="../_images/examples_shapley_basic_spotify_31_0.png" src="../_images/examples_shapley_basic_spotify_31_0.png" />
 </div>
 </div>
 <p>Let us take all the songs by Rihanna, set their score to 0 and re-calculate the Shapley values.</p>
@@ -1013,15 +1023,22 @@ that <strong>the value depends on the model chosen</strong>! Artists that are de
     <span class="n">y_test</span><span class="o">=</span><span class="n">val_data</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
 <span class="p">)</span>
 <span class="n">grouped_anomalous_dataset</span> <span class="o">=</span> <span class="n">GroupedDataset</span><span class="o">.</span><span class="n">from_dataset</span><span class="p">(</span><span class="n">anomalous_dataset</span><span class="p">,</span> <span class="n">artist</span><span class="p">)</span>
-<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span>
+<span class="n">anomalous_utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">GradientBoostingRegressor</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
     <span class="n">data</span><span class="o">=</span><span class="n">grouped_anomalous_dataset</span><span class="p">,</span>
-    <span class="n">scoring</span><span class="o">=</span><span class="s2">&quot;neg_mean_absolute_error&quot;</span><span class="p">,</span>
+    <span class="n">scorer</span><span class="o">=</span><span class="n">Scorer</span><span class="p">(</span><span class="s2">&quot;neg_mean_absolute_error&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span>
     <span class="n">enable_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">dvl_df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
-    <span class="n">utility</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">available_cpus</span><span class="p">(),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;truncated_montecarlo&quot;</span>
-<span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;data_value&quot;</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
+    <span class="n">anomalous_utility</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="n">ShapleyMode</span><span class="o">.</span><span class="n">TruncatedMontecarlo</span><span class="p">,</span>
+    <span class="n">done</span><span class="o">=</span><span class="n">StandardErrorRatio</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span> <span class="o">|</span> <span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">200</span><span class="p">),</span>
+    <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">worker_update_period</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">coordinator_update_period</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">values</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;data_value&quot;</span><span class="p">,</span> <span class="n">use_names</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1030,7 +1047,7 @@ that <strong>the value depends on the model chosen</strong>! Artists that are de
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span>
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
 <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_shapley</span><span class="p">(</span>
     <span class="n">low_dvl</span><span class="p">,</span>
@@ -1048,7 +1065,7 @@ that <strong>the value depends on the model chosen</strong>! Artists that are de
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_shapley_basic_spotify_37_0.png" src="../_images/examples_shapley_basic_spotify_37_0.png" />
+<img alt="../_images/examples_shapley_basic_spotify_36_0.png" src="../_images/examples_shapley_basic_spotify_36_0.png" />
 </div>
 </div>
 <p>And Rihanna (our anomalous data group) has moved from top contributor to having negative impact on the performance of the model, as expected!</p>

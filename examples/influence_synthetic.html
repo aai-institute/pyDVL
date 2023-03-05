@@ -241,6 +241,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../pydvl/value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
@@ -563,8 +564,18 @@ div.rendered_html tbody tr:hover {
     .nboutput .prompt {
         display: none;
     }
+    @media not print {
+        [data-theme='dark'] .output_area img {
+            filter: invert(0.9);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .output_area img {
+                filter: invert(0.9);
+            }
+        }
+    }
 </style><section id="Influence-functions-for-data-mislabeling">
-<h1>Influence functions for data mislabeling<a class="headerlink" href="#Influence-functions-for-data-mislabeling" title="Permalink to this heading"></a></h1>
+<h1>Influence functions for data mislabeling<a class="headerlink" href="#Influence-functions-for-data-mislabeling" title="Permalink to this heading">#</a></h1>
 <p>In this notebook, we will take a closer look at the theory of influence functions with the help of a synthetic dataset. Data mislabeling occurs whenever some examples from a usually big dataset are wrongly-labeled. In real-life this happens fairly often, e.g. as a consequence of human error, or noise in the data.</p>
 <p>Let’s consider a classification problem with the following notation:</p>
 <div class="math-wrapper docutils container">
@@ -584,7 +595,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 <p>with fixed means and diagonal covariance. Implementing the sampling scheme in python is straightforward and can be achieved by first sampling <span class="math notranslate nohighlight">\(y\)</span> and afterward <span class="math notranslate nohighlight">\(x\)</span>.</p>
 <section id="Imports">
-<h2>Imports<a class="headerlink" href="#Imports" title="Permalink to this heading"></a></h2>
+<h2>Imports<a class="headerlink" href="#Imports" title="Permalink to this heading">#</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -641,7 +652,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 </section>
 <section id="Constants">
-<h2>Constants<a class="headerlink" href="#Constants" title="Permalink to this heading"></a></h2>
+<h2>Constants<a class="headerlink" href="#Constants" title="Permalink to this heading">#</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -673,7 +684,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 </section>
 <section id="Dataset">
-<h2>Dataset<a class="headerlink" href="#Dataset" title="Permalink to this heading"></a></h2>
+<h2>Dataset<a class="headerlink" href="#Dataset" title="Permalink to this heading">#</a></h2>
 <p>The following code snippet generates the aforementioned dataset.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -700,7 +711,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 </div>
 </section>
 <section id="Plotting-the-dataset">
-<h2>Plotting the dataset<a class="headerlink" href="#Plotting-the-dataset" title="Permalink to this heading"></a></h2>
+<h2>Plotting the dataset<a class="headerlink" href="#Plotting-the-dataset" title="Permalink to this heading">#</a></h2>
 <p>Let’s plot the dataset is plotted with their respective labels and the optimal decision line</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -729,7 +740,7 @@ x_i \sim \mathcal{N}\left ((1 - y_i) \mu_1 + y_i \mu_2, \sigma^2 I \right),\end{
 <p>Note that there are samples which go across the optimal decision boundary and will be wrongly labelled. The optimal decision boundary can not discriminate these as the mislabelling is a consequence of the presence of random noise.</p>
 </section>
 <section id="Training-the-model">
-<h2>Training the model<a class="headerlink" href="#Training-the-model" title="Permalink to this heading"></a></h2>
+<h2>Training the model<a class="headerlink" href="#Training-the-model" title="Permalink to this heading">#</a></h2>
 <p>We will now train a logistic regression model on the training data. This can be done with the following</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
@@ -820,7 +831,7 @@ Model fitting: 100%|██████████| 50/50 [00:03&lt;00:00, 14.92
 </div>
 </section>
 <section id="Calculating-influences">
-<h2>Calculating influences<a class="headerlink" href="#Calculating-influences" title="Permalink to this heading"></a></h2>
+<h2>Calculating influences<a class="headerlink" href="#Calculating-influences" title="Permalink to this heading">#</a></h2>
 <p>It is important that the model converges to a point near the optimum, since the influence values assume that we are at a minimum (or close) in the loss landscape. The function</p>
 <div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
@@ -984,7 +995,7 @@ Average correct data influence: 0.01503900857368328
 <p>Red circles indicate the points which have been corrupted. We can see that the mislabelled data have a more negative average influence on the model, especially those that are farther away from the decision boundary.</p>
 </section>
 <section id="Inversion-through-conjugate-gradient">
-<h2>Inversion through conjugate gradient<a class="headerlink" href="#Inversion-through-conjugate-gradient" title="Permalink to this heading"></a></h2>
+<h2>Inversion through conjugate gradient<a class="headerlink" href="#Inversion-through-conjugate-gradient" title="Permalink to this heading">#</a></h2>
 <p>The “direct” method that we have used above involves the inversion of the Hessian matrix of the model. If a model has <span class="math notranslate nohighlight">\(n\)</span> training points and <span class="math notranslate nohighlight">\(\theta \in \mathbb{R}^p\)</span> parameters, this requires <span class="math notranslate nohighlight">\(O(n \ p^2 + p^3)\)</span> operations, which for larger models, like neural networks, becomes quickly unfeasible. Conjugate gradient avoids the explicit computation of the Hessian via a technique called implicit Hessian-vector products (HVPs), which typically takes <span class="math notranslate nohighlight">\(O(n \ p)\)</span> operations.</p>
 <p>In the next cell we will use conjugate gradient to compute the influence factors. Since logistic regression is a very simple model, “cg” actually slows computation with respect to the direct method, which in this case is a much better choice. Nevertheless, we are able to verify that the influences calculated with “cg” are the same (to a minor error) as those calculated directly.</p>
 <div class="nbinput docutils container">
@@ -1046,7 +1057,7 @@ Average correct data influence: 0.015039001098187444
 </div>
 </section>
 <section id="Appendix:-Calculating-the-decision-boundary">
-<h2>Appendix: Calculating the decision boundary<a class="headerlink" href="#Appendix:-Calculating-the-decision-boundary" title="Permalink to this heading"></a></h2>
+<h2>Appendix: Calculating the decision boundary<a class="headerlink" href="#Appendix:-Calculating-the-decision-boundary" title="Permalink to this heading">#</a></h2>
 <p>For obtaining the optimal discriminator one has to solve the equation</p>
 <div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">

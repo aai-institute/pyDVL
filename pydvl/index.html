@@ -241,6 +241,7 @@
 <li class="toctree-l3"><a class="reference internal" href="value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="value/shapley/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/montecarlo.html">montecarlo</a></li>
@@ -290,7 +291,7 @@
         </div>
         <article role="main">
           <section id="module-pydvl">
-<span id="api-reference"></span><h1>API Reference<a class="headerlink" href="#module-pydvl" title="Permalink to this heading"></a></h1>
+<span id="api-reference"></span><h1>API Reference<a class="headerlink" href="#module-pydvl" title="Permalink to this heading">#</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="influence.html">influence</a><ul>
@@ -661,22 +662,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="value/shapley.html">shapley</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="value/shapley.html#pydvl.value.shapley.compute_shapley_values"><code class="docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="value/shapley.html#pydvl.value.shapley.ShapleyMode"><code class="docutils literal notranslate"><span class="pre">ShapleyMode</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="value/shapley.html#pydvl.value.shapley.ShapleyMode.CombinatorialExact"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.CombinatorialExact</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="value/shapley.html#pydvl.value.shapley.ShapleyMode.CombinatorialMontecarlo"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.CombinatorialMontecarlo</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="value/shapley.html#pydvl.value.shapley.ShapleyMode.GroupTesting"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.GroupTesting</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="value/shapley.html#pydvl.value.shapley.ShapleyMode.KNN"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.KNN</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="value/shapley.html#pydvl.value.shapley.ShapleyMode.Owen"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.Owen</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="value/shapley.html#pydvl.value.shapley.ShapleyMode.OwenAntithetic"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.OwenAntithetic</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="value/shapley.html#pydvl.value.shapley.ShapleyMode.PermutationExact"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.PermutationExact</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="value/shapley.html#pydvl.value.shapley.ShapleyMode.PermutationMontecarlo"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.PermutationMontecarlo</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="value/shapley.html#pydvl.value.shapley.ShapleyMode.TruncatedMontecarlo"><code class="docutils literal notranslate"><span class="pre">ShapleyMode.TruncatedMontecarlo</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="value/shapley/actor.html">actor</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/actor.html#pydvl.value.shapley.actor.get_shapley_coordinator"><code class="docutils literal notranslate"><span class="pre">get_shapley_coordinator()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/actor.html#pydvl.value.shapley.actor.get_shapley_worker"><code class="docutils literal notranslate"><span class="pre">get_shapley_worker()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="value/shapley/common.html">common</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="value/shapley/common.html#pydvl.value.shapley.common.compute_shapley_values"><code class="docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="value/shapley/gt.html">gt</a><ul>
@@ -756,8 +748,8 @@
 <li class="toctree-l4"><a class="reference internal" href="value/stopping.html#pydvl.value.stopping.StoppingCriterion.name"><code class="docutils literal notranslate"><span class="pre">StoppingCriterion.name</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="value/stopping.html#pydvl.value.stopping.StandardError"><code class="docutils literal notranslate"><span class="pre">StandardError</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="value/stopping.html#pydvl.value.stopping.StandardError.completion"><code class="docutils literal notranslate"><span class="pre">StandardError.completion()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="value/stopping.html#pydvl.value.stopping.StandardErrorRatio"><code class="docutils literal notranslate"><span class="pre">StandardErrorRatio</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="value/stopping.html#pydvl.value.stopping.StandardErrorRatio.completion"><code class="docutils literal notranslate"><span class="pre">StandardErrorRatio.completion()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="value/stopping.html#pydvl.value.stopping.MaxChecks"><code class="docutils literal notranslate"><span class="pre">MaxChecks</span></code></a><ul>

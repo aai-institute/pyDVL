@@ -241,6 +241,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../pydvl/value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
@@ -563,31 +564,40 @@ div.rendered_html tbody tr:hover {
     .nboutput .prompt {
         display: none;
     }
+    @media not print {
+        [data-theme='dark'] .output_area img {
+            filter: invert(0.9);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .output_area img {
+                filter: invert(0.9);
+            }
+        }
+    }
 </style><section id="KNN-Shapley">
-<h1>KNN Shapley<a class="headerlink" href="#KNN-Shapley" title="Permalink to this heading"></a></h1>
+<h1>KNN Shapley<a class="headerlink" href="#KNN-Shapley" title="Permalink to this heading">#</a></h1>
 <p>This notebook shows how to calculate Shapley values for the K-Nearest Neighbours algorithm. By making use of the local structure of KNN, it is possible to compute an exact value in almost linear time, as opposed to exponential complexity of exact, model-agnostic Shapley.</p>
 <p>The main idea is to exploit the fact that adding or removing points beyond the k-ball doesn’t influence the score. Because the algorithm then essentially only needs to do a search it runs in <span class="math notranslate nohighlight">\(\mathcal{O}(N \log N)\)</span> time.</p>
 <p>By further using approximate nearest neighbours, it is possible to achieve <span class="math notranslate nohighlight">\((\epsilon,\delta)\)</span>-approximations in sublinear time. However, this is not implemented in pyDVL yet.</p>
 <p>We refer to the original paper that pyDVL implements for details: <em>Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nezihe Merve Gurel, Bo Li, Ce Zhang, Costas Spanos, and Dawn Song.</em><a class="reference external" href="https://doi.org/10.14778/3342263.3342637">Efficient Task-Specific Data Valuation for Nearest Neighbor Algorithms</a><em>. Proceedings of the VLDB Endowment 12, no. 11 (1 July 2019): 1610–23.</em></p>
 <section id="Setup">
-<h2>Setup<a class="headerlink" href="#Setup" title="Permalink to this heading"></a></h2>
+<h2>Setup<a class="headerlink" href="#Setup" title="Permalink to this heading">#</a></h2>
 <p>We begin by importing the main libraries and setting some defaults.</p>
 <div class="admonition note">
 <p>If you are reading this in the documentation, some boilerplate has been omitted for convenience.</p>
 </div>
-<p>The main entry point is the function <a class="reference internal" href="../pydvl/value/shapley.html#pydvl.value.shapley.compute_shapley_values"><span class="std std-ref">compute_shapley_values()</span></a>, which provides a facade to all Shapley methods. In order to use it we need the classes <a class="reference internal" href="../pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset"><span class="std std-ref">Dataset</span></a> and <a class="reference internal" href="../pydvl/utils/utility.html#pydvl.utils.utility.Utility"><span class="std std-ref">Utility</span></a>.</p>
+<p>The main entry point is the function <a class="reference internal" href="../pydvl/value/shapley/common.html#pydvl.value.shapley.common.compute_shapley_values"><span class="std std-ref">compute_shapley_values()</span></a>, which provides a facade to all Shapley methods. In order to use it we need the classes <a class="reference internal" href="../pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset"><span class="std std-ref">Dataset</span></a>, <a class="reference internal" href="../pydvl/utils/utility.html#pydvl.utils.utility.Utility"><span class="std std-ref">Utility</span></a> and <a class="reference internal" href="../pydvl/utils/score.html#pydvl.utils.score.Scorer"><span class="std std-ref">Scorer</span></a>, all of which can be imported from <code class="docutils literal notranslate"><span class="pre">pydvl.value</span></code>:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
-<span class="kn">from</span> <span class="nn">pydvl.value.shapley</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
 </div>
 </section>
 <section id="Building-a-Dataset-and-a-Utility">
-<h2>Building a Dataset and a Utility<a class="headerlink" href="#Building-a-Dataset-and-a-Utility" title="Permalink to this heading"></a></h2>
+<h2>Building a Dataset and a Utility<a class="headerlink" href="#Building-a-Dataset-and-a-Utility" title="Permalink to this heading">#</a></h2>
 <p>We use <a class="reference external" href="https://scikit-learn.org/stable/auto_examples/datasets/plot_iris_dataset.html">the sklearn iris dataset</a> and wrap it into a <a class="reference internal" href="../pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset"><span class="std std-ref">pydvl.utils.dataset.Dataset</span></a> calling the factory <a class="reference internal" href="../pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset.from_sklearn"><span class="std std-ref">pydvl.utils.dataset.Dataset.from_sklearn()</span></a>. This automatically creates a train/test split for us which will be used to compute the utility.</p>
 <p>We then create a model and instantiate a <a class="reference internal" href="../pydvl/utils/utility.html#pydvl.utils.utility.Utility"><span class="std std-ref">Utility</span></a> using data and model. The model needs to implement the protocol <a class="reference internal" href="../pydvl/utils/types.html#pydvl.utils.types.SupervisedModel"><span class="std std-ref">pydvl.utils.types.SupervisedModel</span></a>, which is just the standard sklearn interface of <code class="docutils literal notranslate"><span class="pre">fit()</span></code>,<code class="docutils literal notranslate"><span class="pre">predict()</span></code> and <code class="docutils literal notranslate"><span class="pre">score()</span></code>. In constructing the <code class="docutils literal notranslate"><span class="pre">Utility</span></code> one can also choose a scoring function, but we pick the default which is just the model’s
 <code class="docutils literal notranslate"><span class="pre">knn.score()</span></code>.</p>
@@ -604,13 +614,14 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="Computing-values">
-<h2>Computing values<a class="headerlink" href="#Computing-values" title="Permalink to this heading"></a></h2>
-<p>Calculating the Shapley values is straightforward. We just call <a class="reference internal" href="../pydvl/value/shapley.html#pydvl.value.shapley.compute_shapley_values"><span class="std std-ref">pydvl.value.shapley.compute_shapley_values()</span></a> with the utility object we created above. The function returns a <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html">pandas DataFrame</a> where the index corresponds to sample indices and the values are in column <code class="docutils literal notranslate"><span class="pre">data_value</span></code>. The DataFrame is sorted by ascending <code class="docutils literal notranslate"><span class="pre">data_value</span></code>.</p>
+<h2>Computing values<a class="headerlink" href="#Computing-values" title="Permalink to this heading">#</a></h2>
+<p>Calculating the Shapley values is straightforward. We just call <a class="reference internal" href="../pydvl/value/shapley/common.html#pydvl.value.shapley.common.compute_shapley_values"><span class="std std-ref">compute_shapley_values()</span></a> with the utility object we created above. The function returns a <a class="reference internal" href="../pydvl/value/result.html#pydvl.value.result.ValuationResult"><span class="std std-ref">ValuationResult</span></a>. This object contains the values themselves, data indices and labels.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapley_values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;knn&quot;</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shapley_values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">ShapleyMode</span><span class="o">.</span><span class="n">KNN</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">shapley_values</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
 <span class="n">values</span> <span class="o">=</span> <span class="n">shapley_values</span><span class="o">.</span><span class="n">values</span>
 </pre></div>
 </div>
@@ -619,11 +630,11 @@ div.rendered_html tbody tr:hover {
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "25db2986aef24b08ae9ccfccb2c0c6df", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "aa2ad3d8aa2b4c0e8bce1457d08863ff", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 </section>
 <section id="Inspecting-the-results">
-<h2>Inspecting the results<a class="headerlink" href="#Inspecting-the-results" title="Permalink to this heading"></a></h2>
+<h2>Inspecting the results<a class="headerlink" href="#Inspecting-the-results" title="Permalink to this heading">#</a></h2>
 <p>Let us first look at the labels’ distribution as a function of petal and sepal length:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
@@ -689,34 +700,47 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="Corrupting-labels">
-<h2>Corrupting labels<a class="headerlink" href="#Corrupting-labels" title="Permalink to this heading"></a></h2>
+<h2>Corrupting labels<a class="headerlink" href="#Corrupting-labels" title="Permalink to this heading">#</a></h2>
 <p>To test how informative values are, we can corrupt some training labels and see how their Shapley values change with respect to the non-corrupted points.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">corrupted_dataset</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-<span class="n">num_corrupted</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="n">corrupted_dataset</span><span class="o">.</span><span class="n">y_train</span><span class="p">[:</span><span class="n">num_corrupted</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">corrupted_dataset</span><span class="o">.</span><span class="n">y_train</span><span class="p">[:</span><span class="n">num_corrupted</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
-<span class="p">)</span> <span class="o">%</span> <span class="mi">3</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">corrupted_data</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">n_corrupted</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">corrupted_data</span><span class="o">.</span><span class="n">y_train</span><span class="p">[:</span><span class="n">n_corrupted</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">corrupted_data</span><span class="o">.</span><span class="n">y_train</span><span class="p">[:</span><span class="n">n_corrupted</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">3</span>
 <span class="n">knn</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">neighbors</span><span class="o">.</span><span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="n">contaminated_shapley</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
-    <span class="n">Utility</span><span class="p">(</span><span class="n">knn</span><span class="p">,</span> <span class="n">corrupted_dataset</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;knn&quot;</span>
-<span class="p">)</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;data_value&quot;</span><span class="p">)</span>
+<span class="n">contaminated_values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
+    <span class="n">Utility</span><span class="p">(</span><span class="n">knn</span><span class="p">,</span> <span class="n">corrupted_data</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="n">ShapleyMode</span><span class="o">.</span><span class="n">KNN</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <p>Taking the average corrupted value and comparing it to non-corrupted ones, we notice that on average anomalous points have a much lower score, i.e. they tend to be much less valuable to the model.</p>
+<p>To do this, first we make sure that we access the results by data index with a call to <code class="docutils literal notranslate"><span class="pre">ValuationResult.sort()</span></code>, then we split the values into two groups: corrupted and non-corrupted. Note how we access property <code class="docutils literal notranslate"><span class="pre">values</span></code> of the <code class="docutils literal notranslate"><span class="pre">ValuationResult</span></code> object. This is a numpy array of values, sorted however the object was sorted. Finally, we compute the quantiles of the two groups and compare them. We see that the corrupted mean is in the lowest percentile of the value distribution, while the
+correct mean is in the 70th percentile.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">corrupted_shapley_values</span> <span class="o">=</span> <span class="n">contaminated_shapley</span><span class="o">.</span><span class="n">data_value</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="n">num_corrupted</span><span class="p">]</span>
-<span class="n">correct_shapley_values</span> <span class="o">=</span> <span class="n">contaminated_shapley</span><span class="o">.</span><span class="n">data_value</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">num_corrupted</span><span class="p">:]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">contaminated_values</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
+    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;index&quot;</span>
+<span class="p">)</span>  <span class="c1"># This is redundant, but illustrates sorting, which is in-place</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Mean shapley value of corrupted points:&quot;</span><span class="p">,</span> <span class="n">corrupted_shapley_values</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Mean shapley value of regular points:&quot;</span><span class="p">,</span> <span class="n">correct_shapley_values</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+<span class="n">corrupted_shapley_values</span> <span class="o">=</span> <span class="n">contaminated_values</span><span class="o">.</span><span class="n">values</span><span class="p">[:</span><span class="n">n_corrupted</span><span class="p">]</span>
+<span class="n">correct_shapley_values</span> <span class="o">=</span> <span class="n">contaminated_values</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">n_corrupted</span><span class="p">:]</span>
+
+<span class="n">mean_corrupted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">corrupted_shapley_values</span><span class="p">)</span>
+<span class="n">mean_correct</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">correct_shapley_values</span><span class="p">)</span>
+<span class="n">percentile_corrupted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">values</span> <span class="o">&lt;</span> <span class="n">mean_corrupted</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">percentile_correct</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">values</span> <span class="o">&lt;</span> <span class="n">mean_correct</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;The corrupted mean is at percentile </span><span class="si">{</span><span class="n">percentile_corrupted</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> of the value distribution.&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;The correct mean is percentile </span><span class="si">{</span><span class="n">percentile_correct</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> of the value distribution.&quot;</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -725,8 +749,8 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Mean shapley value of corrupted points: -0.008934091047241414
-Mean shapley value of regular points: 0.010925156715879228
+The corrupted mean is at percentile 1 of the value distribution.
+The correct mean is percentile 71 of the value distribution.
 </pre></div></div>
 </div>
 <p>This is confirmed if we plot the distribution of Shapley values and circle corrupt points in red. They all tend to have low Shapley scores, regardless of their position in space and assigned label:</p>
@@ -736,8 +760,8 @@ Mean shapley value of regular points: 0.010925156715879228
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_iris</span><span class="p">(</span>
     <span class="n">data</span><span class="p">,</span>
-    <span class="n">colors</span><span class="o">=</span><span class="n">contaminated_shapley</span><span class="o">.</span><span class="n">data_value</span><span class="p">,</span>
-    <span class="n">highlight_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_corrupted</span><span class="p">),</span>
+    <span class="n">colors</span><span class="o">=</span><span class="n">contaminated_values</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+    <span class="n">highlight_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_corrupted</span><span class="p">),</span>
     <span class="n">legend_title</span><span class="o">=</span><span class="s2">&quot;shapley values&quot;</span><span class="p">,</span>
     <span class="n">suptitle</span><span class="o">=</span><span class="s2">&quot;Distribution of Shapley values&quot;</span><span class="p">,</span>
     <span class="n">colorbar_limits</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.027</span><span class="p">),</span>

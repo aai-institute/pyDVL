@@ -241,6 +241,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../result.html">result</a></li>
 <li class="toctree-l3 current has-children"><a class="reference internal" href="../shapley.html">shapley</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="montecarlo.html">montecarlo</a></li>
@@ -290,11 +291,11 @@
         </div>
         <article role="main">
           <section id="module-pydvl.value.shapley.types">
-<span id="types"></span><h1>types<a class="headerlink" href="#module-pydvl.value.shapley.types" title="Permalink to this heading"></a></h1>
+<span id="types"></span><h1>types<a class="headerlink" href="#module-pydvl.value.shapley.types" title="Permalink to this heading">#</a></h1>
 <hr class="docutils" />
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ShapleyMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/types.py#L4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ShapleyMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/types.py#L4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>Supported algorithms for the computation of Shapley values.</p>
 <div class="admonition-todo admonition" id="id1">
@@ -303,47 +304,47 @@
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.CombinatorialExact">
-<span class="sig-name descname"><span class="pre">CombinatorialExact</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'combinatorial_exact'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.CombinatorialExact" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">CombinatorialExact</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'combinatorial_exact'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.CombinatorialExact" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.CombinatorialMontecarlo">
-<span class="sig-name descname"><span class="pre">CombinatorialMontecarlo</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'combinatorial_montecarlo'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.CombinatorialMontecarlo" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">CombinatorialMontecarlo</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'combinatorial_montecarlo'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.CombinatorialMontecarlo" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.GroupTesting">
-<span class="sig-name descname"><span class="pre">GroupTesting</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'group_testing'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.GroupTesting" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">GroupTesting</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'group_testing'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.GroupTesting" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.KNN">
-<span class="sig-name descname"><span class="pre">KNN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'knn'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.KNN" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">KNN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'knn'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.KNN" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.Owen">
-<span class="sig-name descname"><span class="pre">Owen</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'owen'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.Owen" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">Owen</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'owen'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.Owen" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.OwenAntithetic">
-<span class="sig-name descname"><span class="pre">OwenAntithetic</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'owen_antithetic'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.OwenAntithetic" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">OwenAntithetic</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'owen_antithetic'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.OwenAntithetic" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.PermutationExact">
-<span class="sig-name descname"><span class="pre">PermutationExact</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'permutation_exact'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.PermutationExact" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">PermutationExact</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'permutation_exact'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.PermutationExact" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.PermutationMontecarlo">
-<span class="sig-name descname"><span class="pre">PermutationMontecarlo</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'permutation_montecarlo'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.PermutationMontecarlo" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">PermutationMontecarlo</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'permutation_montecarlo'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.PermutationMontecarlo" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pydvl.value.shapley.types.ShapleyMode.TruncatedMontecarlo">
-<span class="sig-name descname"><span class="pre">TruncatedMontecarlo</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'truncated_montecarlo'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.TruncatedMontecarlo" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">TruncatedMontecarlo</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'truncated_montecarlo'</span></em><a class="headerlink" href="#pydvl.value.shapley.types.ShapleyMode.TruncatedMontecarlo" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

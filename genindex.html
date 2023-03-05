@@ -239,6 +239,7 @@
 <li class="toctree-l3"><a class="reference internal" href="pydvl/value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
@@ -359,9 +360,9 @@
 </li>
         <li><a href="pydvl/value/shapley/montecarlo.html#pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley">combinatorial_montecarlo_shapley() (in module pydvl.value.shapley.montecarlo)</a>
 </li>
-        <li><a href="pydvl/value/shapley.html#pydvl.value.shapley.ShapleyMode.CombinatorialExact">CombinatorialExact (ShapleyMode attribute)</a>, <a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.CombinatorialExact">[1]</a>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.CombinatorialExact">CombinatorialExact (ShapleyMode attribute)</a>
 </li>
-        <li><a href="pydvl/value/shapley.html#pydvl.value.shapley.ShapleyMode.CombinatorialMontecarlo">CombinatorialMontecarlo (ShapleyMode attribute)</a>, <a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.CombinatorialMontecarlo">[1]</a>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.CombinatorialMontecarlo">CombinatorialMontecarlo (ShapleyMode attribute)</a>
 </li>
         <li><a href="pydvl/value/stopping.html#pydvl.value.stopping.HistoryDeviation.completion">completion() (HistoryDeviation method)</a>
 
@@ -374,7 +375,7 @@
 </li>
           <li><a href="pydvl/value/stopping.html#pydvl.value.stopping.MinUpdates.completion">(MinUpdates method)</a>
 </li>
-          <li><a href="pydvl/value/stopping.html#pydvl.value.stopping.StandardError.completion">(StandardError method)</a>
+          <li><a href="pydvl/value/stopping.html#pydvl.value.stopping.StandardErrorRatio.completion">(StandardErrorRatio method)</a>
 </li>
           <li><a href="pydvl/value/stopping.html#pydvl.value.stopping.StoppingCriterion.completion">(StoppingCriterion method)</a>
 </li>
@@ -391,7 +392,7 @@
 </li>
         <li><a href="pydvl/reporting/scores.html#pydvl.reporting.scores.compute_removal_score">compute_removal_score() (in module pydvl.reporting.scores)</a>
 </li>
-        <li><a href="pydvl/value/shapley.html#pydvl.value.shapley.compute_shapley_values">compute_shapley_values() (in module pydvl.value.shapley)</a>
+        <li><a href="pydvl/value/shapley/common.html#pydvl.value.shapley.common.compute_shapley_values">compute_shapley_values() (in module pydvl.value.shapley.common)</a>
 </li>
         <li><a href="pydvl/influence/conjugate_gradient.html#pydvl.influence.conjugate_gradient.conjugate_gradient">conjugate_gradient() (in module pydvl.influence.conjugate_gradient)</a>
 </li>
@@ -547,7 +548,7 @@
 </li>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.GroupedDataset">GroupedDataset (class in pydvl.utils.dataset)</a>
 </li>
-        <li><a href="pydvl/value/shapley.html#pydvl.value.shapley.ShapleyMode.GroupTesting">GroupTesting (ShapleyMode attribute)</a>, <a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.GroupTesting">[1]</a>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.GroupTesting">GroupTesting (ShapleyMode attribute)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -615,7 +616,7 @@
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="pydvl/value/shapley.html#pydvl.value.shapley.ShapleyMode.KNN">KNN (ShapleyMode attribute)</a>, <a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.KNN">[1]</a>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.KNN">KNN (ShapleyMode attribute)</a>
 </li>
         <li><a href="pydvl/value/shapley/knn.html#pydvl.value.shapley.knn.knn_shapley">knn_shapley() (in module pydvl.value.shapley.knn)</a>
 </li>
@@ -775,6 +776,8 @@
 </li>
           <li><a href="pydvl/value/shapley/actor.html#module-pydvl.value.shapley.actor">pydvl.value.shapley.actor</a>
 </li>
+          <li><a href="pydvl/value/shapley/common.html#module-pydvl.value.shapley.common">pydvl.value.shapley.common</a>
+</li>
           <li><a href="pydvl/value/shapley/gt.html#module-pydvl.value.shapley.gt">pydvl.value.shapley.gt</a>
 </li>
           <li><a href="pydvl/value/shapley/knn.html#module-pydvl.value.shapley.knn">pydvl.value.shapley.knn</a>
@@ -850,7 +853,7 @@
   <h2>O</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="pydvl/value/shapley.html#pydvl.value.shapley.ShapleyMode.Owen">Owen (ShapleyMode attribute)</a>, <a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.Owen">[1]</a>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.Owen">Owen (ShapleyMode attribute)</a>
 </li>
         <li><a href="pydvl/value/shapley/owen.html#pydvl.value.shapley.owen.owen_sampling_shapley">owen_sampling_shapley() (in module pydvl.value.shapley.owen)</a>
 </li>
@@ -858,7 +861,7 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/value/shapley/owen.html#pydvl.value.shapley.owen.OwenAlgorithm">OwenAlgorithm (class in pydvl.value.shapley.owen)</a>
 </li>
-        <li><a href="pydvl/value/shapley.html#pydvl.value.shapley.ShapleyMode.OwenAntithetic">OwenAntithetic (ShapleyMode attribute)</a>, <a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.OwenAntithetic">[1]</a>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.OwenAntithetic">OwenAntithetic (ShapleyMode attribute)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -876,9 +879,9 @@
 </li>
         <li><a href="pydvl/value/shapley/montecarlo.html#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley">permutation_montecarlo_shapley() (in module pydvl.value.shapley.montecarlo)</a>
 </li>
-        <li><a href="pydvl/value/shapley.html#pydvl.value.shapley.ShapleyMode.PermutationExact">PermutationExact (ShapleyMode attribute)</a>, <a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.PermutationExact">[1]</a>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.PermutationExact">PermutationExact (ShapleyMode attribute)</a>
 </li>
-        <li><a href="pydvl/value/shapley.html#pydvl.value.shapley.ShapleyMode.PermutationMontecarlo">PermutationMontecarlo (ShapleyMode attribute)</a>, <a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.PermutationMontecarlo">[1]</a>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.PermutationMontecarlo">PermutationMontecarlo (ShapleyMode attribute)</a>
 </li>
         <li><a href="pydvl/influence/general.html#pydvl.influence.general.InfluenceType.Perturbation">Perturbation (InfluenceType attribute)</a>
 </li>
@@ -1152,6 +1155,13 @@
 </li>
         </ul></li>
         <li>
+    pydvl.value.shapley.common
+
+        <ul>
+          <li><a href="pydvl/value/shapley/common.html#module-pydvl.value.shapley.common">module</a>
+</li>
+        </ul></li>
+        <li>
     pydvl.value.shapley.gt
 
         <ul>
@@ -1283,12 +1293,8 @@
 </li>
         <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.shapley_results">shapley_results() (in module pydvl.reporting.plots)</a>
 </li>
-        <li><a href="pydvl/value/shapley.html#pydvl.value.shapley.ShapleyMode">ShapleyMode (class in pydvl.value.shapley)</a>
-
-        <ul>
-          <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode">(class in pydvl.value.shapley.types)</a>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode">ShapleyMode (class in pydvl.value.shapley.types)</a>
 </li>
-        </ul></li>
         <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility.signature">signature (Utility property)</a>
 </li>
     </ul></td>
@@ -1309,7 +1315,7 @@
 </li>
         <li><a href="pydvl/value/shapley/owen.html#pydvl.value.shapley.owen.OwenAlgorithm.Standard">Standard (OwenAlgorithm attribute)</a>
 </li>
-        <li><a href="pydvl/value/stopping.html#pydvl.value.stopping.StandardError">StandardError (class in pydvl.value.stopping)</a>
+        <li><a href="pydvl/value/stopping.html#pydvl.value.stopping.StandardErrorRatio">StandardErrorRatio (class in pydvl.value.stopping)</a>
 </li>
         <li><a href="pydvl/utils/status.html#pydvl.utils.status.Status">Status (class in pydvl.utils.status)</a>
 </li>
@@ -1383,7 +1389,7 @@
         </ul></li>
         <li><a href="pydvl/value/shapley/truncated.html#pydvl.value.shapley.truncated.truncated_montecarlo_shapley">truncated_montecarlo_shapley() (in module pydvl.value.shapley.truncated)</a>
 </li>
-        <li><a href="pydvl/value/shapley.html#pydvl.value.shapley.ShapleyMode.TruncatedMontecarlo">TruncatedMontecarlo (ShapleyMode attribute)</a>, <a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.TruncatedMontecarlo">[1]</a>
+        <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.TruncatedMontecarlo">TruncatedMontecarlo (ShapleyMode attribute)</a>
 </li>
         <li><a href="pydvl/value/shapley/truncated.html#pydvl.value.shapley.truncated.TruncationPolicy">TruncationPolicy (class in pydvl.value.shapley.truncated)</a>
 </li>

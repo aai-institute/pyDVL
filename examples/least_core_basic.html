@@ -241,6 +241,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../pydvl/value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
@@ -563,8 +564,18 @@ div.rendered_html tbody tr:hover {
     .nboutput .prompt {
         display: none;
     }
+    @media not print {
+        [data-theme='dark'] .output_area img {
+            filter: invert(0.9);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .output_area img {
+                filter: invert(0.9);
+            }
+        }
+    }
 </style><section id="Least-Core-for-Data-Valuation">
-<h1>Least Core for Data Valuation<a class="headerlink" href="#Least-Core-for-Data-Valuation" title="Permalink to this heading"></a></h1>
+<h1>Least Core for Data Valuation<a class="headerlink" href="#Least-Core-for-Data-Valuation" title="Permalink to this heading">#</a></h1>
 <p>This notebook introduces Least Core methods for the computation of data values using pyDVL.</p>
 <p>Shapley values define a fair way of distributing the worth of the whole training set when every data point is part of it. But they do not consider the question of stability of subsets: Could some data points obtain a higher payoff if they formed smaller subsets? It is argued that this might be relevant if data providers are paid based on data value, since Shapley values can incentivise them not to contribute their data to the “grand coalition”, but instead try to form smaller ones. Whether this
 is of actual practical relevance is debatable, but in any case, the least core is an alternative tool available for any task of Data Valuation</p>
@@ -582,7 +593,7 @@ is of actual practical relevance is debatable, but in any case, the least core i
 <p>To illustrate this method we will use a synthetic dataset. We will first use a subset of 10 data point to compute the exact values and use them to assess the Monte Carlo approximation. Afterwards, we will conduct the data removal experiments as described by Ghorbani and Zou in their paper <a class="reference external" href="https://arxiv.org/abs/1904.02868v1">Data Shapley: Equitable Valuation of Data for Machine Learning</a>: We compute the data valuation given different computation budgets and incrementally remove a percentage
 of the best, respectively worst, data points and observe how that affects the utility.</p>
 <section id="Setup">
-<h2>Setup<a class="headerlink" href="#Setup" title="Permalink to this heading"></a></h2>
+<h2>Setup<a class="headerlink" href="#Setup" title="Permalink to this heading">#</a></h2>
 <p>We begin by importing the main libraries and setting some defaults.</p>
 <div class="admonition note">
 <p>If you are reading this in the documentation, some boilerplate has been omitted for convenience.</p>
@@ -605,7 +616,7 @@ of the best, respectively worst, data points and observe how that affects the ut
 </div>
 </section>
 <section id="Dataset">
-<h2>Dataset<a class="headerlink" href="#Dataset" title="Permalink to this heading"></a></h2>
+<h2>Dataset<a class="headerlink" href="#Dataset" title="Permalink to this heading">#</a></h2>
 <p>We generate a synthetic dataset using the <code class="docutils literal notranslate"><span class="pre">`make_classification</span></code> &lt;<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.make_classification.html">https://scikit-learn.org/stable/modules/generated/sklearn.datasets.make_classification.html</a>&gt;`__ function from scikit-learn.</p>
 <p>We sample 200 data points from a 50-dimensional Gaussian distribution with 25 informative features and 25 non-informative features (generated as random linear combinations of the informative features).</p>
 <p>The 200 samples are uniformly distributed across 3 classes with a small percentage of noise added to the labels to make the task a bit more difficult.</p>
@@ -696,7 +707,7 @@ Testing accuracy: 47.89%
 </div>
 </section>
 <section id="Estimating-Least-Core-Values">
-<h2>Estimating Least Core Values<a class="headerlink" href="#Estimating-Least-Core-Values" title="Permalink to this heading"></a></h2>
+<h2>Estimating Least Core Values<a class="headerlink" href="#Estimating-Least-Core-Values" title="Permalink to this heading">#</a></h2>
 <p>In this first section we will use a smaller subset of the dataset containing 10 samples in order to be able to compute exact values in a reasonable amount of time. Afterwards, we will use the Monte Carlo method with a limited budget (maximum number of subsets) to approximate these values.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -909,7 +920,7 @@ Wall time: 1min 7s
 </div>
 </section>
 <section id="Data-Removal">
-<h2>Data Removal<a class="headerlink" href="#Data-Removal" title="Permalink to this heading"></a></h2>
+<h2>Data Removal<a class="headerlink" href="#Data-Removal" title="Permalink to this heading">#</a></h2>
 <p>We now move on to the data removal experiments using the full dataset.</p>
 <p>In this set of experiments, the data instances are ranked from most valuable to least valuable using the Monte Carlo Least Core method, then we gradually remove 5 percent of the most valuable/least valuable ones, train the model on this subset and compute its accuracy.</p>
 <div class="nbinput nblast docutils container">
@@ -930,7 +941,7 @@ Wall time: 1min 7s
 </div>
 </div>
 <section id="Remove-Best">
-<h3>Remove Best<a class="headerlink" href="#Remove-Best" title="Permalink to this heading"></a></h3>
+<h3>Remove Best<a class="headerlink" href="#Remove-Best" title="Permalink to this heading">#</a></h3>
 <p>We start by removing the best data instances and seeing how the model’s accuracy evolves.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
@@ -1015,7 +1026,7 @@ Wall time: 1h 17min 3s
 <p>We can also see that an increase in the budget does not necessarily lead to an improvement in the removal results. This could be due to the simple nature of the dataset or to the fact that we sample the subsets with replacement in the Monte Carlo method i.e there may be repeated subsets.</p>
 </section>
 <section id="Remove-Worst">
-<h3>Remove Worst<a class="headerlink" href="#Remove-Worst" title="Permalink to this heading"></a></h3>
+<h3>Remove Worst<a class="headerlink" href="#Remove-Worst" title="Permalink to this heading">#</a></h3>
 <p>We then proceed to removing the worst data instances and seeing how the model’s accuracy evolves.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:

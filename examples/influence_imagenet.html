@@ -241,6 +241,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../pydvl/value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
@@ -563,8 +564,18 @@ div.rendered_html tbody tr:hover {
     .nboutput .prompt {
         display: none;
     }
+    @media not print {
+        [data-theme='dark'] .output_area img {
+            filter: invert(0.9);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .output_area img {
+                filter: invert(0.9);
+            }
+        }
+    }
 </style><section id="Influence-functions-for-neural-networks">
-<h1>Influence functions for neural networks<a class="headerlink" href="#Influence-functions-for-neural-networks" title="Permalink to this heading"></a></h1>
+<h1>Influence functions for neural networks<a class="headerlink" href="#Influence-functions-for-neural-networks" title="Permalink to this heading">#</a></h1>
 <p>This notebook explores the use of influence functions for convolutional neural networks. In <a class="reference external" href="#analysing-influences">the first part</a> we will investigate the usefulness, or lack thereof, of influence functions for the interpretation of a classifier’s outputs.</p>
 <p>For our study we choose a pre-trained ResNet18, fine-tuned on the <a class="reference external" href="https://huggingface.co/datasets/Maysee/tiny-imagenet">tiny-imagenet dataset</a>. This dataset was created for a Stanford course on <a class="reference external" href="http://cs231n.stanford.edu/">Deep Learning for Computer Vision</a>, and is a subset of the <a class="reference external" href="https://image-net.org/challenges/LSVRC/2012/index">famous ImageNet</a> with 200 classes instead of 1000, and images down-sampled to a lower resolution of 64x64 pixels.</p>
 <p>After tuning the last layers of the network, we will use <strong>pyDVL</strong> to find the most and the least influential training images for the test set. This can sometimes be used to explain inference errors, or to direct efforts during data collection, although we will face inconclusive results with our model and data. This illustrates well-known issues of influence functions for neural networks.</p>
@@ -574,7 +585,7 @@ div.rendered_html tbody tr:hover {
 <p>If you are reading this in the documentation, some boilerplate has been omitted for convenience.</p>
 </div>
 <section id="Imports-and-setup">
-<h2>Imports and setup<a class="headerlink" href="#Imports-and-setup" title="Permalink to this heading"></a></h2>
+<h2>Imports and setup<a class="headerlink" href="#Imports-and-setup" title="Permalink to this heading">#</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -587,7 +598,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="Loading-and-preprocessing-the-dataset">
-<h2>Loading and preprocessing the dataset<a class="headerlink" href="#Loading-and-preprocessing-the-dataset" title="Permalink to this heading"></a></h2>
+<h2>Loading and preprocessing the dataset<a class="headerlink" href="#Loading-and-preprocessing-the-dataset" title="Permalink to this heading">#</a></h2>
 <p>We pick two classes arbitrarily to work with: 90 and 100, corresponding respectively to dining tables, and boats in Venice (you can of course select any other two classes, or more of them, although that would imply longer training times and some modifications in the notebook below). The dataset is loaded with <code class="docutils literal notranslate"><span class="pre">load_preprocess_imagenet()</span></code>, which returns three pandas <code class="docutils literal notranslate"><span class="pre">DataFrames</span></code> with training, validation and test sets respectively. Each dataframe has three columns: normalized images, labels
 and the original images. Note that you can load a subset of the data decreasing downsampling_ratio.</p>
 <div class="nbinput docutils container">
@@ -672,7 +683,7 @@ memory usage: 16.7+ KB
 </div>
 </section>
 <section id="Model-definition-and-training">
-<h2>Model definition and training<a class="headerlink" href="#Model-definition-and-training" title="Permalink to this heading"></a></h2>
+<h2>Model definition and training<a class="headerlink" href="#Model-definition-and-training" title="Permalink to this heading">#</a></h2>
 <p>We use a ResNet18 from <code class="docutils literal notranslate"><span class="pre">torchvision</span></code> with final layers modified for binary classification.</p>
 <p>Training for influence computation is facilitated by <code class="docutils literal notranslate"><span class="pre">:class:~pydvl.influence.model_wrappers.torch_wrappers.TorchModel</span></code>, a convenience wrapper around torch models which is part of pyDVL. We wrap this with a simple class <code class="docutils literal notranslate"><span class="pre">TrainingManager</span></code> which transparently handles persistence after training. The latter is not part of the main pyDVL package but just a way to reduce clutter in this notebook.</p>
 <p>We train the model for 50 epochs and save the results. Then we plot the train and validation loss curves.</p>
@@ -751,7 +762,7 @@ f1_score of model: 0.8468272032336833
 </div>
 </section>
 <section id="Influence-computation">
-<h2>Influence computation<a class="headerlink" href="#Influence-computation" title="Permalink to this heading"></a></h2>
+<h2>Influence computation<a class="headerlink" href="#Influence-computation" title="Permalink to this heading">#</a></h2>
 <p>Let’s now calculate influences! The main method is <code class="docutils literal notranslate"><span class="pre">:func:~pydvl.influence.general.compute_influences</span></code>, which takes a trained <code class="docutils literal notranslate"><span class="pre">nn.Model</span></code>, the training loss, some input dataset with labels (which typically is the training data, or a subset of it) and some test data.</p>
 <p>Other important parameters are the Hessian regularization term, which should be chosen as small as possible for the computation to converge (further details on why this is important can be found in the <a class="reference external" href="#appendix">Appendix</a>).</p>
 <p>Since Resnet18 is quite big, we pick conjugate gradient (<code class="docutils literal notranslate"><span class="pre">cg</span></code>) as the method for inversion of the Hessian. A naive computation would require a lot of memory. Finally, the influence type will be <code class="docutils literal notranslate"><span class="pre">up</span></code>. The other option, <code class="docutils literal notranslate"><span class="pre">perturbation</span></code>, is beyond the scope of this notebook, but more info can be found in the notebook <a class="reference internal" href="influence_wine.html"><span class="doc">using the Wine dataset</span></a> or in the documentation for pyDVL.</p>
@@ -795,10 +806,10 @@ f1_score of model: 0.8468272032336833
 </div>
 </section>
 <section id="Analysing-influences">
-<h2>Analysing influences<a class="headerlink" href="#Analysing-influences" title="Permalink to this heading"></a></h2>
+<h2>Analysing influences<a class="headerlink" href="#Analysing-influences" title="Permalink to this heading">#</a></h2>
 <p>With the computed influences we can study single images or all of them together:</p>
 <section id="Influence-on-a-single-test-image">
-<h3>Influence on a single test image<a class="headerlink" href="#Influence-on-a-single-test-image" title="Permalink to this heading"></a></h3>
+<h3>Influence on a single test image<a class="headerlink" href="#Influence-on-a-single-test-image" title="Permalink to this heading">#</a></h3>
 <p>Let’s take any image in the test set:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
@@ -874,7 +885,7 @@ f1_score of model: 0.8468272032336833
 <p>Looking at the images, it is difficult to explain why those on the right are more influential than those on the left. At first sight, the choice seems to be random (or at the very least noisy). Let’s dig in a bit more by looking at average influences:</p>
 </section>
 <section id="Analysing-the-average-influence-on-test-samples">
-<h3>Analysing the average influence on test samples<a class="headerlink" href="#Analysing-the-average-influence-on-test-samples" title="Permalink to this heading"></a></h3>
+<h3>Analysing the average influence on test samples<a class="headerlink" href="#Analysing-the-average-influence-on-test-samples" title="Permalink to this heading">#</a></h3>
 <p>By averaging across the rows of the influence matrix, we obtain the average influence of each training sample on the whole test set:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
@@ -927,7 +938,7 @@ with other explanations <em>a posteriori</em>.</p>
 </section>
 </section>
 <section id="Detecting-corrupted-data">
-<h2>Detecting corrupted data<a class="headerlink" href="#Detecting-corrupted-data" title="Permalink to this heading"></a></h2>
+<h2>Detecting corrupted data<a class="headerlink" href="#Detecting-corrupted-data" title="Permalink to this heading">#</a></h2>
 <p>After facing the shortcomings of influence functions for explaining decisions, we move to an application with clear-cut results. Influences can be successfully used to detect corrupted or mislabeled samples, making them an effective tool to “debug” training data.</p>
 <p>We begin by training a new model (with the same architecture as before) on a dataset with some corrupted labels. The method <code class="docutils literal notranslate"><span class="pre">get_corrupted_imagenet</span></code> will take the training dataset and corrupt a certain fraction of the labels by flipping them. We use the same number of epochs and optimizer as before.</p>
 <div class="nbinput docutils container">
@@ -1147,11 +1158,11 @@ F1 score of model with corrupted data: 0.8164795918367347
 </section>
 </section>
 <section id="Theory-of-influence-functions-for-neural-networks">
-<h1>Theory of influence functions for neural networks<a class="headerlink" href="#Theory-of-influence-functions-for-neural-networks" title="Permalink to this heading"></a></h1>
+<h1>Theory of influence functions for neural networks<a class="headerlink" href="#Theory-of-influence-functions-for-neural-networks" title="Permalink to this heading">#</a></h1>
 <p>In this appendix we will briefly go through the basic ideas of influence functions adapted for neural networks as introduced in <em>Koh, Pang Wei, and Percy Liang.</em><a class="reference external" href="https://arxiv.org/pdf/1703.04730.pdf">“Understanding Black-box Predictions via Influence Functions”</a><em>International conference on machine learning. PMLR, 2017.</em></p>
 <p>Note however that this paper departs from the standard and established theory and notation for influence functions. For a rigorous introduction to the topic we recommend classical texts like <em>Hampel, Frank R., Elvezio M. Ronchetti, Peter J. Rousseeuw, and Werner A. Stahel. Robust Statistics: The Approach Based on Influence Functions. 1st edition. Wiley Series in Probability and Statistics. New York: Wiley-Interscience, 2005. https://doi.org/10.1002/9781118186435.</em></p>
 <section id="Upweighting-points">
-<h2>Upweighting points<a class="headerlink" href="#Upweighting-points" title="Permalink to this heading"></a></h2>
+<h2>Upweighting points<a class="headerlink" href="#Upweighting-points" title="Permalink to this heading">#</a></h2>
 <p>Let’s start by considering some input space <span class="math notranslate nohighlight">\(\mathcal{X}\)</span> to a model (e.g. images) and an output space <span class="math notranslate nohighlight">\(\mathcal{Y}\)</span> (e.g. labels). Let’s take <span class="math notranslate nohighlight">\(z_i = (x_i, y_i)\)</span> to be the <span class="math notranslate nohighlight">\(i\)</span>-th training point, and <span class="math notranslate nohighlight">\(\theta\)</span> to be the (potentially highly) multi-dimensional parameters of the neural network (i.e. <span class="math notranslate nohighlight">\(\theta\)</span> is a big array with very many parameters). We will indicate with <span class="math notranslate nohighlight">\(L(z, \theta)\)</span> the loss of the model for point <span class="math notranslate nohighlight">\(z\)</span> and parameters <span class="math notranslate nohighlight">\(\theta\)</span>.
 When training the model we minimize the loss over all points, i.e. the optimal parameters are calculated through gradient descent on the following formula:</p>
 <div class="math-wrapper docutils container">
@@ -1181,7 +1192,7 @@ re-training the full model.</p>
 <p>where <span class="math notranslate nohighlight">\(H_{\hat{\theta}} = \frac{1}{n} \sum_{i=1}^n \nabla_\theta^2 L(z_i, \hat{\theta})\)</span> is the Hessian of <span class="math notranslate nohighlight">\(L\)</span>. Importantly, notice that this expression is only valid when <span class="math notranslate nohighlight">\(\hat{\theta}\)</span> is a minimum of <span class="math notranslate nohighlight">\(L\)</span>, or otherwise <span class="math notranslate nohighlight">\(H_{\hat{\theta}}\)</span> cannot be inverted!</p>
 </section>
 <section id="Approximating-the-influence-of-a-point">
-<h2>Approximating the influence of a point<a class="headerlink" href="#Approximating-the-influence-of-a-point" title="Permalink to this heading"></a></h2>
+<h2>Approximating the influence of a point<a class="headerlink" href="#Approximating-the-influence-of-a-point" title="Permalink to this heading">#</a></h2>
 <p>We will define the influence of training point <span class="math notranslate nohighlight">\(z\)</span> on test point <span class="math notranslate nohighlight">\(z_{\text{test}}\)</span> as <span class="math notranslate nohighlight">\(\mathcal{I}(z, z_{\text{test}}) = L(z_{\text{test}}, \hat{\theta}_{-z}) - L(z_{\text{test}}, \hat{\theta})\)</span> (notice that it is higher for points <span class="math notranslate nohighlight">\(z\)</span> which positively impact the model score, since if they are excluded, the loss is higher). In practice, however, we will always use the infinitesimal approximation <span class="math notranslate nohighlight">\(\mathcal{I}_{up}(z, z_{\text{test}})\)</span>, defined as</p>
 <div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
@@ -1195,7 +1206,7 @@ re-training the full model.</p>
 <p>In order to calculate this expression we need the gradient and the Hessian of the loss wrt. the model parameters <span class="math notranslate nohighlight">\(\hat{\theta}\)</span>. This can be easily done through a single backpropagation pass.</p>
 </section>
 <section id="Regularizing-the-Hessian">
-<h2>Regularizing the Hessian<a class="headerlink" href="#Regularizing-the-Hessian" title="Permalink to this heading"></a></h2>
+<h2>Regularizing the Hessian<a class="headerlink" href="#Regularizing-the-Hessian" title="Permalink to this heading">#</a></h2>
 <p>One very important assumption that we make when approximating influence is that <span class="math notranslate nohighlight">\(\hat{\theta}\)</span> is at least a local minimum of the loss. However, we clearly cannot guarantee this except for convex models, and despite good apparent convergence, <span class="math notranslate nohighlight">\(\hat{\theta}\)</span> might be located in a region with flat curvature or close to a saddle point. In particular, the Hessian might have vanishing eigenvalues making its direct inversion impossible.</p>
 <p>To circumvent this problem, instead of inverting the true Hessian <span class="math notranslate nohighlight">\(H_{\hat{\theta}}\)</span>, one can invert a small perturbation thereof: <span class="math notranslate nohighlight">\(H_{\hat{\theta}} + \lambda \mathbb{I}\)</span>, with <span class="math notranslate nohighlight">\(\mathbb{I}\)</span> being the identity matrix. This standard trick ensures that the eigenvalues of <span class="math notranslate nohighlight">\(H_{\hat{\theta}}\)</span> are bounded away from zero and therefore the matrix is invertible. In order for this regularization not to corrupt the outcome too much, the parameter <span class="math notranslate nohighlight">\(\lambda\)</span> should be as small as
 possible while still allowing a reliable inversion of <span class="math notranslate nohighlight">\(H_{\hat{\theta}} + \lambda \mathbb{I}\)</span>.</p>

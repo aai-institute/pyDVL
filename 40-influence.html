@@ -241,6 +241,7 @@
 <li class="toctree-l3"><a class="reference internal" href="pydvl/value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
@@ -290,7 +291,7 @@
         </div>
         <article role="main">
           <section id="computing-influence-values">
-<span id="influence"></span><h1>Computing influence values<a class="headerlink" href="#computing-influence-values" title="Permalink to this heading"></a></h1>
+<span id="influence"></span><h1>Computing influence values<a class="headerlink" href="#computing-influence-values" title="Permalink to this heading">#</a></h1>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Much of the code in the package <a class="reference internal" href="pydvl/influence.html#module-pydvl.influence" title="pydvl.influence"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.influence</span></code></a> is experimental or
@@ -318,7 +319,7 @@ parameter in the call to the main entry points,
 <a class="reference internal" href="pydvl/influence/linear.html#pydvl.influence.linear.compute_linear_influences" title="pydvl.influence.linear.compute_linear_influences"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_linear_influences()</span></code></a> and
 <code class="xref py py-func docutils literal notranslate"><span class="pre">compute_influences()</span></code>.</p>
 <section id="influence-for-ols">
-<h2>Influence for OLS<a class="headerlink" href="#influence-for-ols" title="Permalink to this heading"></a></h2>
+<h2>Influence for OLS<a class="headerlink" href="#influence-for-ols" title="Permalink to this heading">#</a></h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>This will be deprecated. It makes no sense to have a separate interface for
@@ -341,7 +342,7 @@ function to work with these models.</p>
 least squares regression problem.</p>
 </section>
 <section id="exact-influences-using-the-twicedifferentiable-protocol">
-<h2>Exact influences using the <cite>TwiceDifferentiable</cite> protocol<a class="headerlink" href="#exact-influences-using-the-twicedifferentiable-protocol" title="Permalink to this heading"></a></h2>
+<h2>Exact influences using the <cite>TwiceDifferentiable</cite> protocol<a class="headerlink" href="#exact-influences-using-the-twicedifferentiable-protocol" title="Permalink to this heading">#</a></h2>
 <p>More generally, influences can be computed for any model which implements the
 <code class="xref py py-class docutils literal notranslate"><span class="pre">TwiceDifferentiable</span></code> protocol, i.e. which is capable of calculating
 second derivative matrix vector products and gradients of the loss evaluated on
@@ -357,7 +358,7 @@ training and test samples.</p>
 </pre></div>
 </div>
 <section id="approximate-matrix-inversion">
-<h3>Approximate matrix inversion<a class="headerlink" href="#approximate-matrix-inversion" title="Permalink to this heading"></a></h3>
+<h3>Approximate matrix inversion<a class="headerlink" href="#approximate-matrix-inversion" title="Permalink to this heading">#</a></h3>
 <p>Sometimes it is not possible to construct the complete Hessian in memory. In
 that case one can use conjugate gradient as a space-efficient approximation to
 inverting the full matrix. In pyDVL this can be done with the parameter
@@ -376,7 +377,7 @@ inverting the full matrix. In pyDVL this can be done with the parameter
 </section>
 </section>
 <section id="perturbation-influences">
-<h2>Perturbation influences<a class="headerlink" href="#perturbation-influences" title="Permalink to this heading"></a></h2>
+<h2>Perturbation influences<a class="headerlink" href="#perturbation-influences" title="Permalink to this heading">#</a></h2>
 <p>As mentioned, the method of empirical influence computation can be selected
 in <code class="xref py py-func docutils literal notranslate"><span class="pre">compute_influences()</span></code> with <cite>influence_type</cite>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>

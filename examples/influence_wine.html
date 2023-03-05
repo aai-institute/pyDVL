@@ -241,6 +241,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../pydvl/value/result.html">result</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/actor.html">actor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/knn.html">knn</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
@@ -563,13 +564,23 @@ div.rendered_html tbody tr:hover {
     .nboutput .prompt {
         display: none;
     }
+    @media not print {
+        [data-theme='dark'] .output_area img {
+            filter: invert(0.9);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .output_area img {
+                filter: invert(0.9);
+            }
+        }
+    }
 </style><section id="Influence-functions-and-neural-networks">
-<h1>Influence functions and neural networks<a class="headerlink" href="#Influence-functions-and-neural-networks" title="Permalink to this heading"></a></h1>
+<h1>Influence functions and neural networks<a class="headerlink" href="#Influence-functions-and-neural-networks" title="Permalink to this heading">#</a></h1>
 <p>This notebook shows how to calculate influences on a NN model using pyDVL for an arbitrary dataset, and how this can be used to find anomalous or corrupted data points.</p>
 <p>It uses the wine dataset from sklearn: given a set of 13 different input parameters regarding a particular bottle, each related to some physical property (e.g. concentration of magnesium, malic acidity, alcoholic percentage, etc), the model will need to predict to which of 3 classes the wine belongs to. For more details, please refer to the <a class="reference external" href="https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset">sklearn documentation</a>.</p>
 <p>Let’s start by loading the imports, the dataset and splitting it into train, validation and test sets. We will use a large test set to have a less noisy estimate of the average influence.</p>
 <section id="Imports">
-<h2>Imports<a class="headerlink" href="#Imports" title="Permalink to this heading"></a></h2>
+<h2>Imports<a class="headerlink" href="#Imports" title="Permalink to this heading">#</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -614,7 +625,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="Constants">
-<h2>Constants<a class="headerlink" href="#Constants" title="Permalink to this heading"></a></h2>
+<h2>Constants<a class="headerlink" href="#Constants" title="Permalink to this heading">#</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -635,7 +646,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="Dataset">
-<h2>Dataset<a class="headerlink" href="#Dataset" title="Permalink to this heading"></a></h2>
+<h2>Dataset<a class="headerlink" href="#Dataset" title="Permalink to this heading">#</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -663,7 +674,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </section>
 <section id="Fit-a-neural-network-to-the-data">
-<h2>Fit a neural network to the data<a class="headerlink" href="#Fit-a-neural-network-to-the-data" title="Permalink to this heading"></a></h2>
+<h2>Fit a neural network to the data<a class="headerlink" href="#Fit-a-neural-network-to-the-data" title="Permalink to this heading">#</a></h2>
 <p>We will train a 2-layer neural network. PyDVL has some convenience wrappers to initialize a pytorch NN. If you already have a model loaded and trained, you can skip this section.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
@@ -762,7 +773,7 @@ div.rendered_html tbody tr:hover {
 <p>Let’s now move to calculating influences of each point on the total score.</p>
 </section>
 <section id="Calculating-influences-for-small-neural-networks">
-<h2>Calculating influences for small neural networks<a class="headerlink" href="#Calculating-influences-for-small-neural-networks" title="Permalink to this heading"></a></h2>
+<h2>Calculating influences for small neural networks<a class="headerlink" href="#Calculating-influences-for-small-neural-networks" title="Permalink to this heading">#</a></h2>
 <p>The following cell calculates the influences of each training data point on the neural network. Neural networks have typically a very bumpy parameter space, which, during training, is explored until the configuration that minimises the loss is found. There is an important assumption in influence functions that the model lays at a (at least local) minimum of such loss, and if this is not fulfilled many issues can arise. In order to avoid this scenario, a regularisation term should be used
 whenever dealing with big and noisy models.</p>
 <div class="nbinput docutils container">
@@ -854,7 +865,7 @@ Average influence of other points:  0.005525699381638608
 </div>
 </section>
 <section id="Influence-of-training-features">
-<h2>Influence of training features<a class="headerlink" href="#Influence-of-training-features" title="Permalink to this heading"></a></h2>
+<h2>Influence of training features<a class="headerlink" href="#Influence-of-training-features" title="Permalink to this heading">#</a></h2>
 <p>We have seen how to calculate the influence of single training points on each test point using influence_type ‘up’. Using influence_type ‘perturbation’ we can also calculate the influence of the input features of each point. In the next cell we will calculate the average influence of each feature on training and test points, and ultimately assess which are the most relevant to model performance.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
@@ -910,7 +921,7 @@ Average influence of other points:  0.005525699381638608
 </div>
 </section>
 <section id="Speeding-up-influences-for-big-models">
-<h2>Speeding up influences for big models<a class="headerlink" href="#Speeding-up-influences-for-big-models" title="Permalink to this heading"></a></h2>
+<h2>Speeding up influences for big models<a class="headerlink" href="#Speeding-up-influences-for-big-models" title="Permalink to this heading">#</a></h2>
 <p>The calculation of the Hessian matrix (necessary to calculate the influences) can be quite numerically challenging, but there are some techniques to speed up its calculation. PyDVL allows to use the full method (“direct”) or the conjugate gradient method (“cg”). The first one should be used only for very small networks (like our current example), while for bigger ones “cg” is advisable.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
