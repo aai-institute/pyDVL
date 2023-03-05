@@ -3,6 +3,8 @@ import math
 import numpy as np
 import pytest
 from numpy.typing import NDArray
+
+from pydvl.value import ValuationResult
 from value import check_values
 
 from pydvl.utils.status import Status
@@ -17,23 +19,15 @@ from pydvl.value.semivalues import (
     permutation_shapley,
     shapley,
 )
-from pydvl.value.stopping import (
-    StoppingCriterion,
-    max_samples_criterion,
-    stderr_criterion,
-)
+from pydvl.value.stopping import StoppingCriterion, MaxUpdates, StandardErrorRatio
 
 
 @pytest.mark.parametrize(
     "num_samples, fun, criterion",
     [
         #
-        (5, shapley, stderr_criterion(0.1, 1.0) & ~max_samples_criterion(2**10)),
-        (
-            10,
-            permutation_shapley,
-            stderr_criterion(0.1, 1.0) & ~max_samples_criterion(300),
-        ),
+        (5, shapley, StandardErrorRatio(0.1, 1.0) & ~MaxUpdates(2**10)),
+        (10, permutation_shapley, StandardErrorRatio(0.1, 1.0) & ~MaxUpdates(300)),
     ],
 )
 def test_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
@@ -47,12 +41,8 @@ def test_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion)
     "num_samples, fun, criterion",
     [
         # Uniform sampling with replacement is just too bad
-        # (5, shapley, stderr_criterion(0.2, 1.0) | max_samples_criterion(2**12),
-        (
-            10,
-            permutation_shapley,
-            stderr_criterion(0.1, 1.0) | max_samples_criterion(600),
-        )
+        # (5, shapley, StandardErrorRatio(0.2, 1.0) | MaxUpdates(2**12),
+        (10, permutation_shapley, StandardErrorRatio(0.1, 1.0) | MaxUpdates(600))
     ],
 )
 def test_shapley_convergence(
@@ -68,9 +58,9 @@ def test_shapley_convergence(
 @pytest.mark.parametrize(
     "fun, criterion",
     [
-        (beta_shapley, stderr_criterion(0.1, 1.0) | max_samples_criterion(100)),
-        # (beta_shapley, finite_difference_criterion(7, 10, 0.05, 1) | max_samples_criterion(100),
-        (beta_shapley_paper, stderr_criterion(0.1, 1.0) | max_samples_criterion(100)),
+        (beta_shapley, StandardErrorRatio(0.1, 1.0) | MaxUpdates(100)),
+        # (beta_shapley, finite_difference_criterion(7, 10, 0.05, 1) | MaxUpdates(100),
+        (beta_shapley_paper, StandardErrorRatio(0.1, 1.0) | MaxUpdates(100)),
     ],
 )
 def test_beta_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
@@ -86,33 +76,23 @@ def test_beta_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCrite
         ([1, 1, 1], [0, 0, 0], [1, 1, 1], 1e-4, 1.0, Status.Converged),
         ([1, 2, 3], [0.01, 0.03, 0.08], [1, 1, 1], 0.1, 1.0, Status.Converged),
         ([1, 2, 3], [0.01, 0.03, 0.8], [1, 1, 1], 0.1, 1.0, Status.Pending),
-        (
-            [1, 2, 3],
-            [0.01, 0.03, 0.8],
-            [1, 1, 1],
-            0.1,
-            2 / 3,
-            Status.Converged,
-        ),
+        ([1, 2, 3], [0.01, 0.03, 0.8], [1, 1, 1], 0.1, 2 / 3, Status.Converged),
     ],
 )
 def test_stderr_criterion(
     values: NDArray[np.float_],
     variances: NDArray[np.float_],
-    counts: NDArray[np.int],
+    counts: NDArray[np.int_],
     eps: float,
     values_ratio: float,
     status: Status,
 ):
-    assert (
-        stderr_criterion(eps, values_ratio)(
-            0,  # unused
-            np.array(values, dtype=float),
-            np.array(variances, dtype=float),
-            np.array(counts, dtype=int),
-        )
-        == status
+    v = ValuationResult(
+        values=np.array(values, dtype=float),
+        variances=np.array(variances, dtype=float),
+        counts=np.array(counts, dtype=int),
     )
+    assert StandardErrorRatio(eps, values_ratio)(v) == status
 
 
 @pytest.mark.parametrize(
@@ -127,11 +107,16 @@ def test_stderr_criterion(
 def test_variance_criterion_exceptions(
     values: NDArray[np.float_],
     variances: NDArray[np.float_],
-    counts: NDArray[np.int],
+    counts: NDArray[np.int_],
     exception,
 ):
+    v = ValuationResult(
+        values=np.array(values, dtype=float),
+        variances=np.array(variances, dtype=float),
+        counts=np.array(counts, dtype=int),
+    )
     with pytest.raises(exception):
-        stderr_criterion(0.1, 1.0)(0, values, variances, counts)
+        StandardErrorRatio(0.1, 1.0)(v)
 
 
 @pytest.mark.parametrize("n", [0, 10, 100])
