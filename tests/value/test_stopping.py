@@ -12,7 +12,7 @@ from pydvl.value.stopping import (
     MaxTime,
     MaxUpdates,
     MinUpdates,
-    StandardError,
+    RelativeStandardError,
     StoppingCriterion,
     make_criterion,
 )
@@ -158,11 +158,11 @@ def test_history_deviation(n_steps, rtol):
 
 
 def test_standard_error():
-    """Test the StandardError stopping criterion."""
+    """Test the RelativeStandardError stopping criterion."""
     eps = 0.1
     n = 5
 
-    done = StandardError(threshold=eps)
+    done = RelativeStandardError(threshold=eps)
 
     # Trivial case: no variance.
     v = ValuationResult(values=np.ones(n), variances=np.zeros(n))

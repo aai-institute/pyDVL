@@ -1,12 +1,12 @@
 """
 Stopping criteria for value computations.
 
-This module provides a basic set of stopping criteria: :class:`StandardError`,
-:class:`MaxUpdates`, :class:`MinUpdates`, :class:`MaxTime`, and
-:class:`HistoryDeviation`. These can behave in different ways depending on the
-context. For example, the :class:`MaxUpdates` limits the number of updates to
-values, and different algorithms may different number of utility evaluations or
-other steps in order to perform a single step.
+This module provides a basic set of stopping criteria, like :class:`MaxUpdates`,
+:class:`MaxTime`, or :class:`HistoryDeviation` among others. These can behave in
+different ways depending on the context. For example, :class:`MaxUpdates` limits
+the number of updates to values, which depending on the algorithm may mean a
+different number of utility evaluations or imply other computations like solving
+a linear or quadratic program.
 
 .. rubric:: Creating stopping criteria
 
@@ -36,6 +36,7 @@ from typing import Callable, Optional, Type
 import numpy as np
 from deprecation import deprecated
 from numpy.typing import NDArray
+from scipy.stats import norm
 
 from pydvl.utils import Status
 from pydvl.value import ValuationResult
@@ -44,7 +45,7 @@ __all__ = [
     "make_criterion",
     "StoppingCriterion",
     "StandardError",
-    "StandardErrorRatio",
+    "RelativeStandardError",
     "MaxChecks",
     "MaxUpdates",
     "MinUpdates",
@@ -175,12 +176,18 @@ def make_criterion(
     return WrappedCriterion
 
 
-class StandardErrorRatio(StoppingCriterion):
+class RelativeStandardError(StoppingCriterion):
     """Compute a ratio of standard errors to values to determine convergence.
 
     If $s_i$ is the standard error for datum $i$ and $v_i$ its value, then this
     criterion returns :attr:`~pydvl.utils.status.Status.Converged` if
-    $s_i / v_i < \\epsilon$ for all $i$ and a threshold value $\\epsilon \\gt 0$.
+    $|s_i| < \\epsilon |v_i|$ for all $i$ and a threshold value
+    $\\epsilon \\gt 0$.
+
+    .. warning::
+       Because the test is relative to the magnitude of the value, this criterion
+       will be too strict for values that are close to zero, or too lax for
+       values far from it. This might introduce rank instability.
 
     :param threshold: A value is considered to have converged if the ratio of
         standard error to value has dropped below this value.
@@ -196,8 +203,7 @@ class StandardErrorRatio(StoppingCriterion):
         self.fraction = fraction
 
     def _check(self, result: ValuationResult) -> Status:
-        ratios = result.stderr / result.values
-        self._converged = ratios < self.threshold
+        self._converged = np.abs(result.stderr) < self.threshold * np.abs(result.values)
         if np.mean(self._converged) >= self.fraction:
             return Status.Converged
         return Status.Pending
@@ -211,9 +217,10 @@ class StandardErrorRatio(StoppingCriterion):
 @deprecated(
     deprecated_in="0.6.0",
     removed_in="0.7.0",
-    details="This class has been renamed. Use StandardErrorRatio instead",
+    details="This stopping criterion has been deprecated. "
+    "Use RelativeStandardError instead",
 )
-class StandardError(StandardErrorRatio):
+class StandardError(RelativeStandardError):
     pass
 
 
