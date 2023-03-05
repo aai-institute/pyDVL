@@ -175,18 +175,20 @@ def plot_shapley(
     xlabel: str = None,
     ylabel: str = None,
 ) -> plt.Axes:
-    """Plots the shapley values, as returned from shapley.compute_shapley_values.
+    """Plots the shapley values, as returned from
+    shapley.compute_shapley_values.
 
-    :param dval_df: dataframe with the shapley values
-    :param figsize: tuple with figure size
+    :param df: dataframe with the shapley values
+    :param ax: axes to plot on or None if a new subplots should be created
     :param title: string, title of the plot
     :param xlabel: string, x label of the plot
     :param ylabel: string, y label of the plot
+    :return: the axes created or used
     """
     if ax is None:
         _, ax = plt.subplots()
     ax.errorbar(
-        x=df.index, y=df["data_value"], yerr=df["data_value_std"], fmt="o", capsize=6
+        x=df.index, y=df["data_value"], yerr=df["data_value_stderr"], fmt="o", capsize=6
     )
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)

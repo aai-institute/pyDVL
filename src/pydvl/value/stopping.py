@@ -34,6 +34,7 @@ from time import time
 from typing import Callable, Optional, Type
 
 import numpy as np
+from deprecation import deprecated
 from numpy.typing import NDArray
 
 from pydvl.utils import Status
@@ -43,6 +44,7 @@ __all__ = [
     "make_criterion",
     "StoppingCriterion",
     "StandardError",
+    "StandardErrorRatio",
     "MaxChecks",
     "MaxUpdates",
     "MinUpdates",
@@ -173,7 +175,7 @@ def make_criterion(
     return WrappedCriterion
 
 
-class StandardError(StoppingCriterion):
+class StandardErrorRatio(StoppingCriterion):
     """Compute a ratio of standard errors to values to determine convergence.
 
     If $s_i$ is the standard error for datum $i$ and $v_i$ its value, then this
@@ -182,16 +184,21 @@ class StandardError(StoppingCriterion):
 
     :param threshold: A value is considered to have converged if the ratio of
         standard error to value has dropped below this value.
+    :param fraction: The fraction of values that must have converged for the
+        criterion to return :attr:`~pydvl.utils.status.Status.Converged`.
     """
 
-    def __init__(self, threshold: float, modify_result: bool = True):
+    def __init__(
+        self, threshold: float, fraction: float = 1.0, modify_result: bool = True
+    ):
         super().__init__(modify_result=modify_result)
         self.threshold = threshold
+        self.fraction = fraction
 
     def _check(self, result: ValuationResult) -> Status:
         ratios = result.stderr / result.values
         self._converged = ratios < self.threshold
-        if np.all(self._converged):
+        if np.mean(self._converged) >= self.fraction:
             return Status.Converged
         return Status.Pending
 
@@ -199,6 +206,15 @@ class StandardError(StoppingCriterion):
         if self._converged.size == 0:
             return 0.0
         return np.mean(self._converged).item()
+
+
+@deprecated(
+    deprecated_in="0.6.0",
+    removed_in="0.7.0",
+    details="This class has been renamed. Use StandardErrorRatio instead",
+)
+class StandardError(StandardErrorRatio):
+    pass
 
 
 class MaxChecks(StoppingCriterion):
@@ -356,8 +372,8 @@ class HistoryDeviation(StoppingCriterion):
     This implementation is slightly generalised to allow for different number of
     updates to individual indices, as happens with powerset samplers instead of
     permutations. Every subset of indices that is found to converge can be
-    pinned
-    to that state. Once all indices have converged the method has converged.
+    pinned to that state. Once all indices have converged the method has
+    converged.
 
     .. warning::
        This criterion is meant for the reproduction of the results in the paper,
