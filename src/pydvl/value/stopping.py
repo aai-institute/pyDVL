@@ -85,13 +85,15 @@ class StoppingCriterion(abc.ABC):
         """Check whether the computation should stop."""
         ...
 
-    @abc.abstractmethod
     def completion(self) -> float:
         """Returns a value between 0 and 1 indicating the completion of the
         computation.
         """
-        ...
+        if self.converged.size == 0:
+            return 0.0
+        return np.mean(self.converged).item()
 
+    @property
     def converged(self) -> NDArray[np.bool_]:
         """Returns a boolean array indicating whether the values have converged
         for each data point.
@@ -119,35 +121,36 @@ class StoppingCriterion(abc.ABC):
     def __and__(self, other: "StoppingCriterion") -> "StoppingCriterion":
         return make_criterion(
             fun=lambda result: self._check(result) & other._check(result),
-            completion=lambda: min(self.completion(), other.completion()),
+            converged=lambda: self.converged & other.converged,
             name=f"Composite StoppingCriterion: {self.name} AND {other.name}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __or__(self, other: "StoppingCriterion") -> "StoppingCriterion":
         return make_criterion(
             fun=lambda result: self._check(result) | other._check(result),
-            completion=lambda: max(self.completion(), other.completion()),
+            converged=lambda: self.converged | other.converged,
             name=f"Composite StoppingCriterion: {self.name} OR {other.name}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __invert__(self) -> "StoppingCriterion":
         return make_criterion(
             fun=lambda result: ~self._check(result),
-            completion=lambda: 1 - self.completion(),
+            converged=lambda: ~self.converged,
             name=f"Composite StoppingCriterion: NOT {self.name}",
         )(modify_result=self.modify_result)
 
 
 def make_criterion(
     fun: StoppingCriterionCallable,
-    completion: Callable[[], float] = None,
+    converged: Callable[[], NDArray[np.bool_]] = None,
     name: str = None,
 ) -> Type[StoppingCriterion]:
     """Create a new :class:`StoppingCriterion` from a function.
     Use this to enable simpler functions to be composed with bitwise operators
 
     :param fun: The callable to wrap.
-    :param completion: A callable that returns a value between 0 and 1.
+    :param converged: A callable that returns a boolean array indicating whether
+        the values have converged for each data point.
     :param name: The name of the new criterion. If ``None``, the ``__name__`` of
         the function is used.
     :return: A new subclass of :class:`StoppingCriterion`.
@@ -161,17 +164,13 @@ def make_criterion(
         def _check(self, result: ValuationResult) -> Status:
             return fun(result)
 
-        def completion(self) -> float:
-            return completion() if completion is not None else 0.0
+        @property
+        def converged(self) -> NDArray[np.bool_]:
+            return converged()
 
         @property
         def name(self):
             return self._name
-
-        def converged(self) -> NDArray[np.bool_]:
-            raise NotImplementedError(
-                "Cannot determine individual sample convergence from a function"
-            )
 
     return WrappedCriterion
 
@@ -205,11 +204,6 @@ class AbsoluteStandardError(StoppingCriterion):
         if np.mean(self._converged) >= self.fraction:
             return Status.Converged
         return Status.Pending
-
-    def completion(self) -> float:
-        if self._converged.size == 0:
-            return 0.0
-        return np.mean(self._converged).item()
 
 
 @deprecated(
@@ -282,11 +276,6 @@ class ConfidenceIntervalSeparation(StoppingCriterion):
             return Status.Converged
         return Status.Pending
 
-    def completion(self) -> float:
-        if self._converged.size == 0:
-            return 0.0
-        return np.mean(self._converged).item()
-
 
 class MaxChecks(StoppingCriterion):
     """Terminate as soon as the number of checks exceeds the threshold.
@@ -309,6 +298,7 @@ class MaxChecks(StoppingCriterion):
         if self.n_checks:
             self._count += 1
             if self._count > self.n_checks:
+                self._converged = np.ones_like(result.values, dtype=bool)
                 return Status.Converged
         return Status.Pending
 
@@ -503,6 +493,3 @@ class HistoryDeviation(StoppingCriterion):
                 if np.all(self._converged):
                     return Status.Converged
         return Status.Pending
-
-    def completion(self) -> float:
-        return np.mean(self._converged or [0]).item()
