@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- Fixed problem with `StandardError` stopping criterion and added new adhoc
-  criterion based on normal confidence intervals `ConfidenceIntervalSeparation`.
+- Fixed problem with `StandardError` stopping criterion and a bug with `n_jobs`
+  in `truncated_montecarlo_shapley`.
   [PR #300](https://github.com/appliedAI-Initiative/pyDVL/pull/300)
 - Shuffling code around to allow for simpler user imports, some cleanup and
   documentation fixes.
