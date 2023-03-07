@@ -149,8 +149,8 @@ def make_criterion(
     Use this to enable simpler functions to be composed with bitwise operators
 
     :param fun: The callable to wrap.
-    :param converged: A callable that returns a boolean array indicating whether
-        the values have converged for each data point.
+    :param converged: A callable that returns a boolean array indicating what
+        values have converged.
     :param name: The name of the new criterion. If ``None``, the ``__name__`` of
         the function is used.
     :return: A new subclass of :class:`StoppingCriterion`.
@@ -166,6 +166,8 @@ def make_criterion(
 
         @property
         def converged(self) -> NDArray[np.bool_]:
+            if converged is None:
+                return super().converged
             return converged()
 
         @property
