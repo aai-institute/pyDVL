@@ -107,7 +107,7 @@ u = Utility(model, data, Scorer("accuracy", default=0.0))
 values = compute_shapley_values(
         u,
         mode=ShapleyMode.TruncatedMontecarlo,
-        done=MaxUpdates(100) | RelativeStandardError(threshold=0.01),
+        done=MaxUpdates(100) | AbsoluteStandardError(threshold=0.01),
         truncation=RelativeTruncation(u, rtol=0.01),
         )
 ```
