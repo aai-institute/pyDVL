@@ -59,13 +59,21 @@ def lc_solve_problem(
 
     logger.debug("Building equality constraint")
     A_eq = np.ones((1, n))
-    # We might have already computed the total utility. That's the index of the
-    # row in A_lb with all ones.
-    total_utility_index = np.where(A_lb.sum(axis=1) == n)[0]
-    if len(total_utility_index) == 0:
+    # We might have already computed the total utility one or more times.
+    # This is the index of the row(s) in A_lb with all ones.
+    total_utility_indices = np.where(A_lb.sum(axis=1) == n)[0]
+    if len(total_utility_indices) == 0:
         b_eq = np.array([u(u.data.indices)])
     else:
-        b_eq = b_lb[total_utility_index]
+        b_eq = b_lb[total_utility_indices]
+        # When not using the non-negativity constraint
+        # on the subsidy, we remove the row corresponding
+        # to the total utility from the lower bound constraints
+        if not non_negative_subsidy:
+            mask = np.ones_like(b_lb, dtype=bool)
+            mask[total_utility_indices] = False
+            b_lb = b_lb[mask]
+            A_lb = A_lb[mask]
 
     _, subsidy = _solve_least_core_linear_program(
         A_eq=A_eq,
