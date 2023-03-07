@@ -149,8 +149,9 @@ class Dataset:
         """Given a set of indices, returns the training data that refer to those
         indices.
 
-        This is used to retrieve subsets of the data from indices to calculate
-        Shapley values.
+        This is used mainly by :class:`~pydvl.utils.utility.Utility` to retrieve
+        subsets of the data from indices. It is typically **not needed in
+        algorithms**.
 
         :param indices: Optional indices that will be used to select points
             from the training data. If ``None``, the entire training data will
@@ -321,12 +322,7 @@ class Dataset:
             random_state=random_state,
             stratify=y if stratify_by_target else None,
         )
-        return cls(
-            x_train,
-            y_train,
-            x_test,
-            y_test,
-        )
+        return cls(x_train, y_train, x_test, y_test)
 
 
 class GroupedDataset(Dataset):
@@ -645,10 +641,7 @@ def synthetic_classification_dataset(
         + mus[y]
     )
     x, x_test, y, y_test = train_test_split(
-        x,
-        y,
-        train_size=1 - test_size,
-        random_state=random_seed,
+        x, y, train_size=1 - test_size, random_state=random_seed
     )
     x_train, x_val, y_train, y_val = train_test_split(
         x, y, train_size=train_size / (1 - test_size), random_state=random_seed
