@@ -17,7 +17,7 @@ def exact_least_core(
     u: Utility,
     *,
     non_negative_subsidy: bool = False,
-    options: Optional[dict] = None,
+    solver_options: Optional[dict] = None,
     progress: bool = True,
 ) -> ValuationResult:
     r"""Computes the exact Least Core values.
@@ -44,7 +44,7 @@ def exact_least_core(
     :param u: Utility object with model, data, and scoring function
     :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
         to be non-negative.
-    :param options: Keyword arguments that will be used to select a solver
+    :param solver_options: Dictionary of options that will be used to select a solver
         and to configure it. Refer to the following page for all possible options:
         https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
     :param progress: If True, shows a tqdm progress bar
@@ -61,7 +61,7 @@ def exact_least_core(
         u=u,
         algorithm="exact_least_core",
         non_negative_subsidy=non_negative_subsidy,
-        **(options or {}),
+        solver_options=solver_options,
     )
 
 

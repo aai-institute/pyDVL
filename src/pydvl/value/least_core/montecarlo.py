@@ -29,7 +29,7 @@ def montecarlo_least_core(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     non_negative_subsidy: bool = False,
-    options: Optional[dict] = None,
+    solver_options: Optional[dict] = None,
     progress: bool = False,
 ) -> ValuationResult:
     r"""Computes approximate Least Core values using a Monte Carlo approach.
@@ -56,7 +56,7 @@ def montecarlo_least_core(
         address, number of cpus, etc.
     :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
         to be non-negative.
-    :param options: Keyword arguments that will be used to select a solver
+    :param solver_options: Dictionary of options that will be used to select a solver
         and to configure it. Refer to the following page for all possible options:
         https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
     :param progress: If True, shows a tqdm progress bar
@@ -70,7 +70,7 @@ def montecarlo_least_core(
         u=u,
         algorithm="montecarlo_least_core",
         non_negative_subsidy=non_negative_subsidy,
-        **(options or {}),
+        solver_options=solver_options,
     )
 
 

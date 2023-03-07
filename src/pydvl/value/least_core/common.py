@@ -32,7 +32,7 @@ def lc_solve_problem(
     u: Utility,
     algorithm: str,
     non_negative_subsidy: bool = False,
-    **options,
+    solver_options: Optional[dict] = None,
 ) -> ValuationResult:
     """Solves a linear problem prepared by :func:`mclc_prepare_problem`.
     Useful for parallel execution of multiple experiments by running this as a
@@ -81,7 +81,7 @@ def lc_solve_problem(
         A_lb=A_lb,
         b_lb=b_lb,
         non_negative_subsidy=non_negative_subsidy,
-        **options,
+        solver_options=solver_options,
     )
 
     values: Optional[NDArray[np.float_]]
@@ -99,7 +99,7 @@ def lc_solve_problem(
             b_eq=b_eq,
             A_lb=A_lb,
             b_lb=b_lb,
-            **options,
+            solver_options=solver_options,
         )
 
         if values is None:
@@ -128,7 +128,7 @@ def lc_solve_problems(
     config: ParallelConfig = ParallelConfig(),
     n_jobs: int = 1,
     non_negative_subsidy: bool = False,
-    **options,
+    solver_options: Optional[dict] = None,
 ) -> List[ValuationResult]:
     """Solves a list of linear problems in parallel.
 
@@ -141,7 +141,7 @@ def lc_solve_problems(
     :param n_jobs: Number of parallel jobs to run.
     :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
         to be non-negative.
-    :param options: Additional options to pass to the solver.
+    :param solver_options: Additional options to pass to the solver.
     :return: List of solutions.
     """
 
@@ -155,7 +155,12 @@ def lc_solve_problems(
     ] = MapReduceJob(
         inputs=problems,
         map_func=_map_func,
-        map_kwargs=dict(u=u, algorithm=algorithm, **options),
+        map_kwargs=dict(
+            u=u,
+            algorithm=algorithm,
+            non_negative_subsidy=non_negative_subsidy,
+            solver_options=solver_options,
+        ),
         reduce_func=lambda x: list(itertools.chain(*x)),
         config=config,
         n_jobs=n_jobs,
@@ -171,7 +176,7 @@ def _solve_least_core_linear_program(
     A_lb: NDArray[np.float_],
     b_lb: NDArray[np.float_],
     non_negative_subsidy: bool = False,
-    **options,
+    solver_options: Optional[dict] = None,
 ) -> Tuple[Optional[NDArray[np.float_]], Optional[float]]:
     """Solves the Least Core's linear program using cvxopt.
 
@@ -205,6 +210,9 @@ def _solve_least_core_linear_program(
     """
     logger.debug(f"Solving linear program : {A_eq=}, {b_eq=}, {A_lb=}, {b_lb=}")
 
+    if solver_options is None:
+        solver_options = {}
+
     n_variables = A_eq.shape[1]
 
     x = cp.Variable(n_variables)
@@ -221,10 +229,10 @@ def _solve_least_core_linear_program(
 
     problem = cp.Problem(objective, constraints)
 
-    solver = options.pop("solver", cp.ECOS)
+    solver = solver_options.pop("solver", cp.ECOS)
 
     try:
-        problem.solve(solver=solver, **options)
+        problem.solve(solver=solver, **solver_options)
     except cp.error.SolverError as err:
         raise ValueError("Could not solve linear program") from err
 
@@ -264,7 +272,7 @@ def _solve_egalitarian_least_core_quadratic_program(
     b_eq: NDArray[np.float_],
     A_lb: NDArray[np.float_],
     b_lb: NDArray[np.float_],
-    **options,
+    solver_options: Optional[dict] = None,
 ) -> Optional[NDArray[np.float_]]:
     """Solves the egalitarian Least Core's quadratic program using cvxopt.
 
@@ -290,11 +298,14 @@ def _solve_egalitarian_least_core_quadratic_program(
         coefficients of a linear inequality constraint on ``x``.
     :param b_lb: The inequality constraint vector. Each element represents a
         lower bound on the corresponding value of ``A_lb @ x``.
-    :param options: Keyword arguments that will be used to select a solver
+    :param solver_options: Keyword arguments that will be used to select a solver
         and to configure it. Refer to the following page for all possible options:
         https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
     """
     logger.debug(f"Solving quadratic program : {A_eq=}, {b_eq=}, {A_lb=}, {b_lb=}")
+
+    if solver_options is None:
+        solver_options = {}
 
     if subsidy < 0:
         raise ValueError("The least core subsidy must be non-negative.")
@@ -310,10 +321,10 @@ def _solve_egalitarian_least_core_quadratic_program(
     ]
     problem = cp.Problem(objective, constraints)
 
-    solver = options.pop("solver", cp.ECOS)
+    solver = solver_options.pop("solver", cp.ECOS)
 
     try:
-        problem.solve(solver=solver, **options)
+        problem.solve(solver=solver, **solver_options)
     except cp.error.SolverError as err:
         raise ValueError("Could not solve quadratic program") from err
 

@@ -20,8 +20,11 @@ parallelized itself, so preparing the problems should be done in sequence in thi
 case. The solution of the linear systems can then be done in parallel.
 
 """
+import warnings
 from enum import Enum
 from typing import Optional
+
+from deprecation import DeprecatedWarning
 
 from pydvl.utils.utility import Utility
 from pydvl.value.least_core.montecarlo import *
@@ -45,6 +48,7 @@ def compute_least_core_values(
     n_iterations: Optional[int] = None,
     mode: LeastCoreMode = LeastCoreMode.MonteCarlo,
     non_negative_subsidy: bool = False,
+    solver_options: Optional[dict] = None,
     **kwargs,
 ) -> ValuationResult:
     """Umbrella method to compute Least Core values with any of the available
@@ -69,13 +73,20 @@ def compute_least_core_values(
         options.
     :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
         to be non-negative.
-    :param kwargs: Additional keyword arguments passed to the solver.
+    :param solver_options: Optional dictionary of options passed to the solvers.
 
     :return: ValuationResult object with the computed values.
 
     .. versionadded:: 0.5.0
     """
     progress: bool = kwargs.pop("progress", False)
+
+    if kwargs:
+        warnings.warn(
+            "Passing solver options as kwargs was deprecated in 0.6 and will be removed in 0.7. "
+            "Use solver_options instead.",
+            DeprecatedWarning,
+        )
 
     if mode == LeastCoreMode.MonteCarlo:
         # TODO fix progress showing and maybe_progress in remote case
@@ -88,14 +99,14 @@ def compute_least_core_values(
             n_jobs=n_jobs,
             progress=progress,
             non_negative_subsidy=non_negative_subsidy,
-            options=kwargs,
+            solver_options=solver_options,
         )
     elif mode == LeastCoreMode.Exact:
         return exact_least_core(
             u=u,
             progress=progress,
             non_negative_subsidy=non_negative_subsidy,
-            options=kwargs,
+            solver_options=solver_options,
         )
 
     raise ValueError(f"Invalid value encountered in {mode=}")
