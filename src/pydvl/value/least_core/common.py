@@ -20,14 +20,19 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-LeastCoreProblem = NamedTuple(
-    "LeastCoreProblem",
-    [("utility_values", NDArray[np.float_]), ("A_lb", NDArray[np.float_])],
-)
+
+class LeastCoreProblem(NamedTuple):
+    utility_values: NDArray[np.float_]
+    A_lb: NDArray[np.float_]
 
 
 def lc_solve_problem(
-    problem: LeastCoreProblem, *, u: Utility, algorithm: str, **options
+    problem: LeastCoreProblem,
+    *,
+    u: Utility,
+    algorithm: str,
+    non_negative_subsidy: bool = False,
+    **options,
 ) -> ValuationResult:
     """Solves a linear problem prepared by :func:`mclc_prepare_problem`.
     Useful for parallel execution of multiple experiments by running this as a
@@ -63,7 +68,12 @@ def lc_solve_problem(
         b_eq = b_lb[total_utility_index]
 
     _, subsidy = _solve_least_core_linear_program(
-        A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
+        A_eq=A_eq,
+        b_eq=b_eq,
+        A_lb=A_lb,
+        b_lb=b_lb,
+        non_negative_subsidy=non_negative_subsidy,
+        **options,
     )
 
     values: Optional[NDArray[np.float_]]
@@ -109,6 +119,7 @@ def lc_solve_problems(
     algorithm: str,
     config: ParallelConfig = ParallelConfig(),
     n_jobs: int = 1,
+    non_negative_subsidy: bool = False,
     **options,
 ) -> List[ValuationResult]:
     """Solves a list of linear problems in parallel.
@@ -120,6 +131,8 @@ def lc_solve_problems(
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param n_jobs: Number of parallel jobs to run.
+    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        to be non-negative.
     :param options: Additional options to pass to the solver.
     :return: List of solutions.
     """
@@ -149,6 +162,7 @@ def _solve_least_core_linear_program(
     b_eq: NDArray[np.float_],
     A_lb: NDArray[np.float_],
     b_lb: NDArray[np.float_],
+    non_negative_subsidy: bool = False,
     **options,
 ) -> Tuple[Optional[NDArray[np.float_]], Optional[float]]:
     """Solves the Least Core's linear program using cvxopt.
@@ -160,11 +174,12 @@ def _solve_least_core_linear_program(
         & A_{lb} x + e \ge b_{lb},\\
         & A_{eq} x = b_{eq},\\
         & x in \mathcal{R}^n , \\
-        & e \ge 0
 
      where :math:`x` is a vector of decision variables; ,
     :math:`b_{ub}`, :math:`b_{eq}`, :math:`l`, and :math:`u` are vectors; and
     :math:`A_{ub}` and :math:`A_{eq}` are matrices.
+
+    if `non_negative_subsidy` is True, then an additional constraint $e \ge 0$ is used.
 
     :param A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies the
         coefficients of a linear equality constraint on ``x``.
@@ -174,6 +189,8 @@ def _solve_least_core_linear_program(
         coefficients of a linear inequality constraint on ``x``.
     :param b_lb: The inequality constraint vector. Each element represents a
         lower bound on the corresponding value of ``A_lb @ x``.
+    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        to be non-negative.
     :param options: Keyword arguments that will be used to select a solver
         and to configure it. For all possible options, refer to `cvxpy's documentation
         <https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options>`_
@@ -187,10 +204,13 @@ def _solve_least_core_linear_program(
 
     objective = cp.Minimize(e)
     constraints = [
-        e >= 0,
         A_eq @ x == b_eq,
         (A_lb @ x + e * np.ones(len(A_lb))) >= b_lb,
     ]
+
+    if non_negative_subsidy:
+        constraints += [e >= 0]
+
     problem = cp.Problem(objective, constraints)
 
     solver = options.pop("solver", cp.ECOS)

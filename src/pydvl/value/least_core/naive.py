@@ -14,7 +14,11 @@ logger = logging.getLogger(__name__)
 
 
 def exact_least_core(
-    u: Utility, *, options: Optional[dict] = None, progress: bool = True
+    u: Utility,
+    *,
+    non_negative_subsidy: bool = False,
+    options: Optional[dict] = None,
+    progress: bool = True,
 ) -> ValuationResult:
     r"""Computes the exact Least Core values.
 
@@ -38,6 +42,8 @@ def exact_least_core(
     Where $N = \{1, 2, \dots, n\}$ are the training set's indices.
 
     :param u: Utility object with model, data, and scoring function
+    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        to be non-negative.
     :param options: Keyword arguments that will be used to select a solver
         and to configure it. Refer to the following page for all possible options:
         https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
@@ -51,7 +57,11 @@ def exact_least_core(
 
     problem = lc_prepare_problem(u, progress=progress)
     return lc_solve_problem(
-        problem=problem, u=u, algorithm="exact_least_core", **(options or {})
+        problem=problem,
+        u=u,
+        algorithm="exact_least_core",
+        non_negative_subsidy=non_negative_subsidy,
+        **(options or {}),
     )
 
 

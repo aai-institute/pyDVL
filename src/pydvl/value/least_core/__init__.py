@@ -44,6 +44,7 @@ def compute_least_core_values(
     n_jobs: int = 1,
     n_iterations: Optional[int] = None,
     mode: LeastCoreMode = LeastCoreMode.MonteCarlo,
+    non_negative_subsidy: bool = False,
     **kwargs,
 ) -> ValuationResult:
     """Umbrella method to compute Least Core values with any of the available
@@ -66,6 +67,8 @@ def compute_least_core_values(
         Only used for Monte Carlo Least Core.
     :param mode: Algorithm to use. See :class:`LeastCoreMode` for available
         options.
+    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        to be non-negative.
     :param kwargs: Additional keyword arguments passed to the solver.
 
     :return: ValuationResult object with the computed values.
@@ -84,9 +87,15 @@ def compute_least_core_values(
             n_iterations=n_iterations,
             n_jobs=n_jobs,
             progress=progress,
+            non_negative_subsidy=non_negative_subsidy,
             options=kwargs,
         )
     elif mode == LeastCoreMode.Exact:
-        return exact_least_core(u=u, progress=progress, options=kwargs)
+        return exact_least_core(
+            u=u,
+            progress=progress,
+            non_negative_subsidy=non_negative_subsidy,
+            options=kwargs,
+        )
 
     raise ValueError(f"Invalid value encountered in {mode=}")

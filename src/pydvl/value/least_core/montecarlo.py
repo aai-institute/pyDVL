@@ -28,6 +28,7 @@ def montecarlo_least_core(
     *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
+    non_negative_subsidy: bool = False,
     options: Optional[dict] = None,
     progress: bool = False,
 ) -> ValuationResult:
@@ -53,6 +54,8 @@ def montecarlo_least_core(
     :param n_jobs: number of jobs across which to distribute the computation
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
+    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        to be non-negative.
     :param options: Keyword arguments that will be used to select a solver
         and to configure it. Refer to the following page for all possible options:
         https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
@@ -63,7 +66,11 @@ def montecarlo_least_core(
         u, n_iterations, n_jobs=n_jobs, config=config, progress=progress
     )
     return lc_solve_problem(
-        problem, u=u, algorithm="montecarlo_least_core", **(options or {})
+        problem,
+        u=u,
+        algorithm="montecarlo_least_core",
+        non_negative_subsidy=non_negative_subsidy,
+        **(options or {}),
     )
 
 
