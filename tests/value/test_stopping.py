@@ -7,12 +7,12 @@ import pytest
 from pydvl.utils import Status
 from pydvl.value import ValuationResult
 from pydvl.value.stopping import (
+    AbsoluteStandardError,
     HistoryDeviation,
     MaxChecks,
     MaxTime,
     MaxUpdates,
     MinUpdates,
-    AbsoluteStandardError,
     StoppingCriterion,
     make_criterion,
 )

@@ -5,9 +5,8 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 from matplotlib.axes import Axes
-from scipy.stats import norm
-
 from numpy.typing import NDArray
+from scipy.stats import norm
 
 
 def shaded_mean_std(
