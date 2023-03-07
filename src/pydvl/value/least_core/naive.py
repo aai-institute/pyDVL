@@ -87,6 +87,10 @@ def lc_prepare_problem(u: Utility, progress: bool = False) -> LeastCoreProblem:
             powerset(u.data.indices), progress, total=powerset_size - 1, position=0
         )
     ):
+        # Skip empty subset otherwise it would just result
+        # in the constraint e >= 0
+        if len(subset) == 0:
+            continue
         indices = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
         A_lb[i, indices] = 1
