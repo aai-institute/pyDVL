@@ -43,10 +43,9 @@ from pydvl.value import ValuationResult
 
 __all__ = [
     "make_criterion",
-    "ConfidenceIntervalSeparation",
+    "AbsoluteStandardError",
     "StoppingCriterion",
     "StandardError",
-    "RelativeStandardError",
     "MaxChecks",
     "MaxUpdates",
     "MinUpdates",
@@ -177,21 +176,19 @@ def make_criterion(
     return WrappedCriterion
 
 
-class RelativeStandardError(StoppingCriterion):
-    r"""Compute a ratio of standard errors to values to determine convergence.
+class AbsoluteStandardError(StoppingCriterion):
+    r"""Determine convergence based on the standard error of the values.
 
     If $s_i$ is the standard error for datum $i$ and $v_i$ its value, then this
     criterion returns :attr:`~pydvl.utils.status.Status.Converged` if
-    $| s_i | < \epsilon | v_i | $ for all $i$ and a threshold value
-    $\epsilon \gt 0$.
+    $s_i < \epsilon$ for all $i$ and a threshold value $\epsilon \gt 0$.
 
-    .. warning::
-       Because the test is relative to the magnitude of the value, this criterion
-       will be too strict for values that are close to zero, or too lax for
-       values far from it. This might introduce rank instability.
-
-    :param threshold: A value is considered to have converged if the ratio of
-        standard error to value has dropped below this value.
+    :param threshold: A value is considered to have converged if the standard
+        error is below this value. A way of choosing it is to pick some
+        percentage of the range of the values. For Shapley values this is the
+        difference between the maximum and minimum of the utility function (to
+        see this substitute the maximum and minimum values of the utility into
+        the marginal contribution formula).
     :param fraction: The fraction of values that must have converged for the
         criterion to return :attr:`~pydvl.utils.status.Status.Converged`.
     """
@@ -204,7 +201,7 @@ class RelativeStandardError(StoppingCriterion):
         self.fraction = fraction
 
     def _check(self, result: ValuationResult) -> Status:
-        self._converged = np.abs(result.stderr) < self.threshold * np.abs(result.values)
+        self._converged = result.stderr < self.threshold
         if np.mean(self._converged) >= self.fraction:
             return Status.Converged
         return Status.Pending
@@ -219,9 +216,9 @@ class RelativeStandardError(StoppingCriterion):
     deprecated_in="0.6.0",
     removed_in="0.7.0",
     details="This stopping criterion has been deprecated. "
-    "Use RelativeStandardError instead",
+    "Use AbsoluteStandardError instead",
 )
-class StandardError(RelativeStandardError):
+class StandardError(AbsoluteStandardError):
     pass
 
 
