@@ -19,6 +19,7 @@ import warnings
 from typing import Dict, FrozenSet, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
+from dataclasses import asdict
 from numpy.typing import NDArray
 from sklearn.base import clone
 from sklearn.metrics import check_scoring
@@ -141,7 +142,10 @@ class Utility:
 
     def _initialize_utility_wrapper(self):
         if self.enable_cache:
-            self._utility_wrapper = memcached(self.cache_options)(  # type: ignore
+            # asdict() is recursive, but we want client_config to remain a dataclass
+            options = asdict(self.cache_options)
+            options["client_config"] = self.cache_options.client_config
+            self._utility_wrapper = memcached(**options)(  # type: ignore
                 self._utility, signature=self._signature
             )
         else:
