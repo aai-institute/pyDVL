@@ -57,6 +57,8 @@ def lc_solve_problem(
 
     if "solver" not in solver_options:
         solver_options["solver"] = cp.SCS
+
+    if "max_iters" not in solver_options and solver_options["solver"] == cp.SCS:
         solver_options["max_iters"] = 10000
 
     logger.debug("Removing possible duplicate values in lower bound array")
