@@ -5,7 +5,8 @@
 - Stopping criteria: fixed problem with `StandardError` and enable proper composition
   of index convergence statuses. Fixed a bug with `n_jobs` in
   `truncated_montecarlo_shapley`.
-  [PR #300](https://github.com/appliedAI-Initiative/pyDVL/pull/300)
+  [PR #300](https://github.com/appliedAI-Initiative/pyDVL/pull/300) and
+  [PR #305](https://github.com/appliedAI-Initiative/pyDVL/pull/305)
 - Shuffling code around to allow for simpler user imports, some cleanup and
   documentation fixes.
   [PR #284](https://github.com/appliedAI-Initiative/pyDVL/pull/284)
