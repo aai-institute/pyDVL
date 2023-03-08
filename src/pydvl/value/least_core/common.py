@@ -75,17 +75,19 @@ def lc_solve_problem(
         b_eq = np.array([u(u.data.indices)])
     else:
         b_eq = b_lb[total_utility_indices]
-        # When not using the non-negativity constraint
-        # on the subsidy, we remove the row corresponding
-        # to the total utility from the lower bound constraints
-        if not non_negative_subsidy:
-            mask = np.ones_like(b_lb, dtype=bool)
-            mask[total_utility_indices] = False
-            b_lb = b_lb[mask]
-            A_lb = A_lb[mask]
+        # Remove the row(s) corresponding to the total utility
+        # from the lower bound constraints
+        # because it is the same as using the constraint e >= 0
+        # (i.e. setting non_negative_subsidy = True)
+        # Because we already have the equality constraint.
+        mask = np.ones_like(b_lb, dtype=bool)
+        mask[total_utility_indices] = False
+        b_lb = b_lb[mask]
+        A_lb = A_lb[mask]
 
-    # Skip empty subset otherwise it would just result
-    # in the constraint e >= 0
+    # Remove the row(s) corresponding to the empty subset
+    # because it is the same as using the constraint e >= 0
+    # (i.e. setting non_negative_subsidy = True)
     emptyset_utility_indices = np.where(A_lb.sum(axis=1) == 0)[0]
     if len(emptyset_utility_indices) > 0:
         mask = np.ones_like(b_lb, dtype=bool)
