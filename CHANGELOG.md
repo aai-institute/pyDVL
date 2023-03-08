@@ -4,6 +4,13 @@
 
 - Refactoring of influence functions and removal of torch wrappers
   [PR #278](https://github.com/appliedAI-Initiative/pyDVL/pull/278)
+- Stopping criteria: fixed problem with `StandardError` and enable proper composition
+  of index convergence statuses. Fixed a bug with `n_jobs` in
+  `truncated_montecarlo_shapley`.
+  [PR #300](https://github.com/appliedAI-Initiative/pyDVL/pull/300)
+- Shuffling code around to allow for simpler user imports, some cleanup and
+  documentation fixes.
+  [PR #284](https://github.com/appliedAI-Initiative/pyDVL/pull/284)
 - **Bug fix**: Warn instead of raising an error when `n_iterations`
   is less than the size of the dataset in Monte Carlo Least Core
   [PR #281](https://github.com/appliedAI-Initiative/pyDVL/pull/281)

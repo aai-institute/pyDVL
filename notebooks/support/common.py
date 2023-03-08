@@ -185,6 +185,7 @@ def plot_iris(
 
     if colors is None:
         colors = y_train
+    marker_size = 2 * plt.rcParams["lines.markersize"] ** 2
 
     def _handle_legend(scatter):
         if len(np.unique(colors)) > 10:
@@ -215,6 +216,7 @@ def plot_iris(
         x_train[sepal_length_indices],
         x_train[sepal_width_indices],
         c=colors,
+        s=marker_size,
         marker="o",
         alpha=0.8,
     )
@@ -229,7 +231,7 @@ def plot_iris(
             x_train[sepal_width_indices][highlight_indices],
             facecolors="none",
             edgecolors="r",
-            s=80,
+            s=marker_size * 1.1,
         )
 
     plt.subplot(1, 2, 2)
@@ -248,6 +250,7 @@ def plot_iris(
         x_train[petal_width_indices],
         c=colors,
         marker="o",
+        s=marker_size,
         alpha=0.8,
     )
     plt.xlim(xmin - xmargin, xmax + xmargin)
