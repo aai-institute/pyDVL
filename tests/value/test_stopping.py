@@ -162,7 +162,7 @@ def test_standard_error():
     eps = 0.1
     n = 5
 
-    done = AbsoluteStandardError(threshold=eps)
+    done = AbsoluteStandardError(threshold=eps, fraction=1.0, burn_in=0)
 
     # Trivial case: no variance.
     v = ValuationResult(values=np.ones(n), variances=np.zeros(n))
