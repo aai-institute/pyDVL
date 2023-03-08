@@ -75,6 +75,15 @@ def lc_solve_problem(
             b_lb = b_lb[mask]
             A_lb = A_lb[mask]
 
+    # Skip empty subset otherwise it would just result
+    # in the constraint e >= 0
+    emptyset_utility_indices = np.where(A_lb.sum(axis=1) == 0)[0]
+    if len(emptyset_utility_indices) > 0:
+        mask = np.ones_like(b_lb, dtype=bool)
+        mask[emptyset_utility_indices] = False
+        b_lb = b_lb[mask]
+        A_lb = A_lb[mask]
+
     _, subsidy = _solve_least_core_linear_program(
         A_eq=A_eq,
         b_eq=b_eq,
@@ -238,24 +247,13 @@ def _solve_least_core_linear_program(
 
     if problem.status in cp.settings.SOLUTION_PRESENT:
         logger.debug("Problem was solved")
-        if problem.status in [cp.settings.OPTIMAL_INACCURATE, cp.settings.USER_LIMIT]:
+        if problem.status == cp.settings.USER_LIMIT:
             warnings.warn(
                 "Solver terminated early. Consider increasing the solver's "
-                "maximum number of iterations in options",
+                "maximum number of iterations in solver_options",
                 RuntimeWarning,
             )
         subsidy = e.value.item()
-        # HACK: sometimes the returned least core subsidy
-        # is negative but very close to 0
-        # to avoid any problems with the subsequent quadratic program
-        # we just set it to 0.0
-        if subsidy < 0:
-            warnings.warn(
-                f"Least core subsidy e={subsidy} is negative but close to zero. "
-                "It will be set to 0.0",
-                RuntimeWarning,
-            )
-            subsidy = 0.0
         return x.value, subsidy
 
     if problem.status in cp.settings.INF_OR_UNB:
@@ -307,9 +305,6 @@ def _solve_egalitarian_least_core_quadratic_program(
     if solver_options is None:
         solver_options = {}
 
-    if subsidy < 0:
-        raise ValueError("The least core subsidy must be non-negative.")
-
     n_variables = A_eq.shape[1]
 
     x = cp.Variable(n_variables)
@@ -330,10 +325,10 @@ def _solve_egalitarian_least_core_quadratic_program(
 
     if problem.status in cp.settings.SOLUTION_PRESENT:
         logger.debug("Problem was solved")
-        if problem.status in [cp.settings.OPTIMAL_INACCURATE, cp.settings.USER_LIMIT]:
+        if problem.status == cp.settings.USER_LIMIT:
             warnings.warn(
                 "Solver terminated early. Consider increasing the solver's "
-                "maximum number of iterations in options",
+                "maximum number of iterations in solver_options",
                 RuntimeWarning,
             )
         return x.value  # type: ignore

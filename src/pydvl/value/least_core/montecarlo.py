@@ -143,10 +143,6 @@ def _montecarlo_least_core(
     for i, subset in enumerate(
         maybe_progress(power_set, progress, total=n_iterations, position=job_id)
     ):
-        # Skip empty subset otherwise it would just result
-        # in the constraint e >= 0
-        if len(subset) == 0:
-            continue
         indices = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
         A_lb[i, indices] = 1
