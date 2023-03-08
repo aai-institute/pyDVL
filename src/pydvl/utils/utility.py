@@ -16,10 +16,10 @@ for testing and for demonstration purposes.
 """
 import logging
 import warnings
+from dataclasses import asdict
 from typing import Dict, FrozenSet, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
-from dataclasses import asdict
 from numpy.typing import NDArray
 from sklearn.base import clone
 from sklearn.metrics import check_scoring
