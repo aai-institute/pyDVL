@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- PEP-561 conformance
+  [PR #307](https://github.com/appliedAI-Initiative/pyDVL/pull/307)
 - Stopping criteria: fixed problem with `StandardError` and enable proper composition
   of index convergence statuses. Fixed a bug with `n_jobs` in
   `truncated_montecarlo_shapley`.
