@@ -3,11 +3,10 @@ import math
 import numpy as np
 import pytest
 from numpy.typing import NDArray
-
-from pydvl.value import ValuationResult
 from value import check_values
 
 from pydvl.utils.status import Status
+from pydvl.value import ValuationResult
 from pydvl.value.semivalues import (
     SemiValue,
     SVCoefficient,
@@ -19,15 +18,15 @@ from pydvl.value.semivalues import (
     permutation_shapley,
     shapley,
 )
-from pydvl.value.stopping import StoppingCriterion, MaxUpdates, StandardErrorRatio
+from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates, StoppingCriterion
 
 
 @pytest.mark.parametrize(
     "num_samples, fun, criterion",
     [
         #
-        (5, shapley, StandardErrorRatio(0.1, 1.0) & ~MaxUpdates(2**10)),
-        (10, permutation_shapley, StandardErrorRatio(0.1, 1.0) & ~MaxUpdates(300)),
+        (5, shapley, AbsoluteStandardError(0.05, 1.0) | MaxUpdates(2**10)),
+        (10, permutation_shapley, AbsoluteStandardError(0.05, 1.0) | MaxUpdates(300)),
     ],
 )
 def test_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
@@ -42,7 +41,7 @@ def test_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion)
     [
         # Uniform sampling with replacement is just too bad
         # (5, shapley, StandardErrorRatio(0.2, 1.0) | MaxUpdates(2**12),
-        (10, permutation_shapley, StandardErrorRatio(0.1, 1.0) | MaxUpdates(600))
+        (10, permutation_shapley, AbsoluteStandardError(0.05, 1.0) | MaxUpdates(600))
     ],
 )
 def test_shapley_convergence(
@@ -58,9 +57,9 @@ def test_shapley_convergence(
 @pytest.mark.parametrize(
     "fun, criterion",
     [
-        (beta_shapley, StandardErrorRatio(0.1, 1.0) | MaxUpdates(100)),
+        (beta_shapley, AbsoluteStandardError(0.05, 1.0) | MaxUpdates(100)),
         # (beta_shapley, finite_difference_criterion(7, 10, 0.05, 1) | MaxUpdates(100),
-        (beta_shapley_paper, StandardErrorRatio(0.1, 1.0) | MaxUpdates(100)),
+        (beta_shapley_paper, AbsoluteStandardError(0.05, 1.0) | MaxUpdates(100)),
     ],
 )
 def test_beta_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
@@ -71,7 +70,7 @@ def test_beta_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCrite
 
 
 @pytest.mark.parametrize(
-    "values, variances, counts, eps, values_ratio, status",
+    "values, variances, counts, threshold, fraction, status",
     [
         ([1, 1, 1], [0, 0, 0], [1, 1, 1], 1e-4, 1.0, Status.Converged),
         ([1, 2, 3], [0.01, 0.03, 0.08], [1, 1, 1], 0.1, 1.0, Status.Converged),
@@ -83,8 +82,8 @@ def test_stderr_criterion(
     values: NDArray[np.float_],
     variances: NDArray[np.float_],
     counts: NDArray[np.int_],
-    eps: float,
-    values_ratio: float,
+    threshold: float,
+    fraction: float,
     status: Status,
 ):
     v = ValuationResult(
@@ -92,7 +91,7 @@ def test_stderr_criterion(
         variances=np.array(variances, dtype=float),
         counts=np.array(counts, dtype=int),
     )
-    assert StandardErrorRatio(eps, values_ratio)(v) == status
+    assert AbsoluteStandardError(threshold=threshold, fraction=fraction)(v) == status
 
 
 @pytest.mark.parametrize(
@@ -116,7 +115,7 @@ def test_variance_criterion_exceptions(
         counts=np.array(counts, dtype=int),
     )
     with pytest.raises(exception):
-        StandardErrorRatio(0.1, 1.0)(v)
+        AbsoluteStandardError(threshold=0.1, fraction=1.0)(v)
 
 
 @pytest.mark.parametrize("n", [0, 10, 100])
