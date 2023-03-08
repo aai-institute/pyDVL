@@ -66,7 +66,7 @@ you can pass a custom value to be used as key with
 
 .. code-block:: python
 
-   cached_fun = memcached(**cache_options)(fun, signature=custom_signature)
+   cached_fun = memcached(**asdict(cache_options))(fun, signature=custom_signature)
 
 If you are running experiments with the same :class:`~pydvl.utils.utility.Utility`
 but different datasets, this will lead to evaluations of the utility on new data
@@ -93,7 +93,7 @@ import logging
 import socket
 import uuid
 import warnings
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from functools import wraps
 from hashlib import blake2b
 from io import BytesIO
@@ -164,7 +164,7 @@ def memcached(
     .. code-block:: python
        :caption: Example usage
 
-       cached_fun = memcached(**cache_options)(heavy_computation)
+       cached_fun = memcached(**asdict(cache_options))(heavy_computation)
 
     :param client_config: configuration for `pymemcache's Client()
         <https://pymemcache.readthedocs.io/en/stable/apidoc/pymemcache.client.base.html>`_.
@@ -198,9 +198,8 @@ def memcached(
         """First tries to establish a connection, then tries setting and
         getting a value."""
         try:
-            test_config: Dict = dict(**config)
             client = RetryingClient(
-                Client(**test_config),
+                Client(**asdict(config)),
                 attempts=3,
                 retry_delay=0.1,
                 retry_for=[MemcacheUnexpectedCloseError],
@@ -294,7 +293,7 @@ def memcached(
                 """Restores a client connection after loading from a pickle."""
                 self.config = d["config"]
                 self.stats = d["stats"]
-                self.client = Client(**self.config)
+                self.client = Client(**asdict(self.config))
                 self._signature = signature
 
             def get_key_value(self, key: bytes):
@@ -325,9 +324,6 @@ def memcached(
         Wrapped.__qualname__ = ".".join(reversed(patched))
 
         # TODO: pick from some config file or something
-        config = MemcachedClientConfig()
-        if client_config is not None:
-            config.update(client_config)  # type: ignore
-        return Wrapped(config)
+        return Wrapped(client_config or MemcachedClientConfig())
 
     return wrapper

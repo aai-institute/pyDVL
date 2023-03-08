@@ -7,6 +7,8 @@
   Renamed `options` to `solver_options` and pass it as dict.
   Change default least core solver to SCS with 10000 max_iters.
   [PR #304](https://github.com/appliedAI-Initiative/pyDVL/pull/304)
+- Cleanup: removed unnecessary decorator `@unpackable`
+  [PR #233](https://github.com/appliedAI-Initiative/pyDVL/pull/233)
 - Stopping criteria: fixed problem with `StandardError` and enable proper composition
   of index convergence statuses. Fixed a bug with `n_jobs` in
   `truncated_montecarlo_shapley`.
