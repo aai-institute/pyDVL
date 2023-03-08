@@ -145,8 +145,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         :returns: An array [NxP] representing the gradients with respect to
         all parameters of the model.
         """
-        x = as_tensor(x).unsqueeze(1)
-        y = as_tensor(y)
+        x = as_tensor(x, ensure=False).unsqueeze(1)
+        y = as_tensor(y, ensure=False)
 
         params = [
             param for param in self.model.parameters() if param.requires_grad == True
@@ -182,8 +182,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
             - second element is the input to the model as a grad parameters. \
                 This can be used for further differentiation. 
         """
-        x = as_tensor(x).requires_grad_(True)
-        y = as_tensor(y)
+        x = as_tensor(x, ensure=False).requires_grad_(True)
+        y = as_tensor(y, ensure=False)
 
         params = [
             param for param in self.model.parameters() if param.requires_grad == True

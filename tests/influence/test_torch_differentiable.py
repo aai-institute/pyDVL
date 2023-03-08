@@ -22,7 +22,10 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from pydvl.influence.frameworks.torch_differentiable import TorchTwiceDifferentiable
+from pydvl.influence.frameworks.torch_differentiable import (
+    TorchTwiceDifferentiable,
+    mvp,
+)
 
 DATA_OUTPUT_NOISE: float = 0.01
 
@@ -121,8 +124,10 @@ def test_linear_hessian(
 
     test_hessian_analytical = linear_hessian_analytical((A, b), train_x)
     grad_xy, _ = mvp_model.grad(train_x, train_y)
-    estimated_hessian = mvp_model.mvp(
-        grad_xy, np.eye((input_dimension + 1) * output_dimension)
+    estimated_hessian = mvp(
+        grad_xy,
+        np.eye((input_dimension + 1) * output_dimension),
+        mvp_model.parameters(),
     )
     assert np.allclose(test_hessian_analytical, estimated_hessian, rtol=1e-5)
 
@@ -162,7 +167,7 @@ def test_linear_mixed_derivative(
     for i in range(len(train_x)):
         grad_xy, tensor_x = mvp_model.grad(train_x[i], train_y[i])
         model_mvp.append(
-            mvp_model.mvp(
+            mvp(
                 grad_xy,
                 np.eye((input_dimension + 1) * output_dimension),
                 backprop_on=tensor_x,
