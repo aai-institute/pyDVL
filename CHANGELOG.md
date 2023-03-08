@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Cleanup: removed unnecessary decorator `@unpackable`
+  [PR #233](https://github.com/appliedAI-Initiative/pyDVL/pull/233)
 - Stopping criteria: fixed problem with `StandardError` and enable proper composition
   of index convergence statuses. Fixed a bug with `n_jobs` in
   `truncated_montecarlo_shapley`.
