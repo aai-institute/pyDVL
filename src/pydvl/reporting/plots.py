@@ -1,13 +1,12 @@
-from typing import TYPE_CHECKING, Any, List, Optional, OrderedDict, Sequence
+from typing import Any, List, Optional, OrderedDict, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy as sp
 from matplotlib.axes import Axes
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
+from numpy.typing import NDArray
+from scipy.stats import norm
 
 
 def shaded_mean_std(
@@ -170,15 +169,18 @@ def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue: float):
 def plot_shapley(
     df: pd.DataFrame,
     *,
-    ax: Optional[plt.Axes] = None,
+    level: float = 0.05,
+    ax: plt.Axes = None,
     title: str = None,
     xlabel: str = None,
     ylabel: str = None,
 ) -> plt.Axes:
     """Plots the shapley values, as returned from
-    shapley.compute_shapley_values.
+    :func:`~pydvl.value.shapley.common.compute_shapley_values`, with error bars
+    corresponding to an $\alpha$-level confidence interval.
 
     :param df: dataframe with the shapley values
+    :param level: confidence level for the error bars
     :param ax: axes to plot on or None if a new subplots should be created
     :param title: string, title of the plot
     :param xlabel: string, x label of the plot
@@ -187,9 +189,10 @@ def plot_shapley(
     """
     if ax is None:
         _, ax = plt.subplots()
-    ax.errorbar(
-        x=df.index, y=df["data_value"], yerr=df["data_value_stderr"], fmt="o", capsize=6
-    )
+
+    yerr = norm.ppf(1 - level / 2) * df["data_value_stderr"]
+
+    ax.errorbar(x=df.index, y=df["data_value"], yerr=yerr, fmt="o", capsize=6)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
@@ -198,9 +201,7 @@ def plot_shapley(
 
 
 def plot_influence_distribution_by_label(
-    influences: "NDArray[np.float_]",
-    labels: "NDArray[np.float_]",
-    title_extra: str = "",
+    influences: NDArray[np.float_], labels: NDArray[np.float_], title_extra: str = ""
 ):
     """Plots the histogram of the influence that all samples in the training set
      have over a single sample index, separated by labels.

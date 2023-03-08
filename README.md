@@ -105,11 +105,11 @@ data = Dataset.from_sklearn(load_breast_cancer(), train_size=0.7)
 model = LogisticRegression()
 u = Utility(model, data, Scorer("accuracy", default=0.0))
 values = compute_shapley_values(
-    u,
-    mode=ShapleyMode.TruncatedMontecarlo,
-    done=MaxUpdates(100) | StandardErrorRatio(threshold=0.01), 
-    truncation=RelativeTruncation(u, rtol=0.01),
-)
+        u,
+        mode=ShapleyMode.TruncatedMontecarlo,
+        done=MaxUpdates(100) | AbsoluteStandardError(threshold=0.01),
+        truncation=RelativeTruncation(u, rtol=0.01),
+        )
 ```
 
 For more instructions and information refer to [Getting
