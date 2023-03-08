@@ -343,7 +343,7 @@ and the same value will be returned.</p>
 <p>When a function is wrapped with <a class="reference internal" href="#pydvl.utils.caching.memcached" title="pydvl.utils.caching.memcached"><code class="xref py py-func docutils literal notranslate"><span class="pre">memcached()</span></code></a> for memoization, its signature
 (input and output names) and code are used as a key for the cache. Alternatively
 you can pass a custom value to be used as key with</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cached_fun</span> <span class="o">=</span> <span class="n">memcached</span><span class="p">(</span><span class="o">**</span><span class="n">cache_options</span><span class="p">)(</span><span class="n">fun</span><span class="p">,</span> <span class="n">signature</span><span class="o">=</span><span class="n">custom_signature</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cached_fun</span> <span class="o">=</span> <span class="n">memcached</span><span class="p">(</span><span class="o">**</span><span class="n">asdict</span><span class="p">(</span><span class="n">cache_options</span><span class="p">))(</span><span class="n">fun</span><span class="p">,</span> <span class="n">signature</span><span class="o">=</span><span class="n">custom_signature</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>If you are running experiments with the same <a class="reference internal" href="utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a>
@@ -427,7 +427,7 @@ until the value has stabilized with a standard error smaller than
 </div>
 <div class="literal-block-wrapper docutils container" id="id2">
 <div class="code-block-caption"><span class="caption-text">Example usage</span><a class="headerlink" href="#id2" title="Permalink to this code">#</a></div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cached_fun</span> <span class="o">=</span> <span class="n">memcached</span><span class="p">(</span><span class="o">**</span><span class="n">cache_options</span><span class="p">)(</span><span class="n">heavy_computation</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cached_fun</span> <span class="o">=</span> <span class="n">memcached</span><span class="p">(</span><span class="o">**</span><span class="n">asdict</span><span class="p">(</span><span class="n">cache_options</span><span class="p">))(</span><span class="n">heavy_computation</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
