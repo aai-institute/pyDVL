@@ -1,6 +1,7 @@
 import functools
 import os
 from collections import defaultdict
+from dataclasses import asdict
 from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
 
 import numpy as np
@@ -132,7 +133,7 @@ def memcache_client_config(memcached_service) -> MemcachedClientConfig:
     client_config = MemcachedClientConfig(
         server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
     )
-    Client(**client_config).flush_all()
+    Client(**asdict(client_config)).flush_all()
     return client_config
 
 
@@ -141,7 +142,7 @@ def memcached_client(memcache_client_config) -> Tuple[Client, MemcachedClientCon
     from pymemcache.client import Client
 
     try:
-        c = Client(**memcache_client_config)
+        c = Client(**asdict(memcache_client_config))
         c.flush_all()
         return c, memcache_client_config
     except Exception as e:
