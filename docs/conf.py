@@ -43,7 +43,6 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx_math_dollar",
     "sphinx.ext.todo",
-    "sphinx_rtd_theme",
     "hoverxref.extension",  # This only works on read the docs
     "sphinx_design",
     "sphinxcontrib.bibtex",
@@ -97,6 +96,16 @@ nbsphinx_prolog = r"""
         .nbinput .prompt,
         .nboutput .prompt {
             display: none;
+        }
+        @media not print {
+            [data-theme='dark'] .output_area img {
+                filter: invert(0.9);
+            }
+            @media (prefers-color-scheme: dark) {
+                :root:not([data-theme="light"]) .output_area img {
+                    filter: invert(0.9);
+                }
+            }
         }
     </style>
 """

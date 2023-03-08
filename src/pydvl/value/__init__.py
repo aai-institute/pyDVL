@@ -5,7 +5,9 @@ See :ref:`data valuation` for an introduction to the concepts and methods
 implemented here.
 """
 
-from .results import *  # isort: skip
+from .result import *  # isort: skip
+from ..utils import Dataset, Scorer, Utility
 from .least_core import *
 from .loo import *
 from .shapley import *
+from .stopping import *

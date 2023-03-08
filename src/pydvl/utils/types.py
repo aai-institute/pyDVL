@@ -2,13 +2,11 @@
 transformations. Some of it probably belongs elsewhere.
 """
 import inspect
-from enum import Enum
-from typing import Callable, Optional, Protocol, Type, Union
+from typing import Callable, Protocol, Type
 
-from numpy import ndarray
-from sklearn.metrics import get_scorer
+from numpy.typing import NDArray
 
-__all__ = ["SupervisedModel", "Scorer", "compose_score"]
+__all__ = ["SupervisedModel"]
 
 
 class SupervisedModel(Protocol):
@@ -19,17 +17,14 @@ class SupervisedModel(Protocol):
     `score()`.
     """
 
-    def fit(self, x: ndarray, y: ndarray):
+    def fit(self, x: NDArray, y: NDArray):
         pass
 
-    def predict(self, x: ndarray) -> ndarray:
+    def predict(self, x: NDArray) -> NDArray:
         pass
 
-    def score(self, x: ndarray, y: ndarray) -> float:
+    def score(self, x: NDArray, y: NDArray) -> float:
         pass
-
-
-Scorer = Callable[[SupervisedModel, ndarray, ndarray], float]
 
 
 def maybe_add_argument(fun: Callable, new_arg: str):
@@ -57,49 +52,3 @@ def maybe_add_argument(fun: Callable, new_arg: str):
         return fun(*args, **kwargs)
 
     return wrapper
-
-
-# FIXME: This probably should be somewhere else
-def compose_score(
-    score: Union[str, Scorer],
-    transformation: Callable[[float], float],
-    name: str = None,
-):
-    """Composes a scoring function with an arbitrary scalar transformation.
-
-    Useful to squash unbounded scores into ranges manageable by data valuation
-    methods.
-
-    .. code-block:: python
-       :caption: Example usage
-
-       sigmoid = lambda x: 1/(1+np.exp(-x))
-       compose_score("r2", sigmoid, "squashed r2")
-
-    :param score: Either a callable or a string naming any of sklearn's scorers
-    :param transformation: A scalar transformation
-    :param name: A string representation for the composition, for `str()`.
-
-    :return: The function composition.
-    """
-    scoring_function: Scorer = get_scorer(score) if isinstance(score, str) else score
-
-    class NewScorer(object):
-        def __init__(self, scorer: Scorer, name: Optional[str] = None):
-            self._scorer = scorer
-            self._name = name or "Composite " + getattr(
-                self._scorer, "__name__", "scorer"
-            )
-
-        def __call__(self, *args, **kwargs):
-            score = self._scorer(*args, **kwargs)
-            return transformation(score)
-
-        def __str__(self):
-            return self._name
-
-        def __repr__(self):
-            capitalized_name = "".join(s.capitalize() for s in self._name.split(" "))
-            return f"{capitalized_name} (scorer={self._scorer})"
-
-    return NewScorer(scoring_function, name=name)

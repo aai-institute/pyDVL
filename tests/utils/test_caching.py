@@ -5,7 +5,6 @@ import numpy as np
 import pytest
 
 from pydvl.utils import MapReduceJob, memcached
-from pydvl.utils.caching import get_running_avg_variance
 
 logger = logging.getLogger(__name__)
 
@@ -16,22 +15,6 @@ def test_failed_connection():
     client_config = MemcachedClientConfig(server=("localhost", 0), connect_timeout=0.1)
     with pytest.raises(ConnectionRefusedError):
         memcached(client_config)(lambda x: x)
-
-
-@pytest.mark.parametrize(
-    "sequence", [np.arange(-4, 12), np.arange(10), np.random.random(size=100)]
-)
-def test_get_running_avg_variance(sequence):
-    avg, var = 0.0, 0.0
-    for i, n in enumerate(sequence[:-1]):
-        true_avg = np.mean(sequence[: i + 1])
-        true_var = np.var(sequence[: i + 1])
-
-        new_avg, new_var = get_running_avg_variance(avg, var, n, i)
-        avg, var = new_avg, new_var
-
-        assert np.isclose(new_avg, true_avg)
-        assert np.isclose(new_var, true_var)
 
 
 def test_memcached_single_job(memcached_client):

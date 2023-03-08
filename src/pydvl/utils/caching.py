@@ -98,14 +98,14 @@ from functools import wraps
 from hashlib import blake2b
 from io import BytesIO
 from time import time
-from typing import Callable, Dict, Iterable, Optional, TypeVar
+from typing import Callable, Dict, Iterable, Optional, TypeVar, cast
 
 from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
 from pymemcache.client import Client, RetryingClient
 
 from .config import MemcachedClientConfig
-from .numeric import get_running_avg_variance
+from .numeric import running_moments
 
 PICKLE_VERSION = 5  # python >= 3.8
 
@@ -245,7 +245,7 @@ def memcached(
 
                 key = blake2b(self._signature + arg_signature).hexdigest().encode("ASCII")  # type: ignore
 
-                result_dict: Dict = self.get_key_value(key)
+                result_dict: Dict[str, float] = self.get_key_value(key)
                 if result_dict is None:
                     result_dict = {}
                     start = time()
@@ -269,8 +269,8 @@ def memcached(
                         or count <= min_repetitions
                     ):
                         new_value = fun(*args, **kwargs)
-                        new_avg, new_var = get_running_avg_variance(
-                            value, variance, new_value, count
+                        new_avg, new_var = running_moments(
+                            value, variance, int(count), cast(float, new_value)
                         )
                         result_dict["value"] = new_avg
                         result_dict["count"] = count + 1

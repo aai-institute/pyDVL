@@ -1,3 +1,5 @@
+from typing import Sequence
+
 import numpy as np
 from scipy.stats import spearmanr
 
@@ -42,6 +44,8 @@ def check_values(
     exact_values: ValuationResult,
     rtol: float = 0.1,
     atol: float = 1e-5,
+    *,
+    extra_values_names: Sequence[str] = tuple(),
 ):
     """Compares values in dictionaries.
 
@@ -59,11 +63,17 @@ def check_values(
     :param atol: absolute tolerance of elements in `values` with respect to
         elements in `exact_values`. E.g. if atol = 0.1, and rtol = 0 we must
         have |value - exact_value| < 0.1 for every value.
+    :param extra_values_names: Sequence of names of extra values that should
+        also be compared.
     """
     values.sort()
     exact_values.sort()
 
     assert np.allclose(values.values, exact_values.values, rtol=rtol, atol=atol)
+    for name in extra_values_names:
+        assert np.isclose(
+            getattr(values, name), getattr(exact_values, name), rtol=rtol, atol=atol
+        )
 
 
 def check_rank_correlation(

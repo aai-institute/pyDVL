@@ -5,16 +5,16 @@ from typing import Optional
 import numpy as np
 
 from pydvl.utils import Utility, maybe_progress, powerset
-from pydvl.value.least_core._common import _solve_linear_program
-from pydvl.value.results import ValuationResult, ValuationStatus
+from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
+from pydvl.value.result import ValuationResult
 
-__all__ = ["exact_least_core"]
+__all__ = ["exact_least_core", "lc_prepare_problem"]
 
 logger = logging.getLogger(__name__)
 
 
 def exact_least_core(
-    u: Utility, *, options: Optional[dict] = None, progress: bool = True, **kwargs
+    u: Utility, *, options: Optional[dict] = None, progress: bool = True
 ) -> ValuationResult:
     r"""Computes the exact Least Core values.
 
@@ -38,76 +38,48 @@ def exact_least_core(
     Where $N = \{1, 2, \dots, n\}$ are the training set's indices.
 
     :param u: Utility object with model, data, and scoring function
-    :param options: LP Solver options. Refer to `SciPy's documentation
-        <https://docs.scipy.org/doc/scipy/reference/optimize.linprog-highs.html>`_
-        for more information
-    :param progress: Whether to display a progress bar
-    :return: Object with the data values.
+    :param options: Keyword arguments that will be used to select a solver
+        and to configure it. Refer to the following page for all possible options:
+        https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
+    :param progress: If True, shows a tqdm progress bar
+
+    :return: Object with the data values and the least core value.
+    """
+    n = len(u.data)
+    if n > 20:  # Arbitrary choice, will depend on time required, caching, etc.
+        warnings.warn(f"Large dataset! Computation requires 2^{n} calls to model.fit()")
+
+    problem = lc_prepare_problem(u, progress=progress)
+    return lc_solve_problem(
+        problem=problem, u=u, algorithm="exact_least_core", **(options or {})
+    )
+
+
+def lc_prepare_problem(u: Utility, progress: bool = False) -> LeastCoreProblem:
+    """Prepares a linear problem with all subsets of the data
+    Use this to separate the problem preparation from the solving with
+    :func:`~pydvl.value.least_core.common.lc_solve_problem`. Useful for
+    parallel execution of multiple experiments.
+
+    See :func:`~pydvl.value.least_core.naive.exact_least_core` for argument
+    descriptions.
     """
     n = len(u.data)
 
-    # Arbitrary choice, will depend on time required, caching, etc.
-    if n > 20:
-        warnings.warn(f"Large dataset! Computation requires 2^{n} calls to model.fit()")
-
-    if options is None:
-        options = {}
-
-    powerset_size = 2**n
-
     logger.debug("Building vectors and matrices for linear programming problem")
-    c = np.zeros(n + 1)
-    c[-1] = 1
-    A_eq = np.ones((1, n + 1))
-    A_eq[:, -1] = 0
-    A_ub = np.zeros((powerset_size, n + 1))
-    A_ub[:, -1] = -1
+    powerset_size = 2**n
+    A_lb = np.zeros((powerset_size, n))
 
     logger.debug("Iterating over all subsets")
     utility_values = np.zeros(powerset_size)
     for i, subset in enumerate(
         maybe_progress(
-            powerset(u.data.indices),
-            progress,
-            total=powerset_size - 1,
-            position=0,
+            powerset(u.data.indices), progress, total=powerset_size - 1, position=0
         )
     ):
-        indices = np.zeros(n + 1, dtype=bool)
+        indices = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
-        A_ub[i, indices] = -1
+        A_lb[i, indices] = 1
         utility_values[i] = u(subset)
 
-    b_ub = -utility_values
-    b_eq = utility_values[-1:]
-
-    values = _solve_linear_program(
-        c,
-        A_eq,
-        b_eq,
-        A_ub,
-        b_ub,
-        bounds=[(None, None)] * n + [(0.0, None)],
-        **options,
-    )
-
-    if values is None:
-        logger.debug("No values were found")
-        status = ValuationStatus.Failed
-        values = np.empty(n)
-        values[:] = np.nan
-    else:
-        status = ValuationStatus.Converged
-
-    # The last entry represents the least core value 'e'
-    least_core_value = values[-1].item()
-    values = values[:-1]
-
-    return ValuationResult(
-        algorithm="exact_least_core",
-        status=status,
-        values=values,
-        stderr=None,
-        data_names=u.data.data_names,
-        least_core_value=least_core_value,
-    )
+    return LeastCoreProblem(utility_values, A_lb)
