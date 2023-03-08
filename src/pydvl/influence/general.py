@@ -1,16 +1,22 @@
 """
-Contains parallelized influence calculation functions for general models.
+This module contains parallelized influence calculation functions for general
+models, as introduced in :footcite:t:`koh_understanding_2017`.
 """
 from enum import Enum
 
-import numpy as np
-from numpy.typing import NDArray
-
 from ..utils import maybe_progress
-from .frameworks import TensorType, TwiceDifferentiable
-from .inversion_methods import InversionMethod, invert_matrix
+from .frameworks import (
+    ModelType,
+    TensorType,
+    TwiceDifferentiable,
+    as_tensor,
+    einsum,
+    mvp,
+    stack_tensors,
+)
+from .inversion import InversionMethod, solve_hvp
 
-__all__ = ["compute_influences", "InfluenceType", "calculate_influence_factors"]
+__all__ = ["compute_influences", "InfluenceType", "compute_influence_factors"]
 
 
 class InfluenceType(str, Enum):
@@ -22,8 +28,8 @@ class InfluenceType(str, Enum):
     Perturbation = "perturbation"
 
 
-def calculate_influence_factors(
-    model: TwiceDifferentiable,
+def compute_influence_factors(
+    model: TwiceDifferentiable[TensorType, ModelType],
     x: TensorType,
     y: TensorType,
     x_test: TensorType,
@@ -31,8 +37,8 @@ def calculate_influence_factors(
     inversion_method: InversionMethod,
     lam: float = 0,
     progress: bool = False,
-) -> NDArray:
-    """
+) -> TensorType:
+    r"""
     It calculates influence factors of a model from its training and test
     points. Given a test point $z_test = (x_{test}, y_{test})$, a loss
     $L(z_{test}, \theta)$ ($\theta$ being the parameters of the model) and the
@@ -45,8 +51,8 @@ def calculate_influence_factors(
     more info, refer to :footcite:t:`koh_understanding_2017`, paragraph 3.
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
-    :param x_train: An array of shape [MxK] containing the features of the input data points.
-    :param y_train: An array of shape [MxL] containing the targets of the input data points.
+    :param x: An array of shape [MxK] containing the features of the input data points.
+    :param y: An array of shape [MxL] containing the targets of the input data points.
     :param x_test: An array of shape [NxK] containing the features of the test set of data points.
     :param y_test: An array of shape [NxL] containing the targets of the test set of data points.
     :param inversion_func: function to use to invert the product of hvp (hessian
@@ -56,27 +62,31 @@ def calculate_influence_factors(
     :returns: An array of size (N, D) containing the influence factors for each
         dimension (D) and test sample (N).
     """
-    grad_xy, _ = model.grad(x, y)
-    hvp = lambda v: model.mvp(grad_xy, v) + lam * v
-    n_params = model.num_params()
+    x = as_tensor(x)
+    y = as_tensor(y)
+    x_test = as_tensor(x_test)
+    y_test = as_tensor(y_test)
+
     test_grads = model.split_grad(x_test, y_test, progress)
-    return invert_matrix(
+    return solve_hvp(
         inversion_method,
-        hvp,
-        (n_params, n_params),
+        model,
+        x,
+        y,
         test_grads,
+        lam,
         progress,
     )
 
 
-def _calculate_influences_up(
-    model: TwiceDifferentiable,
+def _compute_influences_up(
+    model: TwiceDifferentiable[TensorType, ModelType],
     x: TensorType,
     y: TensorType,
-    influence_factors: NDArray,
+    influence_factors: TensorType,
     progress: bool = False,
-) -> NDArray:
-    """
+) -> TensorType:
+    r"""
     Given the model, the training points and the influence factors, calculates the
     influences using the upweighting method. More precisely, first it calculates
     the gradients of the model wrt. each training sample ($\grad_{\theta} L$,
@@ -95,17 +105,17 @@ def _calculate_influences_up(
         number of train points.
     """
     train_grads = model.split_grad(x, y, progress)
-    return np.einsum("ta,va->tv", influence_factors, train_grads)  # type: ignore
+    return einsum("ta,va->tv", influence_factors, train_grads)
 
 
-def _calculate_influences_pert(
-    model: TwiceDifferentiable,
+def _compute_influences_pert(
+    model: TwiceDifferentiable[TensorType, ModelType],
     x: TensorType,
     y: TensorType,
-    influence_factors: NDArray,
+    influence_factors: TensorType,
     progress: bool = False,
-) -> NDArray:
-    """
+) -> TensorType:
+    r"""
     Calculates the influence values from the influence factors and the training
     points using the perturbation method. More precisely, for each training sample it
     calculates $\grad_{\theta} L$ (with L the loss of the model over the single
@@ -131,24 +141,24 @@ def _calculate_influences_pert(
         desc="Influence Perturbation",
     ):
         grad_xy, tensor_x = model.grad(x[i : i + 1], y[i])
-        perturbation_influences = model.mvp(
+        perturbation_influences = mvp(
             grad_xy,
             influence_factors,
             backprop_on=tensor_x,
         )
         all_pert_influences.append(perturbation_influences.reshape((-1, *x[i].shape)))
 
-    return np.stack(all_pert_influences, axis=1)
+    return stack_tensors(all_pert_influences, axis=1)
 
 
 influence_type_registry = {
-    InfluenceType.Up: _calculate_influences_up,
-    InfluenceType.Perturbation: _calculate_influences_pert,
+    InfluenceType.Up: _compute_influences_up,
+    InfluenceType.Perturbation: _compute_influences_pert,
 }
 
 
 def compute_influences(
-    differentiable_model: TwiceDifferentiable,
+    differentiable_model: TwiceDifferentiable[TensorType, ModelType],
     x: TensorType,
     y: TensorType,
     x_test: TensorType,
@@ -157,8 +167,8 @@ def compute_influences(
     inversion_method: InversionMethod = InversionMethod.Direct,
     influence_type: InfluenceType = InfluenceType.Up,
     hessian_regularization: float = 0,
-) -> NDArray:
-    """
+) -> TensorType:
+    r"""
     Calculates the influence of the training points j on the test points i.
     First it calculates the influence factors for all test points with respect
     to the training points, and then uses them to get the influences over the
@@ -186,8 +196,12 @@ def compute_influences(
         train points. If instead influence_type is 'perturbation', output shape
         is [NxMxP], with P the number of input features.
     """
+    x = as_tensor(x)
+    y = as_tensor(y)
+    x_test = as_tensor(x_test)
+    y_test = as_tensor(y_test)
 
-    influence_factors = calculate_influence_factors(
+    influence_factors = compute_influence_factors(
         differentiable_model,
         x,
         y,

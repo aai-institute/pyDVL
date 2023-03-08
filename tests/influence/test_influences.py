@@ -76,25 +76,24 @@ def analytical_linear_influences(
     return result
 
 
-class InfluenceTestSettings:
-    INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [3]
-    INFLUENCE_TRAINING_SET_SIZE: List[int] = [50, 30]
-    INFLUENCE_TEST_SET_SIZE: List[int] = [20]
-    INFLUENCE_DIMENSIONS: List[Tuple[int, int]] = [
-        (10, 10),
-        (3, 20),
-    ]
-    HESSIAN_REGULARIZATION: List[float] = [0, 1]
+INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [3]
+INFLUENCE_TRAINING_SET_SIZE: List[int] = [50, 30]
+INFLUENCE_TEST_SET_SIZE: List[int] = [20]
+INFLUENCE_DIMENSIONS: List[Tuple[int, int]] = [
+    (10, 10),
+    (3, 20),
+]
+HESSIAN_REGULARIZATION: List[float] = [0, 1]
 
 
 test_cases = list(
     itertools.product(
-        InfluenceTestSettings.INFLUENCE_TRAINING_SET_SIZE,
-        InfluenceTestSettings.INFLUENCE_TEST_SET_SIZE,
+        INFLUENCE_TRAINING_SET_SIZE,
+        INFLUENCE_TEST_SET_SIZE,
         InfluenceType,
-        InfluenceTestSettings.INFLUENCE_DIMENSIONS,
-        InfluenceTestSettings.INFLUENCE_TEST_CONDITION_NUMBERS,
-        InfluenceTestSettings.HESSIAN_REGULARIZATION,
+        INFLUENCE_DIMENSIONS,
+        INFLUENCE_TEST_CONDITION_NUMBERS,
+        HESSIAN_REGULARIZATION,
     )
 )
 
@@ -151,7 +150,7 @@ def test_influence_linear_model(
         influence_type=influence_type,
         inversion_method="direct",
         hessian_regularization=hessian_reg,
-    )
+    ).numpy()
 
     cg_influences = compute_influences(
         TorchTwiceDifferentiable(linear_layer, loss),
@@ -161,7 +160,7 @@ def test_influence_linear_model(
         influence_type=influence_type,
         inversion_method="cg",
         hessian_regularization=hessian_reg,
-    )
+    ).numpy()
     assert np.logical_not(np.any(np.isnan(direct_influences)))
     assert np.logical_not(np.any(np.isnan(cg_influences)))
     assert np.allclose(direct_influences, analytical_influences, rtol=1e-7)
@@ -266,7 +265,7 @@ def test_influences_nn(
             influence_type=influence_type,
             inversion_method=inversion_method,
             hessian_regularization=hessian_reg,
-        )
+        ).numpy()
         assert not np.any(np.isnan(influences))
         multiple_influences.append(influences)
     if influence_type == InfluenceType.Up:

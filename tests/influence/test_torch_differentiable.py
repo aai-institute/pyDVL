@@ -24,51 +24,25 @@ from torch import nn
 
 from pydvl.influence.frameworks.torch_differentiable import TorchTwiceDifferentiable
 
+DATA_OUTPUT_NOISE: float = 0.01
 
-class ModelTestSettings:
-    DATA_OUTPUT_NOISE: float = 0.01
-
-    TEST_CONDITION_NUMBERS: List[int] = [5]
-    TEST_SET_SIZE: List[int] = [20]
-    TRAINING_SET_SIZE: List[int] = [50]
-    PROBLEM_DIMENSIONS: List[Tuple[int, int]] = [
-        (2, 2),
-        (5, 10),
-        (10, 5),
-        (10, 10),
-    ]
-
-
-test_cases_linear_regression_fit = list(
-    itertools.product(
-        ModelTestSettings.TRAINING_SET_SIZE,
-        ModelTestSettings.TEST_SET_SIZE,
-        ModelTestSettings.PROBLEM_DIMENSIONS,
-        ModelTestSettings.TEST_CONDITION_NUMBERS,
-    )
-)
-
-test_cases_logistic_regression_fit = list(
-    itertools.product(
-        ModelTestSettings.TRAINING_SET_SIZE,
-        ModelTestSettings.TEST_SET_SIZE,
-        [(1, 3), (1, 7), (1, 20)],
-        ModelTestSettings.TEST_CONDITION_NUMBERS,
-    )
-)
+TEST_CONDITION_NUMBERS: List[int] = [5]
+TEST_SET_SIZE: List[int] = [20]
+TRAINING_SET_SIZE: List[int] = [50]
+PROBLEM_DIMENSIONS: List[Tuple[int, int]] = [
+    (2, 2),
+    (5, 10),
+    (10, 5),
+    (10, 10),
+]
 
 test_cases_linear_regression_derivatives = list(
     itertools.product(
-        ModelTestSettings.TRAINING_SET_SIZE,
-        ModelTestSettings.PROBLEM_DIMENSIONS,
-        ModelTestSettings.TEST_CONDITION_NUMBERS,
+        TRAINING_SET_SIZE,
+        PROBLEM_DIMENSIONS,
+        TEST_CONDITION_NUMBERS,
     )
 )
-
-
-def lmb_fit_test_case_to_str(packed_i_test_case):
-    i, test_case = packed_i_test_case
-    return f"Problem #{i} of dimension {test_case[2]} with train size {test_case[0]}, test size {test_case[1]} and condition number {test_case[3]}"
 
 
 def lmb_correctness_test_case_to_str(packed_i_test_case):
@@ -76,15 +50,6 @@ def lmb_correctness_test_case_to_str(packed_i_test_case):
     return f"Problem #{i} of dimension {test_case[1]} with train size {test_case[0]} and condition number {test_case[2]}"
 
 
-fit_test_case_ids = list(
-    map(
-        lmb_fit_test_case_to_str,
-        zip(
-            range(len(test_cases_linear_regression_fit)),
-            test_cases_linear_regression_fit,
-        ),
-    )
-)
 correctness_test_case_ids = list(
     map(
         lmb_correctness_test_case_to_str,
@@ -112,9 +77,7 @@ def test_linear_grad(
     output_dimension, input_dimension = tuple(A.shape)
 
     # generate datasets
-    data_model = lambda x: np.random.normal(
-        x @ A.T + b, ModelTestSettings.DATA_OUTPUT_NOISE
-    )
+    data_model = lambda x: np.random.normal(x @ A.T + b, DATA_OUTPUT_NOISE)
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
 
@@ -146,9 +109,7 @@ def test_linear_hessian(
     output_dimension, input_dimension = tuple(A.shape)
 
     # generate datasets
-    data_model = lambda x: np.random.normal(
-        x @ A.T + b, ModelTestSettings.DATA_OUTPUT_NOISE
-    )
+    data_model = lambda x: np.random.normal(x @ A.T + b, DATA_OUTPUT_NOISE)
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
     model = nn.Linear(input_dimension, output_dimension)
@@ -182,9 +143,7 @@ def test_linear_mixed_derivative(
     output_dimension, input_dimension = tuple(A.shape)
 
     # generate datasets
-    data_model = lambda x: np.random.normal(
-        x @ A.T + b, ModelTestSettings.DATA_OUTPUT_NOISE
-    )
+    data_model = lambda x: np.random.normal(x @ A.T + b, DATA_OUTPUT_NOISE)
     train_x = np.random.uniform(size=[train_set_size, input_dimension])
     train_y = data_model(train_x)
     model = nn.Linear(input_dimension, output_dimension)

@@ -2,7 +2,7 @@ import logging
 import os
 import pickle as pkl
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -13,6 +13,7 @@ from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader, TensorDataset
 from torchvision.models import ResNet18_Weights, resnet18
 
+from pydvl.influence.frameworks import as_tensor
 from pydvl.utils import maybe_progress
 
 from .types import Losses
@@ -89,10 +90,10 @@ class TorchMLP(nn.Module):
 
 def fit_torch_model(
     model: nn.Module,
-    x_train: Union[NDArray[np.float_], torch.tensor],
-    y_train: Union[NDArray[np.float_], torch.tensor],
-    x_val: Union[NDArray[np.float_], torch.tensor],
-    y_val: Union[NDArray[np.float_], torch.tensor],
+    x_train: torch.Tensor,
+    y_train: torch.Tensor,
+    x_val: torch.Tensor,
+    y_val: torch.Tensor,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     optimizer: Optimizer,
     scheduler: Optional[_LRScheduler] = None,
@@ -101,8 +102,8 @@ def fit_torch_model(
     progress: bool = True,
 ) -> Losses:
     """
-    Method that fits a pytorch model to the supplied data.
-    It represents a simple machine learning loop, iterating over a number of
+    Fits a pytorch model to the supplied data.
+    Represents a simple machine learning loop, iterating over a number of
     epochs, sampling data with a certain batch size, calculating gradients and updating the parameters through a
     loss function.
     :param x: Matrix of shape [NxD] representing the features x_i.
@@ -112,12 +113,11 @@ def fit_torch_model(
     :param num_epochs: Number of epochs to repeat training.
     :param batch_size: Batch size to use in training.
     :param progress: True, iff progress shall be printed.
-    :param tensor_type: accuracy of tensors. Typically 'float' or 'long'
     """
-    x_train = torch.as_tensor(x_train).clone()
-    y_train = torch.as_tensor(y_train).clone()
-    x_val = torch.as_tensor(x_val).clone()
-    y_val = torch.as_tensor(y_val).clone()
+    x_train = as_tensor(x_train)
+    y_train = as_tensor(y_train)
+    x_val = as_tensor(x_val)
+    y_val = as_tensor(y_val)
 
     dataset = TensorDataset(x_train, y_train)
     dataloader = DataLoader(dataset, batch_size=batch_size)
@@ -196,7 +196,7 @@ class TrainingManager:
         lr: float = 0.001,
         batch_size: int = 1000,
         use_cache: bool = True,
-    ) -> Tuple[NDArray[np.float_], NDArray[np.float_]]:
+    ) -> Losses:
         """
         :return: Tuple of training_loss, validation_loss
         """
@@ -226,10 +226,7 @@ class TrainingManager:
         self.model.eval()
         return losses
 
-    def save(
-        self,
-        losses: Losses,
-    ):
+    def save(self, losses: Losses):
         """Saves the model weights and training and validation losses.
 
         :param training_loss: list of training losses, one per epoch

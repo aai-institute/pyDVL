@@ -1,6 +1,5 @@
 import logging
 import os
-from collections import namedtuple
 from copy import deepcopy
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
@@ -13,8 +12,9 @@ from PIL.JpegImagePlugin import JpegImageFile
 
 from pydvl.utils import Dataset
 
+from .types import Losses
+
 logger = logging.getLogger(__name__)
-Losses = namedtuple("Losses", "training val")
 
 
 def plot_gaussian_blobs(
@@ -426,7 +426,7 @@ def plot_losses(losses: Losses):
     """
     _, ax = plt.subplots()
     ax.plot(losses.training, label="Train")
-    ax.plot(losses.val, label="Val")
+    ax.plot(losses.validation, label="Val")
     ax.set_ylabel("Loss")
     ax.set_xlabel("Train epoch")
     ax.legend()
