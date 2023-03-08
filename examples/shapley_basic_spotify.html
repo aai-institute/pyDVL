@@ -826,7 +826,9 @@ construct the utility.</p>
 <span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
     <span class="n">utility</span><span class="p">,</span>
     <span class="n">mode</span><span class="o">=</span><span class="n">ShapleyMode</span><span class="o">.</span><span class="n">TruncatedMontecarlo</span><span class="p">,</span>
-    <span class="n">done</span><span class="o">=</span><span class="n">StandardErrorRatio</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span> <span class="o">|</span> <span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">200</span><span class="p">),</span>
+    <span class="c1"># Stop if the standard error is below 1% of the range of the values (which is ~2),</span>
+    <span class="c1"># or if the number of updates exceeds 1000</span>
+    <span class="n">done</span><span class="o">=</span><span class="n">AbsoluteStandardError</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span> <span class="o">|</span> <span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">1000</span><span class="p">),</span>
     <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">worker_update_period</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">coordinator_update_period</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -876,45 +878,44 @@ to use. In this case, we use the <a class="reference internal" href="../pydvl/va
   </thead>
   <tbody>
     <tr>
+      <th>Years &amp; Years</th>
+      <td>-1.371126</td>
+      <td>0.031585</td>
+    </tr>
+    <tr>
+      <th>Maroon 5</th>
+      <td>-1.369077</td>
+      <td>0.043815</td>
+    </tr>
+    <tr>
+      <th>Adele</th>
+      <td>-1.336247</td>
+      <td>0.326559</td>
+    </tr>
+    <tr>
       <th>5 Seconds of Summer</th>
-      <td>-1.583986</td>
-      <td>0.175742</td>
+      <td>-1.306585</td>
+      <td>0.065579</td>
     </tr>
     <tr>
-      <th>Little Mix</th>
-      <td>-1.378706</td>
-      <td>0.064739</td>
-    </tr>
-    <tr>
-      <th>CNCO</th>
-      <td>-1.371991</td>
-      <td>0.098652</td>
-    </tr>
-    <tr>
-      <th>Astrid S</th>
-      <td>-1.323620</td>
-      <td>0.131028</td>
-    </tr>
-    <tr>
-      <th>AlunaGeorge</th>
-      <td>-1.309662</td>
-      <td>0.086501</td>
+      <th>Ariana Grande</th>
+      <td>-1.198273</td>
+      <td>0.083772</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
 <p>The first thing to notice is that we sorted the results in ascending order of Shapley value. The index holds the labels for each data group: in this case, artist names. The column <code class="docutils literal notranslate"><span class="pre">data_value</span></code> is just that: the Shapley Data value, and <code class="docutils literal notranslate"><span class="pre">data_value_stderr</span></code> is its estimated standard error because we are using a Monte Carlo approximation.</p>
-<p>Let us plot the results. In the next cell we will take the 30 artists with the lowest score and plot their values with (approximate) error bars. Keep in mind that Monte Carlo Shapley is typically very noisy, so it may take several steps to arrive at a clean estimate.</p>
+<p>Let us plot the results. In the next cell we will take the 30 artists with the lowest score and plot their values with 95% Normal confidence intervals. Keep in mind that Monte Carlo Shapley is typically very noisy, and it can take many steps to arrive at a clean estimate.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span>
-<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
 <span class="n">plot_shapley</span><span class="p">(</span>
     <span class="n">low_dvl</span><span class="p">,</span>
-    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+    <span class="n">level</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
     <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Artists with low values&quot;</span><span class="p">,</span>
     <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Artist&quot;</span><span class="p">,</span>
     <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Shapley value&quot;</span><span class="p">,</span>
@@ -969,10 +970,10 @@ to use. In this case, we use the <a class="reference internal" href="../pydvl/va
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Improvement: 14.601513%
+Improvement: 13.910043%
 </pre></div></div>
 </div>
-<p>The score has improved by almost 15%! This is quite an important result, as it shows a consistent process to improve the performance of a model by excluding data points from its training set.</p>
+<p>The score has improved by almost 14%! This is quite an important result, as it shows a consistent process to improve the performance of a model by excluding data points from its training set.</p>
 <div class="admonition warning">
 <p>One must however proceed with caution instead of simply throwing away data. For one, <code class="docutils literal notranslate"><span class="pre">mean_absolute_error</span></code> is an estimate of generalization error on unseen data, so the improvement we see on the test set might not be as large upon deployment. It would be advisable to cross-validate this whole process to obtain more conservative estimates. It is also advisable to manually inspect the artists with low value and to try to understand the reason why the model behaves like it does. Finally, remember
 that <strong>the value depends on the model chosen</strong>! Artists that are detrimental to the Gradient Boosting Regressor might be informative for a different model (although it is likely that the worst ones share some characteristic making them “bad” for other regressors).</p>
@@ -986,10 +987,8 @@ that <strong>the value depends on the model chosen</strong>! Artists that are de
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">high_dvl</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">30</span><span class="p">:]</span>
-<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-<span class="n">plot_shapley</span><span class="p">(</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_shapley</span><span class="p">(</span>
     <span class="n">high_dvl</span><span class="p">,</span>
-    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
     <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Artists with high values&quot;</span><span class="p">,</span>
     <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Artist&quot;</span><span class="p">,</span>
     <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Shapley value&quot;</span><span class="p">,</span>
@@ -1032,7 +1031,7 @@ that <strong>the value depends on the model chosen</strong>! Artists that are de
 <span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
     <span class="n">anomalous_utility</span><span class="p">,</span>
     <span class="n">mode</span><span class="o">=</span><span class="n">ShapleyMode</span><span class="o">.</span><span class="n">TruncatedMontecarlo</span><span class="p">,</span>
-    <span class="n">done</span><span class="o">=</span><span class="n">StandardErrorRatio</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span> <span class="o">|</span> <span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">200</span><span class="p">),</span>
+    <span class="n">done</span><span class="o">=</span><span class="n">AbsoluteStandardError</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span> <span class="o">|</span> <span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">1000</span><span class="p">),</span>
     <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">worker_update_period</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">coordinator_update_period</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -1048,10 +1047,8 @@ that <strong>the value depends on the model chosen</strong>! Artists that are de
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span>
-<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
 <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_shapley</span><span class="p">(</span>
     <span class="n">low_dvl</span><span class="p">,</span>
-    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
     <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Artists with low data valuation scores&quot;</span><span class="p">,</span>
     <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Artist&quot;</span><span class="p">,</span>
     <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Shapley Value&quot;</span><span class="p">,</span>
