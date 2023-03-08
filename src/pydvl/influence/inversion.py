@@ -1,9 +1,8 @@
 """
-Contains methods to invert matrices
+Contains methods to invert the hessian vector product. 
 """
 import logging
 from enum import Enum
-from typing import List
 
 import numpy as np
 from numpy.typing import NDArray
