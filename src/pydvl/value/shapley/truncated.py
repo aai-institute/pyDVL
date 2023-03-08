@@ -4,7 +4,7 @@ from time import sleep
 
 import numpy as np
 
-from pydvl.utils import ParallelConfig, Utility, running_moments
+from pydvl.utils import ParallelConfig, Utility, effective_n_jobs, running_moments
 from pydvl.value import ValuationResult
 from pydvl.value.stopping import StoppingCriterion
 
@@ -227,7 +227,7 @@ def truncated_montecarlo_shapley(
             update_period=worker_update_period,
             config=config,
         )
-        for worker_id in range(n_jobs)
+        for worker_id in range(effective_n_jobs(n_jobs, config=config))
     ]
     for worker in workers:
         worker.run(block=False)
