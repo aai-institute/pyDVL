@@ -52,6 +52,13 @@ def lc_solve_problem(
             RuntimeWarning,
         )
 
+    if solver_options is None:
+        solver_options = {}
+
+    if "solver" not in solver_options:
+        solver_options["solver"] = cp.SCS
+        solver_options["max_iters"] = 10000
+
     logger.debug("Removing possible duplicate values in lower bound array")
     b_lb = problem.utility_values
     A_lb, unique_indices = np.unique(problem.A_lb, return_index=True, axis=0)
@@ -184,8 +191,8 @@ def _solve_least_core_linear_program(
     b_eq: NDArray[np.float_],
     A_lb: NDArray[np.float_],
     b_lb: NDArray[np.float_],
+    solver_options: dict,
     non_negative_subsidy: bool = False,
-    solver_options: Optional[dict] = None,
 ) -> Tuple[Optional[NDArray[np.float_]], Optional[float]]:
     """Solves the Least Core's linear program using cvxopt.
 
@@ -219,9 +226,6 @@ def _solve_least_core_linear_program(
     """
     logger.debug(f"Solving linear program : {A_eq=}, {b_eq=}, {A_lb=}, {b_lb=}")
 
-    if solver_options is None:
-        solver_options = {}
-
     n_variables = A_eq.shape[1]
 
     x = cp.Variable(n_variables)
@@ -238,10 +242,8 @@ def _solve_least_core_linear_program(
 
     problem = cp.Problem(objective, constraints)
 
-    solver = solver_options.pop("solver", cp.ECOS)
-
     try:
-        problem.solve(solver=solver, **solver_options)
+        problem.solve(**solver_options)
     except cp.error.SolverError as err:
         raise ValueError("Could not solve linear program") from err
 
@@ -270,7 +272,7 @@ def _solve_egalitarian_least_core_quadratic_program(
     b_eq: NDArray[np.float_],
     A_lb: NDArray[np.float_],
     b_lb: NDArray[np.float_],
-    solver_options: Optional[dict] = None,
+    solver_options: dict,
 ) -> Optional[NDArray[np.float_]]:
     """Solves the egalitarian Least Core's quadratic program using cvxopt.
 
@@ -302,9 +304,6 @@ def _solve_egalitarian_least_core_quadratic_program(
     """
     logger.debug(f"Solving quadratic program : {A_eq=}, {b_eq=}, {A_lb=}, {b_lb=}")
 
-    if solver_options is None:
-        solver_options = {}
-
     n_variables = A_eq.shape[1]
 
     x = cp.Variable(n_variables)
@@ -316,10 +315,8 @@ def _solve_egalitarian_least_core_quadratic_program(
     ]
     problem = cp.Problem(objective, constraints)
 
-    solver = solver_options.pop("solver", cp.ECOS)
-
     try:
-        problem.solve(solver=solver, **solver_options)
+        problem.solve(**solver_options)
     except cp.error.SolverError as err:
         raise ValueError("Could not solve quadratic program") from err
 
