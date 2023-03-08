@@ -87,6 +87,10 @@ def compute_least_core_values(
             "Use solver_options instead.",
             DeprecatedWarning,
         )
+        if solver_options is None:
+            solver_options = kwargs
+        else:
+            solver_options.update(kwargs)
 
     if mode == LeastCoreMode.MonteCarlo:
         # TODO fix progress showing and maybe_progress in remote case
