@@ -526,10 +526,14 @@ class ValuationResult(
         xm[other_pos] = other._values
         vm[other_pos] = other._variances
 
+        # np.maximum(1, n + m) covers case n = m = 0 with
+        n_m_sum = np.maximum(1, n + m)
+
         # Sample mean of n+m samples from two means of n and m samples
-        xnm = (n * xn + m * xm) / (n + m)
+        xnm = (n * xn + m * xm) / n_m_sum
+
         # Sample variance of n+m samples from two sample variances of n and m samples
-        vnm = (n * (vn + xn**2) + m * (vm + xm**2)) / (n + m) - xnm**2
+        vnm = (n * (vn + xn**2) + m * (vm + xm**2)) / n_m_sum - xnm**2
 
         if np.any(vnm < 0):
             if np.any(vnm < -1e-6):
@@ -609,6 +613,15 @@ class ValuationResult(
             count=self._counts[pos] + 1,
         )
         return self
+
+    def scale(self, indices: Optional[NDArray[IndexT]], coefficient: float):
+        # Sometimes writeable flag is false on numpy array.
+        values = self._values.copy()
+        values[self._sort_positions[indices]] *= coefficient
+        self._values = values
+        variances = self._variances.copy()
+        variances[self._sort_positions[indices]] *= coefficient**2
+        self._variances = variances
 
     def get(self, idx: Integral) -> ValueItem:
         """Retrieves a ValueItem by data index, as opposed to sort index, like

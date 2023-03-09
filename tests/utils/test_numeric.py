@@ -5,6 +5,7 @@ from pydvl.utils.numeric import (
     powerset,
     random_matrix_with_condition_number,
     random_powerset,
+    random_powerset_group_conditional,
     random_subset_of_size,
     running_moments,
 )
@@ -138,3 +139,29 @@ def test_running_moments():
         true_variances = [np.var(vv) for vv in values]
         assert np.allclose(means, true_means)
         assert np.allclose(variances, true_variances)
+
+
+@pytest.mark.parametrize("min_elements", [1, 2])
+@pytest.mark.parametrize("elements_per_group", [10])
+@pytest.mark.parametrize("num_groups", [3])
+@pytest.mark.parametrize("check_num_samples", [10])
+def test_random_powerset_group_conditional(
+    min_elements: int,
+    elements_per_group: int,
+    num_groups: int,
+    check_num_samples: int,
+):
+    s = np.arange(num_groups * elements_per_group)
+    groups = np.arange(num_groups).repeat(elements_per_group)
+
+    for idx, subset in enumerate(
+        random_powerset_group_conditional(s, groups, min_elements)
+    ):
+        assert np.all(np.isin(subset, s))
+        assert np.all(np.unique(groups[subset]) == np.unique(groups))
+
+        for group in np.unique(groups):
+            assert np.sum(group == groups[subset]) >= min_elements
+
+        if idx == check_num_samples:
+            break

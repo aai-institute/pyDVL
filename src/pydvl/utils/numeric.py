@@ -4,8 +4,22 @@ library.
 """
 from __future__ import annotations
 
+import logging
+import os
+import random
+import time
 from itertools import chain, combinations
-from typing import Collection, Generator, Iterator, Optional, Tuple, TypeVar, overload
+from typing import (
+    Collection,
+    Generator,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    cast,
+    overload,
+)
 
 import numpy as np
 from numpy.typing import NDArray
@@ -17,9 +31,14 @@ __all__ = [
     "random_matrix_with_condition_number",
     "random_subset",
     "random_powerset",
+    "random_powerset_group_conditional",
     "random_subset_of_size",
     "top_k_value_accuracy",
 ]
+
+
+logger = logging.getLogger(__name__)
+
 
 T = TypeVar("T", bound=np.generic)
 
@@ -108,6 +127,69 @@ def random_powerset(
     while total <= n_samples:
         yield random_subset(s, q)
         total += 1
+
+
+def random_powerset_group_conditional(
+    s: NDArray[T],
+    groups: NDArray[np.int_],
+    min_elements_per_group: int = 1,
+) -> Generator[NDArray[T], None, None]:
+    """
+    Draw infinite random group-conditional subsets from the passed set s. It is ensured
+    that in each sampled set, each unique group is represented at least ``min_elements``
+    times. The groups are specified as integers for all elements of the set separately.
+
+    :param s: Vector of size N representing the set to sample elements from.
+    :param groups: Vector of size N containing the group as an integer for each element.
+    :param min_elements_per_group: The minimum number of elements for each group.
+
+    :return: Generated draw from the power set of s with ``min_elements`` of each group.
+    :raises: TypeError: If the data ``s`` or ``groups`` is not a NumPy array.
+    :raises: ValueError: If the length of ``s``and ``groups`` different or
+        ``min_elements`` is smaller than 0.
+    """
+    if not isinstance(s, np.ndarray):
+        raise TypeError("Set must be an NDArray")
+
+    if not isinstance(groups, np.ndarray):
+        raise TypeError("Labels must be an NDArray")
+
+    if len(groups) != len(s):
+        raise ValueError("Set and labels have to be of same size.")
+
+    if min_elements_per_group < 0:
+        raise ValueError(
+            f"Parameter min_elements={min_elements_per_group} needs to be bigger or equal to 0."
+        )
+
+    if min_elements_per_group == 0:
+        logger.warning(
+            "It is recommended to ensure at least one element of each group is"
+            " contained in the sampled and yielded set."
+        )
+
+    rng = np.random.default_rng()
+    unique_labels = np.unique(groups)
+
+    while True:
+        subsets: List[NDArray[T]] = []
+        for label in unique_labels:
+            label_indices = np.asarray(np.where(groups == label)[0])
+            subset_length = int(
+                rng.integers(
+                    min(min_elements_per_group, len(label_indices)),
+                    len(label_indices) + 1,
+                )
+            )
+            if subset_length > 0:
+                subsets.append(random_subset_of_size(s[label_indices], subset_length))
+
+        if len(subsets) > 0:
+            subset = np.concatenate(tuple(subsets))
+            rng.shuffle(subset)
+            yield subset
+        else:
+            yield np.array([])
 
 
 def random_subset_of_size(s: NDArray[T], size: int) -> NDArray[T]:

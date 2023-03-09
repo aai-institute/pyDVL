@@ -35,12 +35,14 @@ import math
 import operator
 from functools import reduce
 from itertools import cycle, takewhile
-from typing import Sequence
+from typing import Optional, Sequence, Tuple
 
 import numpy as np
+from numpy._typing import NDArray
 from numpy.typing import NDArray
 from tqdm import tqdm
 
+from pydvl.utils import Utility, random_powerset_group_conditional
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import MapReduceJob
@@ -51,7 +53,11 @@ from pydvl.value.stopping import StoppingCriterion
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["permutation_montecarlo_shapley", "combinatorial_montecarlo_shapley"]
+__all__ = [
+    "permutation_montecarlo_shapley",
+    "permutation_montecarlo_classwise_shapley",
+    "combinatorial_montecarlo_shapley",
+]
 
 
 def _permutation_montecarlo_shapley(
@@ -87,20 +93,11 @@ def _permutation_montecarlo_shapley(
     while not done(result):
         pbar.n = 100 * done.completion()
         pbar.refresh()
-        prev_score = 0.0
         permutation = np.random.permutation(u.data.indices)
-        permutation_done = False
-        truncation.reset()
-        for i, idx in enumerate(permutation):
-            if permutation_done:
-                score = prev_score
-            else:
-                score = u(permutation[: i + 1])
-            marginal = score - prev_score
-            result.update(idx, marginal)
-            prev_score = score
-            if not permutation_done and truncation(i, score):
-                permutation_done = True
+        result += _permutation_montecarlo_shapley_rollout(
+            u, permutation, truncation=truncation, algorithm_name=algorithm_name
+        )
+
     return result
 
 
@@ -150,6 +147,146 @@ def permutation_montecarlo_shapley(
         n_jobs=n_jobs,
     )
     return map_reduce_job()
+
+
+def permutation_montecarlo_classwise_shapley(
+    u: Utility,
+    label: int,
+    *,
+    done: StoppingCriterion,
+    truncation: TruncationPolicy,
+    use_default_scorer_value: bool = True,
+    min_elements_per_label: int = 1,
+) -> ValuationResult:
+    """
+    Samples a random subset of the complement set and computes the truncated Monte Carlo
+    estimator.
+
+    :param u: Utility object containing model, data, and scoring function. The scoring
+        function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
+    :param done: Function checking whether computation needs to stop.
+    :param label: The label for which to sample the complement (e.g. all other labels)
+    :param truncation: Callable which decides whether to interrupt processing a
+        permutation and set all subsequent marginals to zero.
+    :param use_default_scorer_value: Use default scorer value even if additional_indices
+        is not None.
+    :param min_elements_per_label: The minimum number of elements for each opposite
+        label.
+    :return: ValuationResult object containing computed data values.
+    """
+
+    algorithm_name = "classwise_shapley"
+    result = ValuationResult.zeros(
+        algorithm="classwise_shapley",
+        indices=u.data.indices,
+        data_names=u.data.data_names,
+    )
+
+    _, y_train = u.data.get_training_data(u.data.indices)
+    class_indices_set, class_complement_indices_set = split_indices_by_label(
+        u.data.indices,
+        y_train,
+        label,
+    )
+    _, complement_y_train = u.data.get_training_data(class_complement_indices_set)
+    indices_permutation = np.random.permutation(class_indices_set)
+
+    for subset_idx, subset_complement in enumerate(
+        random_powerset_group_conditional(
+            class_complement_indices_set,
+            complement_y_train,
+            min_elements_per_group=min_elements_per_label,
+        )
+    ):
+        result += _permutation_montecarlo_shapley_rollout(
+            u,
+            indices_permutation,
+            additional_indices=subset_complement,
+            truncation=truncation,
+            algorithm_name=algorithm_name,
+            use_default_scorer_value=use_default_scorer_value,
+        )
+        if done(result):
+            break
+
+    return result
+
+
+def _permutation_montecarlo_shapley_rollout(
+    u: Utility,
+    permutation: NDArray[np.int_],
+    *,
+    truncation: TruncationPolicy,
+    algorithm_name: str,
+    additional_indices: Optional[NDArray[np.int_]] = None,
+    use_default_scorer_value: bool = True,
+) -> ValuationResult:
+    """
+    A truncated version of a permutation-based MC estimator for classwise Shapley
+    values. It generates a permutation p[i] of the class label indices and iterates over
+    all subsets starting from the empty set to the full set of indices.
+
+    :param u: Utility object containing model, data, and scoring function. The scoring
+        function should to be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
+    :param permutation: Permutation of indices to be considered.
+    :param truncation: Callable which decides whether to interrupt processing a
+        permutation and set all subsequent marginals to zero.
+    :param additional_indices: Set of additional indices for data points which should be
+        always considered.
+    :param use_default_scorer_value: Use default scorer value even if additional_indices
+        is not None.
+    :return: ValuationResult object containing computed data values.
+    """
+    if (
+        additional_indices is not None
+        and len(np.intersect1d(permutation, additional_indices)) > 0
+    ):
+        raise ValueError(
+            "The class label set and the complement set have to be disjoint."
+        )
+
+    result = ValuationResult.zeros(
+        algorithm=algorithm_name,
+        indices=u.data.indices,
+        data_names=u.data.data_names,
+    )
+
+    prev_score = (
+        u.default_score
+        if (
+            use_default_scorer_value
+            or additional_indices is None
+            or additional_indices is not None
+            and len(additional_indices) == 0
+        )
+        else u(additional_indices)
+    )
+
+    # hack to calculate the correct value in reset.
+    if additional_indices is not None:
+        old_indices = u.data.indices
+        u.data.indices = np.sort(np.concatenate((permutation, additional_indices)))
+        truncation.reset(u)
+        u.data.indices = old_indices
+    else:
+        truncation.reset(u)
+
+    is_terminated = False
+    for i, idx in enumerate(permutation):
+        if is_terminated or (is_terminated := truncation(i, prev_score)):
+            score = prev_score
+        else:
+            score = u(
+                np.concatenate((permutation[: i + 1], additional_indices))
+                if additional_indices is not None and len(additional_indices) > 0
+                else permutation[: i + 1]
+            )
+
+        marginal = score - prev_score
+        result.update(idx, marginal)
+        prev_score = score
+
+    return result
 
 
 def _combinatorial_montecarlo_shapley(
@@ -246,3 +383,23 @@ def combinatorial_montecarlo_shapley(
         config=config,
     )
     return map_reduce_job()
+
+
+def split_indices_by_label(
+    indices: NDArray[np.int_], labels: NDArray[np.int_], label: int
+) -> Tuple[NDArray[np.int_], NDArray[np.int_]]:
+    """
+    Splits the indices into two sets based on the value of  ``label``: those samples
+    with and without that label.
+
+    :param indices: The indices to be used for referring to the data.
+    :param labels: Corresponding labels for the indices.
+    :param label: Label to be used for splitting.
+    :return: Tuple with two sets of indices.
+    """
+    active_elements = labels == label
+    class_indices_set = np.where(active_elements)[0]
+    class_complement_indices_set = np.where(~active_elements)[0]
+    class_indices_set = indices[class_indices_set]
+    class_complement_indices_set = indices[class_complement_indices_set]
+    return class_indices_set, class_complement_indices_set

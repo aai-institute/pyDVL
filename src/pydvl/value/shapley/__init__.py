@@ -8,6 +8,7 @@ Please refer to :ref:`data valuation` for an overview of Shapley Data value.
 
 from ..result import *
 from ..stopping import *
+from .classwise import *
 from .common import *
 from .gt import *
 from .knn import *

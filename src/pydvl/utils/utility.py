@@ -187,6 +187,7 @@ class Utility:
                     model = self._clone_model(self.model)
                 else:
                     model = self.model
+
                 model.fit(x_train, y_train)
                 score = float(self.scorer(model, x_test, y_test))
                 # Some scorers raise exceptions if they return NaNs, some might not
