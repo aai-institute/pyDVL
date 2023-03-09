@@ -21,6 +21,7 @@ __all__ = [
     "powerset",
     "random_matrix_with_condition_number",
     "random_powerset",
+    "random_powerset_group_conditional",
     "random_subset_of_size",
     "top_k_value_accuracy",
 ]
@@ -101,6 +102,49 @@ def random_powerset(
     while total <= n_samples:
         selection = rng.uniform(size=len(s)) > q
         subset = s[selection]
+        yield subset
+        total += 1
+
+
+def random_powerset_group_conditional(
+    s: NDArray[T],
+    labels: NDArray[np.int_],
+    n_samples: Optional[int] = None,
+    min_elements: int = 1,
+) -> Generator[NDArray[T], None, None]:
+    """
+    :param s: set to sample from
+    :param labels: Labels that a minimum number from each label group is included.
+    :param n_samples: if set, stop the generator after this many steps.
+        Defaults to `np.iinfo(np.int32).max`
+    :param min_elements: The minimum number of elements for each distinct label and its associated group.
+
+    :return: Samples from the power set of s
+    :raises: TypeError: if the data `s` is not a NumPy array
+    :raises: ValueError: if the element sampling probability is not in [0,1]
+
+    """
+    if not isinstance(s, np.ndarray):
+        raise TypeError("Set must be an NDArray")
+
+    if not isinstance(labels, np.ndarray):
+        raise TypeError("Labels must be an NDArray")
+
+    rng = np.random.default_rng()
+    total = 1
+    if n_samples is None:
+        n_samples = np.iinfo(np.int32).max
+
+    while total <= n_samples:
+
+        subsets = []
+        for label in labels:
+            label_indices = list(np.where(labels == label)[0])
+            s = rng.integers(min_elements, len(label_indices))
+            subsets.append(random_subset_of_size(label_indices, s))
+
+        subset = np.concatenate(tuple(subsets))
+        rng.shuffle(subset)
         yield subset
         total += 1
 
