@@ -12,7 +12,7 @@ from .frameworks import (
     as_tensor,
     einsum,
     mvp,
-    stack_tensors,
+    stack,
 )
 from .inversion import InversionMethod, solve_hvp
 
@@ -39,11 +39,11 @@ def compute_influence_factors(
     progress: bool = False,
 ) -> TensorType:
     r"""
-    It calculates influence factors of a model from its training and test
-    points. Given a test point $z_test = (x_{test}, y_{test})$, a loss
+    Calculates influence factors of a model for training and test
+    data. Given a test point $z_test = (x_{test}, y_{test})$, a loss
     $L(z_{test}, \theta)$ ($\theta$ being the parameters of the model) and the
     Hessian of the model $H_{\theta}$, influence factors are defined as
-    $s_{test} = H_{\theta}^{-1} \grad_{\theta} L(z_{test}, \theta)$. They are
+    $$s_{test} = H_{\theta}^{-1} \grad_{\theta} L(z_{test}, \theta).$$. They are
     used for efficient influence calculation. This method first
     (implicitly) calculates the Hessian and then (explicitly) finds the
     influence factors for the model using the given inversion method. The
@@ -148,7 +148,7 @@ def _compute_influences_pert(
         )
         all_pert_influences.append(perturbation_influences.reshape((-1, *x[i].shape)))
 
-    return stack_tensors(all_pert_influences, axis=1)
+    return stack(all_pert_influences, axis=1)
 
 
 influence_type_registry = {

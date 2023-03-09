@@ -77,7 +77,7 @@ def solve_hvp(
                 progress,
             ),
             dtype=x.dtype,
-            ensure=False,
+            warn=False,
         )
     else:
         raise ValueError(f"Unknown inversion method: {inversion_method}")

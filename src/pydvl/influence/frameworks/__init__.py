@@ -19,7 +19,7 @@ try:
         identity_tensor,
         mvp,
         solve_linear,
-        stack_tensors,
+        stack,
     )
 
     TensorType = torch.Tensor
@@ -34,7 +34,7 @@ __all__.extend(
         "ModelType",
         "solve_linear",
         "as_tensor",
-        "stack_tensors",
+        "stack",
         "einsum",
         "identity_tensor",
         "mvp",

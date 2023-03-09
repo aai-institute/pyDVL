@@ -176,17 +176,17 @@ class TrainingManager:
         name: str,
         model: nn.Module,
         loss: torch.nn.modules.loss._Loss,
-        train_x: NDArray[np.float_],
-        train_y: NDArray[np.float_],
-        val_x: NDArray[np.float_],
-        val_y: NDArray[np.float_],
+        train_x: torch.Tensor,
+        train_y: torch.Tensor,
+        val_x: torch.Tensor,
+        val_y: torch.Tensor,
         data_dir: Path,
     ):
         self.name = name
         self.model = model
         self.loss = loss
-        self.train_x, self.train_y = train_x, train_y
-        self.val_x, self.val_y = val_x, val_y
+        self.train_x, self.train_y = as_tensor(train_x), as_tensor(train_y)
+        self.val_x, self.val_y = as_tensor(val_x), as_tensor(val_y)
         self.data_dir = data_dir
         os.makedirs(self.data_dir, exist_ok=True)
 

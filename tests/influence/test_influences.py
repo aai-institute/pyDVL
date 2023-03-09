@@ -46,7 +46,7 @@ def analytical_linear_influences(
     :param y_test: An array of shape (N, L) containing the targets of the test
         set.
     :param influence_type: the type of the influence.
-    :param hessian_retularization: regularization value for the hessian
+    :param hessian_regularization: regularization value for the hessian
     :returns: An array of shape (B, C) with the influences of the training points
         on the test points if influence_type is "up", an array of shape (K, L,
         M) if influence_type is "perturbation".

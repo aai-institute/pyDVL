@@ -31,14 +31,18 @@ def solve_linear(matrix: torch.Tensor, b: torch.Tensor):
     return torch.linalg.solve(matrix, b)
 
 
-def as_tensor(a: Any, ensure=True, **kwargs):
-    """Converts an array into a torch tensor"""
-    if ensure and not isinstance(a, torch.Tensor):
+def as_tensor(a: Any, warn=True, **kwargs):
+    """Converts an array into a torch tensor
+
+    :param a: array to convert to tensor
+    :param warn: if True, warns that a will be converted
+    """
+    if warn and not isinstance(a, torch.Tensor):
         logger.warning("Converting tensor to type torch.Tensor.")
     return torch.as_tensor(a, **kwargs)
 
 
-def stack_tensors(a: Sequence[torch.Tensor], **kwargs):
+def stack(a: Sequence[torch.Tensor], **kwargs):
     """Stacks a sequence of tensors into a single torch tensor"""
     return torch.stack(a, **kwargs)
 
@@ -78,7 +82,7 @@ def mvp(
         backprop_on is None, otherwise [DxM], with M the number of elements
         of backprop_on.
     """
-    v = as_tensor(v, ensure=False)
+    v = as_tensor(v, warn=False)
     if v.ndim == 1:
         v = v.unsqueeze(0)
 
@@ -94,18 +98,15 @@ def mvp(
 
 
 class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
-    """
-    Calculates second-derivative of a model wrt. a given loss
-    """
-
     def __init__(
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     ):
-        """
+        r"""
         :param model: A (differentiable) function.
-        :param loss: Loss function $L(f(x), y)$ maps a prediction and a target to a single value.
+        :param loss: :param loss: A differentiable scalar loss $L(\hat{y}, y)$,
+               mapping a prediction and a target to a real value.
         """
         if model.training:
             logger.warning(
@@ -145,8 +146,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         :returns: An array [NxP] representing the gradients with respect to
         all parameters of the model.
         """
-        x = as_tensor(x, ensure=False).unsqueeze(1)
-        y = as_tensor(y, ensure=False)
+        x = as_tensor(x, warn=False).unsqueeze(1)
+        y = as_tensor(y, warn=False)
 
         params = [
             param for param in self.model.parameters() if param.requires_grad == True
@@ -174,7 +175,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         y: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Calculates gradient of model parameters wrt $x$ and $y$.
+        Calculates gradient of model parameters wrt the model parameters.
         :param x: A matrix [NxD] representing the features $x_i$.
         :param y: A matrix [NxK] representing the target values $y_i$.
         :returns: A tuple where: \
@@ -182,8 +183,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
             - second element is the input to the model as a grad parameters. \
                 This can be used for further differentiation. 
         """
-        x = as_tensor(x, ensure=False).requires_grad_(True)
-        y = as_tensor(y, ensure=False)
+        x = as_tensor(x, warn=False).requires_grad_(True)
+        y = as_tensor(y, warn=False)
 
         params = [
             param for param in self.model.parameters() if param.requires_grad == True
@@ -202,10 +203,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         """Calculates the explicit hessian of model parameters given data ($x$ and $y$).
         :param x: A matrix [NxD] representing the features $x_i$.
         :param y: A matrix [NxK] representing the target values $y_i$.
-        :returns: A tuple where: \
-            - first element is an array [P] with the gradients of the model. \
-            - second element is the input to the model as a grad parameters. \
-                This can be used for further differentiation. 
+        :returns: the hessian of the model, i.e. the second derivative wrt. the
+            model parameters.
         """
         grad_xy, _ = self.grad(x, y)
         backprop_on = [
