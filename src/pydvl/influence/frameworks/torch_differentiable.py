@@ -203,8 +203,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         """Calculates the explicit hessian of model parameters given data ($x$ and $y$).
         :param x: A matrix [NxD] representing the features $x_i$.
         :param y: A matrix [NxK] representing the target values $y_i$.
-        :returns: the hessian of the model, i.e. the second derivative wrt. the
-            model parameters.
+        :returns: the hessian of the model, i.e. the second derivative wrt. the model parameters.
         """
         grad_xy, _ = self.grad(x, y)
         backprop_on = [
