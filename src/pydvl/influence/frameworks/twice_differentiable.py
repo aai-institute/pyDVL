@@ -67,6 +67,6 @@ class TwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
         :param x: An array representing the features $x_i$.
         :param y: An array representing the target values $y_i$.
         :returns: the hessian of the model, i.e. the second derivative wrt. the
-            model parameters.
+        model parameters.
         """
         pass
