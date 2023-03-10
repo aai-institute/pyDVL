@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Adds kwargs parameter to `from_array` and `from_sklearn`
+  Dataset and GroupedDataset class methods
+  [PR #316](https://github.com/appliedAI-Initiative/pyDVL/pull/316)
 - PEP-561 conformance: added `py.typed`
   [PR #307](https://github.com/appliedAI-Initiative/pyDVL/pull/307)
 - Removed default non-negativity constraint on least core subsidy
