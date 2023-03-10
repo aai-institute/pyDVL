@@ -19,7 +19,6 @@ semi-value. The interface is :class:`SemiValue`. The coefficients implement
 """
 
 import math
-from functools import lru_cache
 from itertools import takewhile
 from typing import Protocol
 
@@ -98,12 +97,10 @@ def _semivalues(
     return result
 
 
-@lru_cache
 def combinatorial_coefficient(n: int, k: int) -> float:
     return 1 / math.comb(n - 1, k)
 
 
-@lru_cache
 def banzhaf_coefficient(n: int, k: int) -> float:
     return n / 2 ** (n - 1)
 
@@ -113,7 +110,6 @@ def permutation_coefficient(n: int, k: int) -> float:
 
 
 def beta_coefficient(alpha: float, beta: float) -> SVCoefficient:
-
     # Leave this here in case we want to avoid depending on scipy
     # n = n or 1024
     # @lru_cache(maxsize=int(n * (n - 1) / 2))
