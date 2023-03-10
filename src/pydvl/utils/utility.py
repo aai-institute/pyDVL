@@ -374,6 +374,9 @@ class MinerGameUtility(Utility):
             subsidy = (self.n_miners - 1) / (2 * self.n_miners)
         return values, subsidy
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(n={self.n_miners})"
+
 
 class GlovesGameUtility(Utility):
     r"""Toy game utility that is used for testing and demonstration purposes.
@@ -414,11 +417,16 @@ class GlovesGameUtility(Utility):
         pass
 
     def exact_least_core_values(self) -> Tuple[NDArray[np.float_], float]:
-        subsidy = 0.0
         if self.left == self.right:
+            subsidy = -0.5
             values = np.array([0.5] * (self.left + self.right))
         elif self.left < self.right:
+            subsidy = 0.0
             values = np.array([1.0] * self.left + [0.0] * self.right)
         else:
+            subsidy = 0.0
             values = np.array([0.0] * self.left + [1.0] * self.right)
         return values, subsidy
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(L={self.left}, R={self.right})"

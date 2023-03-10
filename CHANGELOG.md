@@ -4,6 +4,13 @@
 
 - Change IF interface, removal of torch wrappers, and add tests
   [PR #278](https://github.com/appliedAI-Initiative/pyDVL/pull/278)
+- PEP-561 conformance: added `py.typed`
+  [PR #307](https://github.com/appliedAI-Initiative/pyDVL/pull/307)
+- Removed default non-negativity constraint on least core subsidy
+  and added instead a `non_negative_subsidy` boolean flag.
+  Renamed `options` to `solver_options` and pass it as dict.
+  Change default least core solver to SCS with 10000 max_iters.
+  [PR #304](https://github.com/appliedAI-Initiative/pyDVL/pull/304)
 - Cleanup: removed unnecessary decorator `@unpackable`
   [PR #233](https://github.com/appliedAI-Initiative/pyDVL/pull/233)
 - Stopping criteria: fixed problem with `StandardError` and enable proper composition

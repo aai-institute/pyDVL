@@ -20,8 +20,11 @@ parallelized itself, so preparing the problems should be done in sequence in thi
 case. The solution of the linear systems can then be done in parallel.
 
 """
+import warnings
 from enum import Enum
 from typing import Optional
+
+from deprecation import DeprecatedWarning
 
 from pydvl.utils.utility import Utility
 from pydvl.value.least_core.montecarlo import *
@@ -44,6 +47,8 @@ def compute_least_core_values(
     n_jobs: int = 1,
     n_iterations: Optional[int] = None,
     mode: LeastCoreMode = LeastCoreMode.MonteCarlo,
+    non_negative_subsidy: bool = False,
+    solver_options: Optional[dict] = None,
     **kwargs,
 ) -> ValuationResult:
     """Umbrella method to compute Least Core values with any of the available
@@ -66,13 +71,30 @@ def compute_least_core_values(
         Only used for Monte Carlo Least Core.
     :param mode: Algorithm to use. See :class:`LeastCoreMode` for available
         options.
-    :param kwargs: Additional keyword arguments passed to the solver.
+    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        to be non-negative.
+    :param solver_options: Optional dictionary of options passed to the solvers.
 
     :return: ValuationResult object with the computed values.
 
     .. versionadded:: 0.5.0
     """
     progress: bool = kwargs.pop("progress", False)
+
+    # TODO: remove this before releasing version 0.6.0
+    if kwargs:
+        warnings.warn(
+            DeprecatedWarning(
+                "Passing solver options as kwargs",
+                deprecated_in="0.5.1",
+                removed_in="0.6.0",
+                details="Use solver_options instead.",
+            )
+        )
+        if solver_options is None:
+            solver_options = kwargs
+        else:
+            solver_options.update(kwargs)
 
     if mode == LeastCoreMode.MonteCarlo:
         # TODO fix progress showing and maybe_progress in remote case
@@ -84,9 +106,16 @@ def compute_least_core_values(
             n_iterations=n_iterations,
             n_jobs=n_jobs,
             progress=progress,
-            options=kwargs,
+            non_negative_subsidy=non_negative_subsidy,
+            solver_options=solver_options,
+            **kwargs,
         )
     elif mode == LeastCoreMode.Exact:
-        return exact_least_core(u=u, progress=progress, options=kwargs)
+        return exact_least_core(
+            u=u,
+            progress=progress,
+            non_negative_subsidy=non_negative_subsidy,
+            solver_options=solver_options,
+        )
 
     raise ValueError(f"Invalid value encountered in {mode=}")

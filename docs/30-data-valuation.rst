@@ -449,7 +449,7 @@ It satisfies the following 2 properties:
   The sum of payoffs to the agents in any coalition S is at
   least as large as the amount that these agents could earn by
   forming a coalition on their own.
-  $$\sum_{x_i\in S} v_u(x_i) \geq u(S), \forall S \subseteq D\,$$
+  $$\sum_{x_i\in S} v_u(x_i) \geq u(S), \forall S \subset D\,$$
 
 The second property states that the sum of payoffs to the agents
 in any subcoalition $S$ is at least as large as the amount that
@@ -463,7 +463,7 @@ By relaxing the coalitional rationality property by a subsidy $e \gt 0$,
 we are then able to find approximate payoffs:
 
 $$
-\sum_{x_i\in S} v_u(x_i) + e \geq u(S), \forall S \subseteq D\
+\sum_{x_i\in S} v_u(x_i) + e \geq u(S), \forall S \subset D, S \neq \emptyset \
 ,$$
 
 The least core value $v$ of the $i$-th sample in dataset $D$ wrt.
@@ -473,7 +473,7 @@ $$
 \begin{array}{lll}
 \text{minimize} & e & \\
 \text{subject to} & \sum_{x_i\in D} v_u(x_i) = u(D) & \\
-& \sum_{x_i\in S} v_u(x_i) + e \geq u(S) &, \forall S \subseteq D \\
+& \sum_{x_i\in S} v_u(x_i) + e \geq u(S) &, \forall S \subset D, S \neq \emptyset  \\
 \end{array}
 $$
 
