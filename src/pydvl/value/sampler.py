@@ -1,10 +1,11 @@
+import math
 from enum import Enum
 from typing import Any, Collection, Generator, Generic, Sequence, Tuple, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import powerset, random_powerset
+from pydvl.utils import powerset, random_powerset, random_subset_of_size
 
 T = TypeVar("T", bound=np.generic)
 
@@ -115,7 +116,7 @@ class UniformSampler(PowersetSampler[T]):
         the marginals converges to the value: the uniform distribution over the
         powerset of a set with n-1 elements has mass 2^{n-1} over each subset.
         The factor 1 / n corresponds to the one in the Shapley definition."""
-        return float(2 ** (self._n - 1) / self._n) if self._n > 0 else 1.0
+        return float(2 ** (self._n - 1)) if self._n > 0 else 1.0
 
 
 class AntitheticSampler(PowersetSampler[T]):
@@ -141,7 +142,7 @@ class AntitheticSampler(PowersetSampler[T]):
                     yield idx, self.complement(subset, idx)
 
     def weight(self, subset: Sequence[T]) -> float:
-        return 2 ** (self._n - 1) / self._n
+        return float(2 ** (self._n - 1)) if self._n > 0 else 1.0
 
 
 class PermutationSampler(PowersetSampler[T]):
@@ -161,7 +162,7 @@ class PermutationSampler(PowersetSampler[T]):
                 yield idx, permutation[:i]
 
     def weight(self, subset: Sequence[T]) -> float:
-        return 1.0
+        return self._n * math.comb(self._n - 1, len(subset)) if self._n > 0 else 1.0
 
 
 class HierarchicalSampler(PowersetSampler[T]):
@@ -169,46 +170,14 @@ class HierarchicalSampler(PowersetSampler[T]):
 
     .. todo::
        This is unnecessary, but a step towards proper stratified sampling.
-
     """
 
     def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
         while True:
             for idx in self.indices():
                 k = np.random.choice(np.arange(len(self._indices)), size=1).item()
-                for subset in random_powerset(  # FIXME: not implemented
-                    self.complement([idx]), size=k, n_samples=1
-                ):
+                for subset in random_subset_of_size(self.complement([idx]), size=k):
                     yield idx, subset
 
     def weight(self, subset: Sequence[T]) -> float:
-        return 2 ** (self._n - 1) / self._n
-
-
-class OwenSampler(PowersetSampler[T]):
-    class Algorithm(Enum):
-        Standard = "standard"
-        Antithetic = "antithetic"
-
-    def __init__(self, indices: NDArray[T], method: Algorithm, n_steps: int):
-        super().__init__(indices)
-        q_stop = {
-            OwenSampler.Algorithm.Standard: 1.0,
-            OwenSampler.Algorithm.Antithetic: 0.5,
-        }
-        self.q_steps = np.linspace(start=0, stop=q_stop[method], num=n_steps)
-
-    def complement(self, exclude: Sequence[T], *args, **kwargs):
-        return np.setxor1d(self._indices, exclude)
-
-    def __iter__(self) -> Generator[Tuple[np.float_, T, Collection[T]], Any, None]:
-        while True:
-            for idx in self.indices():
-                for j, q in enumerate(self.q_steps):
-                    for subset in random_powerset(
-                        self.complement([idx]), q=q, n_samples=1
-                    ):
-                        yield q, idx, subset
-
-    def weight(self, subset: Sequence[T]) -> float:
-        raise NotImplementedError("Compute the right weight")
+        return 2 ** (self._n - 1) if self._n > 0 else 1.0

@@ -2,19 +2,18 @@ import math
 
 import numpy as np
 import pytest
-from numpy.typing import NDArray
 from value import check_values
 
 from pydvl.utils.status import Status
-from pydvl.value import ValuationResult
 from pydvl.value.semivalues import (
     SemiValue,
     SVCoefficient,
     banzhaf_coefficient,
+    banzhaf_index,
     beta_coefficient,
     beta_shapley,
     beta_shapley_paper,
-    combinatorial_coefficient,
+    shapley_coefficient,
     permutation_shapley,
     shapley,
 )
@@ -24,9 +23,8 @@ from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates, StoppingCrit
 @pytest.mark.parametrize(
     "num_samples, fun, criterion",
     [
-        #
-        (5, shapley, AbsoluteStandardError(0.05, 1.0) | MaxUpdates(2**10)),
-        (10, permutation_shapley, AbsoluteStandardError(0.05, 1.0) | MaxUpdates(300)),
+        (5, shapley, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10)),
+        (10, permutation_shapley, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(300)),
     ],
 )
 def test_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
@@ -53,13 +51,12 @@ def test_shapley_convergence(
     assert values.status == Status.Converged
 
 
-@pytest.mark.parametrize("num_samples", [10])
 @pytest.mark.parametrize(
-    "fun, criterion",
+    "num_samples, fun, criterion",
     [
-        (beta_shapley, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(100)),
+        (6, beta_shapley, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(100)),
         # (beta_shapley, FiniteDifference(7, 10, 0.05, 1) | MaxUpdates(100),
-        (beta_shapley_paper, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(100)),
+        (6, beta_shapley_paper, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(100)),
     ],
 )
 def test_beta_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
@@ -69,7 +66,14 @@ def test_beta_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCrite
     check_values(values, exact_values, rtol=0.1)
 
 
-@pytest.mark.parametrize("n", [0, 10, 100])
+@pytest.mark.parametrize("num_samples", [5])
+def test_banzhaf(analytic_banzhaf, num_samples):
+    u, exact_values = analytic_banzhaf
+    values = banzhaf_index(u, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10))
+    check_values(values, exact_values, rtol=0.1)
+
+
+@pytest.mark.parametrize("n", [10, 100])
 @pytest.mark.parametrize(
     "coefficient",
     [
@@ -77,12 +81,16 @@ def test_beta_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCrite
         beta_coefficient(1, 16),
         beta_coefficient(4, 1),
         banzhaf_coefficient,
-        combinatorial_coefficient,
+        shapley_coefficient,
     ],
 )
 def test_coefficients(n: int, coefficient: SVCoefficient):
     r"""Coefficients for semi-values must fulfill:
-    $$ \sum_{i=1}^{n}\choose{n-1}{j-1}w^{(n)}(j) = n $$
+
+    $$ \sum_{i=1}^{n}\choose{n-1}{j-1}w^{(n)}(j) = 1 $$
+
+    Note that we depart from the usual definitions by including the factor $1/n$
+    in the shapley and beta coefficients.
     """
     s = [math.comb(n - 1, j - 1) * coefficient(n, j - 1) for j in range(1, n + 1)]
-    assert np.isclose(n, np.sum(s))
+    assert np.isclose(1, np.sum(s))

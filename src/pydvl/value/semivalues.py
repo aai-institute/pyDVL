@@ -27,12 +27,7 @@ from tqdm import tqdm
 
 from pydvl.utils import Utility
 from pydvl.value import ValuationResult
-from pydvl.value.sampler import (
-    OwenSampler,
-    PermutationSampler,
-    PowersetSampler,
-    UniformSampler,
-)
+from pydvl.value.sampler import PermutationSampler, PowersetSampler, UniformSampler
 from pydvl.value.stopping import StoppingCriterion, StoppingCriterionCallable
 
 
@@ -97,16 +92,12 @@ def _semivalues(
     return result
 
 
-def combinatorial_coefficient(n: int, k: int) -> float:
-    return 1 / math.comb(n - 1, k)
+def shapley_coefficient(n: int, k: int) -> float:
+    return 1 / math.comb(n - 1, k) / n
 
 
 def banzhaf_coefficient(n: int, k: int) -> float:
-    return n / 2 ** (n - 1)
-
-
-def permutation_coefficient(n: int, k: int) -> float:
-    return 1.0
+    return 1 / 2 ** (n - 1)
 
 
 def beta_coefficient(alpha: float, beta: float) -> SVCoefficient:
@@ -126,19 +117,19 @@ def beta_coefficient(alpha: float, beta: float) -> SVCoefficient:
         j = k + 1
         w = n * B(j + beta - 1, n - j + alpha) / const
         # return math.comb(n - 1, j - 1) * w
-        return w
+        return w / n
 
     return beta_coefficient_w
 
 
 def shapley(u: Utility, criterion: StoppingCriterion):
     sampler = UniformSampler(u.data.indices)
-    return _semivalues(u, sampler, combinatorial_coefficient, criterion)
+    return _semivalues(u, sampler, shapley_coefficient, criterion)
 
 
 def permutation_shapley(u: Utility, criterion: StoppingCriterion):
     sampler = PermutationSampler(u.data.indices)
-    return _semivalues(u, sampler, permutation_coefficient, criterion)
+    return _semivalues(u, sampler, shapley_coefficient, criterion)
 
 
 def beta_shapley(
@@ -166,18 +157,6 @@ def beta_shapley_paper(
 def banzhaf_index(u: Utility, criterion: StoppingCriterion):
     """Implements the Banzhaf index semi-value as introduced in
     :footcite:t:`wang_data_2022`.
-
-    .. rubric:: References
-
-    .. footbibliography::
-
     """
     sampler = PermutationSampler(u.data.indices)
     return _semivalues(u, sampler, banzhaf_coefficient, criterion)
-
-
-def owen_shapley(u: Utility, criterion: StoppingCriterion, max_q: int):
-    sampler = OwenSampler(
-        u.data.indices, method=OwenSampler.Algorithm.Standard, n_steps=200
-    )
-    raise NotImplementedError("to do")
