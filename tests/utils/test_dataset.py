@@ -46,6 +46,8 @@ def test_creating_grouped_dataset_from_sklearn(train_size):
         data, data_groups=data_groups, train_size=train_size
     )
     assert len(dataset) == n_groups
+    with pytest.raises(ValueError):
+        GroupedDataset.from_sklearn(data, data_groups=data_groups[len(data) // 2 :])
 
 
 def test_creating_grouped_dataset_subsclassfrom_sklearn(train_size):
@@ -78,3 +80,6 @@ def test_creating_grouped_dataset_from_x_y_arrays(train_size, kwargs):
     assert len(dataset) == n_groups
     for k, v in kwargs.items():
         assert getattr(dataset, k) == v
+
+    with pytest.raises(ValueError):
+        GroupedDataset.from_arrays(X, y, data_groups=data_groups[len(X) // 2 :])

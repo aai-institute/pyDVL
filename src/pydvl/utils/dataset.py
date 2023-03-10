@@ -68,9 +68,8 @@ class Dataset:
             timestamp which can be referenced directly instead of using a row
             number.
         :param description: A textual description of the dataset.
-        :param is_multi_output: set to True if y holds multiple labels for each
-            data point. False if y is a 1d array holding a single label per
-            point.
+        :param is_multi_output: set to ``False`` if labels are scalars, or to
+            ``True`` if they are vectors of dimension > 1.
         """
         self.x_train, self.y_train = check_X_y(
             x_train, y_train, multi_output=is_multi_output
@@ -255,23 +254,31 @@ class Dataset:
         stratify_by_target: bool = False,
         **kwargs,
     ) -> "Dataset":
-        """Constructs a :class:`Dataset` object from an :class:`sklearn.utils.Bunch` bunch as returned by the
-        `load_*` functions in `sklearn toy datasets
+        """Constructs a :class:`Dataset` object from an
+        :class:`sklearn.utils.Bunch`, as returned by the `load_*` functions in
+        `sklearn toy datasets
         <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_.
 
-        :param data: sklearn dataset
+        :param data: sklearn dataset. The following attributes are supported
+            - ``data``: covariates [required]
+            - ``target``: target variables (labels) [required]
+            - ``feature_names``: the feature names
+            - ``target_names``: the target names
+            - ``DESCR``: a description
         :param train_size: size of the training dataset. Used in
             `train_test_split`
         :param random_state: seed for train / test split
         :param stratify_by_target: If `True`, data is split in a stratified
             fashion, using the target variable as labels. Read more in
-            `sklearn's user guide
+            `scikit-learn's user guide
             <https://scikit-learn.org/stable/modules/cross_validation.html
             #stratification>`.
-        :param kwargs: Additional keyword arguments that will be passed
-            to the class constructor.
+        :param kwargs: Additional keyword arguments to pass to the
+            :class:`Dataset` constructor. Use this to pass e.g. ``is_multi_output``.
+        :return: Object with the sklearn dataset
 
-        :return: Dataset with the selected sklearn data
+        .. versionchanged:: 0.5.1
+           Added kwargs to pass to the :class:`Dataset` constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
             data.data,
@@ -301,10 +308,8 @@ class Dataset:
         stratify_by_target: bool = False,
         **kwargs,
     ) -> "Dataset":
-        """.. versionadded:: 0.4.0
-
-        Constructs a :class:`Dataset` object from X and y numpy arrays  as returned by the
-        `make_*` functions in `sklearn generated datasets
+        """Constructs a :class:`Dataset` object from X and y numpy arrays  as
+        returned by the `make_*` functions in `sklearn generated datasets
         <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
 
         :param X: numpy array of shape (n_samples, n_features)
@@ -317,10 +322,16 @@ class Dataset:
             `sklearn's user guide
             <https://scikit-learn.org/stable/modules/cross_validation.html
             #stratification>`.
-        :param kwargs: Additional keyword arguments that will be passed
-            to the class constructor.
+        :param kwargs: Additional keyword arguments to pass to the
+            :class:`Dataset` constructor. Use this to pass e.g. ``feature_names``
+            or ``target_names``.
+        :return: Object with the passed X and y arrays split across training
+            and test sets.
 
-        :return: Dataset with the passed X and y arrays split across training and test sets.
+        .. versionadded:: 0.4.0
+
+        .. versionchanged:: 0.5.1
+           Added kwargs to pass to the :class:`Dataset` constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
             X,
@@ -365,11 +376,12 @@ class GroupedDataset(Dataset):
         :param target_names: names of the labels or targets y
         :param group_names: names of the groups. If not provided, the labels
             from ``data_groups`` will be used.
-
-        :param description: description of the dataset
+        :param description: A textual description of the dataset
+        :param kwargs: Additional keyword arguments to pass to the
+            :class:`Dataset` constructor.
 
         .. versionchanged:: 0.5.1
-           Added `group_names` argument
+           Added ``group_names`` and forwarding of ``kwargs``
         """
         super().__init__(
             x_train=x_train,
@@ -440,29 +452,32 @@ class GroupedDataset(Dataset):
         data_groups: Optional[Sequence] = None,
         **kwargs,
     ) -> "GroupedDataset":
-        """Constructs a :class:`GroupedDataset` object from an sklearn bunch as returned by the
-        `load_*` functions in `sklearn toy datasets
+        """Constructs a :class:`GroupedDataset` object from a scikit-learn bunch
+        as returned by the `load_*` functions in `sklearn toy datasets
         <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_ and groups
         it.
 
-        :param data: sklearn dataset
+        :param data: sklearn dataset. The following attributes are supported
+            - ``data``: covariates [required]
+            - ``target``: target variables (labels) [required]
+            - ``feature_names``: the feature names
+            - ``target_names``: the target names
+            - ``DESCR``: a description
         :param train_size: size of the training dataset. Used in
             `train_test_split`.
         :param random_state: seed for train / test split.
-        :param stratify_by_target: If `True`, data is split in a stratified
+        :param stratify_by_target: If ``True``, data is split in a stratified
             fashion, using the target variable as labels. Read more in
             `sklearn's user guide
             <https://scikit-learn.org/stable/modules/cross_validation.html
             #stratification>`.
-        :param data_groups: for each element in the training set, it associates
-            a group index or name.
-        :param kwargs: Additional keyword arguments that will be passed
-            to the :class:`~pydvl.utils.dataset.Dataset` constructor.
-
+        :param data_groups: an array holding the group index or name for each
+            data point. The length of this array must be equal to the number of
+            data points in the dataset.
+        :param kwargs: Additional keyword arguments to pass to the
+            :class:`Dataset` constructor.
         :return: Dataset with the selected sklearn data
         """
-        if data_groups is None:
-            raise ValueError("data_groups argument is missing")
         dataset = Dataset.from_sklearn(
             data, train_size, random_state, stratify_by_target, **kwargs
         )
@@ -493,8 +508,9 @@ class GroupedDataset(Dataset):
             `sklearn's user guide
             <https://scikit-learn.org/stable/modules/cross_validation.html
             #stratification>`.
-        :param data_groups: for each element in the training set, and associated
-            group index or name.
+        :param data_groups: an array holding the group index or name for each
+            data point. The length of this array must be equal to the number of
+            data points in the dataset.
         :param kwargs: Additional keyword arguments that will be passed
             to the :class:`~pydvl.utils.dataset.Dataset` constructor.
 
@@ -502,16 +518,12 @@ class GroupedDataset(Dataset):
             and test sets.
 
         .. versionadded:: 0.4.0
+
+        .. versionchanged:: 0.5.1
+           Added kwargs to pass to the :class:`Dataset` constructor.
         """
-        if data_groups is None:
-            raise ValueError("data_groups argument is missing")
         dataset = Dataset.from_arrays(
-            X,
-            y,
-            train_size,
-            random_state,
-            stratify_by_target,
-            **kwargs,
+            X, y, train_size, random_state, stratify_by_target, **kwargs
         )
         return cls.from_dataset(dataset, data_groups)
 
@@ -519,14 +531,24 @@ class GroupedDataset(Dataset):
     def from_dataset(
         cls, dataset: Dataset, data_groups: Sequence[Any]
     ) -> "GroupedDataset":
-        """Given a :class:`Dataset` object, it creates it into a :class:`GroupedDataset` object
-        by passing a list of data groups, one for each element in the training set.
+        """Creates a :class:`GroupedDataset` object from the data a
+        :class:`Dataset` object and a mapping of data groups.
 
-        :param dataset: :class:`Dataset` object
-        :param data_groups: for each element in the training set, it associates a group
-            index or name.
-        :return: :class:`GroupedDataset`, with the initial :class:`Dataset` grouped by data_groups.
+        :param dataset: The original data.
+        :param data_groups: An array holding the group index or name for each
+            data point. The length of this array must be equal to the number of
+            data points in the dataset.
+        :return: A :class:`GroupedDataset` with the initial :class:`Dataset`
+            grouped by data_groups.
         """
+        if data_groups is None:
+            raise ValueError("data_groups argument is missing")
+        if len(data_groups) != len(dataset):
+            raise ValueError(
+                "data_groups must have the same length as the dataset. "
+                f"Got {len(data_groups)} and {len(dataset)}."
+            )
+
         return cls(
             x_train=dataset.x_train,
             y_train=dataset.y_train,
