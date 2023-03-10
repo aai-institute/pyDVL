@@ -9,6 +9,7 @@ long_description = (repository_root / "README.md").read_text()
 setup(
     name="pyDVL",
     package_dir={"": "src"},
+    package_data={"pydvl": ["py.typed"]},
     packages=find_packages(where="src"),
     include_package_data=True,
     version="0.5.1.dev0",
@@ -43,4 +44,5 @@ setup(
         "Documentation": "https://appliedai-initiative.github.io/pyDVL",
         "TransferLab": "https://transferlab.appliedai.de",
     },
+    zip_safe=False,  # Needed for mypy to find py.typed
 )

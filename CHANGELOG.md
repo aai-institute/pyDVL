@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- PEP-561 conformance: added `py.typed`
+  [PR #307](https://github.com/appliedAI-Initiative/pyDVL/pull/307)
 - Removed default non-negativity constraint on least core subsidy
   and added instead a `non_negative_subsidy` boolean flag.
   Renamed `options` to `solver_options` and pass it as dict.
