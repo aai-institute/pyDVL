@@ -55,8 +55,7 @@ def test_shapley_convergence(
     "num_samples, fun, criterion",
     [
         (6, beta_shapley, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(100)),
-        # (beta_shapley, FiniteDifference(7, 10, 0.05, 1) | MaxUpdates(100),
-        (6, beta_shapley_paper, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(100)),
+        (6, beta_shapley_paper, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(300)),
     ],
 )
 def test_beta_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
