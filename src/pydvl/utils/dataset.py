@@ -344,6 +344,7 @@ class GroupedDataset(Dataset):
         target_names: Optional[Sequence[str]] = None,
         group_names: Optional[Sequence[str]] = None,
         description: Optional[str] = None,
+        **kwargs,
     ):
         """Class for grouping datasets.
 
@@ -371,7 +372,14 @@ class GroupedDataset(Dataset):
            Added `group_names` argument
         """
         super().__init__(
-            x_train, y_train, x_test, y_test, feature_names, target_names, description
+            x_train=x_train,
+            y_train=y_train,
+            x_test=x_test,
+            y_test=y_test,
+            feature_names=feature_names,
+            target_names=target_names,
+            description=description,
+            **kwargs,
         )
 
         if len(data_groups) != len(x_train):
