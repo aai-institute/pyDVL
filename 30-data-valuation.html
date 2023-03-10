@@ -683,7 +683,7 @@ least as large as the amount that these agents could earn by
 forming a coalition on their own.
 <div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[\sum_{x_i\in S} v_u(x_i) \geq u(S), \forall S \subseteq D\,\]</div>
+\[\sum_{x_i\in S} v_u(x_i) \geq u(S), \forall S \subset D\,\]</div>
 </div>
 </p></li>
 </ul>
@@ -698,7 +698,7 @@ we are then able to find approximate payoffs:</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[
-\sum_{x_i\in S} v_u(x_i) + e \geq u(S), \forall S \subseteq D\
+\sum_{x_i\in S} v_u(x_i) + e \geq u(S), \forall S \subset D, S \neq \emptyset \
 ,\]</div>
 </div>
 </p>
@@ -710,7 +710,7 @@ utility <span class="math notranslate nohighlight">\(u\)</span> is computed by s
 \begin{array}{lll}
 \text{minimize} &amp; e &amp; \\
 \text{subject to} &amp; \sum_{x_i\in D} v_u(x_i) = u(D) &amp; \\
-&amp; \sum_{x_i\in S} v_u(x_i) + e \geq u(S) &amp;, \forall S \subseteq D \\
+&amp; \sum_{x_i\in S} v_u(x_i) + e \geq u(S) &amp;, \forall S \subset D, S \neq \emptyset  \\
 \end{array}
 \end{split}\]</div>
 </div>

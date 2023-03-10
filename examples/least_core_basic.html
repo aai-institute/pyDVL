@@ -587,7 +587,7 @@ is of actual practical relevance is debatable, but in any case, the least core i
 \[\begin{split}\begin{array}{lll}
 \text{minimize} &amp; \displaystyle{e} &amp; \\
 \text{subject to} &amp; \displaystyle\sum_{x_i\in D} v_u(x_i) = u(D) &amp; \\
-&amp; \displaystyle\sum_{x_i\in S} v_u(x_i) + e \geq u(S) &amp;, \forall S \subseteq D \\
+&amp; \displaystyle\sum_{x_i\in S} v_u(x_i) + e \geq u(S) &amp;, \forall S \subset D, S \neq \emptyset \\
 \end{array}\end{split}\]</div>
 </div>
 <p>To illustrate this method we will use a synthetic dataset. We will first use a subset of 10 data point to compute the exact values and use them to assess the Monte Carlo approximation. Afterwards, we will conduct the data removal experiments as described by Ghorbani and Zou in their paper <a class="reference external" href="https://arxiv.org/abs/1904.02868v1">Data Shapley: Equitable Valuation of Data for Machine Learning</a>: We compute the data valuation given different computation budgets and incrementally remove a percentage
@@ -608,7 +608,7 @@ of the best, respectively worst, data points and observe how that affects the ut
     <span class="n">Dataset</span><span class="p">,</span>
     <span class="n">Utility</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">exact_least_core</span><span class="p">,</span> <span class="n">montecarlo_least_core</span><span class="p">,</span> <span class="n">ValuationResult</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_least_core_values</span><span class="p">,</span> <span class="n">LeastCoreMode</span><span class="p">,</span> <span class="n">ValuationResult</span>
 <span class="kn">from</span> <span class="nn">pydvl.reporting.plots</span> <span class="kn">import</span> <span class="n">shaded_mean_std</span>
 <span class="kn">from</span> <span class="nn">pydvl.reporting.scores</span> <span class="kn">import</span> <span class="n">compute_removal_score</span>
 </pre></div>
@@ -713,7 +713,7 @@ Testing accuracy: 47.89%
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">small_dataset</span><span class="p">,</span> <span class="n">enable_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">small_dataset</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -721,121 +721,34 @@ Testing accuracy: 47.89%
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
-<span class="n">exact_values</span> <span class="o">=</span> <span class="n">exact_least_core</span><span class="p">(</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">exact_values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span>
     <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="n">LeastCoreMode</span><span class="o">.</span><span class="n">Exact</span><span class="p">,</span>
     <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">exact_values</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "7b30add22a5c47d8aed967c9c0319cc4", "version_major": 2, "version_minor": 0}</script></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-CPU times: user 4.95 s, sys: 11.2 s, total: 16.2 s
-Wall time: 2.81 s
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-ValuationResult(algorithm=&#39;exact_least_core&#39;,status=&#39;converged&#39;,values=[0.04   0.0358 0.0837 0.0563 0.0321 0.0358 0.0579 0.0447 0.0342 0.0584], least_core_value=0.28631578945813296)
-</pre></div></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "e791c3afe5a94daabd8d65be58e3ed94", "version_major": 2, "version_minor": 0}</script></div>
 </div>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">exact_values_df</span> <span class="o">=</span> <span class="n">exact_values</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;exact_value&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
 <span class="n">exact_values_df</span> <span class="o">=</span> <span class="n">exact_values_df</span><span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">exact_values_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)]</span>
-<span class="n">exact_values_df</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
-</pre></div>
-</div>
-<div class="output_area rendered_html docutils container">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>0</th>
-      <th>1</th>
-      <th>2</th>
-      <th>3</th>
-      <th>4</th>
-      <th>5</th>
-      <th>6</th>
-      <th>7</th>
-      <th>8</th>
-      <th>9</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>exact_value</th>
-      <td>0.04</td>
-      <td>0.035789</td>
-      <td>0.083684</td>
-      <td>0.056316</td>
-      <td>0.032105</td>
-      <td>0.03579</td>
-      <td>0.057895</td>
-      <td>0.044737</td>
-      <td>0.034211</td>
-      <td>0.058421</td>
-    </tr>
-    <tr>
-      <th>exact_value_stderr</th>
-      <td>0.00</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.00000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-    </tr>
-  </tbody>
-</table>
-</div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
-<span class="n">budget_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="nb">len</span><span class="p">(</span><span class="n">small_dataset</span><span class="p">),</span> <span class="n">num</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">budget_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="nb">len</span><span class="p">(</span><span class="n">small_dataset</span><span class="p">),</span> <span class="n">num</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
 
 <span class="n">all_estimated_values_df</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">all_errors</span> <span class="o">=</span> <span class="p">{</span><span class="n">budget</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">budget</span> <span class="ow">in</span> <span class="n">budget_array</span><span class="p">}</span>
@@ -843,13 +756,13 @@ ValuationResult(algorithm=&#39;exact_least_core&#39;,status=&#39;converged&#39;,
 <span class="k">for</span> <span class="n">budget</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">budget_array</span><span class="p">):</span>
     <span class="n">dfs</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">):</span>
-        <span class="n">column_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;estimated_value_</span><span class="si">{</span><span class="n">budget</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="n">montecarlo_least_core</span><span class="p">(</span>
+    <span class="n">column_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;estimated_value_</span><span class="si">{</span><span class="n">budget</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span>
             <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="n">LeastCoreMode</span><span class="o">.</span><span class="n">MonteCarlo</span><span class="p">,</span>
             <span class="n">n_iterations</span><span class="o">=</span><span class="n">budget</span><span class="p">,</span>
             <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
-            <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">df</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">values</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="n">column_name</span><span class="p">)</span>
@@ -871,20 +784,11 @@ ValuationResult(algorithm=&#39;exact_least_core&#39;,status=&#39;converged&#39;,
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "98d718bbd35c4e8fb5f5f7ccfcf2b36c", "version_major": 2, "version_minor": 0}</script></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-CPU times: user 16.1 s, sys: 1.23 s, total: 17.4 s
-Wall time: 1min 7s
-</pre></div></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "4e124fe5b1a14e8cbdcd2054b2ea7519", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
@@ -922,12 +826,12 @@ Wall time: 1min 7s
 <section id="Data-Removal">
 <h2>Data Removal<a class="headerlink" href="#Data-Removal" title="Permalink to this heading">#</a></h2>
 <p>We now move on to the data removal experiments using the full dataset.</p>
-<p>In this set of experiments, the data instances are ranked from most valuable to least valuable using the Monte Carlo Least Core method, then we gradually remove 5 percent of the most valuable/least valuable ones, train the model on this subset and compute its accuracy.</p>
+<p>In these experiments, we first rank the data points from most valuable to least valuable using the values estimated by the Monte Carlo Least Core method. Then, we gradually remove from 5 to 40 percent, by increments of 5 percentage points, of the most valuable/least valuable ones, train the model on this subset and compute its accuracy.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">full_dataset</span><span class="p">,</span> <span class="n">enable_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">full_dataset</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -935,65 +839,49 @@ Wall time: 1min 7s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">budget_array</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Random&quot;</span><span class="p">,</span> <span class="mi">5000</span><span class="p">,</span> <span class="mi">10000</span><span class="p">,</span> <span class="mi">25000</span><span class="p">,</span> <span class="mi">50000</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">method_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Random&quot;</span><span class="p">,</span> <span class="s2">&quot;Least Core&quot;</span><span class="p">]</span>
 <span class="n">removal_percentages</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.41</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <section id="Remove-Best">
 <h3>Remove Best<a class="headerlink" href="#Remove-Best" title="Permalink to this heading">#</a></h3>
-<p>We start by removing the best data instances and seeing how the model’s accuracy evolves.</p>
+<p>We start by removing the best data points and seeing how the model’s accuracy evolves.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
-<span class="n">all_scores</span> <span class="o">=</span> <span class="p">[]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">all_scores</span> <span class="o">=</span> <span class="p">[]</span>
 
-<span class="k">for</span> <span class="n">budget</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">budget_array</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">budget</span> <span class="o">==</span> <span class="s2">&quot;Random&quot;</span><span class="p">:</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">trange</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">method_name</span> <span class="ow">in</span> <span class="n">method_names</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">method_name</span> <span class="o">==</span> <span class="s2">&quot;Random&quot;</span><span class="p">:</span>
             <span class="n">values</span> <span class="o">=</span> <span class="n">ValuationResult</span><span class="o">.</span><span class="n">from_random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">utility</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
-                <span class="n">values</span> <span class="o">=</span> <span class="n">montecarlo_least_core</span><span class="p">(</span>
-                    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
-                    <span class="n">n_iterations</span><span class="o">=</span><span class="n">budget</span><span class="p">,</span>
-                    <span class="n">options</span><span class="o">=</span><span class="p">{</span>
-                        <span class="s2">&quot;solver&quot;</span><span class="p">:</span> <span class="s2">&quot;SCS&quot;</span><span class="p">,</span>
-                        <span class="s2">&quot;max_iters&quot;</span><span class="p">:</span> <span class="mi">20000</span><span class="p">,</span>
-                    <span class="p">},</span>
-                    <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
-                    <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span>
+                <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="n">LeastCoreMode</span><span class="o">.</span><span class="n">MonteCarlo</span><span class="p">,</span>
+                <span class="n">n_iterations</span><span class="o">=</span><span class="mi">25000</span><span class="p">,</span>
+                <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="n">compute_removal_score</span><span class="p">(</span>
             <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
             <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">,</span>
             <span class="n">percentages</span><span class="o">=</span><span class="n">removal_percentages</span><span class="p">,</span>
             <span class="n">remove_best</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">scores</span><span class="p">[</span><span class="s2">&quot;budget&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">budget</span>
+        <span class="n">scores</span><span class="p">[</span><span class="s2">&quot;method_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method_name</span>
         <span class="n">all_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
 
 <span class="n">scores_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "2d480ead62be4916a880bb38aade276e", "version_major": 2, "version_minor": 0}</script></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-CPU times: user 1h 6min 22s, sys: 14.7 s, total: 1h 6min 36s
-Wall time: 1h 17min 3s
-</pre></div></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "7feee65d856d427f8d45ac223b27e536", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
@@ -1010,62 +898,45 @@ Wall time: 1h 17min 3s
 <img alt="../_images/examples_least_core_basic_28_0.png" src="../_images/examples_least_core_basic_28_0.png" />
 </div>
 </div>
-<p>We can clearly see that removing the most valuable data instances, as given by the Least Core method, leads to, on average, a decrease in the model’s performance and that the method outperforms a random removal.</p>
-<p>We can also see that an increase in the budget does not necessarily lead to an improvement in the removal results. This could be due to the simple nature of the dataset or to the fact that we sample the subsets with replacement in the Monte Carlo method i.e there may be repeated subsets.</p>
+<p>We can clearly see that removing the most valuable data points, as given by the Least Core method, leads to, on average, a decrease in the model’s performance and that the method outperforms random removal of data points.</p>
 </section>
 <section id="Remove-Worst">
 <h3>Remove Worst<a class="headerlink" href="#Remove-Worst" title="Permalink to this heading">#</a></h3>
-<p>We then proceed to removing the worst data instances and seeing how the model’s accuracy evolves.</p>
+<p>We then proceed to removing the worst data points and seeing how the model’s accuracy evolves.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
-<span class="n">all_scores</span> <span class="o">=</span> <span class="p">[]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">all_scores</span> <span class="o">=</span> <span class="p">[]</span>
 
-<span class="k">for</span> <span class="n">budget</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">budget_array</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">budget</span> <span class="o">==</span> <span class="s2">&quot;Random&quot;</span><span class="p">:</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">trange</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">method_name</span> <span class="ow">in</span> <span class="n">method_names</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">method_name</span> <span class="o">==</span> <span class="s2">&quot;Random&quot;</span><span class="p">:</span>
             <span class="n">values</span> <span class="o">=</span> <span class="n">ValuationResult</span><span class="o">.</span><span class="n">from_random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">utility</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
-                <span class="n">values</span> <span class="o">=</span> <span class="n">montecarlo_least_core</span><span class="p">(</span>
-                    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
-                    <span class="n">n_iterations</span><span class="o">=</span><span class="n">budget</span><span class="p">,</span>
-                    <span class="n">options</span><span class="o">=</span><span class="p">{</span>
-                        <span class="s2">&quot;solver&quot;</span><span class="p">:</span> <span class="s2">&quot;SCS&quot;</span><span class="p">,</span>
-                        <span class="s2">&quot;max_iters&quot;</span><span class="p">:</span> <span class="mi">20000</span><span class="p">,</span>
-                    <span class="p">},</span>
-                    <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
-                    <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span>
+                <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="n">LeastCoreMode</span><span class="o">.</span><span class="n">MonteCarlo</span><span class="p">,</span>
+                <span class="n">n_iterations</span><span class="o">=</span><span class="mi">25000</span><span class="p">,</span>
+                <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="n">compute_removal_score</span><span class="p">(</span>
             <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
             <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">,</span>
             <span class="n">percentages</span><span class="o">=</span><span class="n">removal_percentages</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">scores</span><span class="p">[</span><span class="s2">&quot;budget&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">budget</span>
+        <span class="n">scores</span><span class="p">[</span><span class="s2">&quot;method_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method_name</span>
         <span class="n">all_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
 
 <span class="n">scores_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "b10f0b779c9e4621b09a8d9a85594799", "version_major": 2, "version_minor": 0}</script></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-CPU times: user 1h 6min 48s, sys: 15.3 s, total: 1h 7min 3s
-Wall time: 1h 17min 28s
-</pre></div></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "8909d638b4ba48d09074a9993c3c5861", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
@@ -1082,8 +953,7 @@ Wall time: 1h 17min 28s
 <img alt="../_images/examples_least_core_basic_33_0.png" src="../_images/examples_least_core_basic_33_0.png" />
 </div>
 </div>
-<p>We can clearly see that removing the least valuable data instances, as given by the Least Core method, leads to, on average, an increase in the model’s performance and that the method outperforms a random removal.</p>
-<p>We can also see that an increase in the budget does not necessarily lead to an improvement in the removal results. This could be due to the simple nature of the dataset or to the fact that we sample the subsets with replacement in the Monte Carlo method i.e there may be repeated subsets.</p>
+<p>We can clearly see that removing the least valuable data points, as given by the Least Core method, leads to, on average, an increase in the model’s performance and that the method outperforms the random removal of data points.</p>
 </section>
 </section>
 </section>
