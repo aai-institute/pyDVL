@@ -541,14 +541,6 @@ class GroupedDataset(Dataset):
         :return: A :class:`GroupedDataset` with the initial :class:`Dataset`
             grouped by data_groups.
         """
-        if data_groups is None:
-            raise ValueError("data_groups argument is missing")
-        if len(data_groups) != len(dataset):
-            raise ValueError(
-                "data_groups must have the same length as the dataset. "
-                f"Got {len(data_groups)} and {len(dataset)}."
-            )
-
         return cls(
             x_train=dataset.x_train,
             y_train=dataset.y_train,
