@@ -165,7 +165,7 @@ def lc_solve_problems(
     algorithm: str,
     config: ParallelConfig = ParallelConfig(),
     n_jobs: int = 1,
-    non_negative_subsidy: bool = False,
+    non_negative_subsidy: bool = True,
     solver_options: Optional[dict] = None,
     **options,
 ) -> List[ValuationResult]:
