@@ -478,10 +478,14 @@ class GroupedDataset(Dataset):
             :class:`Dataset` constructor.
         :return: Dataset with the selected sklearn data
         """
+        if data_groups is None:
+            raise ValueError(
+                "data_groups must be provided when constructing a GroupedDataset"
+            )
         dataset = Dataset.from_sklearn(
             data, train_size, random_state, stratify_by_target, **kwargs
         )
-        return cls.from_dataset(dataset, data_groups)
+        return cls.from_dataset(dataset, data_groups)  # type: ignore
 
     @classmethod
     def from_arrays(
@@ -522,6 +526,10 @@ class GroupedDataset(Dataset):
         .. versionchanged:: 0.5.1
            Added kwargs to pass to the :class:`Dataset` constructor.
         """
+        if data_groups is None:
+            raise ValueError(
+                "data_groups must be provided when constructing a GroupedDataset"
+            )
         dataset = Dataset.from_arrays(
             X, y, train_size, random_state, stratify_by_target, **kwargs
         )
