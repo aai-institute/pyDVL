@@ -16,6 +16,7 @@ for testing and for demonstration purposes.
 """
 import logging
 import warnings
+from dataclasses import asdict
 from typing import Dict, FrozenSet, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -141,7 +142,10 @@ class Utility:
 
     def _initialize_utility_wrapper(self):
         if self.enable_cache:
-            self._utility_wrapper = memcached(**self.cache_options)(  # type: ignore
+            # asdict() is recursive, but we want client_config to remain a dataclass
+            options = asdict(self.cache_options)
+            options["client_config"] = self.cache_options.client_config
+            self._utility_wrapper = memcached(**options)(  # type: ignore
                 self._utility, signature=self._signature
             )
         else:
@@ -370,6 +374,9 @@ class MinerGameUtility(Utility):
             subsidy = (self.n_miners - 1) / (2 * self.n_miners)
         return values, subsidy
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(n={self.n_miners})"
+
 
 class GlovesGameUtility(Utility):
     r"""Toy game utility that is used for testing and demonstration purposes.
@@ -410,11 +417,16 @@ class GlovesGameUtility(Utility):
         pass
 
     def exact_least_core_values(self) -> Tuple[NDArray[np.float_], float]:
-        subsidy = 0.0
         if self.left == self.right:
+            subsidy = -0.5
             values = np.array([0.5] * (self.left + self.right))
         elif self.left < self.right:
+            subsidy = 0.0
             values = np.array([1.0] * self.left + [0.0] * self.right)
         else:
+            subsidy = 0.0
             values = np.array([0.0] * self.left + [1.0] * self.right)
         return values, subsidy
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(L={self.left}, R={self.right})"
