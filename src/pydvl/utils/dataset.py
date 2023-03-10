@@ -253,6 +253,7 @@ class Dataset:
         train_size: float = 0.8,
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
+        **kwargs,
     ) -> "Dataset":
         """Constructs a :class:`Dataset` object from an :class:`sklearn.utils.Bunch` bunch as returned by the
         `load_*` functions in `sklearn toy datasets
@@ -267,6 +268,8 @@ class Dataset:
             `sklearn's user guide
             <https://scikit-learn.org/stable/modules/cross_validation.html
             #stratification>`.
+        :param kwargs: Additional keyword arguments that will be passed
+            to the class constructor.
 
         :return: Dataset with the selected sklearn data
         """
@@ -285,6 +288,7 @@ class Dataset:
             feature_names=data.get("feature_names"),
             target_names=data.get("target_names"),
             description=data.get("DESCR"),
+            **kwargs,
         )
 
     @classmethod
@@ -295,6 +299,7 @@ class Dataset:
         train_size: float = 0.8,
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
+        **kwargs,
     ) -> "Dataset":
         """.. versionadded:: 0.4.0
 
@@ -312,6 +317,8 @@ class Dataset:
             `sklearn's user guide
             <https://scikit-learn.org/stable/modules/cross_validation.html
             #stratification>`.
+        :param kwargs: Additional keyword arguments that will be passed
+            to the class constructor.
 
         :return: Dataset with the passed X and y arrays split across training and test sets.
         """
@@ -322,7 +329,7 @@ class Dataset:
             random_state=random_state,
             stratify=y if stratify_by_target else None,
         )
-        return cls(x_train, y_train, x_test, y_test)
+        return cls(x_train, y_train, x_test, y_test, **kwargs)
 
 
 class GroupedDataset(Dataset):
@@ -423,6 +430,7 @@ class GroupedDataset(Dataset):
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
         data_groups: Optional[Sequence] = None,
+        **kwargs,
     ) -> "GroupedDataset":
         """Constructs a :class:`GroupedDataset` object from an sklearn bunch as returned by the
         `load_*` functions in `sklearn toy datasets
@@ -440,13 +448,15 @@ class GroupedDataset(Dataset):
             #stratification>`.
         :param data_groups: for each element in the training set, it associates
             a group index or name.
+        :param kwargs: Additional keyword arguments that will be passed
+            to the :class:`~pydvl.utils.dataset.Dataset` constructor.
 
         :return: Dataset with the selected sklearn data
         """
         if data_groups is None:
             raise ValueError("data_groups argument is missing")
         dataset = Dataset.from_sklearn(
-            data, train_size, random_state, stratify_by_target
+            data, train_size, random_state, stratify_by_target, **kwargs
         )
         return cls.from_dataset(dataset, data_groups)
 
@@ -459,6 +469,7 @@ class GroupedDataset(Dataset):
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
         data_groups: Optional[Sequence] = None,
+        **kwargs,
     ) -> "Dataset":
         """Constructs a :class:`GroupedDataset` object from X and y numpy arrays
         as returned by the `make_*` functions in `sklearn generated datasets
@@ -476,6 +487,8 @@ class GroupedDataset(Dataset):
             #stratification>`.
         :param data_groups: for each element in the training set, and associated
             group index or name.
+        :param kwargs: Additional keyword arguments that will be passed
+            to the :class:`~pydvl.utils.dataset.Dataset` constructor.
 
         :return: Dataset with the passed X and y arrays split across training
             and test sets.
@@ -485,7 +498,12 @@ class GroupedDataset(Dataset):
         if data_groups is None:
             raise ValueError("data_groups argument is missing")
         dataset = Dataset.from_arrays(
-            X, y, train_size, random_state, stratify_by_target
+            X,
+            y,
+            train_size,
+            random_state,
+            stratify_by_target,
+            **kwargs,
         )
         return cls.from_dataset(dataset, data_groups)
 
