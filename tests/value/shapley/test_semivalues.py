@@ -57,9 +57,9 @@ def test_shapley_convergence(
 @pytest.mark.parametrize(
     "fun, criterion",
     [
-        (beta_shapley, AbsoluteStandardError(0.05, 1.0) | MaxUpdates(100)),
-        # (beta_shapley, finite_difference_criterion(7, 10, 0.05, 1) | MaxUpdates(100),
-        (beta_shapley_paper, AbsoluteStandardError(0.05, 1.0) | MaxUpdates(100)),
+        (beta_shapley, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(100)),
+        # (beta_shapley, FiniteDifference(7, 10, 0.05, 1) | MaxUpdates(100),
+        (beta_shapley_paper, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(100)),
     ],
 )
 def test_beta_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
@@ -67,55 +67,6 @@ def test_beta_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCrite
     values = fun(u, criterion, alpha=1, beta=1)
     assert values.status == Status.Converged
     check_values(values, exact_values, rtol=0.1)
-
-
-@pytest.mark.parametrize(
-    "values, variances, counts, threshold, fraction, status",
-    [
-        ([1, 1, 1], [0, 0, 0], [1, 1, 1], 1e-4, 1.0, Status.Converged),
-        ([1, 2, 3], [0.01, 0.03, 0.08], [1, 1, 1], 0.1, 1.0, Status.Converged),
-        ([1, 2, 3], [0.01, 0.03, 0.8], [1, 1, 1], 0.1, 1.0, Status.Pending),
-        ([1, 2, 3], [0.01, 0.03, 0.8], [1, 1, 1], 0.1, 2 / 3, Status.Converged),
-    ],
-)
-def test_stderr_criterion(
-    values: NDArray[np.float_],
-    variances: NDArray[np.float_],
-    counts: NDArray[np.int_],
-    threshold: float,
-    fraction: float,
-    status: Status,
-):
-    v = ValuationResult(
-        values=np.array(values, dtype=float),
-        variances=np.array(variances, dtype=float),
-        counts=np.array(counts, dtype=int),
-    )
-    assert AbsoluteStandardError(threshold=threshold, fraction=fraction)(v) == status
-
-
-@pytest.mark.parametrize(
-    "values, variances, counts, exception",
-    [
-        (np.array([]), np.array([]), np.array([]), ValueError),
-        (np.array([1.0]), np.array([]), np.array([]), ValueError),
-        (np.array([1.0]), np.array([1.0]), np.array([]), ValueError),
-        (np.array([1.0]), np.array([]), np.array([1]), ValueError),
-    ],
-)
-def test_variance_criterion_exceptions(
-    values: NDArray[np.float_],
-    variances: NDArray[np.float_],
-    counts: NDArray[np.int_],
-    exception,
-):
-    v = ValuationResult(
-        values=np.array(values, dtype=float),
-        variances=np.array(variances, dtype=float),
-        counts=np.array(counts, dtype=int),
-    )
-    with pytest.raises(exception):
-        AbsoluteStandardError(threshold=0.1, fraction=1.0)(v)
 
 
 @pytest.mark.parametrize("n", [0, 10, 100])
