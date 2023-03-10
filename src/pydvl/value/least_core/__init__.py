@@ -108,6 +108,7 @@ def compute_least_core_values(
             progress=progress,
             non_negative_subsidy=non_negative_subsidy,
             solver_options=solver_options,
+            **kwargs,
         )
     elif mode == LeastCoreMode.Exact:
         return exact_least_core(

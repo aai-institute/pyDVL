@@ -5,6 +5,7 @@ from typing import List, NamedTuple, Optional, Sequence, Tuple
 
 import cvxpy as cp
 import numpy as np
+from deprecation import DeprecatedWarning
 from numpy.typing import NDArray
 
 from pydvl.utils import MapReduceJob, ParallelConfig, Status, Utility
@@ -33,6 +34,7 @@ def lc_solve_problem(
     algorithm: str,
     non_negative_subsidy: bool = False,
     solver_options: Optional[dict] = None,
+    **options,
 ) -> ValuationResult:
     """Solves a linear problem prepared by :func:`mclc_prepare_problem`.
     Useful for parallel execution of multiple experiments by running this as a
@@ -51,6 +53,21 @@ def lc_solve_problem(
             f"values out of {problem.utility_values.size}",
             RuntimeWarning,
         )
+
+    # TODO: remove this before releasing version 0.6.0
+    if options:
+        warnings.warn(
+            DeprecatedWarning(
+                "Passing solver options as kwargs",
+                deprecated_in="0.5.1",
+                removed_in="0.6.0",
+                details="Use solver_options instead.",
+            )
+        )
+        if solver_options is None:
+            solver_options = options
+        else:
+            solver_options.update(options)
 
     if solver_options is None:
         solver_options = {}
@@ -150,6 +167,7 @@ def lc_solve_problems(
     n_jobs: int = 1,
     non_negative_subsidy: bool = False,
     solver_options: Optional[dict] = None,
+    **options,
 ) -> List[ValuationResult]:
     """Solves a list of linear problems in parallel.
 
@@ -181,6 +199,7 @@ def lc_solve_problems(
             algorithm=algorithm,
             non_negative_subsidy=non_negative_subsidy,
             solver_options=solver_options,
+            **options,
         ),
         reduce_func=lambda x: list(itertools.chain(*x)),
         config=config,

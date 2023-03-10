@@ -3,6 +3,7 @@ import warnings
 from typing import Iterable, Optional
 
 import numpy as np
+from deprecation import DeprecatedWarning
 
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
@@ -30,6 +31,7 @@ def montecarlo_least_core(
     config: ParallelConfig = ParallelConfig(),
     non_negative_subsidy: bool = False,
     solver_options: Optional[dict] = None,
+    options: Optional[dict] = None,
     progress: bool = False,
 ) -> ValuationResult:
     r"""Computes approximate Least Core values using a Monte Carlo approach.
@@ -59,9 +61,25 @@ def montecarlo_least_core(
     :param solver_options: Dictionary of options that will be used to select a solver
         and to configure it. Refer to the following page for all possible options:
         https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
+    :param options: (Deprecated) Dictionary of solver options. Use solver_options instead.
     :param progress: If True, shows a tqdm progress bar
     :return: Object with the data values and the least core value.
     """
+    # TODO: remove this before releasing version 0.6.0
+    if options:
+        warnings.warn(
+            DeprecatedWarning(
+                "Passing solver options as kwargs",
+                deprecated_in="0.5.1",
+                removed_in="0.6.0",
+                details="Use solver_options instead.",
+            )
+        )
+        if solver_options is None:
+            solver_options = options
+        else:
+            solver_options.update(options)
+
     problem = mclc_prepare_problem(
         u, n_iterations, n_jobs=n_jobs, config=config, progress=progress
     )
