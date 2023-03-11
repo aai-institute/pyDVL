@@ -1,3 +1,16 @@
+"""
+Samplers iterate over subsets of indices.
+
+The classes in this module are used to iterate over index sets, generating
+subsets of the complement of the current index. This is the natural mode of
+iteration for the combinatorial definition of semi-values, in particular Shapley
+value. For the computation using permutations, adhering to this interface is not
+ideal, but we stick to it for consistency.
+
+The samplers are used in the :mod:`pydvl.value.semivalues` module to compute any
+semi-value, in particular Shapley and Beta values, and Banzhaf indices.
+"""
+
 from __future__ import annotations
 
 import abc
