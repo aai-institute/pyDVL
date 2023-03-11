@@ -1,21 +1,24 @@
+from __future__ import annotations
+
+import abc
 import math
+from collections.abc import Generator, Iterable, Sequence
 from enum import Enum
-from typing import Any, Collection, Generator, Generic, Sequence, Tuple, TypeVar
+from typing import Any, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import powerset, random_powerset, random_subset_of_size
+from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
 
 T = TypeVar("T", bound=np.generic)
 
 
-class PowersetSampler(Generic[T]):
-    """Samplers iterate over subsets.
+class PowersetSampler(abc.ABC, Iterable[T]):
+    """Samplers iterate over subsets of indices.
 
-    For each element in the whole set, the complementary set is considered, and
-    at most ``n_samples`` from its power set are generated.
-
+    For each element in the set, the complementary set is considered and
+    sets from its power set are generated.
 
     :Example:
 
@@ -27,7 +30,7 @@ class PowersetSampler(Generic[T]):
 
     ``[]``, ``[2]``, ``[]``, ``[1]``
 
-    In addition, samplers define a :meth:`weight` function to be used as a
+    In addition, samplers must define a :meth:`weight` function to be used as a
     multiplier in Monte Carlo sums, so that the limit expectation coincides with
     the semi-value.
     """
@@ -43,14 +46,34 @@ class PowersetSampler(Generic[T]):
     ):
         """
         :param indices: The set of items (indices) to sample from.
+        :param index_iteration: the order in which indices are iterated over
         """
         self._indices = indices
         self._index_iteration = index_iteration
         self._n = len(indices)
+        self._n_samples = 0
 
+    @property
+    def indices(self) -> NDArray[T]:
+        return self._indices
+
+    @indices.setter
+    def indices(self, indices: NDArray[T]):
+        raise AttributeError("Cannot set indices of sampler")
+
+    @property
+    def n_samples(self) -> int:
+        return self._n_samples
+
+    @n_samples.setter
+    def n_samples(self, n: int):
+        raise AttributeError("Cannot reset a sampler's number of samples")
+
+    @abc.abstractmethod
     def __iter__(self):
-        raise NotImplementedError()
+        ...
 
+    @abc.abstractmethod
     def weight(self, subset: Sequence[T]) -> float:
         r"""Factor by which to multiply Monte Carlo samples, so that the
         mean converges to the desired expression.
@@ -64,13 +87,14 @@ class PowersetSampler(Generic[T]):
         We add a factor $c(S_j)$ in order to have this expectation coincide with
         the desired expression.
         """
-        raise NotImplementedError()
+        ...
 
-    def complement(self, exclude: Sequence[T], *args, **kwargs) -> NDArray[T]:
+    def complement(self, exclude: Sequence[T]) -> NDArray[T]:
         return np.setxor1d(self._indices, exclude)
 
-    def indices(self) -> Generator[T, Any, None]:
-        """
+    def iterindices(self) -> Generator[T, Any, None]:
+        """Iterates over indices in the order specified at construction.
+
         FIXME: this is probably not very useful, but I couldn't decide
           which method is better
         """
@@ -80,6 +104,22 @@ class PowersetSampler(Generic[T]):
         elif self._index_iteration is PowersetSampler.IndexIteration.Random:
             while True:
                 yield np.random.choice(self._indices, size=1).item()
+
+    @overload
+    def __getitem__(self, key: slice) -> "PowersetSampler[T]":
+        ...
+
+    @overload
+    def __getitem__(self, key: list[int]) -> "PowersetSampler[T]":
+        ...
+
+    def __getitem__(self, key: slice | list[int]) -> "PowersetSampler[T]":
+        if isinstance(key, slice) or isinstance(key, Iterable):
+            return self.__class__(self._indices[key])
+        raise TypeError("Indices must be an iterable or a slice")
+
+    def __len__(self) -> int:
+        return self._n
 
 
 class DeterministicSampler(PowersetSampler[T]):
@@ -93,10 +133,11 @@ class DeterministicSampler(PowersetSampler[T]):
         """
         super().__init__(indices, PowersetSampler.IndexIteration.Sequential)
 
-    def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
-        for idx in self.indices():
+    def __iter__(self) -> Generator[tuple[T, NDArray[T]], Any, None]:
+        for idx in self.iterindices():
             for subset in powerset(self.complement([idx])):
                 yield idx, subset
+                self._n_samples += 1
 
     def weight(self, subset: Sequence[T]) -> float:
         """Deterministic sampling should be used only for exact computations,
@@ -105,11 +146,14 @@ class DeterministicSampler(PowersetSampler[T]):
 
 
 class UniformSampler(PowersetSampler[T]):
-    def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
+    def __iter__(self) -> Generator[tuple[T, NDArray[T]], Any, None]:
         while True:
-            for idx in self.indices():
-                for subset in random_powerset(self.complement([idx]), n_samples=1):
-                    yield idx, subset
+            for idx in self.iterindices():
+                subset = random_subset(self.complement([idx]))
+                yield idx, subset
+                self._n_samples += 1
+            if self._n_samples == 0:  # Empty index set
+                break
 
     def weight(self, subset: Sequence[T]) -> float:
         """Correction coming from Monte Carlo integration so that the mean of
@@ -120,26 +164,16 @@ class UniformSampler(PowersetSampler[T]):
 
 
 class AntitheticSampler(PowersetSampler[T]):
-    def complement(self, exclude: Sequence[T], *args, **kwargs) -> NDArray[T]:
-        """
-
-        :param exclude:
-        :param args:
-        :param kwargs: Additional keyword arguments, including:
-            - exclude_idx: index to exclude from the complement
-        :return:
-        """
-        tmp = super().complement(exclude)
-        if exclude_idx := kwargs.get("exclude_idx") is None:
-            return tmp
-        return np.setxor1d(tmp, [exclude_idx])
-
-    def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
+    def __iter__(self) -> Generator[tuple[T, NDArray[T]], None, None]:
         while True:
-            for idx in self.indices():
-                for subset in random_powerset(self.complement([idx]), n_samples=1):
-                    yield idx, subset
-                    yield idx, self.complement(subset, idx)
+            for idx in self.iterindices():
+                subset = random_subset(self.complement([idx]))
+                yield idx, subset
+                self._n_samples += 1
+                yield idx, self.complement(np.concatenate((subset, [idx])))
+                self._n_samples += 1
+            if self._n_samples == 0:  # Empty index set
+                break
 
     def weight(self, subset: Sequence[T]) -> float:
         return float(2 ** (self._n - 1)) if self._n > 0 else 1.0
@@ -147,37 +181,47 @@ class AntitheticSampler(PowersetSampler[T]):
 
 class PermutationSampler(PowersetSampler[T]):
     """Sample permutations of indices and iterate through each returning sets,
-    as required for the permutation definition of Shapley value.
+    as required for the permutation definition of semi-values.
 
     .. warning::
        This sampler requires caching to be enabled or computation
        will be doubled wrt. a "direct" implementation of permutation MC
-
     """
 
-    def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
+    def __iter__(self) -> Generator[tuple[T, NDArray[T]], None, None]:
         while True:
             permutation = np.random.permutation(self._indices)
             for i, idx in enumerate(permutation):
                 yield idx, permutation[:i]
+                self._n_samples += 1
+            if self._n_samples == 0:  # Empty index set
+                break
+
+    def __getitem__(self, key: slice | list[int]) -> "PowersetSampler[T]":
+        """Permutation samplers cannot be split across indices, so we return
+        a copy of the full sampler."""
+        return super().__getitem__(slice(None))
 
     def weight(self, subset: Sequence[T]) -> float:
         return self._n * math.comb(self._n - 1, len(subset)) if self._n > 0 else 1.0
 
 
-class HierarchicalSampler(PowersetSampler[T]):
-    """Sample a set size, then a set of that size.
+class RandomHierarchicalSampler(PowersetSampler[T]):
+    """For every index, sample a set size, then a set of that size.
 
     .. todo::
        This is unnecessary, but a step towards proper stratified sampling.
     """
 
-    def __iter__(self) -> Generator[Tuple[T, Collection[T]], Any, None]:
+    def __iter__(self) -> Generator[tuple[T, NDArray[T]], None, None]:
         while True:
-            for idx in self.indices():
+            for idx in self.iterindices():
                 k = np.random.choice(np.arange(len(self._indices)), size=1).item()
-                for subset in random_subset_of_size(self.complement([idx]), size=k):
-                    yield idx, subset
+                subset = random_subset_of_size(self.complement([idx]), size=k)
+                yield idx, subset
+                self._n_samples += 1
+            if self._n_samples == 0:  # Empty index set
+                break
 
     def weight(self, subset: Sequence[T]) -> float:
         return 2 ** (self._n - 1) if self._n > 0 else 1.0
