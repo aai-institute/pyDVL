@@ -62,7 +62,7 @@ def _semivalues(
 
     The exact semi-value is given by:
 
-    $$\v_\text{semi}(i) = \frac{1}{n}
+    $$\v_\text{semi}(i) =
       \sum_{i=1}^n w(k) \sum_{S \subset D_{-i}^{(k)}} [U(S_{+i})-U(S)]$$
 
 
@@ -137,11 +137,6 @@ def beta_shapley(
 ) -> ValuationResult:
     """Implements the Beta Shapley semi-value as introduced in
     :footcite:t:`kwon_beta_2022`.
-
-    .. rubric:: References
-
-    .. footbibliography::
-
     """
     sampler = PermutationSampler(u.data.indices)
     return _semivalues(u, sampler, beta_coefficient(alpha, beta), criterion)

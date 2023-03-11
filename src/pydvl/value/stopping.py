@@ -36,7 +36,6 @@ from typing import Callable, Optional, Type
 import numpy as np
 from deprecation import deprecated
 from numpy.typing import NDArray
-from scipy.stats import norm
 
 from pydvl.utils import Status
 from pydvl.value import ValuationResult
