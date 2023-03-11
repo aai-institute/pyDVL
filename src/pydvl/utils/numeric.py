@@ -29,6 +29,7 @@ __all__ = [
     "num_samples_permutation_hoeffding",
     "powerset",
     "random_matrix_with_condition_number",
+    "random_subset",
     "random_powerset",
     "random_subset_of_size",
     "top_k_value_accuracy",
@@ -72,6 +73,19 @@ def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) 
     return int(np.ceil(np.log(2 / delta) * 2 * u_range**2 / eps**2))
 
 
+def random_subset(s: NDArray[T], q: float = 0.5) -> NDArray[T]:
+    """Returns one subset at random from ``s``.
+
+    :param s: set to sample from
+    :param q: Sampling probability for elements. The default 0.5 yields a
+        uniform distribution over the power set of s.
+    :return: the subset
+    """
+    rng = np.random.default_rng()
+    selection = rng.uniform(size=len(s)) > q
+    return s[selection]
+
+
 def random_powerset(
     s: NDArray[T], n_samples: Optional[int] = None, q: float = 0.5
 ) -> Generator[NDArray[T], None, None]:
@@ -81,9 +95,8 @@ def random_powerset(
     See `powerset()` if you wish to deterministically generate all subsets.
 
     To generate subsets, `len(s)` Bernoulli draws with probability `q` are
-    drawn.
-    The default value of `q = 0.5` provides a uniform distribution over the
-    power set of `s`. Other choices can be used e.g. to implement
+    drawn. The default value of `q = 0.5` provides a uniform distribution over
+    the power set of `s`. Other choices can be used e.g. to implement
     :func:`Owen sampling
     <pydvl.value.shapley.montecarlo.owen_sampling_shapley>`.
 
@@ -103,19 +116,17 @@ def random_powerset(
     if q < 0 or q > 1:
         raise ValueError("Element sampling probability must be in [0,1]")
 
-    rng = np.random.default_rng()
     total = 1
     if n_samples is None:
         n_samples = np.iinfo(np.int32).max
     while total <= n_samples:
-        selection = rng.uniform(size=len(s)) > q
-        subset = s[selection]
-        yield subset
+        yield random_subset(s, q)
         total += 1
 
 
 def random_subset_of_size(s: NDArray[T], size: int) -> NDArray[T]:
-    """Samples a random subset of given size.
+    """Samples a random subset of given size uniformly from the powerset
+    of ``s``.
 
     :param s: Set to sample from
     :param size: Size of the subset to generate
