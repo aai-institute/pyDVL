@@ -19,13 +19,15 @@ semi-value. The interface is :class:`SemiValue`. The coefficients implement
 """
 
 import math
+import operator
+from functools import reduce
 from itertools import takewhile
 from typing import Protocol
 
 import scipy as sp
 from tqdm import tqdm
 
-from pydvl.utils import Utility
+from pydvl.utils import MapReduceJob, ParallelConfig, Utility
 from pydvl.value import ValuationResult
 from pydvl.value.sampler import PermutationSampler, PowersetSampler, UniformSampler
 from pydvl.value.stopping import StoppingCriterion, StoppingCriterionCallable
@@ -50,8 +52,8 @@ class SemiValue(Protocol):
 
 
 def _semivalues(
-    u: Utility,
     sampler: PowersetSampler,
+    u: Utility,
     coefficient: SVCoefficient,
     done: StoppingCriterion,
     *,
@@ -74,9 +76,10 @@ def _semivalues(
     :param job_id: id to use for reporting progress.
     :return: Object with valuation results.
     """
-    n = len(u.data)
+    n = len(u.data.indices)
     result = ValuationResult.empty(
-        algorithm=f"semivalue-{str(sampler)}-{str(coefficient)}", indices=u.data.indices
+        algorithm=f"semivalue-{str(sampler)}-{str(coefficient)}",
+        indices=sampler.indices,
     )
 
     samples = takewhile(lambda _: not done(result), sampler)
@@ -90,6 +93,27 @@ def _semivalues(
         result.update(idx, marginal)
 
     return result
+
+
+def compute_semivalues(
+    u: Utility,
+    sampler: PowersetSampler,
+    coefficient: SVCoefficient,
+    done: StoppingCriterion,
+    *,
+    n_jobs: int = 1,
+    config: ParallelConfig = ParallelConfig(),
+    progress: bool = False,
+):
+    map_reduce_job: MapReduceJob[PowersetSampler, ValuationResult] = MapReduceJob(
+        sampler,
+        map_func=_semivalues,
+        reduce_func=lambda results: reduce(operator.add, results),
+        map_kwargs=dict(u=u, coefficient=coefficient, done=done, progress=progress),
+        config=config,
+        n_jobs=n_jobs,
+    )
+    return map_reduce_job()
 
 
 def shapley_coefficient(n: int, k: int) -> float:
