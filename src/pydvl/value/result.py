@@ -501,11 +501,14 @@ class ValuationResult(collections.abc.Sequence):
         # Sample variance of n+m samples from two sample variances of n and m samples
         vnm = (n * (vn + xn**2) + m * (vm + xm**2)) / (n + m) - xnm**2
 
+        if self._names.dtype != other._names.dtype:
+            raise ValueError(f"Mismatching name dtypes in ValuationResults")
+
         this_names = np.empty_like(indices, dtype=object)
         other_names = np.empty_like(indices, dtype=object)
         this_names[this_pos] = self._names
         other_names[other_pos] = other._names
-        names = np.where(this_names, this_names, other_names)
+        names = np.where(this_names, this_names, other_names).astype(self._names.dtype)
         both = np.where((this_names != None) & (other_names != None))
         if np.any(other_names[both] != this_names[both]):
             raise ValueError(f"Mismatching names in ValuationResults")
