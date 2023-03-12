@@ -31,9 +31,8 @@ from __future__ import annotations
 
 import abc
 import math
-from typing import Iterable, Iterator, Sequence
 from enum import Enum
-from typing import Generic, Tuple, TypeVar, overload
+from typing import Generic, Iterable, Iterator, Sequence, Tuple, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
