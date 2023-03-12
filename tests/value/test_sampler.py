@@ -51,6 +51,7 @@ def test_chunkify(sampler_class):
     s3 = s1[5:]
     assert isinstance(s2, sampler_class)
     assert isinstance(s3, sampler_class)
+    assert s1._n == s2._n == s3._n
     assert len(s2) == len(s3)
     assert len(s1) == len(s2) + len(s3)
 

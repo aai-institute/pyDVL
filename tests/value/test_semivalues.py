@@ -1,74 +1,67 @@
 import math
+from typing import Type
 
 import numpy as np
 import pytest
+
+from pydvl.value.sampler import (
+    AntitheticSampler,
+    DeterministicSampler,
+    PermutationSampler,
+    PowersetSampler,
+    UniformSampler,
+)
 from value import check_values
 
-from pydvl.utils.status import Status
 from pydvl.value.semivalues import (
-    SemiValue,
     SVCoefficient,
     banzhaf_coefficient,
-    banzhaf_index,
     beta_coefficient,
-    beta_shapley,
-    beta_shapley_paper,
+    semivalues,
+    serial_semivalues,
     shapley_coefficient,
-    permutation_shapley,
-    shapley,
 )
 from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates, StoppingCriterion
 
 
+@pytest.mark.parametrize("num_samples", [5])
 @pytest.mark.parametrize(
-    "num_samples, fun, criterion",
+    "sampler",
+    [DeterministicSampler, UniformSampler, PermutationSampler, AntitheticSampler],
+)
+@pytest.mark.parametrize(
+    "coefficient, criterion",
     [
-        (5, shapley, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10)),
-        (10, permutation_shapley, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(300)),
+        (shapley_coefficient, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10)),
+        (beta_coefficient(1, 1), AbsoluteStandardError(0.02, 1.0) | MaxUpdates(300)),
     ],
 )
-def test_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
-    u, exact_values = analytic_shapley
-    values = fun(u, criterion)
-    assert values.status == Status.Converged
-    check_values(values, exact_values, rtol=0.1)
-
-
-@pytest.mark.parametrize(
-    "num_samples, fun, criterion",
-    [
-        # Uniform sampling with replacement is just too bad
-        # (5, shapley, StandardErrorRatio(0.2, 1.0) | MaxUpdates(2**12),
-        (10, permutation_shapley, AbsoluteStandardError(0.05, 1.0) | MaxUpdates(600))
-    ],
-)
-def test_shapley_convergence(
-    analytic_shapley, fun: SemiValue, criterion: StoppingCriterion
+@pytest.mark.parametrize("method", [serial_semivalues, semivalues])
+def test_shapley(
+    num_samples: int,
+    analytic_shapley,
+    sampler: Type[PowersetSampler],
+    coefficient: SVCoefficient,
+    criterion: StoppingCriterion,
+    method,
 ):
     u, exact_values = analytic_shapley
-    values = fun(u, criterion)
-    check_values(values, exact_values, rtol=0.1)
-    assert values.status == Status.Converged
-
-
-@pytest.mark.parametrize(
-    "num_samples, fun, criterion",
-    [
-        (6, beta_shapley, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(100)),
-        (6, beta_shapley_paper, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(300)),
-    ],
-)
-def test_beta_shapley(analytic_shapley, fun: SemiValue, criterion: StoppingCriterion):
-    u, exact_values = analytic_shapley
-    values = fun(u, criterion, alpha=1, beta=1)
-    assert values.status == Status.Converged
+    kwargs = dict()
+    if method == semivalues:
+        kwargs.update(dict(n_jobs=2))
+    values = method(sampler(u.data.indices), u, coefficient, criterion, **kwargs)
     check_values(values, exact_values, rtol=0.1)
 
 
 @pytest.mark.parametrize("num_samples", [5])
 def test_banzhaf(analytic_banzhaf, num_samples):
     u, exact_values = analytic_banzhaf
-    values = banzhaf_index(u, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10))
+    values = serial_semivalues(
+        PermutationSampler(u.data.indices),
+        u,
+        banzhaf_coefficient,
+        AbsoluteStandardError(0.02, 1.0) | MaxUpdates(300),
+    )
     check_values(values, exact_values, rtol=0.1)
 
 
