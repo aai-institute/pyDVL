@@ -3,7 +3,6 @@ from typing import Type
 
 import numpy as np
 import pytest
-from . import check_values
 
 from pydvl.value.sampler import (
     AntitheticSampler,
@@ -21,6 +20,8 @@ from pydvl.value.semivalues import (
     shapley_coefficient,
 )
 from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates, StoppingCriterion
+
+from . import check_values
 
 
 @pytest.mark.parametrize("num_samples", [5])
