@@ -32,7 +32,10 @@ from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates, StoppingCrit
     "coefficient, criterion",
     [
         (shapley_coefficient, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10)),
-        (beta_coefficient(1, 1), AbsoluteStandardError(0.02, 1.0) | MaxUpdates(600)),
+        (
+            beta_coefficient(1, 1),
+            AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10),
+        ),
     ],
 )
 @pytest.mark.parametrize("method", [_semivalues, semivalues])

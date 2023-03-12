@@ -48,8 +48,9 @@ Sequence.register(np.ndarray)
 class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
     """Samplers iterate over subsets of indices.
 
-    The indices are iterated over, either sequentially or at random, and subsets
-    of the complement are returned.
+    This is done in nested loops, where the outer loop iterates over the set of
+    indices, and the inner loop iterates over subsets of the complement of the
+    current index. The outer iteration can be either sequential or at random.
 
     :Example:
 
@@ -62,6 +63,12 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
     Samplers must define a :meth:`weight` function to be used as a multiplier in
     Monte Carlo sums, so that the limit expectation coincides with the
     semi-value.
+
+    .. rubric:: Slicing of samplers
+
+    The samplers can be sliced for parallel computation. For those which are
+    embarrassingly parallel, this is done by slicing the set of "outer" indices
+    and returning new samplers over those slices.
     """
 
     class IndexIteration(Enum):
@@ -138,7 +145,8 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
         raise TypeError("Indices must be an iterable or a slice")
 
     def __len__(self) -> int:
-        return len(self._indices)
+        """Returns the number of outer indices over which the sampler iterates."""
+        return len(self._outer_indices)
 
     def __str__(self):
         return f"{self.__class__.__name__}"
