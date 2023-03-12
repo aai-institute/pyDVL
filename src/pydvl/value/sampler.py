@@ -15,9 +15,9 @@ from __future__ import annotations
 
 import abc
 import math
-from collections.abc import Generator, Iterable, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from enum import Enum
-from typing import Any, TypeVar, overload
+from typing import Generic, Tuple, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -25,27 +25,27 @@ from numpy.typing import NDArray
 from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
 
 T = TypeVar("T", bound=np.generic)
+SampleType = Tuple[T, NDArray[T]]
+Sequence.register(np.ndarray)
 
 
-class PowersetSampler(abc.ABC, Iterable[T]):
+class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
     """Samplers iterate over subsets of indices.
 
-    For each element in the set, the complementary set is considered and
-    sets from its power set are generated.
+    The indices are iterated over, either sequentially or at random, and subsets
+    of the complement are returned.
 
     :Example:
 
-    .. code::python
-       for idx, s in DeterministicSampler([1,2], 4):
-           print(s)
+    >>>for idx, s in DeterministicSampler([1,2]):
+    >>>    print(s, end="")
+    ()(2,)()(1,)
 
-    will print the arrays
+    .. rubric:: Methods required in subclasses
 
-    ``[]``, ``[2]``, ``[]``, ``[1]``
-
-    In addition, samplers must define a :meth:`weight` function to be used as a
-    multiplier in Monte Carlo sums, so that the limit expectation coincides with
-    the semi-value.
+    Samplers must define a :meth:`weight` function to be used as a multiplier in
+    Monte Carlo sums, so that the limit expectation coincides with the
+    semi-value.
     """
 
     class IndexIteration(Enum):
@@ -56,14 +56,20 @@ class PowersetSampler(abc.ABC, Iterable[T]):
         self,
         indices: NDArray[T],
         index_iteration: IndexIteration = IndexIteration.Sequential,
+        total_indices: int = None,
     ):
         """
         :param indices: The set of items (indices) to sample from.
         :param index_iteration: the order in which indices are iterated over
+        :param total_indices: the total number of indices in the dataset.
+            Note that this will be larger than ``len(indices)`` for sliced
+            samplers (e.g. in parallel computations). It is usually OK to leave
+            it empty, since e.g. slicing of the Sampler will take this into
+            account, but it is required for the :meth:`weight` method to work
         """
         self._indices = indices
         self._index_iteration = index_iteration
-        self._n = len(indices)
+        self._n = total_indices if total_indices is not None else len(indices)
         self._n_samples = 0
 
     @property
@@ -82,30 +88,10 @@ class PowersetSampler(abc.ABC, Iterable[T]):
     def n_samples(self, n: int):
         raise AttributeError("Cannot reset a sampler's number of samples")
 
-    @abc.abstractmethod
-    def __iter__(self):
-        ...
-
-    @abc.abstractmethod
-    def weight(self, subset: Sequence[T]) -> float:
-        r"""Factor by which to multiply Monte Carlo samples, so that the
-        mean converges to the desired expression.
-
-        By the Law of Large Numbers, the sample mean of $\delta_i(S_j)$ converges
-        to the expectation under the distribution from which $S_j$ is sampled.
-
-        $$ \frac{1}{m}  \sum_{j = 1}^m \delta_i (S_j) c (S_j) \longrightarrow
-           \underset{S \sim \mathcal{D}_{- i}}{\mathbb{E}} [\delta_i (S) c (S)]$$
-
-        We add a factor $c(S_j)$ in order to have this expectation coincide with
-        the desired expression.
-        """
-        ...
-
     def complement(self, exclude: Sequence[T]) -> NDArray[T]:
         return np.setxor1d(self._indices, exclude)
 
-    def iterindices(self) -> Generator[T, Any, None]:
+    def iterindices(self) -> Iterator[T]:
         """Iterates over indices in the order specified at construction.
 
         FIXME: this is probably not very useful, but I couldn't decide
@@ -128,15 +114,47 @@ class PowersetSampler(abc.ABC, Iterable[T]):
 
     def __getitem__(self, key: slice | list[int]) -> "PowersetSampler[T]":
         if isinstance(key, slice) or isinstance(key, Iterable):
-            return self.__class__(self._indices[key])
+            return self.__class__(
+                self._indices[key],
+                index_iteration=self._index_iteration,
+                total_indices=self._n,
+            )
         raise TypeError("Indices must be an iterable or a slice")
 
     def __len__(self) -> int:
-        return self._n
+        return len(self._indices)
+
+    def __str__(self):
+        return f"{self.__class__.__name__}"
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self._indices})"
+
+    @abc.abstractmethod
+    def __iter__(self) -> Iterator[SampleType]:
+        ...
+
+    @abc.abstractmethod
+    def weight(self, subset: NDArray[T]) -> float:
+        r"""Factor by which to multiply Monte Carlo samples, so that the
+        mean converges to the desired expression.
+
+        By the Law of Large Numbers, the sample mean of $\delta_i(S_j)$
+        converges
+        to the expectation under the distribution from which $S_j$ is sampled.
+
+        $$ \frac{1}{m}  \sum_{j = 1}^m \delta_i (S_j) c (S_j) \longrightarrow
+           \underset{S \sim \mathcal{D}_{- i}}{\mathbb{E}} [\delta_i (S) c (
+           S)]$$
+
+        We add a factor $c(S_j)$ in order to have this expectation coincide with
+        the desired expression.
+        """
+        ...
 
 
 class DeterministicSampler(PowersetSampler[T]):
-    def __init__(self, indices: NDArray[T]):
+    def __init__(self, indices: NDArray[T], *args, **kwargs):
         """Uniform deterministic sampling of subsets.
 
         For every index $i$, each subset of `indices - {i}` has equal
@@ -144,22 +162,22 @@ class DeterministicSampler(PowersetSampler[T]):
 
         :param indices: The set of items (indices) to sample from.
         """
-        super().__init__(indices, PowersetSampler.IndexIteration.Sequential)
+        # Force sequential iteration
+        kwargs.update({"index_iteration": PowersetSampler.IndexIteration.Sequential})
+        super().__init__(indices, *args, **kwargs)
 
-    def __iter__(self) -> Generator[tuple[T, NDArray[T]], Any, None]:
+    def __iter__(self) -> Iterator[SampleType]:
         for idx in self.iterindices():
             for subset in powerset(self.complement([idx])):
-                yield idx, subset
+                yield idx, np.array(subset)
                 self._n_samples += 1
 
-    def weight(self, subset: Sequence[T]) -> float:
-        """Deterministic sampling should be used only for exact computations,
-        where there is no need for a correcting factor in Monte Carlo sums."""
-        return 1.0
+    def weight(self, subset: NDArray[T]) -> float:
+        return float(2 ** (self._n - 1)) if self._n > 0 else 1.0
 
 
 class UniformSampler(PowersetSampler[T]):
-    def __iter__(self) -> Generator[tuple[T, NDArray[T]], Any, None]:
+    def __iter__(self) -> Iterator[SampleType]:
         while True:
             for idx in self.iterindices():
                 subset = random_subset(self.complement([idx]))
@@ -168,7 +186,7 @@ class UniformSampler(PowersetSampler[T]):
             if self._n_samples == 0:  # Empty index set
                 break
 
-    def weight(self, subset: Sequence[T]) -> float:
+    def weight(self, subset: NDArray[T]) -> float:
         """Correction coming from Monte Carlo integration so that the mean of
         the marginals converges to the value: the uniform distribution over the
         powerset of a set with n-1 elements has mass 2^{n-1} over each subset.
@@ -177,18 +195,18 @@ class UniformSampler(PowersetSampler[T]):
 
 
 class AntitheticSampler(PowersetSampler[T]):
-    def __iter__(self) -> Generator[tuple[T, NDArray[T]], None, None]:
+    def __iter__(self) -> Iterator[SampleType]:
         while True:
             for idx in self.iterindices():
                 subset = random_subset(self.complement([idx]))
                 yield idx, subset
                 self._n_samples += 1
-                yield idx, self.complement(np.concatenate((subset, [idx])))
+                yield idx, self.complement(np.concatenate((subset, np.array([idx]))))
                 self._n_samples += 1
             if self._n_samples == 0:  # Empty index set
                 break
 
-    def weight(self, subset: Sequence[T]) -> float:
+    def weight(self, subset: NDArray[T]) -> float:
         return float(2 ** (self._n - 1)) if self._n > 0 else 1.0
 
 
@@ -201,7 +219,7 @@ class PermutationSampler(PowersetSampler[T]):
        will be doubled wrt. a "direct" implementation of permutation MC
     """
 
-    def __iter__(self) -> Generator[tuple[T, NDArray[T]], None, None]:
+    def __iter__(self) -> Iterator[SampleType]:
         while True:
             permutation = np.random.permutation(self._indices)
             for i, idx in enumerate(permutation):
@@ -215,7 +233,7 @@ class PermutationSampler(PowersetSampler[T]):
         a copy of the full sampler."""
         return super().__getitem__(slice(None))
 
-    def weight(self, subset: Sequence[T]) -> float:
+    def weight(self, subset: NDArray[T]) -> float:
         return self._n * math.comb(self._n - 1, len(subset)) if self._n > 0 else 1.0
 
 
@@ -226,7 +244,7 @@ class RandomHierarchicalSampler(PowersetSampler[T]):
        This is unnecessary, but a step towards proper stratified sampling.
     """
 
-    def __iter__(self) -> Generator[tuple[T, NDArray[T]], None, None]:
+    def __iter__(self) -> Iterator[SampleType]:
         while True:
             for idx in self.iterindices():
                 k = np.random.choice(np.arange(len(self._indices)), size=1).item()
@@ -236,5 +254,5 @@ class RandomHierarchicalSampler(PowersetSampler[T]):
             if self._n_samples == 0:  # Empty index set
                 break
 
-    def weight(self, subset: Sequence[T]) -> float:
-        return 2 ** (self._n - 1) if self._n > 0 else 1.0
+    def weight(self, subset: NDArray[T]) -> float:
+        return float(2 ** (self._n - 1)) if self._n > 0 else 1.0

@@ -20,38 +20,38 @@ semi-value. The interface is :class:`SemiValue`. The coefficients implement
 
 import math
 import operator
+from enum import Enum
 from functools import reduce
 from itertools import takewhile
-from typing import Protocol
+from typing import Protocol, Type, cast
 
 import scipy as sp
 from tqdm import tqdm
 
 from pydvl.utils import MapReduceJob, ParallelConfig, Utility
 from pydvl.value import ValuationResult
-from pydvl.value.sampler import PermutationSampler, PowersetSampler, UniformSampler
-from pydvl.value.stopping import StoppingCriterion, StoppingCriterionCallable
+from pydvl.value.sampler import PermutationSampler, PowersetSampler
+from pydvl.value.stopping import MaxUpdates, StoppingCriterion
+
+
+__all__ = ["serial_semivalues", "semivalues"]
 
 
 class SVCoefficient(Protocol):
-    """A coefficient for the computation of a :class:`SemiValue`."""
+    """A coefficient for the computation of semi-values."""
+
+    __name__: str
 
     def __call__(self, n: int, k: int) -> float:
-        """
-        :param n: Number of data points
+        """Computes the coefficient for a given subset size.
+
+        :param n: Total number of elements in the set.
         :param k: Size of the subset for which the coefficient is being computed
         """
         ...
 
 
-class SemiValue(Protocol):
-    def __call__(
-        self, u: Utility, stop: StoppingCriterionCallable, *args, **kwargs
-    ) -> ValuationResult:
-        ...
-
-
-def _semivalues(
+def serial_semivalues(
     sampler: PowersetSampler,
     u: Utility,
     coefficient: SVCoefficient,
@@ -78,7 +78,7 @@ def _semivalues(
     """
     n = len(u.data.indices)
     result = ValuationResult.empty(
-        algorithm=f"semivalue-{str(sampler)}-{str(coefficient)}",
+        algorithm=f"semivalue-{str(sampler)}-{coefficient.__name__}",
         indices=sampler.indices,
     )
 
@@ -95,19 +95,19 @@ def _semivalues(
     return result
 
 
-def compute_semivalues(
-    u: Utility,
+def semivalues(
     sampler: PowersetSampler,
+    u: Utility,
     coefficient: SVCoefficient,
     done: StoppingCriterion,
     *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
-):
+) -> ValuationResult:
     map_reduce_job: MapReduceJob[PowersetSampler, ValuationResult] = MapReduceJob(
         sampler,
-        map_func=_semivalues,
+        map_func=serial_semivalues,
         reduce_func=lambda results: reduce(operator.add, results),
         map_kwargs=dict(u=u, coefficient=coefficient, done=done, progress=progress),
         config=config,
@@ -117,11 +117,11 @@ def compute_semivalues(
 
 
 def shapley_coefficient(n: int, k: int) -> float:
-    return 1 / math.comb(n - 1, k) / n
+    return float(1 / math.comb(n - 1, k) / n)
 
 
 def banzhaf_coefficient(n: int, k: int) -> float:
-    return 1 / 2 ** (n - 1)
+    return float(1 / 2 ** (n - 1))
 
 
 def beta_coefficient(alpha: float, beta: float) -> SVCoefficient:
@@ -141,41 +141,63 @@ def beta_coefficient(alpha: float, beta: float) -> SVCoefficient:
         j = k + 1
         w = n * B(j + beta - 1, n - j + alpha) / const
         # return math.comb(n - 1, j - 1) * w
-        return w / n
+        return float(w / n)
 
-    return beta_coefficient_w
-
-
-def shapley(u: Utility, criterion: StoppingCriterion):
-    sampler = UniformSampler(u.data.indices)
-    return _semivalues(u, sampler, shapley_coefficient, criterion)
+    return cast(SVCoefficient, beta_coefficient_w)
 
 
-def permutation_shapley(u: Utility, criterion: StoppingCriterion):
-    sampler = PermutationSampler(u.data.indices)
-    return _semivalues(u, sampler, shapley_coefficient, criterion)
+class SemiValueMode(str, Enum):
+    Shapley = "shapley"
+    BetaShapley = "beta-shapley"
+    Banzhaf = "banzhaf"
 
 
-def beta_shapley(
-    u: Utility, criterion: StoppingCriterion, alpha: float, beta: float
+def compute_semivalues(
+    u: Utility,
+    *,
+    done: StoppingCriterion = MaxUpdates(100),
+    mode: SemiValueMode = SemiValueMode.Shapley,
+    sampler_t: Type[PowersetSampler] = PermutationSampler,
+    n_jobs: int = 1,
+    **kwargs,
 ) -> ValuationResult:
-    """Implements the Beta Shapley semi-value as introduced in
-    :footcite:t:`kwon_beta_2022`.
+    """Entry point for most common semi-value computations. All are implemented
+    with permutation sampling.
+
+    For any other sampling method, use :func:`parallel_semivalues` directly.
+
+    See :ref:`data valuation` for an overview of valuation.
+
+    The modes supported are:
+
+    - :attr:`SemiValueMode.Shapley`: Shapley values.
+    - :attr:`SemiValueMode.BetaShapley`: Implements the Beta Shapley semi-value
+        as introduced in :footcite:t:`kwon_beta_2022`. Pass additional keyword
+        arguments ``alpha`` and ``beta`` to set the parameters of the Beta
+        distribution (both default to 1).
+    - :attr:`SemiValueMode.Banzhaf`: Implements the Banzhaf semi-value as
+        introduced in :footcite:t:`wang_data_2022`.
+
+    :param u: Utility object with model, data, and scoring function.
+    :param done: Stopping criterion.
+    :param mode: The semi-value mode to use. See :class:`SemiValueMode` for a
+        list.
+    :param sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
+        for a list.
+    :param n_jobs: Number of parallel jobs to use.
+    :param kwargs: Additional keyword arguments passed to
+        :func:`~pydvl.value.semivalues.semivalues`.
     """
-    sampler = PermutationSampler(u.data.indices)
-    return _semivalues(u, sampler, beta_coefficient(alpha, beta), criterion)
-
-
-def beta_shapley_paper(
-    u: Utility, criterion: StoppingCriterion, alpha: float, beta: float
-) -> ValuationResult:
-    sampler = UniformSampler(u.data.indices)
-    return _semivalues(u, sampler, beta_coefficient(alpha, beta), criterion)
-
-
-def banzhaf_index(u: Utility, criterion: StoppingCriterion):
-    """Implements the Banzhaf index semi-value as introduced in
-    :footcite:t:`wang_data_2022`.
-    """
-    sampler = PermutationSampler(u.data.indices)
-    return _semivalues(u, sampler, banzhaf_coefficient, criterion)
+    sampler_instance = sampler_t(u.data.indices)
+    if mode == SemiValueMode.Shapley:
+        coefficient = shapley_coefficient
+    elif mode == SemiValueMode.BetaShapley:
+        alpha = kwargs.get("alpha", 1)
+        beta = kwargs.get("beta", 1)
+        coefficient = beta_coefficient(alpha, beta)
+    elif mode == SemiValueMode.Banzhaf:
+        coefficient = banzhaf_coefficient
+    else:
+        raise ValueError(f"Unknown mode {mode}")
+    coefficient = cast(SVCoefficient, coefficient)
+    return semivalues(sampler_instance, u, coefficient, done, n_jobs=n_jobs, **kwargs)
