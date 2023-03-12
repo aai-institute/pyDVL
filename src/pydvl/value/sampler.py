@@ -40,6 +40,15 @@ from numpy.typing import NDArray
 
 from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
 
+__all__ = [
+    "AntitheticSampler",
+    "DeterministicSampler",
+    "PermutationSampler",
+    "PowersetSampler",
+    "RandomHierarchicalSampler",
+    "UniformSampler",
+]
+
 T = TypeVar("T", bound=np.generic)
 SampleType = Tuple[T, NDArray[T]]
 Sequence.register(np.ndarray)
