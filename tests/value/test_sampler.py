@@ -7,8 +7,8 @@ from pydvl.utils import powerset
 from pydvl.value.sampler import (
     AntitheticSampler,
     DeterministicSampler,
-    RandomHierarchicalSampler,
     PermutationSampler,
+    RandomHierarchicalSampler,
     UniformSampler,
 )
 

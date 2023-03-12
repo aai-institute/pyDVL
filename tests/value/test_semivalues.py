@@ -3,6 +3,7 @@ from typing import Type
 
 import numpy as np
 import pytest
+from . import check_values
 
 from pydvl.value.sampler import (
     AntitheticSampler,
@@ -11,14 +12,12 @@ from pydvl.value.sampler import (
     PowersetSampler,
     UniformSampler,
 )
-from value import check_values
-
 from pydvl.value.semivalues import (
     SVCoefficient,
+    _semivalues,
     banzhaf_coefficient,
     beta_coefficient,
     semivalues,
-    _semivalues,
     shapley_coefficient,
 )
 from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates, StoppingCriterion
@@ -33,7 +32,7 @@ from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates, StoppingCrit
     "coefficient, criterion",
     [
         (shapley_coefficient, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10)),
-        (beta_coefficient(1, 1), AbsoluteStandardError(0.02, 1.0) | MaxUpdates(300)),
+        (beta_coefficient(1, 1), AbsoluteStandardError(0.02, 1.0) | MaxUpdates(600)),
     ],
 )
 @pytest.mark.parametrize("method", [_semivalues, semivalues])
