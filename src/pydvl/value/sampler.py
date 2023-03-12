@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import abc
 import math
-from collections.abc import Iterable, Iterator, Sequence
+from typing import Iterable, Iterator, Sequence
 from enum import Enum
 from typing import Generic, Tuple, TypeVar, overload
 
