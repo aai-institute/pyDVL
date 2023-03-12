@@ -1,20 +1,45 @@
-r""" Computation of generic semi-values
+r"""
+This module provides the core functionality for the computation of generic
+semi-values. A **semi-value** is any valuation function with the form:
 
-A semi-value is a valuation function with generic form:
-
-$$\v_\text{semi}(i) = \frac{1}{n}
-      \sum_{i=1}^n w(k) \sum_{S \subset D_{-i}^{(k)}} [U(S_{+i})-U(S)],$$
+$$v_\text{semi}(i) = \sum_{i=1}^n w(k)
+\sum_{S \subset D_{-i}^{(k)}} [U(S_{+i})-U(S)],$$
 
 where the coefficients $w(k)$ satisfy the property:
 
-$$ \sum_{k=1}^n w(k) = n.$$
+$$\sum_{k=1}^n w(k) = 1.$$
 
-This module provides the core functionality for the computation of any such
-semi-value. The interface is :class:`SemiValue`. The coefficients implement
-:class:`Coefficient`.
+As such, the computation of a semi-value requires two components:
 
-.. todo::
-   Finish documenting this.
+1. A **subset sampler** that generates subsets of the set $D$ of interest.
+2. A **coefficient** $w(k)$ that assigns a weight to each subset size $k$.
+
+Samplers can be found in :mod:`pydvl.value.sampler`, and can be classified into
+two categories: powerset samplers and (one) permutation sampler. Powerset
+samplers generate subsets of $D_{-i}$, while the permutation sampler generates
+permutations of $D$. The former conform to the above definition of semi-values,
+while the latter reformulates it as:
+
+$$
+v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
+\tilde{w}( | \sigma_{:i} | )[u(\sigma_{:i} \cup \{i\}) − u(\sigma_{:i})],
+$$
+
+where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
+position where $i$ appears (see :ref:`data valuation` for details), and
+$\tilde{w}(k) = n \choose{n-1}{k} w(k)$ is the weight correction due to the
+reformulation.
+
+
+There are several pre-defined coefficients, including the Shapley value
+of :footcite:t:`ghorbani_data_2019`, the Banzhaf index of
+:footcite:t:`wang_data_2022`, and the Beta coefficient of
+:footcite:t:`kwon_beta_2022`.
+
+.. note::
+   For implementation consistency, we slightly depart from the common definition
+   of semi-values, which includes a factor $1/n$ in the sum over subsets.
+   Instead, we subsume this factor into the coefficient $w(k)$.
 
 """
 
@@ -33,8 +58,7 @@ from pydvl.value import ValuationResult
 from pydvl.value.sampler import PermutationSampler, PowersetSampler
 from pydvl.value.stopping import MaxUpdates, StoppingCriterion
 
-
-__all__ = ["serial_semivalues", "semivalues"]
+__all__ = ["semivalues"]
 
 
 class SVCoefficient(Protocol):
@@ -51,7 +75,7 @@ class SVCoefficient(Protocol):
         ...
 
 
-def serial_semivalues(
+def _semivalues(
     sampler: PowersetSampler,
     u: Utility,
     coefficient: SVCoefficient,
@@ -60,21 +84,16 @@ def serial_semivalues(
     progress: bool = False,
     job_id: int = 1,
 ) -> ValuationResult:
-    r"""Helper function used for all computations of semi-values.
+    r"""Serial computation of semi-values. This is a helper function for
+    :func:`semivalues`.
 
-    The exact semi-value is given by:
-
-    $$\v_\text{semi}(i) =
-      \sum_{i=1}^n w(k) \sum_{S \subset D_{-i}^{(k)}} [U(S_{+i})-U(S)]$$
-
-
-    :param u: Utility object with model, data, and scoring function.
     :param sampler: The subset sampler to use for utility computations.
+    :param u: Utility object with model, data, and scoring function.
     :param coefficient: The semivalue coefficient
     :param done: Stopping criterion.
     :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress.
-    :return: Object with valuation results.
+    :return: Object with the results.
     """
     n = len(u.data.indices)
     result = ValuationResult.empty(
@@ -105,9 +124,23 @@ def semivalues(
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
 ) -> ValuationResult:
+    """
+    Computes semi-values for a given utility function and subset sampler.
+
+    :param sampler: The subset sampler to use for utility computations.
+    :param u: Utility object with model, data, and scoring function.
+    :param coefficient: The semi-value coefficient
+    :param done: Stopping criterion.
+    :param n_jobs: Number of parallel jobs to use.
+    :param config: Object configuring parallel computation, with cluster
+        address, number of cpus, etc.
+    :param progress: Whether to display progress bars for each job.
+    :return: Object with the results.
+
+    """
     map_reduce_job: MapReduceJob[PowersetSampler, ValuationResult] = MapReduceJob(
         sampler,
-        map_func=serial_semivalues,
+        map_func=_semivalues,
         reduce_func=lambda results: reduce(operator.add, results),
         map_kwargs=dict(u=u, coefficient=coefficient, done=done, progress=progress),
         config=config,

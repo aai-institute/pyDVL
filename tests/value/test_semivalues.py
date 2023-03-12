@@ -18,7 +18,7 @@ from pydvl.value.semivalues import (
     banzhaf_coefficient,
     beta_coefficient,
     semivalues,
-    serial_semivalues,
+    _semivalues,
     shapley_coefficient,
 )
 from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates, StoppingCriterion
@@ -36,7 +36,7 @@ from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates, StoppingCrit
         (beta_coefficient(1, 1), AbsoluteStandardError(0.02, 1.0) | MaxUpdates(300)),
     ],
 )
-@pytest.mark.parametrize("method", [serial_semivalues, semivalues])
+@pytest.mark.parametrize("method", [_semivalues, semivalues])
 def test_shapley(
     num_samples: int,
     analytic_shapley,
@@ -56,11 +56,12 @@ def test_shapley(
 @pytest.mark.parametrize("num_samples", [5])
 def test_banzhaf(analytic_banzhaf, num_samples):
     u, exact_values = analytic_banzhaf
-    values = serial_semivalues(
+    values = semivalues(
         PermutationSampler(u.data.indices),
         u,
         banzhaf_coefficient,
         AbsoluteStandardError(0.02, 1.0) | MaxUpdates(300),
+        n_jobs=1,
     )
     check_values(values, exact_values, rtol=0.1)
 

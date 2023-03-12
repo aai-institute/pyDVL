@@ -1,14 +1,30 @@
 """
 Samplers iterate over subsets of indices.
 
-The classes in this module are used to iterate over index sets, generating
-subsets of the complement of the current index. This is the natural mode of
-iteration for the combinatorial definition of semi-values, in particular Shapley
-value. For the computation using permutations, adhering to this interface is not
-ideal, but we stick to it for consistency.
+The classes in this module are used to iterate over indices and subsets of their
+complement in the whole set, as required for the computation of marginal utility
+for semi-values. The elements returned when iterating over any subclass of
+:class:`PowersetSampler` are tuples of the form ``(idx, subset)``, where ``idx``
+is the index of the element being added to the subset, and ``subset`` is the
+subset of the complement of ``idx``.
+
+.. note::
+   This is the natural mode of iteration for the combinatorial definition of
+   semi-values, in particular Shapley value. For the computation using
+   permutations, adhering to this interface is not ideal, but we stick to it for
+   consistency.
 
 The samplers are used in the :mod:`pydvl.value.semivalues` module to compute any
 semi-value, in particular Shapley and Beta values, and Banzhaf indices.
+
+.. rubric:: Slicing of samplers
+
+The samplers can be sliced for parallel computation. For those which are
+embarrassingly parallel, this is done by slicing the set of indices and
+returning new samplers over those slices. This includes all truly powerset-based
+samplers, such as :class:`DeterministicSampler` and :class:`UniformSampler`. In
+contrast, slicing a :class:`PermutationSampler` creates a new sampler which
+iterates over the same indices.
 """
 
 from __future__ import annotations

@@ -329,11 +329,11 @@ It uses permutations over indices instead of subsets:
 
 $$
 v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
-[u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})]
+[u(\sigma_{:i} \cup \{i\}) − u(\sigma_{:i})]
 ,$$
 
-where $\sigma_i$ denotes the set of indices in permutation sigma up until the
-position of index $i$. To approximate this sum (with $\mathcal{O}(n!)$ terms!)
+where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
+position where $i$ appears. To approximate this sum (with $\mathcal{O}(n!)$ terms!)
 one uses Monte Carlo sampling of permutations, something which has surprisingly
 low sample complexity. By adding early stopping, the result is the so-called
 **Truncated Monte Carlo Shapley** (:footcite:t:`ghorbani_data_2019`), which is
