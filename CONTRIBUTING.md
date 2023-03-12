@@ -21,10 +21,10 @@ Consider installing any of [black's IDE
 integrations](https://black.readthedocs.io/en/stable/integrations/editors.html)
 to make your life easier.
 
-Run the following command to set up the pre-commit git hook:
+Run the following to set up the pre-commit git hook to run before pushes:
 
 ```shell script
-pre-commit install
+pre-commit install --hook-type pre-push
 ```
 
 ## Setting up your environment
