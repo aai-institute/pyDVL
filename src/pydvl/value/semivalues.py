@@ -172,16 +172,16 @@ def beta_coefficient(alpha: float, beta: float) -> SVCoefficient:
     def beta_coefficient_w(n: int, k: int) -> float:
         """Beta coefficient"""
         j = k + 1
-        w = n * B(j + beta - 1, n - j + alpha) / const
-        # return math.comb(n - 1, j - 1) * w
-        return float(w / n)
+        w = B(j + beta - 1, n - j + alpha) / const
+        # return math.comb(n - 1, j - 1) * w * n
+        return float(w)
 
     return cast(SVCoefficient, beta_coefficient_w)
 
 
 class SemiValueMode(str, Enum):
     Shapley = "shapley"
-    BetaShapley = "beta-shapley"
+    BetaShapley = "beta_shapley"
     Banzhaf = "banzhaf"
 
 
