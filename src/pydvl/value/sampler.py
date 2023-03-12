@@ -20,7 +20,7 @@ semi-value, in particular Shapley and Beta values, and Banzhaf indices.
 .. rubric:: Slicing of samplers
 
 The samplers can be sliced for parallel computation. For those which are
-embarrassingly parallel, this is done by slicing the set of indices and
+embarrassingly parallel, this is done by slicing the set of "outer" indices and
 returning new samplers over those slices. This includes all truly powerset-based
 samplers, such as :class:`DeterministicSampler` and :class:`UniformSampler`. In
 contrast, slicing a :class:`PermutationSampler` creates a new sampler which
@@ -72,20 +72,20 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
         self,
         indices: NDArray[T],
         index_iteration: IndexIteration = IndexIteration.Sequential,
-        total_indices: int = None,
+        outer_indices: NDArray[T] = None,
     ):
         """
         :param indices: The set of items (indices) to sample from.
         :param index_iteration: the order in which indices are iterated over
-        :param total_indices: the total number of indices in the dataset.
-            Note that this will be larger than ``len(indices)`` for sliced
-            samplers (e.g. in parallel computations). It is usually OK to leave
-            it empty, since e.g. slicing of the Sampler will take this into
-            account, but it is required for the :meth:`weight` method to work
+        :param outer_indices: The set of items (indices) over which to iterate
+            when sampling. Subsets are taken from the complement of each index
+            in succession. For embarrassingly parallel computations, this set
+            is sliced and the samplers are used to iterate over the slices.
         """
         self._indices = indices
         self._index_iteration = index_iteration
-        self._n = total_indices if total_indices is not None else len(indices)
+        self._outer_indices = outer_indices if outer_indices is not None else indices
+        self._n = len(indices)
         self._n_samples = 0
 
     @property
@@ -114,11 +114,11 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
           which method is better
         """
         if self._index_iteration is PowersetSampler.IndexIteration.Sequential:
-            for idx in self._indices:
+            for idx in self._outer_indices:
                 yield idx
         elif self._index_iteration is PowersetSampler.IndexIteration.Random:
             while True:
-                yield np.random.choice(self._indices, size=1).item()
+                yield np.random.choice(self._outer_indices, size=1).item()
 
     @overload
     def __getitem__(self, key: slice) -> "PowersetSampler[T]":
@@ -131,9 +131,9 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
     def __getitem__(self, key: slice | list[int]) -> "PowersetSampler[T]":
         if isinstance(key, slice) or isinstance(key, Iterable):
             return self.__class__(
-                self._indices[key],
+                self._indices,
                 index_iteration=self._index_iteration,
-                total_indices=self._n,
+                outer_indices=self._indices[key],
             )
         raise TypeError("Indices must be an iterable or a slice")
 
