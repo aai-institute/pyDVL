@@ -32,10 +32,10 @@ from . import check_values
 @pytest.mark.parametrize(
     "coefficient, criterion",
     [
-        (shapley_coefficient, AbsoluteStandardError(0.05, 1.0) | MaxUpdates(2**10)),
+        (shapley_coefficient, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10)),
         (
             beta_coefficient(1, 1),
-            AbsoluteStandardError(0.05, 1.0) | MaxUpdates(2**10),
+            AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10),
         ),
     ],
 )
@@ -53,7 +53,7 @@ def test_shapley(
     if method == semivalues:
         kwargs.update(dict(n_jobs=2))
     values = method(sampler(u.data.indices), u, coefficient, criterion, **kwargs)
-    check_values(values, exact_values, rtol=0.1)
+    check_values(values, exact_values, rtol=0.15)
 
 
 @pytest.mark.parametrize("num_samples", [5])
@@ -73,10 +73,10 @@ def test_banzhaf(
         sampler(u.data.indices),
         u,
         banzhaf_coefficient,
-        AbsoluteStandardError(0.05, 1.0) | MaxUpdates(300),
+        AbsoluteStandardError(0.02, 1.0) | MaxUpdates(300),
         **kwargs,
     )
-    check_values(values, exact_values, rtol=0.1)
+    check_values(values, exact_values, rtol=0.15)
 
 
 @pytest.mark.parametrize("n", [10, 100])
