@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="least_core" href="value/least_core.html" /><link rel="prev" title="utility" href="utils/utility.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
@@ -239,6 +239,8 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="value/result.html">result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="value/sampler.html">sampler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="value/semivalues.html">semivalues</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="value/shapley/common.html">common</a></li>
@@ -359,6 +361,56 @@ implemented here.</p>
 <li class="toctree-l3"><a class="reference internal" href="value/result.html#pydvl.value.result.ValueItem.variance"><code class="docutils literal notranslate"><span class="pre">ValueItem.variance</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="value/result.html#pydvl.value.result.ValueItem.count"><code class="docutils literal notranslate"><span class="pre">ValueItem.count</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="value/result.html#pydvl.value.result.ValueItem.stderr"><code class="docutils literal notranslate"><span class="pre">ValueItem.stderr</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="value/sampler.html">sampler</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.AntitheticSampler"><code class="docutils literal notranslate"><span class="pre">AntitheticSampler</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.AntitheticSampler.weight"><code class="docutils literal notranslate"><span class="pre">AntitheticSampler.weight()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.DeterministicCombinatorialSampler"><code class="docutils literal notranslate"><span class="pre">DeterministicCombinatorialSampler</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.DeterministicCombinatorialSampler.weight"><code class="docutils literal notranslate"><span class="pre">DeterministicCombinatorialSampler.weight()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.DeterministicPermutationSampler"><code class="docutils literal notranslate"><span class="pre">DeterministicPermutationSampler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.PermutationSampler"><code class="docutils literal notranslate"><span class="pre">PermutationSampler</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.PermutationSampler.weight"><code class="docutils literal notranslate"><span class="pre">PermutationSampler.weight()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.PowersetSampler"><code class="docutils literal notranslate"><span class="pre">PowersetSampler</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.PowersetSampler.IndexIteration"><code class="docutils literal notranslate"><span class="pre">PowersetSampler.IndexIteration</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.PowersetSampler.IndexIteration.Sequential"><code class="docutils literal notranslate"><span class="pre">PowersetSampler.IndexIteration.Sequential</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.PowersetSampler.IndexIteration.Random"><code class="docutils literal notranslate"><span class="pre">PowersetSampler.IndexIteration.Random</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.PowersetSampler.indices"><code class="docutils literal notranslate"><span class="pre">PowersetSampler.indices</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.PowersetSampler.n_samples"><code class="docutils literal notranslate"><span class="pre">PowersetSampler.n_samples</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.PowersetSampler.complement"><code class="docutils literal notranslate"><span class="pre">PowersetSampler.complement()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.PowersetSampler.iterindices"><code class="docutils literal notranslate"><span class="pre">PowersetSampler.iterindices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.PowersetSampler.weight"><code class="docutils literal notranslate"><span class="pre">PowersetSampler.weight()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.RandomHierarchicalSampler"><code class="docutils literal notranslate"><span class="pre">RandomHierarchicalSampler</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.RandomHierarchicalSampler.weight"><code class="docutils literal notranslate"><span class="pre">RandomHierarchicalSampler.weight()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.UniformSampler"><code class="docutils literal notranslate"><span class="pre">UniformSampler</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.UniformSampler.weight"><code class="docutils literal notranslate"><span class="pre">UniformSampler.weight()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="value/semivalues.html">semivalues</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.banzhaf_coefficient"><code class="docutils literal notranslate"><span class="pre">banzhaf_coefficient()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.beta_coefficient"><code class="docutils literal notranslate"><span class="pre">beta_coefficient()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.shapley_coefficient"><code class="docutils literal notranslate"><span class="pre">shapley_coefficient()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.semivalues"><code class="docutils literal notranslate"><span class="pre">semivalues()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.SemiValueMode"><code class="docutils literal notranslate"><span class="pre">SemiValueMode</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.SemiValueMode.Shapley"><code class="docutils literal notranslate"><span class="pre">SemiValueMode.Shapley</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.SemiValueMode.BetaShapley"><code class="docutils literal notranslate"><span class="pre">SemiValueMode.BetaShapley</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.SemiValueMode.Banzhaf"><code class="docutils literal notranslate"><span class="pre">SemiValueMode.Banzhaf</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -503,7 +555,7 @@ implemented here.</p>
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2022 AppliedAI Institute gGmbH
+                Copyright &#169; AppliedAI Institute gGmbH
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             

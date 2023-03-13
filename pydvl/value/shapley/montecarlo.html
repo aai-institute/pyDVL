@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="naive" href="naive.html" /><link rel="prev" title="knn" href="knn.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
@@ -239,6 +239,8 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../result.html">result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../sampler.html">sampler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../semivalues.html">semivalues</a></li>
 <li class="toctree-l3 current has-children"><a class="reference internal" href="../shapley.html">shapley</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="common.html">common</a></li>
@@ -331,11 +333,14 @@ groups of samples as units.</p>
 permutations to approximate the sum:</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
-[u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})].\]</div>
+\[
+v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
+\tilde{w}( | \sigma_{:i} | )[u(\sigma_{:i} \cup \{i\}) − u(\sigma_{:i})],
+\]</div>
 </div>
 </p>
-<p>See <a class="reference internal" href="../../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for details.</p>
+<p>where <span class="math notranslate nohighlight">\(\sigma_{:i}\)</span> denotes the set of indices in permutation sigma before the
+position where <span class="math notranslate nohighlight">\(i\)</span> appears (see <a class="reference internal" href="../../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -358,7 +363,7 @@ address, number of cpus, etc.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley">
-<span class="sig-name descname"><span class="pre">combinatorial_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../stopping.html#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><span class="pre">StoppingCriterion</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">n_local_workers=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/montecarlo.py#L200"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">combinatorial_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../stopping.html#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><span class="pre">StoppingCriterion</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='ray',</span> <span class="pre">address=None,</span> <span class="pre">n_local_workers=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/montecarlo.py#L203"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley" title="Permalink to this definition">#</a></dt>
 <dd><p>Computes an approximate Shapley value using the combinatorial
 definition:</p>
 <p><div class="math-wrapper docutils container">
@@ -426,7 +431,7 @@ address, number of cpus, etc.</p></li>
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2022 AppliedAI Institute gGmbH
+                Copyright &#169; AppliedAI Institute gGmbH
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             

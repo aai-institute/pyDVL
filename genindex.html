@@ -237,6 +237,8 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/value/result.html">result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/value/sampler.html">sampler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/value/semivalues.html">semivalues</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/actor.html">actor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/common.html">common</a></li>
@@ -304,15 +306,17 @@
 </li>
         <li><a href="pydvl/utils/parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.add_results">add_results() (Coordinator method)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.ParallelConfig.address">address (ParallelConfig attribute)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.algorithm">algorithm (ValuationResult property)</a>
 </li>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations">allow_repeated_evaluations (MemcachedConfig attribute)</a>
 </li>
         <li><a href="pydvl/value/shapley/owen.html#pydvl.value.shapley.owen.OwenAlgorithm.Antithetic">Antithetic (OwenAlgorithm attribute)</a>
+</li>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.AntitheticSampler">AntitheticSampler (class in pydvl.value.sampler)</a>
 </li>
         <li><a href="pydvl/utils/parallel/backend.html#pydvl.utils.parallel.backend.available_cpus">available_cpus() (in module pydvl.utils.parallel.backend)</a>
 </li>
@@ -326,11 +330,19 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.ParallelConfig.backend">backend (ParallelConfig attribute)</a>
 </li>
+        <li><a href="pydvl/value/semivalues.html#pydvl.value.semivalues.SemiValueMode.Banzhaf">Banzhaf (SemiValueMode attribute)</a>
+</li>
+        <li><a href="pydvl/value/semivalues.html#pydvl.value.semivalues.banzhaf_coefficient">banzhaf_coefficient() (in module pydvl.value.semivalues)</a>
+</li>
         <li><a href="pydvl/influence/conjugate_gradient.html#pydvl.influence.conjugate_gradient.batched_preconditioned_conjugate_gradient">batched_preconditioned_conjugate_gradient() (in module pydvl.influence.conjugate_gradient)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/influence/general.html#pydvl.influence.general.InversionMethod.BatchedCg">BatchedCg (InversionMethod attribute)</a>
+</li>
+        <li><a href="pydvl/value/semivalues.html#pydvl.value.semivalues.beta_coefficient">beta_coefficient() (in module pydvl.value.semivalues)</a>
+</li>
+        <li><a href="pydvl/value/semivalues.html#pydvl.value.semivalues.SemiValueMode.BetaShapley">BetaShapley (SemiValueMode attribute)</a>
 </li>
         <li><a href="pydvl/value/shapley/truncated.html#pydvl.value.shapley.truncated.BootstrapTruncation">BootstrapTruncation (class in pydvl.value.shapley.truncated)</a>
 </li>
@@ -365,6 +377,8 @@
         <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.CombinatorialExact">CombinatorialExact (ShapleyMode attribute)</a>
 </li>
         <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.CombinatorialMontecarlo">CombinatorialMontecarlo (ShapleyMode attribute)</a>
+</li>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.PowersetSampler.complement">complement() (PowersetSampler method)</a>
 </li>
         <li><a href="pydvl/value/stopping.html#pydvl.value.stopping.MaxChecks.completion">completion() (MaxChecks method)</a>
 
@@ -435,6 +449,10 @@
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset">Dataset (class in pydvl.utils.dataset)</a>
 </li>
         <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.DataUtilityLearning">DataUtilityLearning (class in pydvl.utils.utility)</a>
+</li>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.DeterministicCombinatorialSampler">DeterministicCombinatorialSampler (class in pydvl.value.sampler)</a>
+</li>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.DeterministicPermutationSampler">DeterministicPermutationSampler (class in pydvl.value.sampler)</a>
 </li>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset.dim">dim (Dataset property)</a>
 </li>
@@ -579,6 +597,8 @@
         <ul>
           <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.GroupedDataset.indices">(GroupedDataset property)</a>
 </li>
+          <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.PowersetSampler.indices">(PowersetSampler property)</a>
+</li>
           <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.indices">(ValuationResult property)</a>
 </li>
         </ul></li>
@@ -591,6 +611,8 @@
         <li><a href="pydvl/influence/general.html#pydvl.influence.general.InversionMethod">InversionMethod (class in pydvl.influence.general)</a>
 </li>
         <li><a href="pydvl/utils/parallel/actor.html#pydvl.utils.parallel.actor.Coordinator.is_done">is_done() (Coordinator method)</a>
+</li>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.PowersetSampler.iterindices">iterindices() (PowersetSampler method)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -758,6 +780,10 @@
 </li>
           <li><a href="pydvl/value/result.html#module-pydvl.value.result">pydvl.value.result</a>
 </li>
+          <li><a href="pydvl/value/sampler.html#module-pydvl.value.sampler">pydvl.value.sampler</a>
+</li>
+          <li><a href="pydvl/value/semivalues.html#module-pydvl.value.semivalues">pydvl.value.semivalues</a>
+</li>
           <li><a href="pydvl/value/shapley.html#module-pydvl.value.shapley">pydvl.value.shapley</a>
 </li>
           <li><a href="pydvl/value/shapley/actor.html#module-pydvl.value.shapley.actor">pydvl.value.shapley.actor</a>
@@ -805,6 +831,8 @@
 </li>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.ParallelConfig.n_local_workers">n_local_workers (ParallelConfig attribute)</a>
 </li>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.PowersetSampler.n_samples">n_samples (PowersetSampler property)</a>
+</li>
         <li><a href="pydvl/value/loo/naive.html#pydvl.value.loo.naive.naive_loo">naive_loo() (in module pydvl.value.loo.naive)</a>
 </li>
         <li><a href="pydvl/value/stopping.html#pydvl.value.stopping.StoppingCriterion.name">name (StoppingCriterion property)</a>
@@ -813,10 +841,10 @@
           <li><a href="pydvl/value/result.html#pydvl.value.result.ValueItem.name">(ValueItem attribute)</a>
 </li>
         </ul></li>
-        <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.names">names (ValuationResult property)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.names">names (ValuationResult property)</a>
+</li>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedClientConfig.no_delay">no_delay (MemcachedClientConfig attribute)</a>
 </li>
         <li><a href="pydvl/value/shapley/truncated.html#pydvl.value.shapley.truncated.NoTruncation">NoTruncation (class in pydvl.value.shapley.truncated)</a>
@@ -869,6 +897,8 @@
 </li>
         <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode.PermutationMontecarlo">PermutationMontecarlo (ShapleyMode attribute)</a>
 </li>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.PermutationSampler">PermutationSampler (class in pydvl.value.sampler)</a>
+</li>
         <li><a href="pydvl/influence/general.html#pydvl.influence.general.InfluenceType.Perturbation">Perturbation (InfluenceType attribute)</a>
 </li>
         <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.plot_influence_distribution_by_label">plot_influence_distribution_by_label() (in module pydvl.reporting.plots)</a>
@@ -876,6 +906,10 @@
         <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.plot_shapley">plot_shapley() (in module pydvl.reporting.plots)</a>
 </li>
         <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.powerset">powerset() (in module pydvl.utils.numeric)</a>
+</li>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.PowersetSampler">PowersetSampler (class in pydvl.value.sampler)</a>
+</li>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.PowersetSampler.IndexIteration">PowersetSampler.IndexIteration (class in pydvl.value.sampler)</a>
 </li>
         <li><a href="pydvl/utils/types.html#pydvl.utils.types.SupervisedModel.predict">predict() (SupervisedModel method)</a>
 </li>
@@ -1019,8 +1053,6 @@
           <li><a href="pydvl/utils/parallel/actor.html#module-pydvl.utils.parallel.actor">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     pydvl.utils.parallel.backend
 
@@ -1028,6 +1060,8 @@
           <li><a href="pydvl/utils/parallel/backend.html#module-pydvl.utils.parallel.backend">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     pydvl.utils.parallel.map_reduce
 
@@ -1127,6 +1161,20 @@
 </li>
         </ul></li>
         <li>
+    pydvl.value.sampler
+
+        <ul>
+          <li><a href="pydvl/value/sampler.html#module-pydvl.value.sampler">module</a>
+</li>
+        </ul></li>
+        <li>
+    pydvl.value.semivalues
+
+        <ul>
+          <li><a href="pydvl/value/semivalues.html#module-pydvl.value.semivalues">module</a>
+</li>
+        </ul></li>
+        <li>
     pydvl.value.shapley
 
         <ul>
@@ -1211,11 +1259,17 @@
   <h2>R</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.PowersetSampler.IndexIteration.Random">Random (PowersetSampler.IndexIteration attribute)</a>
+</li>
         <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.random_matrix_with_condition_number">random_matrix_with_condition_number() (in module pydvl.utils.numeric)</a>
 </li>
         <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.random_powerset">random_powerset() (in module pydvl.utils.numeric)</a>
 </li>
+        <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.random_subset">random_subset() (in module pydvl.utils.numeric)</a>
+</li>
         <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.random_subset_of_size">random_subset_of_size() (in module pydvl.utils.numeric)</a>
+</li>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.RandomHierarchicalSampler">RandomHierarchicalSampler (class in pydvl.value.sampler)</a>
 </li>
         <li><a href="pydvl/utils/score.html#pydvl.utils.score.Scorer.range">range (Scorer attribute)</a>
 </li>
@@ -1223,12 +1277,12 @@
 </li>
         <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.CacheStats.reconnects">reconnects (CacheStats attribute)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/parallel/map_reduce.html#pydvl.utils.parallel.map_reduce.MapReduceJob.reduce">reduce() (MapReduceJob method)</a>
 </li>
         <li><a href="pydvl/value/shapley/truncated.html#pydvl.value.shapley.truncated.RelativeTruncation">RelativeTruncation (class in pydvl.value.shapley.truncated)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/value/shapley/truncated.html#pydvl.value.shapley.truncated.BootstrapTruncation.reset">reset() (BootstrapTruncation method)</a>
 
         <ul>
@@ -1267,6 +1321,12 @@
           <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility.scorer">(Utility attribute)</a>
 </li>
         </ul></li>
+        <li><a href="pydvl/value/semivalues.html#pydvl.value.semivalues.SemiValueMode">SemiValueMode (class in pydvl.value.semivalues)</a>
+</li>
+        <li><a href="pydvl/value/semivalues.html#pydvl.value.semivalues.semivalues">semivalues() (in module pydvl.value.semivalues)</a>
+</li>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.PowersetSampler.IndexIteration.Sequential">Sequential (PowersetSampler.IndexIteration attribute)</a>
+</li>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedClientConfig.serde">serde (MemcachedClientConfig attribute)</a>
 </li>
         <li><a href="pydvl/utils/caching.html#pydvl.utils.caching.serialize">serialize() (in module pydvl.utils.caching)</a>
@@ -1277,14 +1337,18 @@
 </li>
         <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.shaded_mean_std">shaded_mean_std() (in module pydvl.reporting.plots)</a>
 </li>
+        <li><a href="pydvl/value/semivalues.html#pydvl.value.semivalues.SemiValueMode.Shapley">Shapley (SemiValueMode attribute)</a>
+</li>
+        <li><a href="pydvl/value/semivalues.html#pydvl.value.semivalues.shapley_coefficient">shapley_coefficient() (in module pydvl.value.semivalues)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.shapley_results">shapley_results() (in module pydvl.reporting.plots)</a>
 </li>
         <li><a href="pydvl/value/shapley/types.html#pydvl.value.shapley.types.ShapleyMode">ShapleyMode (class in pydvl.value.shapley.types)</a>
 </li>
         <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility.signature">signature (Utility property)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.sort">sort() (ValuationResult method)</a>
 </li>
         <li><a href="pydvl/reporting/plots.html#pydvl.reporting.plots.spearman_correlation">spearman_correlation() (in module pydvl.reporting.plots)</a>
@@ -1387,12 +1451,14 @@
   <h2>U</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="pydvl/influence/general.html#pydvl.influence.general.InfluenceType.Up">Up (InfluenceType attribute)</a>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.UniformSampler">UniformSampler (class in pydvl.value.sampler)</a>
 </li>
-        <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.update">update() (ValuationResult method)</a>
+        <li><a href="pydvl/influence/general.html#pydvl.influence.general.InfluenceType.Up">Up (InfluenceType attribute)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.update">update() (ValuationResult method)</a>
+</li>
         <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.Utility">Utility (class in pydvl.utils.utility)</a>
 </li>
         <li><a href="pydvl/value/least_core/common.html#pydvl.value.least_core.common.LeastCoreProblem.utility_values">utility_values (LeastCoreProblem attribute)</a>
@@ -1427,6 +1493,22 @@
   <h2>W</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.AntitheticSampler.weight">weight() (AntitheticSampler method)</a>
+
+        <ul>
+          <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.DeterministicCombinatorialSampler.weight">(DeterministicCombinatorialSampler method)</a>
+</li>
+          <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.PermutationSampler.weight">(PermutationSampler method)</a>
+</li>
+          <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.PowersetSampler.weight">(PowersetSampler method)</a>
+</li>
+          <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.RandomHierarchicalSampler.weight">(RandomHierarchicalSampler method)</a>
+</li>
+          <li><a href="pydvl/value/sampler.html#pydvl.value.sampler.UniformSampler.weight">(UniformSampler method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/parallel/actor.html#pydvl.utils.parallel.actor.Worker">Worker (class in pydvl.utils.parallel.actor)</a>
 </li>
     </ul></td>
@@ -1445,7 +1527,7 @@
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2022 AppliedAI Institute gGmbH
+                Copyright &#169; AppliedAI Institute gGmbH
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             
