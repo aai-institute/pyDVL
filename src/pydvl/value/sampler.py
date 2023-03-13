@@ -22,9 +22,9 @@ semi-value, in particular Shapley and Beta values, and Banzhaf indices.
 The samplers can be sliced for parallel computation. For those which are
 embarrassingly parallel, this is done by slicing the set of "outer" indices and
 returning new samplers over those slices. This includes all truly powerset-based
-samplers, such as :class:`DeterministicSampler` and :class:`UniformSampler`. In
-contrast, slicing a :class:`PermutationSampler` creates a new sampler which
-iterates over the same indices.
+samplers, such as :class:`DeterministicCombinatorialSampler` and
+:class:`UniformSampler`. In contrast, slicing a :class:`PermutationSampler`
+creates a new sampler which iterates over the same indices.
 """
 
 from __future__ import annotations
@@ -32,6 +32,7 @@ from __future__ import annotations
 import abc
 import math
 from enum import Enum
+from itertools import permutations
 from typing import Generic, Iterable, Iterator, Sequence, Tuple, TypeVar, overload
 
 import numpy as np
@@ -41,7 +42,8 @@ from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
 
 __all__ = [
     "AntitheticSampler",
-    "DeterministicSampler",
+    "DeterministicCombinatorialSampler",
+    "DeterministicPermutationSampler",
     "PermutationSampler",
     "PowersetSampler",
     "RandomHierarchicalSampler",
@@ -62,7 +64,7 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
 
     :Example:
 
-    >>>for idx, s in DeterministicSampler([1,2]):
+    >>>for idx, s in DeterministicCombinatorialSampler([1,2]):
     >>>    print(s, end="")
     ()(2,)()(1,)
 
@@ -185,7 +187,7 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
         ...
 
 
-class DeterministicSampler(PowersetSampler[T]):
+class DeterministicCombinatorialSampler(PowersetSampler[T]):
     def __init__(self, indices: NDArray[T], *args, **kwargs):
         """Uniform deterministic sampling of subsets.
 
@@ -267,6 +269,25 @@ class PermutationSampler(PowersetSampler[T]):
 
     def weight(self, subset: NDArray[T]) -> float:
         return self._n * math.comb(self._n - 1, len(subset)) if self._n > 0 else 1.0
+
+
+class DeterministicPermutationSampler(PermutationSampler[T]):
+    """Samples all n! permutations of the indices deterministically, and
+    iterates through them, returning sets as required for the permutation-based
+    definition of semi-values.
+
+    .. warning::
+       This sampler requires caching to be enabled or computation
+       will be doubled wrt. a "direct" implementation of permutation MC
+    """
+
+    def __iter__(self) -> Iterator[SampleType]:
+        for permutation in permutations(self._indices):
+            for i, idx in enumerate(permutation):
+                yield idx, np.array(permutation[:i], dtype=self._indices.dtype)
+                self._n_samples += 1
+            if self._n_samples == 0:  # Empty index set
+                break
 
 
 class RandomHierarchicalSampler(PowersetSampler[T]):

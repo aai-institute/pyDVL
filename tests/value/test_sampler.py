@@ -6,7 +6,8 @@ import pytest
 from pydvl.utils import powerset
 from pydvl.value.sampler import (
     AntitheticSampler,
-    DeterministicSampler,
+    DeterministicCombinatorialSampler,
+    DeterministicPermutationSampler,
     PermutationSampler,
     RandomHierarchicalSampler,
     UniformSampler,
@@ -16,7 +17,7 @@ from pydvl.value.sampler import (
 @pytest.mark.parametrize(
     "sampler_class",
     [
-        DeterministicSampler,
+        DeterministicCombinatorialSampler,
         UniformSampler,
         PermutationSampler,
         AntitheticSampler,
@@ -37,7 +38,7 @@ def test_proper(sampler_class, indices):
 @pytest.mark.parametrize(
     "sampler_class",
     [
-        DeterministicSampler,
+        DeterministicCombinatorialSampler,
         UniformSampler,
         #    PermutationSampler,
         AntitheticSampler,
@@ -56,11 +57,14 @@ def test_chunkify(sampler_class):
     assert len(s1) == len(s2) + len(s3)
 
 
-def test_chunkify_permutation():
+@pytest.mark.parametrize(
+    "sampler_class", [DeterministicPermutationSampler, PermutationSampler]
+)
+def test_chunkify_permutation(sampler_class):
     indices = np.arange(10)
-    s1 = PermutationSampler(indices)
+    s1 = sampler_class(indices)
     s2 = s1[:5]
-    assert isinstance(s2, PermutationSampler)
+    assert isinstance(s2, sampler_class)
     assert len(s1) == len(s2)
 
 

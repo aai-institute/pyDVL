@@ -58,7 +58,13 @@ from pydvl.value import ValuationResult
 from pydvl.value.sampler import PermutationSampler, PowersetSampler
 from pydvl.value.stopping import MaxUpdates, StoppingCriterion
 
-__all__ = ["semivalues"]
+__all__ = [
+    "banzhaf_coefficient",
+    "beta_coefficient",
+    "shapley_coefficient",
+    "semivalues",
+    "SemiValueMode",
+]
 
 
 class SVCoefficient(Protocol):

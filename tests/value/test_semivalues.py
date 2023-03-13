@@ -6,7 +6,8 @@ import pytest
 
 from pydvl.value.sampler import (
     AntitheticSampler,
-    DeterministicSampler,
+    DeterministicCombinatorialSampler,
+    DeterministicPermutationSampler,
     PermutationSampler,
     PowersetSampler,
     UniformSampler,
@@ -27,7 +28,13 @@ from . import check_values
 @pytest.mark.parametrize("num_samples", [5])
 @pytest.mark.parametrize(
     "sampler",
-    [DeterministicSampler, UniformSampler, PermutationSampler, AntitheticSampler],
+    [
+        DeterministicCombinatorialSampler,
+        DeterministicPermutationSampler,
+        UniformSampler,
+        PermutationSampler,
+        AntitheticSampler,
+    ],
 )
 @pytest.mark.parametrize(
     "coefficient, criterion",
@@ -59,7 +66,13 @@ def test_shapley(
 @pytest.mark.parametrize("num_samples", [5])
 @pytest.mark.parametrize(
     "sampler",
-    [DeterministicSampler, UniformSampler, PermutationSampler, AntitheticSampler],
+    [
+        DeterministicCombinatorialSampler,
+        DeterministicPermutationSampler,
+        UniformSampler,
+        PermutationSampler,
+        AntitheticSampler,
+    ],
 )
 @pytest.mark.parametrize("method", [_semivalues, semivalues])
 def test_banzhaf(
