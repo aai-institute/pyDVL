@@ -130,9 +130,6 @@ class Dataset:
         self._indices = np.arange(len(self.x_train))
         self._data_names = data_names if data_names is not None else self._indices
 
-    def __iter__(self):
-        return self.x_train, self.y_train, self.x_test, self.y_test
-
     def __getitem__(self, idx: Union[int, slice, Iterable]) -> Tuple:
         return self.x_train[idx], self.y_train[idx]
 
