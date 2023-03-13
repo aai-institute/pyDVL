@@ -4,7 +4,7 @@ library.
 """
 
 from itertools import chain, combinations
-from typing import Collection, Generator, Iterator, Optional, Tuple, TypeVar
+from typing import Collection, Generator, Iterator, List, Optional, Tuple, TypeVar, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -130,6 +130,9 @@ def random_powerset_group_conditional(
     if not isinstance(labels, np.ndarray):
         raise TypeError("Labels must be an NDArray")
 
+    if len(labels) != len(s):
+        raise ValueError("Set and labels have to be of same size.")
+
     rng = np.random.default_rng()
     total = 1
     if n_samples is None:
@@ -137,11 +140,11 @@ def random_powerset_group_conditional(
 
     while total <= n_samples:
 
-        subsets = []
+        subsets: List[NDArray[T]] = []
         for label in labels:
-            label_indices = list(np.where(labels == label)[0])
-            s = rng.integers(min_elements, len(label_indices))
-            subsets.append(random_subset_of_size(label_indices, s))
+            label_indices = np.asarray(np.where(labels == label)[0])
+            subset_length = int(rng.integers(min_elements, len(label_indices)))
+            subsets.append(random_subset_of_size(s[label_indices], subset_length))
 
         subset = np.concatenate(tuple(subsets))
         rng.shuffle(subset)

@@ -81,7 +81,7 @@ class CSScorer:
         in_cls_acc, out_cls_acc = _estimate_in_out_cls_accuracy(
             model, x_test, y_test, self.label
         )
-        return in_cls_acc * np.exp(out_cls_acc)
+        return float(in_cls_acc * np.exp(out_cls_acc))
 
 
 def class_wise_shapley(
