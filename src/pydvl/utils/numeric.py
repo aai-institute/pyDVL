@@ -2,24 +2,13 @@
 This module contains routines for numerical computations used across the
 library.
 """
+from __future__ import annotations
 
 from itertools import chain, combinations
-from typing import (
-    Collection,
-    Generator,
-    Iterator,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-    overload,
-)
+from typing import Collection, Generator, Iterator, Optional, Tuple, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
-
-FloatOrArray = TypeVar("FloatOrArray", float, NDArray[np.float_])
-IntOrArray = TypeVar("IntOrArray", int, NDArray[np.int_])
 
 __all__ = [
     "running_moments",
@@ -250,20 +239,20 @@ def running_moments(
 
 @overload
 def running_moments(
-    previous_avg: "NDArray[np.float_]",
-    previous_variance: "NDArray[np.float_]",
+    previous_avg: NDArray[np.float_],
+    previous_variance: NDArray[np.float_],
     count: int,
-    new_value: "NDArray[np.float_]",
-) -> Tuple["NDArray[np.float_]", "NDArray[np.float_]"]:
+    new_value: NDArray[np.float_],
+) -> Tuple[NDArray[np.float_], NDArray[np.float_]]:
     ...
 
 
 def running_moments(
-    previous_avg: Union[float, "NDArray[np.float_]"],
-    previous_variance: Union[float, "NDArray[np.float_]"],
+    previous_avg: float | NDArray[np.float_],
+    previous_variance: float | NDArray[np.float_],
     count: int,
-    new_value: Union[float, "NDArray[np.float_]"],
-) -> Tuple[Union[float, "NDArray[np.float_]"], Union[float, "NDArray[np.float_]"]]:
+    new_value: float | NDArray[np.float_],
+) -> Tuple[float | NDArray[np.float_], float | NDArray[np.float_]]:
     """Uses Welford's algorithm to calculate the running average and variance of
      a set of numbers.
 
