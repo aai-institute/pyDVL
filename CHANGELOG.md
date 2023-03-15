@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fixes in `ValuationResult`: bugs around data names, semantics of
+  `empty()`, new method `zeros()` and normalised random values
+  [PR #327](https://github.com/appliedAI-Initiative/pyDVL/pull/327)
 - **New method**: Implements generalised semi-values for data valuation,
   including Data Banzhaf and Beta Shapley, with configurable sampling strategies
   [PR #319](https://github.com/appliedAI-Initiative/pyDVL/pull/319)
