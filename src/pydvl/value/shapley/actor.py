@@ -77,7 +77,7 @@ class ShapleyCoordinator(Coordinator):
             reported yet, returns ``None``.
         """
         if len(self.worker_results) == 0:
-            return ValuationResult.empty()
+            return ValuationResult.empty()  # type: ignore
 
         # FIXME: inefficient, possibly unstable
         totals: ValuationResult = reduce(operator.add, self.worker_results)
@@ -161,7 +161,7 @@ class ShapleyWorker(Worker):
         terminating if it's ``True``.
         """
         while True:
-            acc = ValuationResult.empty(algorithm=self.algorithm)
+            acc = ValuationResult.empty()
             start_time = time()
             while (time() - start_time) < self.update_period:
                 if self.coordinator.is_done():

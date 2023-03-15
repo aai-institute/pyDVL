@@ -50,6 +50,7 @@ from typing import (
 )
 
 import numpy as np
+from deprecate import deprecated
 from numpy.typing import NDArray
 
 from pydvl.utils.dataset import Dataset
@@ -650,17 +651,50 @@ class ValuationResult(
         return cls(**options)  # type: ignore
 
     @classmethod
+    @deprecated(
+        target=True,
+        deprecated_in="0.5.1",
+        remove_in="0.7.0",
+        args_mapping=dict(indices=None, data_names=None, n_samples=None),
+        template_mgs="`%(source_name)s` is deprecated for generating zero-filled "
+        "results, use `ValuationResult.zeros()` instead.",
+    )
     def empty(
         cls,
         algorithm: str = "",
-        indices: Optional[Union[Sequence[int], NDArray[np.int_]]] = None,
-        data_names: Optional[Union[Sequence[str], NDArray[np.str_]]] = None,
+        indices: Optional[Sequence[IndexT] | NDArray[IndexT]] = None,
+        data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         n_samples: int = 0,
     ) -> "ValuationResult":
         """Creates an empty :class:`ValuationResult` object.
 
         Empty results are characterised by having an empty array of values. When
-        another result is added to an empty one, the latter is ignored.
+        another result is added to an empty one, the empty one is discarded.
+
+        :param algorithm: Name of the algorithm used to compute the values
+        :return: An instance of :class:`ValuationResult`
+        """
+        if indices is not None or data_names is not None or n_samples != 0:
+            return ValuationResult.zeros(
+                algorithm=algorithm,
+                indices=indices,
+                data_names=data_names,
+                n_samples=n_samples,
+            )
+        return cls(algorithm=algorithm, status=Status.Pending, values=np.array([]))
+
+    @classmethod
+    def zeros(
+        cls,
+        algorithm: str = "",
+        indices: Optional[Sequence[IndexT] | NDArray[IndexT]] = None,
+        data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
+        n_samples: int = 0,
+    ) -> "ValuationResult":
+        """Creates an empty :class:`ValuationResult` object.
+
+        Empty results are characterised by having an empty array of values. When
+        another result is added to an empty one, the empty one is ignored.
 
         :param algorithm: Name of the algorithm used to compute the values
         :param indices: Data indices to use. A copy will be made. If not given,
@@ -674,14 +708,14 @@ class ValuationResult(
         if indices is None:
             indices = np.arange(n_samples, dtype=np.int_)
         else:
-            indices = np.array(indices, dtype=np.int_)
+            indices = np.array(indices)
         return cls(
             algorithm=algorithm,
             status=Status.Pending,
             indices=indices,
             data_names=data_names
             if data_names is not None
-            else indices.astype(np.str_),
+            else np.empty_like(indices, dtype=object),
             values=np.zeros(len(indices)),
             variances=np.zeros(len(indices)),
             counts=np.zeros(len(indices), dtype=np.int_),
