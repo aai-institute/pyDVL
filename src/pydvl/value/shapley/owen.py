@@ -54,7 +54,7 @@ def _owen_sampling_shapley(
 
     result = ValuationResult.empty(
         algorithm="owen_sampling_shapley_" + str(method),
-        indices=indices,
+        indices=np.array(indices, dtype=np.int_),
         data_names=[u.data.data_names[i] for i in indices],
     )
 

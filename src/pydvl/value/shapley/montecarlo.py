@@ -179,7 +179,7 @@ def _combinatorial_montecarlo_shapley(
     correction = 2 ** (n - 1) / n
     result = ValuationResult.empty(
         algorithm="combinatorial_montecarlo_shapley",
-        indices=indices,
+        indices=np.array(indices, dtype=np.int_),
         data_names=[u.data.data_names[i] for i in indices],
     )
 

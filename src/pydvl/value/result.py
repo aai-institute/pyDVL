@@ -27,6 +27,8 @@ returned. These objects can be compared with the usual operators, which take
 only the :attr:`ValueItem.value` into account.
 
 """
+from __future__ import annotations
+
 import collections.abc
 import logging
 from dataclasses import dataclass
@@ -34,12 +36,14 @@ from functools import total_ordering
 from numbers import Integral
 from typing import (
     Any,
-    Generator,
+    Generic,
     Iterable,
+    Iterator,
     List,
     Literal,
     Optional,
     Sequence,
+    TypeVar,
     Union,
     cast,
     overload,
@@ -57,14 +61,18 @@ try:
 except ImportError:
     pass
 
-__all__ = ["ValuationResult", "ValueItem"]
+__all__ = ["ValuationResult", "ValueItem", "IndexT", "NameT"]
 
 logger = logging.getLogger(__name__)
+
+# TODO: Move to value.types once it's there
+IndexT = TypeVar("IndexT", bound=np.int_)
+NameT = TypeVar("NameT", bound=Any)
 
 
 @total_ordering
 @dataclass
-class ValueItem:
+class ValueItem(Generic[IndexT, NameT]):
     """The result of a value computation for one datum.
 
     ``ValueItems`` can be compared with the usual operators, forming a total
@@ -77,9 +85,9 @@ class ValueItem:
 
     #: Index of the sample with this value in the original
     #  :class:`~pydvl.utils.dataset.Dataset`
-    index: int
+    index: IndexT
     #: Name of the sample if it was provided. Otherwise, `str(index)`
-    name: str
+    name: NameT
     #: The value
     value: float
     #: Variance of the value if it was computed with an approximate method
@@ -93,7 +101,7 @@ class ValueItem:
     def __eq__(self, other):
         return self.value == other.value
 
-    def __index__(self) -> int:
+    def __index__(self) -> IndexT:
         return self.index
 
     @property
@@ -104,7 +112,9 @@ class ValueItem:
         return float(np.sqrt(self.variance / self.count).item())
 
 
-class ValuationResult(collections.abc.Sequence):
+class ValuationResult(
+    collections.abc.Sequence, Iterable[ValueItem[IndexT, NameT]], Generic[IndexT, NameT]
+):
     """Objects of this class hold the results of valuation algorithms.
 
     These include indices in the original :class:`Dataset`, any data names (e.g.
@@ -179,12 +189,12 @@ class ValuationResult(collections.abc.Sequence):
     :raise ValueError: If input arrays have mismatching lengths.
     """
 
-    _indices: NDArray[np.int_]
+    _indices: NDArray[IndexT]
     _values: NDArray[np.float_]
     _counts: NDArray[np.int_]
     _variances: NDArray[np.float_]
     _data: Dataset
-    _names: NDArray[np.str_]
+    _names: NDArray[NameT]
     _algorithm: str
     _status: Status
     # None for unsorted, True for ascending, False for descending
@@ -197,8 +207,8 @@ class ValuationResult(collections.abc.Sequence):
         values: NDArray[np.float_],
         variances: Optional[NDArray[np.float_]] = None,
         counts: Optional[NDArray[np.int_]] = None,
-        indices: Optional[NDArray[np.int_]] = None,
-        data_names: Optional[Union[Sequence[str], NDArray[np.str_]]] = None,
+        indices: Optional[NDArray[IndexT]] = None,
+        data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         algorithm: str = "",
         status: Status = Status.Pending,
         sort: bool = False,
@@ -220,8 +230,11 @@ class ValuationResult(collections.abc.Sequence):
         self._extra_values = extra_values or {}
 
         if data_names is None:
-            data_names = [str(i) for i in range(len(self._values))]
-        self._names = np.array(data_names, dtype=np.str_)
+            self._names = np.array([str(i) for i in range(len(self._values))])
+        elif not isinstance(data_names, np.ndarray):
+            self._names = np.array(data_names)
+        else:
+            self._names = data_names.copy()
         if len(np.unique(self._names)) != len(self._names):
             raise ValueError("Data names must be unique")
 
@@ -285,7 +298,7 @@ class ValuationResult(collections.abc.Sequence):
         return self._counts[self._sort_positions]
 
     @property
-    def indices(self) -> NDArray[np.int_]:
+    def indices(self) -> NDArray[IndexT]:
         """The indices for the values, possibly sorted.
 
         If the object is unsorted, then these are the same as declared at
@@ -294,7 +307,7 @@ class ValuationResult(collections.abc.Sequence):
         return self._indices[self._sort_positions]
 
     @property
-    def names(self) -> NDArray[np.str_]:
+    def names(self) -> NDArray[NameT]:
         """The names for the values, possibly sorted.
         If the object is unsorted, then these are the same as declared at
         construction or ``np.arange(len(values))`` if none were passed.
@@ -347,8 +360,8 @@ class ValuationResult(collections.abc.Sequence):
                 raise IndexError(f"Index {key} out of range (0, {len(self)}).")
             idx = self._sort_positions[key]
             return ValueItem(
-                int(self._indices[idx]),
-                str(self._names[idx]),
+                self._indices[idx],
+                self._names[idx],
                 float(self._values[idx]),
                 float(self._variances[idx]),
                 int(self._counts[idx]),
@@ -391,7 +404,7 @@ class ValuationResult(collections.abc.Sequence):
         else:
             raise TypeError("Indices must be integers, iterable or slices")
 
-    def __iter__(self) -> Generator[ValueItem, Any, None]:
+    def __iter__(self) -> Iterator[ValueItem[IndexT, NameT]]:
         """Iterate over the results returning :class:`ValueItem` objects.
         To sort in place before iteration, use :meth:`sort`.
         """
@@ -443,7 +456,7 @@ class ValuationResult(collections.abc.Sequence):
             raise NotImplementedError(
                 f"Cannot combine ValuationResult with {type(other)}"
             )
-        if self.algorithm != other.algorithm:
+        if self.algorithm and self.algorithm != other.algorithm:
             raise ValueError("Cannot combine results from different algorithms")
 
     def __add__(self, other: "ValuationResult") -> "ValuationResult":
@@ -478,7 +491,7 @@ class ValuationResult(collections.abc.Sequence):
 
         self._check_compatible(other)
 
-        indices = np.union1d(self._indices, other._indices)
+        indices = np.union1d(self._indices, other._indices).astype(self._indices.dtype)
         this_pos = np.searchsorted(indices, self._indices)
         other_pos = np.searchsorted(indices, other._indices)
 
@@ -501,18 +514,6 @@ class ValuationResult(collections.abc.Sequence):
         # Sample variance of n+m samples from two sample variances of n and m samples
         vnm = (n * (vn + xn**2) + m * (vm + xm**2)) / (n + m) - xnm**2
 
-        if self._names.dtype != other._names.dtype:
-            raise ValueError(f"Mismatching name dtypes in ValuationResults")
-
-        this_names = np.empty_like(indices, dtype=object)
-        other_names = np.empty_like(indices, dtype=object)
-        this_names[this_pos] = self._names
-        other_names[other_pos] = other._names
-        names = np.where(this_names, this_names, other_names).astype(self._names.dtype)
-        both = np.where((this_names != None) & (other_names != None))
-        if np.any(other_names[both] != this_names[both]):
-            raise ValueError(f"Mismatching names in ValuationResults")
-
         if np.any(vnm < 0):
             if np.any(vnm < -1e-6):
                 logger.warning(
@@ -520,6 +521,34 @@ class ValuationResult(collections.abc.Sequence):
                     f"Negative sample variances clipped to 0 in {vnm}"
                 )
             vnm[np.where(vnm < 0)] = 0
+
+        # Merging of names:
+        # If an index has the same name in both results, it must be the same.
+        # If an index has a name in one result but not the other, the name is
+        # taken from the result with the name.
+        if self._names.dtype != other._names.dtype:
+            if np.can_cast(other._names.dtype, self._names.dtype, casting="safe"):
+                other._names = other._names.astype(self._names.dtype)
+                logger.warning(
+                    f"Casting ValuationResult.names from {other._names.dtype} to {self._names.dtype}"
+                )
+            else:
+                raise TypeError(
+                    f"Cannot cast ValuationResult.names from "
+                    f"{other._names.dtype} to {self._names.dtype}"
+                )
+
+        this_names = np.empty_like(indices, dtype=object)
+        other_names = np.empty_like(indices, dtype=object)
+        this_names[this_pos] = self._names
+        other_names[other_pos] = other._names
+        both = np.where(this_pos == other_pos)
+        names = np.empty_like(indices, dtype=self._names.dtype)
+        names[this_pos] = self._names
+        names[other_pos] = other._names
+
+        if np.any(other_names[both] != this_names[both]):
+            raise ValueError(f"Mismatching names in ValuationResults")
 
         return ValuationResult(
             algorithm=self.algorithm or other.algorithm or "",
@@ -550,7 +579,7 @@ class ValuationResult(collections.abc.Sequence):
             self._values[pos], self._variances[pos], self._counts[pos], new_value
         )
         self[pos] = ValueItem(
-            index=idx,
+            index=cast(IndexT, idx),
             name=self._names[pos],
             value=val,
             variance=var,
@@ -604,16 +633,21 @@ class ValuationResult(collections.abc.Sequence):
         return df
 
     @classmethod
-    def from_random(cls, size: int) -> "ValuationResult":
+    def from_random(cls, size: int, **kwargs) -> "ValuationResult":
         """Creates a :class:`ValuationResult` object and fills it
         with an array of random values of the given size uniformly sampled
         from the range [-1, 1].
 
         :param size: Number of values to generate
-        :return: An instance of :class:`ValuationResult`
+        :param kwargs: Additional options to pass to the constructor of
+            :class:`ValuationResult`. Use to override status, names, etc.
+        :return: A valuation result with its status set to :attr:`Status.Converged`
+            by default.
         """
         values = np.random.uniform(low=-1.0, high=1.0, size=size)
-        return cls(algorithm="random", status=Status.Converged, values=values)
+        options = dict(values=values, status=Status.Converged, algorithm="random")
+        options.update(kwargs)
+        return cls(**options)  # type: ignore
 
     @classmethod
     def empty(
