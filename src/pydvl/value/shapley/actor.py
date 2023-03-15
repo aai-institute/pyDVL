@@ -7,7 +7,7 @@ methods for pyDVL that use parallelization.
 
 import logging
 from time import time
-from typing import cast
+from typing import Sequence, cast
 
 import numpy as np
 from ray.util.queue import Empty, Queue
@@ -20,7 +20,7 @@ from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.truncated import TruncationPolicy
 from pydvl.value.stopping import MaxChecks, StoppingCriterion
 
-__all__ = ["get_shapley_coordinator", "get_shapley_worker"]
+__all__ = ["get_shapley_queue", "get_shapley_coordinator", "get_shapley_workers"]
 
 
 logger = logging.getLogger(__name__)
@@ -49,18 +49,23 @@ def get_shapley_coordinator(
     return coordinator
 
 
-def get_shapley_worker(
-    u: Utility, *args, config: ParallelConfig = ParallelConfig(), **kwargs
-) -> "ShapleyWorker":
+def get_shapley_workers(
+    u: Utility, *args, n_jobs: int, config: ParallelConfig = ParallelConfig(), **kwargs
+) -> Sequence["ShapleyWorker"]:
     parallel_backend = init_parallel_backend(config)
     u_id = parallel_backend.put(u)
     if config.backend == "ray":
-        worker = cast(
-            ShapleyWorker, RayActorWrapper(ShapleyWorker, config, u_id, *args, **kwargs)
-        )
+        workers = []
+        for worker_id in range(parallel_backend.effective_n_jobs(n_jobs)):
+            workers.append(
+                cast(
+                    ShapleyWorker,
+                    RayActorWrapper(ShapleyWorker, config, u_id, *args, **kwargs),
+                )
+            )
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
-    return worker
+    return workers
 
 
 class ShapleyCoordinator(Coordinator):

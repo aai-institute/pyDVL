@@ -1,10 +1,9 @@
 import abc
 import logging
-from time import sleep
 
 import numpy as np
 
-from pydvl.utils import ParallelConfig, Utility, effective_n_jobs, running_moments
+from pydvl.utils import ParallelConfig, Utility, running_moments
 from pydvl.value import ValuationResult
 from pydvl.value.stopping import StoppingCriterion
 
@@ -166,6 +165,8 @@ def truncated_montecarlo_shapley(
     config: ParallelConfig = ParallelConfig(),
     coordinator_update_period: int = 10,
     worker_update_period: int = 5,
+    queue_timeout: int = 30,
+    max_queue_size: int = 100,
 ) -> ValuationResult:
     """Monte Carlo approximation to the Shapley value of data points.
 
@@ -204,11 +205,14 @@ def truncated_montecarlo_shapley(
         accumulated results from the workers for convergence.
     :param worker_update_period: interval in seconds between different
         updates to and from the coordinator
+    :param queue_timeout: Interval of time after which an operation
+        on the queue will timeout.
+    :param max_queue_size: Size of the queue.
     :return: Object with the data values.
 
     """
     # Avoid circular imports
-    from .actor import get_shapley_coordinator, get_shapley_queue, get_shapley_worker
+    from .actor import get_shapley_coordinator, get_shapley_queue, get_shapley_workers
 
     if config.backend == "sequential":
         raise NotImplementedError(
@@ -216,21 +220,24 @@ def truncated_montecarlo_shapley(
             "the Sequential parallel backend."
         )
 
-    queue = get_shapley_queue(maxsize=100, config=config)
+    queue = get_shapley_queue(maxsize=max_queue_size, config=config)
 
-    coordinator = get_shapley_coordinator(config=config, update_period=coordinator_update_period, queue=queue, done=done)  # type: ignore
+    coordinator = get_shapley_coordinator(
+        update_period=coordinator_update_period,
+        queue_timeout=queue_timeout,
+        queue=queue,
+        done=done,
+        config=config,
+    )  # type: ignore
 
-    workers = [
-        get_shapley_worker(  # type: ignore
-            u,
-            queue=queue,
-            truncation=truncation,
-            worker_id=worker_id,
-            update_period=worker_update_period,
-            config=config,
-        )
-        for worker_id in range(effective_n_jobs(n_jobs, config=config))
-    ]
+    workers = get_shapley_workers(
+        u,
+        queue=queue,
+        truncation=truncation,
+        update_period=worker_update_period,
+        config=config,
+        n_jobs=n_jobs,
+    )
     for worker in workers:
         worker.run(block=False)
 
