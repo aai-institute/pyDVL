@@ -6,16 +6,15 @@ methods for pyDVL that use parallelization.
 """
 
 import logging
-import operator
-from functools import reduce
 from time import time
 from typing import cast
 
 import numpy as np
+from ray.util.queue import Empty, Queue
 
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.parallel import init_parallel_backend
-from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
+from pydvl.utils.parallel.actor import Coordinator, QueueType, RayActorWrapper, Worker
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.truncated import TruncationPolicy
@@ -27,6 +26,16 @@ __all__ = ["get_shapley_coordinator", "get_shapley_worker"]
 logger = logging.getLogger(__name__)
 
 
+def get_shapley_queue(
+    maxsize: int, config: ParallelConfig = ParallelConfig()
+) -> QueueType:
+    if config.backend == "ray":
+        queue = Queue(maxsize=maxsize)
+    else:
+        raise NotImplementedError(f"Unexpected parallel type {config.backend}")
+    return queue
+
+
 def get_shapley_coordinator(
     *args, config: ParallelConfig = ParallelConfig(), **kwargs
 ) -> "ShapleyCoordinator":
@@ -35,8 +44,6 @@ def get_shapley_coordinator(
             ShapleyCoordinator,
             RayActorWrapper(ShapleyCoordinator, config, *args, **kwargs),
         )
-    elif config.backend == "sequential":
-        coordinator = ShapleyCoordinator(*args, **kwargs)
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
     return coordinator
@@ -51,8 +58,6 @@ def get_shapley_worker(
         worker = cast(
             ShapleyWorker, RayActorWrapper(ShapleyWorker, config, u_id, *args, **kwargs)
         )
-    elif config.backend == "sequential":
-        worker = ShapleyWorker(u_id, *args, **kwargs)
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
     return worker
@@ -60,33 +65,25 @@ def get_shapley_worker(
 
 class ShapleyCoordinator(Coordinator):
     """The coordinator has two main tasks: aggregating the results of the
-    workers and terminating processes once a certain stopping criterion is
+    workers and shutting down the queue once a certain stopping criterion is
     satisfied.
+
+    :param queue: Used by workers to report their results to the coordinator.
+    :param done: Stopping criterion.
+    :param update_period: Interval in seconds in-between convergence checks.
     """
 
-    def __init__(self, done: StoppingCriterion):
-        super().__init__()
+    def __init__(
+        self, queue: QueueType, done: StoppingCriterion, *, update_period: int = 10
+    ):
+        super().__init__(queue=queue)
+        self.update_period = update_period
+        self.result = ValuationResult.empty()
         self.results_done = done
         self.results_done.modify_result = True
 
-    def accumulate(self) -> ValuationResult:
-        """Accumulates all results received from the workers.
-
-        :return: Values and standard errors in a
-            :class:`~pydvl.value.result.ValuationResult`. If no worker has
-            reported yet, returns ``None``.
-        """
-        if len(self.worker_results) == 0:
-            return ValuationResult.empty()  # type: ignore
-
-        # FIXME: inefficient, possibly unstable
-        totals: ValuationResult = reduce(operator.add, self.worker_results)
-        # Avoid recomputing
-        self.worker_results = [totals]
-        return totals
-
     def check_convergence(self) -> bool:
-        """Evaluates the convergence criterion on the accumulated results.
+        """Evaluates the convergence criterion on the aggregated results.
 
         If the convergence criterion is satisfied, calls to
         :meth:`~Coordinator.is_done` return ``True``.
@@ -95,15 +92,45 @@ class ShapleyCoordinator(Coordinator):
         """
         if self.is_done():
             return True
-        if len(self.worker_results) > 0:
-            self._status = self.results_done(self.accumulate())
+        self._status = self.results_done(self.result)
         return self.is_done()
+
+    def run(self, *args, **kwargs) -> ValuationResult:
+        """Runs the coordinator."""
+        start_time = time()
+        while True:
+            while (time() - start_time) < self.update_period:
+                try:
+                    worker_result: ValuationResult = self.queue.get(
+                        block=True, timeout=30
+                    )
+                    self.result += worker_result
+                except Empty:
+                    break
+            start_time = time()
+            self._status = self.results_done(self.result)
+            if self.check_convergence():
+                break
+        self.queue.shutdown()
+        return self.result  # type: ignore
 
 
 class ShapleyWorker(Worker):
-    """A worker.
+    """A worker calculates Shapley values using the permutation definition,
+    aggregates the results and puts them in the queue every
+    `update_period` seconds until it is closed by the coordinator.
 
-    It should work.
+    To implement early stopping, workers can be signaled by the
+    :class:`~pydvl.value.shapley.actor.ShapleyCoordinator` before they are
+    done with their work package.
+
+
+    :param u: Utility object with model, data, and scoring function
+    :param queue: Used by workers to report their results to the coordinator.
+    :param truncation: callable that decides whether to stop computing
+        marginals for a given permutation.
+    :param worker_id: id used for reporting through maybe_progress
+    :param update_period: interval in seconds in-between updates to the queue.
     """
 
     algorithm: str = "truncated_montecarlo_shapley"
@@ -111,7 +138,7 @@ class ShapleyWorker(Worker):
     def __init__(
         self,
         u: Utility,
-        coordinator: ShapleyCoordinator,
+        queue: QueueType,
         *,
         truncation: TruncationPolicy,
         worker_id: int,
@@ -132,9 +159,7 @@ class ShapleyWorker(Worker):
         :param truncation: callable that decides whether to stop computing
             marginals for a given permutation.
         """
-        super().__init__(
-            coordinator=coordinator, update_period=update_period, worker_id=worker_id
-        )
+        super().__init__(queue=queue, update_period=update_period, worker_id=worker_id)
         self.u = u
         self.truncation = truncation
 
@@ -154,18 +179,13 @@ class ShapleyWorker(Worker):
 
         This calls :meth:`_compute_marginals` repeatedly calculating Shapley
         values on different permutations of the indices. After :attr:`update_period`
-        seconds have passed, it reports the results to the
-        :class:`~pydvl.value.shapley.actor.ShapleyCoordinator`. Before starting
-        the next iteration, it checks the coordinator's
-        :meth:`~pydvl.utils.parallel.actor.Coordinator.is_done` flag,
-        terminating if it's ``True``.
+        seconds have passed, it puts the results in the queue.
+        The loop is terminated if the queue is closed by the coordinator.
         """
         while True:
             acc = ValuationResult.empty()
             start_time = time()
             while (time() - start_time) < self.update_period:
-                if self.coordinator.is_done():
-                    return
                 results = self._compute_marginals()
                 nans = np.isnan(results.values).sum()
                 if nans > 0:
@@ -175,4 +195,7 @@ class ShapleyWorker(Worker):
                     )
                     continue
                 acc += results
-            self.coordinator.add_results(acc)
+            try:
+                self.queue.put(acc, block=True, timeout=30)
+            except Exception:
+                break

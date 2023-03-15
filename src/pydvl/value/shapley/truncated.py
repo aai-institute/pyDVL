@@ -208,7 +208,7 @@ def truncated_montecarlo_shapley(
 
     """
     # Avoid circular imports
-    from .actor import get_shapley_coordinator, get_shapley_worker
+    from .actor import get_shapley_coordinator, get_shapley_queue, get_shapley_worker
 
     if config.backend == "sequential":
         raise NotImplementedError(
@@ -216,12 +216,14 @@ def truncated_montecarlo_shapley(
             "the Sequential parallel backend."
         )
 
-    coordinator = get_shapley_coordinator(config=config, done=done)  # type: ignore
+    queue = get_shapley_queue(maxsize=100, config=config)
+
+    coordinator = get_shapley_coordinator(config=config, update_period=coordinator_update_period, queue=queue, done=done)  # type: ignore
 
     workers = [
         get_shapley_worker(  # type: ignore
             u,
-            coordinator=coordinator,
+            queue=queue,
             truncation=truncation,
             worker_id=worker_id,
             update_period=worker_update_period,
@@ -232,19 +234,6 @@ def truncated_montecarlo_shapley(
     for worker in workers:
         worker.run(block=False)
 
-    while not coordinator.check_convergence():
-        sleep(coordinator_update_period)
+    result = coordinator.run(block=True)
 
-    return coordinator.accumulate()
-
-    # Something like this would be nicer, but it doesn't seem to be possible
-    # to start the workers from the coordinator.
-    # coordinator.add_workers(
-    #     n_workers=n_jobs,
-    #     u=u_id,
-    #     update_period=worker_update_period,
-    #     config=config,
-    #     truncation=truncation,
-    # )
-    #
-    # return coordinator.run(delay=coordinator_update_period)
+    return result
