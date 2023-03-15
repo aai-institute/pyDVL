@@ -26,6 +26,15 @@ Indexing and slicing of results is supported and :class:`ValueItem` objects are
 returned. These objects can be compared with the usual operators, which take
 only the :attr:`ValueItem.value` into account.
 
+.. rubric:: Creating result objects
+
+The most commonly used factory method is :meth:`ValuationResult.zeros`, which
+creates a result object with all values, variances and counts set to zero.
+:meth:`ValuationResult.empty` creates an empty result object, which can be used
+as a starting point for adding results together. Empty results are discarded
+when added to other results. Finally, :meth:`ValuationResult.from_random`
+samples random values uniformly.
+
 """
 from __future__ import annotations
 
@@ -43,6 +52,7 @@ from typing import (
     Literal,
     Optional,
     Sequence,
+    Tuple,
     TypeVar,
     Union,
     cast,
@@ -230,8 +240,12 @@ class ValuationResult(
         self._sort_order = None
         self._extra_values = extra_values or {}
 
+        # Yuk...
         if data_names is None:
-            self._names = np.array([str(i) for i in range(len(self._values))])
+            if indices is not None:
+                self._names = np.copy(indices)
+            else:
+                self._names = np.arange(len(self._values), dtype=np.int_)
         elif not isinstance(data_names, np.ndarray):
             self._names = np.array(data_names)
         else:
@@ -634,18 +648,32 @@ class ValuationResult(
         return df
 
     @classmethod
-    def from_random(cls, size: int, **kwargs) -> "ValuationResult":
-        """Creates a :class:`ValuationResult` object and fills it
-        with an array of random values of the given size uniformly sampled
-        from the range [-1, 1].
+    def from_random(
+        cls, size: int, total: Optional[float] = None, **kwargs
+    ) -> "ValuationResult":
+        """Creates a :class:`ValuationResult` object and fills it with an array
+        of random values from a uniform distribution in [-1,1]. The values can
+        be to sum to a given total number (doing so will change their range).
 
         :param size: Number of values to generate
+        :param total: If set, the values are normalized to sum to this number
+            ("efficiency" property of Shapley values).
         :param kwargs: Additional options to pass to the constructor of
             :class:`ValuationResult`. Use to override status, names, etc.
-        :return: A valuation result with its status set to :attr:`Status.Converged`
-            by default.
+        :return: A valuation result with its status set to
+            :attr:`Status.Converged` by default.
+        :raises ValueError: If ``size`` is less than 1.
+
+        .. versionchanged:: 0.5.1
+            Added parameter ``total``. Check for zero size
         """
-        values = np.random.uniform(low=-1.0, high=1.0, size=size)
+        if size < 1:
+            raise ValueError("Size must be a positive integer")
+
+        values = np.random.uniform(low=-1, high=1, size=size)
+        if total is not None:
+            values *= total / np.sum(values)
+
         options = dict(values=values, status=Status.Converged, algorithm="random")
         options.update(kwargs)
         return cls(**options)  # type: ignore
@@ -675,7 +703,7 @@ class ValuationResult(
         :return: An instance of :class:`ValuationResult`
         """
         if indices is not None or data_names is not None or n_samples != 0:
-            return ValuationResult.zeros(
+            return cls.zeros(
                 algorithm=algorithm,
                 indices=indices,
                 data_names=data_names,

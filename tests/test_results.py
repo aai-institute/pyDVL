@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 import operator
 import pickle
@@ -238,10 +240,20 @@ def test_extra_values(extra_values):
         assert k in repr_string
 
 
-@pytest.mark.parametrize("size", [0, 1, 10, 500])
-def test_from_random_creation(size):
-    result = ValuationResult.from_random(size)
+@pytest.mark.parametrize("size", [1, 10])
+@pytest.mark.parametrize("total", [None, 1.0, -1.0])
+def test_from_random_creation(size: int, total: float | None):
+    result = ValuationResult.from_random(size=size, total=total)
     assert len(result) == size
+    assert result.status == Status.Converged
+    assert result.algorithm == "random"
+    if total is not None:
+        assert np.isclose(np.sum(result.values), total)
+
+
+def test_from_random_creation_errors():
+    with pytest.raises(ValueError):
+        ValuationResult.from_random(size=0)
 
 
 def test_adding_random():
