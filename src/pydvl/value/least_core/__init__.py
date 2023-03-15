@@ -24,8 +24,6 @@ import warnings
 from enum import Enum
 from typing import Optional
 
-from deprecation import DeprecatedWarning
-
 from pydvl.utils.utility import Utility
 from pydvl.value.least_core.montecarlo import *
 from pydvl.value.least_core.naive import *
@@ -84,11 +82,9 @@ def compute_least_core_values(
     # TODO: remove this before releasing version 0.6.0
     if kwargs:
         warnings.warn(
-            DeprecatedWarning(
-                "Passing solver options as kwargs",
-                deprecated_in="0.5.1",
-                removed_in="0.6.0",
-                details="Use solver_options instead.",
+            DeprecationWarning(
+                "Passing solver options as kwargs was deprecated in 0.5.1, will "
+                "be removed in 0.6.0. `Use solver_options` instead."
             )
         )
         if solver_options is None:

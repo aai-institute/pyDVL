@@ -34,9 +34,8 @@ from time import time
 from typing import Callable, Optional, Type
 
 import numpy as np
-from deprecation import deprecated
+from deprecate import deprecated, void
 from numpy.typing import NDArray
-from scipy.stats import norm
 
 from pydvl.utils import Status
 from pydvl.value import ValuationResult
@@ -221,14 +220,10 @@ class AbsoluteStandardError(StoppingCriterion):
         return Status.Pending
 
 
-@deprecated(
-    deprecated_in="0.6.0",
-    removed_in="0.7.0",
-    details="This stopping criterion has been deprecated. "
-    "Use AbsoluteStandardError instead",
-)
 class StandardError(AbsoluteStandardError):
-    pass
+    @deprecated(target=AbsoluteStandardError, deprecated_in="0.5.1", remove_in="0.7.0")
+    def __init__(self, *args, **kwargs):
+        void(*args, **kwargs)
 
 
 class MaxChecks(StoppingCriterion):
