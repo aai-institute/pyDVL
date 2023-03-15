@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **New method**: Implements generalised semi-values for data valuation,
+  including Data Banzhaf and Beta Shapley, with configurable sampling strategies
+  [PR #319](https://github.com/appliedAI-Initiative/pyDVL/pull/319)
 - Adds kwargs parameter to `from_array` and `from_sklearn`
   Dataset and GroupedDataset class methods
   [PR #316](https://github.com/appliedAI-Initiative/pyDVL/pull/316)

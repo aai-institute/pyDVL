@@ -116,10 +116,13 @@ def permutation_montecarlo_shapley(
     r"""Computes an approximate Shapley value by sampling independent index
     permutations to approximate the sum:
 
-    $$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
-    [u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})].$$
+    $$
+    v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
+    \tilde{w}( | \sigma_{:i} | )[u(\sigma_{:i} \cup \{i\}) − u(\sigma_{:i})],
+    $$
 
-    See :ref:`data valuation` for details.
+    where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
+    position where $i$ appears (see :ref:`data valuation` for details).
 
     :param u: Utility object with model, data, and scoring function.
     :param done: function checking whether computation must stop.
