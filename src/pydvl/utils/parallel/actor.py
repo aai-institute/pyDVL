@@ -90,12 +90,15 @@ class Coordinator(Generic[Result], abc.ABC):
     number of iterations is reached.
 
     :param queue: Used by workers to report their results to the coordinator.
+    :param queue_timeout: Interval of time after which an operation
+        on the queue will time out.
     """
 
     _status: Status
 
-    def __init__(self, queue: QueueType):
+    def __init__(self, queue: QueueType, queue_timeout: int = 30):
         self.queue = queue
+        self.queue_timeout = queue_timeout
         self.result: Result
         self._status = Status.Pending
 
@@ -110,12 +113,12 @@ class Coordinator(Generic[Result], abc.ABC):
     @abc.abstractmethod
     def check_convergence(self) -> bool:
         """Evaluates the convergence criteria on the aggregated results."""
-        raise NotImplementedError()
+        ...
 
     @abc.abstractmethod
     def run(self, *args, **kwargs):
         """Runs the coordinator."""
-        raise NotImplementedError()
+        ...
 
 
 class Worker(abc.ABC):
@@ -125,6 +128,8 @@ class Worker(abc.ABC):
     :param worker_id: id used for reporting through maybe_progress.
     :param update_period: interval in seconds between different updates
         to and from the coordinator.
+    :param queue_timeout: Interval of time after which an operation
+        on the queue will time out.
     """
 
     def __init__(
@@ -133,13 +138,15 @@ class Worker(abc.ABC):
         worker_id: int,
         *,
         update_period: int = 30,
+        queue_timeout: int = 30,
     ):
         super().__init__()
         self.queue = queue
         self.worker_id = worker_id
         self.update_period = update_period
+        self.queue_timeout = queue_timeout
 
     @abc.abstractmethod
     def run(self, *args, **kwargs):
         """Runs the worker."""
-        raise NotImplementedError()
+        ...

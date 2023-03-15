@@ -3,7 +3,7 @@ import logging
 
 import numpy as np
 
-from pydvl.utils import ParallelConfig, Utility, running_moments
+from pydvl.utils import ParallelConfig, Utility, init_parallel_backend, running_moments
 from pydvl.value import ValuationResult
 from pydvl.value.stopping import StoppingCriterion
 
@@ -163,9 +163,9 @@ def truncated_montecarlo_shapley(
     truncation: TruncationPolicy,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
-    coordinator_update_period: int = 10,
-    worker_update_period: int = 5,
-    queue_timeout: int = 30,
+    coordinator_update_period: int = 30,
+    worker_update_period: int = 10,
+    queue_timeout: int = 5,
     max_queue_size: int = 100,
 ) -> ValuationResult:
     """Monte Carlo approximation to the Shapley value of data points.
@@ -206,7 +206,7 @@ def truncated_montecarlo_shapley(
     :param worker_update_period: interval in seconds between different
         updates to and from the coordinator
     :param queue_timeout: Interval of time after which an operation
-        on the queue will timeout.
+        on the queue will time out.
     :param max_queue_size: Size of the queue.
     :return: Object with the data values.
 
@@ -220,6 +220,8 @@ def truncated_montecarlo_shapley(
             "the Sequential parallel backend."
         )
 
+    parallel_backend = init_parallel_backend(config)
+
     queue = get_shapley_queue(maxsize=max_queue_size, config=config)
 
     coordinator = get_shapley_coordinator(
@@ -228,7 +230,7 @@ def truncated_montecarlo_shapley(
         queue=queue,
         done=done,
         config=config,
-    )  # type: ignore
+    )
 
     workers = get_shapley_workers(
         u,
@@ -239,8 +241,8 @@ def truncated_montecarlo_shapley(
         n_jobs=n_jobs,
     )
     for worker in workers:
-        worker.run(block=False)
+        worker.run.remote()
 
-    result = coordinator.run(block=True)
+    result = parallel_backend.get(coordinator.run.remote(), timeout=300)
 
     return result
