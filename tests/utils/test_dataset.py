@@ -83,3 +83,29 @@ def test_creating_grouped_dataset_from_x_y_arrays(train_size, kwargs):
 
     with pytest.raises(ValueError):
         GroupedDataset.from_arrays(X, y, data_groups=data_groups[len(X) // 2 :])
+
+
+def test_grouped_dataset_results():
+    """Test that data names are preserved in valuation results"""
+    X, y = make_classification()
+    train_size = 0.5
+    data_groups = np.random.randint(
+        low=0, high=3, size=int(train_size * len(X)), dtype=np.int_
+    ).flatten()
+    dataset = GroupedDataset.from_arrays(
+        X, y, data_groups=data_groups, train_size=train_size
+    )
+
+    from pydvl.value import ValuationResult
+
+    v = ValuationResult.zeros(indices=dataset.indices, data_names=dataset.data_names)
+    v2 = ValuationResult(
+        indices=dataset.indices,
+        values=np.ones(len(dataset)),
+        variances=np.zeros(len(dataset)),
+        data_names=dataset.data_names,
+    )
+    v += v2
+    assert np.all(v.values == 1)
+    assert np.all(v.names == np.array(dataset.data_names))
+    assert np.all([isinstance(x, np.int_) for x in v.names])
