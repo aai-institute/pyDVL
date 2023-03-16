@@ -5,7 +5,6 @@ from typing import List, NamedTuple, Optional, Sequence, Tuple
 
 import cvxpy as cp
 import numpy as np
-from deprecation import DeprecatedWarning
 from numpy.typing import NDArray
 
 from pydvl.utils import MapReduceJob, ParallelConfig, Status, Utility
@@ -57,11 +56,10 @@ def lc_solve_problem(
     # TODO: remove this before releasing version 0.6.0
     if options:
         warnings.warn(
-            DeprecatedWarning(
-                "Passing solver options as kwargs",
-                deprecated_in="0.5.1",
-                removed_in="0.6.0",
-                details="Use solver_options instead.",
+            DeprecationWarning(
+                "Passing solver options as kwargs was deprecated in "
+                "0.5.1, will be removed in 0.6.0. `Use solver_options` "
+                "instead."
             )
         )
         if solver_options is None:
@@ -256,10 +254,7 @@ def _solve_least_core_linear_program(
     e = cp.Variable()
 
     objective = cp.Minimize(e)
-    constraints = [
-        A_eq @ x == b_eq,
-        (A_lb @ x + e * np.ones(len(A_lb))) >= b_lb,
-    ]
+    constraints = [A_eq @ x == b_eq, (A_lb @ x + e * np.ones(len(A_lb))) >= b_lb]
 
     if non_negative_subsidy:
         constraints += [e >= 0]
@@ -333,10 +328,7 @@ def _solve_egalitarian_least_core_quadratic_program(
     x = cp.Variable(n_variables)
 
     objective = cp.Minimize(cp.norm2(x))
-    constraints = [
-        A_eq @ x == b_eq,
-        (A_lb @ x + subsidy * np.ones(len(A_lb))) >= b_lb,
-    ]
+    constraints = [A_eq @ x == b_eq, (A_lb @ x + subsidy * np.ones(len(A_lb))) >= b_lb]
     problem = cp.Problem(objective, constraints)
 
     try:

@@ -102,9 +102,10 @@ def _semivalues(
     :return: Object with the results.
     """
     n = len(u.data.indices)
-    result = ValuationResult.empty(
+    result = ValuationResult.zeros(
         algorithm=f"semivalue-{str(sampler)}-{coefficient.__name__}",
         indices=sampler.indices,
+        data_names=[u.data.data_names[i] for i in sampler.indices],
     )
 
     samples = takewhile(lambda _: not done(result), sampler)

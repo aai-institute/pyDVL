@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 import operator
 import pickle
@@ -27,7 +29,6 @@ def dummy_values(values, names):
     "values, names, ranks_asc", [([], [], []), ([2, 3, 1], ["a", "b", "c"], [2, 0, 1])]
 )
 def test_sorting(values, names, ranks_asc, dummy_values):
-
     dummy_values.sort(key="value")
     assert np.alltrue([it.value for it in dummy_values] == sorted(values))
     assert np.alltrue(dummy_values.indices == ranks_asc)
@@ -239,10 +240,20 @@ def test_extra_values(extra_values):
         assert k in repr_string
 
 
-@pytest.mark.parametrize("size", [0, 1, 10, 500])
-def test_from_random_creation(size):
-    result = ValuationResult.from_random(size)
+@pytest.mark.parametrize("size", [1, 10])
+@pytest.mark.parametrize("total", [None, 1.0, -1.0])
+def test_from_random_creation(size: int, total: float | None):
+    result = ValuationResult.from_random(size=size, total=total)
     assert len(result) == size
+    assert result.status == Status.Converged
+    assert result.algorithm == "random"
+    if total is not None:
+        assert np.isclose(np.sum(result.values), total)
+
+
+def test_from_random_creation_errors():
+    with pytest.raises(ValueError):
+        ValuationResult.from_random(size=0)
 
 
 def test_adding_random():
@@ -340,3 +351,60 @@ def test_adding_different_indices(
     assert np.allclose(v3.indices, np.array(expected_indices))
     assert np.allclose(v3.values, np.array(expected_values))
     assert np.all(v3.names == expected_names)
+
+
+@pytest.mark.parametrize(
+    "indices, index_t, data_names, name_t",
+    [
+        ([0, 1, 2], np.int32, ["a", "b", "c"], "<U1"),
+        ([4, 1, 7], np.int64, [4, 1, 7], np.int64),
+        ([4, 1, 7], np.int32, [4, 1, 7], np.float_),
+    ],
+)
+def test_types(indices, index_t, data_names, name_t):
+    """Test that types for indices and names are correctly preserved when adding
+    valuation results"""
+
+    v = ValuationResult(
+        indices=np.array(indices, dtype=index_t),
+        values=np.ones(len(indices), dtype=np.float_),
+        data_names=np.array(data_names, dtype=name_t),
+    )
+    assert v.indices.dtype == index_t
+    assert v.names.dtype == name_t
+
+    v2 = ValuationResult(
+        indices=np.array(indices),
+        values=np.ones(len(indices)),
+        variances=np.zeros(len(indices)),
+        data_names=data_names,
+    )
+    v += v2
+    assert v.indices.dtype == index_t
+    assert v.names.dtype == name_t
+
+
+@pytest.mark.parametrize("data_names", [["a", "b", "c"]])
+def test_names(data_names):
+    """Test that data names are preserved after addition of results"""
+
+    n = len(data_names)
+    v = ValuationResult.from_random(size=n, data_names=data_names)
+    v2 = ValuationResult.from_random(size=n, data_names=data_names)
+
+    v += v2
+    assert np.all(v.names == np.array(data_names))
+
+
+@pytest.mark.parametrize("n", [0, 5])
+def test_empty(n):
+    v = ValuationResult.empty()
+    assert len(v) == 0
+    v2 = ValuationResult(values=np.arange(n))
+    v += v2
+    assert len(v2) == n
+
+
+def test_empty_deprecation():
+    with pytest.warns(DeprecationWarning):
+        v3 = ValuationResult.empty(indices=[1, 2, 3])
