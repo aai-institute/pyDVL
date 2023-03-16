@@ -57,13 +57,13 @@ def exact_least_core(
     if n > 20:  # Arbitrary choice, will depend on time required, caching, etc.
         warnings.warn(f"Large dataset! Computation requires 2^{n} calls to model.fit()")
 
-    # TODO: remove this before releasing version 0.6.0
+    # TODO: remove this before releasing version 0.7.0
     if options:
         warnings.warn(
             DeprecationWarning(
                 "Passing solver options as kwargs was deprecated in "
-                "0.5.1, will "
-                "be removed in 0.6.0. `Use solver_options` instead."
+                "0.6.0, will "
+                "be removed in 0.7.0. `Use solver_options` instead."
             )
         )
         if solver_options is None:

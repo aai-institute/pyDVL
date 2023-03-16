@@ -79,12 +79,12 @@ def compute_least_core_values(
     """
     progress: bool = kwargs.pop("progress", False)
 
-    # TODO: remove this before releasing version 0.6.0
+    # TODO: remove this before releasing version 0.7.0
     if kwargs:
         warnings.warn(
             DeprecationWarning(
-                "Passing solver options as kwargs was deprecated in 0.5.1, will "
-                "be removed in 0.6.0. `Use solver_options` instead."
+                "Passing solver options as kwargs was deprecated in 0.6.0, will "
+                "be removed in 0.7.0. `Use solver_options` instead."
             )
         )
         if solver_options is None:

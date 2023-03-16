@@ -61,12 +61,12 @@ def montecarlo_least_core(
     :param progress: If True, shows a tqdm progress bar
     :return: Object with the data values and the least core value.
     """
-    # TODO: remove this before releasing version 0.6.0
+    # TODO: remove this before releasing version 0.7.0
     if options:
         warnings.warn(
             DeprecationWarning(
                 "Passing solver options as kwargs was deprecated in "
-                "0.5.1, will be removed in 0.6.0. `Use solver_options` "
+                "0.6.0, will be removed in 0.7.0. `Use solver_options` "
                 "instead."
             )
         )

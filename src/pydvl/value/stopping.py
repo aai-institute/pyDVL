@@ -262,7 +262,7 @@ class AbsoluteStandardError(StoppingCriterion):
 
 
 class StandardError(AbsoluteStandardError):
-    @deprecated(target=AbsoluteStandardError, deprecated_in="0.5.1", remove_in="0.7.0")
+    @deprecated(target=AbsoluteStandardError, deprecated_in="0.6.0", remove_in="0.8.0")
     def __init__(self, *args, **kwargs):
         void(*args, **kwargs)
 

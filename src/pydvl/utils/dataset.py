@@ -274,7 +274,7 @@ class Dataset:
             :class:`Dataset` constructor. Use this to pass e.g. ``is_multi_output``.
         :return: Object with the sklearn dataset
 
-        .. versionchanged:: 0.5.1
+        .. versionchanged:: 0.6.0
            Added kwargs to pass to the :class:`Dataset` constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
@@ -327,7 +327,7 @@ class Dataset:
 
         .. versionadded:: 0.4.0
 
-        .. versionchanged:: 0.5.1
+        .. versionchanged:: 0.6.0
            Added kwargs to pass to the :class:`Dataset` constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
@@ -377,7 +377,7 @@ class GroupedDataset(Dataset):
         :param kwargs: Additional keyword arguments to pass to the
             :class:`Dataset` constructor.
 
-        .. versionchanged:: 0.5.1
+        .. versionchanged:: 0.6.0
            Added ``group_names`` and forwarding of ``kwargs``
         """
         super().__init__(
@@ -520,7 +520,7 @@ class GroupedDataset(Dataset):
 
         .. versionadded:: 0.4.0
 
-        .. versionchanged:: 0.5.1
+        .. versionchanged:: 0.6.0
            Added kwargs to pass to the :class:`Dataset` constructor.
         """
         if data_groups is None:

@@ -664,7 +664,7 @@ class ValuationResult(
             :attr:`Status.Converged` by default.
         :raises ValueError: If ``size`` is less than 1.
 
-        .. versionchanged:: 0.5.1
+        .. versionchanged:: 0.6.0
             Added parameter ``total``. Check for zero size
         """
         if size < 1:
@@ -681,8 +681,8 @@ class ValuationResult(
     @classmethod
     @deprecated(
         target=True,
-        deprecated_in="0.5.1",
-        remove_in="0.7.0",
+        deprecated_in="0.6.0",
+        remove_in="0.8.0",
         args_mapping=dict(indices=None, data_names=None, n_samples=None),
         template_mgs="`%(source_name)s` is deprecated for generating zero-filled "
         "results, use `ValuationResult.zeros()` instead.",

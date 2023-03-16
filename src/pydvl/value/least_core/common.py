@@ -53,12 +53,12 @@ def lc_solve_problem(
             RuntimeWarning,
         )
 
-    # TODO: remove this before releasing version 0.6.0
+    # TODO: remove this before releasing version 0.7.0
     if options:
         warnings.warn(
             DeprecationWarning(
                 "Passing solver options as kwargs was deprecated in "
-                "0.5.1, will be removed in 0.6.0. `Use solver_options` "
+                "0.6.0, will be removed in 0.7.0. `Use solver_options` "
                 "instead."
             )
         )
