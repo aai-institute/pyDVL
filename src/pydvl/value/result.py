@@ -653,7 +653,7 @@ class ValuationResult(
     ) -> "ValuationResult":
         """Creates a :class:`ValuationResult` object and fills it with an array
         of random values from a uniform distribution in [-1,1]. The values can
-        be to sum to a given total number (doing so will change their range).
+        be made to sum up to a given total number (doing so will change their range).
 
         :param size: Number of values to generate
         :param total: If set, the values are normalized to sum to this number
