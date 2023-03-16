@@ -3,6 +3,7 @@ import pytest
 from sklearn.datasets import load_wine, make_classification
 
 from pydvl.utils.dataset import Dataset, GroupedDataset
+from pydvl.value.result import ValuationResult
 
 
 @pytest.fixture(scope="module", params=[0.1, 0.5, 0.8])
@@ -95,8 +96,6 @@ def test_grouped_dataset_results():
     dataset = GroupedDataset.from_arrays(
         X, y, data_groups=data_groups, train_size=train_size
     )
-
-    from pydvl.value import ValuationResult
 
     v = ValuationResult.zeros(indices=dataset.indices, data_names=dataset.data_names)
     v2 = ValuationResult(
