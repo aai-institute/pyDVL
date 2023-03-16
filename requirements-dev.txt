@@ -1,12 +1,12 @@
-black[jupyter] == 22.10.0
+black[jupyter] == 23.1.0
 isort == 5.12.0
 jupyter
 mypy == 0.982
 nbconvert>=7.2.9
 nbstripout == 0.6.1
 bump2version
-pre-commit==3.0.4
-pytest==7.2.1
+pre-commit==3.1.1
+pytest==7.2.2
 pytest-cov
 pytest-docker==0.12.0
 pytest-mock
@@ -15,4 +15,4 @@ ray[default] >= 0.8
 tox<4.0.0
 tox-wheel
 types-tqdm
-twine
+twine==4.0.2

@@ -14,6 +14,7 @@ from typing import cast
 import numpy as np
 
 from pydvl.utils.config import ParallelConfig
+from pydvl.utils.parallel import init_parallel_backend
 from pydvl.utils.parallel.actor import Coordinator, RayActorWrapper, Worker
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
@@ -42,14 +43,16 @@ def get_shapley_coordinator(
 
 
 def get_shapley_worker(
-    *args, config: ParallelConfig = ParallelConfig(), **kwargs
+    u: Utility, *args, config: ParallelConfig = ParallelConfig(), **kwargs
 ) -> "ShapleyWorker":
+    parallel_backend = init_parallel_backend(config)
+    u_id = parallel_backend.put(u)
     if config.backend == "ray":
         worker = cast(
-            ShapleyWorker, RayActorWrapper(ShapleyWorker, config, *args, **kwargs)
+            ShapleyWorker, RayActorWrapper(ShapleyWorker, config, u_id, *args, **kwargs)
         )
     elif config.backend == "sequential":
-        worker = ShapleyWorker(*args, **kwargs)
+        worker = ShapleyWorker(u_id, *args, **kwargs)
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
     return worker
@@ -74,7 +77,7 @@ class ShapleyCoordinator(Coordinator):
             reported yet, returns ``None``.
         """
         if len(self.worker_results) == 0:
-            return ValuationResult.empty()
+            return ValuationResult.empty()  # type: ignore
 
         # FIXME: inefficient, possibly unstable
         totals: ValuationResult = reduce(operator.add, self.worker_results)
@@ -158,14 +161,18 @@ class ShapleyWorker(Worker):
         terminating if it's ``True``.
         """
         while True:
-            acc = ValuationResult.empty(algorithm=self.algorithm)
+            acc = ValuationResult.empty()
             start_time = time()
             while (time() - start_time) < self.update_period:
                 if self.coordinator.is_done():
                     return
                 results = self._compute_marginals()
-                if np.any(np.isnan(results.values)):
-                    logger.warning("NaN values in current permutation, ignoring")
+                nans = np.isnan(results.values).sum()
+                if nans > 0:
+                    logger.warning(
+                        f"{nans} NaN values in current permutation, ignoring. "
+                        "Consider setting a default value for the Scorer"
+                    )
                     continue
                 acc += results
             self.coordinator.add_results(acc)

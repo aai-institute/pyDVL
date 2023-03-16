@@ -16,10 +16,121 @@ from pydvl.value.result import ValuationResult
 logger = logging.getLogger(__name__)
 
 
-__all__ = [
-    "montecarlo_least_core",
-    "mclc_prepare_problem",
-]
+__all__ = ["montecarlo_least_core", "mclc_prepare_problem"]
+
+
+def montecarlo_least_core(
+    u: Utility,
+    n_iterations: int,
+    *,
+    n_jobs: int = 1,
+    config: ParallelConfig = ParallelConfig(),
+    non_negative_subsidy: bool = False,
+    solver_options: Optional[dict] = None,
+    options: Optional[dict] = None,
+    progress: bool = False,
+) -> ValuationResult:
+    r"""Computes approximate Least Core values using a Monte Carlo approach.
+
+    $$
+    \begin{array}{lll}
+    \text{minimize} & \displaystyle{e} & \\
+    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
+    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) & ,
+    \forall S \in \{S_1, S_2, \dots, S_m \overset{\mathrm{iid}}{\sim} U(2^N) \}
+    \end{array}
+    $$
+
+    Where:
+
+    * $U(2^N)$ is the uniform distribution over the powerset of $N$.
+    * $m$ is the number of subsets that will be sampled and whose utility will
+      be computed and used to compute the data values.
+
+    :param u: Utility object with model, data, and scoring function
+    :param n_iterations: total number of iterations to use
+    :param n_jobs: number of jobs across which to distribute the computation
+    :param config: Object configuring parallel computation, with cluster
+        address, number of cpus, etc.
+    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        to be non-negative.
+    :param solver_options: Dictionary of options that will be used to select a solver
+        and to configure it. Refer to the following page for all possible options:
+        https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
+    :param options: (Deprecated) Dictionary of solver options. Use solver_options instead.
+    :param progress: If True, shows a tqdm progress bar
+    :return: Object with the data values and the least core value.
+    """
+    # TODO: remove this before releasing version 0.7.0
+    if options:
+        warnings.warn(
+            DeprecationWarning(
+                "Passing solver options as kwargs was deprecated in "
+                "0.6.0, will be removed in 0.7.0. `Use solver_options` "
+                "instead."
+            )
+        )
+        if solver_options is None:
+            solver_options = options
+        else:
+            solver_options.update(options)
+
+    problem = mclc_prepare_problem(
+        u, n_iterations, n_jobs=n_jobs, config=config, progress=progress
+    )
+    return lc_solve_problem(
+        problem,
+        u=u,
+        algorithm="montecarlo_least_core",
+        non_negative_subsidy=non_negative_subsidy,
+        solver_options=solver_options,
+    )
+
+
+def mclc_prepare_problem(
+    u: Utility,
+    n_iterations: int,
+    *,
+    n_jobs: int = 1,
+    config: ParallelConfig = ParallelConfig(),
+    progress: bool = False,
+) -> LeastCoreProblem:
+    """Prepares a linear problem by sampling subsets of the data.
+    Use this to separate the problem preparation from the solving with
+    :func:`~pydvl.value.least_core.common.lc_solve_problem`. Useful for
+    parallel execution of multiple experiments.
+
+    See :func:`montecarlo_least_core` for argument descriptions.
+    """
+    n = len(u.data)
+
+    if n_iterations < n:
+        warnings.warn(
+            f"Number of iterations '{n_iterations}' is smaller the size of the dataset '{n}'. "
+            f"This is not optimal because in the worst case we need at least '{n}' constraints "
+            "to satisfy the individual rationality condition."
+        )
+
+    if n_iterations > 2**n:
+        warnings.warn(
+            f"Passed n_iterations is greater than the number subsets! "
+            f"Setting it to 2^{n}",
+            RuntimeWarning,
+        )
+        n_iterations = 2**n
+
+    iterations_per_job = max(1, n_iterations // effective_n_jobs(n_jobs, config))
+
+    map_reduce_job: MapReduceJob["Utility", "LeastCoreProblem"] = MapReduceJob(
+        inputs=u,
+        map_func=_montecarlo_least_core,
+        reduce_func=_reduce_func,
+        map_kwargs=dict(n_iterations=iterations_per_job, progress=progress),
+        n_jobs=n_jobs,
+        config=config,
+    )
+
+    return map_reduce_job()
 
 
 def _montecarlo_least_core(
@@ -60,92 +171,3 @@ def _reduce_func(results: Iterable[LeastCoreProblem]) -> LeastCoreProblem:
     utility_values = np.concatenate(utility_values_list)
     A_lb = np.concatenate(A_lb_list)
     return LeastCoreProblem(utility_values, A_lb)
-
-
-def montecarlo_least_core(
-    u: Utility,
-    n_iterations: int,
-    *,
-    n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
-    options: Optional[dict] = None,
-    progress: bool = False,
-) -> ValuationResult:
-    r"""Computes approximate Least Core values using a Monte Carlo approach.
-
-    $$
-    \begin{array}{lll}
-    \text{minimize} & \displaystyle{e} & \\
-    \text{subject to} & \displaystyle\sum_{i\in N} x_{i} = v(N) & \\
-    & \displaystyle\sum_{i\in S} x_{i} + e \geq v(S) & ,
-    \forall S \in \{S_1, S_2, \dots, S_m \overset{\mathrm{iid}}{\sim} U(2^N) \}
-    \end{array}
-    $$
-
-    Where:
-
-    * $U(2^N)$ is the uniform distribution over the powerset of $N$.
-    * $m$ is the number of subsets that will be sampled and whose utility will
-      be computed and used to compute the data values.
-
-    :param u: Utility object with model, data, and scoring function
-    :param n_iterations: total number of iterations to use
-    :param n_jobs: number of jobs across which to distribute the computation
-    :param config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
-    :param options: Keyword arguments that will be used to select a solver
-        and to configure it. Refer to the following page for all possible options:
-        https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
-    :param progress: If True, shows a tqdm progress bar
-    :return: Object with the data values and the least core value.
-    """
-    problem = mclc_prepare_problem(
-        u, n_iterations, n_jobs=n_jobs, config=config, progress=progress
-    )
-    return lc_solve_problem(
-        problem, u=u, algorithm="montecarlo_least_core", **(options or {})
-    )
-
-
-def mclc_prepare_problem(
-    u: Utility,
-    n_iterations: int,
-    *,
-    n_jobs: int = 1,
-    config: ParallelConfig = ParallelConfig(),
-    progress: bool = False,
-) -> LeastCoreProblem:
-    """Prepares a linear problem by sampling subsets of the data.
-    Use this to separate the problem preparation from the solving with
-    :func:`~pydvl.value.least_core.common.lc_solve_problem`. Useful for
-    parallel execution of multiple experiments.
-
-    See :func:`montecarlo_least_core` for argument descriptions.
-    """
-    n = len(u.data)
-
-    if n_iterations < n:
-        raise ValueError(
-            "Number of iterations should be greater than the size of the dataset"
-        )
-
-    if n_iterations > 2**n:
-        warnings.warn(
-            f"Passed n_iterations is greater than the number subsets! "
-            f"Setting it to 2^{n}",
-            RuntimeWarning,
-        )
-        n_iterations = 2**n
-
-    iterations_per_job = max(1, n_iterations // effective_n_jobs(n_jobs, config))
-
-    map_reduce_job: MapReduceJob["Utility", "LeastCoreProblem"] = MapReduceJob(
-        inputs=u,
-        map_func=_montecarlo_least_core,
-        reduce_func=_reduce_func,
-        map_kwargs=dict(n_iterations=iterations_per_job, progress=progress),
-        n_jobs=n_jobs,
-        config=config,
-    )
-
-    return map_reduce_job()

@@ -123,7 +123,6 @@ def batched_preconditioned_conjugate_gradient(
     atol = np.linalg.norm(b, axis=1) * rtol
 
     while iteration < max_iterations:
-
         # remaining fields
         iteration += 1
         not_yet_converged_indices = np.argwhere(np.logical_not(converged))[:, 0]

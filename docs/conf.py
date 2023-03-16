@@ -43,7 +43,6 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx_math_dollar",
     "sphinx.ext.todo",
-    "sphinx_rtd_theme",
     "hoverxref.extension",  # This only works on read the docs
     "sphinx_design",
     "sphinxcontrib.bibtex",
@@ -97,6 +96,16 @@ nbsphinx_prolog = r"""
         .nbinput .prompt,
         .nboutput .prompt {
             display: none;
+        }
+        @media not print {
+            [data-theme='dark'] .output_area img {
+                filter: invert(0.9);
+            }
+            @media (prefers-color-scheme: dark) {
+                :root:not([data-theme="light"]) .output_area img {
+                    filter: invert(0.9);
+                }
+            }
         }
     </style>
 """
@@ -325,7 +334,7 @@ html_static_path = []
 
 # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
 html_show_copyright = True
-copyright = "2022 AppliedAI Institute gGmbH"
+copyright = "AppliedAI Institute gGmbH"
 
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the

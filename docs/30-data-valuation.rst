@@ -241,6 +241,7 @@ v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}}
 .. code-block:: python
 
    from pydvl.value import compute_shapley_value
+
    utility = Utility(...)
    values = compute_shapley_values(utility, mode="combinatorial_exact")
    df = values.to_dataframe(column='value')
@@ -264,7 +265,8 @@ same pattern:
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
-   from pydvl.value.shapley import compute_shapley_values
+   from pydvl.value import compute_shapley_values
+
    model = ...
    data = Dataset(...)
    utility = Utility(model, data)
@@ -303,7 +305,8 @@ values in pyDVL. First construct the dataset and utility, then call
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
-   from pydvl.value.shapley import compute_shapley_values
+   from pydvl.value import compute_shapley_values
+
    model = ...
    dataset = Dataset(...)
    utility = Utility(data, model)
@@ -329,11 +332,11 @@ It uses permutations over indices instead of subsets:
 
 $$
 v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
-[u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})]
+[u(\sigma_{:i} \cup \{i\}) − u(\sigma_{:i})]
 ,$$
 
-where $\sigma_i$ denotes the set of indices in permutation sigma up until the
-position of index $i$. To approximate this sum (with $\mathcal{O}(n!)$ terms!)
+where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
+position where $i$ appears. To approximate this sum (with $\mathcal{O}(n!)$ terms!)
 one uses Monte Carlo sampling of permutations, something which has surprisingly
 low sample complexity. By adding early stopping, the result is the so-called
 **Truncated Monte Carlo Shapley** (:footcite:t:`ghorbani_data_2019`), which is
@@ -342,7 +345,7 @@ efficient enough to be useful in some applications.
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
-   from pydvl.value.shapley import compute_shapley_values
+   from pydvl.value import compute_shapley_values
 
    model = ...
    data = Dataset(...)
@@ -364,7 +367,7 @@ and can be used in pyDVL with:
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
-   from pydvl.value.shapley import compute_shapley_values
+   from pydvl.value import compute_shapley_values
    from sklearn.neighbors import KNeighborsClassifier
 
    model = KNeighborsClassifier(n_neighbors=5)
@@ -410,7 +413,7 @@ its variance.
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
-   from pydvl.value.shapley import compute_shapley_values
+   from pydvl.value import compute_shapley_values
 
    model = ...
    data = Dataset(...)
@@ -449,7 +452,7 @@ It satisfies the following 2 properties:
   The sum of payoffs to the agents in any coalition S is at
   least as large as the amount that these agents could earn by
   forming a coalition on their own.
-  $$\sum_{x_i\in S} v_u(x_i) \geq u(S), \forall S \subseteq D\,$$
+  $$\sum_{x_i\in S} v_u(x_i) \geq u(S), \forall S \subset D\,$$
 
 The second property states that the sum of payoffs to the agents
 in any subcoalition $S$ is at least as large as the amount that
@@ -463,7 +466,7 @@ By relaxing the coalitional rationality property by a subsidy $e \gt 0$,
 we are then able to find approximate payoffs:
 
 $$
-\sum_{x_i\in S} v_u(x_i) + e \geq u(S), \forall S \subseteq D\
+\sum_{x_i\in S} v_u(x_i) + e \geq u(S), \forall S \subset D, S \neq \emptyset \
 ,$$
 
 The least core value $v$ of the $i$-th sample in dataset $D$ wrt.
@@ -473,7 +476,7 @@ $$
 \begin{array}{lll}
 \text{minimize} & e & \\
 \text{subject to} & \sum_{x_i\in D} v_u(x_i) = u(D) & \\
-& \sum_{x_i\in S} v_u(x_i) + e \geq u(S) &, \forall S \subseteq D \\
+& \sum_{x_i\in S} v_u(x_i) + e \geq u(S) &, \forall S \subset D, S \neq \emptyset  \\
 \end{array}
 $$
 
@@ -487,11 +490,12 @@ As such it returns as exact a value as the utility function allows
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
-   from pydvl.value.least_core import exact_least_core
+   from pydvl.value import compute_least_core_values
+
    model = ...
    dataset = Dataset(...)
    utility = Utility(data, model)
-   values = exact_least_core(utility)
+   values = compute_least_core_values(utility, mode="exact")
 
 Monte Carlo Least Core
 ----------------------
@@ -515,16 +519,20 @@ where $e^{*}$ is the optimal least core subsidy.
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
-   from pydvl.value.least_core import montecarlo_least_core
+   from pydvl.value import compute_least_core_values
+
    model = ...
    dataset = Dataset(...)
    n_iterations = ...
    utility = Utility(data, model)
-   values = montecarlo_least_core(utility, n_iterations=n_iterations)
+   values = compute_least_core_values(
+       utility, mode="montecarlo", n_iterations=n_iterations
+   )
 
 .. note::
 
-   ``n_iterations`` needs to be at least equal to the number of data points.
+   Although any number is supported, it is best to choose ``n_iterations`` to be
+   at least equal to the number of data points.
 
 Because computing the Least Core values requires the solution of a linear and a
 quadratic problem *after* computing all the utility values, we offer the
@@ -538,6 +546,7 @@ list of problems to solve, then solve them in parallel with
 
    from pydvl.utils import Dataset, Utility
    from pydvl.value.least_core import mclc_prepare_problem, lc_solve_problems
+
    model = ...
    dataset = Dataset(...)
    n_iterations = ...
@@ -548,15 +557,102 @@ list of problems to solve, then solve them in parallel with
    values = lc_solve_problems(problems)
 
 
-Other methods
-=============
+Semi-values
+===========
 
-There are other game-theoretic concepts in pyDVL's roadmap, based on the notion
-of semivalue, which is a generalization to different weighting schemes:
-in particular **Banzhaf indices** and **Beta Shapley**, with better numerical
-and rank stability in certain situations.
+Shapley values are a particular case of a more general concept called semi-value,
+which is a generalization to different weighting schemes. A **semi-value** is
+any valuation function with the form:
 
-Contributions are welcome!
+$$
+v\_\text{semi}(i) = \sum_{i=1}^n w(k)
+\sum_{S \subset D\_{-i}^{(k)}} [U(S\_{+i})-U(S)],
+$$
+
+where the coefficients $w(k)$ satisfy the property:
+
+$$\sum_{k=1}^n w(k) = 1.$$
+
+Two instances of this are **Banzhaf indices** (:footcite:t:`wang_data_2022`),
+and **Beta Shapley** (:footcite:t:`kwon_beta_2022`), with better numerical and
+rank stability in certain situations.
+
+.. note::
+
+   Shapley values are a particular case of semi-values and can therefore also be
+   computed with the methods described here. However, as of version 0.6.0, we
+   recommend using :func:`~pydvl.value.shapley.compute_shapley_values` instead,
+   in particular because it implements truncated Monte Carlo sampling for faster
+   computation.
+
+
+Beta Shapley
+^^^^^^^^^^^^
+
+For some machine learning applications, where the utility is typically the
+performance when trained on a set $S \subset D$, diminishing returns are often
+observed when computing the marginal utility of adding a new data point.
+
+Beta Shapley is a weighting scheme that uses the Beta function to place more
+weight on subsets deemed to be more informative. The weights are defined as:
+
+$$
+w(k) := \frac{B(k+\beta, n-k+1+\alpha)}{B(\alpha, \beta)},
+$$
+
+where $B$ is the `Beta function <https://en.wikipedia.org/wiki/Beta_function>`_,
+and $\alpha$ and $\beta$ are parameters that control the weighting of the
+subsets. Setting both to 1 recovers Shapley values, and setting $\alpha = 1$, and
+$\beta = 16$ is reported in :footcite:t:`kwon_beta_2022` to be a good choice for
+some applications. See however :ref:`banzhaf indices` for an alternative choice
+of weights which is reported to work better.
+
+.. code-block:: python
+
+   from pydvl.utils import Dataset, Utility
+   from pydvl.value import compute_semivalues
+
+   model = ...
+   data = Dataset(...)
+   utility = Utility(model, data)
+   values = compute_semivalues(
+       u=utility, mode="beta_shapley", done=MaxUpdates(500), alpha=1, beta=16
+   )
+
+.. _banzhaf indices:
+
+Banzhaf indices
+^^^^^^^^^^^^^^^
+
+As noted below in :ref:`problems of data values`, the Shapley value can be very
+sensitive to variance in the utility function. For machine learning applications,
+where the utility is typically the performance when trained on a set $S \subset
+D$, this variance is often largest for smaller subsets $S$. It is therefore
+reasonable to try reducing the relative contribution of these subsets with
+adequate weights.
+
+One such choice of weights is the Banzhaf index, which is defined as the
+constant:
+
+$$w(k) := 2^{n-1},$$
+
+for all set sizes $k$. The intuition for picking a constant weight is that for
+any choice of weight function $w$, one can always construct a utility with
+higher variance where $w$ is greater. Therefore, in a worst-case sense, the best
+one can do is to pick a constant weight.
+
+The authors of :footcite:t:`wang_data_2022` show that Banzhaf indices are more
+robust to variance in the utility function than Shapley and Beta Shapley values.
+
+.. code-block:: python
+
+   from pydvl.utils import Dataset, Utility
+   from pydvl.value import compute_semivalues
+
+   model = ...
+   data = Dataset(...)
+   utility = Utility(model, data)
+   values = compute_semivalues( u=utility, mode="banzhaf", done=MaxUpdates(500))
 
 
 .. _problems of data values:

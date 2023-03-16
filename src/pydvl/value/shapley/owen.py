@@ -52,8 +52,10 @@ def _owen_sampling_shapley(
     q_stop = {OwenAlgorithm.Standard: 1.0, OwenAlgorithm.Antithetic: 0.5}
     q_steps = np.linspace(start=0, stop=q_stop[method], num=max_q)
 
-    result = ValuationResult.empty(
-        algorithm="owen_sampling_shapley_" + str(method), indices=indices
+    result = ValuationResult.zeros(
+        algorithm="owen_sampling_shapley_" + str(method),
+        indices=np.array(indices, dtype=np.int_),
+        data_names=[u.data.data_names[i] for i in indices],
     )
 
     done = MinUpdates(1)
