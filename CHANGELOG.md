@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗
 
 - Fixes in `ValuationResult`: bugs around data names, semantics of
   `empty()`, new method `zeros()` and normalised random values
