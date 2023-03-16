@@ -1,11 +1,27 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗
 
+- Fixes in `ValuationResult`: bugs around data names, semantics of
+  `empty()`, new method `zeros()` and normalised random values
+  [PR #327](https://github.com/appliedAI-Initiative/pyDVL/pull/327)
+- **New method**: Implements generalised semi-values for data valuation,
+  including Data Banzhaf and Beta Shapley, with configurable sampling strategies
+  [PR #319](https://github.com/appliedAI-Initiative/pyDVL/pull/319)
+- Adds kwargs parameter to `from_array` and `from_sklearn`
+  Dataset and GroupedDataset class methods
+  [PR #316](https://github.com/appliedAI-Initiative/pyDVL/pull/316)
+- PEP-561 conformance: added `py.typed`
+  [PR #307](https://github.com/appliedAI-Initiative/pyDVL/pull/307)
+- Removed default non-negativity constraint on least core subsidy
+  and added instead a `non_negative_subsidy` boolean flag.
+  Renamed `options` to `solver_options` and pass it as dict.
+  Change default least-core solver to SCS with 10000 max_iters.
+  [PR #304](https://github.com/appliedAI-Initiative/pyDVL/pull/304)
 - Cleanup: removed unnecessary decorator `@unpackable`
   [PR #233](https://github.com/appliedAI-Initiative/pyDVL/pull/233)
-- Stopping criteria: fixed problem with `StandardError` and enable proper composition
-  of index convergence statuses. Fixed a bug with `n_jobs` in
+- Stopping criteria: fixed problem with `StandardError` and enable proper
+  composition of index convergence statuses. Fixed a bug with `n_jobs` in
   `truncated_montecarlo_shapley`.
   [PR #300](https://github.com/appliedAI-Initiative/pyDVL/pull/300) and
   [PR #305](https://github.com/appliedAI-Initiative/pyDVL/pull/305)

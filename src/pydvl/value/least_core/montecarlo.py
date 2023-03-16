@@ -16,10 +16,7 @@ from pydvl.value.result import ValuationResult
 logger = logging.getLogger(__name__)
 
 
-__all__ = [
-    "montecarlo_least_core",
-    "mclc_prepare_problem",
-]
+__all__ = ["montecarlo_least_core", "mclc_prepare_problem"]
 
 
 def montecarlo_least_core(
@@ -28,6 +25,8 @@ def montecarlo_least_core(
     *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
+    non_negative_subsidy: bool = False,
+    solver_options: Optional[dict] = None,
     options: Optional[dict] = None,
     progress: bool = False,
 ) -> ValuationResult:
@@ -53,17 +52,38 @@ def montecarlo_least_core(
     :param n_jobs: number of jobs across which to distribute the computation
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param options: Keyword arguments that will be used to select a solver
+    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        to be non-negative.
+    :param solver_options: Dictionary of options that will be used to select a solver
         and to configure it. Refer to the following page for all possible options:
         https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
+    :param options: (Deprecated) Dictionary of solver options. Use solver_options instead.
     :param progress: If True, shows a tqdm progress bar
     :return: Object with the data values and the least core value.
     """
+    # TODO: remove this before releasing version 0.7.0
+    if options:
+        warnings.warn(
+            DeprecationWarning(
+                "Passing solver options as kwargs was deprecated in "
+                "0.6.0, will be removed in 0.7.0. `Use solver_options` "
+                "instead."
+            )
+        )
+        if solver_options is None:
+            solver_options = options
+        else:
+            solver_options.update(options)
+
     problem = mclc_prepare_problem(
         u, n_iterations, n_jobs=n_jobs, config=config, progress=progress
     )
     return lc_solve_problem(
-        problem, u=u, algorithm="montecarlo_least_core", **(options or {})
+        problem,
+        u=u,
+        algorithm="montecarlo_least_core",
+        non_negative_subsidy=non_negative_subsidy,
+        solver_options=solver_options,
     )
 
 

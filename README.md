@@ -54,6 +54,13 @@ methods from the following papers:
   [Towards Efficient Data Valuation Based on the Shapley Value](http://proceedings.mlr.press/v89/jia19a.html).
   In 22nd International Conference on Artificial Intelligence and Statistics,
   1167–76. PMLR, 2019.
+- Wang, Jiachen T., and Ruoxi Jia. 
+  [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://doi.org/10.48550/arXiv.2205.15466).
+  arXiv, October 22, 2022.
+- Kwon, Yongchan, and James Zou.
+  [Beta Shapley: A Unified and Noise-Reduced Data Valuation Framework for Machine Learning](http://arxiv.org/abs/2110.14049).
+  In Proceedings of the 25th International Conference on Artificial Intelligence
+  and Statistics (AISTATS) 2022, Vol. 151. Valencia, Spain: PMLR, 2022.
 
 Influence Functions compute the effect that single points have on an estimator /
 model. We implement methods from the following papers:
@@ -105,11 +112,11 @@ data = Dataset.from_sklearn(load_breast_cancer(), train_size=0.7)
 model = LogisticRegression()
 u = Utility(model, data, Scorer("accuracy", default=0.0))
 values = compute_shapley_values(
-        u,
-        mode=ShapleyMode.TruncatedMontecarlo,
-        done=MaxUpdates(100) | AbsoluteStandardError(threshold=0.01),
-        truncation=RelativeTruncation(u, rtol=0.01),
-        )
+    u,
+    mode=ShapleyMode.TruncatedMontecarlo,
+    done=MaxUpdates(100) | AbsoluteStandardError(threshold=0.01),
+    truncation=RelativeTruncation(u, rtol=0.01),
+)
 ```
 
 For more instructions and information refer to [Getting

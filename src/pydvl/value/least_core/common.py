@@ -20,14 +20,20 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-LeastCoreProblem = NamedTuple(
-    "LeastCoreProblem",
-    [("utility_values", NDArray[np.float_]), ("A_lb", NDArray[np.float_])],
-)
+
+class LeastCoreProblem(NamedTuple):
+    utility_values: NDArray[np.float_]
+    A_lb: NDArray[np.float_]
 
 
 def lc_solve_problem(
-    problem: LeastCoreProblem, *, u: Utility, algorithm: str, **options
+    problem: LeastCoreProblem,
+    *,
+    u: Utility,
+    algorithm: str,
+    non_negative_subsidy: bool = False,
+    solver_options: Optional[dict] = None,
+    **options,
 ) -> ValuationResult:
     """Solves a linear problem prepared by :func:`mclc_prepare_problem`.
     Useful for parallel execution of multiple experiments by running this as a
@@ -47,6 +53,29 @@ def lc_solve_problem(
             RuntimeWarning,
         )
 
+    # TODO: remove this before releasing version 0.7.0
+    if options:
+        warnings.warn(
+            DeprecationWarning(
+                "Passing solver options as kwargs was deprecated in "
+                "0.6.0, will be removed in 0.7.0. `Use solver_options` "
+                "instead."
+            )
+        )
+        if solver_options is None:
+            solver_options = options
+        else:
+            solver_options.update(options)
+
+    if solver_options is None:
+        solver_options = {}
+
+    if "solver" not in solver_options:
+        solver_options["solver"] = cp.SCS
+
+    if "max_iters" not in solver_options and solver_options["solver"] == cp.SCS:
+        solver_options["max_iters"] = 10000
+
     logger.debug("Removing possible duplicate values in lower bound array")
     b_lb = problem.utility_values
     A_lb, unique_indices = np.unique(problem.A_lb, return_index=True, axis=0)
@@ -54,16 +83,41 @@ def lc_solve_problem(
 
     logger.debug("Building equality constraint")
     A_eq = np.ones((1, n))
-    # We might have already computed the total utility. That's the index of the
-    # row in A_lb with all ones.
-    total_utility_index = np.where(A_lb.sum(axis=1) == n)[0]
-    if len(total_utility_index) == 0:
+    # We might have already computed the total utility one or more times.
+    # This is the index of the row(s) in A_lb with all ones.
+    total_utility_indices = np.where(A_lb.sum(axis=1) == n)[0]
+    if len(total_utility_indices) == 0:
         b_eq = np.array([u(u.data.indices)])
     else:
-        b_eq = b_lb[total_utility_index]
+        b_eq = b_lb[total_utility_indices]
+        # Remove the row(s) corresponding to the total utility
+        # from the lower bound constraints
+        # because given the equality constraint
+        # it is the same as using the constraint e >= 0
+        # (i.e. setting non_negative_subsidy = True).
+        mask = np.ones_like(b_lb, dtype=bool)
+        mask[total_utility_indices] = False
+        b_lb = b_lb[mask]
+        A_lb = A_lb[mask]
+
+    # Remove the row(s) corresponding to the empty subset
+    # because, given u(∅) = (which is almost always the case,
+    # it is the same as using the constraint e >= 0
+    # (i.e. setting non_negative_subsidy = True).
+    emptyset_utility_indices = np.where(A_lb.sum(axis=1) == 0)[0]
+    if len(emptyset_utility_indices) > 0:
+        mask = np.ones_like(b_lb, dtype=bool)
+        mask[emptyset_utility_indices] = False
+        b_lb = b_lb[mask]
+        A_lb = A_lb[mask]
 
     _, subsidy = _solve_least_core_linear_program(
-        A_eq=A_eq, b_eq=b_eq, A_lb=A_lb, b_lb=b_lb, **options
+        A_eq=A_eq,
+        b_eq=b_eq,
+        A_lb=A_lb,
+        b_lb=b_lb,
+        non_negative_subsidy=non_negative_subsidy,
+        solver_options=solver_options,
     )
 
     values: Optional[NDArray[np.float_]]
@@ -81,7 +135,7 @@ def lc_solve_problem(
             b_eq=b_eq,
             A_lb=A_lb,
             b_lb=b_lb,
-            **options,
+            solver_options=solver_options,
         )
 
         if values is None:
@@ -109,6 +163,8 @@ def lc_solve_problems(
     algorithm: str,
     config: ParallelConfig = ParallelConfig(),
     n_jobs: int = 1,
+    non_negative_subsidy: bool = True,
+    solver_options: Optional[dict] = None,
     **options,
 ) -> List[ValuationResult]:
     """Solves a list of linear problems in parallel.
@@ -120,7 +176,9 @@ def lc_solve_problems(
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param n_jobs: Number of parallel jobs to run.
-    :param options: Additional options to pass to the solver.
+    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        to be non-negative.
+    :param solver_options: Additional options to pass to the solver.
     :return: List of solutions.
     """
 
@@ -134,7 +192,13 @@ def lc_solve_problems(
     ] = MapReduceJob(
         inputs=problems,
         map_func=_map_func,
-        map_kwargs=dict(u=u, algorithm=algorithm, **options),
+        map_kwargs=dict(
+            u=u,
+            algorithm=algorithm,
+            non_negative_subsidy=non_negative_subsidy,
+            solver_options=solver_options,
+            **options,
+        ),
         reduce_func=lambda x: list(itertools.chain(*x)),
         config=config,
         n_jobs=n_jobs,
@@ -149,7 +213,8 @@ def _solve_least_core_linear_program(
     b_eq: NDArray[np.float_],
     A_lb: NDArray[np.float_],
     b_lb: NDArray[np.float_],
-    **options,
+    solver_options: dict,
+    non_negative_subsidy: bool = False,
 ) -> Tuple[Optional[NDArray[np.float_]], Optional[float]]:
     """Solves the Least Core's linear program using cvxopt.
 
@@ -160,11 +225,12 @@ def _solve_least_core_linear_program(
         & A_{lb} x + e \ge b_{lb},\\
         & A_{eq} x = b_{eq},\\
         & x in \mathcal{R}^n , \\
-        & e \ge 0
 
      where :math:`x` is a vector of decision variables; ,
     :math:`b_{ub}`, :math:`b_{eq}`, :math:`l`, and :math:`u` are vectors; and
     :math:`A_{ub}` and :math:`A_{eq}` are matrices.
+
+    if `non_negative_subsidy` is True, then an additional constraint $e \ge 0$ is used.
 
     :param A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies the
         coefficients of a linear equality constraint on ``x``.
@@ -174,6 +240,8 @@ def _solve_least_core_linear_program(
         coefficients of a linear inequality constraint on ``x``.
     :param b_lb: The inequality constraint vector. Each element represents a
         lower bound on the corresponding value of ``A_lb @ x``.
+    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        to be non-negative.
     :param options: Keyword arguments that will be used to select a solver
         and to configure it. For all possible options, refer to `cvxpy's documentation
         <https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options>`_
@@ -186,40 +254,27 @@ def _solve_least_core_linear_program(
     e = cp.Variable()
 
     objective = cp.Minimize(e)
-    constraints = [
-        e >= 0,
-        A_eq @ x == b_eq,
-        (A_lb @ x + e * np.ones(len(A_lb))) >= b_lb,
-    ]
+    constraints = [A_eq @ x == b_eq, (A_lb @ x + e * np.ones(len(A_lb))) >= b_lb]
+
+    if non_negative_subsidy:
+        constraints += [e >= 0]
+
     problem = cp.Problem(objective, constraints)
 
-    solver = options.pop("solver", cp.ECOS)
-
     try:
-        problem.solve(solver=solver, **options)
+        problem.solve(**solver_options)
     except cp.error.SolverError as err:
         raise ValueError("Could not solve linear program") from err
 
     if problem.status in cp.settings.SOLUTION_PRESENT:
         logger.debug("Problem was solved")
-        if problem.status in [cp.settings.OPTIMAL_INACCURATE, cp.settings.USER_LIMIT]:
+        if problem.status == cp.settings.USER_LIMIT:
             warnings.warn(
                 "Solver terminated early. Consider increasing the solver's "
-                "maximum number of iterations in options",
+                "maximum number of iterations in solver_options",
                 RuntimeWarning,
             )
         subsidy = e.value.item()
-        # HACK: sometimes the returned least core subsidy
-        # is negative but very close to 0
-        # to avoid any problems with the subsequent quadratic program
-        # we just set it to 0.0
-        if subsidy < 0:
-            warnings.warn(
-                f"Least core subsidy e={subsidy} is negative but close to zero. "
-                "It will be set to 0.0",
-                RuntimeWarning,
-            )
-            subsidy = 0.0
         return x.value, subsidy
 
     if problem.status in cp.settings.INF_OR_UNB:
@@ -236,7 +291,7 @@ def _solve_egalitarian_least_core_quadratic_program(
     b_eq: NDArray[np.float_],
     A_lb: NDArray[np.float_],
     b_lb: NDArray[np.float_],
-    **options,
+    solver_options: dict,
 ) -> Optional[NDArray[np.float_]]:
     """Solves the egalitarian Least Core's quadratic program using cvxopt.
 
@@ -262,39 +317,31 @@ def _solve_egalitarian_least_core_quadratic_program(
         coefficients of a linear inequality constraint on ``x``.
     :param b_lb: The inequality constraint vector. Each element represents a
         lower bound on the corresponding value of ``A_lb @ x``.
-    :param options: Keyword arguments that will be used to select a solver
+    :param solver_options: Keyword arguments that will be used to select a solver
         and to configure it. Refer to the following page for all possible options:
         https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
     """
     logger.debug(f"Solving quadratic program : {A_eq=}, {b_eq=}, {A_lb=}, {b_lb=}")
-
-    if subsidy < 0:
-        raise ValueError("The least core subsidy must be non-negative.")
 
     n_variables = A_eq.shape[1]
 
     x = cp.Variable(n_variables)
 
     objective = cp.Minimize(cp.norm2(x))
-    constraints = [
-        A_eq @ x == b_eq,
-        (A_lb @ x + subsidy * np.ones(len(A_lb))) >= b_lb,
-    ]
+    constraints = [A_eq @ x == b_eq, (A_lb @ x + subsidy * np.ones(len(A_lb))) >= b_lb]
     problem = cp.Problem(objective, constraints)
 
-    solver = options.pop("solver", cp.ECOS)
-
     try:
-        problem.solve(solver=solver, **options)
+        problem.solve(**solver_options)
     except cp.error.SolverError as err:
         raise ValueError("Could not solve quadratic program") from err
 
     if problem.status in cp.settings.SOLUTION_PRESENT:
         logger.debug("Problem was solved")
-        if problem.status in [cp.settings.OPTIMAL_INACCURATE, cp.settings.USER_LIMIT]:
+        if problem.status == cp.settings.USER_LIMIT:
             warnings.warn(
                 "Solver terminated early. Consider increasing the solver's "
-                "maximum number of iterations in options",
+                "maximum number of iterations in solver_options",
                 RuntimeWarning,
             )
         return x.value  # type: ignore

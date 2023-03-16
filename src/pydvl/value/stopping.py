@@ -25,7 +25,8 @@ inherit from this class and implement the abstract methods
 Objects of type :class:`StoppingCriterion` can be composed with the binary
 operators ``&`` (*and*), and ``|`` (*or*), following the truth tables of
 :class:`~pydvl.utils.status.Status`. The unary operator ``~`` (*not*) is also
-supported.
+supported. See :class:`StoppingCriterion` for details on how these operations
+affect the behavior of the stopping criteria.
 """
 
 import abc
@@ -34,9 +35,8 @@ from time import time
 from typing import Callable, Optional, Type
 
 import numpy as np
-from deprecation import deprecated
+from deprecate import deprecated, void
 from numpy.typing import NDArray
-from scipy.stats import norm
 
 from pydvl.utils import Status
 from pydvl.value import ValuationResult
@@ -62,11 +62,38 @@ class StoppingCriterion(abc.ABC):
     """A composable callable object to determine whether a computation
     must stop.
 
-    A ``StoppingCriterion`` takes a :class:`~pydvl.value.result.ValuationResult`
-    and returns a :class:`~pydvl.value.result.Status~. Objects of this type
-    can be composed with the binary operators ``&`` (*and*), and ``|`` (*or*),
-    following the truth tables of :class:`~pydvl.utils.status.Status`. The
-    unary operator ``~`` (*not*) is also supported.
+    A ``StoppingCriterion`` is a callable taking a
+    :class:`~pydvl.value.result.ValuationResult` and returning a
+    :class:`~pydvl.value.result.Status`. It also keeps track of individual
+    convergence of values with :meth:`converged`, and reports the overall
+    completion of the computation with :meth:`completion`.
+
+    Instances of ``StoppingCriterion`` can be composed with the binary operators
+    ``&`` (*and*), and ``|`` (*or*), following the truth tables of
+    :class:`~pydvl.utils.status.Status`. The unary operator ``~`` (*not*) is
+    also supported. These boolean operations act according to the following
+    rules:
+
+    - The results of :meth:`_check` are combined with the operator. See
+      :class:`~pydvl.utils.status.Status` for the truth tables.
+    - The results of :meth:`converged` are combined with the operator (returning
+      another boolean array).
+    - The :meth:`completion` method returns the min, max, or the complement to 1
+      of the completions of the operands, for AND, OR and NOT respectively. This
+      is required for cases where one of the criteria does not keep track of the
+      convergence of single values, e.g. :class:`MaxUpdates`, because
+      :meth:`completion` by default returns the mean of the boolean convergence
+      array.
+
+    .. rubric:: Subclassing
+
+    Subclassing this class requires implementing a :meth:`_check` method that
+    returns a :class:`~pydvl.utils.status.Status` object based on a given
+    :class:`~pydvl.value.result.ValuationResult`. This method should update the
+    :attr:`converged` attribute, which is a boolean array indicating whether
+    the value for each index has converged. When this is not possible,
+    :meth:`completion` should be overridden to provide an overall completion
+    value, since the default implementation returns the mean of :attr:`converged`.
 
     :param modify_result: If ``True`` the status of the input
         :class:`~pydvl.value.result.ValuationResult` is modified in place after
@@ -108,6 +135,7 @@ class StoppingCriterion(abc.ABC):
         return type(self).__name__
 
     def __call__(self, result: ValuationResult) -> Status:
+        """Calls :meth:`_check`, maybe updating the result."""
         if len(result) == 0:
             logger.warning(
                 "At least one iteration finished but no results where generated. "
@@ -122,6 +150,7 @@ class StoppingCriterion(abc.ABC):
         return make_criterion(
             fun=lambda result: self._check(result) & other._check(result),
             converged=lambda: self.converged & other.converged,
+            completion=lambda: min(self.completion(), other.completion()),
             name=f"Composite StoppingCriterion: {self.name} AND {other.name}",
         )(modify_result=self.modify_result or other.modify_result)
 
@@ -129,6 +158,7 @@ class StoppingCriterion(abc.ABC):
         return make_criterion(
             fun=lambda result: self._check(result) | other._check(result),
             converged=lambda: self.converged | other.converged,
+            completion=lambda: max(self.completion(), other.completion()),
             name=f"Composite StoppingCriterion: {self.name} OR {other.name}",
         )(modify_result=self.modify_result or other.modify_result)
 
@@ -136,6 +166,7 @@ class StoppingCriterion(abc.ABC):
         return make_criterion(
             fun=lambda result: ~self._check(result),
             converged=lambda: ~self.converged,
+            completion=lambda: 1 - self.completion(),
             name=f"Composite StoppingCriterion: NOT {self.name}",
         )(modify_result=self.modify_result)
 
@@ -143,6 +174,7 @@ class StoppingCriterion(abc.ABC):
 def make_criterion(
     fun: StoppingCriterionCallable,
     converged: Callable[[], NDArray[np.bool_]] = None,
+    completion: Callable[[], float] = None,
     name: str = None,
 ) -> Type[StoppingCriterion]:
     """Create a new :class:`StoppingCriterion` from a function.
@@ -151,6 +183,9 @@ def make_criterion(
     :param fun: The callable to wrap.
     :param converged: A callable that returns a boolean array indicating what
         values have converged.
+    :param completion: A callable that returns a value between 0 and 1 indicating
+        the rate of completion of the computation. If not provided, the fraction
+        of converged values is used.
     :param name: The name of the new criterion. If ``None``, the ``__name__`` of
         the function is used.
     :return: A new subclass of :class:`StoppingCriterion`.
@@ -173,6 +208,11 @@ def make_criterion(
         @property
         def name(self):
             return self._name
+
+        def completion(self) -> float:
+            if completion is None:
+                return super().completion()
+            return completion()
 
     return WrappedCriterion
 
@@ -221,14 +261,10 @@ class AbsoluteStandardError(StoppingCriterion):
         return Status.Pending
 
 
-@deprecated(
-    deprecated_in="0.6.0",
-    removed_in="0.7.0",
-    details="This stopping criterion has been deprecated. "
-    "Use AbsoluteStandardError instead",
-)
 class StandardError(AbsoluteStandardError):
-    pass
+    @deprecated(target=AbsoluteStandardError, deprecated_in="0.6.0", remove_in="0.8.0")
+    def __init__(self, *args, **kwargs):
+        void(*args, **kwargs)
 
 
 class MaxChecks(StoppingCriterion):
