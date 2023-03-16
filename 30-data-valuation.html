@@ -520,7 +520,7 @@ standard errors as an additional column, in this case named <cite>cmc_stderr</ci
 <p>Note the usage of the object <a class="reference internal" href="pydvl/value/stopping.html#pydvl.value.stopping.MaxUpdates" title="pydvl.value.stopping.MaxUpdates"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxUpdates</span></code></a> as the
 stop condition. This is an instance of a
 <a class="reference internal" href="pydvl/value/stopping.html#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code></a>. Other examples are
-<a class="reference internal" href="pydvl/value/stopping.html#pydvl.value.stopping.MaxTime" title="pydvl.value.stopping.MaxTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxTime</span></code></a> and <code class="xref py py-class docutils literal notranslate"><span class="pre">StandardError</span></code>.</p>
+<a class="reference internal" href="pydvl/value/stopping.html#pydvl.value.stopping.MaxTime" title="pydvl.value.stopping.MaxTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxTime</span></code></a> and <a class="reference internal" href="pydvl/value/stopping.html#pydvl.value.stopping.StandardError" title="pydvl.value.stopping.StandardError"><code class="xref py py-class docutils literal notranslate"><span class="pre">StandardError</span></code></a>.</p>
 </section>
 <section id="owen-sampling">
 <h3>Owen sampling<a class="headerlink" href="#owen-sampling" title="Permalink to this heading">#</a></h3>
@@ -818,7 +818,7 @@ rank stability in certain situations.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Shapley values are a particular case of semi-values and can therefore also be
-computed with the methods described here. However, as of version 0.5.1, we
+computed with the methods described here. However, as of version 0.6.0, we
 recommend using <code class="xref py py-func docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code> instead,
 in particular because it implements truncated Monte Carlo sampling for faster
 computation.</p>

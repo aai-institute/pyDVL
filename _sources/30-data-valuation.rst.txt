@@ -580,7 +580,7 @@ rank stability in certain situations.
 .. note::
 
    Shapley values are a particular case of semi-values and can therefore also be
-   computed with the methods described here. However, as of version 0.5.1, we
+   computed with the methods described here. However, as of version 0.6.0, we
    recommend using :func:`~pydvl.value.shapley.compute_shapley_values` instead,
    in particular because it implements truncated Monte Carlo sampling for faster
    computation.
