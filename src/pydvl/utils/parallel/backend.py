@@ -16,7 +16,6 @@ from typing import (
 
 import ray
 from ray import ObjectRef
-from ray.remote_function import RemoteFunction
 
 from ..config import ParallelConfig
 

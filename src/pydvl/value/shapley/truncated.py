@@ -1,11 +1,14 @@
 import abc
 import logging
+from concurrent.futures import FIRST_COMPLETED, as_completed, wait
 
 import numpy as np
 
-from pydvl.utils import ParallelConfig, Utility, init_parallel_backend, running_moments
+from pydvl.utils import ParallelConfig, Utility, running_moments
+from pydvl.utils.parallel.backend import init_parallel_backend
+from pydvl.utils.parallel.futures import init_executor
 from pydvl.value import ValuationResult
-from pydvl.value.stopping import StoppingCriterion
+from pydvl.value.stopping import MaxChecks, StoppingCriterion
 
 __all__ = [
     "TruncationPolicy",
@@ -156,17 +159,38 @@ class BootstrapTruncation(TruncationPolicy):
         self.variance = self.mean = 0
 
 
+def _permutation_montecarlo_one_step(
+    u: Utility,
+    truncation: TruncationPolicy,
+    algorithm: str,
+) -> ValuationResult:
+    # Avoid circular imports
+    from .montecarlo import _permutation_montecarlo_shapley
+
+    result = _permutation_montecarlo_shapley(
+        u,
+        done=MaxChecks(1),
+        truncation=truncation,
+        algorithm_name=algorithm,
+    )
+    nans = np.isnan(result.values).sum()
+    if nans > 0:
+        logger.warning(
+            f"{nans} NaN values in current permutation, ignoring. "
+            "Consider setting a default value for the Scorer"
+        )
+        result = ValuationResult.empty(algorithm="truncated_montecarlo_shapley")
+    return result
+
+
 def truncated_montecarlo_shapley(
     u: Utility,
     *,
     done: StoppingCriterion,
     truncation: TruncationPolicy,
-    n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
-    coordinator_update_period: int = 30,
-    worker_update_period: int = 10,
-    queue_timeout: int = 5,
-    max_queue_size: int = 100,
+    n_jobs: int = 1,
+    n_concurrent_computations: int = 50,
 ) -> ValuationResult:
     """Monte Carlo approximation to the Shapley value of data points.
 
@@ -201,48 +225,55 @@ def truncated_montecarlo_shapley(
         set to :func:`available_cpus`.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param coordinator_update_period: in seconds. How often to check the
-        accumulated results from the workers for convergence.
-    :param worker_update_period: interval in seconds between different
-        updates to and from the coordinator
-    :param queue_timeout: Interval of time after which an operation
-        on the queue will time out.
-    :param max_queue_size: Size of the queue.
+    :param n_concurrent_computations: Number of permutation monte carlo iterations
+        to run concurrently.
     :return: Object with the data values.
 
     """
-    # Avoid circular imports
-    from .actor import get_shapley_coordinator, get_shapley_queue, get_shapley_workers
-
-    if config.backend == "sequential":
+    if config.backend != "ray":
         raise NotImplementedError(
-            "Truncated MonteCarlo Shapley does not work with "
-            "the Sequential parallel backend."
+            "Truncated MonteCarlo Shapley only works with " "the Ray parallel backend."
         )
 
+    done.modify_result = True
+    algorithm = "truncated_montecarlo_shapley"
+
     parallel_backend = init_parallel_backend(config)
+    u = parallel_backend.put(u)
 
-    queue = get_shapley_queue(maxsize=max_queue_size, config=config)
+    accumulated_result = ValuationResult.empty(algorithm=algorithm)
 
-    coordinator = get_shapley_coordinator(
-        update_period=coordinator_update_period,
-        queue_timeout=queue_timeout,
-        queue=queue,
-        done=done,
-        config=config,
-    )
-
-    workers = get_shapley_workers(
-        u,
-        queue=queue,
-        truncation=truncation,
-        update_period=worker_update_period,
-        config=config,
-        n_jobs=n_jobs,
-    )
-    for worker in workers:
-        worker.run.remote()
-
-    result = parallel_backend.get(coordinator.run.remote(), timeout=300)
-
-    return result
+    with init_executor(max_workers=n_jobs, config=config) as executor:
+        futures = set()
+        # Initial batch of computations
+        for _ in range(n_concurrent_computations):
+            future = executor.submit(
+                _permutation_montecarlo_one_step,
+                u,
+                truncation,
+                algorithm,
+            )
+            futures.add(future)
+        while futures:
+            # Wait for the next futures to complete.
+            completed_futures, futures = wait(
+                futures, timeout=60, return_when=FIRST_COMPLETED
+            )
+            for future in completed_futures:
+                accumulated_result += future.result()
+                if done(accumulated_result):
+                    break
+            if done(accumulated_result):
+                break
+            # Submit more computations
+            # The goal is to always have `n_concurrent_computations`
+            # computations running
+            for _ in range(n_concurrent_computations - len(futures)):
+                future = executor.submit(
+                    _permutation_montecarlo_one_step,
+                    u,
+                    truncation,
+                    algorithm,
+                )
+                futures.add(future)
+    return accumulated_result

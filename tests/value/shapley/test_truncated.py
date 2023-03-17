@@ -26,10 +26,9 @@ log = logging.getLogger(__name__)
             0.1,
             1e-5,
             dict(
-                coordinator_update_period=1,
-                worker_update_period=0.5,
                 done=MaxUpdates(500),
                 truncation=NoTruncation(),
+                n_concurrent_computations=10,
             ),
         ),
     ],
@@ -63,10 +62,9 @@ def test_tmcs_analytic_montecarlo_shapley(
         (
             ShapleyMode.TruncatedMontecarlo,
             dict(
-                coordinator_update_period=0.2,
-                worker_update_period=0.1,
                 done=MaxUpdates(500),
                 truncation=NoTruncation(),
+                n_concurrent_computations=10,
             ),
         ),
     ],
@@ -118,10 +116,9 @@ def test_tmcs_linear_montecarlo_shapley(
         (
             ShapleyMode.TruncatedMontecarlo,
             dict(
-                coordinator_update_period=0.2,
-                worker_update_period=0.1,
                 done=HistoryDeviation(n_steps=10, rtol=0.1) | MaxUpdates(500),
                 truncation=NoTruncation(),
+                n_concurrent_computations=10,
             ),
         ),
     ],
