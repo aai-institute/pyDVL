@@ -112,7 +112,7 @@ def class_wise_shapley(
             "Please set CSScorer object as scorer object of utility. See scoring argument of Utility."
         )
 
-    result = ValuationResult.empty(
+    result = ValuationResult.zeros(
         algorithm="class_wise_shapley",
         indices=u.data.indices,
         data_names=u.data.data_names,
