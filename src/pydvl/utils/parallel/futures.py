@@ -1,7 +1,7 @@
 from concurrent.futures import Executor, Future
-from contextlib import contextmanager, nullcontext
+from contextlib import contextmanager
 from dataclasses import asdict
-from typing import Callable, Generator
+from typing import Callable, Generator, TypeVar
 from weakref import WeakSet
 
 import ray
@@ -10,6 +10,8 @@ from ..config import ParallelConfig
 from .backend import effective_n_jobs
 
 __all__ = ["init_executor", "RayExecutor"]
+
+T = TypeVar("T")
 
 
 @contextmanager
@@ -39,10 +41,10 @@ class RayExecutor(Executor):
         if not ray.is_initialized():
             ray.init(**self.config)
 
-    def submit(self, fn: Callable, /, *args, **kwargs) -> Future:
+    def submit(self, fn: Callable[..., T], *args, **kwargs) -> Future[T]:
         remote_fn = ray.remote(fn)
         ref = remote_fn.remote(*args, **kwargs)
-        future = ref.future()
+        future: Future[T] = ref.future()
         self.futures.add(future)
         return future
 
