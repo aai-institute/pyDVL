@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Create new `RayExecutor` class based on the concurrent.futures API,
+  use the new class to fix an issue with
+  Truncated Monte Carlo Shapley (TMCS) starting
+  too many processes and dying 
+  [PR #329](https://github.com/appliedAI-Initiative/pyDVL/pull/329)
+
 ## 0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗
 
 - Fixes in `ValuationResult`: bugs around data names, semantics of
