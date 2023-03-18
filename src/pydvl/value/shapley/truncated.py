@@ -241,7 +241,7 @@ def truncated_montecarlo_shapley(
     parallel_backend = init_parallel_backend(config)
     u = parallel_backend.put(u)
 
-    accumulated_result = ValuationResult.empty(algorithm=algorithm)
+    accumulated_result = ValuationResult.zeros(algorithm=algorithm)
 
     with init_executor(max_workers=n_jobs, config=config) as executor:
         futures = set()
