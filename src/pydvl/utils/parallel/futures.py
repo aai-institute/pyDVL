@@ -41,10 +41,10 @@ class RayExecutor(Executor):
         if not ray.is_initialized():
             ray.init(**self.config)
 
-    def submit(self, fn: Callable[..., T], *args, **kwargs) -> Future[T]:
+    def submit(self, fn: Callable[..., T], *args, **kwargs) -> "Future[T]":
         remote_fn = ray.remote(fn)
         ref = remote_fn.remote(*args, **kwargs)
-        future: Future[T] = ref.future()
+        future: "Future[T]" = ref.future()
         self.futures.add(future)
         return future
 
