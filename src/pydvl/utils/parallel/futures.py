@@ -56,6 +56,16 @@ class RayExecutor(Executor):
             ray.init(**self.config)
 
     def submit(self, fn: Callable[..., T], *args, **kwargs) -> "Future[T]":
+        r"""Submits a callable to be executed with the given arguments.
+
+        Schedules the callable to be executed as fn(\*args, \**kwargs)
+        and returns a Future instance representing the execution of the callable.
+
+        :param fn: Callable.
+        :param args: Positional arguments that will be passed to `fn`.
+        :param kwargs: Keyword arguments that will be passed to `fn`.
+        :return: A Future representing the given call.
+        """
         remote_fn = ray.remote(fn)
         ref = remote_fn.remote(*args, **kwargs)
         future: "Future[T]" = ref.future()
