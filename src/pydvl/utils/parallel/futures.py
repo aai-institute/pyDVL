@@ -18,6 +18,20 @@ T = TypeVar("T")
 def init_executor(
     max_workers: int, config: ParallelConfig
 ) -> Generator[Executor, None, None]:
+    """Initializes a futures executor based on the passed parallel configuration object.
+
+    :param max_workers: Maximum number of concurrent tasks.
+    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+
+    :Example:
+
+    >>> from pydvl.utils.parallel.futures import init_executor
+    >>> from pydvl.utils.config import ParallelConfig
+    >>> config = ParallelConfig(backend="ray")
+    >>> with init_executor(max_workers=4, config=config) as executor:
+    ...     pass
+
+    """
     if config.backend == "ray":
         max_workers = effective_n_jobs(max_workers, config=config)
         executor = RayExecutor(max_workers, config)
