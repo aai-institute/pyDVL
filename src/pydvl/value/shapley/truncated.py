@@ -1,11 +1,13 @@
 import abc
 import logging
-from concurrent.futures import FIRST_COMPLETED, as_completed, wait
+from concurrent.futures import FIRST_COMPLETED, wait
+from typing import Optional
 
 import numpy as np
+from deprecate import deprecated
 
 from pydvl.utils import ParallelConfig, Utility, running_moments
-from pydvl.utils.parallel.backend import init_parallel_backend
+from pydvl.utils.parallel.backend import effective_n_jobs, init_parallel_backend
 from pydvl.utils.parallel.futures import init_executor
 from pydvl.value import ValuationResult
 from pydvl.value.stopping import MaxChecks, StoppingCriterion
@@ -183,14 +185,22 @@ def _permutation_montecarlo_one_step(
     return result
 
 
+@deprecated(
+    target=True,
+    deprecated_in="0.7.0",
+    remove_in="0.8.0",
+    args_mapping=dict(coordinator_update_period=None, worker_update_period=None),
+)
 def truncated_montecarlo_shapley(
     u: Utility,
     *,
     done: StoppingCriterion,
     truncation: TruncationPolicy,
     config: ParallelConfig = ParallelConfig(),
+    max_workers: Optional[int] = None,
     n_jobs: int = 1,
-    n_concurrent_computations: int = 50,
+    coordinator_update_period: int = 10,
+    worker_update_period: int = 5,
 ) -> ValuationResult:
     """Monte Carlo approximation to the Shapley value of data points.
 
@@ -221,12 +231,16 @@ def truncated_montecarlo_shapley(
         sampling permutations.
     :param truncation: callable that decides whether to stop computing
         marginals for a given permutation.
-    :param n_jobs: number of jobs processing permutations. If None, it will be
-        set to :func:`available_cpus`.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param n_concurrent_computations: Number of permutation monte carlo iterations
+    :param max_workers: Number of workers processing permutations.
+        If None, it will be set to the specific executor's maximum.
+    :param n_jobs: Number of permutation monte carlo jobs
         to run concurrently.
+    :param coordinator_update_period: in seconds. How often to check the
+        accumulated results from the workers for convergence.
+    :param worker_update_period: interval in seconds between different
+        updates to and from the coordinator
     :return: Object with the data values.
 
     """
@@ -235,7 +249,8 @@ def truncated_montecarlo_shapley(
             "Truncated MonteCarlo Shapley only works with " "the Ray parallel backend."
         )
 
-    done.modify_result = True
+    n_jobs = effective_n_jobs(n_jobs, config)
+
     algorithm = "truncated_montecarlo_shapley"
 
     parallel_backend = init_parallel_backend(config)
@@ -243,10 +258,10 @@ def truncated_montecarlo_shapley(
 
     accumulated_result = ValuationResult.zeros(algorithm=algorithm)
 
-    with init_executor(max_workers=n_jobs, config=config) as executor:
+    with init_executor(max_workers=max_workers, config=config) as executor:
         futures = set()
         # Initial batch of computations
-        for _ in range(n_concurrent_computations):
+        for _ in range(n_jobs):
             future = executor.submit(
                 _permutation_montecarlo_one_step,
                 u,
@@ -268,7 +283,7 @@ def truncated_montecarlo_shapley(
             # Submit more computations
             # The goal is to always have `n_concurrent_computations`
             # computations running
-            for _ in range(n_concurrent_computations - len(futures)):
+            for _ in range(n_jobs - len(futures)):
                 future = executor.submit(
                     _permutation_montecarlo_one_step,
                     u,
