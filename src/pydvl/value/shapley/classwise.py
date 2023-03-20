@@ -136,7 +136,7 @@ def _class_wise_shapley_worker(
             label_set = np.where(active_elements)[0]
             complement_label_set = np.where(~active_elements)[0]
             label_set = indices[label_set]
-            complement_label_set = u.data.indices[complement_label_set]
+            complement_label_set = indices[complement_label_set]
 
             _, complement_y_train = u.data.get_training_data(complement_label_set)
             permutation_label_set = np.random.permutation(label_set)
