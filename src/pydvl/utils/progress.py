@@ -3,7 +3,7 @@ from typing import Iterable, Iterator, Union
 
 from tqdm.auto import tqdm
 
-__all__ = ["maybe_progress", "enumerate_with_progress"]
+__all__ = ["maybe_progress"]
 
 
 class MockProgress(collections.abc.Iterator):
@@ -64,11 +64,3 @@ def maybe_progress(
     if isinstance(it, int):
         it = range(it)  # type: ignore
     return tqdm(it, **kwargs) if display else MockProgress(it)
-
-
-def enumerate_with_progress(lst, pbar):
-    pbar.total = len(lst)
-    for idx, el in enumerate(lst):
-        pbar.n = idx
-        pbar.refresh()
-        yield idx, el

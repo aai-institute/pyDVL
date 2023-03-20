@@ -7,11 +7,16 @@ Refs:
 # TODO rename function, and object refs, when transferred to pyDVL.
 
 import numbers
-from typing import Optional, Tuple
+import operator
+from functools import reduce
+from typing import Optional, Sequence, Tuple
 
 import numpy as np
+import yaml
+from numpy._typing import NDArray
+from valda.cs_shapley import cs_shapley
 
-from pydvl.utils import SupervisedModel, Utility
+from pydvl.utils import MapReduceJob, ParallelConfig, SupervisedModel, Utility
 
 __all__ = ["class_wise_shapley", "CSScorer"]
 
@@ -19,7 +24,6 @@ from sklearn.metrics import accuracy_score
 from tqdm import tqdm
 
 from pydvl.utils.numeric import random_powerset_group_conditional
-from pydvl.utils.progress import enumerate_with_progress
 from pydvl.value import StoppingCriterion, ValuationResult
 
 
@@ -84,14 +88,14 @@ class CSScorer:
         return float(in_cls_acc * np.exp(out_cls_acc))
 
 
-def class_wise_shapley(
+def _class_wise_shapley_worker(
+    indices: Sequence[int],
     u: Utility,
     *,
     progress: bool = True,
     num_resample_complement_sets: int = 1,
     done: StoppingCriterion,
     eps: float = 1e-4,
-    normalize_score: bool = True,
 ) -> ValuationResult:
     r"""Computes the class-wise Shapley value using the formulation with permutations:
 
@@ -100,7 +104,6 @@ def class_wise_shapley(
     :param done: Criterion on when no new permutation shall be sampled.
     :param num_resample_complement_sets: How often the complement set shall be resampled for each permutation.
     :param eps: The threshold when updating using the truncated monte carlo estimator.
-    :param normalize_score: True, iff the final score shall be normalized.
     :return: ValuationResult object with the data values.
     """
 
@@ -114,36 +117,27 @@ def class_wise_shapley(
 
     result = ValuationResult.zeros(
         algorithm="class_wise_shapley",
-        indices=u.data.indices,
-        data_names=u.data.data_names,
+        indices=indices,
+        data_names=u.data.data_names[indices],
     )
 
-    x_train, y_train = u.data.get_training_data(u.data.indices)
+    x_train, y_train = u.data.get_training_data(indices)
     unique_labels = np.unique(y_train)
-
-    # TODO: Reduce to one progress bar once testing stage is done and parallelization gets implemented
-    pbars = [
-        tqdm(disable=not progress, position=0, total=100, unit="%"),
-        tqdm(disable=not progress, position=1, total=1, unit="%"),
-        tqdm(
-            disable=not progress,
-            position=2,
-            total=num_resample_complement_sets,
-            unit="%",
-        ),
-        tqdm(disable=not progress, position=3, total=1, unit="%"),
-    ]
+    pbar = tqdm(disable=not progress, position=0, total=100, unit="%")
 
     while not done(result):
-        pbars[0].n = 100 * done.completion()
-        pbars[0].refresh()
+        pbar.n = 100 * done.completion()
+        pbar.refresh()
 
-        for idx_label, label in enumerate_with_progress(unique_labels, pbars[1]):
+        for idx_label, label in enumerate(unique_labels):
 
             u.scorer.label = label
             active_elements = y_train == label
             label_set = np.where(active_elements)[0]
             complement_label_set = np.where(~active_elements)[0]
+            label_set = indices[label_set]
+            complement_label_set = u.data.indices[complement_label_set]
+
             _, complement_y_train = u.data.get_training_data(complement_label_set)
             permutation_label_set = np.random.permutation(label_set)
 
@@ -154,14 +148,12 @@ def class_wise_shapley(
                     n_samples=num_resample_complement_sets,
                 )
             ):
-                pbars[2].n = kl
-                pbars[2].refresh()
 
                 train_set = np.concatenate((label_set, subset_complement))
                 final_score = u(train_set)
                 prev_score = 0.0
 
-                for i, _ in enumerate_with_progress(label_set, pbars[3]):
+                for i, _ in enumerate(label_set):
 
                     if np.abs(prev_score - final_score) < eps:
                         score = prev_score
@@ -175,6 +167,32 @@ def class_wise_shapley(
                     marginal = score - prev_score
                     result.update(permutation_label_set[i], marginal)
                     prev_score = score
+
+    return result
+
+
+def class_wise_shapley(
+    u: Utility,
+    *,
+    progress: bool = False,
+    done: StoppingCriterion,
+    eps: float = 1e-4,
+    normalize_score: bool = True,
+    n_jobs: int = 4,
+    config: ParallelConfig = ParallelConfig(),
+) -> ValuationResult:
+
+    map_reduce_job: MapReduceJob[NDArray, ValuationResult] = MapReduceJob(
+        u.data.indices,
+        map_func=_class_wise_shapley_worker,
+        reduce_func=lambda results: reduce(operator.add, results),
+        map_kwargs=dict(u=u, done=done, progress=progress, eps=eps),
+        n_jobs=n_jobs,
+        config=config,
+    )
+    result = map_reduce_job()
+    y_train = u.data.y_train
+    unique_labels = np.unique(np.concatenate((y_train, u.data.y_test)))
 
     if normalize_score:
 
