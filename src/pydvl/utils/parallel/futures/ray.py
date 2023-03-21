@@ -117,11 +117,14 @@ class RayExecutor(Executor):
 
         if wait:
             logger.debug("executor waiting for futures to finish")
-            # Putting None in the queue to signal
-            # to work item manager thread that we are shutting down
-            self._put_work_item_in_queue(None)
-            logger.debug("executor waiting for work item manager thread to terminate")
-            self._work_item_manager_thread.join()
+            if self._work_item_manager_thread is not None:
+                # Putting None in the queue to signal
+                # to work item manager thread that we are shutting down
+                self._put_work_item_in_queue(None)
+                logger.debug(
+                    "executor waiting for work item manager thread to terminate"
+                )
+                self._work_item_manager_thread.join()
             # To reduce the risk of opening too many files, remove references to
             # objects that use file descriptors.
             self._work_item_manager_thread = None
