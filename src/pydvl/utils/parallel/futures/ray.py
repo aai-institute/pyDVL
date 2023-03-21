@@ -203,7 +203,8 @@ class _WorkItemManagerThread(threading.Thread):
     def run(self) -> None:
         logger.debug("starting work item manager thread main loop")
         while True:
-            time.sleep(0.1)
+            # This is used to avoid using too much CPU
+            time.sleep(0.01)
             try:
                 self.add_pending_item_to_work_queue()
                 self.submit_work_item()
@@ -222,6 +223,8 @@ class _WorkItemManagerThread(threading.Thread):
         # Fills work_queue with _WorkItems from pending_queue.
         # This function never blocks.
         while True:
+            # This is used to avoid using too much CPU
+            time.sleep(0.01)
             with self.queue_lock:
                 logger.debug("work item manager thread acquired queue lock")
                 # If the work queue is not full,
