@@ -8,6 +8,7 @@ import pytest
 
 from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
 from pydvl.utils.parallel.backend import available_cpus, effective_n_jobs
+from pydvl.utils.parallel.futures import init_executor
 from pydvl.utils.parallel.map_reduce import _get_value
 
 
@@ -223,3 +224,58 @@ def test_wrap_function(parallel_config, num_workers):
         wrapped_func = parallel_backend.wrap(get_pid, num_cpus=1)
         pids = parallel_backend.get([wrapped_func() for _ in range(num_workers)])
         assert len(set(pids)) == num_workers
+
+
+def test_futures_executor_submit(parallel_config):
+    if parallel_config.backend != "ray":
+        with pytest.raises(NotImplementedError):
+            with init_executor(config=parallel_config):
+                ...
+        pytest.xfail("Currently this only works with Ray")
+
+    with init_executor(config=parallel_config) as executor:
+        future = executor.submit(lambda x: x + 1, 1)
+        result = future.result()
+    assert result == 2
+
+
+def test_futures_executor_map(parallel_config, num_workers):
+    if parallel_config.backend != "ray":
+        with pytest.raises(NotImplementedError):
+            with init_executor(config=parallel_config):
+                ...
+        pytest.xfail("Currently this only works with Ray")
+
+    def func(_):
+        time.sleep(1)
+        return time.monotonic()
+
+    start_time = time.monotonic()
+    with init_executor(config=parallel_config) as executor:
+        assert executor._max_workers == num_workers
+        list(executor.map(func, range(3)))
+    end_time = time.monotonic()
+    total_time = end_time - start_time
+    # We expect the time difference to be > 3 / num_workers, but has to be at least 1
+    assert total_time > max(1.0, 3 / num_workers)
+
+
+@pytest.mark.parametrize("n_workers", [1, 2, 4])
+def test_futures_executor_map_with_max_workers(n_workers, parallel_config):
+    if parallel_config.backend != "ray" or parallel_config.address is not None:
+        pytest.skip()
+
+    parallel_config.n_workers = n_workers
+
+    def func(_):
+        time.sleep(1)
+        return time.monotonic()
+
+    start_time = time.monotonic()
+    with init_executor(config=parallel_config) as executor:
+        assert executor._max_workers == n_workers
+        list(executor.map(func, range(3)))
+    end_time = time.monotonic()
+    total_time = end_time - start_time
+    # We expect the time difference to be > 3 / n_workers, but has to be at least 1
+    assert total_time > max(1.0, 3 / n_workers)
