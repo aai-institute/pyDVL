@@ -227,24 +227,21 @@ def test_wrap_function(parallel_config, num_workers):
 
 
 def test_futures_executor_submit(parallel_config):
-    if parallel_config.backend != "ray":
-        with pytest.raises(NotImplementedError):
-            with init_executor(config=parallel_config):
-                ...
-        pytest.xfail("Currently this only works with Ray")
-
     with init_executor(config=parallel_config) as executor:
         future = executor.submit(lambda x: x + 1, 1)
         result = future.result()
     assert result == 2
 
 
-def test_futures_executor_map(parallel_config, num_workers):
+def test_futures_executor_map(parallel_config):
+    with init_executor(config=parallel_config) as executor:
+        results = list(executor.map(lambda x: x + 1, range(3)))
+    assert results == [1, 2, 3]
+
+
+def test_futures_executor_map_with_max_workers(parallel_config, num_workers):
     if parallel_config.backend != "ray":
-        with pytest.raises(NotImplementedError):
-            with init_executor(config=parallel_config):
-                ...
-        pytest.xfail("Currently this only works with Ray")
+        pytest.skip("Currently this test only works with Ray")
 
     def func(_):
         time.sleep(1)
@@ -258,24 +255,3 @@ def test_futures_executor_map(parallel_config, num_workers):
     total_time = end_time - start_time
     # We expect the time difference to be > 3 / num_workers, but has to be at least 1
     assert total_time > max(1.0, 3 / num_workers)
-
-
-@pytest.mark.parametrize("n_workers", [1, 4])
-def test_futures_executor_map_with_max_workers(n_workers, parallel_config):
-    if parallel_config.backend != "ray" or parallel_config.address is not None:
-        pytest.skip()
-
-    parallel_config.n_workers = n_workers
-
-    def func(_):
-        time.sleep(1)
-        return time.monotonic()
-
-    start_time = time.monotonic()
-    with init_executor(config=parallel_config) as executor:
-        assert executor._max_workers == n_workers
-        list(executor.map(func, range(3)))
-    end_time = time.monotonic()
-    total_time = end_time - start_time
-    # We expect the time difference to be > 3 / n_workers, but has to be at least 1
-    assert total_time > max(1.0, 3 / n_workers)
