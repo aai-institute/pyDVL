@@ -5,7 +5,7 @@ from ray.cluster_utils import Cluster
 from pydvl.utils.config import ParallelConfig
 
 
-@pytest.fixture(scope="function", params=["sequential", "ray-local", "ray-external"])
+@pytest.fixture(scope="module", params=["sequential", "ray-local", "ray-external"])
 def parallel_config(request, num_workers):
     if request.param == "sequential":
         yield ParallelConfig(backend=request.param)
@@ -20,8 +20,6 @@ def parallel_config(request, num_workers):
                 "num_cpus": num_workers,
             },
         )
-        yield ParallelConfig(
-            backend="ray", address=cluster.address, n_workers=num_workers
-        )
+        yield ParallelConfig(backend="ray", address=cluster.address)
         ray.shutdown()
         cluster.shutdown()
