@@ -1,4 +1,4 @@
-from concurrent.futures import Executor
+from concurrent.futures import Executor, ThreadPoolExecutor
 from contextlib import contextmanager
 from typing import Generator
 
@@ -29,6 +29,10 @@ def init_executor(
     if config.backend == "ray":
         max_workers = config.n_workers
         with RayExecutor(max_workers, config=config) as executor:
+            yield executor
+    elif config.backend == "sequential":
+        max_workers = 1
+        with ThreadPoolExecutor(max_workers) as executor:
             yield executor
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
