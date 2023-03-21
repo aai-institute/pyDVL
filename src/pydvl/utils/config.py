@@ -13,10 +13,13 @@ __all__ = ["ParallelConfig", "MemcachedClientConfig", "MemcachedConfig"]
 class ParallelConfig:
     """Configuration for parallel computation backend.
 
-    :param backend: Type of backend to use. For now only 'ray' is supported.
+    :param backend: Type of backend to use.
+        Defaults to 'ray'
     :param address: Address of existing remote or local cluster to use.
+        Defaults to None.
     :param n_workers: Number of workers (CPUs) to use.
         This has no effect when using an existing ray cluster.
+        Defaults to None.
     :param logging_level: Logging level for the parallel backend's worker.
     """
 
@@ -24,6 +27,10 @@ class ParallelConfig:
     address: Optional[Union[str, Tuple[str, int]]] = None
     n_workers: Optional[int] = None
     logging_level: int = logging.WARNING
+
+    def __post_init__(self) -> None:
+        if self.address is not None and self.n_workers is not None:
+            raise ValueError("When `address` is set, `n_workers` should be None.")
 
 
 @dataclass
