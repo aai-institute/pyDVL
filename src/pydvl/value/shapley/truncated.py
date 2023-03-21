@@ -197,7 +197,6 @@ def truncated_montecarlo_shapley(
     done: StoppingCriterion,
     truncation: TruncationPolicy,
     config: ParallelConfig = ParallelConfig(),
-    max_workers: Optional[int] = None,
     n_jobs: int = 1,
     coordinator_update_period: int = 10,
     worker_update_period: int = 5,
@@ -233,8 +232,6 @@ def truncated_montecarlo_shapley(
         marginals for a given permutation.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param max_workers: Number of workers processing permutations.
-        If None, it will be set to the specific executor's maximum.
     :param n_jobs: Number of permutation monte carlo jobs
         to run concurrently.
     :param coordinator_update_period: in seconds. How often to check the
@@ -258,7 +255,7 @@ def truncated_montecarlo_shapley(
 
     accumulated_result = ValuationResult.zeros(algorithm=algorithm)
 
-    with init_executor(max_workers=max_workers, config=config) as executor:
+    with init_executor(config=config) as executor:
         futures = set()
         # Initial batch of computations
         for _ in range(n_jobs):
