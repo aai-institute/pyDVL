@@ -161,7 +161,11 @@ def random_powerset_group_conditional(
         subsets: List[NDArray[T]] = []
         for label in labels:
             label_indices = np.asarray(np.where(labels == label)[0])
-            subset_length = int(rng.integers(min_elements, len(label_indices)))
+            subset_length = int(
+                rng.integers(
+                    min(min_elements, len(label_indices) - 1), len(label_indices)
+                )
+            )
             subsets.append(random_subset_of_size(s[label_indices], subset_length))
 
         subset = np.concatenate(tuple(subsets))
