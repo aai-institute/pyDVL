@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Implemented exact games in Castro et al. 2009 and 2017
+
 ## 0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗
 
 - Fixes in `ValuationResult`: bugs around data names, semantics of
