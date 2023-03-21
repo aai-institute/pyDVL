@@ -28,7 +28,6 @@ log = logging.getLogger(__name__)
             dict(
                 done=MaxUpdates(500),
                 truncation=NoTruncation(),
-                n_concurrent_computations=10,
             ),
         ),
     ],
@@ -64,7 +63,6 @@ def test_tmcs_analytic_montecarlo_shapley(
             dict(
                 done=MaxUpdates(500),
                 truncation=NoTruncation(),
-                n_concurrent_computations=10,
             ),
         ),
     ],
@@ -118,7 +116,6 @@ def test_tmcs_linear_montecarlo_shapley(
             dict(
                 done=HistoryDeviation(n_steps=10, rtol=0.1) | MaxUpdates(500),
                 truncation=NoTruncation(),
-                n_concurrent_computations=10,
             ),
         ),
     ],

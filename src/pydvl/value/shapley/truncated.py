@@ -240,11 +240,6 @@ def truncated_montecarlo_shapley(
     :return: Object with the data values.
 
     """
-    if config.backend != "ray":
-        raise NotImplementedError(
-            "Truncated MonteCarlo Shapley only works with " "the Ray parallel backend."
-        )
-
     n_jobs = effective_n_jobs(n_jobs, config)
 
     algorithm = "truncated_montecarlo_shapley"
