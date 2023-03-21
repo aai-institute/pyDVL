@@ -100,7 +100,7 @@ def compute_shapley_values(
 
     if mode == ShapleyMode.TruncatedMontecarlo:
         truncation = kwargs.pop("truncation", NoTruncation())
-        return truncated_montecarlo_shapley(
+        return truncated_montecarlo_shapley(  # type: ignore
             u=u, done=done, n_jobs=n_jobs, truncation=truncation, **kwargs
         )
     elif mode == ShapleyMode.CombinatorialMontecarlo:

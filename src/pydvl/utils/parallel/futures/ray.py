@@ -76,8 +76,12 @@ class RayExecutor(Executor):
         self._cancel_pending_futures = False
         self._shutdown_lock = threading.Lock()
         self._queue_lock = threading.Lock()
-        self._work_queue = queue.Queue(maxsize=self._max_workers)
-        self._pending_queue = queue.SimpleQueue()
+        self._work_queue: "queue.Queue[Optional[_WorkItem]]" = queue.Queue(
+            maxsize=self._max_workers
+        )
+        self._pending_queue: "queue.SimpleQueue[Optional[_WorkItem]]" = (
+            queue.SimpleQueue()
+        )
 
         # Work Item Manager Thread
         self._work_item_manager_thread: Optional[_WorkItemManagerThread] = None
@@ -101,7 +105,7 @@ class RayExecutor(Executor):
                 raise RuntimeError("cannot schedule new futures after shutdown")
 
             logging.debug("Creating future and putting work item in work queue")
-            future = Future()
+            future: "Future[T]" = Future()
             w = _WorkItem(future, fn, args, kwargs)
             self._put_work_item_in_queue(w)
             # We delay starting the thread until the first call to submit
@@ -128,8 +132,8 @@ class RayExecutor(Executor):
             # To reduce the risk of opening too many files, remove references to
             # objects that use file descriptors.
             self._work_item_manager_thread = None
-            self._work_queue = None
-            self._pending_queue = None
+            del self._work_queue
+            del self._pending_queue
 
     def _put_work_item_in_queue(self, work_item: Optional["_WorkItem"]) -> None:
         with self._queue_lock:
@@ -176,7 +180,7 @@ class _WorkItem:
 
         ref._on_completed(set_future)
         # Prevent this object ref from being released.
-        self.future.object_ref = ref
+        self.future.object_ref = ref  # type: ignore
 
     if sys.version_info >= (3, 9):
         __class_getitem__ = classmethod(types.GenericAlias)
@@ -197,10 +201,10 @@ class _WorkItemManagerThread(threading.Thread):
         self.executor_reference = ref(executor)
         self.shutdown_lock: threading.Lock = executor._shutdown_lock
         self.queue_lock: threading.Lock = executor._queue_lock
-        self.work_queue: Optional["queue.Queue[_WorkItem]"] = executor._work_queue
-        self.pending_queue: Optional[
-            "queue.SimpleQueue[_WorkItem]"
-        ] = executor._pending_queue
+        self.work_queue: "queue.Queue[Optional[_WorkItem]]" = executor._work_queue
+        self.pending_queue: "queue.SimpleQueue[Optional[_WorkItem]]" = (
+            executor._pending_queue
+        )
         super().__init__()
 
     def run(self) -> None:
