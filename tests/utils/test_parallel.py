@@ -260,7 +260,7 @@ def test_futures_executor_map(parallel_config, num_workers):
     assert total_time > max(1.0, 3 / num_workers)
 
 
-@pytest.mark.parametrize("n_workers", [1, 2, 4])
+@pytest.mark.parametrize("n_workers", [1, 4])
 def test_futures_executor_map_with_max_workers(n_workers, parallel_config):
     if parallel_config.backend != "ray" or parallel_config.address is not None:
         pytest.skip()

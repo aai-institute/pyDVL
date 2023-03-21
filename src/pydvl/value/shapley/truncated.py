@@ -1,7 +1,6 @@
 import abc
 import logging
 from concurrent.futures import FIRST_COMPLETED, wait
-from typing import Optional
 
 import numpy as np
 from deprecate import deprecated
