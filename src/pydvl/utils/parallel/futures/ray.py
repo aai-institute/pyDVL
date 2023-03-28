@@ -24,26 +24,11 @@ class RayExecutor(Executor):
     """Asynchronous executor using Ray that implements the concurrent.futures API.
 
     It shouldn't be initialized directly. You should instead call
-    :function:`~pydvl.utils.parallel.futures.init_executor`.
+    :func:`~pydvl.utils.parallel.futures.init_executor`.
 
     :param max_workers: Maximum number of concurrent tasks.
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
-
-    Example:
-        >>> from pydvl.utils.parallel.futures import RayExecutor
-        >>> with RayExecutor() as executor:
-        ...     future = executor.submit(lambda x: x + 1, 1)
-        ...     result = future.result()
-        ...
-        >>> print(result)
-        2
-
-        >>> from pydvl.utils.parallel.futures import RayExecutor
-        >>> with RayExecutor() as executor:
-        ...     results = list(executor.map(lambda x: x + 1, range(5)))
-        ...
-        >>> print(results)
-        [1, 2, 3, 4, 5]
+    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig`
+        with cluster address, number of cpus, etc.
     """
 
     def __init__(

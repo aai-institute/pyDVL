@@ -95,7 +95,7 @@ class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
     """Class used to run jobs sequentially and locally.
 
     It shouldn't be initialized directly. You should instead call
-    :function:`~pydvl.utils.parallel.backend.init_parallel_backend`.
+    :func:`~pydvl.utils.parallel.backend.init_parallel_backend`.
 
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with number of cpus
     """
@@ -126,7 +126,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     """Class used to wrap ray to make it transparent to algorithms.
 
     It shouldn't be initialized directly. You should instead call
-    :function:`~pydvl.utils.parallel.backend.init_parallel_backend`.
+    :func:`~pydvl.utils.parallel.backend.init_parallel_backend`.
 
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
         cluster address, number of cpus, etc.

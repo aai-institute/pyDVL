@@ -5,7 +5,7 @@ from typing import Generator
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.parallel.futures.ray import RayExecutor
 
-__all__ = ["init_executor", "RayExecutor"]
+__all__ = ["init_executor"]
 
 
 @contextmanager
@@ -24,6 +24,21 @@ def init_executor(
     >>> config = ParallelConfig(backend="ray")
     >>> with init_executor(config=config) as executor:
     ...     pass
+
+    >>> from pydvl.utils.parallel.futures import init_executor
+    >>> with init_executor() as executor:
+    ...     future = executor.submit(lambda x: x + 1, 1)
+    ...     result = future.result()
+    ...
+    >>> print(result)
+    2
+
+    >>> from pydvl.utils.parallel.futures import init_executor
+    >>> with init_executor() as executor:
+    ...     results = list(executor.map(lambda x: x + 1, range(5)))
+    ...
+    >>> print(results)
+    [1, 2, 3, 4, 5]
 
     """
     if config.backend == "ray":
