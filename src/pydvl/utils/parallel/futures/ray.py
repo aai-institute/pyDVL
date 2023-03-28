@@ -7,7 +7,7 @@ import types
 from concurrent.futures import BrokenExecutor, Executor, Future
 from dataclasses import asdict
 from typing import Any, Callable, Optional, TypeVar
-from weakref import ref
+from weakref import WeakSet, ref
 
 import ray
 
@@ -205,6 +205,7 @@ class _WorkItemManagerThread(threading.Thread):
         self.pending_queue: "queue.SimpleQueue[Optional[_WorkItem]]" = (
             executor._pending_queue
         )
+        self.submitted_futures: "WeakSet[Future]" = WeakSet()
         super().__init__()
 
     def run(self) -> None:
@@ -268,6 +269,7 @@ class _WorkItemManagerThread(threading.Thread):
                 return
         logger.debug("Submitting work item")
         work_item.run()
+        self.submitted_futures.add(work_item.future)
         # Delete references to object
         del work_item
 
@@ -297,10 +299,16 @@ class _WorkItemManagerThread(threading.Thread):
                 executor._shutdown = True
                 # Cancel pending work items if requested.
                 if executor._cancel_pending_futures:
-                    logger.debug("forcefully cancelling futures")
+                    logger.debug("forcefully cancelling running futures")
+                    # We cancel all the submitted futures
+                    # and their corresponding object references
+                    for future in self.submitted_futures:
+                        future.cancel()
+                        ray.cancel(future.object_ref)
                     # Drain all work items from the queues,
                     # and then cancel their associated futures.
                     # We empty the pending queue first.
+                    logger.debug("cancelling pending work items")
                     while True:
                         with self.queue_lock:
                             try:
