@@ -148,6 +148,16 @@ class RayExecutor(Executor):
             self._work_item_manager_thread = _WorkItemManagerThread(self)
             self._work_item_manager_thread.start()
 
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit the runtime context related to the RayExecutor object.
+
+        This explicitly sets cancel_futures to True
+        in the call to the shutdown() method which is different
+        from the base Executor class' __exit__ method.
+        """
+        self.shutdown(cancel_futures=True)
+        return False
+
 
 class _WorkItem:
     """Inspired by code from: concurrent.futures.thread"""
@@ -300,10 +310,9 @@ class _WorkItemManagerThread(threading.Thread):
                 # Cancel pending work items if requested.
                 if executor._cancel_pending_futures:
                     logger.debug("forcefully cancelling running futures")
-                    # We cancel all the submitted futures
-                    # and their corresponding object references
+                    # We cancel the future's object references
+                    # We cannot cancel a running future object.
                     for future in self.submitted_futures:
-                        future.cancel()
                         ray.cancel(future.object_ref)
                     # Drain all work items from the queues,
                     # and then cancel their associated futures.
