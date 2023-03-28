@@ -92,8 +92,10 @@ class BaseParallelBackend(metaclass=NoPublicConstructor):
 
 
 class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
-    """Class used to run jobs sequentially and locally. It shouldn't
-    be initialized directly. You should instead call `init_parallel_backend`.
+    """Class used to run jobs sequentially and locally.
+
+    It shouldn't be initialized directly. You should instead call
+    :function:`~pydvl.utils.parallel.backend.init_parallel_backend`.
 
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with number of cpus
     """
@@ -121,8 +123,10 @@ class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
 
 
 class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
-    """Class used to wrap ray to make it transparent to algorithms. It shouldn't
-    be initialized directly. You should instead call `init_parallel_backend`.
+    """Class used to wrap ray to make it transparent to algorithms.
+
+    It shouldn't be initialized directly. You should instead call
+    :function:`~pydvl.utils.parallel.backend.init_parallel_backend`.
 
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
         cluster address, number of cpus, etc.
@@ -196,7 +200,8 @@ def init_parallel_backend(
 ) -> BaseParallelBackend:
     """Initializes the parallel backend and returns an instance of it.
 
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig`
+        with cluster address, number of cpus, etc.
 
     :Example:
 

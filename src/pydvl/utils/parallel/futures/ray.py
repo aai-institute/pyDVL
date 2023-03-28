@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 class RayExecutor(Executor):
     """Asynchronous executor using Ray that implements the concurrent.futures API.
 
+    It shouldn't be initialized directly. You should instead call
+    :function:`~pydvl.utils.parallel.futures.init_executor`.
+
     :param max_workers: Maximum number of concurrent tasks.
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
 
