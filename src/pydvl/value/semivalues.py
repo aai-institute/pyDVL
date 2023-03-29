@@ -232,8 +232,8 @@ def compute_semivalues(
     if mode == SemiValueMode.Shapley:
         coefficient = shapley_coefficient
     elif mode == SemiValueMode.BetaShapley:
-        alpha = kwargs.get("alpha", 1)
-        beta = kwargs.get("beta", 1)
+        alpha = kwargs.pop("alpha", 1)
+        beta = kwargs.pop("beta", 1)
         coefficient = beta_coefficient(alpha, beta)
     elif mode == SemiValueMode.Banzhaf:
         coefficient = banzhaf_coefficient
