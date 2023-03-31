@@ -314,9 +314,8 @@ values in pyDVL. First construct the dataset and utility, then call
        u=utility, mode="owen", n_iterations=4, max_q=200
    )
 
-There are more details on Owen
-sampling, and its variant *Antithetic Owen Sampling* in the documentation for the
-function doing the work behind the scenes:
+There are more details on Owen sampling, and its variant *Antithetic Owen
+Sampling* in the documentation for the function doing the work behind the scenes:
 :func:`~pydvl.value.shapley.montecarlo.owen_sampling_shapley`.
 
 Note that in this case we do not pass a
@@ -327,8 +326,9 @@ integration.
 Permutation Shapley
 ^^^^^^^^^^^^^^^^^^^
 
-An equivalent way of computing Shapley values appears often in the literature.
-It uses permutations over indices instead of subsets:
+An equivalent way of computing Shapley values (``ApproShapley``) appeared in
+:footcite:t:`castro_polynomial_2009` and is the basis for the method most often
+used in practice. It uses permutations over indices instead of subsets:
 
 $$
 v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
@@ -336,11 +336,16 @@ v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
 ,$$
 
 where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
-position where $i$ appears. To approximate this sum (with $\mathcal{O}(n!)$ terms!)
-one uses Monte Carlo sampling of permutations, something which has surprisingly
-low sample complexity. By adding early stopping, the result is the so-called
-**Truncated Monte Carlo Shapley** (:footcite:t:`ghorbani_data_2019`), which is
-efficient enough to be useful in some applications.
+position where $i$ appears. To approximate this sum (which has $\mathcal{O}(n!)$
+terms!) one uses Monte Carlo sampling of permutations, something which has
+surprisingly low sample complexity. One notable difference wrt. the
+combinatorial approach above is that the approximations always fulfill the
+efficiency axiom of Shapley, namely $\sum_{i=1}^n \hat{v}_i = u(D)$ (see
+:footcite:t:`castro_polynomial_2009`, Proposition 3.2).
+
+By adding early stopping, the result is the so-called **Truncated Monte Carlo
+Shapley** (:footcite:t:`ghorbani_data_2019`), which is efficient enough to be
+useful in applications.
 
 .. code-block:: python
 
