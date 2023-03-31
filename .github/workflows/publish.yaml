@@ -10,6 +10,10 @@ on:
         description: Why did you trigger the pipeline?
         required: False
         default: Check if it runs again due to external changes
+      tag:
+        description: Tag for which a package should be published
+        type: string
+        required: false
 
 env:
   PY_COLORS: 1
@@ -23,19 +27,35 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Fail if manually triggered workflow is not on 'master' branch
-        if: github.event_name == 'workflow_dispatch' && github.ref_name != 'master'
-        run: exit -1
+      - name: Fail if manually triggered workflow does not have 'tag' input
+        if: github.event_name == 'workflow_dispatch' && inputs.tag == ''
+        run: |
+          echo "Input 'tag' should not be empty"
+          exit -1
+      - name: Extract branch name from input
+        id: get_branch_name_input
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          export BRANCH_NAME=$(git log -1 --format='%D' ${{ inputs.tag }} | sed -e 's/.*origin\/\(.*\).*/\1/')
+          echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
       - name: Extract branch name from tag
-        id: get_branch_name
+        id: get_branch_name_tag
         if: github.ref_type == 'tag'
         run: |
-          export BRANCH_NAME=$(git log -1 --format='%D' $GITHUB_REF | sed -e 's/.*origin\/\(.*\),.*/\1/')
-          echo ::set-output name=branch_name::${BRANCH_NAME}
+          export BRANCH_NAME=$(git log -1 --format='%D' $GITHUB_REF | sed -e 's/.*origin\/\(.*\).*/\1/')
+          echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
         shell: bash
       - name: Fail if tag is not on 'master' branch
-        if: github.ref_type == 'tag' && steps.get_branch_name.outputs.branch_name != 'master'
-        run: exit -1
+        if: ${{ steps.get_branch_name_tag.outputs.branch_name != 'master' && steps.get_branch_name_input.outputs.branch_name != 'master' }}
+        run: |
+          echo "Tag is on branch ${{ steps.get_branch_name.outputs.branch_name }}"
+          echo "Should be on Master branch instead"
+          exit -1
+      - name: Fail if running locally
+        if: ${{ !github.event.act }} # skip during local actions testing
+        run: |
+          echo "Running action locally. Failing"
+          exit -1
       - name: Set up Python 3.8
         uses: actions/setup-python@v4
         with:
