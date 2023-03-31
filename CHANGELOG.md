@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added alias `ApproShapley` from Castro et al. 2009 for permutation Shapley
+  [PR #332](https://github.com/appliedAI-Initiative/pyDVL/pull/332)
   
 
 ## 0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗
