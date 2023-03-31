@@ -1,4 +1,4 @@
-name: Upload Python Package to PyPI
+name: Publish Python Package to PyPI
 
 on:
   push:
@@ -19,10 +19,10 @@ env:
   PY_COLORS: 1
 
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
     concurrency:
-      group: deploy
+      group: publish
     steps:
       - uses: actions/checkout@v3
         with:
