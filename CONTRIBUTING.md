@@ -324,11 +324,11 @@ act -v
 
 #### Example
 
-To run the `deploy` job (the toughest one to test) with tag 'v0.6.0' 
+To run the `publish` job (the toughest one to test) with tag 'v0.6.0' 
 you would simply use:
 
 ```shell
-act push -j deploy --eventpath events.json
+act push -j publish --eventpath events.json
 ```
 
 With `events.json` containing:
@@ -343,7 +343,7 @@ To instead run it as it were manually triggered (i.e. `workflow_dispatch`)
 you would instead use:
 
 ```shell
-act workflow_dispatch -j deploy --eventpath events.json
+act workflow_dispatch -j publish --eventpath events.json
 ```
 
 With `events.json` containing:
