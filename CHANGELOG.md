@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix release job not triggering on CI when a new tag is pushed
+  [PR #331](https://github.com/appliedAI-Initiative/pyDVL/pull/331)
+
 ## 0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗
 
 - Fixes in `ValuationResult`: bugs around data names, semantics of
