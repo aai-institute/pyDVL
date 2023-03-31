@@ -273,8 +273,8 @@ based on the dependencies that were defined.
 Once it has the execution path, it then uses the Docker API
 to run containers for each action based on the images prepared earlier.
 The [environment variables](https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables) 
-and [filesystem](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#file-systems) are all configured to match
-what GitHub provides.
+and [filesystem](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#file-systems)
+are all configured to match what GitHub provides.
 
 You can install it manually using:
 
@@ -339,7 +339,8 @@ With `events.json` containing:
 }
 ```
 
-To instead run it as it were manually triggered (i.e. `workflow_dispatch`)
+To instead run it as if it had been manually triggered (i.e. `workflow_dispatch`)
+
 you would instead use:
 
 ```shell
@@ -465,7 +466,7 @@ a GitHub release.
 #### Publish to TestPyPI
 
 We use [bump2version](https://pypi.org/project/bump2version/) to bump
-the build part of the version number publish a package to TestPyPI from CI.
+the build part of the version number and publish a package to TestPyPI from CI.
 
 To do that, we use 2 different tox environments:
 
