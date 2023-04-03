@@ -5,7 +5,7 @@
 - Create new `RayExecutor` class based on the concurrent.futures API,
   use the new class to fix an issue with
   Truncated Monte Carlo Shapley (TMCS) starting
-  too many processes and dying 
+  too many processes and dying, plus other small changes
   [PR #329](https://github.com/appliedAI-Initiative/pyDVL/pull/329)
 - Fix release job not triggering on CI when a new tag is pushed
   [PR #331](https://github.com/appliedAI-Initiative/pyDVL/pull/331)
