@@ -4,7 +4,7 @@ import sys
 import threading
 import time
 import types
-from concurrent.futures import BrokenExecutor, Executor, Future
+from concurrent.futures import Executor, Future
 from dataclasses import asdict
 from typing import Any, Callable, Optional, TypeVar
 from weakref import WeakSet, ref
@@ -67,7 +67,6 @@ class RayExecutor(Executor):
         if self._max_workers is None:
             self._max_workers = int(ray._private.state.cluster_resources()["CPU"])
 
-        self._broken = False
         self._shutdown = False
         self._cancel_pending_futures = False
         self._shutdown_lock = threading.Lock()
@@ -92,13 +91,10 @@ class RayExecutor(Executor):
         :param args: Positional arguments that will be passed to `fn`.
         :param kwargs: Keyword arguments that will be passed to `fn`.
         :return: A Future representing the given call.
-        :raises BrokenExecutor: If ... 
         :raises RuntimeError: If a task is submitted after the executor has been shut down.
         """
         with self._shutdown_lock:
             logger.debug("executor acquired shutdown lock")
-            if self._broken:
-                raise BrokenExecutor(self._broken)
             if self._shutdown:
                 raise RuntimeError("cannot schedule new futures after shutdown")
 
