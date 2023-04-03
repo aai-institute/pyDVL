@@ -135,7 +135,10 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     def __init__(self, config: ParallelConfig):
         config_dict = asdict(config)
         config_dict.pop("backend")
-        config_dict["num_cpus"] = config_dict.pop("n_workers")
+        n_workers = config_dict.pop("n_workers")
+        if config_dict.get("address", None) is None:
+            config_dict["num_cpus"] = n_workers
+        self.n_cpus_per_job = config_dict.pop("n_cpus_per_job")
         self.config = config_dict
         if not ray.is_initialized():
             ray.init(**self.config)
@@ -168,9 +171,13 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
 
         :return: The `.remote` method of the ray `RemoteFunction`.
         """
-        if len(kwargs) > 1:
-            return ray.remote(**kwargs)(fun).remote  # type: ignore
-        return ray.remote(fun).remote  # type: ignore
+        remote_fn = ray.remote(fun)
+        if len(kwargs) == 0:
+            kwargs["num_cpus"] = self.n_cpus_per_job
+        else:
+            if "num_cpus" not in kwargs:
+                kwargs["num_cpus"] = self.n_cpus_per_job
+        return remote_fn.remote  # type: ignore
 
     def wait(
         self,

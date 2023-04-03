@@ -49,7 +49,8 @@ class RayExecutor(Executor):
         config_dict = asdict(config)
         config_dict.pop("backend")
         config_dict.pop("n_workers")
-        if "address" not in config_dict:
+        self.n_cpus_per_job = config_dict.pop("n_cpus_per_job")
+        if config_dict.get("address", None) is None:
             config_dict["num_cpus"] = max_workers
         self.config = config_dict
         if not ray.is_initialized():
@@ -94,7 +95,7 @@ class RayExecutor(Executor):
 
             logging.debug("Creating future and putting work item in work queue")
             future: "Future[T]" = Future()
-            w = _WorkItem(future, fn, args, kwargs)
+            w = _WorkItem(future, fn, args, kwargs, n_cpus_per_job=self.n_cpus_per_job)
             self._put_work_item_in_queue(w)
             # We delay starting the thread until the first call to submit
             self._start_work_item_manager_thread()
@@ -150,21 +151,29 @@ class RayExecutor(Executor):
 class _WorkItem:
     """Inspired by code from: concurrent.futures.thread"""
 
-    def __init__(self, future: Future, fn: Callable, args: Any, kwargs: Any):
+    def __init__(
+        self,
+        future: Future,
+        fn: Callable,
+        args: Any,
+        kwargs: Any,
+        *,
+        n_cpus_per_job: float,
+    ):
         self.future = future
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
+        self.n_cpus_per_job = n_cpus_per_job
 
     def run(self) -> None:
         if not self.future.set_running_or_notify_cancel():
             return
 
         remote_fn = ray.remote(self.fn)
-        # TODO: we assign 1 CPU to each task which could be wasteful.
-        ref = remote_fn.options(name=self.fn.__name__, num_cpus=1).remote(
-            *self.args, **self.kwargs
-        )
+        ref = remote_fn.options(
+            name=self.fn.__name__, num_cpus=self.n_cpus_per_job
+        ).remote(*self.args, **self.kwargs)
 
         # Almost verbatim copy of `future()` method of ClientObjectRef
         def set_future(data: Any) -> None:
