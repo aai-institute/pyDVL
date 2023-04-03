@@ -12,9 +12,7 @@ from functools import reduce
 from typing import Optional, Sequence, Tuple
 
 import numpy as np
-import yaml
 from numpy._typing import NDArray
-from valda.cs_shapley import cs_shapley
 
 from pydvl.utils import MapReduceJob, ParallelConfig, SupervisedModel, Utility
 
