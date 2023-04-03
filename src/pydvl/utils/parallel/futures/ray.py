@@ -29,6 +29,10 @@ class RayExecutor(Executor):
     :param max_workers: Maximum number of concurrent tasks.
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig`
         with cluster address, number of cpus, etc.
+    :param cancel_futures_on_exit: If True, all futures will be cancelled
+        when exiting the context created by using this class instance
+        as a context manager. It will be ignored when calling `shutdown()`
+        directly.
     """
 
     def __init__(
@@ -36,6 +40,7 @@ class RayExecutor(Executor):
         max_workers: Optional[int] = None,
         *,
         config: ParallelConfig = ParallelConfig(),
+        cancel_futures_on_exit: bool = True,
     ):
         if config.backend != "ray":
             raise ValueError(
@@ -45,6 +50,8 @@ class RayExecutor(Executor):
             if max_workers <= 0:
                 raise ValueError("max_workers must be greater than 0")
             max_workers = max_workers
+
+        self.cancel_futures_on_exit = cancel_futures_on_exit
 
         config_dict = asdict(config)
         config_dict.pop("backend")
@@ -140,11 +147,11 @@ class RayExecutor(Executor):
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Exit the runtime context related to the RayExecutor object.
 
-        This explicitly sets cancel_futures to True
-        in the call to the shutdown() method which is different
-        from the base Executor class' __exit__ method.
+        This explicitly sets cancel_futures to be equal to cancel_futures_on_exit
+        attribute set at instantiation time in the call to the `shutdown()` method
+        which is different from the base Executor class' __exit__ method.
         """
-        self.shutdown(cancel_futures=True)
+        self.shutdown(cancel_futures=self.cancel_futures_on_exit)
         return False
 
 
