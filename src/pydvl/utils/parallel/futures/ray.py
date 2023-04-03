@@ -92,6 +92,8 @@ class RayExecutor(Executor):
         :param args: Positional arguments that will be passed to `fn`.
         :param kwargs: Keyword arguments that will be passed to `fn`.
         :return: A Future representing the given call.
+        :raises BrokenExecutor: If ... 
+        :raises RuntimeError: If a task is submitted after the executor has been shut down.
         """
         with self._shutdown_lock:
             logger.debug("executor acquired shutdown lock")
