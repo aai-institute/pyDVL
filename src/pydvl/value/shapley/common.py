@@ -107,7 +107,7 @@ def compute_shapley_values(
         return combinatorial_montecarlo_shapley(
             u, done=done, n_jobs=n_jobs, progress=progress
         )
-    elif mode == ShapleyMode.PermutationMontecarlo:
+    elif mode in (ShapleyMode.PermutationMontecarlo, ShapleyMode.ApproShapley):
         truncation = kwargs.pop("truncation", NoTruncation())
         return permutation_montecarlo_shapley(
             u,
