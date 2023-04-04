@@ -64,7 +64,7 @@ def solve_cg(hvp, y, x0=None, rtol=1e-7, atol=1e-7, maxiter=None):
     :param maxiter: maximum number of iterations. If None, defaults to 10*len(y)
     """
     if x0 is None:
-        x0 = y
+        x0 = torch.clone(y)
     if maxiter is None:
         maxiter = len(y) * 10
 
@@ -92,6 +92,17 @@ def solve_cg(hvp, y, x0=None, rtol=1e-7, atol=1e-7, maxiter=None):
 
     info = {"niter": k, "optimal": optimal}
     return x, info
+
+
+def solve_lissa(model, x, y, b, lam, maxiter=1000, damp=0, scale=10):
+    h_estimate = torch.clone(b)
+    for i in range(maxiter):
+        # for x_i, y_i in zip(x, y):
+        #     grad_xy, _ = model.grad(x_i.unsqueeze(dim=0), y_i.unsqueeze(dim=0))
+        grad_xy, _ = model.grad(x, y)
+        reg_hvp = lambda v: mvp(grad_xy, v, model.parameters()) + lam * v
+        h_estimate = b + (1 - damp) * h_estimate - reg_hvp(h_estimate) / scale
+    return h_estimate / scale
 
 
 def as_tensor(a: Any, warn=True, **kwargs):

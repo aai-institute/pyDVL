@@ -4,20 +4,15 @@ Contains methods to invert the hessian vector product.
 import logging
 from enum import Enum
 
-import numpy as np
-from numpy.typing import NDArray
-from scipy.sparse.linalg import LinearOperator, cg
-
-from ..utils import maybe_progress
 from .frameworks import (
     ModelType,
     TensorType,
     TwiceDifferentiable,
-    as_tensor,
     identity_tensor,
     mvp,
     solve_batch_cg,
     solve_linear,
+    solve_lissa,
 )
 
 __all__ = ["solve_hvp"]
@@ -32,6 +27,7 @@ class InversionMethod(str, Enum):
 
     Direct = "direct"
     Cg = "cg"
+    Lissa = "lissa"
 
 
 def solve_hvp(
@@ -54,6 +50,7 @@ def solve_hvp(
     :param inversion_method:
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param x: An array containing the features of the input data points.
+    :param y: labels for x
     :param b:
     :param lam: regularization of the hessian
     :param progress: If True, display progress bars.
@@ -71,5 +68,7 @@ def solve_hvp(
         backprop_on = model.parameters()
         reg_hvp = lambda v: mvp(grad_xy, v, backprop_on) + lam * v
         return solve_batch_cg(reg_hvp, b, progress)
+    elif inversion_method == InversionMethod.Lissa:
+        return solve_lissa(model, x, y, b, lam)
     else:
         raise ValueError(f"Unknown inversion method: {inversion_method}")

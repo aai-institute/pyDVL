@@ -20,6 +20,7 @@ try:
         mvp,
         solve_batch_cg,
         solve_linear,
+        solve_lissa,
         stack,
     )
 
@@ -35,6 +36,7 @@ __all__.extend(
         "ModelType",
         "solve_linear",
         "solve_batch_cg",
+        "solve_lissa",
         "as_tensor",
         "stack",
         "einsum",
