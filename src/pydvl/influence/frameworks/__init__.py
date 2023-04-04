@@ -18,6 +18,7 @@ try:
         einsum,
         identity_tensor,
         mvp,
+        solve_batch_cg,
         solve_linear,
         stack,
     )
@@ -33,6 +34,7 @@ __all__.extend(
         "TensorType",
         "ModelType",
         "solve_linear",
+        "solve_batch_cg",
         "as_tensor",
         "stack",
         "einsum",

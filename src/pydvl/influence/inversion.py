@@ -16,6 +16,7 @@ from .frameworks import (
     as_tensor,
     identity_tensor,
     mvp,
+    solve_batch_cg,
     solve_linear,
 )
 
@@ -69,36 +70,6 @@ def solve_hvp(
         grad_xy, _ = model.grad(x, y)
         backprop_on = model.parameters()
         reg_hvp = lambda v: mvp(grad_xy, v, backprop_on) + lam * v
-        hvp_dimensions = model.num_params()
-        return as_tensor(
-            conjugate_gradient(
-                LinearOperator((hvp_dimensions, hvp_dimensions), matvec=reg_hvp),
-                b,
-                progress,
-            ),
-            dtype=x.dtype,
-            warn=False,
-        )
+        return solve_batch_cg(reg_hvp, b, progress)
     else:
         raise ValueError(f"Unknown inversion method: {inversion_method}")
-
-
-def conjugate_gradient(
-    A: LinearOperator, batch_y: TensorType, progress: bool = False
-) -> NDArray:
-    """
-    Given a matrix and a batch of vectors, it uses conjugate gradient to calculate the solution
-    to $Ax = y$ for each $y$ in ``batch_y``. For more info:
-    https://en.wikipedia.org/wiki/Conjugate_gradient_method
-
-    :param A: a real, symmetric and positive-definite matrix of shape [NxN]
-    :param batch_y: a matrix of shape [PxN], with P the size of the batch.
-    :param progress: True, iff progress shall be printed.
-
-    :return: A matrix of shape [PxN] with each line being a solution of $Ax=b$.
-    """
-    batch_cg = []
-    for y in maybe_progress(batch_y, progress, desc="Conjugate gradient"):
-        y_cg, _ = cg(A, y, atol="legacy")
-        batch_cg.append(y_cg)
-    return np.asarray(batch_cg)

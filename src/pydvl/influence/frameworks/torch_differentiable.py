@@ -31,6 +31,69 @@ def solve_linear(matrix: torch.Tensor, b: torch.Tensor):
     return torch.linalg.solve(matrix, b)
 
 
+def solve_batch_cg(
+    hvp: Callable[[torch.Tensor], torch.Tensor], b: torch.Tensor, progress: bool = True
+):
+    """
+    Given a callable Hessian vector product (A) and a batch of vectors, it uses
+    conjugate gradient to calculate the solution. More precisely, it finds x
+    s.t. $Ax = y$ for each $y$ in ``batch_y``. For more info:
+    https://en.wikipedia.org/wiki/Conjugate_gradient_method
+
+    :param hvp: a Callable Hvp, operating with tensors of size N
+    :param batch_y: a matrix of shape [PxN], with P the size of the batch.
+    :param progress: True, iff progress shall be printed.
+
+    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$.
+    """
+    batch_cg = torch.zeros_like(b)
+    for idx, y in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
+        y_cg, _ = solve_cg(hvp, y)
+        batch_cg[idx] = y_cg
+    return batch_cg
+
+
+def solve_cg(hvp, y, x0=None, rtol=1e-7, atol=1e-7, maxiter=None):
+    """Conjugate gradient solver for the Hessian vector product
+
+    :param hvp: a Callable Hvp, operating with tensors of size N
+    :param y: a tensor of shape [N]
+    :param x0: initial guess for hvp
+    :param rtol: maximum relative tolerance of result
+    :param atol: absolute tolerance of result
+    :param maxiter: maximum number of iterations. If None, defaults to 10*len(y)
+    """
+    if x0 is None:
+        x0 = y
+    if maxiter is None:
+        maxiter = len(y) * 10
+
+    y_norm = torch.sum(torch.matmul(y, y)).item()
+    stopping_val = max([rtol**2 * y_norm, atol**2])
+
+    x = x0
+    p = r = (y - hvp(x)).squeeze()
+    gamma = torch.sum(torch.matmul(r, r)).item()
+    optimal = False
+
+    for k in range(maxiter):
+        Ap = hvp(p).squeeze()
+        alpha = gamma / torch.sum(torch.matmul(p, Ap)).item()
+        x += alpha * p
+        r -= alpha * Ap
+        gamma_ = torch.sum(torch.matmul(r, r)).item()
+        beta = gamma_ / gamma
+        gamma = gamma_
+        p = r + beta * p
+
+        if gamma < stopping_val:
+            optimal = True
+            break
+
+    info = {"niter": k, "optimal": optimal}
+    return x, info
+
+
 def as_tensor(a: Any, warn=True, **kwargs):
     """Converts an array into a torch tensor
 
