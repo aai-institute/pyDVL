@@ -272,7 +272,7 @@ def truncated_montecarlo_shapley(
             if done(accumulated_result):
                 break
             # Submit more computations
-            # The goal is to always have `n_concurrent_computations`
+            # The goal is to always have `n_jobs`
             # computations running
             for _ in range(n_jobs - len(futures)):
                 future = executor.submit(

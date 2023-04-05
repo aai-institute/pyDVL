@@ -1,4 +1,5 @@
 import logging
+import math
 import queue
 import sys
 import threading
@@ -26,12 +27,14 @@ class RayExecutor(Executor):
     It shouldn't be initialized directly. You should instead call
     :func:`~pydvl.utils.parallel.futures.init_executor`.
 
-    :param max_workers: Maximum number of concurrent tasks.
+    :param max_workers: Maximum number of concurrent tasks. Each task can
+        request itself any number of vCPUs. You must ensure that the product of
+        both does not exceed available cluster resources.
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig`
         with cluster address, number of cpus, etc.
-    :param cancel_futures_on_exit: If True, all futures will be cancelled
-        when exiting the context created by using this class instance
-        as a context manager. It will be ignored when calling `shutdown()`
+    :param cancel_futures_on_exit: If ``True``, all futures will be cancelled
+        when exiting the context created by using this class instance as a
+        context manager. It will be ignored when calling :meth:`shutdown`
         directly.
     """
 
@@ -88,8 +91,8 @@ class RayExecutor(Executor):
         and returns a Future instance representing the execution of the callable.
 
         :param fn: Callable.
-        :param args: Positional arguments that will be passed to `fn`.
-        :param kwargs: Keyword arguments that will be passed to `fn`.
+        :param args: Positional arguments that will be passed to ``fn``.
+        :param kwargs: Keyword arguments that will be passed to ``fn``.
         :return: A Future representing the given call.
         :raises RuntimeError: If a task is submitted after the executor has been shut down.
         """
