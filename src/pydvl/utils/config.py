@@ -16,12 +16,9 @@ class ParallelConfig:
     :param backend: Type of backend to use.
         Defaults to 'ray'
     :param address: Address of existing remote or local cluster to use.
-        Defaults to None.
     :param n_workers: Number of workers (CPUs) to use.
         This has no effect when using an existing ray cluster.
-        Defaults to None.
     :param n_cpus_per_job: Number of CPUs to use per job.
-        Defaults to 1.0.
     :param logging_level: Logging level for the parallel backend's worker.
     """
 
