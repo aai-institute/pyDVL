@@ -90,10 +90,8 @@ class TorchMLP(nn.Module):
 
 def fit_torch_model(
     model: nn.Module,
-    x_train: torch.Tensor,
-    y_train: torch.Tensor,
-    x_val: torch.Tensor,
-    y_val: torch.Tensor,
+    train_data: DataLoader,
+    val_data: DataLoader,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     optimizer: Optimizer,
     scheduler: Optional[_LRScheduler] = None,
@@ -114,19 +112,12 @@ def fit_torch_model(
     :param batch_size: Batch size to use in training.
     :param progress: True, iff progress shall be printed.
     """
-    x_train = as_tensor(x_train)
-    y_train = as_tensor(y_train)
-    x_val = as_tensor(x_val)
-    y_val = as_tensor(y_val)
-
-    dataset = TensorDataset(x_train, y_train)
-    dataloader = DataLoader(dataset, batch_size=batch_size)
     train_loss = []
     val_loss = []
 
     for epoch in maybe_progress(range(num_epochs), progress, desc="Model fitting"):
         batch_loss = []
-        for train_batch in dataloader:
+        for train_batch in train_data:
             batch_x, batch_y = train_batch
             pred_y = model(batch_x)
             loss_value = loss(torch.squeeze(pred_y), torch.squeeze(batch_y))
@@ -139,6 +130,7 @@ def fit_torch_model(
 
             if scheduler:
                 scheduler.step()
+        x_val, y_val = next(iter(val_data))
         pred_val = model(x_val)
         epoch_val_loss = loss(torch.squeeze(pred_val), torch.squeeze(y_val)).item()
         mean_epoch_train_loss = np.mean(batch_loss)

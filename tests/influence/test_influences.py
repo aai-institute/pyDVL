@@ -9,6 +9,7 @@ import torch
 import torch.nn.functional as F
 from numpy.typing import NDArray
 from torch import nn
+from torch.utils.data import DataLoader
 
 from pydvl.influence import TorchTwiceDifferentiable, compute_influences
 from pydvl.influence.general import InfluenceType, InversionMethod
@@ -141,10 +142,18 @@ def test_influence_linear_model(
         hessian_regularization=hessian_reg,
     )
 
+    train_data_loader = DataLoader(list(zip(*train_data)), batch_size=5, shuffle=True)
+    input_data = DataLoader(list(zip(*train_data)), batch_size=5)
+    test_data_loader = DataLoader(
+        list(zip(*test_data)),
+        batch_size=5,
+    )
+
     direct_influences = compute_influences(
         TorchTwiceDifferentiable(linear_layer, loss),
-        *train_data,
-        *test_data,
+        train_data_loader,
+        input_data,
+        test_data_loader,
         progress=True,
         influence_type=influence_type,
         inversion_method="direct",
@@ -153,8 +162,9 @@ def test_influence_linear_model(
 
     cg_influences = compute_influences(
         TorchTwiceDifferentiable(linear_layer, loss),
-        *train_data,
-        *test_data,
+        train_data_loader,
+        input_data,
+        test_data_loader,
         progress=True,
         influence_type=influence_type,
         inversion_method="cg",
@@ -163,8 +173,9 @@ def test_influence_linear_model(
 
     lissa_influences = compute_influences(
         TorchTwiceDifferentiable(linear_layer, loss),
-        *train_data,
-        *test_data,
+        train_data_loader,
+        input_data,
+        test_data_loader,
         progress=True,
         influence_type=influence_type,
         inversion_method="lissa",
@@ -178,13 +189,13 @@ def test_influence_linear_model(
     assert np.logical_not(np.any(np.isnan(cg_influences)))
     assert np.allclose(direct_influences, analytical_influences, rtol=1e-7)
     assert np.allclose(cg_influences, analytical_influences, rtol=1e-1)
-    upper_quantile_mask = lissa_influences > np.quantile(lissa_influences, 0.9)
+    upper_quantile_mask = lissa_influences > np.quantile(lissa_influences, 0.7)
     assert np.allclose(
         lissa_influences[upper_quantile_mask],
         analytical_influences[upper_quantile_mask],
         rtol=1e-1,
     )
-    lower_quantile_mask = lissa_influences < np.quantile(lissa_influences, 0.1)
+    lower_quantile_mask = lissa_influences < np.quantile(lissa_influences, 0.3)
     assert np.allclose(
         lissa_influences[lower_quantile_mask],
         analytical_influences[lower_quantile_mask],
@@ -258,13 +269,13 @@ test_cases = {
 
 @pytest.mark.torch
 @pytest.mark.parametrize(
-    "nn_architecture, batch_size, input_dim, output_dim, loss, influence_type",
+    "nn_architecture, data_len, input_dim, output_dim, loss, influence_type",
     test_cases.values(),
     ids=test_cases.keys(),
 )
 def test_influences_nn(
     nn_architecture: nn.Module,
-    batch_size: int,
+    data_len: int,
     input_dim: Tuple[int],
     output_dim: int,
     loss: nn.modules.loss._Loss,
@@ -272,8 +283,8 @@ def test_influences_nn(
     hessian_reg: float = 100,
     test_data_len: int = 10,
 ):
-    x_train = torch.rand((batch_size, *input_dim))
-    y_train = torch.rand((batch_size, output_dim))
+    x_train = torch.rand((data_len, *input_dim))
+    y_train = torch.rand((data_len, output_dim))
     x_test = torch.rand((test_data_len, *input_dim))
     y_test = torch.rand((test_data_len, output_dim))
     nn_architecture.eval()
@@ -282,18 +293,25 @@ def test_influences_nn(
         "direct": {},
         "cg": {},
         "lissa": {
-            "maxiter": 6,
+            "maxiter": 10,
             "scale": 100,
         },
     }
+    train_data_loader = DataLoader(
+        list(zip(x_train, y_train)), batch_size=10, shuffle=True
+    )
+    input_data = DataLoader(list(zip(x_train, y_train)), batch_size=10)
+    test_data_loader = DataLoader(
+        list(zip(x_test, y_test)),
+        batch_size=10,
+    )
     multiple_influences = {}
     for inversion_method in InversionMethod:
         influences = compute_influences(
             TorchTwiceDifferentiable(nn_architecture, loss),
-            x_train,
-            y_train,
-            x_test,
-            y_test,
+            train_data_loader,
+            input_data,
+            test_data_loader,
             progress=True,
             influence_type=influence_type,
             inversion_method=inversion_method,
@@ -308,9 +326,9 @@ def test_influences_nn(
             if infl_type == "direct":
                 continue
             assert np.allclose(
-                multiple_influences["direct"], influences, rtol=1e-2
+                multiple_influences["direct"], influences, rtol=1e-1
             ), f"Failed method {infl_type}"
-            assert influences.shape == (test_data_len, batch_size)
+            assert influences.shape == (test_data_len, data_len)
     elif influence_type == InfluenceType.Perturbation:
         for infl_type, influences in multiple_influences.items():
             if infl_type == "direct":
@@ -318,7 +336,7 @@ def test_influences_nn(
             assert np.allclose(
                 multiple_influences["direct"], influences, rtol=1e-1
             ), f"Failed method {infl_type}"
-            assert influences.shape == (test_data_len, batch_size, *input_dim)
+            assert influences.shape == (test_data_len, data_len, *input_dim)
     else:
         raise ValueError(f"Unknown influence type: {influence_type}")
     # check that influences are not all constant

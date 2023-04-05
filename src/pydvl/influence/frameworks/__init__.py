@@ -15,6 +15,7 @@ try:
 
     from .torch_differentiable import (
         as_tensor,
+        cat,
         einsum,
         mvp,
         solve_batch_cg,
@@ -24,6 +25,7 @@ try:
     )
 
     TensorType = torch.Tensor
+    DataLoaderType = torch.utils.data.DataLoader
     ModelType = torch.nn.Module
 
 except ImportError:
@@ -38,6 +40,7 @@ __all__.extend(
         "solve_lissa",
         "as_tensor",
         "stack",
+        "cat",
         "einsum",
         "mvp",
     ]

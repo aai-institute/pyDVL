@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Any, Dict
 
 from .frameworks import (
+    DataLoaderType,
     ModelType,
     TensorType,
     TwiceDifferentiable,
@@ -32,8 +33,7 @@ class InversionMethod(str, Enum):
 def solve_hvp(
     inversion_method: InversionMethod,
     model: TwiceDifferentiable[TensorType, ModelType],
-    x: TensorType,
-    y: TensorType,
+    training_data: DataLoaderType,
     b: TensorType,
     lam: float = 0,
     inversion_method_kwargs: Dict[str, Any] = {},
@@ -62,8 +62,7 @@ def solve_hvp(
     if inversion_method == InversionMethod.Direct:
         return solve_linear(
             model,
-            x,
-            y,
+            training_data,
             b,
             lam,
             **inversion_method_kwargs,
@@ -72,8 +71,7 @@ def solve_hvp(
     elif inversion_method == InversionMethod.Cg:
         return solve_batch_cg(
             model,
-            x,
-            y,
+            training_data,
             b,
             lam,
             **inversion_method_kwargs,
@@ -82,8 +80,7 @@ def solve_hvp(
     elif inversion_method == InversionMethod.Lissa:
         return solve_lissa(
             model,
-            x,
-            y,
+            training_data,
             b,
             lam,
             **inversion_method_kwargs,

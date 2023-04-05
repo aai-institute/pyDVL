@@ -2,13 +2,14 @@
 Contains all parts of pyTorch based machine learning model.
 """
 import logging
-from typing import Any, Callable, Dict, List, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
 from torch import autograd
 from torch.autograd import Variable
+from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
 from .twice_differentiable import TwiceDifferentiable
@@ -28,17 +29,17 @@ def flatten_gradient(grad):
 
 def solve_linear(
     model: TwiceDifferentiable,
-    x: torch.Tensor,
-    y: torch.Tensor,
+    training_data: DataLoader,
     b: torch.Tensor,
     lam: float = 0,
     progress: bool = True,
 ):
-    """Computes the solution of a square system of linear equations
+    """Given a model and training data, it uses conjugate gradient to calculate the
+    inverse of the HVP. More precisely, it finds x s.t. $Hx = b$, with $H$ being
+    the model hessian.
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
-    :param x: An array containing the features of the input data points.
-    :param y: labels for x
+    :param training_data: A DataLoader containing the training data.
     :param b:
     :param lam: regularization of the hessian
     :param progress: If True, display progress bars.
@@ -46,27 +47,34 @@ def solve_linear(
     :return: An array that solves the inverse problem,
         i.e. it returns $x$ such that $Ax = b$
     """
-    matrix = model.hessian(x, y, progress) + lam * identity_tensor(model.num_params())
+    all_x, all_y = [], []
+    for x, y in training_data:
+        all_x.append(x)
+        all_y.append(y)
+    all_x = cat(all_x)
+    all_y = cat(all_y)
+    matrix = model.hessian(all_x, all_y, progress) + lam * identity_tensor(
+        model.num_params()
+    )
     return torch.linalg.solve(matrix, b.T).T
 
 
 def solve_batch_cg(
     model: TwiceDifferentiable,
-    x: torch.Tensor,
-    y: torch.Tensor,
+    training_data: DataLoader,
     b: torch.Tensor,
     lam: float = 0,
     inversion_method_kwargs: Dict[str, Any] = {},
     progress: bool = True,
 ):
     """
-    It uses conjugate gradient to calculate the solution of a linear equation.
-    More precisely, it finds x s.t. $Ax = y$. For
-    more info: https://en.wikipedia.org/wiki/Conjugate_gradient_method
+    Given a model and training data, it uses conjugate gradient to calculate the
+    inverse of the HVP. More precisely, it finds x s.t. $Hx = b$, with $H$ being
+    the model hessian. For more info:
+    https://en.wikipedia.org/wiki/Conjugate_gradient_method
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
-    :param x: An array containing the features of the input data points.
-    :param y: labels for x
+    :param training_data: A DataLoader containing the training data.
     :param b:
     :param lam: regularization of the hessian
     :param inversion_method_kwargs: kwargs to pass to the inversion method
@@ -74,36 +82,48 @@ def solve_batch_cg(
 
     :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$.
     """
-    grad_xy, _ = model.grad(x, y)
+    total_grad_xy = 0
+    total_points = 0
+    for x, y in maybe_progress(training_data, progress, desc="Batch Train Gradients"):
+        grad_xy, _ = model.grad(x, y)
+        total_grad_xy += grad_xy * len(x)
+        total_points += len(x)
     backprop_on = model.parameters()
-    reg_hvp = lambda v: mvp(grad_xy, v, backprop_on) + lam * v
+    reg_hvp = lambda v: mvp(total_grad_xy / total_points, v, backprop_on) + lam * v
     batch_cg = torch.zeros_like(b)
-    for idx, y in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
-        y_cg, _ = solve_cg(reg_hvp, y, **inversion_method_kwargs)
-        batch_cg[idx] = y_cg
+    for idx, bi in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
+        bi_cg, _ = solve_cg(reg_hvp, bi, **inversion_method_kwargs)
+        batch_cg[idx] = bi_cg
     return batch_cg
 
 
-def solve_cg(hvp, y, x0=None, rtol=1e-7, atol=1e-7, maxiter=None):
+def solve_cg(
+    hvp: Callable[[torch.Tensor], torch.Tensor],
+    b: torch.Tensor,
+    x0: Optional[torch.Tensor] = None,
+    rtol: float = 1e-7,
+    atol: float = 1e-7,
+    maxiter: Optional[int] = None,
+):
     """Conjugate gradient solver for the Hessian vector product
 
     :param hvp: a Callable Hvp, operating with tensors of size N
-    :param y: a tensor of shape [N]
+    :param b: a tensor of shape [N]
     :param x0: initial guess for hvp
     :param rtol: maximum relative tolerance of result
     :param atol: absolute tolerance of result
     :param maxiter: maximum number of iterations. If None, defaults to 10*len(y)
     """
     if x0 is None:
-        x0 = torch.clone(y)
+        x0 = torch.clone(b)
     if maxiter is None:
-        maxiter = len(y) * 10
+        maxiter = len(b) * 10
 
-    y_norm = torch.sum(torch.matmul(y, y)).item()
+    y_norm = torch.sum(torch.matmul(b, b)).item()
     stopping_val = max([rtol**2 * y_norm, atol**2])
 
     x = x0
-    p = r = (y - hvp(x)).squeeze()
+    p = r = (b - hvp(x)).squeeze()
     gamma = torch.sum(torch.matmul(r, r)).item()
     optimal = False
 
@@ -126,32 +146,29 @@ def solve_cg(hvp, y, x0=None, rtol=1e-7, atol=1e-7, maxiter=None):
 
 
 def solve_lissa(
-    model,
-    x,
-    y,
-    b,
-    lam,
+    model: TwiceDifferentiable,
+    training_data: DataLoader,
+    b: torch.Tensor,
+    lam: float = 0,
     progress: bool = True,
     maxiter: int = 1000,
     damp: float = 0,
     scale: float = 10,
 ):
     """
-    It uses LISSA, Linear time Stochastic Second-Order Algorithm, to approximate
-    the solution of a linear equation.
-    More precisely, it finds x s.t. $Ax = y$. For
-    more info: https://en.wikipedia.org/wiki/Conjugate_gradient_method.
-    This is done by iteratively approximating A through
+    It uses LISSA, Linear time Stochastic Second-Order Algorithm, to calculate the
+    inverse of the HVP. More precisely, it finds x s.t. $Hx = b$, with $H$ being
+    the model hessian.
+    This is done by iteratively approximating H through
     $$
-    A^{-1}_{j+1} y = y + (I - A) \ A^{-1}_j y
+    H^{-1}_{j+1} b = b + (I - H) \ H^{-1}_j b
     $$
     where I is the identity matrix. Additional damping and scaling factors are
     applied to help convergence. More info can be found in
     :footcite:t:`koh_understanding_2017`
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
-    :param x: An array containing the features of the input data points.
-    :param y: labels for x
+    :param training_data: A DataLoader containing the training data.
     :param b:
     :param lam: regularization of the hessian
     :param maxiter: maximum number of iterations,
@@ -162,7 +179,8 @@ def solve_lissa(
     :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$.
     """
     h_estimate = torch.clone(b)
-    for i in maybe_progress(range(maxiter), progress, desc="Lissa"):
+    for _ in maybe_progress(range(maxiter), progress, desc="Lissa"):
+        x, y = next(iter(training_data))
         grad_xy, _ = model.grad(x, y)
         reg_hvp = lambda v: mvp(grad_xy, v, model.parameters()) + lam * v
         h_estimate = b + (1 - damp) * h_estimate - reg_hvp(h_estimate) / scale
@@ -183,6 +201,11 @@ def as_tensor(a: Any, warn=True, **kwargs):
 def stack(a: Sequence[torch.Tensor], **kwargs):
     """Stacks a sequence of tensors into a single torch tensor"""
     return torch.stack(a, **kwargs)
+
+
+def cat(a: Sequence[torch.Tensor], **kwargs):
+    """Concatenates a sequence of tensors into a single torch tensor"""
+    return torch.cat(a, **kwargs)
 
 
 def einsum(equation, *operands):
@@ -220,7 +243,8 @@ def mvp(
         backprop_on is None, otherwise [DxM], with M the number of elements
         of backprop_on.
     """
-    v = as_tensor(v, warn=False)
+    device = grad_xy.device
+    v = as_tensor(v, warn=False).to(device)
     if v.ndim == 1:
         v = v.unsqueeze(0)
 
@@ -240,11 +264,15 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        device: torch.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        ),
     ):
         r"""
         :param model: A (differentiable) function.
         :param loss: :param loss: A differentiable scalar loss $L(\hat{y}, y)$,
                mapping a prediction and a target to a real value.
+        :param device: device to use for computations. Defaults to cuda if available.
         """
         if model.training:
             logger.warning(
@@ -252,8 +280,9 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
                 "computation, e.g. due to batch normalization. Please call model.eval() before "
                 "computing influences."
             )
-        self.model = model
+        self.model = model.to(device)
         self.loss = loss
+        self.device = device
 
     def parameters(self) -> List[torch.Tensor]:
         """Returns all the model parameters that require differentiating"""
@@ -284,8 +313,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         :returns: An array [NxP] representing the gradients with respect to
         all parameters of the model.
         """
-        x = as_tensor(x, warn=False).unsqueeze(1)
-        y = as_tensor(y, warn=False)
+        x = as_tensor(x, warn=False).to(self.device).unsqueeze(1)
+        y = as_tensor(y, warn=False).to(self.device)
 
         params = [
             param for param in self.model.parameters() if param.requires_grad == True
@@ -321,8 +350,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
             - second element is the input to the model as a grad parameters. \
                 This can be used for further differentiation. 
         """
-        x = as_tensor(x, warn=False).requires_grad_(True)
-        y = as_tensor(y, warn=False)
+        x = as_tensor(x, warn=False).to(self.device).requires_grad_(True)
+        y = as_tensor(y, warn=False).to(self.device)
 
         params = [
             param for param in self.model.parameters() if param.requires_grad == True
@@ -343,6 +372,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         :param y: A matrix [NxK] representing the target values $y_i$.
         :returns: the hessian of the model, i.e. the second derivative wrt. the model parameters.
         """
+        x = x.to(self.device)
+        y = y.to(self.device)
         grad_xy, _ = self.grad(x, y)
         backprop_on = [
             param for param in self.model.parameters() if param.requires_grad == True
