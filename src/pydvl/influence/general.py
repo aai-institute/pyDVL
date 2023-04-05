@@ -3,6 +3,7 @@ This module contains parallelized influence calculation functions for general
 models, as introduced in :footcite:t:`koh_understanding_2017`.
 """
 from enum import Enum
+from typing import Any, Dict
 
 from ..utils import maybe_progress
 from .frameworks import (
@@ -35,6 +36,7 @@ def compute_influence_factors(
     x_test: TensorType,
     y_test: TensorType,
     inversion_method: InversionMethod,
+    inversion_method_kwargs: Dict[str, Any] = {},
     lam: float = 0,
     progress: bool = False,
 ) -> TensorType:
@@ -57,6 +59,7 @@ def compute_influence_factors(
     :param y_test: An array of shape [NxL] containing the targets of the test set of data points.
     :param inversion_func: function to use to invert the product of hvp (hessian
         vector product) and the gradient of the loss (s_test in the paper).
+    :param inversion_method_kwargs: kwargs to pass to the inversion method
     :param lam: regularization of the hessian
     :param progress: If True, display progress bars.
     :returns: An array of size (N, D) containing the influence factors for each
@@ -75,6 +78,7 @@ def compute_influence_factors(
         y,
         test_grads,
         lam,
+        inversion_method_kwargs,
         progress,
     )
 
@@ -165,6 +169,7 @@ def compute_influences(
     y_test: TensorType,
     progress: bool = False,
     inversion_method: InversionMethod = InversionMethod.Direct,
+    inversion_method_kwargs: Dict[str, Any] = {},
     influence_type: InfluenceType = InfluenceType.Up,
     hessian_regularization: float = 0,
 ) -> TensorType:
@@ -208,6 +213,7 @@ def compute_influences(
         x_test,
         y_test,
         inversion_method,
+        inversion_method_kwargs=inversion_method_kwargs,
         lam=hessian_regularization,
         progress=progress,
     )

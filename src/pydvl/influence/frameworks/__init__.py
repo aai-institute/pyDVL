@@ -16,7 +16,6 @@ try:
     from .torch_differentiable import (
         as_tensor,
         einsum,
-        identity_tensor,
         mvp,
         solve_batch_cg,
         solve_linear,
@@ -40,7 +39,6 @@ __all__.extend(
         "as_tensor",
         "stack",
         "einsum",
-        "identity_tensor",
         "mvp",
     ]
 )

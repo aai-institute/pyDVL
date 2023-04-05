@@ -2,7 +2,7 @@
 Contains all parts of pyTorch based machine learning model.
 """
 import logging
-from typing import Any, Callable, List, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Sequence, Tuple
 
 import numpy as np
 import torch
@@ -26,29 +26,60 @@ def flatten_gradient(grad):
     return torch.cat([el.reshape(-1) for el in grad])
 
 
-def solve_linear(matrix: torch.Tensor, b: torch.Tensor):
-    """Computes the solution of a square system of linear equations"""
-    return torch.linalg.solve(matrix, b)
+def solve_linear(
+    model: TwiceDifferentiable,
+    x: torch.Tensor,
+    y: torch.Tensor,
+    b: torch.Tensor,
+    lam: float = 0,
+    progress: bool = True,
+):
+    """Computes the solution of a square system of linear equations
+
+    :param model: A model wrapped in the TwiceDifferentiable interface.
+    :param x: An array containing the features of the input data points.
+    :param y: labels for x
+    :param b:
+    :param lam: regularization of the hessian
+    :param progress: If True, display progress bars.
+
+    :return: An array that solves the inverse problem,
+        i.e. it returns $x$ such that $Ax = b$
+    """
+    matrix = model.hessian(x, y, progress) + lam * identity_tensor(model.num_params())
+    return torch.linalg.solve(matrix, b.T).T
 
 
 def solve_batch_cg(
-    hvp: Callable[[torch.Tensor], torch.Tensor], b: torch.Tensor, progress: bool = True
+    model: TwiceDifferentiable,
+    x: torch.Tensor,
+    y: torch.Tensor,
+    b: torch.Tensor,
+    lam: float = 0,
+    inversion_method_kwargs: Dict[str, Any] = {},
+    progress: bool = True,
 ):
     """
-    Given a callable Hessian vector product (A) and a batch of vectors, it uses
-    conjugate gradient to calculate the solution. More precisely, it finds x
-    s.t. $Ax = y$ for each $y$ in ``batch_y``. For more info:
-    https://en.wikipedia.org/wiki/Conjugate_gradient_method
+    It uses conjugate gradient to calculate the solution of a linear equation.
+    More precisely, it finds x s.t. $Ax = y$. For
+    more info: https://en.wikipedia.org/wiki/Conjugate_gradient_method
 
-    :param hvp: a Callable Hvp, operating with tensors of size N
-    :param batch_y: a matrix of shape [PxN], with P the size of the batch.
-    :param progress: True, iff progress shall be printed.
+    :param model: A model wrapped in the TwiceDifferentiable interface.
+    :param x: An array containing the features of the input data points.
+    :param y: labels for x
+    :param b:
+    :param lam: regularization of the hessian
+    :param inversion_method_kwargs: kwargs to pass to the inversion method
+    :param progress: If True, display progress bars.
 
     :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$.
     """
+    grad_xy, _ = model.grad(x, y)
+    backprop_on = model.parameters()
+    reg_hvp = lambda v: mvp(grad_xy, v, backprop_on) + lam * v
     batch_cg = torch.zeros_like(b)
     for idx, y in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
-        y_cg, _ = solve_cg(hvp, y)
+        y_cg, _ = solve_cg(reg_hvp, y, **inversion_method_kwargs)
         batch_cg[idx] = y_cg
     return batch_cg
 
@@ -94,11 +125,44 @@ def solve_cg(hvp, y, x0=None, rtol=1e-7, atol=1e-7, maxiter=None):
     return x, info
 
 
-def solve_lissa(model, x, y, b, lam, maxiter=1000, damp=0, scale=10):
+def solve_lissa(
+    model,
+    x,
+    y,
+    b,
+    lam,
+    progress: bool = True,
+    maxiter: int = 1000,
+    damp: float = 0,
+    scale: float = 10,
+):
+    """
+    It uses LISSA, Linear time Stochastic Second-Order Algorithm, to approximate
+    the solution of a linear equation.
+    More precisely, it finds x s.t. $Ax = y$. For
+    more info: https://en.wikipedia.org/wiki/Conjugate_gradient_method.
+    This is done by iteratively approximating A through
+    $$
+    A^{-1}_{j+1} y = y + (I - A) \ A^{-1}_j y
+    $$
+    where I is the identity matrix. Additional damping and scaling factors are
+    applied to help convergence. More info can be found in
+    :footcite:t:`koh_understanding_2017`
+
+    :param model: A model wrapped in the TwiceDifferentiable interface.
+    :param x: An array containing the features of the input data points.
+    :param y: labels for x
+    :param b:
+    :param lam: regularization of the hessian
+    :param maxiter: maximum number of iterations,
+    :param damp: damping factor, defaults to 0 for no damping
+    :param scale: scaling factor, defaults to 10
+    :param progress: If True, display progress bars.
+
+    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$.
+    """
     h_estimate = torch.clone(b)
-    for i in range(maxiter):
-        # for x_i, y_i in zip(x, y):
-        #     grad_xy, _ = model.grad(x_i.unsqueeze(dim=0), y_i.unsqueeze(dim=0))
+    for i in maybe_progress(range(maxiter), progress, desc="Lissa"):
         grad_xy, _ = model.grad(x, y)
         reg_hvp = lambda v: mvp(grad_xy, v, model.parameters()) + lam * v
         h_estimate = b + (1 - damp) * h_estimate - reg_hvp(h_estimate) / scale
