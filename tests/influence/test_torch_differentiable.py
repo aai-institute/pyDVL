@@ -29,9 +29,6 @@ from pydvl.influence.frameworks.torch_differentiable import (
 
 DATA_OUTPUT_NOISE: float = 0.01
 
-TEST_CONDITION_NUMBERS: List[int] = [5]
-TEST_SET_SIZE: List[int] = [20]
-TRAINING_SET_SIZE: List[int] = [50]
 PROBLEM_DIMENSIONS: List[Tuple[int, int]] = [
     (2, 2),
     (5, 10),
@@ -39,41 +36,17 @@ PROBLEM_DIMENSIONS: List[Tuple[int, int]] = [
     (10, 10),
 ]
 
-test_cases_linear_regression_derivatives = list(
-    itertools.product(
-        TRAINING_SET_SIZE,
-        PROBLEM_DIMENSIONS,
-        TEST_CONDITION_NUMBERS,
-    )
-)
-
-
-def lmb_correctness_test_case_to_str(packed_i_test_case):
-    i, test_case = packed_i_test_case
-    return f"Problem #{i} of dimension {test_case[1]} with train size {test_case[0]} and condition number {test_case[2]}"
-
-
-correctness_test_case_ids = list(
-    map(
-        lmb_correctness_test_case_to_str,
-        zip(
-            range(len(test_cases_linear_regression_derivatives)),
-            test_cases_linear_regression_derivatives,
-        ),
-    )
-)
-
 
 @pytest.mark.torch
 @pytest.mark.parametrize(
-    "train_set_size,problem_dimension,condition_number",
-    test_cases_linear_regression_derivatives,
-    ids=correctness_test_case_ids,
+    "problem_dimension",
+    PROBLEM_DIMENSIONS,
+    ids=[f"problem_dimension={dim}" for dim in PROBLEM_DIMENSIONS],
 )
 def test_linear_grad(
-    train_set_size: int,
     problem_dimension: Tuple[int, int],
-    condition_number: float,
+    train_set_size: int = 50,
+    condition_number: float = 5,
 ):
     # some settings
     A, b = linear_model(problem_dimension, condition_number)
@@ -98,14 +71,14 @@ def test_linear_grad(
 
 @pytest.mark.torch
 @pytest.mark.parametrize(
-    "train_set_size,problem_dimension,condition_number",
-    test_cases_linear_regression_derivatives,
-    ids=correctness_test_case_ids,
+    "problem_dimension",
+    PROBLEM_DIMENSIONS,
+    ids=[f"problem_dimension={dim}" for dim in PROBLEM_DIMENSIONS],
 )
 def test_linear_hessian(
-    train_set_size: int,
     problem_dimension: Tuple[int, int],
-    condition_number: float,
+    train_set_size: int = 50,
+    condition_number: float = 5,
 ):
     # some settings
     A, b = linear_model(problem_dimension, condition_number)
@@ -134,14 +107,14 @@ def test_linear_hessian(
 
 @pytest.mark.torch
 @pytest.mark.parametrize(
-    "train_set_size,problem_dimension,condition_number",
-    test_cases_linear_regression_derivatives,
-    ids=correctness_test_case_ids,
+    "problem_dimension",
+    PROBLEM_DIMENSIONS,
+    ids=[f"problem_dimension={dim}" for dim in PROBLEM_DIMENSIONS],
 )
 def test_linear_mixed_derivative(
-    train_set_size: int,
     problem_dimension: Tuple[int, int],
-    condition_number: float,
+    train_set_size: int = 50,
+    condition_number: float = 5,
 ):
     # some settings
     A, b = linear_model(problem_dimension, condition_number)
@@ -165,7 +138,7 @@ def test_linear_mixed_derivative(
     )
     model_mvp = []
     for i in range(len(train_x)):
-        grad_xy, tensor_x = mvp_model.grad(train_x[i], train_y[i])
+        grad_xy, tensor_x = mvp_model.grad(train_x[i], train_y[i], x_requires_grad=True)
         model_mvp.append(
             mvp(
                 grad_xy,
