@@ -1,6 +1,6 @@
 from concurrent.futures import Executor, ThreadPoolExecutor
 from contextlib import contextmanager
-from typing import Generator
+from typing import Generator, Optional
 
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.parallel.futures.ray import RayExecutor
@@ -10,6 +10,7 @@ __all__ = ["init_executor"]
 
 @contextmanager
 def init_executor(
+    max_workers: Optional[int] = None,
     config: ParallelConfig = ParallelConfig(),
 ) -> Generator[Executor, None, None]:
     """Initializes a futures executor based on the passed parallel configuration object.
@@ -22,7 +23,7 @@ def init_executor(
     >>> from pydvl.utils.parallel.futures import init_executor
     >>> from pydvl.utils.config import ParallelConfig
     >>> config = ParallelConfig(backend="ray")
-    >>> with init_executor(config=config) as executor:
+    >>> with init_executor(max_workers=3, config=config) as executor:
     ...     pass
 
     >>> from pydvl.utils.parallel.futures import init_executor
@@ -42,7 +43,6 @@ def init_executor(
 
     """
     if config.backend == "ray":
-        max_workers = config.n_cpus_local
         with RayExecutor(max_workers, config=config) as executor:
             yield executor
     elif config.backend == "sequential":

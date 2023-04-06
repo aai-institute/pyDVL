@@ -186,8 +186,8 @@ def _permutation_montecarlo_one_step(
 
 @deprecated(
     target=True,
-    deprecated_in="0.7.0",
-    remove_in="0.8.0",
+    deprecated_in="0.6.1",
+    remove_in="0.7.0",
     args_mapping=dict(coordinator_update_period=None, worker_update_period=None),
 )
 def truncated_montecarlo_shapley(
@@ -240,19 +240,22 @@ def truncated_montecarlo_shapley(
     :return: Object with the data values.
 
     """
-    n_jobs = effective_n_jobs(n_jobs, config)
-
     algorithm = "truncated_montecarlo_shapley"
 
     parallel_backend = init_parallel_backend(config)
     u = parallel_backend.put(u)
+    # This represents the number of jobs that are running
+    n_jobs = effective_n_jobs(n_jobs, config)
+    # This determines the total number of submitted jobs
+    # including the ones that are running
+    n_submitted_jobs = 2 * n_jobs
 
     accumulated_result = ValuationResult.zeros(algorithm=algorithm)
 
-    with init_executor(config=config) as executor:
+    with init_executor(max_workers=n_jobs, config=config) as executor:
         futures = set()
         # Initial batch of computations
-        for _ in range(n_jobs):
+        for _ in range(n_submitted_jobs):
             future = executor.submit(
                 _permutation_montecarlo_one_step,
                 u,
@@ -274,7 +277,7 @@ def truncated_montecarlo_shapley(
             # Submit more computations
             # The goal is to always have `n_jobs`
             # computations running
-            for _ in range(n_jobs - len(futures)):
+            for _ in range(n_submitted_jobs - len(futures)):
                 future = executor.submit(
                     _permutation_montecarlo_one_step,
                     u,
