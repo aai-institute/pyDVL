@@ -16,21 +16,19 @@ class ParallelConfig:
     :param backend: Type of backend to use.
         Defaults to 'ray'
     :param address: Address of existing remote or local cluster to use.
-    :param n_workers: Number of workers (CPUs) to use.
+    :param n_cpus_local: Number of CPUs to use when creating a local ray cluster.
         This has no effect when using an existing ray cluster.
-    :param n_cpus_per_job: Number of CPUs to use per job.
     :param logging_level: Logging level for the parallel backend's worker.
     """
 
     backend: Literal["sequential", "ray"] = "ray"
     address: Optional[Union[str, Tuple[str, int]]] = None
-    n_workers: Optional[int] = None
-    n_cpus_per_job: float = 1.0
+    n_cpus_local: Optional[int] = None
     logging_level: int = logging.WARNING
 
     def __post_init__(self) -> None:
-        if self.address is not None and self.n_workers is not None:
-            raise ValueError("When `address` is set, `n_workers` should be None.")
+        if self.address is not None and self.n_cpus_local is not None:
+            raise ValueError("When `address` is set, `n_cpus_local` should be None.")
 
 
 @dataclass

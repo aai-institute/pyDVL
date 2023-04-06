@@ -28,8 +28,11 @@ class RayExecutor(Executor):
     :func:`~pydvl.utils.parallel.futures.init_executor`.
 
     :param max_workers: Maximum number of concurrent tasks. Each task can
-        request itself any number of vCPUs. You must ensure that the product of
-        both does not exceed available cluster resources.
+        request itself any number of vCPUs. You must ensure the product
+        of this value and the n_cpus_per_job parameter passed to submit()
+        does not exceed available cluster resources.
+        If set to None, it will default to the total number of vCPUs
+        in the ray cluster.
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig`
         with cluster address, number of cpus, etc.
     :param cancel_futures_on_exit: If ``True``, all futures will be cancelled
@@ -58,10 +61,9 @@ class RayExecutor(Executor):
 
         config_dict = asdict(config)
         config_dict.pop("backend")
-        config_dict.pop("n_workers")
-        self.n_cpus_per_job = config_dict.pop("n_cpus_per_job")
+        n_cpus_local = config_dict.pop("n_cpus_local")
         if config_dict.get("address", None) is None:
-            config_dict["num_cpus"] = max_workers
+            config_dict["num_cpus"] = n_cpus_local
         self.config = config_dict
         if not ray.is_initialized():
             ray.init(**self.config)
@@ -84,7 +86,9 @@ class RayExecutor(Executor):
         # Work Item Manager Thread
         self._work_item_manager_thread: Optional[_WorkItemManagerThread] = None
 
-    def submit(self, fn: Callable[..., T], *args, **kwargs) -> "Future[T]":
+    def submit(
+        self, fn: Callable[..., T], *args, n_cpus_per_job: float = 1.0, **kwargs
+    ) -> "Future[T]":
         r"""Submits a callable to be executed with the given arguments.
 
         Schedules the callable to be executed as fn(\*args, \**kwargs)
@@ -92,6 +96,7 @@ class RayExecutor(Executor):
 
         :param fn: Callable.
         :param args: Positional arguments that will be passed to ``fn``.
+        :param n_cpus_per_job: Number or fraction of vCPUs to request for each task.
         :param kwargs: Keyword arguments that will be passed to ``fn``.
         :return: A Future representing the given call.
         :raises RuntimeError: If a task is submitted after the executor has been shut down.
@@ -103,7 +108,7 @@ class RayExecutor(Executor):
 
             logging.debug("Creating future and putting work item in work queue")
             future: "Future[T]" = Future()
-            w = _WorkItem(future, fn, args, kwargs, n_cpus_per_job=self.n_cpus_per_job)
+            w = _WorkItem(future, fn, args, kwargs, n_cpus_per_job=n_cpus_per_job)
             self._put_work_item_in_queue(w)
             # We delay starting the thread until the first call to submit
             self._start_work_item_manager_thread()

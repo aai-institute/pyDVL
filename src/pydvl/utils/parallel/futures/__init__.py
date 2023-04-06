@@ -42,7 +42,7 @@ def init_executor(
 
     """
     if config.backend == "ray":
-        max_workers = config.n_workers
+        max_workers = config.n_cpus_local
         with RayExecutor(max_workers, config=config) as executor:
             yield executor
     elif config.backend == "sequential":

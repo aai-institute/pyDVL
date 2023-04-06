@@ -135,10 +135,9 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     def __init__(self, config: ParallelConfig):
         config_dict = asdict(config)
         config_dict.pop("backend")
-        n_workers = config_dict.pop("n_workers")
+        n_cpus_local = config_dict.pop("n_cpus_local")
         if config_dict.get("address", None) is None:
-            config_dict["num_cpus"] = n_workers
-        self.n_cpus_per_job = config_dict.pop("n_cpus_per_job")
+            config_dict["num_cpus"] = n_cpus_local
         self.config = config_dict
         if not ray.is_initialized():
             ray.init(**self.config)
