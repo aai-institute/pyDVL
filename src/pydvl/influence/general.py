@@ -164,8 +164,8 @@ influence_type_registry = {
 def compute_influences(
     differentiable_model: TwiceDifferentiable[TensorType, ModelType],
     training_data: DataLoaderType,
-    input_data: Optional[DataLoaderType] = None,
     test_data: Optional[DataLoaderType] = None,
+    input_data: Optional[DataLoaderType] = None,
     progress: bool = False,
     inversion_method: InversionMethod = InversionMethod.Direct,
     inversion_method_kwargs: Dict[str, Any] = {},
@@ -179,11 +179,12 @@ def compute_influences(
     influences over the complete input_data set.
 
     :param differentiable_model: A model wrapped with its loss in TwiceDifferentiable.
-    :param training_data: data loader with the training data
-    :param input_data: data loader with the samples to calculate the influences
-        for. If None, the samples in training_data are used.
+    :param training_data: data loader with the training data, used to calculate
+        the hessian of the model loss.
     :param test_data: data loader with the test samples. If None, the samples in
         training_data are used.
+    :param input_data: data loader with the samples to calculate the influences
+        of. If None, the samples in training_data are used.
     :param progress: whether to display progress bars.
     :param inversion_method: Set the inversion method to a specific one, can be
         'direct' for direct inversion (and explicit construction of the Hessian)

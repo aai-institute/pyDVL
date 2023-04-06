@@ -77,51 +77,29 @@ def analytical_linear_influences(
     return result
 
 
-INFLUENCE_TEST_CONDITION_NUMBERS: List[int] = [3]
-INFLUENCE_TRAINING_SET_SIZE: List[int] = [50, 30]
-INFLUENCE_TEST_SET_SIZE: List[int] = [20]
-INFLUENCE_DIMENSIONS: List[Tuple[int, int]] = [
-    (3, 20),
-]
-HESSIAN_REGULARIZATION: List[float] = [0, 1]
-
-
-test_cases = list(
-    itertools.product(
-        INFLUENCE_TRAINING_SET_SIZE,
-        INFLUENCE_TEST_SET_SIZE,
-        InfluenceType,
-        INFLUENCE_DIMENSIONS,
-        INFLUENCE_TEST_CONDITION_NUMBERS,
-        HESSIAN_REGULARIZATION,
-    )
-)
-
-
-def lmb_test_case_to_str(packed_i_test_case):
-    i, test_case = packed_i_test_case
-    return (
-        f"Problem #{i} of dimension {test_case[3]} with train size {test_case[0]}, "
-        f"test size {test_case[1]}, if_type {test_case[2]}, condition number {test_case[4]} and lam {test_case[5]}."
-    )
-
-
-test_case_ids = list(map(lmb_test_case_to_str, zip(range(len(test_cases)), test_cases)))
-
-
 @pytest.mark.torch
 @pytest.mark.parametrize(
-    "train_set_size,test_set_size,influence_type,problem_dimension,condition_number, hessian_reg",
-    test_cases,
-    ids=test_case_ids,
+    "train_set_size",
+    [50, 30],
+    ids=["train_size=50", "train_size=30"],
+)
+@pytest.mark.parametrize(
+    "influence_type",
+    InfluenceType,
+    ids=[ifl.value for ifl in InfluenceType],
+)
+@pytest.mark.parametrize(
+    "hessian_reg",
+    [0, 1],
+    ids=["hessian_reg=0", "hessian_reg=1"],
 )
 def test_influence_linear_model(
     train_set_size: int,
-    test_set_size: int,
     influence_type: InfluenceType,
-    problem_dimension: Tuple[int, int],
-    condition_number: float,
     hessian_reg: float,
+    test_set_size: int = 20,
+    problem_dimension: Tuple[int, int] = (3, 20),
+    condition_number: float = 3,
 ):
     A, b = linear_model(problem_dimension, condition_number)
     train_data, test_data = add_noise_to_linear_model(
@@ -152,8 +130,8 @@ def test_influence_linear_model(
     direct_influences = compute_influences(
         TorchTwiceDifferentiable(linear_layer, loss),
         train_data_loader,
-        input_data,
         test_data_loader,
+        input_data,
         progress=True,
         influence_type=influence_type,
         inversion_method="direct",
@@ -163,8 +141,8 @@ def test_influence_linear_model(
     cg_influences = compute_influences(
         TorchTwiceDifferentiable(linear_layer, loss),
         train_data_loader,
-        input_data,
         test_data_loader,
+        input_data,
         progress=True,
         influence_type=influence_type,
         inversion_method="cg",
@@ -174,8 +152,8 @@ def test_influence_linear_model(
     lissa_influences = compute_influences(
         TorchTwiceDifferentiable(linear_layer, loss),
         train_data_loader,
-        input_data,
         test_data_loader,
+        input_data,
         progress=True,
         influence_type=influence_type,
         inversion_method="lissa",
