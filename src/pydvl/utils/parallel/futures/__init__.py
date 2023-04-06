@@ -12,11 +12,13 @@ __all__ = ["init_executor"]
 def init_executor(
     max_workers: Optional[int] = None,
     config: ParallelConfig = ParallelConfig(),
+    **kwargs,
 ) -> Generator[Executor, None, None]:
     """Initializes a futures executor based on the passed parallel configuration object.
 
     :param max_workers: Maximum number of concurrent tasks.
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+    :param kwargs: Other optional parameter that will be passed to the executor.
 
     :Example:
 
@@ -43,11 +45,10 @@ def init_executor(
 
     """
     if config.backend == "ray":
-        with RayExecutor(max_workers, config=config) as executor:
+        with RayExecutor(max_workers, config=config, **kwargs) as executor:
             yield executor
     elif config.backend == "sequential":
-        max_workers = 1
-        with ThreadPoolExecutor(max_workers) as executor:
+        with ThreadPoolExecutor(1) as executor:
             yield executor
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")

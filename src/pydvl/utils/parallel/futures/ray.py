@@ -86,9 +86,7 @@ class RayExecutor(Executor):
         # Work Item Manager Thread
         self._work_item_manager_thread: Optional[_WorkItemManagerThread] = None
 
-    def submit(
-        self, fn: Callable[..., T], *args, n_cpus_per_job: float = 1.0, **kwargs
-    ) -> "Future[T]":
+    def submit(self, fn: Callable[..., T], *args, **kwargs) -> "Future[T]":
         r"""Submits a callable to be executed with the given arguments.
 
         Schedules the callable to be executed as fn(\*args, \**kwargs)
@@ -96,8 +94,9 @@ class RayExecutor(Executor):
 
         :param fn: Callable.
         :param args: Positional arguments that will be passed to ``fn``.
-        :param n_cpus_per_job: Number or fraction of vCPUs to request for each task.
         :param kwargs: Keyword arguments that will be passed to ``fn``.
+            It can also optionally contain options for the ray remote function
+            as a dictionary as the keyword argument `remote_function_options`.
         :return: A Future representing the given call.
         :raises RuntimeError: If a task is submitted after the executor has been shut down.
         """
@@ -108,7 +107,14 @@ class RayExecutor(Executor):
 
             logging.debug("Creating future and putting work item in work queue")
             future: "Future[T]" = Future()
-            w = _WorkItem(future, fn, args, kwargs, n_cpus_per_job=n_cpus_per_job)
+            remote_function_options = kwargs.pop("remote_function_options", None)
+            w = _WorkItem(
+                future,
+                fn,
+                args,
+                kwargs,
+                remote_function_options=remote_function_options,
+            )
             self._put_work_item_in_queue(w)
             # We delay starting the thread until the first call to submit
             self._start_work_item_manager_thread()
@@ -171,13 +177,13 @@ class _WorkItem:
         args: Any,
         kwargs: Any,
         *,
-        n_cpus_per_job: float,
+        remote_function_options: Optional[dict] = None,
     ):
         self.future = future
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
-        self.n_cpus_per_job = n_cpus_per_job
+        self.remote_function_options = remote_function_options or {"num_cpus": 1.0}
 
     def run(self) -> None:
         if not self.future.set_running_or_notify_cancel():
@@ -185,7 +191,7 @@ class _WorkItem:
 
         remote_fn = ray.remote(self.fn)
         ref = remote_fn.options(
-            name=self.fn.__name__, num_cpus=self.n_cpus_per_job
+            name=self.fn.__name__, **self.remote_function_options
         ).remote(*self.args, **self.kwargs)
 
         # Almost verbatim copy of `future()` method of ClientObjectRef
