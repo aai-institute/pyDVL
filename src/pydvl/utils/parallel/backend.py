@@ -170,7 +170,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
 
         :return: The `.remote` method of the ray `RemoteFunction`.
         """
-        if len(kwargs) > 1:
+        if len(kwargs) > 0:
             return ray.remote(**kwargs)(fun).remote  # type: ignore
         return ray.remote(fun).remote  # type: ignore
 
