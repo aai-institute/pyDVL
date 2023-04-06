@@ -142,7 +142,7 @@ def _compute_influences_pert(
         desc="Batch Influence Perturbation",
     ):
         for i in range(len(x)):
-            grad_xy, tensor_x = model.grad(x[i : i + 1], y[i])
+            grad_xy, tensor_x = model.grad(x[i : i + 1], y[i], x_requires_grad=True)
             perturbation_influences = mvp(
                 grad_xy,
                 influence_factors,

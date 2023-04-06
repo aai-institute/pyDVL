@@ -44,11 +44,16 @@ class TwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
         """
         pass
 
-    def grad(self, x: TensorType, y: TensorType) -> Tuple[TensorType, TensorType]:
+    def grad(
+        self, x: TensorType, y: TensorType, x_requires_grad: bool = False
+    ) -> Tuple[TensorType, TensorType]:
         """
         Calculates gradient of model parameters wrt. the model parameters.
         :param x: A matrix representing the features $x_i$.
         :param y: A matrix representing the target values $y_i$.
+        :param x_requires_grad: If True, the input $x$ is marked as requiring
+            gradients. This is important for further differentiation on input
+            parameters.
         :returns: A tuple where: \
             - first element is an array with the gradients of the model. \
             - second element is the input to the model as a grad parameters. \

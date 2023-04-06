@@ -340,17 +340,21 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         self,
         x: torch.Tensor,
         y: torch.Tensor,
+        x_requires_grad: bool = False,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Calculates gradient of model parameters wrt the model parameters.
         :param x: A matrix [NxD] representing the features $x_i$.
         :param y: A matrix [NxK] representing the target values $y_i$.
+        :param x_requires_grad: If True, the input $x$ is marked as requiring
+            gradients. This is important for further differentiation on input
+            parameters.
         :returns: A tuple where: \
             - first element is an array [P] with the gradients of the model. \
             - second element is the input to the model as a grad parameters. \
                 This can be used for further differentiation. 
         """
-        x = as_tensor(x, warn=False).to(self.device).requires_grad_(True)
+        x = as_tensor(x, warn=False).to(self.device).requires_grad_(x_requires_grad)
         y = as_tensor(y, warn=False).to(self.device)
 
         params = [

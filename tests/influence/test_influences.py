@@ -299,23 +299,15 @@ def test_influences_nn(
         assert not np.any(np.isnan(influences))
         multiple_influences[inversion_method] = influences
 
-    if influence_type == InfluenceType.Up:
-        for infl_type, influences in multiple_influences.items():
-            if infl_type == "direct":
-                continue
-            assert np.allclose(
-                multiple_influences["direct"], influences, rtol=1e-1
-            ), f"Failed method {infl_type}"
+    for infl_type, influences in multiple_influences.items():
+        if infl_type == "direct":
+            continue
+        assert np.allclose(
+            multiple_influences["direct"], influences, rtol=1e-1
+        ), f"Failed method {infl_type}"
+        if influence_type == InfluenceType.Up:
             assert influences.shape == (test_data_len, data_len)
-    elif influence_type == InfluenceType.Perturbation:
-        for infl_type, influences in multiple_influences.items():
-            if infl_type == "direct":
-                continue
-            assert np.allclose(
-                multiple_influences["direct"], influences, rtol=1e-1
-            ), f"Failed method {infl_type}"
+        elif influence_type == InfluenceType.Perturbation:
             assert influences.shape == (test_data_len, data_len, *input_dim)
-    else:
-        raise ValueError(f"Unknown influence type: {influence_type}")
     # check that influences are not all constant
     assert not np.all(influences == influences.item(0))
