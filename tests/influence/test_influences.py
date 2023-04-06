@@ -201,7 +201,6 @@ simple_nn_regr = nn.Sequential(nn.Linear(10, 10), nn.Linear(10, 3), nn.Linear(3,
 test_cases = {
     "conv3d_nn_up": [
         conv3d_nn,
-        10,
         (5, 3, 3, 3),
         3,
         nn.MSELoss(),
@@ -209,37 +208,33 @@ test_cases = {
     ],
     "conv3d_nn_pert": [
         conv3d_nn,
-        10,
         (5, 3, 3, 3),
         3,
         nn.SmoothL1Loss(),
         InfluenceType.Perturbation,
     ],
-    "conv_2d_nn_up": [conv2d_nn, 10, (5, 5, 5), 3, nn.MSELoss(), InfluenceType.Up],
+    "conv_2d_nn_up": [conv2d_nn, (5, 5, 5), 3, nn.MSELoss(), InfluenceType.Up],
     "conv_2d_nn_pert": [
         conv2d_nn,
-        10,
         (5, 5, 5),
         3,
-        nn.MSELoss(),
+        nn.SmoothL1Loss(),
         InfluenceType.Perturbation,
     ],
-    "conv_1d_nn_up": [conv1d_nn, 10, (5, 3), 3, nn.MSELoss(), InfluenceType.Up],
+    "conv_1d_nn_up": [conv1d_nn, (5, 3), 3, nn.MSELoss(), InfluenceType.Up],
     "conv_1d_pert": [
         conv1d_nn,
-        10,
         (5, 3),
         3,
         nn.SmoothL1Loss(),
         InfluenceType.Perturbation,
     ],
-    "simple_nn_up": [simple_nn_regr, 10, (10,), 1, nn.MSELoss(), InfluenceType.Up],
+    "simple_nn_up": [simple_nn_regr, (10,), 1, nn.MSELoss(), InfluenceType.Up],
     "simple_nn_pert": [
         simple_nn_regr,
-        10,
         (10,),
         1,
-        nn.MSELoss(),
+        nn.SmoothL1Loss(),
         InfluenceType.Perturbation,
     ],
 }
@@ -247,19 +242,20 @@ test_cases = {
 
 @pytest.mark.torch
 @pytest.mark.parametrize(
-    "nn_architecture, data_len, input_dim, output_dim, loss, influence_type",
+    "nn_architecture, input_dim, output_dim, loss, influence_type",
     test_cases.values(),
     ids=test_cases.keys(),
 )
 def test_influences_nn(
     nn_architecture: nn.Module,
-    data_len: int,
     input_dim: Tuple[int],
     output_dim: int,
     loss: nn.modules.loss._Loss,
     influence_type: InfluenceType,
-    hessian_reg: float = 100,
+    data_len: int = 20,
+    hessian_reg: float = 1000,
     test_data_len: int = 10,
+    batch_size: int = 10,
 ):
     x_train = torch.rand((data_len, *input_dim))
     y_train = torch.rand((data_len, output_dim))
@@ -271,24 +267,20 @@ def test_influences_nn(
         "direct": {},
         "cg": {},
         "lissa": {
-            "maxiter": 10,
-            "scale": 100,
+            "maxiter": 100,
+            "scale": 10000,
         },
     }
-    train_data_loader = DataLoader(
-        list(zip(x_train, y_train)), batch_size=10, shuffle=True
-    )
-    input_data = DataLoader(list(zip(x_train, y_train)), batch_size=10)
+    train_data_loader = DataLoader(list(zip(x_train, y_train)), batch_size=batch_size)
     test_data_loader = DataLoader(
         list(zip(x_test, y_test)),
-        batch_size=10,
+        batch_size=batch_size,
     )
     multiple_influences = {}
     for inversion_method in InversionMethod:
         influences = compute_influences(
             TorchTwiceDifferentiable(nn_architecture, loss),
             train_data_loader,
-            input_data,
             test_data_loader,
             progress=True,
             influence_type=influence_type,
@@ -303,7 +295,7 @@ def test_influences_nn(
         if infl_type == "direct":
             continue
         assert np.allclose(
-            multiple_influences["direct"], influences, rtol=1e-1
+            influences, multiple_influences["direct"], rtol=1e-1
         ), f"Failed method {infl_type}"
         if influence_type == InfluenceType.Up:
             assert influences.shape == (test_data_len, data_len)

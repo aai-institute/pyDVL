@@ -20,7 +20,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def flatten_gradient(grad):
+def flatten_gradient(grad) -> torch.Tensor:
     """
     Simple function to flatten a pyTorch gradient for use in subsequent calculation
     """
@@ -33,7 +33,7 @@ def solve_linear(
     b: torch.Tensor,
     lam: float = 0,
     progress: bool = True,
-):
+) -> torch.Tensor:
     """Given a model and training data, it uses conjugate gradient to calculate the
     inverse of the HVP. More precisely, it finds x s.t. $Hx = b$, with $H$ being
     the model hessian.
@@ -66,7 +66,7 @@ def solve_batch_cg(
     lam: float = 0,
     inversion_method_kwargs: Dict[str, Any] = {},
     progress: bool = True,
-):
+) -> torch.Tensor:
     """
     Given a model and training data, it uses conjugate gradient to calculate the
     inverse of the HVP. More precisely, it finds x s.t. $Hx = b$, with $H$ being
@@ -104,7 +104,7 @@ def solve_cg(
     rtol: float = 1e-7,
     atol: float = 1e-7,
     maxiter: Optional[int] = None,
-):
+) -> Tuple[torch.Tensor, Dict[str, Any]]:
     """Conjugate gradient solver for the Hessian vector product
 
     :param hvp: a Callable Hvp, operating with tensors of size N
@@ -154,7 +154,8 @@ def solve_lissa(
     maxiter: int = 1000,
     damp: float = 0,
     scale: float = 10,
-):
+    h0: Optional[torch.Tensor] = None,
+) -> torch.Tensor:
     """
     It uses LISSA, Linear time Stochastic Second-Order Algorithm, to calculate the
     inverse of the HVP. More precisely, it finds x s.t. $Hx = b$, with $H$ being
@@ -171,23 +172,30 @@ def solve_lissa(
     :param training_data: A DataLoader containing the training data.
     :param b:
     :param lam: regularization of the hessian
+    :param progress: If True, display progress bars.
     :param maxiter: maximum number of iterations,
     :param damp: damping factor, defaults to 0 for no damping
     :param scale: scaling factor, defaults to 10
-    :param progress: If True, display progress bars.
+    :param h0: initial guess for hvp
 
     :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$.
     """
-    h_estimate = torch.clone(b)
+    if h0 is None:
+        h_estimate = torch.clone(b)
+    else:
+        h_estimate = h0
+    shuffled_training_data = DataLoader(
+        training_data.dataset, training_data.batch_size, shuffle=True
+    )
     for _ in maybe_progress(range(maxiter), progress, desc="Lissa"):
-        x, y = next(iter(training_data))
+        x, y = next(iter(shuffled_training_data))
         grad_xy, _ = model.grad(x, y)
         reg_hvp = lambda v: mvp(grad_xy, v, model.parameters()) + lam * v
         h_estimate = b + (1 - damp) * h_estimate - reg_hvp(h_estimate) / scale
     return h_estimate / scale
 
 
-def as_tensor(a: Any, warn=True, **kwargs):
+def as_tensor(a: Any, warn=True, **kwargs) -> torch.Tensor:
     """Converts an array into a torch tensor
 
     :param a: array to convert to tensor
@@ -198,24 +206,24 @@ def as_tensor(a: Any, warn=True, **kwargs):
     return torch.as_tensor(a, **kwargs)
 
 
-def stack(a: Sequence[torch.Tensor], **kwargs):
+def stack(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
     """Stacks a sequence of tensors into a single torch tensor"""
     return torch.stack(a, **kwargs)
 
 
-def cat(a: Sequence[torch.Tensor], **kwargs):
+def cat(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
     """Concatenates a sequence of tensors into a single torch tensor"""
     return torch.cat(a, **kwargs)
 
 
-def einsum(equation, *operands):
+def einsum(equation, *operands) -> torch.Tensor:
     """Sums the product of the elements of the input :attr:`operands` along dimensions specified using a notation
     based on the Einstein summation convention.
     """
     return torch.einsum(equation, *operands)
 
 
-def identity_tensor(dim: int):
+def identity_tensor(dim: int) -> torch.Tensor:
     return torch.eye(dim, dim)
 
 

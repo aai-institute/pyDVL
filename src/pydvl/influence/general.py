@@ -80,7 +80,7 @@ def compute_influence_factors(
     )
 
 
-def _compute_influences_up(
+def compute_influences_up(
     model: TwiceDifferentiable[TensorType, ModelType],
     input_data: DataLoaderType,
     influence_factors: TensorType,
@@ -112,7 +112,7 @@ def _compute_influences_up(
     return einsum("ta,va->tv", influence_factors, train_grads)
 
 
-def _compute_influences_pert(
+def compute_influences_pert(
     model: TwiceDifferentiable[TensorType, ModelType],
     input_data: DataLoaderType,
     influence_factors: TensorType,
@@ -156,8 +156,8 @@ def _compute_influences_pert(
 
 
 influence_type_registry = {
-    InfluenceType.Up: _compute_influences_up,
-    InfluenceType.Perturbation: _compute_influences_pert,
+    InfluenceType.Up: compute_influences_up,
+    InfluenceType.Perturbation: compute_influences_pert,
 }
 
 
