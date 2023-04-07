@@ -39,16 +39,23 @@ def test_creating_dataset_from_x_y_arrays(train_size, kwargs):
 
 def test_creating_grouped_dataset_from_sklearn(train_size):
     data = load_wine()
-    data_groups = np.random.randint(
-        low=0, high=3, size=int(train_size * len(data.data))
-    ).flatten()
+    data_groups = np.random.randint(low=0, high=3, size=len(data.data)).flatten()
     n_groups = len(np.unique(data_groups))
     dataset = GroupedDataset.from_sklearn(
         data, data_groups=data_groups, train_size=train_size
     )
     assert len(dataset) == n_groups
+
+
+def test_creating_grouped_dataset_from_sklearn_failure(train_size):
     with pytest.raises(ValueError):
-        GroupedDataset.from_sklearn(data, data_groups=data_groups[len(data) // 2 :])
+        data = load_wine()
+        # The length of data groups should be equal to that of data
+        data_groups_length = np.random.randint(low=0, high=len(data.data) - 1)
+        data_groups = np.random.randint(
+            low=0, high=3, size=data_groups_length
+        ).flatten()
+        GroupedDataset.from_sklearn(data, data_groups=data_groups)
 
 
 def test_creating_grouped_dataset_subsclassfrom_sklearn(train_size):
@@ -57,9 +64,7 @@ def test_creating_grouped_dataset_subsclassfrom_sklearn(train_size):
     class TestGroupedDataset(GroupedDataset):
         ...
 
-    data_groups = np.random.randint(
-        low=0, high=3, size=int(train_size * len(data.data))
-    ).flatten()
+    data_groups = np.random.randint(low=0, high=3, size=len(data.data)).flatten()
     n_groups = len(np.unique(data_groups))
     dataset = TestGroupedDataset.from_sklearn(
         data, data_groups=data_groups, train_size=train_size
@@ -71,9 +76,7 @@ def test_creating_grouped_dataset_subsclassfrom_sklearn(train_size):
 @pytest.mark.parametrize("kwargs", ({}, {"description": "Test Dataset"}))
 def test_creating_grouped_dataset_from_x_y_arrays(train_size, kwargs):
     X, y = make_classification()
-    data_groups = np.random.randint(
-        low=0, high=3, size=int(train_size * len(X))
-    ).flatten()
+    data_groups = np.random.randint(low=0, high=3, size=len(X)).flatten()
     n_groups = len(np.unique(data_groups))
     dataset = GroupedDataset.from_arrays(
         X, y, data_groups=data_groups, train_size=train_size, **kwargs
@@ -82,17 +85,23 @@ def test_creating_grouped_dataset_from_x_y_arrays(train_size, kwargs):
     for k, v in kwargs.items():
         assert getattr(dataset, k) == v
 
+
+def test_creating_grouped_dataset_from_x_y_arrays_failure(train_size):
     with pytest.raises(ValueError):
-        GroupedDataset.from_arrays(X, y, data_groups=data_groups[len(X) // 2 :])
+        X, y = make_classification()
+        # The length of data groups should be equal to that of X and y
+        data_groups_length = np.random.randint(low=0, high=len(X) - 1)
+        data_groups = np.random.randint(
+            low=0, high=3, size=data_groups_length
+        ).flatten()
+        GroupedDataset.from_arrays(X, y, data_groups=data_groups)
 
 
 def test_grouped_dataset_results():
     """Test that data names are preserved in valuation results"""
     X, y = make_classification()
     train_size = 0.5
-    data_groups = np.random.randint(
-        low=0, high=3, size=int(train_size * len(X)), dtype=np.int_
-    ).flatten()
+    data_groups = np.random.randint(low=0, high=3, size=len(X)).flatten()
     dataset = GroupedDataset.from_arrays(
         X, y, data_groups=data_groups, train_size=train_size
     )

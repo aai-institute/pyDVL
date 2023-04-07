@@ -3,11 +3,15 @@
 ## Unreleased
 
 - Implemented exact games in Castro et al. 2009 and 2017
-
+  [PR #...](https://github.com/appliedAI-Initiative/pyDVL/pull/...)
+- Fix creation of GroupedDataset objects using the `from_arrays`
+  and `from_sklearn` class methods 
+  [PR #324](https://github.com/appliedAI-Initiative/pyDVL/pull/334)
 - Fix release job not triggering on CI when a new tag is pushed
   [PR #331](https://github.com/appliedAI-Initiative/pyDVL/pull/331)
 - Added alias `ApproShapley` from Castro et al. 2009 for permutation Shapley
   [PR #332](https://github.com/appliedAI-Initiative/pyDVL/pull/332)
+
 
 ## 0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗
 

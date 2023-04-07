@@ -479,10 +479,20 @@ class GroupedDataset(Dataset):
             raise ValueError(
                 "data_groups must be provided when constructing a GroupedDataset"
             )
-        dataset = Dataset.from_sklearn(
-            data, train_size, random_state, stratify_by_target, **kwargs
+
+        x_train, x_test, y_train, y_test, data_groups_train, _ = train_test_split(
+            data.data,
+            data.target,
+            data_groups,
+            train_size=train_size,
+            random_state=random_state,
+            stratify=data.target if stratify_by_target else None,
         )
-        return cls.from_dataset(dataset, data_groups)  # type: ignore
+
+        dataset = Dataset(
+            x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test, **kwargs
+        )
+        return cls.from_dataset(dataset, data_groups_train)  # type: ignore
 
     @classmethod
     def from_arrays(
@@ -527,10 +537,18 @@ class GroupedDataset(Dataset):
             raise ValueError(
                 "data_groups must be provided when constructing a GroupedDataset"
             )
-        dataset = Dataset.from_arrays(
-            X, y, train_size, random_state, stratify_by_target, **kwargs
+        x_train, x_test, y_train, y_test, data_groups_train, _ = train_test_split(
+            X,
+            y,
+            data_groups,
+            train_size=train_size,
+            random_state=random_state,
+            stratify=y if stratify_by_target else None,
         )
-        return cls.from_dataset(dataset, data_groups)
+        dataset = Dataset(
+            x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test, **kwargs
+        )
+        return cls.from_dataset(dataset, data_groups_train)
 
     @classmethod
     def from_dataset(
