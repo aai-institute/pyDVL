@@ -1,12 +1,15 @@
 import abc
 import logging
-from time import sleep
+from concurrent.futures import FIRST_COMPLETED, wait
 
 import numpy as np
+from deprecate import deprecated
 
-from pydvl.utils import ParallelConfig, Utility, effective_n_jobs, running_moments
+from pydvl.utils import ParallelConfig, Utility, running_moments
+from pydvl.utils.parallel.backend import effective_n_jobs, init_parallel_backend
+from pydvl.utils.parallel.futures import init_executor
 from pydvl.value import ValuationResult
-from pydvl.value.stopping import StoppingCriterion
+from pydvl.value.stopping import MaxChecks, StoppingCriterion
 
 __all__ = [
     "TruncationPolicy",
@@ -157,13 +160,43 @@ class BootstrapTruncation(TruncationPolicy):
         self.variance = self.mean = 0
 
 
+def _permutation_montecarlo_one_step(
+    u: Utility,
+    truncation: TruncationPolicy,
+    algorithm: str,
+) -> ValuationResult:
+    # Avoid circular imports
+    from .montecarlo import _permutation_montecarlo_shapley
+
+    result = _permutation_montecarlo_shapley(
+        u,
+        done=MaxChecks(1),
+        truncation=truncation,
+        algorithm_name=algorithm,
+    )
+    nans = np.isnan(result.values).sum()
+    if nans > 0:
+        logger.warning(
+            f"{nans} NaN values in current permutation, ignoring. "
+            "Consider setting a default value for the Scorer"
+        )
+        result = ValuationResult.empty(algorithm="truncated_montecarlo_shapley")
+    return result
+
+
+@deprecated(
+    target=True,
+    deprecated_in="0.6.1",
+    remove_in="0.7.0",
+    args_mapping=dict(coordinator_update_period=None, worker_update_period=None),
+)
 def truncated_montecarlo_shapley(
     u: Utility,
     *,
     done: StoppingCriterion,
     truncation: TruncationPolicy,
-    n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
+    n_jobs: int = 1,
     coordinator_update_period: int = 10,
     worker_update_period: int = 5,
 ) -> ValuationResult:
@@ -196,10 +229,10 @@ def truncated_montecarlo_shapley(
         sampling permutations.
     :param truncation: callable that decides whether to stop computing
         marginals for a given permutation.
-    :param n_jobs: number of jobs processing permutations. If None, it will be
-        set to :func:`available_cpus`.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
+    :param n_jobs: Number of permutation monte carlo jobs
+        to run concurrently.
     :param coordinator_update_period: in seconds. How often to check the
         accumulated results from the workers for convergence.
     :param worker_update_period: interval in seconds between different
@@ -207,44 +240,49 @@ def truncated_montecarlo_shapley(
     :return: Object with the data values.
 
     """
-    # Avoid circular imports
-    from .actor import get_shapley_coordinator, get_shapley_worker
+    algorithm = "truncated_montecarlo_shapley"
 
-    if config.backend == "sequential":
-        raise NotImplementedError(
-            "Truncated MonteCarlo Shapley does not work with "
-            "the Sequential parallel backend."
-        )
+    parallel_backend = init_parallel_backend(config)
+    u = parallel_backend.put(u)
+    # This represents the number of jobs that are running
+    n_jobs = effective_n_jobs(n_jobs, config)
+    # This determines the total number of submitted jobs
+    # including the ones that are running
+    n_submitted_jobs = 2 * n_jobs
 
-    coordinator = get_shapley_coordinator(config=config, done=done)  # type: ignore
+    accumulated_result = ValuationResult.zeros(algorithm=algorithm)
 
-    workers = [
-        get_shapley_worker(  # type: ignore
-            u,
-            coordinator=coordinator,
-            truncation=truncation,
-            worker_id=worker_id,
-            update_period=worker_update_period,
-            config=config,
-        )
-        for worker_id in range(effective_n_jobs(n_jobs, config=config))
-    ]
-    for worker in workers:
-        worker.run(block=False)
-
-    while not coordinator.check_convergence():
-        sleep(coordinator_update_period)
-
-    return coordinator.accumulate()
-
-    # Something like this would be nicer, but it doesn't seem to be possible
-    # to start the workers from the coordinator.
-    # coordinator.add_workers(
-    #     n_workers=n_jobs,
-    #     u=u_id,
-    #     update_period=worker_update_period,
-    #     config=config,
-    #     truncation=truncation,
-    # )
-    #
-    # return coordinator.run(delay=coordinator_update_period)
+    with init_executor(max_workers=n_jobs, config=config) as executor:
+        futures = set()
+        # Initial batch of computations
+        for _ in range(n_submitted_jobs):
+            future = executor.submit(
+                _permutation_montecarlo_one_step,
+                u,
+                truncation,
+                algorithm,
+            )
+            futures.add(future)
+        while futures:
+            # Wait for the next futures to complete.
+            completed_futures, futures = wait(
+                futures, timeout=60, return_when=FIRST_COMPLETED
+            )
+            for future in completed_futures:
+                accumulated_result += future.result()
+                if done(accumulated_result):
+                    break
+            if done(accumulated_result):
+                break
+            # Submit more computations
+            # The goal is to always have `n_jobs`
+            # computations running
+            for _ in range(n_submitted_jobs - len(futures)):
+                future = executor.submit(
+                    _permutation_montecarlo_one_step,
+                    u,
+                    truncation,
+                    algorithm,
+                )
+                futures.add(future)
+    return accumulated_result

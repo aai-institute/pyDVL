@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Create new `RayExecutor` class based on the concurrent.futures API,
+  use the new class to fix an issue with Truncated Monte Carlo Shapley
+  (TMCS) starting too many processes and dying, plus other small changes
+  [PR #329](https://github.com/appliedAI-Initiative/pyDVL/pull/329)
 - Fix creation of GroupedDataset objects using the `from_arrays`
   and `from_sklearn` class methods 
   [PR #324](https://github.com/appliedAI-Initiative/pyDVL/pull/334)

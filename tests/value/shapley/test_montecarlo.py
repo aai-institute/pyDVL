@@ -10,8 +10,7 @@ from pydvl.utils.score import Scorer, squashed_r2
 from pydvl.value import compute_shapley_values
 from pydvl.value.shapley import ShapleyMode
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
-from pydvl.value.shapley.truncated import NoTruncation
-from pydvl.value.stopping import HistoryDeviation, MaxChecks, MaxUpdates
+from pydvl.value.stopping import MaxChecks, MaxUpdates
 
 from .. import check_rank_correlation, check_total_value, check_values
 
@@ -30,18 +29,6 @@ log = logging.getLogger(__name__)
             0.2,
             1e-4,
             {"done": MaxUpdates(2**10)},
-        ),
-        (
-            12,
-            ShapleyMode.TruncatedMontecarlo,
-            0.1,
-            1e-5,
-            dict(
-                coordinator_update_period=1,
-                worker_update_period=0.5,
-                done=MaxUpdates(500),
-                truncation=NoTruncation(),
-            ),
         ),
         (12, ShapleyMode.Owen, 0.1, 1e-4, dict(n_samples=4, max_q=200)),
         (12, ShapleyMode.OwenAntithetic, 0.1, 1e-4, dict(n_samples=4, max_q=200)),
@@ -111,15 +98,6 @@ def test_hoeffding_bound_montecarlo(
     [
         # FIXME: Hoeffding says 400 should be enough
         (ShapleyMode.PermutationMontecarlo, dict(done=MaxUpdates(600))),
-        (
-            ShapleyMode.TruncatedMontecarlo,
-            dict(
-                coordinator_update_period=0.2,
-                worker_update_period=0.1,
-                done=MaxUpdates(500),
-                truncation=NoTruncation(),
-            ),
-        ),
         (ShapleyMode.CombinatorialMontecarlo, dict(done=MaxUpdates(2**11))),
         (ShapleyMode.Owen, dict(n_samples=2, max_q=300)),
         (ShapleyMode.OwenAntithetic, dict(n_samples=2, max_q=300)),
@@ -174,15 +152,6 @@ def test_linear_montecarlo_shapley(
     "fun, kwargs",
     [
         (ShapleyMode.PermutationMontecarlo, {"done": MaxUpdates(500)}),
-        (
-            ShapleyMode.TruncatedMontecarlo,
-            dict(
-                coordinator_update_period=0.2,
-                worker_update_period=0.1,
-                done=HistoryDeviation(n_steps=10, rtol=0.1) | MaxUpdates(500),
-                truncation=NoTruncation(),
-            ),
-        ),
         (ShapleyMode.Owen, dict(n_samples=4, max_q=400)),
         (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=400)),
         (
