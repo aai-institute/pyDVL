@@ -1,7 +1,7 @@
-actor
-=====
+ray
+===
 
-.. automodule:: pydvl.utils.parallel.actor
+.. automodule:: pydvl.utils.parallel.futures.ray
    :members:
    :undoc-members:
    
