@@ -104,7 +104,7 @@ def test_linear_hessian(
     estimated_hessian = mvp(
         grad_xy,
         np.eye((input_dimension + 1) * output_dimension),
-        mvp_model.parameters(),
+        mvp_model.parameters,
     )
     assert np.allclose(test_hessian_analytical, estimated_hessian, rtol=1e-5)
 
@@ -175,7 +175,7 @@ def test_inversion_methods(
     mvp_model = linear_mvp_model(A, b)
 
     train_data_loader = DataLoader(list(zip(train_x, train_y)), batch_size=128)
-    b = torch.rand(size=(10, mvp_model.num_params()), dtype=torch.float64)
+    b = torch.rand(size=(10, mvp_model.num_params), dtype=torch.float64)
 
     linear_inverse = solve_linear(mvp_model, train_data_loader, b)
     linear_cg = solve_batch_cg(mvp_model, train_data_loader, b)

@@ -54,7 +54,7 @@ def solve_linear(
     all_x = cat(all_x)
     all_y = cat(all_y)
     matrix = model.hessian(all_x, all_y, progress) + lam * identity_tensor(
-        model.num_params()
+        model.num_params
     )
     return torch.linalg.solve(matrix, b.T).T
 
@@ -64,7 +64,10 @@ def solve_batch_cg(
     training_data: DataLoader,
     b: torch.Tensor,
     lam: float = 0,
-    inversion_method_kwargs: Dict[str, Any] = {},
+    x0: Optional[torch.Tensor] = None,
+    rtol: float = 1e-7,
+    atol: float = 1e-7,
+    maxiter: Optional[int] = None,
     progress: bool = True,
 ) -> torch.Tensor:
     """
@@ -77,7 +80,10 @@ def solve_batch_cg(
     :param training_data: A DataLoader containing the training data.
     :param b: a vector or matrix
     :param lam: regularization of the hessian
-    :param inversion_method_kwargs: kwargs to pass to the inversion method
+    :param x0: initial guess for hvp
+    :param rtol: maximum relative tolerance of result
+    :param atol: absolute tolerance of result
+    :param maxiter: maximum number of iterations. If None, defaults to 10*len(y)
     :param progress: If True, display progress bars.
 
     :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$.
@@ -88,11 +94,13 @@ def solve_batch_cg(
         grad_xy, _ = model.grad(x, y)
         total_grad_xy += grad_xy * len(x)
         total_points += len(x)
-    backprop_on = model.parameters()
-    reg_hvp = lambda v: mvp(total_grad_xy / total_points, v, backprop_on) + lam * v
+    backprop_on = model.parameters
+    reg_hvp = lambda v: mvp(
+        total_grad_xy / total_points, v, backprop_on
+    ) + lam * v.type(torch.float64)
     batch_cg = torch.zeros_like(b)
     for idx, bi in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
-        bi_cg, _ = solve_cg(reg_hvp, bi, **inversion_method_kwargs)
+        bi_cg, _ = solve_cg(reg_hvp, bi, x0, rtol, atol, maxiter)
         batch_cg[idx] = bi_cg
     return batch_cg
 
@@ -123,7 +131,7 @@ def solve_cg(
     stopping_val = max([rtol**2 * y_norm, atol**2])
 
     x = x0
-    p = r = (b - hvp(x)).squeeze()
+    p = r = (b - hvp(x)).squeeze().type(torch.float64)
     gamma = torch.sum(torch.matmul(r, r)).item()
     optimal = False
 
@@ -155,6 +163,7 @@ def solve_lissa(
     damp: float = 0,
     scale: float = 10,
     h0: Optional[torch.Tensor] = None,
+    rtol: float = 1e-4,
 ) -> torch.Tensor:
     """
     It uses LISSA, Linear time Stochastic Second-Order Algorithm, to calculate the
@@ -187,13 +196,21 @@ def solve_lissa(
     shuffled_training_data = DataLoader(
         training_data.dataset, training_data.batch_size, shuffle=True
     )
+    lissa_step = lambda h: b + (1 - damp) * h - reg_hvp(h) / scale
     for _ in maybe_progress(range(maxiter), progress, desc="Lissa"):
         x, y = next(iter(shuffled_training_data))
         grad_xy, _ = model.grad(x, y)
-        reg_hvp = lambda v: mvp(grad_xy, v, model.parameters()) + lam * v
-        h_estimate = b + (1 - damp) * h_estimate - reg_hvp(h_estimate) / scale
+        reg_hvp = lambda v: mvp(grad_xy, v, model.parameters) + lam * v
+        residual = lissa_step(h_estimate) - h_estimate
+        h_estimate += residual
         if torch.isnan(h_estimate).any():
             raise RuntimeError("NaNs in h_estimate. Increase scale or damp.")
+        max_residual = torch.max(torch.abs(residual / h_estimate))
+        if max_residual < rtol:
+            break
+    logger.info(
+        f"Terminated Lissa with {max_residual*100:.2f} % max residual. Mean residual: {torch.mean(torch.abs(residual/h_estimate))*100:.5f} %"
+    )
     return h_estimate / scale
 
 
@@ -266,7 +283,7 @@ def mvp(
             flatten_gradient(autograd.grad(z[i], backprop_on, retain_graph=True))
         )
     mvp = torch.stack([grad.contiguous().view(-1) for grad in mvp])
-    return mvp.detach()  # type: ignore
+    return mvp.detach()
 
 
 class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
@@ -294,18 +311,20 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         self.loss = loss
         self.device = device
 
+    @property
     def parameters(self) -> List[torch.Tensor]:
         """Returns all the model parameters that require differentiating"""
         return [
             param for param in self.model.parameters() if param.requires_grad == True
         ]
 
+    @property
     def num_params(self) -> int:
         """
         Get number of parameters of model f.
         :returns: Number of parameters as integer.
         """
-        return sum([np.prod(p.size()) for p in self.parameters()])
+        return sum([np.prod(p.size()) for p in self.parameters])
 
     def split_grad(
         self,
@@ -335,7 +354,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
                             torch.squeeze(self.model(x[i])),
                             torch.squeeze(y[i]),
                         ),
-                        self.parameters(),
+                        self.parameters,
                     )
                 ).detach()
             )
@@ -364,7 +383,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         y = as_tensor(y, warn=False).to(self.device)
 
         loss_value = self.loss(torch.squeeze(self.model(x)), torch.squeeze(y))
-        grad_f = torch.autograd.grad(loss_value, self.parameters(), create_graph=True)
+        grad_f = torch.autograd.grad(loss_value, self.parameters, create_graph=True)
         return flatten_gradient(grad_f), x
 
     def hessian(
@@ -383,7 +402,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         grad_xy, _ = self.grad(x, y)
         return mvp(
             grad_xy,
-            torch.eye(self.num_params(), self.num_params()),
-            self.parameters(),
+            torch.eye(self.num_params, self.num_params, device=self.device),
+            self.parameters,
             progress,
         )

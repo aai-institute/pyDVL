@@ -254,7 +254,7 @@ def test_influences_nn(
     loss: nn.modules.loss._Loss,
     influence_type: InfluenceType,
     data_len: int = 20,
-    hessian_reg: float = 1000,
+    hessian_reg: float = 1e3,
     test_data_len: int = 10,
     batch_size: int = 10,
 ):
@@ -296,7 +296,9 @@ def test_influences_nn(
         if infl_type == "direct":
             continue
         assert np.allclose(
-            influences, multiple_influences["direct"], rtol=1e-1
+            influences,
+            multiple_influences["direct"],
+            rtol=1e-1,
         ), f"Failed method {infl_type}"
         if influence_type == InfluenceType.Up:
             assert influences.shape == (test_data_len, data_len)
