@@ -196,7 +196,7 @@ def solve_lissa(
     shuffled_training_data = DataLoader(
         training_data.dataset, training_data.batch_size, shuffle=True
     )
-    lissa_step = lambda h: b + (1 - damp) * h - reg_hvp(h) / scale
+    lissa_step = lambda h: b + (1 - damp) * h - reg_hvp(h) / scale  # type: ignore
     for _ in maybe_progress(range(maxiter), progress, desc="Lissa"):
         x, y = next(iter(shuffled_training_data))
         grad_xy, _ = model.grad(x, y)
@@ -283,7 +283,7 @@ def mvp(
             flatten_gradient(autograd.grad(z[i], backprop_on, retain_graph=True))
         )
     mvp = torch.stack([grad.contiguous().view(-1) for grad in mvp])
-    return mvp.detach()
+    return mvp.detach()  # type: ignore
 
 
 class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):

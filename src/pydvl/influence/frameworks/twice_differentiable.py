@@ -17,10 +17,12 @@ class TwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
     ):
         pass
 
+    @property
     def num_params(self) -> int:
         """Returns the number of parameters of the model"""
         pass
 
+    @property
     def parameters(self) -> List[TensorType]:
         """Returns all the model parameters that require differentiation"""
         pass

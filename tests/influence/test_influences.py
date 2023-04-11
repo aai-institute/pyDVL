@@ -164,17 +164,6 @@ def test_influence_linear_model(
     assert np.allclose(cg_influences, analytical_influences, rtol=1e-1)
     abs_influence = np.abs(lissa_influences)
     upper_quantile_mask = abs_influence > np.quantile(abs_influence, 0.9)
-    import logging
-
-    logging.info(
-        np.max(
-            (
-                lissa_influences[upper_quantile_mask]
-                - analytical_influences[upper_quantile_mask]
-            )
-            / analytical_influences[upper_quantile_mask]
-        )
-    )
     assert np.allclose(
         lissa_influences[upper_quantile_mask],
         analytical_influences[upper_quantile_mask],
