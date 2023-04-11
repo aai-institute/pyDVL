@@ -34,8 +34,7 @@ def solve_linear(
     lam: float = 0,
     progress: bool = True,
 ) -> torch.Tensor:
-    """Given a model and training data, it uses conjugate gradient to calculate the
-    inverse of the HVP. More precisely, it finds x s.t. $Hx = b$, with $H$ being
+    """Given a model and training data, it finds x s.t. $Hx = b$, with $H$ being
     the model hessian.
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
@@ -45,7 +44,7 @@ def solve_linear(
     :param progress: If True, display progress bars.
 
     :return: An array that solves the inverse problem,
-        i.e. it returns $x$ such that $Ax = b$
+        i.e. it returns $x$ such that $Hx = b$
     """
     all_x, all_y = [], []
     for x, y in training_data:
@@ -72,18 +71,18 @@ def solve_batch_cg(
 ) -> torch.Tensor:
     """
     Given a model and training data, it uses conjugate gradient to calculate the
-    inverse of the HVP. More precisely, it finds x s.t. $Hx = b$, with $H$ being
-    the model hessian. For more info:
+    inverse of the Hessian Vector Product. More precisely, it finds x s.t. $Hx =
+    b$, with $H$ being the model hessian. For more info:
     https://en.wikipedia.org/wiki/Conjugate_gradient_method
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
     :param b: a vector or matrix
     :param lam: regularization of the hessian
-    :param x0: initial guess for hvp
+    :param x0: initial guess for hvp. If None, defaults to b
     :param rtol: maximum relative tolerance of result
     :param atol: absolute tolerance of result
-    :param maxiter: maximum number of iterations. If None, defaults to 10*len(y)
+    :param maxiter: maximum number of iterations. If None, defaults to 10*len(b)
     :param progress: If True, display progress bars.
 
     :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$.
@@ -120,7 +119,7 @@ def solve_cg(
     :param x0: initial guess for hvp
     :param rtol: maximum relative tolerance of result
     :param atol: absolute tolerance of result
-    :param maxiter: maximum number of iterations. If None, defaults to 10*len(y)
+    :param maxiter: maximum number of iterations. If None, defaults to 10*len(b)
     """
     if x0 is None:
         x0 = torch.clone(b)
@@ -209,7 +208,8 @@ def solve_lissa(
         if max_residual < rtol:
             break
     logger.info(
-        f"Terminated Lissa with {max_residual*100:.2f} % max residual. Mean residual: {torch.mean(torch.abs(residual/h_estimate))*100:.5f} %"
+        f"Terminated Lissa with {max_residual*100:.2f} % max residual."
+        f" Mean residual: {torch.mean(torch.abs(residual/h_estimate))*100:.5f} %"
     )
     return h_estimate / scale
 
