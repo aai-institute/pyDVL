@@ -3,7 +3,11 @@
 ## Unreleased
 
 - Implemented exact games in Castro et al. 2009 and 2017
-  [PR #...](https://github.com/appliedAI-Initiative/pyDVL/pull/...)
+  [PR #341](https://github.com/appliedAI-Initiative/pyDVL/pull/341)
+- Create new `RayExecutor` class based on the concurrent.futures API,
+  use the new class to fix an issue with Truncated Monte Carlo Shapley
+  (TMCS) starting too many processes and dying, plus other small changes
+  [PR #329](https://github.com/appliedAI-Initiative/pyDVL/pull/329)
 - Fix creation of GroupedDataset objects using the `from_arrays`
   and `from_sklearn` class methods 
   [PR #324](https://github.com/appliedAI-Initiative/pyDVL/pull/334)

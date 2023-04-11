@@ -10,7 +10,7 @@ def parallel_config(request, num_workers):
     if request.param == "sequential":
         yield ParallelConfig(backend=request.param)
     elif request.param == "ray-local":
-        yield ParallelConfig(backend="ray")
+        yield ParallelConfig(backend="ray", n_cpus_local=num_workers)
         ray.shutdown()
     elif request.param == "ray-external":
         # Starts a head-node for the cluster.

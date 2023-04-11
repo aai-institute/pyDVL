@@ -8,6 +8,7 @@ import pytest
 
 from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
 from pydvl.utils.parallel.backend import available_cpus, effective_n_jobs
+from pydvl.utils.parallel.futures import init_executor
 from pydvl.utils.parallel.map_reduce import _get_value
 
 
@@ -21,7 +22,7 @@ def test_effective_n_jobs(parallel_config, num_workers):
         assert parallel_backend.effective_n_jobs(1) == 1
         assert parallel_backend.effective_n_jobs(4) == 4
         if parallel_config.address is None:
-            assert parallel_backend.effective_n_jobs(-1) == available_cpus()
+            assert parallel_backend.effective_n_jobs(-1) == num_workers
         else:
             assert parallel_backend.effective_n_jobs(-1) == num_workers
 
@@ -223,3 +224,34 @@ def test_wrap_function(parallel_config, num_workers):
         wrapped_func = parallel_backend.wrap(get_pid, num_cpus=1)
         pids = parallel_backend.get([wrapped_func() for _ in range(num_workers)])
         assert len(set(pids)) == num_workers
+
+
+def test_futures_executor_submit(parallel_config):
+    with init_executor(config=parallel_config) as executor:
+        future = executor.submit(lambda x: x + 1, 1)
+        result = future.result()
+    assert result == 2
+
+
+def test_futures_executor_map(parallel_config):
+    with init_executor(config=parallel_config) as executor:
+        results = list(executor.map(lambda x: x + 1, range(3)))
+    assert results == [1, 2, 3]
+
+
+def test_futures_executor_map_with_max_workers(parallel_config, num_workers):
+    if parallel_config.backend != "ray":
+        pytest.skip("Currently this test only works with Ray")
+
+    def func(_):
+        time.sleep(1)
+        return time.monotonic()
+
+    start_time = time.monotonic()
+    with init_executor(config=parallel_config) as executor:
+        assert executor._max_workers == num_workers
+        list(executor.map(func, range(3)))
+    end_time = time.monotonic()
+    total_time = end_time - start_time
+    # We expect the time difference to be > 3 / num_workers, but has to be at least 1
+    assert total_time > max(1.0, 3 / num_workers)
