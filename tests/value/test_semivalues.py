@@ -1,9 +1,10 @@
 import math
-from typing import Type
+from typing import Dict, Type
 
 import numpy as np
 import pytest
 
+from pydvl.utils import Utility
 from pydvl.value.sampler import (
     AntitheticSampler,
     DeterministicCombinatorialSampler,
@@ -13,10 +14,12 @@ from pydvl.value.sampler import (
     UniformSampler,
 )
 from pydvl.value.semivalues import (
+    SemiValueMode,
     SVCoefficient,
     _semivalues,
     banzhaf_coefficient,
     beta_coefficient,
+    compute_semivalues,
     semivalues,
     shapley_coefficient,
 )
@@ -113,3 +116,27 @@ def test_coefficients(n: int, coefficient: SVCoefficient):
     """
     s = [math.comb(n - 1, j - 1) * coefficient(n, j - 1) for j in range(1, n + 1)]
     assert np.isclose(1, np.sum(s))
+
+
+@pytest.mark.parametrize("num_samples", [5])
+@pytest.mark.parametrize(
+    "semi_value_mode,semi_value_mode_kwargs",
+    [
+        (SemiValueMode.Shapley, dict()),
+        (SemiValueMode.BetaShapley, {"alpha": 1, "beta": 16}),
+        (SemiValueMode.Banzhaf, dict()),
+    ],
+    ids=["shapley", "beta-shapley", "banzhaf"],
+)
+def test_dispatch_compute_semi_values(
+    dummy_utility: Utility,
+    semi_value_mode: SemiValueMode,
+    semi_value_mode_kwargs: Dict[str, int],
+):
+    values = compute_semivalues(
+        u=dummy_utility,
+        mode=semi_value_mode,
+        done=MaxUpdates(10),
+        **semi_value_mode_kwargs,
+        progress=True,
+    )
