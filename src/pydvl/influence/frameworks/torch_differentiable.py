@@ -40,7 +40,7 @@ def solve_linear(
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
-    :param b:
+    :param b: a vector or matrix
     :param lam: regularization of the hessian
     :param progress: If True, display progress bars.
 
@@ -75,7 +75,7 @@ def solve_batch_cg(
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
-    :param b:
+    :param b: a vector or matrix
     :param lam: regularization of the hessian
     :param inversion_method_kwargs: kwargs to pass to the inversion method
     :param progress: If True, display progress bars.
@@ -170,7 +170,7 @@ def solve_lissa(
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
-    :param b:
+    :param b: a vector or matrix
     :param lam: regularization of the hessian
     :param progress: If True, display progress bars.
     :param maxiter: maximum number of iterations,
@@ -192,6 +192,8 @@ def solve_lissa(
         grad_xy, _ = model.grad(x, y)
         reg_hvp = lambda v: mvp(grad_xy, v, model.parameters()) + lam * v
         h_estimate = b + (1 - damp) * h_estimate - reg_hvp(h_estimate) / scale
+        if torch.isnan(h_estimate).any():
+            raise RuntimeError("NaNs in h_estimate. Increase scale or damp.")
     return h_estimate / scale
 
 
@@ -324,10 +326,6 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         x = as_tensor(x, warn=False).to(self.device).unsqueeze(1)
         y = as_tensor(y, warn=False).to(self.device)
 
-        params = [
-            param for param in self.model.parameters() if param.requires_grad == True
-        ]
-
         grads = []
         for i in maybe_progress(range(len(x)), progress, desc="Split Gradient"):
             grads.append(
@@ -337,7 +335,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
                             torch.squeeze(self.model(x[i])),
                             torch.squeeze(y[i]),
                         ),
-                        params,
+                        self.parameters(),
                     )
                 ).detach()
             )
@@ -365,12 +363,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         x = as_tensor(x, warn=False).to(self.device).requires_grad_(x_requires_grad)
         y = as_tensor(y, warn=False).to(self.device)
 
-        params = [
-            param for param in self.model.parameters() if param.requires_grad == True
-        ]
-
         loss_value = self.loss(torch.squeeze(self.model(x)), torch.squeeze(y))
-        grad_f = torch.autograd.grad(loss_value, params, create_graph=True)
+        grad_f = torch.autograd.grad(loss_value, self.parameters(), create_graph=True)
         return flatten_gradient(grad_f), x
 
     def hessian(
@@ -387,12 +381,9 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         x = x.to(self.device)
         y = y.to(self.device)
         grad_xy, _ = self.grad(x, y)
-        backprop_on = [
-            param for param in self.model.parameters() if param.requires_grad == True
-        ]
         return mvp(
             grad_xy,
             torch.eye(self.num_params(), self.num_params()),
-            backprop_on,
+            self.parameters(),
             progress,
         )

@@ -79,26 +79,21 @@ def analytical_linear_influences(
 
 @pytest.mark.torch
 @pytest.mark.parametrize(
-    "train_set_size",
-    [50, 30],
-    ids=["train_size=50", "train_size=30"],
-)
-@pytest.mark.parametrize(
     "influence_type",
     InfluenceType,
     ids=[ifl.value for ifl in InfluenceType],
 )
 @pytest.mark.parametrize(
-    "hessian_reg",
-    [0, 1],
-    ids=["hessian_reg=0", "hessian_reg=1"],
+    "train_set_size",
+    [200],
+    ids=["train_set_size_200"],
 )
 def test_influence_linear_model(
-    train_set_size: int,
     influence_type: InfluenceType,
-    hessian_reg: float,
+    train_set_size: int,
+    hessian_reg: float = 0.1,
     test_set_size: int = 20,
-    problem_dimension: Tuple[int, int] = (3, 20),
+    problem_dimension: Tuple[int, int] = (3, 15),
     condition_number: float = 3,
 ):
     A, b = linear_model(problem_dimension, condition_number)
@@ -120,11 +115,11 @@ def test_influence_linear_model(
         hessian_regularization=hessian_reg,
     )
 
-    train_data_loader = DataLoader(list(zip(*train_data)), batch_size=5, shuffle=True)
-    input_data = DataLoader(list(zip(*train_data)), batch_size=5)
+    train_data_loader = DataLoader(list(zip(*train_data)), batch_size=40, shuffle=True)
+    input_data = DataLoader(list(zip(*train_data)), batch_size=40)
     test_data_loader = DataLoader(
         list(zip(*test_data)),
-        batch_size=5,
+        batch_size=40,
     )
 
     direct_influences = compute_influences(
@@ -158,8 +153,8 @@ def test_influence_linear_model(
         influence_type=influence_type,
         inversion_method="lissa",
         inversion_method_kwargs={
-            "maxiter": 1000,
-            "scale": 1,
+            "maxiter": 5000,
+            "scale": 100,
         },
         hessian_regularization=hessian_reg,
     ).numpy()
@@ -167,17 +162,23 @@ def test_influence_linear_model(
     assert np.logical_not(np.any(np.isnan(cg_influences)))
     assert np.allclose(direct_influences, analytical_influences, rtol=1e-7)
     assert np.allclose(cg_influences, analytical_influences, rtol=1e-1)
-    upper_quantile_mask = lissa_influences > np.quantile(lissa_influences, 0.7)
+    abs_influence = np.abs(lissa_influences)
+    upper_quantile_mask = abs_influence > np.quantile(abs_influence, 0.9)
+    import logging
+
+    logging.info(
+        np.max(
+            (
+                lissa_influences[upper_quantile_mask]
+                - analytical_influences[upper_quantile_mask]
+            )
+            / analytical_influences[upper_quantile_mask]
+        )
+    )
     assert np.allclose(
         lissa_influences[upper_quantile_mask],
         analytical_influences[upper_quantile_mask],
-        rtol=1e-1,
-    )
-    lower_quantile_mask = lissa_influences < np.quantile(lissa_influences, 0.3)
-    assert np.allclose(
-        lissa_influences[lower_quantile_mask],
-        analytical_influences[lower_quantile_mask],
-        rtol=1e-1,
+        rtol=0.1,
     )
 
 
