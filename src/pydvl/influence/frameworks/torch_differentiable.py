@@ -298,7 +298,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         r"""
         :param model: A (differentiable) function.
         :param loss: :param loss: A differentiable scalar loss $L(\hat{y}, y)$,
-               mapping a prediction and a target to a real value.
+            mapping a prediction and a target to a real value.
         :param device: device to use for computations. Defaults to cuda if available.
         """
         if model.training:
@@ -336,11 +336,12 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         Calculates gradient of model parameters wrt each $x[i]$ and $y[i]$ and then
         returns a array of size [N, P] with N number of points (length of x and y) and P
         number of parameters of the model.
+
         :param x: An array [NxD] representing the features $x_i$.
         :param y: An array [NxK] representing the predicted target values $y_i$.
         :param progress: True, iff progress shall be printed.
         :returns: An array [NxP] representing the gradients with respect to
-        all parameters of the model.
+            all parameters of the model.
         """
         x = as_tensor(x, warn=False).to(self.device).unsqueeze(1)
         y = as_tensor(y, warn=False).to(self.device)
@@ -369,15 +370,15 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Calculates gradient of model parameters wrt the model parameters.
+
         :param x: A matrix [NxD] representing the features $x_i$.
         :param y: A matrix [NxK] representing the target values $y_i$.
         :param x_requires_grad: If True, the input $x$ is marked as requiring
             gradients. This is important for further differentiation on input
             parameters.
-        :returns: A tuple where: \
-            - first element is an array [P] with the gradients of the model. \
-            - second element is the input to the model as a grad parameters. \
-                This can be used for further differentiation. 
+        :returns: A tuple where the first element is an array [P] with the
+            gradients of the model and second element is the input to the model
+            as a grad parameters. This can be used for further differentiation.
         """
         x = as_tensor(x, warn=False).to(self.device).requires_grad_(x_requires_grad)
         y = as_tensor(y, warn=False).to(self.device)
