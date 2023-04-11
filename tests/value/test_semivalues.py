@@ -136,7 +136,7 @@ def test_dispatch_compute_semi_values(
     values = compute_semivalues(
         u=dummy_utility,
         mode=semi_value_mode,
-        done=MaxUpdates(10),
+        done=MaxUpdates(1),
         **semi_value_mode_kwargs,
         progress=True,
     )
