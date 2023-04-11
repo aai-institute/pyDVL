@@ -294,10 +294,9 @@ class DataUtilityLearning:
     def __call__(self, indices: Iterable[int]) -> float:
         indices_boolean_vector = self._convert_indices_to_boolean_vector(indices)
         frozen_indices = frozenset(indices)
-        if self._current_iteration < self.training_budget:
+        if len(self._utility_samples) < self.training_budget:
             utility = self.utility(frozen_indices)
             self._utility_samples[frozen_indices] = (indices_boolean_vector, utility)
-            self._current_iteration += 1
         else:
             if not self._is_model_fit:
                 X, y = zip(*self._utility_samples.values())

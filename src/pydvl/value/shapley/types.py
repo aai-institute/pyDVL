@@ -8,6 +8,7 @@ class ShapleyMode(str, Enum):
        Make algorithms register themselves here.
     """
 
+    ApproShapley = "appro_shapley"  # Alias for PermutationMontecarlo
     CombinatorialExact = "combinatorial_exact"
     CombinatorialMontecarlo = "combinatorial_montecarlo"
     GroupTesting = "group_testing"
