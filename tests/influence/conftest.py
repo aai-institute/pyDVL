@@ -72,7 +72,7 @@ def linear_derivative_analytical(
 def linear_hessian_analytical(
     linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
     x: NDArray[np.float_],
-    lam: float = 0,
+    lam: float = 0.0,
 ) -> NDArray[np.float_]:
     """
     Given a linear model it returns the hessian wrt. its parameters.

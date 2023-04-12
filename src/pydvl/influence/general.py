@@ -37,7 +37,7 @@ def compute_influence_factors(
     test_data: DataLoaderType,
     inversion_method: InversionMethod,
     *,
-    lam: float = 0,
+    lam: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
 ) -> TensorType:
@@ -171,7 +171,7 @@ def compute_influences(
     input_data: Optional[DataLoaderType] = None,
     inversion_method: InversionMethod = InversionMethod.Direct,
     influence_type: InfluenceType = InfluenceType.Up,
-    hessian_regularization: float = 0,
+    hessian_regularization: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
 ) -> TensorType:
