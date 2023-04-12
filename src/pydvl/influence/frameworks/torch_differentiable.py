@@ -16,11 +16,19 @@ from .twice_differentiable import TwiceDifferentiable
 
 __all__ = [
     "TorchTwiceDifferentiable",
+    "solve_linear",
+    "solve_batch_cg",
+    "solve_lissa",
+    "as_tensor",
+    "stack",
+    "cat",
+    "einsum",
+    "mvp",
 ]
 logger = logging.getLogger(__name__)
 
 
-def flatten_gradient(grad) -> torch.Tensor:
+def flatten_all(grad) -> torch.Tensor:
     """
     Simple function to flatten a pyTorch gradient for use in subsequent calculation
     """
@@ -31,15 +39,16 @@ def solve_linear(
     model: TwiceDifferentiable,
     training_data: DataLoader,
     b: torch.Tensor,
+    *,
     lam: float = 0,
-    progress: bool = True,
+    progress: bool = False,
 ) -> torch.Tensor:
     """Given a model and training data, it finds x s.t. $Hx = b$, with $H$ being
     the model hessian.
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
-    :param b: a vector or matrix
+    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
     :param lam: regularization of the hessian
     :param progress: If True, display progress bars.
 
@@ -52,7 +61,7 @@ def solve_linear(
         all_y.append(y)
     all_x = cat(all_x)
     all_y = cat(all_y)
-    matrix = model.hessian(all_x, all_y, progress) + lam * identity_tensor(
+    matrix = model.hessian(all_x, all_y, progress=progress) + lam * identity_tensor(
         model.num_params
     )
     return torch.linalg.solve(matrix, b.T).T
@@ -62,12 +71,13 @@ def solve_batch_cg(
     model: TwiceDifferentiable,
     training_data: DataLoader,
     b: torch.Tensor,
+    *,
     lam: float = 0,
     x0: Optional[torch.Tensor] = None,
     rtol: float = 1e-7,
     atol: float = 1e-7,
     maxiter: Optional[int] = None,
-    progress: bool = True,
+    progress: bool = False,
 ) -> torch.Tensor:
     """
     Given a model and training data, it uses conjugate gradient to calculate the
@@ -77,7 +87,7 @@ def solve_batch_cg(
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
-    :param b: a vector or matrix
+    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
     :param lam: regularization of the hessian
     :param x0: initial guess for hvp. If None, defaults to b
     :param rtol: maximum relative tolerance of result
@@ -99,7 +109,7 @@ def solve_batch_cg(
     ) + lam * v.type(torch.float64)
     batch_cg = torch.zeros_like(b)
     for idx, bi in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
-        bi_cg, _ = solve_cg(reg_hvp, bi, x0, rtol, atol, maxiter)
+        bi_cg, _ = solve_cg(reg_hvp, bi, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter)
         batch_cg[idx] = bi_cg
     return batch_cg
 
@@ -107,6 +117,7 @@ def solve_batch_cg(
 def solve_cg(
     hvp: Callable[[torch.Tensor], torch.Tensor],
     b: torch.Tensor,
+    *,
     x0: Optional[torch.Tensor] = None,
     rtol: float = 1e-7,
     atol: float = 1e-7,
@@ -115,7 +126,7 @@ def solve_cg(
     """Conjugate gradient solver for the Hessian vector product
 
     :param hvp: a Callable Hvp, operating with tensors of size N
-    :param b: a tensor of shape [N]
+    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
     :param x0: initial guess for hvp
     :param rtol: maximum relative tolerance of result
     :param atol: absolute tolerance of result
@@ -156,13 +167,14 @@ def solve_lissa(
     model: TwiceDifferentiable,
     training_data: DataLoader,
     b: torch.Tensor,
+    *,
     lam: float = 0,
-    progress: bool = True,
     maxiter: int = 1000,
     damp: float = 0,
     scale: float = 10,
     h0: Optional[torch.Tensor] = None,
     rtol: float = 1e-4,
+    progress: bool = False,
 ) -> torch.Tensor:
     """
     It uses LISSA, Linear time Stochastic Second-Order Algorithm, to calculate the
@@ -178,7 +190,7 @@ def solve_lissa(
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
-    :param b: a vector or matrix
+    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
     :param lam: regularization of the hessian
     :param progress: If True, display progress bars.
     :param maxiter: maximum number of iterations,
@@ -250,6 +262,7 @@ def mvp(
     grad_xy: torch.Tensor,
     v: torch.Tensor,
     backprop_on: torch.Tensor,
+    *,
     progress: bool = False,
 ) -> torch.Tensor:
     """
@@ -279,9 +292,7 @@ def mvp(
 
     mvp = []
     for i in maybe_progress(range(len(z)), progress, desc="MVP"):
-        mvp.append(
-            flatten_gradient(autograd.grad(z[i], backprop_on, retain_graph=True))
-        )
+        mvp.append(flatten_all(autograd.grad(z[i], backprop_on, retain_graph=True)))
     mvp = torch.stack([grad.contiguous().view(-1) for grad in mvp])
     return mvp.detach()  # type: ignore
 
@@ -291,6 +302,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        *,
         device: torch.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         ),
@@ -330,6 +342,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         self,
         x: torch.Tensor,
         y: torch.Tensor,
+        *,
         progress: bool = False,
     ) -> torch.Tensor:
         """
@@ -349,7 +362,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         grads = []
         for i in maybe_progress(range(len(x)), progress, desc="Split Gradient"):
             grads.append(
-                flatten_gradient(
+                flatten_all(
                     autograd.grad(
                         self.loss(
                             torch.squeeze(self.model(x[i])),
@@ -366,6 +379,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         self,
         x: torch.Tensor,
         y: torch.Tensor,
+        *,
         x_requires_grad: bool = False,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -385,12 +399,13 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
 
         loss_value = self.loss(torch.squeeze(self.model(x)), torch.squeeze(y))
         grad_f = torch.autograd.grad(loss_value, self.parameters, create_graph=True)
-        return flatten_gradient(grad_f), x
+        return flatten_all(grad_f), x
 
     def hessian(
         self,
         x: torch.Tensor,
         y: torch.Tensor,
+        *,
         progress: bool = False,
     ) -> torch.Tensor:
         """Calculates the explicit hessian of model parameters given data ($x$ and $y$).
@@ -405,5 +420,5 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
             grad_xy,
             torch.eye(self.num_params, self.num_params, device=self.device),
             self.parameters,
-            progress,
+            progress=progress,
         )

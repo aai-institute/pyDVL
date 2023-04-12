@@ -35,9 +35,10 @@ def solve_hvp(
     model: TwiceDifferentiable[TensorType, ModelType],
     training_data: DataLoaderType,
     b: TensorType,
-    lam: float = 0,
-    inversion_method_kwargs: Dict[str, Any] = {},
+    *,
+    lam: float = 0.0,
     progress: bool = False,
+    **kwargs: Any,
 ) -> TensorType:
     """
     Finds $x$ such that $Ax = b$, where $A$ is the hessian of model,
@@ -51,9 +52,9 @@ def solve_hvp(
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param x: An array containing the features of the input data points.
     :param y: labels for x
-    :param b:
+    :param b: Array as the right hand side of the equation $Ax = b$
+    :param kwargs: kwargs to pass to the inversion method
     :param lam: regularization of the hessian
-    :param inversion_method_kwargs: kwargs to pass to the inversion method
     :param progress: If True, display progress bars.
 
     :return: An array that solves the inverse problem,
@@ -64,8 +65,8 @@ def solve_hvp(
             model,
             training_data,
             b,
-            lam,
-            **inversion_method_kwargs,
+            **kwargs,
+            lam=lam,
             progress=progress,
         )
     elif inversion_method == InversionMethod.Cg:
@@ -73,8 +74,8 @@ def solve_hvp(
             model,
             training_data,
             b,
-            lam,
-            **inversion_method_kwargs,
+            **kwargs,
+            lam=lam,
             progress=progress,
         )
     elif inversion_method == InversionMethod.Lissa:
@@ -82,8 +83,8 @@ def solve_hvp(
             model,
             training_data,
             b,
-            lam,
-            **inversion_method_kwargs,
+            **kwargs,
+            lam=lam,
             progress=progress,
         )
     else:

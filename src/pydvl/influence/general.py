@@ -36,9 +36,10 @@ def compute_influence_factors(
     training_data: DataLoaderType,
     test_data: DataLoaderType,
     inversion_method: InversionMethod,
-    inversion_method_kwargs: Dict[str, Any] = {},
+    *,
     lam: float = 0,
     progress: bool = False,
+    **kwargs: Any,
 ) -> TensorType:
     r"""
     Calculates influence factors of a model for training and test
@@ -57,7 +58,6 @@ def compute_influence_factors(
     :param test_data: A DataLoader containing the test data.
     :param inversion_func: function to use to invert the product of hvp (hessian
         vector product) and the gradient of the loss (s_test in the paper).
-    :param inversion_method_kwargs: kwargs to pass to the inversion method
     :param lam: regularization of the hessian
     :param progress: If True, display progress bars.
     :returns: An array of size (N, D) containing the influence factors for each
@@ -67,16 +67,16 @@ def compute_influence_factors(
     for x_test, y_test in maybe_progress(
         test_data, progress, desc="Batch Test Gradients"
     ):
-        test_grads.append(model.split_grad(x_test, y_test, False))
+        test_grads.append(model.split_grad(x_test, y_test, progress=False))
     test_grads = cat(test_grads)
     return solve_hvp(
         inversion_method,
         model,
         training_data,
         test_grads,
-        lam,
-        inversion_method_kwargs,
-        progress,
+        lam=lam,
+        progress=progress,
+        **kwargs,
     )
 
 
@@ -84,6 +84,7 @@ def compute_influences_up(
     model: TwiceDifferentiable[TensorType, ModelType],
     input_data: DataLoaderType,
     influence_factors: TensorType,
+    *,
     progress: bool = False,
 ) -> TensorType:
     r"""
@@ -107,7 +108,7 @@ def compute_influences_up(
     for x, y in maybe_progress(
         input_data, progress, desc="Batch Split Input Gradients"
     ):
-        train_grads.append(model.split_grad(x, y, False))
+        train_grads.append(model.split_grad(x, y, progress=False))
     train_grads = cat(train_grads)
     return einsum("ta,va->tv", influence_factors, train_grads)
 
@@ -116,6 +117,7 @@ def compute_influences_pert(
     model: TwiceDifferentiable[TensorType, ModelType],
     input_data: DataLoaderType,
     influence_factors: TensorType,
+    *,
     progress: bool = False,
 ) -> TensorType:
     r"""
@@ -164,13 +166,14 @@ influence_type_registry = {
 def compute_influences(
     differentiable_model: TwiceDifferentiable[TensorType, ModelType],
     training_data: DataLoaderType,
+    *,
     test_data: Optional[DataLoaderType] = None,
     input_data: Optional[DataLoaderType] = None,
-    progress: bool = False,
     inversion_method: InversionMethod = InversionMethod.Direct,
-    inversion_method_kwargs: Dict[str, Any] = {},
     influence_type: InfluenceType = InfluenceType.Up,
     hessian_regularization: float = 0,
+    progress: bool = False,
+    **kwargs: Any,
 ) -> TensorType:
     r"""
     Calculates the influence of the input_data point j on the test points i.
@@ -186,9 +189,6 @@ def compute_influences(
     :param input_data: data loader with the samples to calculate the influences
         of. If None, the samples in training_data are used.
     :param progress: whether to display progress bars.
-    :param inversion_method: Set the inversion method to a specific one, can be
-        'direct' for direct inversion (and explicit construction of the Hessian)
-        or 'cg' for conjugate gradient.
     :param influence_type: Which algorithm to use to calculate influences.
         Currently supported options: 'up' or 'perturbation'. For details refer
         to :footcite:t:`koh_understanding_2017`
@@ -211,9 +211,9 @@ def compute_influences(
         training_data,
         test_data,
         inversion_method,
-        inversion_method_kwargs=inversion_method_kwargs,
         lam=hessian_regularization,
         progress=progress,
+        **kwargs,
     )
     compute_influence_type = influence_type_registry[influence_type]
 
@@ -221,5 +221,5 @@ def compute_influences(
         differentiable_model,
         input_data,
         influence_factors,
-        progress,
+        progress=progress,
     )

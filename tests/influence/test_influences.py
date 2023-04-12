@@ -124,9 +124,9 @@ def test_influence_linear_model(
 
     direct_influences = compute_influences(
         TorchTwiceDifferentiable(linear_layer, loss),
-        train_data_loader,
-        test_data_loader,
-        input_data,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        input_data=input_data,
         progress=True,
         influence_type=influence_type,
         inversion_method="direct",
@@ -135,9 +135,9 @@ def test_influence_linear_model(
 
     cg_influences = compute_influences(
         TorchTwiceDifferentiable(linear_layer, loss),
-        train_data_loader,
-        test_data_loader,
-        input_data,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        input_data=input_data,
         progress=True,
         influence_type=influence_type,
         inversion_method="cg",
@@ -146,16 +146,14 @@ def test_influence_linear_model(
 
     lissa_influences = compute_influences(
         TorchTwiceDifferentiable(linear_layer, loss),
-        train_data_loader,
-        test_data_loader,
-        input_data,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        input_data=input_data,
         progress=True,
         influence_type=influence_type,
         inversion_method="lissa",
-        inversion_method_kwargs={
-            "maxiter": 5000,
-            "scale": 100,
-        },
+        maxiter=5000,
+        scale=100,
         hessian_regularization=hessian_reg,
     ).numpy()
     assert np.logical_not(np.any(np.isnan(direct_influences)))
@@ -270,13 +268,13 @@ def test_influences_nn(
     for inversion_method in InversionMethod:
         influences = compute_influences(
             TorchTwiceDifferentiable(nn_architecture, loss),
-            train_data_loader,
-            test_data_loader,
+            training_data=train_data_loader,
+            test_data=test_data_loader,
             progress=True,
             influence_type=influence_type,
             inversion_method=inversion_method,
-            inversion_method_kwargs=inversion_method_kwargs[inversion_method],
             hessian_regularization=hessian_reg,
+            **inversion_method_kwargs[inversion_method],
         ).numpy()
         assert not np.any(np.isnan(influences))
         multiple_influences[inversion_method] = influences
