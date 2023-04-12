@@ -13,7 +13,9 @@
   [PR #331](https://github.com/appliedAI-Initiative/pyDVL/pull/331)
 - Added alias `ApproShapley` from Castro et al. 2009 for permutation Shapley
   [PR #332](https://github.com/appliedAI-Initiative/pyDVL/pull/332)
-
+- Change `get` to `pop` in pydvl.value.semivalues.compute_semivalues method. Added
+  test case to test the dispatch method with the possible inputs.
+  [PR #333](https://github.com/appliedAI-Initiative/pyDVL/pull/333)
 
 ## 0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗
 
