@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.6.1 - 🏗 Bug fixes and small improvement
 
+- Fix parsing keyword arguments of `compute_semivalues` dispatch function
+  [PR #333](https://github.com/appliedAI-Initiative/pyDVL/pull/333)
 - Create new `RayExecutor` class based on the concurrent.futures API,
   use the new class to fix an issue with Truncated Monte Carlo Shapley
   (TMCS) starting too many processes and dying, plus other small changes
@@ -13,9 +15,6 @@
   [PR #331](https://github.com/appliedAI-Initiative/pyDVL/pull/331)
 - Added alias `ApproShapley` from Castro et al. 2009 for permutation Shapley
   [PR #332](https://github.com/appliedAI-Initiative/pyDVL/pull/332)
-- Change `get` to `pop` in pydvl.value.semivalues.compute_semivalues method. Added
-  test case to test the dispatch method with the possible inputs.
-  [PR #333](https://github.com/appliedAI-Initiative/pyDVL/pull/333)
 
 ## 0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗
 
