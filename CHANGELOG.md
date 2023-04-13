@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.1 - 🏗 Bug fixes and small improvement
+
+- Fix parsing keyword arguments of `compute_semivalues` dispatch function
+  [PR #333](https://github.com/appliedAI-Initiative/pyDVL/pull/333)
+- Create new `RayExecutor` class based on the concurrent.futures API,
+  use the new class to fix an issue with Truncated Monte Carlo Shapley
+  (TMCS) starting too many processes and dying, plus other small changes
+  [PR #329](https://github.com/appliedAI-Initiative/pyDVL/pull/329)
+- Fix creation of GroupedDataset objects using the `from_arrays`
+  and `from_sklearn` class methods 
+  [PR #324](https://github.com/appliedAI-Initiative/pyDVL/pull/334)
+- Fix release job not triggering on CI when a new tag is pushed
+  [PR #331](https://github.com/appliedAI-Initiative/pyDVL/pull/331)
+- Added alias `ApproShapley` from Castro et al. 2009 for permutation Shapley
+  [PR #332](https://github.com/appliedAI-Initiative/pyDVL/pull/332)
+
 ## 0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗
 
 - Fixes in `ValuationResult`: bugs around data names, semantics of
@@ -8,8 +24,8 @@
 - **New method**: Implements generalised semi-values for data valuation,
   including Data Banzhaf and Beta Shapley, with configurable sampling strategies
   [PR #319](https://github.com/appliedAI-Initiative/pyDVL/pull/319)
-- Adds kwargs parameter to `from_array` and `from_sklearn`
-  Dataset and GroupedDataset class methods
+- Adds kwargs parameter to `from_array` and `from_sklearn` Dataset and
+  GroupedDataset class methods
   [PR #316](https://github.com/appliedAI-Initiative/pyDVL/pull/316)
 - PEP-561 conformance: added `py.typed`
   [PR #307](https://github.com/appliedAI-Initiative/pyDVL/pull/307)

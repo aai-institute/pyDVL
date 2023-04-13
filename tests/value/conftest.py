@@ -126,8 +126,6 @@ def linear_shapley(linear_dataset, scorer, n_jobs):
 @pytest.fixture(scope="module", params=["sequential", "ray-local", "ray-external"])
 def parallel_config(request):
     if request.param == "sequential":
-        # FIXME: instead test TMC separately
-        pytest.skip("Skipping 'sequential' because it doesn't work with TMC")
         yield ParallelConfig(backend=request.param)
     elif request.param == "ray-local":
         yield ParallelConfig(backend="ray")
