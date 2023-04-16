@@ -2,6 +2,8 @@ name: Publish Python Package to PyPI
 
 on:
   push:
+    branches:
+    - "**"
     tags:
     - "v*"
   workflow_dispatch:
@@ -52,7 +54,7 @@ jobs:
           echo "Should be on Master branch instead"
           exit -1
       - name: Fail if running locally
-        if: ${{ !github.event.act }} # skip during local actions testing
+        if: ${{ env.ACT }} # skip during local actions testing
         run: |
           echo "Running action locally. Failing"
           exit -1
