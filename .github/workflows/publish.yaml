@@ -1,19 +1,17 @@
 name: Publish Python Package to PyPI
 
 on:
-  push:
-    branches:
-    - "**"
-    tags:
-    - "v*"
+  release:
+    types:
+    - published
   workflow_dispatch:
     inputs:
       reason:
         description: Why did you trigger the pipeline?
         required: False
         default: Check if it runs again due to external changes
-      tag:
-        description: Tag for which a package should be published
+      tag_name:
+        description: The name of the tag for which a package should be published
         type: string
         required: false
 
@@ -29,22 +27,24 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Fail if manually triggered workflow does not have 'tag' input
-        if: github.event_name == 'workflow_dispatch' && inputs.tag == ''
+      - name: Fail if manually triggered workflow does not have 'tag_name' input
+        if: github.event_name == 'workflow_dispatch' && inputs.tag_name == ''
         run: |
-          echo "Input 'tag' should not be empty"
+          echo "Input 'tag_name' should not be empty"
           exit -1
       - name: Extract branch name from input
         id: get_branch_name_input
         if: github.event_name == 'workflow_dispatch'
         run: |
-          export BRANCH_NAME=$(git log -1 --format='%D' ${{ inputs.tag }} | sed -e 's/.*origin\/\(.*\).*/\1/')
+          export BRANCH_NAME=$(git log -1 --format='%D' ${{ inputs.tag_name }} | sed -e 's/.*origin\/\(.*\).*/\1/')
+          echo "$BRANCH_NAME"
           echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
       - name: Extract branch name from tag
         id: get_branch_name_tag
-        if: github.ref_type == 'tag'
+        if: github.release.tag_name != ''
         run: |
-          export BRANCH_NAME=$(git log -1 --format='%D' $GITHUB_REF | sed -e 's/.*origin\/\(.*\).*/\1/')
+          export BRANCH_NAME=$(git log -1 --format='%D' ${{ github.release.tag_name }} | sed -e 's/.*origin\/\(.*\).*/\1/')
+          echo "$BRANCH_NAME"
           echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
         shell: bash
       - name: Fail if tag is not on 'master' branch
