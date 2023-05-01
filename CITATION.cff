@@ -8,19 +8,9 @@ message: >-
   metadata from this file.
 type: software
 authors:
-  - given-names: Anes
-    family-names: Benmerzoug
-    email: a.benmerzoug@appliedai.de
-    affiliation: appliedAI Initiative GmbH
-  - given-names: Miguel
-    family-names: de Benito Delgado
-    email: m.debenito@appliedai-institute.de
-    affiliation: appliedAI Institute GmbH
-    orcid: 'https://orcid.org/0000-0002-3045-3786'
-  - given-names: Fabio
-    family-names: Peruzzo
-    email: f.peruzzo@appliedai.de
-    affiliation: appliedAI Initiative GmbH
+  - given-names: TransferLab team
+    email: info+pydvl@appliedai.de
+    affiliation: appliedAI Institute gGmbH
 repository-code: 'https://github.com/appliedAI-Initiative/pyDVL'
 abstract: >-
   pyDVL is a library of stable implementations of algorithms
