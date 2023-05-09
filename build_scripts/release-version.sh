@@ -239,7 +239,7 @@ echo "🔨 Merging release branch into master"
 git checkout master
 git pull --ff-only "$REMOTE" master
 git merge --no-ff -X theirs "$RELEASE_BRANCH"
-git tag -a "$RELEASE_TAG" -m"Release $RELEASE_VERSION"
+git tag -a "$RELEASE_TAG" -m "Release $RELEASE_VERSION"
 git push --follow-tags "$REMOTE" master
 
 echo "🏷️ Bumping to next patch version"
