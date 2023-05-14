@@ -96,6 +96,7 @@ def test_influence_linear_model(
     problem_dimension: Tuple[int, int] = (3, 15),
     condition_number: float = 3,
 ):
+
     A, b = linear_model(problem_dimension, condition_number)
     train_data, test_data = add_noise_to_linear_model(
         (A, b), train_set_size, test_set_size
@@ -122,40 +123,22 @@ def test_influence_linear_model(
         batch_size=40,
     )
 
-    direct_influences = compute_influences(
-        TorchTwiceDifferentiable(linear_layer, loss),
-        training_data=train_data_loader,
-        test_data=test_data_loader,
-        input_data=input_data,
-        progress=True,
-        influence_type=influence_type,
-        inversion_method="direct",
-        hessian_regularization=hessian_reg,
-    ).numpy()
+    def compute_method_influence(method: InversionMethod):
+        return compute_influences(
+            TorchTwiceDifferentiable(linear_layer, loss),
+            training_data=train_data_loader,
+            test_data=test_data_loader,
+            input_data=input_data,
+            progress=True,
+            influence_type=influence_type,
+            inversion_method=method,
+            hessian_regularization=hessian_reg,
+        ).numpy()
 
-    cg_influences = compute_influences(
-        TorchTwiceDifferentiable(linear_layer, loss),
-        training_data=train_data_loader,
-        test_data=test_data_loader,
-        input_data=input_data,
-        progress=True,
-        influence_type=influence_type,
-        inversion_method="cg",
-        hessian_regularization=hessian_reg,
-    ).numpy()
+    direct_influences = compute_method_influence(InversionMethod.Direct)
+    cg_influences = compute_method_influence(InversionMethod.ConjugateGradient)
+    lissa_influences = compute_method_influence(InversionMethod.Lissa)
 
-    lissa_influences = compute_influences(
-        TorchTwiceDifferentiable(linear_layer, loss),
-        training_data=train_data_loader,
-        test_data=test_data_loader,
-        input_data=input_data,
-        progress=True,
-        influence_type=influence_type,
-        inversion_method="lissa",
-        maxiter=5000,
-        scale=100,
-        hessian_regularization=hessian_reg,
-    ).numpy()
     assert np.logical_not(np.any(np.isnan(direct_influences)))
     assert np.logical_not(np.any(np.isnan(cg_influences)))
     assert np.allclose(direct_influences, analytical_influences, rtol=1e-7)

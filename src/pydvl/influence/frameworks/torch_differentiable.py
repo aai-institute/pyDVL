@@ -1,5 +1,8 @@
 """
-Contains all parts of pyTorch based machine learning model.
+Contains methods for differentiating  a pyTorch model. Most of the methods focus
+on ways to calculate matrix vector products. Moreover, it contains several
+methods to invert the Hessian vector product. These are used to calculate the
+influence of a training point on the model.
 """
 import logging
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
@@ -28,7 +31,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def flatten_all(grad) -> torch.Tensor:
+def flatten_all(grad: torch.Tensor) -> torch.Tensor:
     """
     Simple function to flatten a pyTorch gradient for use in subsequent calculation
     """
@@ -40,7 +43,7 @@ def solve_linear(
     training_data: DataLoader,
     b: torch.Tensor,
     *,
-    lam: float = 0.0,
+    hessian_perturbation: float = 0.0,
     progress: bool = False,
 ) -> torch.Tensor:
     """Given a model and training data, it finds x s.t. $Hx = b$, with $H$ being
@@ -49,7 +52,7 @@ def solve_linear(
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
     :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
-    :param lam: regularization of the hessian
+    :param hessian_perturbation: regularization of the hessian
     :param progress: If True, display progress bars.
 
     :return: An array that solves the inverse problem,
@@ -61,9 +64,9 @@ def solve_linear(
         all_y.append(y)
     all_x = cat(all_x)
     all_y = cat(all_y)
-    matrix = model.hessian(all_x, all_y, progress=progress) + lam * identity_tensor(
-        model.num_params
-    )
+    matrix = model.hessian(
+        all_x, all_y, progress=progress
+    ) + hessian_perturbation * identity_tensor(model.num_params)
     return torch.linalg.solve(matrix, b.T).T
 
 
@@ -72,7 +75,7 @@ def solve_batch_cg(
     training_data: DataLoader,
     b: torch.Tensor,
     *,
-    lam: float = 0.0,
+    hessian_perturbation: float = 0.0,
     x0: Optional[torch.Tensor] = None,
     rtol: float = 1e-7,
     atol: float = 1e-7,
@@ -82,13 +85,13 @@ def solve_batch_cg(
     """
     Given a model and training data, it uses conjugate gradient to calculate the
     inverse of the Hessian Vector Product. More precisely, it finds x s.t. $Hx =
-    b$, with $H$ being the model hessian. For more info:
-    https://en.wikipedia.org/wiki/Conjugate_gradient_method
+    b$, with $H$ being the model hessian. For more info, see
+    `Wikipedia <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
     :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
-    :param lam: regularization of the hessian
+    :param hessian_perturbation: regularization of the hessian
     :param x0: initial guess for hvp. If None, defaults to b
     :param rtol: maximum relative tolerance of result
     :param atol: absolute tolerance of result
@@ -106,7 +109,7 @@ def solve_batch_cg(
     backprop_on = model.parameters
     reg_hvp = lambda v: mvp(
         total_grad_xy / total_points, v, backprop_on
-    ) + lam * v.type(torch.float64)
+    ) + hessian_perturbation * v.type(torch.float64)
     batch_cg = torch.zeros_like(b)
     for idx, bi in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
         bi_cg, _ = solve_cg(reg_hvp, bi, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter)
@@ -168,9 +171,9 @@ def solve_lissa(
     training_data: DataLoader,
     b: torch.Tensor,
     *,
-    lam: float = 0.0,
+    hessian_perturbation: float = 0.0,
     maxiter: int = 1000,
-    damp: float = 0.0,
+    dampen: float = 0.0,
     scale: float = 10.0,
     h0: Optional[torch.Tensor] = None,
     rtol: float = 1e-4,
@@ -184,17 +187,20 @@ def solve_lissa(
     $$
     H^{-1}_{j+1} b = b + (I - H) \ H^{-1}_j b
     $$
-    where I is the identity matrix. Additional damping and scaling factors are
-    applied to help convergence. More info can be found in
-    :footcite:t:`koh_understanding_2017`
+    where I is the identity matrix. Additional dampening and scaling factors are
+    applied to help convergence, i.e.
+    $$
+    H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s}
+    $$
+    More info can be found in :footcite:t:`koh_understanding_2017`
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
     :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
-    :param lam: regularization of the hessian
+    :param hessian_perturbation: regularization of the hessian
     :param progress: If True, display progress bars.
     :param maxiter: maximum number of iterations,
-    :param damp: damping factor, defaults to 0 for no damping
+    :param dampen: dampening factor, defaults to 0 for no dampening
     :param scale: scaling factor, defaults to 10
     :param h0: initial guess for hvp
 
@@ -207,15 +213,27 @@ def solve_lissa(
     shuffled_training_data = DataLoader(
         training_data.dataset, training_data.batch_size, shuffle=True
     )
-    lissa_step = lambda h: b + (1 - damp) * h - reg_hvp(h) / scale  # type: ignore
+
+    def lissa_step(
+        h: torch.Tensor, reg_hvp: Callable[[torch.Tensor], torch.Tensor]
+    ) -> torch.Tensor:
+        """Given an estimate of the hessian inverse and the regularised hessian
+        vector product, it computes the next estimate.
+
+        :param h: an estimate of the hessian inverse
+        :param reg_hvp: regularised hessian vector product
+        :return: the next estimate of the hessian inverse
+        """
+        return b + (1 - dampen) * h - reg_hvp(h) / scale
+
     for _ in maybe_progress(range(maxiter), progress, desc="Lissa"):
         x, y = next(iter(shuffled_training_data))
         grad_xy, _ = model.grad(x, y)
-        reg_hvp = lambda v: mvp(grad_xy, v, model.parameters) + lam * v
-        residual = lissa_step(h_estimate) - h_estimate
+        reg_hvp = lambda v: mvp(grad_xy, v, model.parameters) + hessian_perturbation * v
+        residual = lissa_step(h_estimate, reg_hvp) - h_estimate
         h_estimate += residual
         if torch.isnan(h_estimate).any():
-            raise RuntimeError("NaNs in h_estimate. Increase scale or damp.")
+            raise RuntimeError("NaNs in h_estimate. Increase scale or dampening.")
         max_residual = torch.max(torch.abs(residual / h_estimate))
         if max_residual < rtol:
             break
