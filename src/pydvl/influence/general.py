@@ -37,7 +37,7 @@ def compute_influence_factors(
     test_data: DataLoaderType,
     inversion_method: InversionMethod,
     *,
-    lam: float = 0.0,
+    hessian_perturbation: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
 ) -> TensorType:
@@ -50,15 +50,16 @@ def compute_influence_factors(
     used for efficient influence calculation. This method first
     (implicitly) calculates the Hessian and then (explicitly) finds the
     influence factors for the model using the given inversion method. The
-    parameter ``lam`` is used to regularize the inversion of the Hessian. For
-    more info, refer to :footcite:t:`koh_understanding_2017`, paragraph 3.
+    parameter ``hessian_perturbation`` is used to regularize the inversion of
+    the Hessian. For more info, refer to :footcite:t:`koh_understanding_2017`,
+    paragraph 3.
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
     :param test_data: A DataLoader containing the test data.
     :param inversion_func: function to use to invert the product of hvp (hessian
         vector product) and the gradient of the loss (s_test in the paper).
-    :param lam: regularization of the hessian
+    :param hessian_perturbation: regularization of the hessian
     :param progress: If True, display progress bars.
     :returns: An array of size (N, D) containing the influence factors for each
         dimension (D) and test sample (N).
@@ -74,7 +75,7 @@ def compute_influence_factors(
         model,
         training_data,
         test_grads,
-        lam=lam,
+        hessian_perturbation=hessian_perturbation,
         progress=progress,
         **kwargs,
     )
@@ -211,7 +212,7 @@ def compute_influences(
         training_data,
         test_data,
         inversion_method,
-        lam=hessian_regularization,
+        hessian_perturbation=hessian_regularization,
         progress=progress,
         **kwargs,
     )

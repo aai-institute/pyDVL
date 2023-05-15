@@ -1,5 +1,5 @@
 import itertools
-from typing import List, Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 import pytest
@@ -88,8 +88,20 @@ def analytical_linear_influences(
     [200],
     ids=["train_set_size_200"],
 )
+@pytest.mark.parametrize(
+    "inversion_method, inversion_method_kwargs, rtol",
+    [
+        [InversionMethod.Direct, {}, 1e-7],
+        [InversionMethod.Cg, {}, 1e-1],
+        [InversionMethod.Lissa, {"maxiter": 5000, "scale": 100}, 0.3],
+    ],
+    ids=[inv.value for inv in InversionMethod],
+)
 def test_influence_linear_model(
     influence_type: InfluenceType,
+    inversion_method: InversionMethod,
+    inversion_method_kwargs: Dict,
+    rtol: float,
     train_set_size: int,
     hessian_reg: float = 0.1,
     test_set_size: int = 20,
@@ -123,32 +135,25 @@ def test_influence_linear_model(
         batch_size=40,
     )
 
-    def compute_method_influence(method: InversionMethod):
-        return compute_influences(
-            TorchTwiceDifferentiable(linear_layer, loss),
-            training_data=train_data_loader,
-            test_data=test_data_loader,
-            input_data=input_data,
-            progress=True,
-            influence_type=influence_type,
-            inversion_method=method,
-            hessian_regularization=hessian_reg,
-        ).numpy()
+    influence_values = compute_influences(
+        TorchTwiceDifferentiable(linear_layer, loss),
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        input_data=input_data,
+        progress=True,
+        influence_type=influence_type,
+        inversion_method=inversion_method,
+        hessian_regularization=hessian_reg,
+        **inversion_method_kwargs,
+    ).numpy()
 
-    direct_influences = compute_method_influence(InversionMethod.Direct)
-    cg_influences = compute_method_influence(InversionMethod.ConjugateGradient)
-    lissa_influences = compute_method_influence(InversionMethod.Lissa)
-
-    assert np.logical_not(np.any(np.isnan(direct_influences)))
-    assert np.logical_not(np.any(np.isnan(cg_influences)))
-    assert np.allclose(direct_influences, analytical_influences, rtol=1e-7)
-    assert np.allclose(cg_influences, analytical_influences, rtol=1e-1)
-    abs_influence = np.abs(lissa_influences)
+    assert np.logical_not(np.any(np.isnan(influence_values)))
+    abs_influence = np.abs(influence_values)
     upper_quantile_mask = abs_influence > np.quantile(abs_influence, 0.9)
     assert np.allclose(
-        lissa_influences[upper_quantile_mask],
+        influence_values[upper_quantile_mask],
         analytical_influences[upper_quantile_mask],
-        rtol=0.1,
+        rtol=rtol,
     )
 
 

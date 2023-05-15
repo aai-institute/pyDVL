@@ -185,14 +185,10 @@ def solve_lissa(
     the model hessian.
     This is done by iteratively approximating H through
     $$
-    H^{-1}_{j+1} b = b + (I - H) \ H^{-1}_j b
-    $$
-    where I is the identity matrix. Additional dampening and scaling factors are
-    applied to help convergence, i.e.
-    $$
     H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s}
     $$
-    More info can be found in :footcite:t:`koh_understanding_2017`
+    where I is the identity matrix, d is a dampening term and s a scaling factor that
+    are applied to help convergence. More info can be found in :footcite:t:`koh_understanding_2017`
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
