@@ -1,0 +1,123 @@
+site_name: "pyDVL"
+site_dir: "docs_build"
+site_url: "https://appliedai-initiative.github.io/pyDVL/"
+repo_url: "https://github.com/appliedAI-Initiative/pyDVL"
+copyright: "Copyright &copy; AppliedAI Institute gGmbH"
+
+watch:
+- src/pydvl
+
+plugins:
+- autorefs
+- search
+- section-index
+- alias:
+    use_relative_link: true
+    verbose: true
+- mkdocstrings:
+    enable_inventory: true
+    handlers:
+      python:
+        import:
+        - https://docs.python.org/3/objects.inv
+        - https://numpy.org/doc/stable/objects.inv
+        paths: [src]  # search packages in the src folder
+        options:
+          docstring_style: google
+          docstring_section_style: spacy
+          line_length: 80
+          show_bases: true
+          members_order: source
+          # separate_signature: true
+          show_signature_annotations: false
+          signature_crossrefs: true
+          # show_if_no_docstring: true
+          merge_init_into_class: true
+          docstring_options:
+            ignore_init_summary: true
+          # filters: [] # include all members
+- gen-files:
+    scripts:
+    - build_scripts/generate_api_docs.py
+- literate-nav:
+    nav_file: SUMMARY.md
+#- git-revision-date-localized:
+#    enable_creation_date: true
+#    type: iso_date
+#    fallback_to_build_date: true
+- bibtex:
+    bib_file: "docs/assets/pydvl.bib"
+    csl_file: "docs/assets/elsevier-harvard.csl"
+    cite_inline: true
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - search.suggest
+    - search.highlight
+    - toc.follow
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.tracking
+    # - navigation.top
+    - navigation.footer
+    - content.code.copy
+  palette:
+  # Palette toggle for light mode
+  - media: "(prefers-color-scheme: light)"
+    scheme: default
+    primary: teal
+    toggle:
+      icon: material/brightness-7
+      name: Switch to dark mode
+  # Palette toggle for dark mode
+  - media: "(prefers-color-scheme: dark)"
+    scheme: slate
+    primary: teal
+    toggle:
+      icon: material/brightness-4
+      name: Switch to light mode
+
+extra_css:
+- stylesheets/extra.css
+
+extra_javascript:
+- javascripts/mathjax.js
+- https://polyfill.io/v3/polyfill.min.js?features=es6
+- https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+extra:
+  social:
+  - icon: fontawesome/brands/github
+    link: https://github.com/appliedAI-Initiative/pyDVL
+  - icon: fontawesome/brands/python
+    link: https://pypi.org/project/pyDVL/
+
+markdown_extensions:
+- admonition
+- attr_list
+- footnotes
+- toc:
+    permalink: True
+    toc_depth: 3
+- pymdownx.tabbed:
+    alternate_style: true
+- pymdownx.emoji:
+    emoji_index: !!python/name:materialx.emoji.twemoji
+    emoji_generator: !!python/name:materialx.emoji.to_svg
+- pymdownx.highlight:
+    anchor_linenums: true
+    pygments_lang_class: true
+    line_spans: __span
+- pymdownx.arithmatex:
+    generic: true
+- pymdownx.inlinehilite
+- pymdownx.snippets
+- pymdownx.superfences
+- pymdownx.details

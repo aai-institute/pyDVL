@@ -1,8 +1,8 @@
-.. _home:
+---
+title: Home
+---
 
-===================
-pyDVL Documentation
-===================
+# pyDVL Documentation
 
 Welcome to the pyDVL library for data valuation!
 
@@ -11,8 +11,15 @@ It runs most of them in parallel either locally or in a cluster and supports
 distributed caching of results.
 
 If you're a first time user of pyDVL, we recommend you to go through the
-:ref:`Getting Started <getting started>` and
-:ref:`Installation <pyDVL Installation>` guides.
+[[getting-started]] and [[installation]] guides.
+
+[TOC]
+
+=== "To the installation guide"
+
+    Test
+
+    :material-toolbox:
 
 .. grid:: 2
     :gutter: 4

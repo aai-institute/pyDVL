@@ -1,8 +1,11 @@
-.. _data valuation:
+---
+title: Computing Data Values
+alias: 
+  name: data-valuation
+  text: Computing Data Values
+---
 
-=====================
-Computing data values
-=====================
+# Computing Data Values
 
 **Data valuation** is the task of assigning a number to each element of a
 training set which reflects its contribution to the final performance of a
@@ -23,47 +26,44 @@ interest, but a function of three factors:
 
 pyDVL collects algorithms for the computation of data values in this sense,
 mostly those derived from cooperative game theory. The methods can be found in
-the package :mod:`~pydvl.value`, with support from modules
+the package ::: pydvl.value , with support from modules
 :mod:`pydvl.utils.dataset` and :mod:`~pydvl.utils.utility`, as detailed below.
 
-.. warning::
-   Be sure to read the section on
-   :ref:`the difficulties using data values <problems of data values>`.
+!!! Warning
 
-Creating a Dataset
-==================
+    Be sure to read the section on
+    [the difficulties using data values][problems-of-data-values].
+
+## Creating a Dataset
 
 The first item in the tuple $(D, \mathcal{A}, u)$ characterising data value is
-the dataset. The class :class:`~pydvl.utils.dataset.Dataset` is a simple
+the dataset. The class [Dataset][pydvl.utils.dataset.Dataset] is a simple
 convenience wrapper for the train and test splits that is used throughout pyDVL.
 The test set will be used to evaluate a scoring function for the model.
 
 It can be used as follows:
 
-.. code-block:: python
-
-   import numpy as np
-   from pydvl.utils import Dataset
-   from sklearn.model_selection import train_test_split
-
-   X, y = np.arange(100).reshape((50, 2)), np.arange(50)
-   X_train, X_test, y_train, y_test = train_test_split(
-       X, y, test_size=0.5, random_state=16
-   )
-
-   dataset = Dataset(X_train, X_test, y_train, y_test)
+```python
+import numpy as np
+from pydvl.utils import Dataset
+from sklearn.model_selection import train_test_split
+X, y = np.arange(100).reshape((50, 2)), np.arange(50)
+X_train, X_test, y_train, y_test = train_test_split(
+  X, y, test_size=0.5, random_state=16
+)
+dataset = Dataset(X_train, X_test, y_train, y_test)
+```
 
 It is also possible to construct Datasets from sklearn toy datasets for
 illustrative purposes using :meth:`~pydvl.utils.dataset.Dataset.from_sklearn`.
 
-Grouping data
-^^^^^^^^^^^^^
+### Grouping data
 
 Be it because data valuation methods are computationally very expensive, or
 because we are interested in the groups themselves, it can be often useful or
 necessary to group samples so as to valuate them together.
-:class:`~pydvl.utils.dataset.GroupedDataset` provides an alternative to
-`Dataset` with the same interface which allows this.
+[GroupedDataset][pydvl.utils.dataset.GroupedDataset] provides an alternative to
+[Dataset][] with the same interface which allows this.
 
 You can see an example in action in the
 :doc:`Spotify notebook <examples/shapley_basic_spotify>`, but here's a simple
@@ -71,15 +71,16 @@ example grouping a pre-existing `Dataset`. First we construct an array mapping
 each index in the dataset to a group, then use
 :meth:`~pydvl.utils.dataset.GroupedDataset.from_dataset`:
 
-.. code-block:: python
+```python
+import numpy as np
+from pydvl.utils import GroupedDataset
 
-   # Randomly assign elements to any one of num_groups:
-   data_groups = np.random.randint(0, num_groups, len(dataset))
-   grouped_dataset = GroupedDataset.from_dataset(dataset, data_groups)
-   grouped_utility = Utility(model=model, data=grouped_dataset)
+# Randomly assign elements to any one of num_groups:
+data_groups = np.random.randint(0, num_groups, len(dataset))
+grouped_dataset = GroupedDataset.from_dataset(dataset, data_groups)
+```
 
-Creating a Utility
-==================
+## Creating a Utility
 
 In pyDVL we have slightly overloaded the name "utility" and use it to refer to
 an object that keeps track of all three items in $(D, \mathcal{A}, u)$. This
@@ -89,14 +90,14 @@ valuation methods.
 
 Here's a minimal example:
 
-.. code-block:: python
+```python
+import sklearn as sk
+from pydvl.utils import Dataset, Utility
 
-   from pydvl.utils import Dataset, Utility
-   import sklearn as sk
-
-   dataset = Dataset.from_sklearn(sk.datasets.load_iris())
-   model = sk.svm.SVC()
-   utility = Utility(model, dataset)
+dataset = Dataset.from_sklearn(sk.datasets.load_iris())
+model = sk.svm.SVC()
+utility = Utility(model, dataset)
+```
 
 The object `utility` is a callable that data valuation methods will execute
 with different subsets of training data. Each call will retrain the model on a
@@ -104,13 +105,12 @@ subset and evaluate it on the test data using a scoring function. By default,
 :class:`~pydvl.utils.utility.Utility` will use `model.score()`, but it is
 possible to use any scoring function (greater values must be better). In
 particular, the constructor accepts the same types as argument as sklearn's
-`cross_validate() <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html>`_:
+[cross_validate()](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html>):
 a string, a scorer callable or `None` for the default.
 
-.. code-block:: python
-
-   utility = Utility(model, dataset, "explained_variance")
-
+```python
+utility = Utility(model, dataset, "explained_variance")
+```
 
 `Utility` will wrap the `fit()` method of the model to cache its results. This
 greatly reduces computation times of Monte Carlo methods. Because of how caching
@@ -118,8 +118,7 @@ is implemented, it is important not to reuse `Utility` objects for different
 datasets. You can read more about :ref:`caching setup` in the installation guide
 and the documentation of the :mod:`pydvl.utils.caching` module.
 
-Using custom scorers
-^^^^^^^^^^^^^^^^^^^^
+### Using custom scorers
 
 The `scoring` argument of :class:`~pydvl.utils.utility.Utility` can be used to
 specify a custom :class:`~pydvl.utils.utility.Scorer` object. This is a simple
@@ -129,46 +128,48 @@ More importantly, the object provides information about the range of the score,
 which is used by some methods by estimate the number of samples necessary, and
 about what default value to use when the model fails to train.
 
-.. note::
-   The most important property of a `Scorer` is its default value. Because many
-   models will fail to fit on small subsets of the data, it is important to
-   provide a sensible default value for the score.
+!!! Note
+
+    The most important property of a `Scorer` is its default value. Because many
+    models will fail to fit on small subsets of the data, it is important to
+    provide a sensible default value for the score.
 
 It is possible to skip the construction of the :class:`~pydvl.utils.utility.Scorer`
 when constructing the `Utility` object. The two following calls are equivalent:
 
-.. code-block:: python
+```python
+utility = Utility(
+   model, dataset, "explained_variance", score_range=(-np.inf, 1), default_score=0.0
+)
+utility = Utility(
+   model, dataset, Scorer("explained_variance", range=(-np.inf, 1), default=0.0)
+)
+```
 
-   utility = Utility(
-       model, dataset, "explained_variance", score_range=(-np.inf, 1), default_score=0.0
-   )
-   utility = Utility(
-       model, dataset, Scorer("explained_variance", range=(-np.inf, 1), default=0.0)
-   )
-
-Learning the utility
-^^^^^^^^^^^^^^^^^^^^
+### Learning the utility
 
 Because each evaluation of the utility entails a full retrain of the model with
 a new subset of the training set, it is natural to try to learn this mapping
 from subsets to scores. This is the idea behind **Data Utility Learning (DUL)**
-(:footcite:t:`wang_improving_2022`) and in pyDVL it's as simple as wrapping the
+[@wang_improving_2022] and in pyDVL it's as simple as wrapping the
 `Utility` inside :class:`~pydvl.utils.utility.DataUtilityLearning`:
 
-.. code-block::python
+```python
+from pydvl.utils import Utility, DataUtilityLearning, Dataset
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.datasets import load_iris
 
-   from pydvl.utils import Utility, DataUtilityLearning, Dataset
-   from sklearn.linear_model import LinearRegression, LogisticRegression
-   from sklearn.datasets import load_iris
-   dataset = Dataset.from_sklearn(load_iris())
-   u = Utility(LogisticRegression(), dataset, enable_cache=False)
-   training_budget = 3
-   wrapped_u = DataUtilityLearning(u, training_budget, LinearRegression())
-   # First 3 calls will be computed normally
-   for i in range(training_budget):
-       _ = wrapped_u((i,))
-   # Subsequent calls will be computed using the fit model for DUL
-   wrapped_u((1, 2, 3))
+dataset = Dataset.from_sklearn(load_iris())
+u = Utility(LogisticRegression(), dataset, enable_cache=False)
+training_budget = 3
+wrapped_u = DataUtilityLearning(u, training_budget, LinearRegression())
+
+# First 3 calls will be computed normally
+for i in range(training_budget):
+   _ = wrapped_u((i,))
+# Subsequent calls will be computed using the fit model for DUL
+wrapped_u((1, 2, 3))
+```
 
 As you can see, all that is required is a model to learn the utility itself and
 the fitting and using of the learned model happens behind the scenes.
@@ -178,8 +179,7 @@ in :doc:`a dedicated notebook <examples/shapley_utility_learning>`.
 
 .. _LOO:
 
-Leave-One-Out values
-====================
+## Leave-One-Out values
 
 The Leave-One-Out method is a simple approach that assigns each sample its
 *marginal utility* as value:
@@ -195,11 +195,11 @@ effect on training performance, despite any qualities it may possess. Whether
 this is indicative of low value or not depends on each one's goals and
 definitions, but other methods are typically preferable.
 
-.. code-block:: python
+```python
+from pydvl.value.loo.naive import naive_loo
 
-   from pydvl.value.loo.naive import naive_loo
-   utility = Utility(...)
-   values = naive_loo(utility)
+values = naive_loo(utility)
+```
 
 The return value of all valuation functions is an object of type
 :class:`~pydvl.value.result.ValuationResult`. This can be iterated over,
@@ -208,8 +208,7 @@ indexed with integers, slices and Iterables, as well as converted to a
 
 .. _Shapley:
 
-Shapley values
-==============
+## Shapley values
 
 The Shapley method is an approach to compute data values originating in
 cooperative game theory. Shapley values are a common way of assigning payoffs to
@@ -222,8 +221,7 @@ Shapley values. They can all be accessed via the facade function
 enumerated in :class:`~pydvl.value.shapley.ShapleyMode`.
 
 
-Combinatorial Shapley
-^^^^^^^^^^^^^^^^^^^^^
+### Combinatorial Shapley
 
 The first algorithm is just a verbatim implementation of the definition. As such
 it returns as exact a value as the utility function allows (see what this means
@@ -238,22 +236,20 @@ v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}}
 \binom{n-1}{ | S | }^{-1} [u(S \cup \{x_i\}) − u(S)]
 ,$$
 
-.. code-block:: python
+```python
+from pydvl.value import compute_shapley_value
 
-   from pydvl.value import compute_shapley_value
-
-   utility = Utility(...)
-   values = compute_shapley_values(utility, mode="combinatorial_exact")
-   df = values.to_dataframe(column='value')
+values = compute_shapley_values(utility, mode="combinatorial_exact")
+df = values.to_dataframe(column='value')
+```
 
 We can convert the return value to a
-`pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_
+[pandas DataFrame](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html)
 and name the column with the results as `value`. Please refer to the
 documentation in :mod:`pydvl.value.shapley` and
 :class:`~pydvl.value.result.ValuationResult` for more information.
 
-Monte Carlo Combinatorial Shapley
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+### Monte Carlo Combinatorial Shapley
 
 Because the number of subsets $S \subseteq D \setminus \{x_i\}$ is
 $2^{ | D | - 1 }$, one typically must resort to approximations. The simplest
@@ -262,18 +258,14 @@ this simple technique is called "Monte Carlo Combinatorial". The method has very
 poor converge rate and others are preferred, but if desired, usage follows the
 same pattern:
 
-.. code-block:: python
+```python
+from pydvl.value import compute_shapley_values, MaxUpdates
 
-   from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_shapley_values
-
-   model = ...
-   data = Dataset(...)
-   utility = Utility(model, data)
-   values = compute_shapley_values(
-       utility, mode="combinatorial_montecarlo", done=MaxUpdates(1000)
-   )
-   df = values.to_dataframe(column='cmc')
+values = compute_shapley_values(
+   utility, mode="combinatorial_montecarlo", done=MaxUpdates(1000)
+)
+df = values.to_dataframe(column='cmc')
+```
 
 The DataFrames returned by most Monte Carlo methods will contain approximate
 standard errors as an additional column, in this case named `cmc_stderr`.
@@ -284,10 +276,9 @@ stop condition. This is an instance of a
 :class:`~pydvl.value.stopping.MaxTime` and :class:`~pydvl.value.stopping.StandardError`.
 
 
-Owen sampling
-^^^^^^^^^^^^^
+### Owen sampling
 
-**Owen Sampling** (:footcite:t:`okhrati_multilinear_2021`) is a practical
+**Owen Sampling** [@okhrati_multilinear_2021] is a practical
 algorithm based on the combinatorial definition. It uses a continuous extension
 of the utility from $\{0,1\}^n$, where a 1 in position $i$ means that sample
 $x_i$ is used to train the model, to $[0,1]^n$. The ensuing expression for
@@ -302,17 +293,13 @@ Using Owen sampling follows the same pattern as every other method for Shapley
 values in pyDVL. First construct the dataset and utility, then call
 :func:`~pydvl.value.shapley.compute_shapley_values`:
 
-.. code-block:: python
+```python
+from pydvl.value import compute_shapley_values
 
-   from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_shapley_values
-
-   model = ...
-   dataset = Dataset(...)
-   utility = Utility(data, model)
-   values = compute_shapley_values(
-       u=utility, mode="owen", n_iterations=4, max_q=200
-   )
+values = compute_shapley_values(
+   u=utility, mode="owen", n_iterations=4, max_q=200
+)
+```
 
 There are more details on Owen sampling, and its variant *Antithetic Owen
 Sampling* in the documentation for the function doing the work behind the scenes:
@@ -323,11 +310,10 @@ Note that in this case we do not pass a
 the number of iterations and the maximum number of samples to use in the
 integration.
 
-Permutation Shapley
-^^^^^^^^^^^^^^^^^^^
+### Permutation Shapley
 
 An equivalent way of computing Shapley values (``ApproShapley``) appeared in
-:footcite:t:`castro_polynomial_2009` and is the basis for the method most often
+[@castro_polynomial_2009] and is the basis for the method most often
 used in practice. It uses permutations over indices instead of subsets:
 
 $$
@@ -341,50 +327,43 @@ terms!) one uses Monte Carlo sampling of permutations, something which has
 surprisingly low sample complexity. One notable difference wrt. the
 combinatorial approach above is that the approximations always fulfill the
 efficiency axiom of Shapley, namely $\sum_{i=1}^n \hat{v}_i = u(D)$ (see
-:footcite:t:`castro_polynomial_2009`, Proposition 3.2).
+[@castro_polynomial_2009], Proposition 3.2).
 
 By adding early stopping, the result is the so-called **Truncated Monte Carlo
-Shapley** (:footcite:t:`ghorbani_data_2019`), which is efficient enough to be
+Shapley** [@ghorbani_data_2019], which is efficient enough to be
 useful in applications.
 
-.. code-block:: python
+```python
+from pydvl.value import compute_shapley_values, MaxUpdates
 
-   from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_shapley_values
-
-   model = ...
-   data = Dataset(...)
-   utility = Utility(model, data)
-   values = compute_shapley_values(
-       u=utility, mode="truncated_montecarlo", done=MaxUpdates(1000)
-   )
+values = compute_shapley_values(
+   u=utility, mode="truncated_montecarlo", done=MaxUpdates(1000)
+)
+```
 
 
-Exact Shapley for KNN
-^^^^^^^^^^^^^^^^^^^^^
+### Exact Shapley for KNN
 
 It is possible to exploit the local structure of K-Nearest Neighbours to reduce
 the amount of subsets to consider: because no sample besides the K closest
 affects the score, most are irrelevant and it is possible to compute a value in
-linear time. This method was introduced by :footcite:t:`jia_efficient_2019a`,
+linear time. This method was introduced by [@jia_efficient_2019a],
 and can be used in pyDVL with:
 
-.. code-block:: python
+```python
+from pydvl.utils import Dataset, Utility
+from pydvl.value import compute_shapley_values
+from sklearn.neighbors import KNeighborsClassifier
 
-   from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_shapley_values
-   from sklearn.neighbors import KNeighborsClassifier
+model = KNeighborsClassifier(n_neighbors=5)
+data = Dataset(...)
+utility = Utility(model, data)
+values = compute_shapley_values(u=utility, mode="knn")
+```
 
-   model = KNeighborsClassifier(n_neighbors=5)
-   data = Dataset(...)
-   utility = Utility(model, data)
-   values = compute_shapley_values(u=utility, mode="knn")
+### Group testing
 
-
-Group testing
-^^^^^^^^^^^^^
-
-An alternative approach introduced in :footcite:t:`jia_efficient_2019a`
+An alternative approach introduced in [@jia_efficient_2019a]
 first approximates the differences of values with a Monte Carlo sum. With
 
 $$\hat{\Delta}_{i j} \approx v_i - v_j,$$
@@ -400,12 +379,13 @@ $$
 \end{array}
 $$
 
-.. warning::
-   We have reproduced this method in pyDVL for completeness and benchmarking,
-   but we don't advocate its use because of the speed and memory cost. Despite
-   our best efforts, the number of samples required in practice for convergence
-   can be several orders of magnitude worse than with e.g. Truncated Monte Carlo.
-   Additionally, the CSP can sometimes turn out to be infeasible.
+!!! Warning
+
+    We have reproduced this method in pyDVL for completeness and benchmarking,
+    but we don't advocate its use because of the speed and memory cost. Despite
+    our best efforts, the number of samples required in practice for convergence
+    can be several orders of magnitude worse than with e.g. Truncated Monte Carlo.
+    Additionally, the CSP can sometimes turn out to be infeasible.
 
 Usage follows the same pattern as every other Shapley method, but with the
 addition of an ``epsilon`` parameter required for the solution of the CSP. It
@@ -415,23 +395,20 @@ note that the number returned will be huge! In practice, fewer samples can be
 enough, but the actual number will strongly depend on the utility, in particular
 its variance.
 
-.. code-block:: python
+```python
+from pydvl.utils import Dataset, Utility
+from pydvl.value import compute_shapley_values
 
-   from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_shapley_values
+model = ...
+data = Dataset(...)
+utility = Utility(model, data, score_range=(_min, _max))
+min_iterations = num_samples_eps_delta(epsilon, delta, n, utility.score_range)
+values = compute_shapley_values(
+   u=utility, mode="group_testing", n_iterations=min_iterations, eps=eps
+)
+```
 
-   model = ...
-   data = Dataset(...)
-   utility = Utility(model, data, score_range=(_min, _max))
-   min_iterations = num_samples_eps_delta(epsilon, delta, n, utility.score_range)
-   values = compute_shapley_values(
-       u=utility, mode="group_testing", n_iterations=min_iterations, eps=eps
-   )
-
-.. _Least Core:
-
-Core values
-===========
+## Core values
 
 The Shapley values define a fair way to distribute payoffs amongst all
 participants when they form a grand coalition. But they do not consider
@@ -463,8 +440,7 @@ The second property states that the sum of payoffs to the agents
 in any subcoalition $S$ is at least as large as the amount that
 these agents could earn by forming a coalition on their own.
 
-Least Core values
-^^^^^^^^^^^^^^^^^
+### Least Core values
 
 Unfortunately, for many cooperative games the Core may be empty.
 By relaxing the coalitional rationality property by a subsidy $e \gt 0$,
@@ -485,31 +461,25 @@ $$
 \end{array}
 $$
 
-Exact Least Core
-----------------
+### Exact Least Core
 
 This first algorithm is just a verbatim implementation of the definition.
 As such it returns as exact a value as the utility function allows
 (see what this means in :ref:`problems of data values`).
 
-.. code-block:: python
+```python
+from pydvl.value import compute_least_core_values
 
-   from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_least_core_values
+values = compute_least_core_values(utility, mode="exact")
+```
 
-   model = ...
-   dataset = Dataset(...)
-   utility = Utility(data, model)
-   values = compute_least_core_values(utility, mode="exact")
-
-Monte Carlo Least Core
-----------------------
+### Monte Carlo Least Core
 
 Because the number of subsets $S \subseteq D \setminus \{x_i\}$ is
 $2^{ | D | - 1 }$, one typically must resort to approximations.
 
 The simplest approximation consists in using a fraction of all subsets for the
-constraints. :footcite:t:`yan_if_2021` show that a quantity of order
+constraints. [@yan_if_2021] show that a quantity of order
 $\mathcal{O}((n - \log \Delta ) / \delta^2)$ is enough to obtain a so-called
 $\delta$-*approximate least core* with high probability. I.e. the following
 property holds with probability $1-\Delta$ over the choice of subsets:
@@ -521,23 +491,18 @@ $$
 
 where $e^{*}$ is the optimal least core subsidy.
 
-.. code-block:: python
+```python
+from pydvl.value import compute_least_core_values
 
-   from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_least_core_values
+values = compute_least_core_values(
+   utility, mode="montecarlo", n_iterations=n_iterations
+)
+```
 
-   model = ...
-   dataset = Dataset(...)
-   n_iterations = ...
-   utility = Utility(data, model)
-   values = compute_least_core_values(
-       utility, mode="montecarlo", n_iterations=n_iterations
-   )
+!!! Note
 
-.. note::
-
-   Although any number is supported, it is best to choose ``n_iterations`` to be
-   at least equal to the number of data points.
+    Although any number is supported, it is best to choose ``n_iterations`` to be
+    at least equal to the number of data points.
 
 Because computing the Least Core values requires the solution of a linear and a
 quadratic problem *after* computing all the utility values, we offer the
@@ -547,23 +512,17 @@ multiple experiments: use
 list of problems to solve, then solve them in parallel with
 :func:`~pydvl.value.least_core.common.lc_solve_problems`.
 
-.. code-block:: python
+```python
+from pydvl.value.least_core import mclc_prepare_problem, lc_solve_problems
 
-   from pydvl.utils import Dataset, Utility
-   from pydvl.value.least_core import mclc_prepare_problem, lc_solve_problems
-
-   model = ...
-   dataset = Dataset(...)
-   n_iterations = ...
-   utility = Utility(data, model)
-   n_experiments = 10
-   problems = [mclc_prepare_problem(utility, n_iterations=n_iterations)
-        for _ in range(n_experiments)]
-   values = lc_solve_problems(problems)
+n_experiments = 10
+problems = [mclc_prepare_problem(utility, n_iterations=n_iterations)
+    for _ in range(n_experiments)]
+values = lc_solve_problems(problems)
+```
 
 
-Semi-values
-===========
+## Semi-values
 
 Shapley values are a particular case of a more general concept called semi-value,
 which is a generalization to different weighting schemes. A **semi-value** is
@@ -578,21 +537,20 @@ where the coefficients $w(k)$ satisfy the property:
 
 $$\sum_{k=1}^n w(k) = 1.$$
 
-Two instances of this are **Banzhaf indices** (:footcite:t:`wang_data_2022`),
-and **Beta Shapley** (:footcite:t:`kwon_beta_2022`), with better numerical and
+Two instances of this are **Banzhaf indices** [@wang_data_2022],
+and **Beta Shapley** [@kwon_beta_2022], with better numerical and
 rank stability in certain situations.
 
-.. note::
+!!! Note
 
-   Shapley values are a particular case of semi-values and can therefore also be
-   computed with the methods described here. However, as of version 0.6.0, we
-   recommend using :func:`~pydvl.value.shapley.compute_shapley_values` instead,
-   in particular because it implements truncated Monte Carlo sampling for faster
-   computation.
+    Shapley values are a particular case of semi-values and can therefore also be
+    computed with the methods described here. However, as of version 0.6.0, we
+    recommend using :func:`~pydvl.value.shapley.compute_shapley_values` instead,
+    in particular because it implements truncated Monte Carlo sampling for faster
+    computation.
 
 
-Beta Shapley
-^^^^^^^^^^^^
+### Beta Shapley
 
 For some machine learning applications, where the utility is typically the
 performance when trained on a set $S \subset D$, diminishing returns are often
@@ -608,26 +566,21 @@ $$
 where $B$ is the `Beta function <https://en.wikipedia.org/wiki/Beta_function>`_,
 and $\alpha$ and $\beta$ are parameters that control the weighting of the
 subsets. Setting both to 1 recovers Shapley values, and setting $\alpha = 1$, and
-$\beta = 16$ is reported in :footcite:t:`kwon_beta_2022` to be a good choice for
+$\beta = 16$ is reported in [@kwon_beta_2022] to be a good choice for
 some applications. See however :ref:`banzhaf indices` for an alternative choice
 of weights which is reported to work better.
 
-.. code-block:: python
+```python
+from pydvl.value import compute_semivalues
 
-   from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_semivalues
-
-   model = ...
-   data = Dataset(...)
-   utility = Utility(model, data)
-   values = compute_semivalues(
-       u=utility, mode="beta_shapley", done=MaxUpdates(500), alpha=1, beta=16
-   )
+values = compute_semivalues(
+   u=utility, mode="beta_shapley", done=MaxUpdates(500), alpha=1, beta=16
+)
+```
 
 .. _banzhaf indices:
 
-Banzhaf indices
-^^^^^^^^^^^^^^^
+### Banzhaf indices
 
 As noted below in :ref:`problems of data values`, the Shapley value can be very
 sensitive to variance in the utility function. For machine learning applications,
@@ -646,24 +599,16 @@ any choice of weight function $w$, one can always construct a utility with
 higher variance where $w$ is greater. Therefore, in a worst-case sense, the best
 one can do is to pick a constant weight.
 
-The authors of :footcite:t:`wang_data_2022` show that Banzhaf indices are more
+The authors of [@wang_data_2022] show that Banzhaf indices are more
 robust to variance in the utility function than Shapley and Beta Shapley values.
 
-.. code-block:: python
+```python
+from pydvl.value import compute_semivalues, MaxUpdates
 
-   from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_semivalues
+values = compute_semivalues( u=utility, mode="banzhaf", done=MaxUpdates(500))
+```
 
-   model = ...
-   data = Dataset(...)
-   utility = Utility(model, data)
-   values = compute_semivalues( u=utility, mode="banzhaf", done=MaxUpdates(500))
-
-
-.. _problems of data values:
-
-Problems of data values
-=======================
+## Problems of data values
 
 There are a number of factors that affect how useful values can be for your
 project. In particular, regression can be especially tricky, but the particular
@@ -682,16 +627,19 @@ nature of every (non-trivial) ML problem can have an effect:
   <pydvl.utils.types.compose_score>` for scorer functions which can be used to
   squash a score. The following is defined in module :mod:`~pydvl.utils.scorer`:
 
-  .. code-block:: python
-
-     def sigmoid(x: float) -> float:
-         return float(1 / (1 + np.exp(-x)))
-
-     squashed_r2 = compose_score("r2", sigmoid, "squashed r2")
-
-     squashed_variance = compose_score(
-         "explained_variance", sigmoid, "squashed explained variance"
-     )
+  ```python
+  import numpy as np
+  from pydvl.utils.types import compose_score
+  
+  def sigmoid(x: float) -> float:
+    return float(1 / (1 + np.exp(-x)))
+  
+  squashed_r2 = compose_score("r2", sigmoid, "squashed r2")
+  
+  squashed_variance = compose_score(
+    "explained_variance", sigmoid, "squashed explained variance"
+  )
+  ```
 
   These squashed scores can prove useful in regression problems, but they can
   also introduce issues in the low-value regime.
@@ -705,7 +653,7 @@ nature of every (non-trivial) ML problem can have an effect:
   every index set. A moving average is computed and returned once the standard
   error is small, see :class:`~pydvl.utils.config.MemcachedConfig`.
 
-  :footcite:t:`wang_data_2022` prove that by relaxing one of the Shapley axioms
+  [@wang_data_2022] prove that by relaxing one of the Shapley axioms
   and considering the general class of semi-values, of which Shapley is an
   instance, one can prove that a choice of constant weights is the best one can
   do in a utility-agnostic setting. So-called *Data Banzhaf* is on our to-do
@@ -729,8 +677,3 @@ nature of every (non-trivial) ML problem can have an effect:
   but this would incur massive computational cost. As of v.0.3.0 there are no
   facilities in pyDVL for cross-validating the utility (note that this would
   require cross-validating the whole value computation).
-
-References
-==========
-
-.. footbibliography::

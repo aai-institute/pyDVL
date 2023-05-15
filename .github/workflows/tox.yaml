@@ -126,7 +126,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: docs
-          path: ./docs/_build
+          path: ./docs_build
       - name: Deploy Docs
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/develop' }}

@@ -1,14 +1,16 @@
 """
 This module contains classes to manage and learn utility functions for the
-computation of values. Please see the documentation on :ref:`data valuation` for
-more information.
+computation of values. Please see the documentation on
+[Computing Data Values][computing-data-values] for more information.
 
-:class:`Utility` holds information about model, data and scoring function (the
-latter being what one usually understands under *utility* in the general
-definition of Shapley value). It is automatically cached across machines.
+[Utility][pydvl.utils.utility.Utility] holds information about model,
+data and scoring function (the latter being what one usually understands
+under *utility* in the general definition of Shapley value).
+It is automatically cached across machines.
 
-:class:`DataUtilityLearning` adds support for learning the scoring function
-to avoid repeated re-training of the model to compute the score.
+[DataUtilityLearning][pydvl.utils.utility.DataUtilityLearning] adds support
+for learning the scoring function to avoid repeated re-training
+of the model to compute the score.
 
 This module also contains Utility classes for toy games that are used
 for testing and for demonstration purposes.
@@ -41,64 +43,63 @@ class Utility:
 
     An instance of ``Utility`` holds the triple of model, dataset and scoring
     function which determines the value of data points. This is mosly used for
-    the computation of :ref:`Shapley values<Shapley>` and
-    :ref:`Least Core values<Least Core>`.
+    the computation of [Shapley Values][shapley-values] and
+    [Core Values][core-values].
 
     The Utility expect the model to fulfill
-    the :class:`pydvl.utils.types.SupervisedModel` interface i.e. to have
-    ``fit()``, ``predict()``, and ``score()`` methods.
+    the [SupervisedModel][pydvl.utils.types.SupervisedModel] interface i.e.
+    to have ``fit()``, ``predict()``, and ``score()`` methods.
 
     When calling the utility, the model will be
-    `cloned <https://scikit-learn.org/stable/modules/generated/sklearn.base
-    .clone.html>`_
+    [cloned](https://scikit-learn.org/stable/modules/generated/sklearn.base
+    .clone.html)
     if it is a Sci-Kit Learn model, otherwise a copy is created using
-    ``deepcopy()``
-    from the builtin `copy <https://docs.python.org/3/library/copy.html>`_
-    module.
+    ``deepcopy()`` from the builtin [copy](https://docs.python.org/3/
+    library/copy.html) module.
 
     Since evaluating the scoring function requires retraining the model
     and that can be time-consuming, this class wraps it and caches
     the results of each execution. Caching is available both locally
     and across nodes, but must always be enabled for your
-    project first, see :ref:`how to set up the cache<caching setup>`.
+    project first, see [Setting up the cache][setting-up-the-cache].
 
-    :param model: Any supervised model. Typical choices can be found at
-            https://scikit-learn.org/stable/supervised_learning.html
-    :param data: :class:`Dataset` or :class:`GroupedDataset`.
-    :param scorer: A scoring object. If None, the ``score()`` method of the model
-        will be used. See :mod:`~pydvl.utils.scorer` for ways to create
-        and compose scorers, in particular how to set default values and ranges.
-        For convenience, a string can be passed, which will be used to construct
-        a :class:`~pydvl.utils.scorer.Scorer`.
-    :param default_score: As a convenience when no ``scorer`` object is passed
-        (where a default value can be provided), this argument also allows to set
-        the default score for models that have not been fit, e.g. when too little
-        data is passed, or errors arise.
-    :param score_range: As with ``default_score``, this is a convenience argument
-        for when no ``scorer`` argument is provided, to set the numerical range
-        of the score function. Some Monte Carlo methods can use this to estimate
-        the number of samples required for a certain quality of approximation.
-    :param catch_errors: set to ``True`` to catch the errors when fit() fails.
-        This could happen in several steps of the pipeline, e.g. when too little
-        training data is passed, which happens often during Shapley value
-        calculations. When this happens, the :attr:`default_score` is returned
-        as a score and computation continues.
-    :param show_warnings: Set to ``False`` to suppress warnings thrown by
-        ``fit()``.
-    :param enable_cache: If ``True``, use memcached for memoization.
-    :param cache_options: Optional configuration object for memcached.
-    :param clone_before_fit: If True, the model will be cloned before calling
-        ``fit()``.
+    Args:
+        model: Any supervised model. Typical choices can be found at
+                https://scikit-learn.org/stable/supervised_learning.html
+        data: Dataset or GroupedDataset instance.
+        scorer: A scoring object. If None, the ``score()`` method of the model
+            will be used. See [score][pydvl.utils.score] for ways to create
+            and compose scorers, in particular how to set default values and ranges.
+            For convenience, a string can be passed, which will be used to construct
+            a [Scorer][pydvl.utils.score.Scorer].
+        default_score: As a convenience when no ``scorer`` object is passed
+            (where a default value can be provided), this argument also allows to set
+            the default score for models that have not been fit, e.g. when too little
+            data is passed, or errors arise.
+        score_range: As with ``default_score``, this is a convenience argument
+            for when no ``scorer`` argument is provided, to set the numerical range
+            of the score function. Some Monte Carlo methods can use this to estimate
+            the number of samples required for a certain quality of approximation.
+        catch_errors: set to ``True`` to catch the errors when fit() fails.
+            This could happen in several steps of the pipeline, e.g. when too little
+            training data is passed, which happens often during Shapley value
+            calculations. When this happens, the :attr:`default_score` is returned
+            as a score and computation continues.
+        show_warnings: Set to ``False`` to suppress warnings thrown by
+            ``fit()``.
+        enable_cache: If ``True``, use memcached for memoization.
+        cache_options: Optional configuration object for memcached.
+        clone_before_fit: If True, the model will be cloned before calling
+            ``fit()``.
 
-    :Example:
-
-    >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
-    >>> from sklearn.linear_model import LinearRegression, LogisticRegression
-    >>> from sklearn.datasets import load_iris
-    >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
-    >>> u = Utility(LogisticRegression(random_state=16), dataset)
-    >>> u(dataset.indices)
-    0.9
+    Examples:
+        >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
+        >>> from sklearn.linear_model import LinearRegression, LogisticRegression
+        >>> from sklearn.datasets import load_iris
+        >>> dataset = Dataset.from_sklearn(load_iris(), random_state=16)
+        >>> u = Utility(LogisticRegression(random_state=16), dataset)
+        >>> u(dataset.indices)
+        0.9
 
     """
 
@@ -152,6 +153,11 @@ class Utility:
             self._utility_wrapper = self._utility
 
     def __call__(self, indices: Iterable[int]) -> float:
+        """
+        Args:
+            indices: a subset of valid indices for the
+                `x_train` attribute of [Dataset][pydvl.utils.dataset.Dataset].
+        """
         utility: float = self._utility_wrapper(frozenset(indices))
         return utility
 
@@ -164,13 +170,15 @@ class Utility:
         when computing utilities of permutations of indices or when randomly
         sampling from the powerset of indices.
 
-        :param indices: a subset of valid indices for
-            :attr:`~pydvl.utils.dataset.Dataset.x_train`. The type must be
-            hashable for the caching to work, e.g. wrap the argument with
-            `frozenset <https://docs.python.org/3/library/stdtypes.html#frozenset>`_
-            (rather than `tuple` since order should not matter)
-        :return: 0 if no indices are passed, :attr:`default_score`` if we fail
-            to fit the model or the scorer returns `NaN`. Otherwise, the score
+        Args:
+            indices: a subset of valid indices for the
+                `x_train` attribute of [Dataset][pydvl.utils.dataset.Dataset].
+                The type must be hashable for the caching to work,
+                e.g. wrap the argument with [frozenset][]
+                (rather than `tuple` since order should not matter)
+        Returns:
+            0 if no indices are passed, ``default_score`` if we fail
+            to fit the model or the scorer returns [numpy.NaN][]. Otherwise, the score
             of the model on the test data.
         """
         if not indices:
@@ -205,8 +213,9 @@ class Utility:
         """Clones the passed model to avoid the possibility
         of reusing a fitted estimator
 
-        :param model: Any supervised model. Typical choices can be found at
-            https://scikit-learn.org/stable/supervised_learning.html
+        Args:
+            model: Any supervised model. Typical choices can be found
+                on [this page](https://scikit-learn.org/stable/supervised_learning.html)
         """
         try:
             model = clone(model)
@@ -225,7 +234,7 @@ class Utility:
     @property
     def cache_stats(self) -> Optional[CacheStats]:
         """Cache statistics are gathered when cache is enabled.
-        See :class:`~pydvl.utils.caching.CacheInfo` for all fields returned.
+        See [CacheStats][pydvl.utils.caching.CacheStats] for all fields returned.
         """
         if self.enable_cache:
             return self._utility_wrapper.stats  # type: ignore
@@ -247,31 +256,31 @@ class DataUtilityLearning:
     """Implementation of Data Utility Learning algorithm
     :footcite:t:`wang_improving_2022`.
 
-    This object wraps a :class:`~pydvl.utils.utility.Utility` and delegates
+    This object wraps a [Utility][pydvl.utils.utility.Utility] and delegates
     calls to it, up until a given budget (number of iterations). Every tuple
     of input and output (a so-called *utility sample*) is stored. Once the
     budget is exhausted, `DataUtilityLearning` fits the given model to the
     utility samples. Subsequent calls will use the learned model to predict the
     utility instead of delegating.
 
-    :param u: The :class:`~pydvl.utils.utility.Utility` to learn.
-    :param training_budget: Number of utility samples to collect before fitting
-        the given model
-    :param model: A supervised regression model
+    Args:
+        u: The [Utility][pydvl.utils.utility.Utility] to learn.
+        training_budget: Number of utility samples to collect before fitting
+            the given model.
+        model: A supervised regression model
 
-    :Example:
-
-    >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
-    >>> from sklearn.linear_model import LinearRegression, LogisticRegression
-    >>> from sklearn.datasets import load_iris
-    >>> dataset = Dataset.from_sklearn(load_iris())
-    >>> u = Utility(LogisticRegression(), dataset)
-    >>> wrapped_u = DataUtilityLearning(u, 3, LinearRegression())
-    ... # First 3 calls will be computed normally
-    >>> for i in range(3):
-    ...     _ = wrapped_u((i,))
-    >>> wrapped_u((1, 2, 3)) # Subsequent calls will be computed using the fit model for DUL
-    0.0
+    Examples:
+        >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
+        >>> from sklearn.linear_model import LinearRegression, LogisticRegression
+        >>> from sklearn.datasets import load_iris
+        >>> dataset = Dataset.from_sklearn(load_iris())
+        >>> u = Utility(LogisticRegression(), dataset)
+        >>> wrapped_u = DataUtilityLearning(u, 3, LinearRegression())
+        ... # First 3 calls will be computed normally
+        >>> for i in range(3):
+        ...     _ = wrapped_u((i,))
+        >>> wrapped_u((1, 2, 3)) # Subsequent calls will be computed using the fit model for DUL
+        0.0
 
     """
 
@@ -312,7 +321,7 @@ class DataUtilityLearning:
 
     @property
     def data(self) -> Dataset:
-        """Returns the wrapped utility's :class:`~pydvl.utils.dataset.Dataset`."""
+        """Returns the wrapped utility's [Dataset][pydvl.utils.dataset.Dataset]."""
         return self.utility.data
 
 
@@ -336,9 +345,10 @@ class MinerGameUtility(Utility):
 
     If there is an odd number of miners, then the core is empty.
 
-    Taken from: https://en.wikipedia.org/wiki/Core_(game_theory)
+    Taken from [Wikipedia](https://en.wikipedia.org/wiki/Core_(game_theory))
 
-    :param n_miners: Number of miners that participate in the game.
+    Args:
+        n_miners: Number of miners that participate in the game.
     """
 
     def __init__(self, n_miners: int, **kwargs):
@@ -392,8 +402,9 @@ class GlovesGameUtility(Utility):
     Where $L$, respectively $R$, is the set of players with left gloves,
     respectively right gloves.
 
-    :param left: Number of players with a left glove.
-    :param right: Number of player with a right glove.
+    Args:
+        left: Number of players with a left glove.
+        right: Number of player with a right glove.
 
     """
 

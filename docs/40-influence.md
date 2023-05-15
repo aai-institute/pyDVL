@@ -1,17 +1,21 @@
-.. _influence:
+---
+title: Computing Influence Values
+alias: 
+  name: influence-values
+  text: Computing Influence Values
+---
 
-==========================
-Computing influence values
-==========================
+# Computing influence values
 
+!!! Warning
+   
+    Much of the code in the package :mod:`pydvl.influence` is experimental or
+    untested. Package structure and basic API are bound to change before v1.0.0
 
-.. warning::
-   Much of the code in the package :mod:`pydvl.influence` is experimental or
-   untested. Package structure and basic API are bound to change before v1.0.0
+!!! Todo
 
-.. todo::
+    This section needs rewriting:
 
-   This section needs rewriting:
     - Introduce some theory
     - Explain how the methods differ
     - Add example for `TwiceDifferentiable`
@@ -28,55 +32,51 @@ parameter in the call to the main entry points,
 :func:`~pydvl.influence.linear.compute_linear_influences` and
 :func:`~pydvl.influence.compute_influences`.
 
-Influence for OLS
------------------
-.. warning::
+# Influence for OLS
 
-   This will be deprecated. It makes no sense to have a separate interface for
-   linear models.
+!!! Warning
+
+    This will be deprecated. It makes no sense to have
+    a separate interface for linear models.
 
 Because the Hessian of the least squares loss for a regression problem can be
 computed analytically, we provide
 :func:`~pydvl.influence.linear.compute_linear_influences` as a convenience
 function to work with these models.
 
-.. code-block:: python
-
-   >>> from pydvl.influence.linear import compute_linear_influences
-   >>> compute_linear_influences(
-   ...    x_train,
-   ...    y_train,
-   ...    x_test,
-   ...    y_test
-   ... )
-
+```python
+from pydvl.influence.linear import compute_linear_influences
+compute_linear_influences(
+   x_train,
+   y_train,
+   x_test,
+   y_test
+)
+```
 
 This method calculates the influence function for each sample in x_train for a
 least squares regression problem.
 
 
-Exact influences using the `TwiceDifferentiable` protocol
----------------------------------------------------------
+# Exact influences using the `TwiceDifferentiable` protocol
 
 More generally, influences can be computed for any model which implements the
 :class:`TwiceDifferentiable` protocol, i.e. which is capable of calculating
 second derivative matrix vector products and gradients of the loss evaluated on
 training and test samples.
 
-.. code-block:: python
+```python
+from pydvl.influence import compute_influences
+compute_influences(
+   model,
+   x_train,
+   y_train,
+   x_test,
+   y_test,,
+)
+```
 
-   >>> from pydvl.influence import influences
-   >>> compute_influences(
-   ...    model,
-   ...    x_train,
-   ...    y_train,
-   ...    x_test,
-   ...    y_test,,
-   ... )
-
-
-Approximate matrix inversion
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+## Approximate matrix inversion
 
 Sometimes it is not possible to construct the complete Hessian in memory. In
 that case one can use conjugate gradient as a space-efficient approximation to
@@ -84,33 +84,31 @@ inverting the full matrix. In pyDVL this can be done with the parameter
 `inversion_method` of :func:`~pydvl.influence.compute_influences`:
 
 
-.. code-block:: python
+```python
+from pydvl.influence import compute_influences
+compute_influences(
+   model,
+   x_train,
+   y_train,
+   x_test,
+   y_test,
+   inversion_method="cg"
+)
+```
 
-   >>> from pydvl.influence import compute_influences
-   >>> compute_influences(
-   ...    model,
-   ...    x_train,
-   ...    y_train,
-   ...    x_test,
-   ...    y_test,
-   ...    inversion_method="cg"
-   ... )
-
-
-Perturbation influences
------------------------
+# Perturbation influences
 
 As mentioned, the method of empirical influence computation can be selected
 in :func:`~pydvl.influence.compute_influences` with `influence_type`:
 
-.. code-block:: python
-
-   >>> from pydvl.influence import compute_influences
-   >>> compute_influences(
-   ...    model,
-   ...    x_train,
-   ...    y_train,
-   ...    x_test,
-   ...    y_test,
-   ...    influence_type="perturbation"
-   ... )
+```python
+from pydvl.influence import compute_influences
+compute_influences(
+   model,
+   x_train,
+   y_train,
+   x_test,
+   y_test,
+   influence_type="perturbation"
+)
+```

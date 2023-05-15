@@ -1,6 +1,4 @@
 """
-Contains
-
 - batched conjugate gradient.
 - error bound for conjugate gradient.
 """
