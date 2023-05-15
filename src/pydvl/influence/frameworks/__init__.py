@@ -48,5 +48,5 @@ try:
 
 except ImportError:
     logger.info(
-        "No compatible framework found. For influence computation install PyTorch 1.13."
+        "No compatible framework found. Influence function computation disabled."
     )

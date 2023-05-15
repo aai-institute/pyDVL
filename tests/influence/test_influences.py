@@ -9,7 +9,7 @@ import torch
 import torch.nn.functional as F
 from numpy.typing import NDArray
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence import TorchTwiceDifferentiable, compute_influences
 from pydvl.influence.general import InfluenceType, InversionMethod
@@ -247,9 +247,11 @@ def test_influences_nn(
             "scale": 10000,
         },
     }
-    train_data_loader = DataLoader(list(zip(x_train, y_train)), batch_size=batch_size)
+    train_data_loader = DataLoader(
+        TensorDataset(x_train, y_train), batch_size=batch_size
+    )
     test_data_loader = DataLoader(
-        list(zip(x_test, y_test)),
+        TensorDataset(x_test, y_test),
         batch_size=batch_size,
     )
     multiple_influences = {}
