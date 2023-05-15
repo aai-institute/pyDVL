@@ -13,88 +13,22 @@ distributed caching of results.
 If you're a first time user of pyDVL, we recommend you to go through the
 [[getting-started]] and [[installation]] guides.
 
-[TOC]
+::cards:: cols=2
 
-=== "To the installation guide"
+- title: To the installation guide
+  image: ./assets/material-toolbox.svg
+  url: 20-install
 
-    Test
+- title: To the code
+  image: ./assets/material-code.svg
+  url: https://github.com/appliedAI-Initiative/pyDVL
 
-    :material-toolbox:
+- title: Browse the API
+  image: ./assets/material-description.svg
+  url: code-reference/pydvl
 
-.. grid:: 2
-    :gutter: 4
-    :padding: 4
+- title: To the examples
+  image: ./assets/material-computer.svg
+  url: examples
 
-    .. grid-item-card::
-        :class-item: sd-text-center
-
-        :material-regular:`home_repair_service;12em`
-
-        .. button-ref:: 20-install
-            :expand:
-            :color: primary
-            :outline:
-            :click-parent:
-
-            To the installation guide
-
-    .. grid-item-card::
-        :class-item: sd-text-center
-
-        :material-regular:`code;12em`
-
-        .. button-link:: https://github.com/appliedAI-Initiative/pyDVL
-            :expand:
-            :color: primary
-            :outline:
-            :click-parent:
-
-            To the sources
-
-    .. grid-item-card::
-        :class-item: sd-text-center
-
-        :material-regular:`description;12em`
-
-        .. button-ref:: pydvl
-            :expand:
-            :color: primary
-            :outline:
-            :click-parent:
-
-            Browse the API
-
-    .. grid-item-card::
-        :class-item: sd-text-center
-
-        :material-regular:`computer;12em`
-
-        .. button-link:: examples
-            :expand:
-            :color: primary
-            :outline:
-            :click-parent:
-
-            To the examples
-
-Contents
-========
-
-.. toctree::
-   :glob:
-
-   *
-   examples/index
-
-.. toctree::
-   :caption: Reference
-   :hidden:
-
-   pydvl/index
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+::/cards::

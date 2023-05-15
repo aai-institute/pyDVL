@@ -41,7 +41,25 @@ a.autorefs-external:hover::after {
   background-color: var(--md-accent-fg-color);
 }
 
-/*Highlight code*/
+/* Headers */
+.md-typeset h1 {
+  font-size: 2.5em;
+  font-weight: 500;
+}
+
+.md-typeset h2 {
+  font-size: 1.7em;
+  font-weight: 300;
+}
+
+/* Highlight function names in red */
 .highlight > :first-child  {
     color: #b30000;
+}
+
+/* Highlight svg logos on hover */
+/* The filter was generated using this link: https://codepen.io/sosuke/pen/Pjoqqp */
+.nt-card-image:hover,
+.nt-card-image:focus {
+  filter: invert(32%) sepia(93%) saturate(1535%) hue-rotate(220deg) brightness(102%) contrast(99%);
 }

@@ -26,8 +26,9 @@ interest, but a function of three factors:
 
 pyDVL collects algorithms for the computation of data values in this sense,
 mostly those derived from cooperative game theory. The methods can be found in
-the package ::: pydvl.value , with support from modules
-:mod:`pydvl.utils.dataset` and :mod:`~pydvl.utils.utility`, as detailed below.
+the package [pydvl.value][pydvl.value] , with support from modules
+[pydvl.utils.dataset][pydvl.utils.dataset]
+and [pydvl.utils.utility][pydvl.utils.utility], as detailed below.
 
 !!! Warning
 
@@ -55,21 +56,21 @@ dataset = Dataset(X_train, X_test, y_train, y_test)
 ```
 
 It is also possible to construct Datasets from sklearn toy datasets for
-illustrative purposes using :meth:`~pydvl.utils.dataset.Dataset.from_sklearn`.
+illustrative purposes using [from_sklearn][pydvl.utils.dataset.Dataset.from_sklearn].
 
 ### Grouping data
 
 Be it because data valuation methods are computationally very expensive, or
 because we are interested in the groups themselves, it can be often useful or
-necessary to group samples so as to valuate them together.
+necessary to group samples to valuate them together.
 [GroupedDataset][pydvl.utils.dataset.GroupedDataset] provides an alternative to
-[Dataset][] with the same interface which allows this.
+[Dataset][pydvl.utils.dataset.Dataset] with the same interface which allows this.
 
 You can see an example in action in the
 :doc:`Spotify notebook <examples/shapley_basic_spotify>`, but here's a simple
 example grouping a pre-existing `Dataset`. First we construct an array mapping
 each index in the dataset to a group, then use
-:meth:`~pydvl.utils.dataset.GroupedDataset.from_dataset`:
+[from_dataset][pydvl.utils.dataset.GroupedDataset.from_dataset]:
 
 ```python
 import numpy as np
@@ -84,7 +85,7 @@ grouped_dataset = GroupedDataset.from_dataset(dataset, data_groups)
 
 In pyDVL we have slightly overloaded the name "utility" and use it to refer to
 an object that keeps track of all three items in $(D, \mathcal{A}, u)$. This
-will be an instance of :class:`~pydvl.utils.utility.Utility` which, as mentioned,
+will be an instance of [Utility][pydvl.utils.utility.Utility] which, as mentioned,
 is a convenient wrapper for the dataset, model and scoring function used for
 valuation methods.
 
@@ -102,11 +103,11 @@ utility = Utility(model, dataset)
 The object `utility` is a callable that data valuation methods will execute
 with different subsets of training data. Each call will retrain the model on a
 subset and evaluate it on the test data using a scoring function. By default,
-:class:`~pydvl.utils.utility.Utility` will use `model.score()`, but it is
+[Utility][pydvl.utils.utility.Utility] will use `model.score()`, but it is
 possible to use any scoring function (greater values must be better). In
 particular, the constructor accepts the same types as argument as sklearn's
-[cross_validate()](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html>):
-a string, a scorer callable or `None` for the default.
+[cross_validate](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html>):
+a string, a scorer callable or [None][] for the default.
 
 ```python
 utility = Utility(model, dataset, "explained_variance")
@@ -115,13 +116,14 @@ utility = Utility(model, dataset, "explained_variance")
 `Utility` will wrap the `fit()` method of the model to cache its results. This
 greatly reduces computation times of Monte Carlo methods. Because of how caching
 is implemented, it is important not to reuse `Utility` objects for different
-datasets. You can read more about :ref:`caching setup` in the installation guide
-and the documentation of the :mod:`pydvl.utils.caching` module.
+datasets. You can read more about [setting up the cache][setting-up-the-cache]
+in the installation guide and the documentation
+of the [caching][pydvl.utils.caching] module.
 
 ### Using custom scorers
 
-The `scoring` argument of :class:`~pydvl.utils.utility.Utility` can be used to
-specify a custom :class:`~pydvl.utils.utility.Scorer` object. This is a simple
+The `scoring` argument of [Utility][pydvl.utils.utility.Utility] can be used to
+specify a custom [Scorer][pydvl.utils.utility.Scorer] object. This is a simple
 wrapper for a callable that takes a model, and test data and returns a score.
 
 More importantly, the object provides information about the range of the score,
@@ -134,7 +136,7 @@ about what default value to use when the model fails to train.
     models will fail to fit on small subsets of the data, it is important to
     provide a sensible default value for the score.
 
-It is possible to skip the construction of the :class:`~pydvl.utils.utility.Scorer`
+It is possible to skip the construction of the [Scorer][pydvl.utils.utility.Scorer]
 when constructing the `Utility` object. The two following calls are equivalent:
 
 ```python
@@ -152,7 +154,7 @@ Because each evaluation of the utility entails a full retrain of the model with
 a new subset of the training set, it is natural to try to learn this mapping
 from subsets to scores. This is the idea behind **Data Utility Learning (DUL)**
 [@wang_improving_2022] and in pyDVL it's as simple as wrapping the
-`Utility` inside :class:`~pydvl.utils.utility.DataUtilityLearning`:
+`Utility` inside [DataUtilityLearning][pydvl.utils.utility.DataUtilityLearning]:
 
 ```python
 from pydvl.utils import Utility, DataUtilityLearning, Dataset
@@ -202,11 +204,9 @@ values = naive_loo(utility)
 ```
 
 The return value of all valuation functions is an object of type
-:class:`~pydvl.value.result.ValuationResult`. This can be iterated over,
+[ValuationResult][pydvl.value.result.ValuationResult]. This can be iterated over,
 indexed with integers, slices and Iterables, as well as converted to a
-`pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
-
-.. _Shapley:
+[pandas.DataFrame][].
 
 ## Shapley values
 
@@ -217,8 +217,9 @@ coalitions) in a way that ensures that certain axioms are fulfilled.
 
 pyDVL implements several methods for the computation and approximation of
 Shapley values. They can all be accessed via the facade function
-:func:`~pydvl.value.shapley.compute_shapley_values`. The supported methods are
-enumerated in :class:`~pydvl.value.shapley.ShapleyMode`.
+[compute_shapley_values][pydvl.value.shapley.compute_shapley_values].
+The supported methods are enumerated in
+[ShapleyMode][pydvl.value.shapley.ShapleyMode].
 
 
 ### Combinatorial Shapley
@@ -237,17 +238,17 @@ v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}}
 ,$$
 
 ```python
-from pydvl.value import compute_shapley_value
+from pydvl.value import compute_shapley_values
 
 values = compute_shapley_values(utility, mode="combinatorial_exact")
 df = values.to_dataframe(column='value')
 ```
 
 We can convert the return value to a
-[pandas DataFrame](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html)
+[pandas.DataFrame][].
 and name the column with the results as `value`. Please refer to the
-documentation in :mod:`pydvl.value.shapley` and
-:class:`~pydvl.value.result.ValuationResult` for more information.
+documentation in [shapley][pydvl.value.shapley] and
+[ValuationResult][pydvl.value.result.ValuationResult] for more information.
 
 ### Monte Carlo Combinatorial Shapley
 
@@ -270,10 +271,11 @@ df = values.to_dataframe(column='cmc')
 The DataFrames returned by most Monte Carlo methods will contain approximate
 standard errors as an additional column, in this case named `cmc_stderr`.
 
-Note the usage of the object :class:`~pydvl.value.stopping.MaxUpdates` as the
+Note the usage of the object [MaxUpdates][pydvl.value.stopping.MaxUpdates] as the
 stop condition. This is an instance of a
-:class:`~pydvl.value.stopping.StoppingCriterion`. Other examples are
-:class:`~pydvl.value.stopping.MaxTime` and :class:`~pydvl.value.stopping.StandardError`.
+[StoppingCriterion][pydvl.value.stopping.StoppingCriterion]. Other examples are
+[MaxTime][pydvl.value.stopping.MaxTime] and
+[AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError].
 
 
 ### Owen sampling
@@ -291,7 +293,7 @@ v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})}
 
 Using Owen sampling follows the same pattern as every other method for Shapley
 values in pyDVL. First construct the dataset and utility, then call
-:func:`~pydvl.value.shapley.compute_shapley_values`:
+[compute_shapley_values][pydvl.value.shapley.compute_shapley_values]:
 
 ```python
 from pydvl.value import compute_shapley_values
@@ -303,10 +305,10 @@ values = compute_shapley_values(
 
 There are more details on Owen sampling, and its variant *Antithetic Owen
 Sampling* in the documentation for the function doing the work behind the scenes:
-:func:`~pydvl.value.shapley.montecarlo.owen_sampling_shapley`.
+[owen_sampling_shapley][pydvl.value.shapley.owen.owen_sampling_shapley].
 
 Note that in this case we do not pass a
-:class:`~pydvl.value.stopping.StoppingCriterion` to the function, but instead
+[StoppingCriterion][pydvl.value.stopping.StoppingCriterion] to the function, but instead
 the number of iterations and the maximum number of samples to use in the
 integration.
 
@@ -390,7 +392,7 @@ $$
 Usage follows the same pattern as every other Shapley method, but with the
 addition of an ``epsilon`` parameter required for the solution of the CSP. It
 should be the same value used to compute the minimum number of samples required.
-This can be done with :func:`~pydvl.value.shapley.gt.num_samples_eps_delta`, but
+This can be done with [num_samples_eps_delta][pydvl.value.shapley.gt.num_samples_eps_delta], but
 note that the number returned will be huge! In practice, fewer samples can be
 enough, but the actual number will strongly depend on the utility, in particular
 its variance.
@@ -508,9 +510,9 @@ Because computing the Least Core values requires the solution of a linear and a
 quadratic problem *after* computing all the utility values, we offer the
 possibility of splitting the latter from the former. This is useful when running
 multiple experiments: use
-:func:`~pydvl.value.least_core.montecarlo.mclc_prepare_problem` to prepare a
+[mclc_prepare_problem][pydvl.value.least_core.montecarlo.mclc_prepare_problem] to prepare a
 list of problems to solve, then solve them in parallel with
-:func:`~pydvl.value.least_core.common.lc_solve_problems`.
+[lc_solve_problems][pydvl.value.least_core.common.lc_solve_problems].
 
 ```python
 from pydvl.value.least_core import mclc_prepare_problem, lc_solve_problems
@@ -545,7 +547,7 @@ rank stability in certain situations.
 
     Shapley values are a particular case of semi-values and can therefore also be
     computed with the methods described here. However, as of version 0.6.0, we
-    recommend using :func:`~pydvl.value.shapley.compute_shapley_values` instead,
+    recommend using [compute_shapley_values][pydvl.value.shapley.compute_shapley_values] instead,
     in particular because it implements truncated Monte Carlo sampling for faster
     computation.
 
@@ -563,12 +565,12 @@ $$
 w(k) := \frac{B(k+\beta, n-k+1+\alpha)}{B(\alpha, \beta)},
 $$
 
-where $B$ is the `Beta function <https://en.wikipedia.org/wiki/Beta_function>`_,
+where $B$ is the [Beta function](https://en.wikipedia.org/wiki/Beta_function),
 and $\alpha$ and $\beta$ are parameters that control the weighting of the
 subsets. Setting both to 1 recovers Shapley values, and setting $\alpha = 1$, and
 $\beta = 16$ is reported in [@kwon_beta_2022] to be a good choice for
-some applications. See however :ref:`banzhaf indices` for an alternative choice
-of weights which is reported to work better.
+some applications. See however the [Banzhaf indices][banzhaf-indices] section 
+for an alternative choice of weights which is reported to work better.
 
 ```python
 from pydvl.value import compute_semivalues
@@ -578,16 +580,14 @@ values = compute_semivalues(
 )
 ```
 
-.. _banzhaf indices:
-
 ### Banzhaf indices
 
-As noted below in :ref:`problems of data values`, the Shapley value can be very
-sensitive to variance in the utility function. For machine learning applications,
-where the utility is typically the performance when trained on a set $S \subset
-D$, this variance is often largest for smaller subsets $S$. It is therefore
-reasonable to try reducing the relative contribution of these subsets with
-adequate weights.
+As noted below in the [Problems of Data Values][problems-of-data-values] section,
+the Shapley value can be very sensitive to variance in the utility function.
+For machine learning applications, where the utility is typically the performance
+when trained on a set $S \subset D$, this variance is often largest
+for smaller subsets $S$. It is therefore reasonable to try reducing
+the relative contribution of these subsets with adequate weights.
 
 One such choice of weights is the Banzhaf index, which is defined as the
 constant:
@@ -623,9 +623,9 @@ nature of every (non-trivial) ML problem can have an effect:
   that matters, and this tends to be accurate (wrt. to the true ranking) despite
   inaccurate values.
 
-  pyDVL offers a dedicated :func:`function composition
-  <pydvl.utils.types.compose_score>` for scorer functions which can be used to
-  squash a score. The following is defined in module :mod:`~pydvl.utils.scorer`:
+  pyDVL offers a dedicated [function composition][pydvl.utils.score.compose_score]
+  for scorer functions which can be used to squash a score.
+  The following is defined in module [score][pydvl.utils.score]:
 
   ```python
   import numpy as np
@@ -651,7 +651,7 @@ nature of every (non-trivial) ML problem can have an effect:
   variance, as will their Monte Carlo estimates. One workaround in pyDVL is to
   configure the caching system to allow multiple evaluations of the utility for
   every index set. A moving average is computed and returned once the standard
-  error is small, see :class:`~pydvl.utils.config.MemcachedConfig`.
+  error is small, see [MemcachedConfig][pydvl.utils.config.MemcachedConfig].
 
   [@wang_data_2022] prove that by relaxing one of the Shapley axioms
   and considering the general class of semi-values, of which Shapley is an
@@ -663,7 +663,7 @@ nature of every (non-trivial) ML problem can have an effect:
   approximations can converge slowly. Massive datasets are thus impractical, at
   least with current techniques. A workaround is to group samples and investigate
   their value together. In pyDVL you can do this using
-  :class:`~pydvl.utils.dataset.GroupedDataset`. There is a fully worked-out
+  [GroupedDataset][pydvl.utils.dataset.GroupedDataset]. There is a fully worked-out
   :doc:`example here <examples/shapley_basic_spotify>`. Some algorithms also
   provide different sampling strategies to reduce the variance, but due to a
   no-free-lunch-type theorem, no single strategy can be optimal for all

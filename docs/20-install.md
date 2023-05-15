@@ -39,13 +39,11 @@ pip install pyDVL --index-url https://test.pypi.org/simple/
 
 pyDVL requires Python >= 3.8, [Memcached](https://memcached.org/) for caching
 and [Ray](https://ray.io) for parallelization. Additionally,
-:mod:`Influence functions<pydvl.influence>` requires PyTorch (see
-:ref:`pyDVL Installation`).
+the [Influence functions][pydvl.influence] module requires PyTorch (see
+ [[installation]]).
 
 ray is used to distribute workloads both locally and across nodes. Please follow
 the instructions in their documentation for installation.
-
-.. _caching setup:
 
 # Setting up the cache
 

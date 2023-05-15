@@ -59,6 +59,7 @@ from pydvl.value.sampler import PermutationSampler, PowersetSampler
 from pydvl.value.stopping import MaxUpdates, StoppingCriterion
 
 __all__ = [
+    "compute_semivalues",
     "banzhaf_coefficient",
     "beta_coefficient",
     "shapley_coefficient",
