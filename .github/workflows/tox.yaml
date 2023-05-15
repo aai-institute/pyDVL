@@ -132,7 +132,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/develop' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/_build/html
+          publish_dir: ./docs_build/
           user_name: ${{ env.GITHUB_BOT_USERNAME }}
           user_email: ${{ env.GITHUB_BOT_EMAIL }}
       - name: Build and publish to TestPyPI
