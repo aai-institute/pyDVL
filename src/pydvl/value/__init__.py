@@ -9,5 +9,7 @@ from .result import *  # isort: skip
 from ..utils import Dataset, Scorer, Utility
 from .least_core import *
 from .loo import *
+from .sampler import *
+from .semivalues import *
 from .shapley import *
 from .stopping import *

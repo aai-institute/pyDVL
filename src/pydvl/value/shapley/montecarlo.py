@@ -79,7 +79,7 @@ def _permutation_montecarlo_shapley(
     :param job_id: id to use for reporting progress (e.g. to place progres bars)
     :return: An object with the results
     """
-    result = ValuationResult.empty(
+    result = ValuationResult.zeros(
         algorithm=algorithm_name, indices=u.data.indices, data_names=u.data.data_names
     )
 
@@ -116,10 +116,13 @@ def permutation_montecarlo_shapley(
     r"""Computes an approximate Shapley value by sampling independent index
     permutations to approximate the sum:
 
-    $$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
-    [u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})].$$
+    $$
+    v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
+    \tilde{w}( | \sigma_{:i} | )[u(\sigma_{:i} \cup \{i\}) − u(\sigma_{:i})],
+    $$
 
-    See :ref:`data valuation` for details.
+    where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
+    position where $i$ appears (see :ref:`data valuation` for details).
 
     :param u: Utility object with model, data, and scoring function.
     :param done: function checking whether computation must stop.
@@ -177,9 +180,9 @@ def _combinatorial_montecarlo_shapley(
     # powerset of a set with n-1 elements has mass 2^{n-1} over each subset. The
     # additional factor n corresponds to the one in the Shapley definition
     correction = 2 ** (n - 1) / n
-    result = ValuationResult.empty(
+    result = ValuationResult.zeros(
         algorithm="combinatorial_montecarlo_shapley",
-        indices=indices,
+        indices=np.array(indices, dtype=np.int_),
         data_names=[u.data.data_names[i] for i in indices],
     )
 

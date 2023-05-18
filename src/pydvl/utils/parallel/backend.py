@@ -16,7 +16,6 @@ from typing import (
 
 import ray
 from ray import ObjectRef
-from ray.remote_function import RemoteFunction
 
 from ..config import ParallelConfig
 
@@ -93,18 +92,16 @@ class BaseParallelBackend(metaclass=NoPublicConstructor):
 
 
 class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
-    """Class used to run jobs sequentially and locally. It shouldn't
-    be initialized directly. You should instead call `init_parallel_backend`.
+    """Class used to run jobs sequentially and locally.
+
+    It shouldn't be initialized directly. You should instead call
+    :func:`~pydvl.utils.parallel.backend.init_parallel_backend`.
 
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with number of cpus
     """
 
     def __init__(self, config: ParallelConfig):
-        config_dict = asdict(config)
-        config_dict.pop("backend")
-        config_dict.pop("address")
-        config_dict["num_cpus"] = config_dict.pop("n_local_workers")
-        self.config = config_dict
+        self.config = {}
 
     def get(self, v: Any, *args, **kwargs):
         return v
@@ -126,8 +123,10 @@ class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
 
 
 class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
-    """Class used to wrap ray to make it transparent to algorithms. It shouldn't
-    be initialized directly. You should instead call `init_parallel_backend`.
+    """Class used to wrap ray to make it transparent to algorithms.
+
+    It shouldn't be initialized directly. You should instead call
+    :func:`~pydvl.utils.parallel.backend.init_parallel_backend`.
 
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
         cluster address, number of cpus, etc.
@@ -136,7 +135,9 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     def __init__(self, config: ParallelConfig):
         config_dict = asdict(config)
         config_dict.pop("backend")
-        config_dict["num_cpus"] = config_dict.pop("n_local_workers")
+        n_cpus_local = config_dict.pop("n_cpus_local")
+        if config_dict.get("address", None) is None:
+            config_dict["num_cpus"] = n_cpus_local
         self.config = config_dict
         if not ray.is_initialized():
             ray.init(**self.config)
@@ -169,7 +170,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
 
         :return: The `.remote` method of the ray `RemoteFunction`.
         """
-        if len(kwargs) > 1:
+        if len(kwargs) > 0:
             return ray.remote(**kwargs)(fun).remote  # type: ignore
         return ray.remote(fun).remote  # type: ignore
 
@@ -201,7 +202,8 @@ def init_parallel_backend(
 ) -> BaseParallelBackend:
     """Initializes the parallel backend and returns an instance of it.
 
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig`
+        with cluster address, number of cpus, etc.
 
     :Example:
 

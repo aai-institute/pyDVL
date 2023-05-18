@@ -21,10 +21,10 @@ Consider installing any of [black's IDE
 integrations](https://black.readthedocs.io/en/stable/integrations/editors.html)
 to make your life easier.
 
-Run the following command to set up the pre-commit git hook:
+Run the following to set up the pre-commit git hook to run before pushes:
 
 ```shell script
-pre-commit install
+pre-commit install --hook-type pre-push
 ```
 
 ## Setting up your environment
@@ -261,6 +261,102 @@ sizeable amount of time, so care must be taken not to overdo it:
 2. We try not to trigger CI pipelines when unnecessary (see [Skipping CI
 runs](#skipping-ci-runs)).
 
+### Running Github Actions locally
+
+To run Github Actions locally we use [act](https://github.com/nektos/act).
+It uses the workflows defined in `.github/workflows` and determines
+the set of actions that need to be run. It uses the Docker API
+to either pull or build the necessary images, as defined
+in our workflow files and finally determines the execution path
+based on the dependencies that were defined.
+
+Once it has the execution path, it then uses the Docker API
+to run containers for each action based on the images prepared earlier.
+The [environment variables](https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables) 
+and [filesystem](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#file-systems)
+are all configured to match what GitHub provides.
+
+You can install it manually using:
+
+```shell
+curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash -s -- -d -b ~/bin 
+```
+
+And then simply add it to your PATH variable: `PATH=~/bin:$PATH`
+
+Refer to its official
+[readme](https://github.com/nektos/act#installation-through-package-managers)
+for more installation options.
+
+#### Cheatsheat
+
+```shell
+# List all actions for all events:
+act -l
+
+# List the actions for a specific event:
+act workflow_dispatch -l
+
+# List the actions for a specific job:
+act -j lint -l
+
+# Run the default (`push`) event:
+act
+
+# Run a specific event:
+act pull_request
+
+# Run a specific job:
+act -j lint
+
+# Collect artifacts to the /tmp/artifacts folder:
+act --artifact-server-path /tmp/artifacts
+
+# Run a job in a specific workflow (useful if you have duplicate job names)
+act -j lint -W .github/workflows/tox.yml
+
+# Run in dry-run mode:
+act -n
+
+# Enable verbose-logging (can be used with any of the above commands)
+act -v
+```
+
+#### Example
+
+To run the `publish` job (the toughest one to test) with tag 'v0.6.0' 
+you would simply use:
+
+```shell
+act push -j publish --eventpath events.json
+```
+
+With `events.json` containing:
+
+```json
+{
+  "ref": "refs/tags/v0.6.0"
+}
+```
+
+To instead run it as if it had been manually triggered (i.e. `workflow_dispatch`)
+
+you would instead use:
+
+```shell
+act workflow_dispatch -j publish --eventpath events.json
+```
+
+With `events.json` containing:
+
+```json
+{
+  "inputs": {
+    "tag": "v0.6.0"
+  }
+}
+```
+
 ### Skipping CI runs
 
 One sometimes would like to skip CI for certain commits (e.g. updating the
@@ -301,8 +397,11 @@ If running in interactive mode (without `-y|--yes`), the script will output a
 summary of pending changes and ask for confirmation before executing the
 actions.
 
-Once this is done, a package will be automatically created and published from CI
-to PyPI.
+Once this is done, a tag will be created on the repository. 
+You should then create a Github
+[release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository#creating-a-release)
+for that tag. That will a trigger a CI pipeline that will
+automatically create a package and publish it from CI to PyPI.
 
 ### Manual release process
 
@@ -345,13 +444,16 @@ create a new release manually by following these steps:
     ```
 7. Delete the release branch if necessary: 
    `git branch -d release/${RELEASE_VERSION}`
-8. Pour yourself a cup of coffee, you earned it! :coffee: :sparkles:
-9. A package will be automatically created and published from CI to PyPI.
+8. Create a Github
+   [release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository#creating-a-release)
+   for the created tag.
+9. Pour yourself a cup of coffee, you earned it! :coffee: :sparkles:
+10. A package will be automatically created and published from CI to PyPI.
 
-### CI and requirements for releases
+### CI and requirements for publishing
 
-In order to release new versions of the package from the development branch, the
-CI pipeline requires the following secret variables set up:
+In order to publish new versions of the package from the development branch,
+the CI pipeline requires the following secret variables set up:
 
 ```
 TEST_PYPI_USERNAME
@@ -367,13 +469,13 @@ The last 2 are used in the [publish.yaml](.github/workflows/publish.yaml) CI
 workflow to publish packages to [PyPI](https://pypi.org/) from `develop` after
 a GitHub release.
 
-#### Release to TestPyPI
+#### Publish to TestPyPI
 
-We use [bump2version](https://pypi.org/project/bump2version/) to bump the build
-part of the version number, create a tag and push it from CI.
+We use [bump2version](https://pypi.org/project/bump2version/) to bump
+the build part of the version number and publish a package to TestPyPI from CI.
 
 To do that, we use 2 different tox environments:
 
 - **bump-dev-version**: Uses bump2version to bump the dev version,
-  without committing  the new version or creating a corresponding git tag.
+  without committing the new version or creating a corresponding git tag.
 - **publish-test-package**: Builds and publishes a package to TestPyPI

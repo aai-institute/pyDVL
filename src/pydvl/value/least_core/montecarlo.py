@@ -3,7 +3,6 @@ import warnings
 from typing import Iterable, Optional
 
 import numpy as np
-from deprecation import DeprecatedWarning
 
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
@@ -17,10 +16,7 @@ from pydvl.value.result import ValuationResult
 logger = logging.getLogger(__name__)
 
 
-__all__ = [
-    "montecarlo_least_core",
-    "mclc_prepare_problem",
-]
+__all__ = ["montecarlo_least_core", "mclc_prepare_problem"]
 
 
 def montecarlo_least_core(
@@ -65,14 +61,13 @@ def montecarlo_least_core(
     :param progress: If True, shows a tqdm progress bar
     :return: Object with the data values and the least core value.
     """
-    # TODO: remove this before releasing version 0.6.0
+    # TODO: remove this before releasing version 0.7.0
     if options:
         warnings.warn(
-            DeprecatedWarning(
-                "Passing solver options as kwargs",
-                deprecated_in="0.5.1",
-                removed_in="0.6.0",
-                details="Use solver_options instead.",
+            DeprecationWarning(
+                "Passing solver options as kwargs was deprecated in "
+                "0.6.0, will be removed in 0.7.0. `Use solver_options` "
+                "instead."
             )
         )
         if solver_options is None:

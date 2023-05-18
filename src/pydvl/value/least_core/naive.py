@@ -3,7 +3,6 @@ import warnings
 from typing import Optional
 
 import numpy as np
-from deprecation import DeprecatedWarning
 
 from pydvl.utils import Utility, maybe_progress, powerset
 from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
@@ -58,14 +57,13 @@ def exact_least_core(
     if n > 20:  # Arbitrary choice, will depend on time required, caching, etc.
         warnings.warn(f"Large dataset! Computation requires 2^{n} calls to model.fit()")
 
-    # TODO: remove this before releasing version 0.6.0
+    # TODO: remove this before releasing version 0.7.0
     if options:
         warnings.warn(
-            DeprecatedWarning(
-                "Passing solver options as kwargs",
-                deprecated_in="0.5.1",
-                removed_in="0.6.0",
-                details="Use solver_options instead.",
+            DeprecationWarning(
+                "Passing solver options as kwargs was deprecated in "
+                "0.6.0, will "
+                "be removed in 0.7.0. `Use solver_options` instead."
             )
         )
         if solver_options is None:

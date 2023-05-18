@@ -94,6 +94,24 @@ def analytic_shapley(dummy_utility):
 
 
 @pytest.fixture(scope="function")
+def analytic_banzhaf(dummy_utility):
+    """Scores are i/n, so
+    v(i) = 1/2^{n-1} Σ_{S_{-i}} [U(S + {i}) - U(S)] = i/n
+    """
+
+    m = float(max(dummy_utility.data.x_train))
+    values = np.array([i / m for i in dummy_utility.data.indices])
+    result = ValuationResult(
+        algorithm="exact",
+        values=values,
+        variances=np.zeros_like(values),
+        data_names=dummy_utility.data.indices,
+        status=Status.Converged,
+    )
+    return dummy_utility, result
+
+
+@pytest.fixture(scope="function")
 def linear_shapley(linear_dataset, scorer, n_jobs):
     u = Utility(
         LinearRegression(), data=linear_dataset, scorer=scorer, enable_cache=False
@@ -108,20 +126,13 @@ def linear_shapley(linear_dataset, scorer, n_jobs):
 @pytest.fixture(scope="module", params=["sequential", "ray-local", "ray-external"])
 def parallel_config(request):
     if request.param == "sequential":
-        # FIXME: instead test TMC separately
-        pytest.skip("Skipping 'sequential' because it doesn't work with TMC")
         yield ParallelConfig(backend=request.param)
     elif request.param == "ray-local":
         yield ParallelConfig(backend="ray")
         ray.shutdown()
     elif request.param == "ray-external":
         # Starts a head-node for the cluster.
-        cluster = Cluster(
-            initialize_head=True,
-            head_node_args={
-                "num_cpus": 4,
-            },
-        )
+        cluster = Cluster(initialize_head=True, head_node_args={"num_cpus": 4})
         yield ParallelConfig(backend="ray", address=cluster.address)
         ray.shutdown()
         cluster.shutdown()
