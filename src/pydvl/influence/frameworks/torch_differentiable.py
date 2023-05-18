@@ -353,11 +353,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         return sum([np.prod(p.size()) for p in self.parameters])
 
     def split_grad(
-        self,
-        x: torch.Tensor,
-        y: torch.Tensor,
-        *,
-        progress: bool = False,
+        self, x: torch.Tensor, y: torch.Tensor, *, progress: bool = False
     ) -> torch.Tensor:
         """
         Calculates gradient of model parameters wrt each $x[i]$ and $y[i]$ and then
@@ -378,10 +374,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
             grads.append(
                 flatten_all(
                     autograd.grad(
-                        self.loss(
-                            torch.squeeze(self.model(x[i])),
-                            torch.squeeze(y[i]),
-                        ),
+                        self.loss(torch.squeeze(self.model(x[i])), torch.squeeze(y[i])),
                         self.parameters,
                     )
                 ).detach()
@@ -390,11 +383,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         return torch.stack(grads, axis=0)
 
     def grad(
-        self,
-        x: torch.Tensor,
-        y: torch.Tensor,
-        *,
-        x_requires_grad: bool = False,
+        self, x: torch.Tensor, y: torch.Tensor, *, x_requires_grad: bool = False
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Calculates gradient of model parameters wrt the model parameters.
@@ -416,15 +405,12 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         return flatten_all(grad_f), x
 
     def hessian(
-        self,
-        x: torch.Tensor,
-        y: torch.Tensor,
-        *,
-        progress: bool = False,
+        self, x: torch.Tensor, y: torch.Tensor, *, progress: bool = False
     ) -> torch.Tensor:
         """Calculates the explicit hessian of model parameters given data ($x$ and $y$).
         :param x: A matrix [NxD] representing the features $x_i$.
         :param y: A matrix [NxK] representing the target values $y_i$.
+        :param progress: ``True`` to display progress.
         :returns: the hessian of the model, i.e. the second derivative wrt. the model parameters.
         """
         x = x.to(self.device)

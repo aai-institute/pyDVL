@@ -11,9 +11,7 @@ class TwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
     """
 
     def __init__(
-        self,
-        model: ModelType,
-        loss: Callable[[TensorType, TensorType], TensorType],
+        self, model: ModelType, loss: Callable[[TensorType, TensorType], TensorType]
     ):
         pass
 
@@ -28,10 +26,7 @@ class TwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
         pass
 
     def split_grad(
-        self,
-        x: TensorType,
-        y: TensorType,
-        progress: bool = False,
+        self, x: TensorType, y: TensorType, *, progress: bool = False
     ) -> TensorType:
         """
         Calculate the gradient of the model wrt each input x and labels y.
@@ -40,14 +35,14 @@ class TwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
 
         :param x: An array representing the features $x_i$.
         :param y: An array representing the predicted target values $y_i$.
-        :param progress: True, iff progress shall be printed.
+        :param progress: ``True`` to display progress.
         :returns: An array representing the gradients wrt. the parameters of the
             model.
         """
         pass
 
     def grad(
-        self, x: TensorType, y: TensorType, x_requires_grad: bool = False
+        self, x: TensorType, y: TensorType, *, x_requires_grad: bool = False
     ) -> Tuple[TensorType, TensorType]:
         """
         Calculates gradient of model parameters wrt. the model parameters.
@@ -65,15 +60,13 @@ class TwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
         pass
 
     def hessian(
-        self,
-        x: TensorType,
-        y: TensorType,
-        progress: bool = False,
+        self, x: TensorType, y: TensorType, *, progress: bool = False
     ) -> TensorType:
         """Calculates the full Hessian of $L(f(x),y)$ with respect to the model
         parameters given data ($x$ and $y$).
         :param x: An array representing the features $x_i$.
         :param y: An array representing the target values $y_i$.
+        :param progress: ``True`` to display progress.
         :returns: the hessian of the model, i.e. the second derivative wrt. the model parameters.
         """
         pass
