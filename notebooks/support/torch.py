@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 from torch.optim import Adam, Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 from torchvision.models import ResNet18_Weights, resnet18
 
 from pydvl.influence.frameworks import as_tensor
@@ -90,15 +90,12 @@ class TorchMLP(nn.Module):
 
 def fit_torch_model(
     model: nn.Module,
-    x_train: torch.Tensor,
-    y_train: torch.Tensor,
-    x_val: torch.Tensor,
-    y_val: torch.Tensor,
+    training_data: DataLoader,
+    val_data: DataLoader,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     optimizer: Optimizer,
     scheduler: Optional[_LRScheduler] = None,
     num_epochs: int = 1,
-    batch_size: int = 64,
     progress: bool = True,
 ) -> Losses:
     """
@@ -106,27 +103,20 @@ def fit_torch_model(
     Represents a simple machine learning loop, iterating over a number of
     epochs, sampling data with a certain batch size, calculating gradients and updating the parameters through a
     loss function.
-    :param x: Matrix of shape [NxD] representing the features x_i.
-    :param y: Matrix of shape [NxK] representing the prediction targets y_i.
+    :param model: A pytorch model.
+    :param training_data: A pytorch DataLoader with the training data.
+    :param val_data: A pytorch DataLoader with the validation data.
     :param optimizer: Select either ADAM or ADAM_W.
     :param scheduler: A pytorch scheduler. If None, no scheduler is used.
     :param num_epochs: Number of epochs to repeat training.
-    :param batch_size: Batch size to use in training.
     :param progress: True, iff progress shall be printed.
     """
-    x_train = as_tensor(x_train)
-    y_train = as_tensor(y_train)
-    x_val = as_tensor(x_val)
-    y_val = as_tensor(y_val)
-
-    dataset = TensorDataset(x_train, y_train)
-    dataloader = DataLoader(dataset, batch_size=batch_size)
     train_loss = []
     val_loss = []
 
     for epoch in maybe_progress(range(num_epochs), progress, desc="Model fitting"):
         batch_loss = []
-        for train_batch in dataloader:
+        for train_batch in training_data:
             batch_x, batch_y = train_batch
             pred_y = model(batch_x)
             loss_value = loss(torch.squeeze(pred_y), torch.squeeze(batch_y))
@@ -139,13 +129,21 @@ def fit_torch_model(
 
             if scheduler:
                 scheduler.step()
-        pred_val = model(x_val)
-        epoch_val_loss = loss(torch.squeeze(pred_val), torch.squeeze(y_val)).item()
+        with torch.no_grad():
+            batch_val_loss = []
+            for val_batch in val_data:
+                batch_x, batch_y = val_batch
+                pred_y = model(batch_x)
+                batch_val_loss.append(
+                    loss(torch.squeeze(pred_y), torch.squeeze(batch_y)).item()
+                )
+
         mean_epoch_train_loss = np.mean(batch_loss)
-        val_loss.append(epoch_val_loss)
+        mean_epoch_val_loss = np.mean(batch_val_loss)
         train_loss.append(mean_epoch_train_loss)
+        val_loss.append(mean_epoch_val_loss)
         logger.info(
-            f"Epoch: {epoch} ---> Training loss: {mean_epoch_train_loss}, Validation loss: {epoch_val_loss}"
+            f"Epoch: {epoch} ---> Training loss: {mean_epoch_train_loss}, Validation loss: {mean_epoch_val_loss}"
         )
     return Losses(train_loss, val_loss)
 
@@ -176,17 +174,15 @@ class TrainingManager:
         name: str,
         model: nn.Module,
         loss: torch.nn.modules.loss._Loss,
-        train_x: torch.Tensor,
-        train_y: torch.Tensor,
-        val_x: torch.Tensor,
-        val_y: torch.Tensor,
+        train_data: DataLoader,
+        val_data: DataLoader,
         data_dir: Path,
     ):
         self.name = name
         self.model = model
         self.loss = loss
-        self.train_x, self.train_y = as_tensor(train_x), as_tensor(train_y)
-        self.val_x, self.val_y = as_tensor(val_x), as_tensor(val_y)
+        self.train_data = train_data
+        self.val_data = val_data
         self.data_dir = data_dir
         os.makedirs(self.data_dir, exist_ok=True)
 
@@ -194,7 +190,6 @@ class TrainingManager:
         self,
         n_epochs: int,
         lr: float = 0.001,
-        batch_size: int = 1000,
         use_cache: bool = True,
     ) -> Losses:
         """
@@ -212,14 +207,11 @@ class TrainingManager:
 
         losses = fit_torch_model(
             model=self.model,
-            x_train=self.train_x,
-            y_train=self.train_y,
-            x_val=self.val_x,
-            y_val=self.val_y,
+            training_data=self.train_data,
+            val_data=self.val_data,
             loss=self.loss,
             optimizer=optimizer,
             num_epochs=n_epochs,
-            batch_size=batch_size,
         )
         if use_cache:
             self.save(losses)

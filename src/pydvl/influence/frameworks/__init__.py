@@ -2,9 +2,12 @@
 # frameworks. In its current form it is ugly and thus it will likely be changed
 # in the future.
 
+import logging
+
 from .twice_differentiable import TwiceDifferentiable
 
 __all__ = ["TwiceDifferentiable"]
+logger = logging.getLogger("frameworks")
 
 try:
     import torch
@@ -15,28 +18,35 @@ try:
 
     from .torch_differentiable import (
         as_tensor,
+        cat,
         einsum,
-        identity_tensor,
         mvp,
+        solve_batch_cg,
         solve_linear,
+        solve_lissa,
         stack,
     )
 
     TensorType = torch.Tensor
+    DataLoaderType = torch.utils.data.DataLoader
     ModelType = torch.nn.Module
 
-except ImportError:
-    pass
+    __all__.extend(
+        [
+            "TensorType",
+            "ModelType",
+            "solve_linear",
+            "solve_batch_cg",
+            "solve_lissa",
+            "as_tensor",
+            "stack",
+            "cat",
+            "einsum",
+            "mvp",
+        ]
+    )
 
-__all__.extend(
-    [
-        "TensorType",
-        "ModelType",
-        "solve_linear",
-        "as_tensor",
-        "stack",
-        "einsum",
-        "identity_tensor",
-        "mvp",
-    ]
-)
+except ImportError:
+    logger.info(
+        "No compatible framework found. Influence function computation disabled."
+    )
