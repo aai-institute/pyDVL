@@ -312,6 +312,19 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
         return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
+class MSRSampler(PowersetSampler[T]):
+    def __iter__(self) -> Iterator[SampleType]:
+        if len(self) == 0:
+            return
+        while True:
+            subset = random_subset(self.indices)
+            yield -1, subset
+            self._n_samples += 1
+
+    def weight(self, subset: NDArray[T]) -> float:
+        return float(2 ** (self._n - 1)) if self._n > 0 else 1.0
+
+
 class AntitheticSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
     """An iterator to perform uniform random sampling of subsets, and their
     complements.

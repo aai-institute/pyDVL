@@ -126,6 +126,7 @@ from typing import Callable, Optional, Protocol, Type
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.stats import spearmanr
 
 from pydvl.utils import Status
 from pydvl.value import ValuationResult
@@ -626,3 +627,35 @@ class HistoryDeviation(StoppingCriterion):
 
     def __str__(self):
         return f"HistoryDeviation(n_steps={self.n_steps}, rtol={self.rtol})"
+
+
+class RankStability(StoppingCriterion):
+    r"""A check for stability of Spearman correlation between checks.
+
+    When the change in rank correlation between two successive iterations is
+    below a given threshold, the computation is terminated.
+
+    This criterion is used in :footcite:t:`wang_data_2022`.
+    """
+
+    def __init__(self, rtol: float, modify_result: bool = True):
+        super().__init__(modify_result=modify_result)
+        if rtol <= 0 or rtol >= 1:
+            raise ValueError("rtol must be in (0, 1)")
+        self.rtol = rtol
+        self._memory = None  # type: ignore
+        self._corr = 0.0
+
+    def _check(self, r: ValuationResult) -> Status:
+        if self._memory is None:
+            self._memory = r.values.copy()
+            self._converged = np.full(len(r), False)
+            return Status.Pending
+
+        corr = spearmanr(self._memory, r.values)[0]
+        self._memory = r.values.copy()
+        if np.isclose(corr, self._corr, rtol=self.rtol):
+            self._converged = np.full(len(r), True)
+            return Status.Converged
+        self._corr = corr
+        return Status.Pending

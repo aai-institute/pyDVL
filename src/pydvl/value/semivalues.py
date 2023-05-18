@@ -104,6 +104,7 @@ from pydvl.utils import Utility
 from pydvl.utils.types import IndexT, Seed
 from pydvl.value import ValuationResult
 from pydvl.value.sampler import (
+    MSRSampler,
     PermutationSampler,
     PowersetSampler,
     SampleT,
@@ -138,6 +139,84 @@ class SVCoefficient(Protocol):
             k: Size of the subset for which the coefficient is being computed
         """
         ...
+
+
+def _msr_banzhaf(
+    sampler: MSRSampler,
+    u: Utility,
+    done: StoppingCriterion,
+    *,
+    job_id: int = 1,
+    progress: bool = False,
+) -> ValuationResult:
+    """Inner loop of the MSR-Banzhaf approximation.
+
+    See :func:`msr_banzhaf` for details.
+
+    :param sampler: The subset sampler to use for utility computations.
+    :param u: Utility object with model, data, and scoring function.
+    :param done: Stopping criterion.
+    :param progress: Whether to display progress bars for each job.
+    :param job_id: id to use for reporting progress.
+    :return: Object with the results.
+    """
+
+    if not isinstance(sampler, MSRSampler):
+        raise TypeError("MSR-Banzhaf requires a MSRSampler.")
+
+    result = ValuationResult.zeros(
+        algorithm=f"msr-banzhaf",
+        indices=sampler.indices,
+        data_names=[u.data.data_names[i] for i in sampler.indices],
+    )
+
+    samples = takewhile(lambda _: not done(result), sampler)
+    pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
+    for _, s in samples:
+        pbar.n = 100 * done.completion()
+        pbar.refresh()
+        _u = u(s)
+        for idx in sampler.indices:
+            # FIXME: this is the wrong normalization
+
+            marginal = _u * (1 if idx in s else -1)
+            result.update(idx, marginal)
+
+    return result
+
+
+def msr_banzhaf(
+    u: Utility,
+    done: StoppingCriterion,
+    *,
+    n_jobs: int = 1,
+    config: ParallelConfig = ParallelConfig(),
+    progress: bool = False,
+) -> ValuationResult:
+    r"""Maximum-Sample-Reuse Monte Carlo approximation to Banzhaf index.
+
+    Following :footcite:t:`wang_data_2022`, the MSR-Banzhaf Monte Carlo
+    approximation uses each sample $S$ of the whole dataset $D$ for each index.
+    This is made possible by the formulation:
+
+    TODO...
+
+    :param u: Utility object with model, data, and scoring function.
+    :param done: Stopping criterion.
+    :param n_jobs: Number of parallel jobs to run.
+    :param config: Configuration for parallel jobs.
+    :param progress: Whether to display progress bars for each job.
+    :return: Object with the results.
+    """
+    map_reduce_job: MapReduceJob[PowersetSampler, ValuationResult] = MapReduceJob(
+        MSRSampler(u.data.indices),
+        map_func=_msr_banzhaf,
+        reduce_func=lambda results: reduce(operator.add, results),
+        map_kwargs=dict(u=u, done=done, progress=progress),
+        config=config,
+        n_jobs=n_jobs,
+    )
+    return map_reduce_job()
 
 
 MarginalT = Tuple[IndexT, float]

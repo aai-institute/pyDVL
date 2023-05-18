@@ -22,6 +22,7 @@ from pydvl.value.semivalues import (
     banzhaf_coefficient,
     beta_coefficient,
     compute_generic_semivalues,
+    msr_banzhaf,
     shapley_coefficient,
 )
 from pydvl.value.stopping import HistoryDeviation, MaxUpdates
@@ -59,6 +60,13 @@ def test_marginal_batch_size(test_game, sampler, coefficient, batch_size, seed):
 
     assert len(marginals_single) == len(marginals_batch)
     assert set(marginals_single) == set(marginals_batch)
+
+
+@pytest.mark.parametrize("num_samples", [5])
+def test_msr_banzhaf(num_samples: int, analytic_banzhaf):
+    u, exact_values = analytic_banzhaf
+    values = msr_banzhaf(u, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(300))
+    check_values(values, exact_values, rtol=0.15)
 
 
 @pytest.mark.parametrize("n", [10, 100])
