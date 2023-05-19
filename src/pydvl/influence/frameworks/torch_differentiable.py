@@ -179,16 +179,17 @@ def solve_lissa(
     rtol: float = 1e-4,
     progress: bool = False,
 ) -> torch.Tensor:
-    """
-    It uses LISSA, Linear time Stochastic Second-Order Algorithm, to calculate the
-    inverse of the HVP. More precisely, it finds x s.t. $Hx = b$, with $H$ being
-    the model hessian.
-    This is done by iteratively approximating H through
-    $$
-    H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s}
-    $$
-    where I is the identity matrix, d is a dampening term and s a scaling factor that
-    are applied to help convergence. More info can be found in :footcite:t:`koh_understanding_2017`
+    r"""
+    Uses LISSA, Linear time Stochastic Second-Order Algorithm, to iteratively
+    approximate the inverse Hessian. More precisely, it finds x s.t. $Hx = b$,
+    with $H$ being the model's second derivative wrt. the parameters.
+    This is done with the update
+
+    $$H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s},$$
+
+    where $I$ is the identity matrix, $d$ is a dampening term and $s$ a scaling
+    factor that are applied to help convergence. For details, see
+    :footcite:t:`koh_understanding_2017`.
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.

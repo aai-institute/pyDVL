@@ -6,7 +6,8 @@ ModelType = TypeVar("ModelType")
 
 
 class TwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
-    """Wraps a differentiable model and loss and provides methods to compute the
+    """
+    Wraps a differentiable model and loss and provides methods to compute the
     second derivative of the loss wrt. the model parameters.
     """
 
@@ -36,7 +37,7 @@ class TwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
         :param x: An array representing the features $x_i$.
         :param y: An array representing the predicted target values $y_i$.
         :param progress: ``True`` to display progress.
-        :returns: An array representing the gradients wrt. the parameters of the
+        :return: An array representing the gradients wrt. the parameters of the
             model.
         """
         pass
@@ -52,7 +53,7 @@ class TwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
         :param x_requires_grad: If True, the input $x$ is marked as requiring
             gradients. This is important for further differentiation on input
             parameters.
-        :returns: A tuple where: the first element is an array with the
+        :return: A tuple where: the first element is an array with the
             gradients of the model, and the second element is the input to the
             model as a grad parameters. This can be used for further
             differentiation.
@@ -64,9 +65,11 @@ class TwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
     ) -> TensorType:
         """Calculates the full Hessian of $L(f(x),y)$ with respect to the model
         parameters given data ($x$ and $y$).
+
         :param x: An array representing the features $x_i$.
         :param y: An array representing the target values $y_i$.
         :param progress: ``True`` to display progress.
-        :returns: the hessian of the model, i.e. the second derivative wrt. the model parameters.
+        :return: The hessian of the model, i.e. the second derivative wrt. the
+            model parameters.
         """
         pass
