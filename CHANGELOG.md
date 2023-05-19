@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Major changes to IF interface and functionality
+  [PR #278](https://github.com/appliedAI-Initiative/pyDVL/pull/278)
+
 ## 0.6.1 - 🏗 Bug fixes and small improvement
 
 - Fix parsing keyword arguments of `compute_semivalues` dispatch function
