@@ -1,7 +1,7 @@
-types
-=====
+inversion
+=========
 
-.. automodule:: pydvl.influence.types
+.. automodule:: pydvl.influence.inversion
    :members:
    :undoc-members:
    

@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="reporting" href="../reporting.html" /><link rel="prev" title="torch_wrappers" href="model_wrappers/torch_wrappers.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="reporting" href="../reporting.html" /><link rel="prev" title="general" href="general.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
-        <title>types - pyDVL 0.6.2.dev0 documentation</title>
+        <title>inversion - pyDVL 0.6.2.dev0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/tooltipster.custom.css" />
@@ -190,33 +190,28 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../influence.html">influence</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="conjugate_gradient.html">conjugate_gradient</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="frameworks/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="frameworks/twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="general.html">general</a></li>
-<li class="toctree-l3"><a class="reference internal" href="linear.html">linear</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="model_wrappers.html">model_wrappers</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="model_wrappers/torch_wrappers.html">torch_wrappers</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">inversion</a></li>
 </ul>
 </li>
-<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">types</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reporting/plots.html">plots</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reporting/scores.html">scores</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../utils/caching.html">caching</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../utils/config.html">config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../utils/dataset.html">dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../utils/numeric.html">numeric</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../utils/parallel.html">parallel</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../utils/parallel.html">parallel</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../utils/parallel/backend.html">backend</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="../utils/parallel/futures.html">futures</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../utils/parallel/futures.html">futures</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="../utils/parallel/futures/ray.html">ray</a></li>
 </ul>
 </li>
@@ -230,21 +225,21 @@
 <li class="toctree-l3"><a class="reference internal" href="../utils/utility.html">utility</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../value.html">value</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../value.html">value</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../value/least_core/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/least_core/montecarlo.html">montecarlo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/least_core/naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../value/loo/naive.html">naive</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../value/result.html">result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../value/sampler.html">sampler</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../value/semivalues.html">semivalues</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/common.html">common</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/gt.html">gt</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../value/shapley/knn.html">knn</a></li>
@@ -294,38 +289,37 @@
           </label>
         </div>
         <article role="main">
-          <section id="module-pydvl.influence.types">
-<span id="types"></span><h1>types<a class="headerlink" href="#module-pydvl.influence.types" title="Permalink to this heading">#</a></h1>
+          <section id="module-pydvl.influence.inversion">
+<span id="inversion"></span><h1>inversion<a class="headerlink" href="#module-pydvl.influence.inversion" title="Permalink to this heading">#</a></h1>
+<p>Contains methods to invert the hessian vector product.</p>
 <hr class="docutils" />
-<dl class="py class">
-<dt class="sig sig-object py" id="pydvl.influence.types.TwiceDifferentiable">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TwiceDifferentiable</span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/types.py#L13"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.types.TwiceDifferentiable" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="pydvl.influence.types.TwiceDifferentiable.num_params">
-<span class="sig-name descname"><span class="pre">num_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#pydvl.influence.types.TwiceDifferentiable.num_params" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pydvl.influence.types.TwiceDifferentiable.split_grad">
-<span class="sig-name descname"><span class="pre">split_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#pydvl.influence.types.TwiceDifferentiable.split_grad" title="Permalink to this definition">#</a></dt>
-<dd><p>Calculate the gradient of the model wrt each input x and labels y.
-The output is therefore of size [Nxp], with N the amout of points (the length of x and y) and
-P the number of parameters.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pydvl.influence.types.TwiceDifferentiable.grad">
-<span class="sig-name descname"><span class="pre">grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pydvl.influence.types.TwiceDifferentiable.grad" title="Permalink to this definition">#</a></dt>
-<dd><p>It calculates the gradient of model parameters with respect to input x and labels y.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pydvl.influence.types.TwiceDifferentiable.mvp">
-<span class="sig-name descname"><span class="pre">mvp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad_xy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backprop_on</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#pydvl.influence.types.TwiceDifferentiable.mvp" title="Permalink to this definition">#</a></dt>
-<dd><p>Calculate the hessian vector product over the loss with all input parameters x and y with the vector v.</p>
-</dd></dl>
-
+<dl class="py function">
+<dt class="sig sig-object py" id="pydvl.influence.inversion.solve_hvp">
+<span class="sig-name descname"><span class="pre">solve_hvp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inversion_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">InversionMethod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="frameworks/twice_differentiable.html#pydvl.influence.frameworks.twice_differentiable.TwiceDifferentiable" title="pydvl.influence.frameworks.twice_differentiable.TwiceDifferentiable"><span class="pre">TwiceDifferentiable</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Module</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataLoader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian_perturbation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/inversion.py#L33"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.inversion.solve_hvp" title="Permalink to this definition">#</a></dt>
+<dd><p>Finds <span class="math notranslate nohighlight">\(x\)</span> such that <span class="math notranslate nohighlight">\(Ax = b\)</span>, where <span class="math notranslate nohighlight">\(A\)</span> is the hessian of model,
+and <span class="math notranslate nohighlight">\(b\)</span> a vector.
+Depending on the inversion method, the hessian is either calculated directly
+and then inverted, or implicitly and then inverted through matrix vector
+product. The method also allows to add a small regularization term (hessian_perturbation)
+to facilitate inversion of non fully trained models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inversion_method</strong> – </p></li>
+<li><p><strong>model</strong> – A model wrapped in the TwiceDifferentiable interface.</p></li>
+<li><p><strong>x</strong> – An array containing the features of the input data points.</p></li>
+<li><p><strong>y</strong> – labels for x</p></li>
+<li><p><strong>b</strong> – Array as the right hand side of the equation <span class="math notranslate nohighlight">\(Ax = b\)</span></p></li>
+<li><p><strong>kwargs</strong> – kwargs to pass to the inversion method</p></li>
+<li><p><strong>hessian_perturbation</strong> – regularization of the hessian</p></li>
+<li><p><strong>progress</strong> – If True, display progress bars.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An array that solves the inverse problem,
+i.e. it returns <span class="math notranslate nohighlight">\(x\)</span> such that <span class="math notranslate nohighlight">\(Ax = b\)</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -344,14 +338,14 @@ P the number of parameters.</p>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="model_wrappers/torch_wrappers.html">
+          <a class="prev-page" href="general.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">torch_wrappers</div>
+                <div class="title">general</div>
                 
               </div>
             </a>
@@ -392,14 +386,8 @@ P the number of parameters.</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">types</a><ul>
-<li><a class="reference internal" href="#pydvl.influence.types.TwiceDifferentiable"><code class="docutils literal notranslate"><span class="pre">TwiceDifferentiable</span></code></a><ul>
-<li><a class="reference internal" href="#pydvl.influence.types.TwiceDifferentiable.num_params"><code class="docutils literal notranslate"><span class="pre">TwiceDifferentiable.num_params()</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.influence.types.TwiceDifferentiable.split_grad"><code class="docutils literal notranslate"><span class="pre">TwiceDifferentiable.split_grad()</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.influence.types.TwiceDifferentiable.grad"><code class="docutils literal notranslate"><span class="pre">TwiceDifferentiable.grad()</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.influence.types.TwiceDifferentiable.mvp"><code class="docutils literal notranslate"><span class="pre">TwiceDifferentiable.mvp()</span></code></a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#">inversion</a><ul>
+<li><a class="reference internal" href="#pydvl.influence.inversion.solve_hvp"><code class="docutils literal notranslate"><span class="pre">solve_hvp()</span></code></a></li>
 </ul>
 </li>
 </ul>
