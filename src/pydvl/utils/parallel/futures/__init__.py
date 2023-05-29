@@ -2,6 +2,8 @@ from concurrent.futures import Executor, ThreadPoolExecutor
 from contextlib import contextmanager
 from typing import Generator, Optional
 
+from joblib.externals.loky import get_reusable_executor
+
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.parallel.futures.ray import RayExecutor
 
@@ -46,6 +48,9 @@ def init_executor(
     """
     if config.backend == "ray":
         with RayExecutor(max_workers, config=config, **kwargs) as executor:
+            yield executor
+    elif config.backend == "joblib":
+        with get_reusable_executor(max_workers=max_workers, timeout=10800) as executor:
             yield executor
     elif config.backend == "sequential":
         with ThreadPoolExecutor(1) as executor:

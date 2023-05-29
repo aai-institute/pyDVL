@@ -10,3 +10,4 @@ pymemcache
 cloudpickle
 tqdm
 matplotlib
+loky==3.0.0
