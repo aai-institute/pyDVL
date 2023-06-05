@@ -16,9 +16,9 @@ def init_executor(
 ) -> Generator[Executor, None, None]:
     """Initializes a futures executor based on the passed parallel configuration object.
 
-    :param max_workers: Maximum number of concurrent tasks.
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
-    :param kwargs: Other optional parameter that will be passed to the executor.
+        max_workers: Maximum number of concurrent tasks.
+        config: instance of :class:`~pydvl.utils.config.ParallelConfig` with cluster address, number of cpus, etc.
+        kwargs: Other optional parameter that will be passed to the executor.
 
     :Example:
 

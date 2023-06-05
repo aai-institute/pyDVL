@@ -31,15 +31,16 @@ def compute_linear_influences(
     validation set for an ordinary least squares model ($y = A x + b$ with
     quadratic loss).
 
-    :param x: An array of shape (M, K) containing the features of training data.
-    :param y: An array of shape (M, L) containing the targets of training data.
-    :param x_test: An array of shape (N, K) containing the features of the
+        x: An array of shape (M, K) containing the features of training data.
+        y: An array of shape (M, L) containing the targets of training data.
+        x_test: An array of shape (N, K) containing the features of the
         test set.
-    :param y_test: An array of shape (N, L) containing the targets of the test
+        y_test: An array of shape (N, L) containing the targets of the test
         set.
-    :param influence_type: Which algorithm to use to calculate influences.
+        influence_type: Which algorithm to use to calculate influences.
         Currently supported options: 'up' or 'perturbation'.
-    :returns: An array of shape (B, C) with the influences of the training
+    Returns:
+        An array of shape (B, C) with the influences of the training
         points on the test data.
     """
 
@@ -84,17 +85,18 @@ def influences_up_linear_regression_analytical(
 
     This method uses the
 
-    :param linear_model: A tuple of arrays of shapes (N, M) and N representing A
+        linear_model: A tuple of arrays of shapes (N, M) and N representing A
         and b respectively.
-    :param x: An array of shape (M, K) containing the features of the
+        x: An array of shape (M, K) containing the features of the
         training set.
-    :param y: An array of shape (M, L) containing the targets of the
+        y: An array of shape (M, L) containing the targets of the
         training set.
-    :param x_test: An array of shape (N, K) containing the features of the test
+        x_test: An array of shape (N, K) containing the features of the test
         set.
-    :param y_test: An array of shape (N, L) containing the targets of the test
+        y_test: An array of shape (N, L) containing the targets of the test
         set.
-    :returns: An array of shape (B, C) with the influences of the training points
+    Returns:
+        An array of shape (B, C) with the influences of the training points
         on the test points.
     """
 
@@ -130,17 +132,18 @@ def influences_perturbation_linear_regression_analytical(
     """Calculate the influences of each training sample onto the
     validation set for a linear model Ax+b=y.
 
-    :param linear_model: A tuple of np.ndarray' of shape (N, M) and (N)
+        linear_model: A tuple of np.ndarray' of shape (N, M) and (N)
         representing A and b respectively.
-    :param x: An array of shape (M, K) containing the features of the
+        x: An array of shape (M, K) containing the features of the
         input data.
-    :param y: An array of shape (M, L) containing the targets of the input
+        y: An array of shape (M, L) containing the targets of the input
         data.
-    :param x_test: An array of shape (N, K) containing the features of the test
+        x_test: An array of shape (N, K) containing the features of the test
         set.
-    :param y_test: An array of shape (N, L) containing the targets of the test
+        y_test: An array of shape (N, L) containing the targets of the test
         set.
-    :returns: An array of shape (B, C, M) with the influences of the training
+    Returns:
+        An array of shape (B, C, M) with the influences of the training
         points on the test points for each feature.
     """
 

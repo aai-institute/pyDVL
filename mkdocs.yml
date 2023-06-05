@@ -11,6 +11,7 @@ plugins:
 - autorefs
 - search
 - section-index
+- mkdocs-version-annotations
 - alias:
     use_relative_link: true
     verbose: true
@@ -62,13 +63,14 @@ theme:
     - search.suggest
     - search.highlight
     - toc.follow
-    - navigation.tabs
-    - navigation.tabs.sticky
+    # - navigation.tabs
+    # - navigation.tabs.sticky
     - navigation.sections
     - navigation.tracking
     # - navigation.top
     - navigation.footer
     - content.code.copy
+    - content.code.annotate
   palette:
   # Palette toggle for light mode
   - media: "(prefers-color-scheme: light)"

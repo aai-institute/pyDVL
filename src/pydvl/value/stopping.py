@@ -95,7 +95,7 @@ class StoppingCriterion(abc.ABC):
     :meth:`completion` should be overridden to provide an overall completion
     value, since the default implementation returns the mean of :attr:`converged`.
 
-    :param modify_result: If ``True`` the status of the input
+        modify_result: If ``True`` the status of the input
         :class:`~pydvl.value.result.ValuationResult` is modified in place after
         the call.
     """
@@ -180,15 +180,16 @@ def make_criterion(
     """Create a new :class:`StoppingCriterion` from a function.
     Use this to enable simpler functions to be composed with bitwise operators
 
-    :param fun: The callable to wrap.
-    :param converged: A callable that returns a boolean array indicating what
+        fun: The callable to wrap.
+        converged: A callable that returns a boolean array indicating what
         values have converged.
-    :param completion: A callable that returns a value between 0 and 1 indicating
+        completion: A callable that returns a value between 0 and 1 indicating
         the rate of completion of the computation. If not provided, the fraction
         of converged values is used.
-    :param name: The name of the new criterion. If ``None``, the ``__name__`` of
+        name: The name of the new criterion. If ``None``, the ``__name__`` of
         the function is used.
-    :return: A new subclass of :class:`StoppingCriterion`.
+    Returns:
+        A new subclass of :class:`StoppingCriterion`.
     """
 
     class WrappedCriterion(StoppingCriterion):
@@ -221,18 +222,18 @@ class AbsoluteStandardError(StoppingCriterion):
     r"""Determine convergence based on the standard error of the values.
 
     If $s_i$ is the standard error for datum $i$ and $v_i$ its value, then this
-    criterion returns :attr:`~pydvl.utils.status.Status.Converged` if
+    criterion returns [Converged][pydvl.utils.status.Status.Converged] if
     $s_i < \epsilon$ for all $i$ and a threshold value $\epsilon \gt 0$.
 
-    :param threshold: A value is considered to have converged if the standard
+        threshold: A value is considered to have converged if the standard
         error is below this value. A way of choosing it is to pick some
         percentage of the range of the values. For Shapley values this is the
         difference between the maximum and minimum of the utility function (to
         see this substitute the maximum and minimum values of the utility into
         the marginal contribution formula).
-    :param fraction: The fraction of values that must have converged for the
-        criterion to return :attr:`~pydvl.utils.status.Status.Converged`.
-    :param burn_in: The number of iterations to ignore before checking for
+        fraction: The fraction of values that must have converged for the
+        criterion to return [Converged][pydvl.utils.status.Status.Converged].
+        burn_in: The number of iterations to ignore before checking for
         convergence. This is required because computations typically start with
         zero variance, as a result of using
         :meth:`~pydvl.value.result.ValuationResult.empty`. The default is set to
@@ -272,7 +273,7 @@ class MaxChecks(StoppingCriterion):
 
     A "check" is one call to the criterion.
 
-    :param n_checks: Threshold: if ``None``, no _check is performed,
+        n_checks: Threshold: if ``None``, no _check is performed,
         effectively creating a (never) stopping criterion that always returns
         ``Pending``.
     """
@@ -308,7 +309,7 @@ class MaxUpdates(StoppingCriterion):
     number coincides with the maximum number of subsets sampled. For permutation
     samplers, it coincides with the number of permutations sampled.
 
-    :param n_updates: Threshold: if ``None``, no _check is performed,
+        n_updates: Threshold: if ``None``, no _check is performed,
         effectively creating a (never) stopping criterion that always returns
         ``Pending``.
     """
@@ -346,7 +347,7 @@ class MinUpdates(StoppingCriterion):
     number is a lower bound for the number of subsets sampled. For
     permutation samplers, it lower-bounds the amount of permutations sampled.
 
-    :param n_updates: Threshold: if ``None``, no _check is performed,
+        n_updates: Threshold: if ``None``, no _check is performed,
         effectively creating a (never) stopping criterion that always returns
         ``Pending``.
     """
@@ -378,7 +379,7 @@ class MaxTime(StoppingCriterion):
 
     Checks the elapsed time since construction
 
-    :param seconds: Threshold: The computation is terminated if the elapsed time
+        seconds: Threshold: The computation is terminated if the elapsed time
         between object construction and a _check exceeds this value. If ``None``,
         no _check is performed, effectively creating a (never) stopping criterion
         that always returns ``Pending``.
@@ -426,14 +427,14 @@ class HistoryDeviation(StoppingCriterion):
     pinned to that state. Once all indices have converged the method has
     converged.
 
-    .. warning::
+    !!! Warning
        This criterion is meant for the reproduction of the results in the paper,
        but we do not recommend using it in practice.
 
-    :param n_steps: Checkpoint values every so many updates and use these saved
+        n_steps: Checkpoint values every so many updates and use these saved
         values to compare.
-    :param rtol: Relative tolerance for convergence ($\epsilon$ in the formula).
-    :param pin_converged: If ``True``, once an index has converged, it is pinned
+        rtol: Relative tolerance for convergence ($\epsilon$ in the formula).
+        pin_converged: If ``True``, once an index has converged, it is pinned
     """
 
     _memory: NDArray[np.float_]

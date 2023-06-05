@@ -35,19 +35,20 @@ def _owen_sampling_shapley(
     of the integrand. For the integrand (the expected marginal utility over the
     power set), use Monte Carlo.
 
-    .. todo::
+    !!! Todo
         We might want to try better quadrature rules like Gauss or Rombert or
         use Monte Carlo for the double integral.
 
-    :param indices: Indices to compute the value for
-    :param u: Utility object with model, data, and scoring function
-    :param method: Either :attr:`~OwenAlgorithm.Full` for $q \in [0,1]$ or
-        :attr:`~OwenAlgorithm.Halved` for $q \in [0,0.5]$ and correlated samples
-    :param n_samples: Number of subsets to sample to estimate the integrand
-    :param max_q: number of subdivisions for the integration over $q$
-    :param progress: Whether to display progress bars for each job
-    :param job_id: For positioning of the progress bar
-    :return: Object with the data values, errors.
+        indices: Indices to compute the value for
+        u: Utility object with model, data, and scoring function
+        method: Either [Full][OwenAlgorithm.Full] for $q \in [0,1]$ or
+        [Halved][OwenAlgorithm.Halved] for $q \in [0,0.5]$ and correlated samples
+        n_samples: Number of subsets to sample to estimate the integrand
+        max_q: number of subdivisions for the integration over $q$
+        progress: Whether to display progress bars for each job
+        job_id: For positioning of the progress bar
+    Returns:
+        Object with the data values, errors.
     """
     q_stop = {OwenAlgorithm.Standard: 1.0, OwenAlgorithm.Antithetic: 0.5}
     q_steps = np.linspace(start=0, stop=q_stop[method], num=max_q)
@@ -122,27 +123,28 @@ def owen_sampling_shapley(
     where now $q_j = \frac{j}{2Q} \in [0,\frac{1}{2}]$, and $S^c$ is the
     complement of $S$.
 
-    .. note::
+    !!! Note
        The outer integration could be done instead with a quadrature rule.
 
-    :param u: :class:`~pydvl.utils.utility.Utility` object holding data, model
+        u: :class:`~pydvl.utils.utility.Utility` object holding data, model
         and scoring function.
-    :param n_samples: Numer of sets to sample for each value of q
-    :param max_q: Number of subdivisions for q ∈ [0,1] (the element sampling
+        n_samples: Numer of sets to sample for each value of q
+        max_q: Number of subdivisions for q ∈ [0,1] (the element sampling
         probability) used to approximate the outer integral.
-    :param method: Selects the algorithm to use, see the description. Either
-        :attr:`~OwenAlgorithm.Full` for $q \in [0,1]$ or
-        :attr:`~OwenAlgorithm.Halved` for $q \in [0,0.5]$ and correlated samples
-    :param n_jobs: Number of parallel jobs to use. Each worker receives a chunk
+        method: Selects the algorithm to use, see the description. Either
+        [Full][OwenAlgorithm.Full] for $q \in [0,1]$ or
+        [Halved][OwenAlgorithm.Halved] for $q \in [0,0.5]$ and correlated samples
+        n_jobs: Number of parallel jobs to use. Each worker receives a chunk
         of the total of `max_q` values for q.
-    :param config: Object configuring parallel computation, with cluster
+        config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param progress: Whether to display progress bars for each job.
-    :return: Object with the data values.
+        progress: Whether to display progress bars for each job.
+    Returns:
+        Object with the data values.
 
-    .. versionadded:: 0.3.0
+    !!! version-added 0.3.0
 
-    .. versionchanged:: 0.5.0
+    !!! version-changed 0.5.0
        Support for parallel computation and enable antithetic sampling.
 
     """

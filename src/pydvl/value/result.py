@@ -17,14 +17,14 @@ with the mean of the values of the two results as values. The variances are
 updated accordingly. See :class:`ValuationResult` for details.
 
 Results can also be sorted by value, variance or number of updates, see
-:meth:`ValuationResult.sort`. The arrays of :attr:`ValuationResult.values`,
-:attr:`ValuationResult.variances`, :attr:`ValuationResult.counts`,
-:attr:`ValuationResult.indices` and :attr:`ValuationResult.names` are sorted in
+:meth:`ValuationResult.sort`. The arrays of [ValuationResult.values][ValuationResult.values],
+[ValuationResult.variances`, :attr:`ValuationResult.counts][ValuationResult.variances`, :attr:`ValuationResult.counts],
+[ValuationResult.indices` and :attr:`ValuationResult.names][ValuationResult.indices` and :attr:`ValuationResult.names] are sorted in
 the same way.
 
 Indexing and slicing of results is supported and :class:`ValueItem` objects are
 returned. These objects can be compared with the usual operators, which take
-only the :attr:`ValueItem.value` into account.
+only the [ValueItem.value][ValueItem.value] into account.
 
 .. rubric:: Creating result objects
 
@@ -89,7 +89,7 @@ class ValueItem(Generic[IndexT, NameT]):
     ``ValueItems`` can be compared with the usual operators, forming a total
     order. Comparisons take only the :attr:`value` into account.
 
-    .. todo::
+    !!! Todo
        Maybe have a mode of comparing similar to `np.isclose`, or taking the
        :attr:`variance` into account.
     """
@@ -177,24 +177,24 @@ class ValuationResult(
 
     Empty objects behave in a special way, see :meth:`empty`.
 
-    :param values: An array of values. If omitted, defaults to an empty array
+        values: An array of values. If omitted, defaults to an empty array
         or to an array of zeros if ``indices`` are given.
-    :param indices: An optional array of indices in the original dataset. If
+        indices: An optional array of indices in the original dataset. If
         omitted, defaults to ``np.arange(len(values))``. **Warning:** It is
         common to pass the indices of a :class:`Dataset` here. Attention must be
         paid in a parallel context to copy them to the local process. Just do
         ``indices=np.copy(data.indices)``.
-    :param variance: An optional array of variances in the computation of each
+        variance: An optional array of variances in the computation of each
         value.
-    :param counts: An optional array with the number of updates for each value.
+        counts: An optional array with the number of updates for each value.
         Defaults to an array of ones.
-    :param data_names: Names for the data points. Defaults to index numbers
+        data_names: Names for the data points. Defaults to index numbers
         if not set.
-    :param algorithm: The method used.
-    :param status: The end status of the algorithm.
-    :param sort: Whether to sort the indices by ascending value. See above how
+        algorithm: The method used.
+        status: The end status of the algorithm.
+        sort: Whether to sort the indices by ascending value. See above how
         this affects usage as an iterable or sequence.
-    :param extra_values: Additional values that can be passed as keyword arguments.
+        extra_values: Additional values that can be passed as keyword arguments.
         This can contain, for example, the least core value.
 
     :raise ValueError: If input arrays have mismatching lengths.
@@ -271,13 +271,13 @@ class ValuationResult(
         """Sorts the indices in place by ``key``.
 
         Once sorted, iteration over the results, and indexing of all the
-        properties :attr:`ValuationResult.values`,
-        :attr:`ValuationResult.variances`, :attr:`ValuationResult.counts`,
-        :attr:`ValuationResult.indices` and :attr:`ValuationResult.names` will
+        properties [ValuationResult.values][ValuationResult.values],
+        [ValuationResult.variances`, :attr:`ValuationResult.counts][ValuationResult.variances`, :attr:`ValuationResult.counts],
+        [ValuationResult.indices` and :attr:`ValuationResult.names][ValuationResult.indices` and :attr:`ValuationResult.names] will
         follow the same order.
 
-        :param reverse: Whether to sort in descending order by value.
-        :param key: The key to sort by. Defaults to :attr:`ValueItem.value`.
+            reverse: Whether to sort in descending order by value.
+            key: The key to sort by. Defaults to [ValueItem.value][ValueItem.value].
         """
         keymap = {
             "index": "_indices",
@@ -481,7 +481,7 @@ class ValuationResult(
         to this is if one argument has empty values, in which case the other
         argument is returned.
 
-        .. warning::
+        !!! Warning
            Abusing this will introduce numerical errors.
 
         Means and standard errors are correctly handled. Statuses are added with
@@ -494,7 +494,7 @@ class ValuationResult(
         different or overlapping indices. The result will have the union of
         indices, and the values.
 
-        .. warning::
+        !!! Warning
            FIXME: Arbitrary ``extra_values`` aren't handled.
 
         """
@@ -581,9 +581,10 @@ class ValuationResult(
         """Updates the result in place with a new value, using running mean
         and variance.
 
-        :param idx: Data index of the value to update.
-        :param new_value: New value to add to the result.
-        :return: A reference to the same, modified result.
+            idx: Data index of the value to update.
+            new_value: New value to add to the result.
+        Returns:
+        A reference to the same, modified result.
         :raises IndexError: If the index is not found.
         """
         try:
@@ -625,11 +626,12 @@ class ValuationResult(
     ) -> pandas.DataFrame:
         """Returns values as a dataframe.
 
-        :param column: Name for the column holding the data value. Defaults to
+            column: Name for the column holding the data value. Defaults to
             the name of the algorithm used.
-        :param use_names: Whether to use data names instead of indices for the
+            use_names: Whether to use data names instead of indices for the
             DataFrame's index.
-        :return: A dataframe with two columns, one for the values, with name
+        Returns:
+        A dataframe with two columns, one for the values, with name
             given as explained in `column`, and another with standard errors for
             approximate algorithms. The latter will be named `column+'_stderr'`.
         :raise ImportError: If pandas is not installed
@@ -655,16 +657,17 @@ class ValuationResult(
         of random values from a uniform distribution in [-1,1]. The values can
         be made to sum up to a given total number (doing so will change their range).
 
-        :param size: Number of values to generate
-        :param total: If set, the values are normalized to sum to this number
+            size: Number of values to generate
+            total: If set, the values are normalized to sum to this number
             ("efficiency" property of Shapley values).
-        :param kwargs: Additional options to pass to the constructor of
+            kwargs: Additional options to pass to the constructor of
             :class:`ValuationResult`. Use to override status, names, etc.
-        :return: A valuation result with its status set to
-            :attr:`Status.Converged` by default.
+        Returns:
+        A valuation result with its status set to
+            [Status.Converged][Status.Converged] by default.
         :raises ValueError: If ``size`` is less than 1.
 
-        .. versionchanged:: 0.6.0
+        !!! version-changed 0.6.0
             Added parameter ``total``. Check for zero size
         """
         if size < 1:
@@ -699,8 +702,9 @@ class ValuationResult(
         Empty results are characterised by having an empty array of values. When
         another result is added to an empty one, the empty one is discarded.
 
-        :param algorithm: Name of the algorithm used to compute the values
-        :return: An instance of :class:`ValuationResult`
+            algorithm: Name of the algorithm used to compute the values
+        Returns:
+        An instance of :class:`ValuationResult`
         """
         if indices is not None or data_names is not None or n_samples != 0:
             return cls.zeros(
@@ -724,14 +728,15 @@ class ValuationResult(
         Empty results are characterised by having an empty array of values. When
         another result is added to an empty one, the empty one is ignored.
 
-        :param algorithm: Name of the algorithm used to compute the values
-        :param indices: Data indices to use. A copy will be made. If not given,
+            algorithm: Name of the algorithm used to compute the values
+            indices: Data indices to use. A copy will be made. If not given,
             the indices will be set to the range ``[0, n_samples)``.
-        :param data_names: Data names to use. A copy will be made. If not given,
+            data_names: Data names to use. A copy will be made. If not given,
             the names will be set to the string representation of the indices.
-        :param n_samples: Number of data points whose values are computed. If
+            n_samples: Number of data points whose values are computed. If
             not given, the length of ``indices`` will be used.
-        :return: An instance of :class:`ValuationResult`
+        Returns:
+        An instance of :class:`ValuationResult`
         """
         if indices is None:
             indices = np.arange(n_samples, dtype=np.int_)

@@ -1,7 +1,7 @@
 r"""
 Algorithms for the exact and approximate computation of value and semi-value.
 
-See :ref:`data valuation` for an introduction to the concepts and methods
+See [Data valuation][computing-data-values] for an introduction to the concepts and methods
 implemented here.
 """
 

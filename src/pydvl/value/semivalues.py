@@ -14,7 +14,7 @@ As such, the computation of a semi-value requires two components:
 1. A **subset sampler** that generates subsets of the set $D$ of interest.
 2. A **coefficient** $w(k)$ that assigns a weight to each subset size $k$.
 
-Samplers can be found in :mod:`pydvl.value.sampler`, and can be classified into
+Samplers can be found in [sampler][pydvl.value.sampler], and can be classified into
 two categories: powerset samplers and (one) permutation sampler. Powerset
 samplers generate subsets of $D_{-i}$, while the permutation sampler generates
 permutations of $D$. The former conform to the above definition of semi-values,
@@ -26,7 +26,7 @@ v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
 $$
 
 where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
-position where $i$ appears (see :ref:`data valuation` for details), and
+position where $i$ appears (see [Data valuation][computing-data-values] for details), and
 $\tilde{w}(k) = n \choose{n-1}{k} w(k)$ is the weight correction due to the
 reformulation.
 
@@ -36,7 +36,7 @@ of :footcite:t:`ghorbani_data_2019`, the Banzhaf index of
 :footcite:t:`wang_data_2022`, and the Beta coefficient of
 :footcite:t:`kwon_beta_2022`.
 
-.. note::
+!!! Note
    For implementation consistency, we slightly depart from the common definition
    of semi-values, which includes a factor $1/n$ in the sum over subsets.
    Instead, we subsume this factor into the coefficient $w(k)$.
@@ -76,8 +76,8 @@ class SVCoefficient(Protocol):
     def __call__(self, n: int, k: int) -> float:
         """Computes the coefficient for a given subset size.
 
-        :param n: Total number of elements in the set.
-        :param k: Size of the subset for which the coefficient is being computed
+        n: Total number of elements in the set.
+        k: Size of the subset for which the coefficient is being computed
         """
         ...
 
@@ -94,13 +94,14 @@ def _semivalues(
     r"""Serial computation of semi-values. This is a helper function for
     :func:`semivalues`.
 
-    :param sampler: The subset sampler to use for utility computations.
-    :param u: Utility object with model, data, and scoring function.
-    :param coefficient: The semivalue coefficient
-    :param done: Stopping criterion.
-    :param progress: Whether to display progress bars for each job.
-    :param job_id: id to use for reporting progress.
-    :return: Object with the results.
+        sampler: The subset sampler to use for utility computations.
+        u: Utility object with model, data, and scoring function.
+        coefficient: The semivalue coefficient
+        done: Stopping criterion.
+        progress: Whether to display progress bars for each job.
+        job_id: id to use for reporting progress.
+    Returns:
+        Object with the results.
     """
     n = len(u.data.indices)
     result = ValuationResult.zeros(
@@ -135,15 +136,16 @@ def semivalues(
     """
     Computes semi-values for a given utility function and subset sampler.
 
-    :param sampler: The subset sampler to use for utility computations.
-    :param u: Utility object with model, data, and scoring function.
-    :param coefficient: The semi-value coefficient
-    :param done: Stopping criterion.
-    :param n_jobs: Number of parallel jobs to use.
-    :param config: Object configuring parallel computation, with cluster
+        sampler: The subset sampler to use for utility computations.
+        u: Utility object with model, data, and scoring function.
+        coefficient: The semi-value coefficient
+        done: Stopping criterion.
+        n_jobs: Number of parallel jobs to use.
+        config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param progress: Whether to display progress bars for each job.
-    :return: Object with the results.
+        progress: Whether to display progress bars for each job.
+    Returns:
+        Object with the results.
 
     """
     map_reduce_job: MapReduceJob[PowersetSampler, ValuationResult] = MapReduceJob(
@@ -207,27 +209,27 @@ def compute_semivalues(
 
     For any other sampling method, use :func:`parallel_semivalues` directly.
 
-    See :ref:`data valuation` for an overview of valuation.
+    See [Data valuation][computing-data-values] for an overview of valuation.
 
     The modes supported are:
 
-    - :attr:`SemiValueMode.Shapley`: Shapley values.
-    - :attr:`SemiValueMode.BetaShapley`: Implements the Beta Shapley semi-value
+    - [SemiValueMode.Shapley][SemiValueMode.Shapley]: Shapley values.
+    - [SemiValueMode.BetaShapley][SemiValueMode.BetaShapley]: Implements the Beta Shapley semi-value
         as introduced in :footcite:t:`kwon_beta_2022`. Pass additional keyword
         arguments ``alpha`` and ``beta`` to set the parameters of the Beta
         distribution (both default to 1).
-    - :attr:`SemiValueMode.Banzhaf`: Implements the Banzhaf semi-value as
+    - [SemiValueMode.Banzhaf][SemiValueMode.Banzhaf]: Implements the Banzhaf semi-value as
         introduced in :footcite:t:`wang_data_2022`.
 
-    :param u: Utility object with model, data, and scoring function.
-    :param done: Stopping criterion.
-    :param mode: The semi-value mode to use. See :class:`SemiValueMode` for a
+        u: Utility object with model, data, and scoring function.
+        done: Stopping criterion.
+        mode: The semi-value mode to use. See :class:`SemiValueMode` for a
         list.
-    :param sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
+        sampler_t: The sampler type to use. See [sampler][pydvl.value.sampler]
         for a list.
-    :param n_jobs: Number of parallel jobs to use.
-    :param kwargs: Additional keyword arguments passed to
-        :func:`~pydvl.value.semivalues.semivalues`.
+        n_jobs: Number of parallel jobs to use.
+        kwargs: Additional keyword arguments passed to
+        [semivalues()][pydvl.value.semivalues.semivalues].
     """
     sampler_instance = sampler_t(u.data.indices)
     if mode == SemiValueMode.Shapley:

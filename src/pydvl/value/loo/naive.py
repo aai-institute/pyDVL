@@ -12,9 +12,10 @@ def naive_loo(u: Utility, *, progress: bool = True) -> ValuationResult:
 
     $$v(i) = u(D) - u(D \setminus \{i\}) $$
 
-    :param u: Utility object with model, data, and scoring function
-    :param progress: If True, display a progress bar
-    :return: Object with the data values.
+        u: Utility object with model, data, and scoring function
+        progress: If True, display a progress bar
+    Returns:
+        Object with the data values.
     """
 
     if len(u.data) < 3:

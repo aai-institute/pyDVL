@@ -31,7 +31,7 @@ class TruncationPolicy(abc.ABC):
     Statistics are kept on the number of calls and truncations as :attr:`n_calls`
     and :attr:`n_truncations` respectively.
 
-    .. todo::
+    !!! Todo
        Because the policy objects are copied to the workers, the statistics
        are not accessible from the
        :class:`~pydvl.value.shapley.actor.ShapleyCoordinator`. We need to add
@@ -55,9 +55,10 @@ class TruncationPolicy(abc.ABC):
     def __call__(self, idx: int, score: float) -> bool:
         """Check whether the computation should be interrupted.
 
-        :param idx: Position in the permutation currently being computed.
-        :param score: Last utility computed.
-        :return: ``True`` if the computation should be interrupted.
+            idx: Position in the permutation currently being computed.
+            score: Last utility computed.
+        Returns:
+     ``True`` if the computation should be interrupted.
         """
         ret = self._check(idx, score)
         self.n_calls += 1
@@ -78,9 +79,9 @@ class NoTruncation(TruncationPolicy):
 class FixedTruncation(TruncationPolicy):
     """Break a permutation after computing a fixed number of marginals.
 
-    :param u: Utility object with model, data, and scoring function
-    :param fraction: Fraction of marginals in a permutation to compute before
-        stopping (e.g. 0.5 to compute half of the marginals).
+    u: Utility object with model, data, and scoring function
+    fraction: Fraction of marginals in a permutation to compute before
+    stopping (e.g. 0.5 to compute half of the marginals).
     """
 
     def __init__(self, u: Utility, fraction: float):
@@ -103,8 +104,8 @@ class RelativeTruncation(TruncationPolicy):
 
     This is called "performance tolerance" in :footcite:t:`ghorbani_data_2019`.
 
-    :param u: Utility object with model, data, and scoring function
-    :param rtol: Relative tolerance. The permutation is broken if the
+        u: Utility object with model, data, and scoring function
+        rtol: Relative tolerance. The permutation is broken if the
         last computed utility is less than ``total_utility * rtol``.
     """
 
@@ -125,10 +126,10 @@ class BootstrapTruncation(TruncationPolicy):
     """Break a permutation if the last computed utility is close to the total
     utility, measured as a multiple of the standard deviation of the utilities.
 
-    :param u: Utility object with model, data, and scoring function
-    :param n_samples: Number of bootstrap samples to use to compute the variance
+        u: Utility object with model, data, and scoring function
+        n_samples: Number of bootstrap samples to use to compute the variance
         of the utilities.
-    :param sigmas: Number of standard deviations to use as a threshold.
+        sigmas: Number of standard deviations to use as a threshold.
     """
 
     def __init__(self, u: Utility, n_samples: int, sigmas: float = 1):
@@ -207,7 +208,7 @@ def truncated_montecarlo_shapley(
     over all possible permutations of the index set, with a double stopping
     criterion.
 
-    .. todo::
+    !!! Todo
        Think of how to add Robin-Gelman or some other more principled stopping
        criterion.
 
@@ -224,20 +225,21 @@ def truncated_montecarlo_shapley(
     We keep sampling permutations and updating all shapley values
     until the :class:`StoppingCriterion` returns ``True``.
 
-    :param u: Utility object with model, data, and scoring function
-    :param done: Check on the results which decides when to stop
+        u: Utility object with model, data, and scoring function
+        done: Check on the results which decides when to stop
         sampling permutations.
-    :param truncation: callable that decides whether to stop computing
+        truncation: callable that decides whether to stop computing
         marginals for a given permutation.
-    :param config: Object configuring parallel computation, with cluster
+        config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param n_jobs: Number of permutation monte carlo jobs
+        n_jobs: Number of permutation monte carlo jobs
         to run concurrently.
-    :param coordinator_update_period: in seconds. How often to check the
+        coordinator_update_period: in seconds. How often to check the
         accumulated results from the workers for convergence.
-    :param worker_update_period: interval in seconds between different
+        worker_update_period: interval in seconds between different
         updates to and from the coordinator
-    :return: Object with the data values.
+    Returns:
+     Object with the data values.
 
     """
     algorithm = "truncated_montecarlo_shapley"

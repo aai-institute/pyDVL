@@ -1,21 +1,21 @@
 """
-.. versionadded:: 0.4.0
+!!! version-added 0.4.0
 
 This package holds all routines for the computation of Least Core data values.
 
-Please refer to :ref:`data valuation` for an overview.
+Please refer to [Data valuation][computing-data-values] for an overview.
 
 In addition to the standard interface via
-:func:`~pydvl.value.least_core.compute_least_core_values`, because computing the
+[compute_least_core_values()][pydvl.value.least_core.compute_least_core_values], because computing the
 Least Core values requires the solution of a linear and a quadratic problem
 *after* computing all the utility values, there is the possibility of performing
 each step separately. This is useful when running multiple experiments: use
-:func:`~pydvl.value.least_core.naive.lc_prepare_problem` or
-:func:`~pydvl.value.least_core.montecarlo.mclc_prepare_problem` to prepare a
+[lc_prepare_problem()][pydvl.value.least_core.naive.lc_prepare_problem] or
+[mclc_prepare_problem()][pydvl.value.least_core.montecarlo.mclc_prepare_problem] to prepare a
 list of problems to solve, then solve them in parallel with
-:func:`~pydvl.value.least_core.common.lc_solve_problems`.
+[lc_solve_problems()][pydvl.value.least_core.common.lc_solve_problems].
 
-Note that :func:`~pydvl.value.least_core.montecarlo.mclc_prepare_problem` is
+Note that [mclc_prepare_problem()][pydvl.value.least_core.montecarlo.mclc_prepare_problem] is
 parallelized itself, so preparing the problems should be done in sequence in this
 case. The solution of the linear systems can then be done in parallel.
 
@@ -52,30 +52,31 @@ def compute_least_core_values(
     """Umbrella method to compute Least Core values with any of the available
     algorithms.
 
-    See :ref:`data valuation` for an overview.
+    See [Data valuation][computing-data-values] for an overview.
 
     The following algorithms are available. Note that the exact method can only
     work with very small datasets and is thus intended only for testing.
 
     - ``exact``: uses the complete powerset of the training set for the constraints
-      :func:`~pydvl.value.shapley.naive.combinatorial_exact_shapley`.
+      [combinatorial_exact_shapley()][pydvl.value.shapley.naive.combinatorial_exact_shapley].
     - ``montecarlo``:  uses the approximate Monte Carlo Least Core algorithm.
-      Implemented in :func:`~pydvl.value.least_core.montecarlo.montecarlo_least_core`.
+      Implemented in [montecarlo_least_core()][pydvl.value.least_core.montecarlo.montecarlo_least_core].
 
-    :param u: Utility object with model, data, and scoring function
-    :param n_jobs: Number of jobs to run in parallel. Only used for Monte Carlo
+        u: Utility object with model, data, and scoring function
+        n_jobs: Number of jobs to run in parallel. Only used for Monte Carlo
         Least Core.
-    :param n_iterations: Number of subsets to sample and evaluate the utility on.
+        n_iterations: Number of subsets to sample and evaluate the utility on.
         Only used for Monte Carlo Least Core.
-    :param mode: Algorithm to use. See :class:`LeastCoreMode` for available
+        mode: Algorithm to use. See :class:`LeastCoreMode` for available
         options.
-    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
         to be non-negative.
-    :param solver_options: Optional dictionary of options passed to the solvers.
+        solver_options: Optional dictionary of options passed to the solvers.
 
-    :return: ValuationResult object with the computed values.
+    Returns:
+        ValuationResult object with the computed values.
 
-    .. versionadded:: 0.5.0
+    !!! version-added 0.5.0
     """
     progress: bool = kwargs.pop("progress", False)
 

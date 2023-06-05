@@ -18,16 +18,17 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 
     $$v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)} [u(\sigma_{i-1} \cup {i}) − u(\sigma_{i})].$$
 
-    See :ref:`data valuation` for details.
+    See [Data valuation][computing-data-values] for details.
 
     When the length of the training set is > 10 this prints a warning since the
     computation becomes too expensive. Used mostly for internal testing and
     simple use cases. Please refer to the :mod:`Monte Carlo
     <pydvl.value.shapley.montecarlo>` approximations for practical applications.
 
-    :param u: Utility object with model, data, and scoring function
-    :param progress: Whether to display progress bars for each job.
-    :return: Object with the data values.
+        u: Utility object with model, data, and scoring function
+        progress: Whether to display progress bars for each job.
+    Returns:
+        Object with the data values.
     """
 
     n = len(u.data)
@@ -92,21 +93,22 @@ def combinatorial_exact_shapley(
 
     $$v_u(i) = \frac{1}{n} \sum_{S \subseteq N \setminus \{i\}} \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)].$$
 
-    See :ref:`data valuation` for details.
+    See [Data valuation][computing-data-values] for details.
 
-    .. note::
+    !!! Note
        If the length of the training set is > n_jobs*20 this prints a warning
        because the computation is very expensive. Used mostly for internal testing
        and simple use cases. Please refer to the
-       :mod:`Monte Carlo <pydvl.shapley.montecarlo>` approximations for practical
+       [Monte Carlo][pydvl.value.shapley.montecarlo] approximations for practical
        applications.
 
-    :param u: Utility object with model, data, and scoring function
-    :param n_jobs: Number of parallel jobs to use
-    :param config: Object configuring parallel computation, with cluster address,
+        u: Utility object with model, data, and scoring function
+        n_jobs: Number of parallel jobs to use
+        config: Object configuring parallel computation, with cluster address,
         number of cpus, etc.
-    :param progress: Whether to display progress bars for each job.
-    :return: Object with the data values.
+        progress: Whether to display progress bars for each job.
+    Returns:
+        Object with the data values.
     """
     # Arbitrary choice, will depend on time required, caching, etc.
     if len(u.data) // n_jobs > 20:

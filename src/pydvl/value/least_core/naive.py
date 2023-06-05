@@ -23,11 +23,11 @@ def exact_least_core(
 ) -> ValuationResult:
     r"""Computes the exact Least Core values.
 
-    .. note::
+    !!! Note
        If the training set contains more than 20 instances a warning is printed
        because the computation is very expensive. This method is mostly used for
        internal testing and simple use cases. Please refer to the
-       :func:`Monte Carlo method <pydvl.value.least_core.montecarlo.montecarlo_least_core>`
+       [Monte Carlo method][pydvl.value.least_core.montecarlo.montecarlo_least_core]
        for practical applications.
 
     The least core is the solution to the following Linear Programming problem:
@@ -42,16 +42,17 @@ def exact_least_core(
 
     Where $N = \{1, 2, \dots, n\}$ are the training set's indices.
 
-    :param u: Utility object with model, data, and scoring function
-    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        u: Utility object with model, data, and scoring function
+        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
         to be non-negative.
-    :param solver_options: Dictionary of options that will be used to select a solver
+        solver_options: Dictionary of options that will be used to select a solver
         and to configure it. Refer to the following page for all possible options:
         https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
-    :param options: (Deprecated) Dictionary of solver options. Use solver_options instead.
-    :param progress: If True, shows a tqdm progress bar
+        options: (Deprecated) Dictionary of solver options. Use solver_options instead.
+        progress: If True, shows a tqdm progress bar
 
-    :return: Object with the data values and the least core value.
+    Returns:
+        Object with the data values and the least core value.
     """
     n = len(u.data)
     if n > 20:  # Arbitrary choice, will depend on time required, caching, etc.
@@ -84,10 +85,10 @@ def exact_least_core(
 def lc_prepare_problem(u: Utility, progress: bool = False) -> LeastCoreProblem:
     """Prepares a linear problem with all subsets of the data
     Use this to separate the problem preparation from the solving with
-    :func:`~pydvl.value.least_core.common.lc_solve_problem`. Useful for
+    [lc_solve_problem()][pydvl.value.least_core.common.lc_solve_problem]. Useful for
     parallel execution of multiple experiments.
 
-    See :func:`~pydvl.value.least_core.naive.exact_least_core` for argument
+    See [exact_least_core()][pydvl.value.least_core.naive.exact_least_core] for argument
     descriptions.
     """
     n = len(u.data)

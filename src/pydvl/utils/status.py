@@ -60,7 +60,7 @@ class Status(Enum):
         bool(Status.Converged) == True
         bool(Status.Failed) == True
 
-    .. warning::
+    !!! Warning
        These truth values are **inconsistent** with the usual boolean operations.
        In particular the XOR of two instances of ``Status`` is not the same as
        the XOR of their boolean values.

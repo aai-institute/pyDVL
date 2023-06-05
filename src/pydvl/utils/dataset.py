@@ -5,7 +5,7 @@ Shapley and Least Core value computations require evaluation of a scoring functi
 (the *utility*). This is typically the performance of the model on a test set
 (as an approximation to its true expected performance). It is therefore convenient
 to keep both the training data and the test data together to be passed around to
-methods in :mod:`~pydvl.value.shapley` and :mod:`~pydvl.value.least_core`.
+methods in [least_core][pydvl.value.shapley` and :mod:`~pydvl.value.least_core].
 This is done with :class:`~pydvl.utils.dataset.Dataset`.
 
 This abstraction layer also seamlessly grouping data points together if one is
@@ -57,19 +57,19 @@ class Dataset:
     ):
         """Constructs a Dataset from data and labels.
 
-        :param x_train: training data
-        :param y_train: labels for training data
-        :param x_test: test data
-        :param y_test: labels for test data
-        :param feature_names: name of the features of input data
-        :param target_names: names of the features of target data
-        :param data_names: names assigned to data points.
-            For example, if the dataset is a time series, each entry can be a
-            timestamp which can be referenced directly instead of using a row
-            number.
-        :param description: A textual description of the dataset.
-        :param is_multi_output: set to ``False`` if labels are scalars, or to
-            ``True`` if they are vectors of dimension > 1.
+        x_train: training data
+        y_train: labels for training data
+        x_test: test data
+        y_test: labels for test data
+        feature_names: name of the features of input data
+        target_names: names of the features of target data
+        data_names: names assigned to data points.
+        For example, if the dataset is a time series, each entry can be a
+        timestamp which can be referenced directly instead of using a row
+        number.
+        description: A textual description of the dataset.
+        is_multi_output: set to ``False`` if labels are scalars, or to
+        ``True`` if they are vectors of dimension > 1.
         """
         self.x_train, self.y_train = check_X_y(
             x_train, y_train, multi_output=is_multi_output
@@ -149,10 +149,11 @@ class Dataset:
         subsets of the data from indices. It is typically **not needed in
         algorithms**.
 
-        :param indices: Optional indices that will be used to select points
+            indices: Optional indices that will be used to select points
             from the training data. If ``None``, the entire training data will
             be returned.
-        :return: If ``indices`` is not ``None``, the selected x and y arrays
+        Returns:
+            If ``indices`` is not ``None``, the selected x and y arrays
             from the training data. Otherwise, the entire dataset.
         """
         if indices is None:
@@ -202,10 +203,11 @@ class Dataset:
             >>> _ = dataset.get_test_data(indices)
 
 
-        :param indices: Optional indices into the test data. This argument
+            indices: Optional indices into the test data. This argument
             is unused and is left as is to keep the same interface as
             :meth:`Dataset.get_training_data`.
-        :return: The entire test data.
+        Returns:
+        The entire test data.
         """
         return self.x_test, self.y_test
 
@@ -256,25 +258,26 @@ class Dataset:
         `sklearn toy datasets
         <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_.
 
-        :param data: sklearn dataset. The following attributes are supported
+            data: sklearn dataset. The following attributes are supported
             - ``data``: covariates [required]
             - ``target``: target variables (labels) [required]
             - ``feature_names``: the feature names
             - ``target_names``: the target names
             - ``DESCR``: a description
-        :param train_size: size of the training dataset. Used in
+            train_size: size of the training dataset. Used in
             `train_test_split`
-        :param random_state: seed for train / test split
-        :param stratify_by_target: If `True`, data is split in a stratified
+            random_state: seed for train / test split
+            stratify_by_target: If `True`, data is split in a stratified
             fashion, using the target variable as labels. Read more in
             `scikit-learn's user guide
             <https://scikit-learn.org/stable/modules/cross_validation.html
             #stratification>`.
-        :param kwargs: Additional keyword arguments to pass to the
+            kwargs: Additional keyword arguments to pass to the
             :class:`Dataset` constructor. Use this to pass e.g. ``is_multi_output``.
-        :return: Object with the sklearn dataset
+        Returns:
+        Object with the sklearn dataset
 
-        .. versionchanged:: 0.6.0
+        !!! version-changed 0.6.0
            Added kwargs to pass to the :class:`Dataset` constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
@@ -309,25 +312,26 @@ class Dataset:
         returned by the `make_*` functions in `sklearn generated datasets
         <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
 
-        :param X: numpy array of shape (n_samples, n_features)
-        :param y: numpy array of shape (n_samples,)
-        :param train_size: size of the training dataset. Used in
+            X: numpy array of shape (n_samples, n_features)
+            y: numpy array of shape (n_samples,)
+            train_size: size of the training dataset. Used in
             `train_test_split`
-        :param random_state: seed for train / test split
-        :param stratify_by_target: If `True`, data is split in a stratified
+            random_state: seed for train / test split
+            stratify_by_target: If `True`, data is split in a stratified
             fashion, using the y variable as labels. Read more in
             `sklearn's user guide
             <https://scikit-learn.org/stable/modules/cross_validation.html
             #stratification>`.
-        :param kwargs: Additional keyword arguments to pass to the
+            kwargs: Additional keyword arguments to pass to the
             :class:`Dataset` constructor. Use this to pass e.g. ``feature_names``
             or ``target_names``.
-        :return: Object with the passed X and y arrays split across training
+        Returns:
+        Object with the passed X and y arrays split across training
             and test sets.
 
-        .. versionadded:: 0.4.0
+        !!! version-added 0.4.0
 
-        .. versionchanged:: 0.6.0
+        !!! version-changed 0.6.0
            Added kwargs to pass to the :class:`Dataset` constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
@@ -360,24 +364,24 @@ class GroupedDataset(Dataset):
         as logical units. For instance, one can group by value of a categorical
         feature, by bin into which a continuous feature falls, or by label.
 
-        :param x_train: training data
-        :param y_train: labels of training data
-        :param x_test: test data
-        :param y_test: labels of test data
-        :param data_groups: Iterable of the same length as ``x_train`` containing
+            x_train: training data
+            y_train: labels of training data
+            x_test: test data
+            y_test: labels of test data
+            data_groups: Iterable of the same length as ``x_train`` containing
             a group label for each training data point. The label can be of any
             type, e.g. ``str`` or ``int``. Data points with the same label will
             then be grouped by this object and considered as one for effects of
             valuation.
-        :param feature_names: names of the covariates' features.
-        :param target_names: names of the labels or targets y
-        :param group_names: names of the groups. If not provided, the labels
+            feature_names: names of the covariates' features.
+            target_names: names of the labels or targets y
+            group_names: names of the groups. If not provided, the labels
             from ``data_groups`` will be used.
-        :param description: A textual description of the dataset
-        :param kwargs: Additional keyword arguments to pass to the
+            description: A textual description of the dataset
+            kwargs: Additional keyword arguments to pass to the
             :class:`Dataset` constructor.
 
-        .. versionchanged:: 0.6.0
+        !!! version-changed 0.6.0
            Added ``group_names`` and forwarding of ``kwargs``
         """
         super().__init__(
@@ -428,9 +432,10 @@ class GroupedDataset(Dataset):
     ) -> Tuple[NDArray, NDArray]:
         """Returns the data and labels of all samples in the given groups.
 
-        :param indices: group indices whose elements to return. If ``None``,
+            indices: group indices whose elements to return. If ``None``,
             all data from all groups are returned.
-        :return: Tuple of training data x and labels y.
+        Returns:
+        Tuple of training data x and labels y.
         """
         if indices is None:
             indices = self.indices
@@ -454,26 +459,27 @@ class GroupedDataset(Dataset):
         <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_ and groups
         it.
 
-        :param data: sklearn dataset. The following attributes are supported
+            data: sklearn dataset. The following attributes are supported
             - ``data``: covariates [required]
             - ``target``: target variables (labels) [required]
             - ``feature_names``: the feature names
             - ``target_names``: the target names
             - ``DESCR``: a description
-        :param train_size: size of the training dataset. Used in
+            train_size: size of the training dataset. Used in
             `train_test_split`.
-        :param random_state: seed for train / test split.
-        :param stratify_by_target: If ``True``, data is split in a stratified
+            random_state: seed for train / test split.
+            stratify_by_target: If ``True``, data is split in a stratified
             fashion, using the target variable as labels. Read more in
             `sklearn's user guide
             <https://scikit-learn.org/stable/modules/cross_validation.html
             #stratification>`.
-        :param data_groups: an array holding the group index or name for each
+            data_groups: an array holding the group index or name for each
             data point. The length of this array must be equal to the number of
             data points in the dataset.
-        :param kwargs: Additional keyword arguments to pass to the
+            kwargs: Additional keyword arguments to pass to the
             :class:`Dataset` constructor.
-        :return: Dataset with the selected sklearn data
+        Returns:
+        Dataset with the selected sklearn data
         """
         if data_groups is None:
             raise ValueError(
@@ -509,28 +515,29 @@ class GroupedDataset(Dataset):
         as returned by the `make_*` functions in `sklearn generated datasets
         <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
 
-        :param X: array of shape (n_samples, n_features)
-        :param y: array of shape (n_samples,)
-        :param train_size: size of the training dataset. Used in
+            X: array of shape (n_samples, n_features)
+            y: array of shape (n_samples,)
+            train_size: size of the training dataset. Used in
             ``train_test_split``.
-        :param random_state: seed for train / test split.
-        :param stratify_by_target: If ``True``, data is split in a stratified
+            random_state: seed for train / test split.
+            stratify_by_target: If ``True``, data is split in a stratified
             fashion, using the y variable as labels. Read more in
             `sklearn's user guide
             <https://scikit-learn.org/stable/modules/cross_validation.html
             #stratification>`.
-        :param data_groups: an array holding the group index or name for each
+            data_groups: an array holding the group index or name for each
             data point. The length of this array must be equal to the number of
             data points in the dataset.
-        :param kwargs: Additional keyword arguments that will be passed
+            kwargs: Additional keyword arguments that will be passed
             to the :class:`~pydvl.utils.dataset.Dataset` constructor.
 
-        :return: Dataset with the passed X and y arrays split across training
+        Returns:
+        Dataset with the passed X and y arrays split across training
             and test sets.
 
-        .. versionadded:: 0.4.0
+        !!! version-added 0.4.0
 
-        .. versionchanged:: 0.6.0
+        !!! version-changed 0.6.0
            Added kwargs to pass to the :class:`Dataset` constructor.
         """
         if data_groups is None:
@@ -557,11 +564,12 @@ class GroupedDataset(Dataset):
         """Creates a :class:`GroupedDataset` object from the data a
         :class:`Dataset` object and a mapping of data groups.
 
-        :param dataset: The original data.
-        :param data_groups: An array holding the group index or name for each
+            dataset: The original data.
+            data_groups: An array holding the group index or name for each
             data point. The length of this array must be equal to the number of
             data points in the dataset.
-        :return: A :class:`GroupedDataset` with the initial :class:`Dataset`
+        Returns:
+        A :class:`GroupedDataset` with the initial :class:`Dataset`
             grouped by data_groups.
         """
         return cls(
@@ -590,12 +598,13 @@ def load_spotify_dataset(
     If this method is called within the CI pipeline, it will load a reduced
     version of the dataset for testing purposes.
 
-    :param val_size: size of the validation set
-    :param test_size: size of the test set
-    :param min_year: minimum year of the returned data
-    :param target_column: column to be returned as y (labels)
-    :param random_state: fixes sklearn random seed
-    :return: Tuple with 3 elements, each being a list sith [input_data, related_labels]
+        val_size: size of the validation set
+        test_size: size of the test set
+        min_year: minimum year of the returned data
+        target_column: column to be returned as y (labels)
+        random_state: fixes sklearn random seed
+    Returns:
+        Tuple with 3 elements, each being a list sith [input_data, related_labels]
     """
     root_dir_path = Path(__file__).parent.parent.parent.parent
     file_path = root_dir_path / "data/top_hits_spotify_dataset.csv"
@@ -625,10 +634,11 @@ def load_wine_dataset(
     """Loads the sklearn wine dataset. More info can be found at
     https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset.
 
-    :param train_size: fraction of points used for training dataset
-    :param test_size: fraction of points used for test dataset
-    :param random_state: fix random seed. If None, no random seed is set.
-    :return: A tuple of four elements with the first three being input and
+        train_size: fraction of points used for training dataset
+        test_size: fraction of points used for test dataset
+        random_state: fix random seed. If None, no random seed is set.
+    Returns:
+        A tuple of four elements with the first three being input and
         target values in the form of matrices of shape (N,D) the first
         and (N,) the second. The fourth element is a list containing names of
         features of the model. (FIXME doc)
@@ -682,13 +692,14 @@ def synthetic_classification_dataset(
 ) -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Tuple[Any, Any]]:
     """Sample from a uniform Gaussian mixture model.
 
-    :param mus: 2d-matrix [CxD] with the means of the components in the rows.
-    :param sigma: Standard deviation of each dimension of each component.
-    :param num_samples: The number of samples to generate.
-    :param train_size: fraction of points used for training dataset
-    :param test_size: fraction of points used for test dataset
-    :param random_seed: fix random seed. If None, no random seed is set.
-    :returns: A tuple of matrix x of shape [NxD] and target vector y of shape [N].
+        mus: 2d-matrix [CxD] with the means of the components in the rows.
+        sigma: Standard deviation of each dimension of each component.
+        num_samples: The number of samples to generate.
+        train_size: fraction of points used for training dataset
+        test_size: fraction of points used for test dataset
+        random_seed: fix random seed. If None, no random seed is set.
+    Returns:
+        A tuple of matrix x of shape [NxD] and target vector y of shape [N].
     """
     num_features = mus.shape[1]
     num_classes = mus.shape[0]
@@ -717,9 +728,10 @@ def decision_boundary_fixed_variance_2d(
 ) -> Callable[[np.ndarray], np.ndarray]:
     """
     Closed-form solution for decision boundary dot(a, b) + b = 0 with fixed variance.
-    :param mu_1: First mean.
-    :param mu_2: Second mean.
-    :returns: A callable which converts a continuous line (-infty, infty) to the decision boundary in feature space.
+        mu_1: First mean.
+        mu_2: Second mean.
+    Returns:
+        A callable which converts a continuous line (-infty, infty) to the decision boundary in feature space.
     """
     a = np.asarray([[0, 1], [-1, 0]]) @ (mu_2 - mu_1)
     b = (mu_1 + mu_2) / 2

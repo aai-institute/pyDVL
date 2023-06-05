@@ -4,7 +4,7 @@ from enum import Enum
 class ShapleyMode(str, Enum):
     """Supported algorithms for the computation of Shapley values.
 
-    .. todo::
+    !!! Todo
        Make algorithms register themselves here.
     """
 

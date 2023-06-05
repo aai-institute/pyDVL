@@ -5,7 +5,7 @@ pyDVL uses `memcached <https://memcached.org>`_ to cache utility values, through
 evaluations across processes and nodes in a cluster. You can run memcached as a
 service, locally or remotely, see :ref:`caching setup`.
 
-.. warning::
+!!! Warning
 
    Function evaluations are cached with a key based on the function's signature
    and code. This can lead to undesired cache hits, see :ref:`cache reuse`.
@@ -48,7 +48,7 @@ training for small sample sizes), but drastically reduces the speed benefits of
 memoization.
 
 This behaviour can be activated with
-:attr:`~pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations`.
+[allow_repeated_evaluations][pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations].
 
 .. _cache reuse:
 
@@ -84,7 +84,7 @@ sometimes one must exclude some of them. For example, If a function is going to
 run across multiple processes and some reporting arguments are added (like a
 `job_id` for logging purposes), these will be part of the signature and make the
 functions distinct to the eyes of the cache. This can be avoided with the use of
-:attr:`~pydvl.utils.config.MemcachedConfig.ignore_args` in the configuration.
+[ignore_args][pydvl.utils.config.MemcachedConfig.ignore_args] in the configuration.
 
 
 """
@@ -157,7 +157,7 @@ def memcached(
     until the value has stabilized with a standard error smaller than
     `rtol_stderr * running average`.
 
-    .. warning::
+    !!! Warning
 
        Do not cache functions with state! See :ref:`cache reuse`
 
@@ -166,28 +166,29 @@ def memcached(
 
        cached_fun = memcached(**asdict(cache_options))(heavy_computation)
 
-    :param client_config: configuration for `pymemcache's Client()
+        client_config: configuration for `pymemcache's Client()
         <https://pymemcache.readthedocs.io/en/stable/apidoc/pymemcache.client.base.html>`_.
         Will be merged on top of the default configuration (see below).
-    :param time_threshold: computations taking less time than this many seconds
+        time_threshold: computations taking less time than this many seconds
         are not cached.
-    :param allow_repeated_evaluations: If `True`, repeated calls to a function
+        allow_repeated_evaluations: If `True`, repeated calls to a function
         with the same arguments will be allowed and outputs averaged until the
         running standard deviation of the mean stabilises below
         `rtol_stderr * mean`.
-    :param rtol_stderr: relative tolerance for repeated evaluations. More
+        rtol_stderr: relative tolerance for repeated evaluations. More
         precisely, :func:`memcached` will stop evaluating the function once the
         standard deviation of the mean is smaller than `rtol_stderr * mean`.
-    :param min_repetitions: minimum number of times that a function evaluation
+        min_repetitions: minimum number of times that a function evaluation
         on the same arguments is repeated before returning cached values. Useful
         for stochastic functions only. If the model training is very noisy, set
         this number to higher values to reduce variance.
-    :param ignore_args: Do not take these keyword arguments into account when
+        ignore_args: Do not take these keyword arguments into account when
         hashing the wrapped function for usage as key in memcached. This allows
         sharing the cache among different jobs for the same experiment run if
         the callable happens to have "nuisance" parameters like "job_id" which
         do not affect the result of the computation.
-    :return: A wrapped function
+    Returns:
+        A wrapped function
 
     """
     if ignore_args is None:

@@ -39,8 +39,8 @@ def lc_solve_problem(
     Useful for parallel execution of multiple experiments by running this as a
     remote task.
 
-    See :func:`~pydvl.value.least_core.naive.exact_least_core` or
-    :func:`~pydvl.value.least_core.montecarlo.montecarlo_least_core` for
+    See [exact_least_core()][pydvl.value.least_core.naive.exact_least_core] or
+    [montecarlo_least_core()][pydvl.value.least_core.montecarlo.montecarlo_least_core] for
     argument descriptions.
     """
     n = len(u.data)
@@ -169,17 +169,18 @@ def lc_solve_problems(
 ) -> List[ValuationResult]:
     """Solves a list of linear problems in parallel.
 
-    :param u: Utility.
-    :param problems: Least Core problems to solve, as returned by
-        :func:`~pydvl.value.least_core.montecarlo.mclc_prepare_problem`.
-    :param algorithm: Name of the valuation algorithm.
-    :param config: Object configuring parallel computation, with cluster
+        u: Utility.
+        problems: Least Core problems to solve, as returned by
+        [mclc_prepare_problem()][pydvl.value.least_core.montecarlo.mclc_prepare_problem].
+        algorithm: Name of the valuation algorithm.
+        config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param n_jobs: Number of parallel jobs to run.
-    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        n_jobs: Number of parallel jobs to run.
+        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
         to be non-negative.
-    :param solver_options: Additional options to pass to the solver.
-    :return: List of solutions.
+        solver_options: Additional options to pass to the solver.
+    Returns:
+        List of solutions.
     """
 
     def _map_func(
@@ -232,17 +233,17 @@ def _solve_least_core_linear_program(
 
     if `non_negative_subsidy` is True, then an additional constraint $e \ge 0$ is used.
 
-    :param A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies the
+        A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies the
         coefficients of a linear equality constraint on ``x``.
-    :param b_eq: The equality constraint vector. Each element of ``A_eq @ x`` must equal
+        b_eq: The equality constraint vector. Each element of ``A_eq @ x`` must equal
         the corresponding element of ``b_eq``.
-    :param A_lb: The inequality constraint matrix. Each row of ``A_lb`` specifies the
+        A_lb: The inequality constraint matrix. Each row of ``A_lb`` specifies the
         coefficients of a linear inequality constraint on ``x``.
-    :param b_lb: The inequality constraint vector. Each element represents a
+        b_lb: The inequality constraint vector. Each element represents a
         lower bound on the corresponding value of ``A_lb @ x``.
-    :param non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
         to be non-negative.
-    :param options: Keyword arguments that will be used to select a solver
+        options: Keyword arguments that will be used to select a solver
         and to configure it. For all possible options, refer to `cvxpy's documentation
         <https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options>`_
     """
@@ -308,16 +309,16 @@ def _solve_egalitarian_least_core_quadratic_program(
     :math:`b_{ub}`, :math:`b_{eq}`, :math:`l`, and :math:`u` are vectors; and
     :math:`A_{ub}` and :math:`A_{eq}` are matrices.
 
-    :param subsidy: Minimal subsidy returned by :func:`_solve_least_core_linear_program`
-    :param A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies the
+        subsidy: Minimal subsidy returned by :func:`_solve_least_core_linear_program`
+        A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies the
         coefficients of a linear equality constraint on ``x``.
-    :param b_eq: The equality constraint vector. Each element of ``A_eq @ x`` must equal
+        b_eq: The equality constraint vector. Each element of ``A_eq @ x`` must equal
         the corresponding element of ``b_eq``.
-    :param A_lb: The inequality constraint matrix. Each row of ``A_lb`` specifies the
+        A_lb: The inequality constraint matrix. Each row of ``A_lb`` specifies the
         coefficients of a linear inequality constraint on ``x``.
-    :param b_lb: The inequality constraint vector. Each element represents a
+        b_lb: The inequality constraint vector. Each element represents a
         lower bound on the corresponding value of ``A_lb @ x``.
-    :param solver_options: Keyword arguments that will be used to select a solver
+        solver_options: Keyword arguments that will be used to select a solver
         and to configure it. Refer to the following page for all possible options:
         https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
     """

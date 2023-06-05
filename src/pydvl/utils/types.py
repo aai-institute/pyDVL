@@ -35,10 +35,11 @@ def maybe_add_argument(fun: Callable, new_arg: str):
     returned as is. Otherwise, a wrapper is returned which merely ignores the
     argument.
 
-    :param fun: The function to wrap
-    :param new_arg: The name of the argument that the new function will accept
+        fun: The function to wrap
+        new_arg: The name of the argument that the new function will accept
         (and ignore).
-    :return: A new function accepting one more keyword argument.
+    Returns:
+        A new function accepting one more keyword argument.
     """
     params = inspect.signature(fun).parameters
     if new_arg in params.keys():

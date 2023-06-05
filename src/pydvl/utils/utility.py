@@ -330,8 +330,8 @@ class MinerGameUtility(Utility):
 
     Consider a group of n miners, who have discovered large bars of gold.
 
-    If two miners can carry one piece of gold,
-    then the payoff of a coalition $S$ is:
+    If two miners can carry one piece of gold, then the payoff of a
+    coalition $S$ is:
 
     $${
     v(S) = \left\{\begin{array}{lll}
