@@ -2,7 +2,7 @@
 This module collects types and methods for the inspection of the results of
 valuation algorithms.
 
-The most important class is :class:`ValuationResult`, which provides access
+The most important class is [ValuationResult][pydvl.value.result.ValuationResult], which provides access
 to raw values, as well as convenient behaviour as a ``Sequence`` with extended
 indexing and updating abilities, and conversion to `pandas DataFrames
 <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
@@ -14,7 +14,7 @@ are typically running averages of iterative algorithms, addition behaves like a
 weighted average of the two results, with the weights being the number of
 updates in each result: adding two results is the same as generating one result
 with the mean of the values of the two results as values. The variances are
-updated accordingly. See :class:`ValuationResult` for details.
+updated accordingly. See [ValuationResult][pydvl.value.result.ValuationResult] for details.
 
 Results can also be sorted by value, variance or number of updates, see
 :meth:`ValuationResult.sort`. The arrays of [ValuationResult.values][ValuationResult.values],
@@ -22,7 +22,7 @@ Results can also be sorted by value, variance or number of updates, see
 [ValuationResult.indices` and :attr:`ValuationResult.names][ValuationResult.indices` and :attr:`ValuationResult.names] are sorted in
 the same way.
 
-Indexing and slicing of results is supported and :class:`ValueItem` objects are
+Indexing and slicing of results is supported and [ValueItem][pydvl.value.result.ValueItem] objects are
 returned. These objects can be compared with the usual operators, which take
 only the [ValueItem.value][ValueItem.value] into account.
 
@@ -95,7 +95,7 @@ class ValueItem(Generic[IndexT, NameT]):
     """
 
     #: Index of the sample with this value in the original
-    #  :class:`~pydvl.utils.dataset.Dataset`
+    #  [Dataset][pydvl.utils.dataset.Dataset]
     index: IndexT
     #: Name of the sample if it was provided. Otherwise, `str(index)`
     name: NameT
@@ -128,14 +128,15 @@ class ValuationResult(
 ):
     """Objects of this class hold the results of valuation algorithms.
 
-    These include indices in the original :class:`Dataset`, any data names (e.g.
-    group names in :class:`GroupedDataset`), the values themselves, and variance
-    of the computation in the case of Monte Carlo methods. ``ValuationResults``
-    can be iterated over like any ``Sequence``: ``iter(valuation_result)``
-    returns a generator of :class:`ValueItem` in the order in which the object
+    These include indices in the original [Dataset][pydvl.utils.dataset.Dataset],
+    any data names (e.g. group names in [GroupedDataset][pydvl.utils.dataset.GroupedDataset]),
+    the values themselves, and variance of the computation in the case of Monte
+    Carlo methods. ``ValuationResults`` can be iterated over like any ``Sequence``:
+    ``iter(valuation_result)`` returns a generator of
+    [ValueItem][pydvl.value.result.ValueItem] in the order in which the object
     is sorted.
 
-    .. rubric:: Indexing
+    # Indexing
 
     Indexing can be position-based, when accessing any of the attributes
     :attr:`values`, :attr:`variances`, :attr:`counts` and :attr:`indices`, as
@@ -148,23 +149,23 @@ class ValuationResult(
     original dataset. This is the case for the methods :meth:`get` and
     :meth:`update`.
 
-    .. rubric:: Sorting
+    # Sorting
 
     Results can be sorted in-place with :meth:`sort`, or alternatively using
     python's standard ``sorted()`` and ``reversed()`` Note that sorting values
     affects how iterators and the object itself as ``Sequence`` behave:
-    ``values[0]`` returns a :class:`ValueItem` with the highest or lowest
+    ``values[0]`` returns a [ValueItem][pydvl.value.result.ValueItem] with the highest or lowest
     ranking point if this object is sorted by descending or ascending value,
     respectively. If unsorted, ``values[0]`` returns the ``ValueItem`` at
     position 0, which has data index ``indices[0]`` in the
-    :class:`~pydvl.utils.dataset.Dataset`.
+    [Dataset][pydvl.utils.dataset.Dataset].
 
     The same applies to direct indexing of the ``ValuationResult``: the index
     is positional, according to the sorting. It does not refer to the "data
     index". To sort according to data index, use :meth:`sort` with
     ``key="index"``.
 
-    In order to access :class:`ValueItem` objects by their data index, use
+    In order to access [ValueItem][pydvl.value.result.ValueItem] objects by their data index, use
     :meth:`get`.
 
     .. rubric:: Operating on results
@@ -182,9 +183,9 @@ class ValuationResult(
             or to an array of zeros if ``indices`` are given.
         indices: An optional array of indices in the original dataset. If
             omitted, defaults to ``np.arange(len(values))``. **Warning:** It is
-            common to pass the indices of a :class:`Dataset` here. Attention must be
-            paid in a parallel context to copy them to the local process. Just do
-            ``indices=np.copy(data.indices)``.
+            common to pass the indices of a [Dataset][pydvl.utils.dataset.Dataset]
+            here. Attention must be paid in a parallel context to copy them to
+            the local process. Just do ``indices=np.copy(data.indices)``.
         variance: An optional array of variances in the computation of each value.
         counts: An optional array with the number of updates for each value.
             Defaults to an array of ones.
@@ -421,7 +422,7 @@ class ValuationResult(
             raise TypeError("Indices must be integers, iterable or slices")
 
     def __iter__(self) -> Iterator[ValueItem[IndexT, NameT]]:
-        """Iterate over the results returning :class:`ValueItem` objects.
+        """Iterate over the results returning [ValueItem][pydvl.value.result.ValueItem] objects.
         To sort in place before iteration, use :meth:`sort`.
         """
         for pos in self._sort_positions:
@@ -659,7 +660,7 @@ class ValuationResult(
     def from_random(
         cls, size: int, total: Optional[float] = None, **kwargs
     ) -> "ValuationResult":
-        """Creates a :class:`ValuationResult` object and fills it with an array
+        """Creates a [ValuationResult][pydvl.value.result.ValuationResult] object and fills it with an array
         of random values from a uniform distribution in [-1,1]. The values can
         be made to sum up to a given total number (doing so will change their range).
 
@@ -668,7 +669,7 @@ class ValuationResult(
             total: If set, the values are normalized to sum to this number
                 ("efficiency" property of Shapley values).
             kwargs: Additional options to pass to the constructor of
-                :class:`ValuationResult`. Use to override status, names, etc.
+                [ValuationResult][pydvl.value.result.ValuationResult]. Use to override status, names, etc.
 
         Returns:
             A valuation result with its status set to
@@ -676,7 +677,7 @@ class ValuationResult(
 
         :raises ValueError: If ``size`` is less than 1.
 
-        !!! info "Changed in version 0.6.0"
+        !!! tip "Changed in version 0.6.0"
             Added parameter ``total``. Check for zero size
         """
         if size < 1:
@@ -706,7 +707,7 @@ class ValuationResult(
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         n_samples: int = 0,
     ) -> "ValuationResult":
-        """Creates an empty :class:`ValuationResult` object.
+        """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
 
         Empty results are characterised by having an empty array of values. When
         another result is added to an empty one, the empty one is discarded.
@@ -734,7 +735,7 @@ class ValuationResult(
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         n_samples: int = 0,
     ) -> "ValuationResult":
-        """Creates an empty :class:`ValuationResult` object.
+        """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
 
         Empty results are characterised by having an empty array of values. When
         another result is added to an empty one, the empty one is ignored.

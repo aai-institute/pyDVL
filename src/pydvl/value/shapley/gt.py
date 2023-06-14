@@ -12,7 +12,7 @@ computed with guarantees.
 
 You can read more [in the documentation][computing-data-values].
 
-!!! info "New in version 0.4.0"
+!!! tip "New in version 0.4.0"
 
 """
 import logging
@@ -109,7 +109,7 @@ def num_samples_eps_delta(
         Number of samples from $2^{[n]}$ guaranteeing ε/√n-correct Shapley
             pair-wise differences of values with probability 1-δ/(N(N-1)).
 
-    !!! info "New in version 0.4.0"
+    !!! tip "New in version 0.4.0"
 
     """
     constants = _constants(n=n, epsilon=eps, delta=delta, utility_range=utility_range)
@@ -193,9 +193,9 @@ def group_testing_shapley(
     Returns:
         Object with the data values.
 
-    !!! info "New in version 0.4.0"
+    !!! tip "New in version 0.4.0"
 
-    !!! info "Changed in version 0.5.0"
+    !!! tip "Changed in version 0.5.0"
         Changed the solver to cvxpy instead of scipy's linprog. Added the ability
         to pass arbitrary options to it.
     """

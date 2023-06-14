@@ -47,7 +47,7 @@ class Scorer:
         name: The name of the scorer. If not provided, the name of the
             function passed will be used.
 
-    !!! info "New in version 0.5.0"
+    !!! tip "New in version 0.5.0"
 
     """
 

@@ -146,9 +146,9 @@ def owen_sampling_shapley(
     Returns:
         Object with the data values.
 
-    !!! info "New in version 0.3.0"
+    !!! tip "New in version 0.3.0"
 
-    !!! info "Changed in version 0.5.0"
+    !!! tip "Changed in version 0.5.0"
         Support for parallel computation and enable antithetic sampling.
 
     """

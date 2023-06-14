@@ -15,7 +15,7 @@ service, locally or remotely, see :ref:`caching setup`.
 
 Memoization is disabled by default but can be enabled easily, see :ref:`caching setup`.
 When enabled, it will be added to any callable used to construct a
-:class:`pydvl.utils.utility.Utility` (done with the decorator :func:`memcached`).
+:class:`pydvl.utils.utility.Utility` (done with the decorator [@memcached][pydvl.utils.caching.memcached]).
 Depending on the nature of the utility you might want to
 enable the computation of a running average of function values, see
 :ref:`caching stochastic functions`. You can see all configuration options under
@@ -151,7 +151,7 @@ def memcached(
     `rtol_stderr * running average`.
 
     !!! Warning
-       Do not cache functions with state! See :ref:`cache reuse`
+        Do not cache functions with state! See :ref:`cache reuse`
 
     !!! example
         ```python

@@ -178,7 +178,7 @@ class Dataset:
         be those of the training data and would not work on the test data.
 
         There may be cases where it is desired to use parts of the test data.
-        In those cases, it is recommended to inherit from the :class:`Dataset`
+        In those cases, it is recommended to inherit from the [Dataset][pydvl.utils.Dataset]
         class and to override the :meth:`~Dataset.get_test_data` method.
 
         For example, the following snippet shows how one could go about
@@ -256,7 +256,7 @@ class Dataset:
         stratify_by_target: bool = False,
         **kwargs,
     ) -> "Dataset":
-        """Constructs a :class:`Dataset` object from an
+        """Constructs a [Dataset][pydvl.utils.Dataset] object from an
         :class:`sklearn.utils.Bunch`, as returned by the `load_*` functions in
         [sklearn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html).
 
@@ -273,13 +273,13 @@ class Dataset:
                 fashion, using the target variable as labels. Read more in
                 [scikit-learn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             kwargs: Additional keyword arguments to pass to the
-                :class:`Dataset` constructor. Use this to pass e.g. ``is_multi_output``.
+                [Dataset][pydvl.utils.Dataset] constructor. Use this to pass e.g. ``is_multi_output``.
 
         Returns:
             Object with the sklearn dataset
 
-        !!! info "Changed in version 0.6.0"
-            Added kwargs to pass to the :class:`Dataset` constructor.
+        !!! tip "Changed in version 0.6.0"
+            Added kwargs to pass to the [Dataset][pydvl.utils.Dataset] constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
             data.data,
@@ -309,7 +309,7 @@ class Dataset:
         stratify_by_target: bool = False,
         **kwargs,
     ) -> "Dataset":
-        """Constructs a :class:`Dataset` object from X and y numpy arrays  as
+        """Constructs a [Dataset][pydvl.utils.Dataset] object from X and y numpy arrays  as
         returned by the `make_*` functions in [sklearn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
 
         Args:
@@ -321,16 +321,16 @@ class Dataset:
                 using the y variable as labels. Read more in [sklearn's user
                 guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             kwargs: Additional keyword arguments to pass to the
-                :class:`Dataset` constructor. Use this to pass e.g. ``feature_names``
+                [Dataset][pydvl.utils.Dataset] constructor. Use this to pass e.g. ``feature_names``
                 or ``target_names``.
 
         Returns:
             Object with the passed X and y arrays split across training and test sets.
 
-        !!! info "New in version 0.4.0"
+        !!! tip "New in version 0.4.0"
 
-        !!! info "Changed in version 0.6.0"
-            Added kwargs to pass to the :class:`Dataset` constructor.
+        !!! tip "Changed in version 0.6.0"
+            Added kwargs to pass to the [Dataset][pydvl.utils.Dataset] constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
             X,
@@ -378,9 +378,9 @@ class GroupedDataset(Dataset):
                 from ``data_groups`` will be used.
             description: A textual description of the dataset
             kwargs: Additional keyword arguments to pass to the
-                :class:`Dataset` constructor.
+                [Dataset][pydvl.utils.Dataset] constructor.
 
-        !!! info "Changed in version 0.6.0"
+        !!! tip "Changed in version 0.6.0"
         Added ``group_names`` and forwarding of ``kwargs``
         """
         super().__init__(
@@ -455,7 +455,7 @@ class GroupedDataset(Dataset):
         data_groups: Optional[Sequence] = None,
         **kwargs,
     ) -> "GroupedDataset":
-        """Constructs a :class:`GroupedDataset` object from a scikit-learn bunch
+        """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from a scikit-learn bunch
         as returned by the `load_*` functions in `sklearn toy datasets
         <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_ and groups
         it.
@@ -476,7 +476,7 @@ class GroupedDataset(Dataset):
             data point. The length of this array must be equal to the number of
             data points in the dataset.
             kwargs: Additional keyword arguments to pass to the
-                :class:`Dataset` constructor.
+                [Dataset][pydvl.utils.Dataset] constructor.
 
         Returns:
             Dataset with the selected sklearn data
@@ -511,7 +511,7 @@ class GroupedDataset(Dataset):
         data_groups: Optional[Sequence] = None,
         **kwargs,
     ) -> "Dataset":
-        """Constructs a :class:`GroupedDataset` object from X and y numpy arrays
+        """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from X and y numpy arrays
         as returned by the `make_*` functions in `sklearn generated datasets
         <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
 
@@ -532,10 +532,10 @@ class GroupedDataset(Dataset):
         Returns:
             Dataset with the passed X and y arrays split across training and test sets.
 
-        !!! info "New in version 0.4.0"
+        !!! tip "New in version 0.4.0"
 
-        !!! info "Changed in version 0.6.0"
-            Added kwargs to pass to the :class:`Dataset` constructor.
+        !!! tip "Changed in version 0.6.0"
+            Added kwargs to pass to the [Dataset][pydvl.utils.Dataset] constructor.
         """
         if data_groups is None:
             raise ValueError(
@@ -558,8 +558,8 @@ class GroupedDataset(Dataset):
     def from_dataset(
         cls, dataset: Dataset, data_groups: Sequence[Any]
     ) -> "GroupedDataset":
-        """Creates a :class:`GroupedDataset` object from the data a
-        :class:`Dataset` object and a mapping of data groups.
+        """Creates a [GroupedDataset][pydvl.utils.GroupedDataset] object from the data a
+        [Dataset][pydvl.utils.Dataset] object and a mapping of data groups.
 
         Args:
             dataset: The original data.
@@ -568,8 +568,8 @@ class GroupedDataset(Dataset):
                 data points in the dataset.
 
         Returns:
-            A :class:`GroupedDataset` with the initial :class:`Dataset` grouped
-                by data_groups.
+            A [GroupedDataset][pydvl.utils.GroupedDataset] with the initial
+                [Dataset][pydvl.utils.Dataset] grouped by data_groups.
         """
         return cls(
             x_train=dataset.x_train,
