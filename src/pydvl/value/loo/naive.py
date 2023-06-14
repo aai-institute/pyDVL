@@ -12,6 +12,7 @@ def naive_loo(u: Utility, *, progress: bool = True) -> ValuationResult:
 
     $$v(i) = u(D) - u(D \setminus \{i\}) $$
 
+    Args:
         u: Utility object with model, data, and scoring function
         progress: If True, display a progress bar
     Returns:

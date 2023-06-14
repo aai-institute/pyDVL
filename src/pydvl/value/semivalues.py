@@ -76,8 +76,9 @@ class SVCoefficient(Protocol):
     def __call__(self, n: int, k: int) -> float:
         """Computes the coefficient for a given subset size.
 
-        n: Total number of elements in the set.
-        k: Size of the subset for which the coefficient is being computed
+        Args:
+            n: Total number of elements in the set.
+            k: Size of the subset for which the coefficient is being computed
         """
         ...
 
@@ -94,6 +95,7 @@ def _semivalues(
     r"""Serial computation of semi-values. This is a helper function for
     :func:`semivalues`.
 
+    Args:
         sampler: The subset sampler to use for utility computations.
         u: Utility object with model, data, and scoring function.
         coefficient: The semivalue coefficient
@@ -136,13 +138,14 @@ def semivalues(
     """
     Computes semi-values for a given utility function and subset sampler.
 
+    Args:
         sampler: The subset sampler to use for utility computations.
         u: Utility object with model, data, and scoring function.
         coefficient: The semi-value coefficient
         done: Stopping criterion.
         n_jobs: Number of parallel jobs to use.
         config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
+            address, number of cpus, etc.
         progress: Whether to display progress bars for each job.
     Returns:
         Object with the results.
@@ -221,15 +224,15 @@ def compute_semivalues(
     - [SemiValueMode.Banzhaf][SemiValueMode.Banzhaf]: Implements the Banzhaf semi-value as
         introduced in :footcite:t:`wang_data_2022`.
 
+    Args:
         u: Utility object with model, data, and scoring function.
         done: Stopping criterion.
-        mode: The semi-value mode to use. See :class:`SemiValueMode` for a
-        list.
+        mode: The semi-value mode to use. See :class:`SemiValueMode` for a list.
         sampler_t: The sampler type to use. See [sampler][pydvl.value.sampler]
-        for a list.
+            for a list.
         n_jobs: Number of parallel jobs to use.
         kwargs: Additional keyword arguments passed to
-        [semivalues()][pydvl.value.semivalues.semivalues].
+            [semivalues()][pydvl.value.semivalues.semivalues].
     """
     sampler_instance = sampler_t(u.data.indices)
     if mode == SemiValueMode.Shapley:

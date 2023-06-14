@@ -25,12 +25,15 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     of calls to the utility function to a constant number per index, thus
     reducing computation time to $O(n)$.
 
+    Args:
         u: Utility with a KNN model to extract parameters from. The object
-        will not be modified nor used other than to call `get_params()
-        <https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params>`_
+            will not be modified nor used other than to call `get_params()
+            <https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params>`_
         progress: Whether to display a progress bar.
+
     Returns:
         Object with the data values.
+
     :raises TypeError: If the model in the utility is not a `KNeighborsClassifier
         <https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html>`_
 

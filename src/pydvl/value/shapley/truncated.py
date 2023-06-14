@@ -55,10 +55,12 @@ class TruncationPolicy(abc.ABC):
     def __call__(self, idx: int, score: float) -> bool:
         """Check whether the computation should be interrupted.
 
+        Args:
             idx: Position in the permutation currently being computed.
             score: Last utility computed.
+
         Returns:
-     ``True`` if the computation should be interrupted.
+            ``True`` if the computation should be interrupted.
         """
         ret = self._check(idx, score)
         self.n_calls += 1
@@ -104,9 +106,10 @@ class RelativeTruncation(TruncationPolicy):
 
     This is called "performance tolerance" in :footcite:t:`ghorbani_data_2019`.
 
+    Args:
         u: Utility object with model, data, and scoring function
         rtol: Relative tolerance. The permutation is broken if the
-        last computed utility is less than ``total_utility * rtol``.
+            last computed utility is less than ``total_utility * rtol``.
     """
 
     def __init__(self, u: Utility, rtol: float):
@@ -126,9 +129,10 @@ class BootstrapTruncation(TruncationPolicy):
     """Break a permutation if the last computed utility is close to the total
     utility, measured as a multiple of the standard deviation of the utilities.
 
+    Args:
         u: Utility object with model, data, and scoring function
         n_samples: Number of bootstrap samples to use to compute the variance
-        of the utilities.
+            of the utilities.
         sigmas: Number of standard deviations to use as a threshold.
     """
 
@@ -225,22 +229,22 @@ def truncated_montecarlo_shapley(
     We keep sampling permutations and updating all shapley values
     until the :class:`StoppingCriterion` returns ``True``.
 
+    Args:
         u: Utility object with model, data, and scoring function
-        done: Check on the results which decides when to stop
-        sampling permutations.
-        truncation: callable that decides whether to stop computing
-        marginals for a given permutation.
-        config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
-        n_jobs: Number of permutation monte carlo jobs
-        to run concurrently.
+        done: Check on the results which decides when to stop sampling
+            permutations.
+        truncation: callable that decides whether to stop computing marginals
+            for a given permutation.
+        config: Object configuring parallel computation, with cluster address,
+            number of cpus, etc.
+        n_jobs: Number of permutation monte carlo jobs to run concurrently.
         coordinator_update_period: in seconds. How often to check the
-        accumulated results from the workers for convergence.
-        worker_update_period: interval in seconds between different
-        updates to and from the coordinator
-    Returns:
-     Object with the data values.
+            accumulated results from the workers for convergence.
+        worker_update_period: interval in seconds between different updates to
+            and from the coordinator
 
+    Returns:
+        Object with the data values.
     """
     algorithm = "truncated_montecarlo_shapley"
 

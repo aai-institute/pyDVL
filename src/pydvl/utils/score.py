@@ -35,18 +35,18 @@ class Scorer:
     """A scoring callable that takes a model, data, and labels and returns a
     scalar.
 
+    Args:
         scoring: Either a string or callable that can be passed to
-        `get_scorer
-        <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.get_scorer.html>`_.
+            `get_scorer <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.get_scorer.html>`_.
         default: score to be used when a model cannot be fit, e.g. when too
-        little data is passed, or errors arise.
+            little data is passed, or errors arise.
         range: numerical range of the score function. Some Monte Carlo
-        methods can use this to estimate the number of samples required for a
-        certain quality of approximation. If not provided, it can be read from
-        the ``scoring`` object if it provides it, for instance if it was
-        constructed with [compose_score()][pydvl.utils.types.compose_score].
+            methods can use this to estimate the number of samples required for a
+            certain quality of approximation. If not provided, it can be read from
+            the ``scoring`` object if it provides it, for instance if it was
+            constructed with [compose_score()][pydvl.utils.types.compose_score].
         name: The name of the scorer. If not provided, the name of the
-        function passed will be used.
+            function passed will be used.
 
     !!! version-added 0.5.0
 
@@ -92,16 +92,18 @@ def compose_score(
     Useful to squash unbounded scores into ranges manageable by data valuation
     methods.
 
-    .. code-block:: python
-       :caption: Example usage
+    Example:
 
-       sigmoid = lambda x: 1/(1+np.exp(-x))
-       compose_score(Scorer("r2"), sigmoid, range=(0,1), name="squashed r2")
+    ```python
+    sigmoid = lambda x: 1/(1+np.exp(-x))
+    compose_score(Scorer("r2"), sigmoid, range=(0,1), name="squashed r2")
+    ```
 
+    Args:
         scorer: The object to be composed.
         transformation: A scalar transformation
         range: The range of the transformation. This will be used e.g. by
-        :class:`~pydvl.utils.utility.Utility` for the range of the composed.
+            :class:`~pydvl.utils.utility.Utility` for the range of the composed.
         name: A string representation for the composition, for `str()`.
     Returns:
         The composite :class:`Scorer`.

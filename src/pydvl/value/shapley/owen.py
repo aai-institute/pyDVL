@@ -39,14 +39,16 @@ def _owen_sampling_shapley(
         We might want to try better quadrature rules like Gauss or Rombert or
         use Monte Carlo for the double integral.
 
+    Args:
         indices: Indices to compute the value for
         u: Utility object with model, data, and scoring function
         method: Either [Full][OwenAlgorithm.Full] for $q \in [0,1]$ or
-        [Halved][OwenAlgorithm.Halved] for $q \in [0,0.5]$ and correlated samples
+            [Halved][OwenAlgorithm.Halved] for $q \in [0,0.5]$ and correlated samples
         n_samples: Number of subsets to sample to estimate the integrand
         max_q: number of subdivisions for the integration over $q$
         progress: Whether to display progress bars for each job
         job_id: For positioning of the progress bar
+
     Returns:
         Object with the data values, errors.
     """
@@ -126,19 +128,21 @@ def owen_sampling_shapley(
     !!! Note
        The outer integration could be done instead with a quadrature rule.
 
+    Args:
         u: :class:`~pydvl.utils.utility.Utility` object holding data, model
-        and scoring function.
+            and scoring function.
         n_samples: Numer of sets to sample for each value of q
         max_q: Number of subdivisions for q ∈ [0,1] (the element sampling
-        probability) used to approximate the outer integral.
+            probability) used to approximate the outer integral.
         method: Selects the algorithm to use, see the description. Either
-        [Full][OwenAlgorithm.Full] for $q \in [0,1]$ or
-        [Halved][OwenAlgorithm.Halved] for $q \in [0,0.5]$ and correlated samples
+            [Full][OwenAlgorithm.Full] for $q \in [0,1]$ or
+            [Halved][OwenAlgorithm.Halved] for $q \in [0,0.5]$ and correlated samples
         n_jobs: Number of parallel jobs to use. Each worker receives a chunk
-        of the total of `max_q` values for q.
-        config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
+            of the total of `max_q` values for q.
+        config: Object configuring parallel computation, with cluster address,
+            number of cpus, etc.
         progress: Whether to display progress bars for each job.
+
     Returns:
         Object with the data values.
 

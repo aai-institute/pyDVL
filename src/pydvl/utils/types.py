@@ -37,7 +37,7 @@ def maybe_add_argument(fun: Callable, new_arg: str):
 
         fun: The function to wrap
         new_arg: The name of the argument that the new function will accept
-        (and ignore).
+            (and ignore).
     Returns:
         A new function accepting one more keyword argument.
     """

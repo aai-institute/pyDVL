@@ -82,28 +82,29 @@ class MapReduceJob(Generic[T, R]):
     Typing information for objects of this class requires the type of the inputs
     that are split for ``map_func`` and the type of its output.
 
+    Args:
         inputs: The input that will be split and passed to `map_func`.
-        if it's not a sequence object. It will be repeat ``n_jobs`` number of times.
+            if it's not a sequence object. It will be repeat ``n_jobs`` number of times.
         map_func: Function that will be applied to the input chunks in each job.
         reduce_func: Function that will be applied to the results of
-        ``map_func`` to reduce them.
+            ``map_func`` to reduce them.
         map_kwargs: Keyword arguments that will be passed to ``map_func`` in
-        each job. Alternatively, one can use ``itertools.partial``.
+            each job. Alternatively, one can use ``itertools.partial``.
         reduce_kwargs: Keyword arguments that will be passed to ``reduce_func``
-        in each job. Alternatively, one can use [itertools.partial][].
+            in each job. Alternatively, one can use [itertools.partial][].
         config: Instance of :class:`~pydvl.utils.config.ParallelConfig`
-        with cluster address, number of cpus, etc.
+            with cluster address, number of cpus, etc.
         n_jobs: Number of parallel jobs to run. Does not accept 0
         timeout: Amount of time in seconds to wait for remote results before
-        ... TODO
+            ... TODO
         max_parallel_tasks: Maximum number of jobs to start in parallel. Any
-        tasks above this number won't be submitted to the backend before some
-        are done. This is to avoid swamping the work queue. Note that tasks have
-        a low memory footprint, so this is probably not a big concern, except
-        in the case of an infinite stream (not the case for MapReduceJob). See
-        https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html
+            tasks above this number won't be submitted to the backend before some
+            are done. This is to avoid swamping the work queue. Note that tasks have
+            a low memory footprint, so this is probably not a big concern, except
+            in the case of an infinite stream (not the case for MapReduceJob). See
+            the [ray docs](https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html)
 
-    :Examples:
+    Examples:
 
     A simple usage example with 2 jobs:
 
@@ -222,11 +223,12 @@ class MapReduceJob(Generic[T, R]):
         """Wraps a function with a timeout and remote arguments and puts it on
         the remote backend.
 
+        Args:
             func: Function to wrap
             kwargs: Additional keyword arguments to pass to the backend
             wrapper. These are *not* arguments for the wrapped function.
         Returns:
-        Remote function that can be called with the same arguments as
+            Remote function that can be called with the same arguments as
             the wrapped function. Depending on the backend, this may simply be
             the function itself.
         """
@@ -237,11 +239,12 @@ class MapReduceJob(Generic[T, R]):
     def _backpressure(
         self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int
     ) -> int:
-        """This is used to limit the number of concurrent tasks.
-        If [max_parallel_tasks][pydvl.utils.parallel.map_reduce.MapReduceJob.max_parallel_tasks] is None then this function
-        is a no-op that simply returns 0.
+        """Used to limit the number of concurrent tasks.
+        If [max_parallel_tasks][pydvl.utils.parallel.map_reduce.MapReduceJob.max_parallel_tasks]
+        is None then this function is a no-op that simply returns 0.
 
-        See https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html
+        See [ray's documentation](https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html)
+        Args:
             jobs:
             n_dispatched:
             n_finished:

@@ -57,6 +57,7 @@ def maybe_progress(
     """Returns either a tqdm progress bar or a mock object which wraps the
     iterator as well, but ignores any accesses to methods or properties.
 
+    Args:
         it: the iterator to wrap
         display: set to True to return a tqdm bar
         kwargs: Keyword arguments that will be forwarded to tqdm

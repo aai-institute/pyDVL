@@ -57,19 +57,20 @@ class Dataset:
     ):
         """Constructs a Dataset from data and labels.
 
-        x_train: training data
-        y_train: labels for training data
-        x_test: test data
-        y_test: labels for test data
-        feature_names: name of the features of input data
-        target_names: names of the features of target data
-        data_names: names assigned to data points.
-        For example, if the dataset is a time series, each entry can be a
-        timestamp which can be referenced directly instead of using a row
-        number.
-        description: A textual description of the dataset.
-        is_multi_output: set to ``False`` if labels are scalars, or to
-        ``True`` if they are vectors of dimension > 1.
+        Args:
+            x_train: training data
+            y_train: labels for training data
+            x_test: test data
+            y_test: labels for test data
+            feature_names: name of the features of input data
+            target_names: names of the features of target data
+            data_names: names assigned to data points.
+                For example, if the dataset is a time series, each entry can be a
+                timestamp which can be referenced directly instead of using a row
+                number.
+            description: A textual description of the dataset.
+            is_multi_output: set to ``False`` if labels are scalars, or to
+                ``True`` if they are vectors of dimension > 1.
         """
         self.x_train, self.y_train = check_X_y(
             x_train, y_train, multi_output=is_multi_output
@@ -149,9 +150,9 @@ class Dataset:
         subsets of the data from indices. It is typically **not needed in
         algorithms**.
 
-            indices: Optional indices that will be used to select points
-            from the training data. If ``None``, the entire training data will
-            be returned.
+        Args:
+            indices: Optional indices that will be used to select points from the
+                    training data. If ``None``, the entire training data will be returned.
         Returns:
             If ``indices`` is not ``None``, the selected x and y arrays
             from the training data. Otherwise, the entire dataset.
@@ -202,12 +203,11 @@ class Dataset:
             >>> _ = dataset.get_training_data(indices)
             >>> _ = dataset.get_test_data(indices)
 
-
-            indices: Optional indices into the test data. This argument
-            is unused and is left as is to keep the same interface as
-            :meth:`Dataset.get_training_data`.
+        Args:
+            indices: Optional indices into the test data. This argument is
+                unused left for compatibility with :meth:`Dataset.get_training_data`.
         Returns:
-        The entire test data.
+            The entire test data.
         """
         return self.x_test, self.y_test
 
@@ -255,27 +255,24 @@ class Dataset:
     ) -> "Dataset":
         """Constructs a :class:`Dataset` object from an
         :class:`sklearn.utils.Bunch`, as returned by the `load_*` functions in
-        `sklearn toy datasets
-        <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_.
+        `sklearn toy datasets <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_.
 
+        Args:
             data: sklearn dataset. The following attributes are supported
-            - ``data``: covariates [required]
-            - ``target``: target variables (labels) [required]
-            - ``feature_names``: the feature names
-            - ``target_names``: the target names
-            - ``DESCR``: a description
-            train_size: size of the training dataset. Used in
-            `train_test_split`
+                - ``data``: covariates [required]
+                - ``target``: target variables (labels) [required]
+                - ``feature_names``: the feature names
+                - ``target_names``: the target names
+                - ``DESCR``: a description
+            train_size: size of the training dataset. Used in `train_test_split`
             random_state: seed for train / test split
             stratify_by_target: If `True`, data is split in a stratified
-            fashion, using the target variable as labels. Read more in
-            `scikit-learn's user guide
-            <https://scikit-learn.org/stable/modules/cross_validation.html
-            #stratification>`.
+                fashion, using the target variable as labels. Read more in
+                [scikit-learn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             kwargs: Additional keyword arguments to pass to the
-            :class:`Dataset` constructor. Use this to pass e.g. ``is_multi_output``.
+                :class:`Dataset` constructor. Use this to pass e.g. ``is_multi_output``.
         Returns:
-        Object with the sklearn dataset
+            Object with the sklearn dataset
 
         !!! version-changed 0.6.0
            Added kwargs to pass to the :class:`Dataset` constructor.
@@ -309,25 +306,21 @@ class Dataset:
         **kwargs,
     ) -> "Dataset":
         """Constructs a :class:`Dataset` object from X and y numpy arrays  as
-        returned by the `make_*` functions in `sklearn generated datasets
-        <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
+        returned by the `make_*` functions in [sklearn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
 
+        Args:
             X: numpy array of shape (n_samples, n_features)
             y: numpy array of shape (n_samples,)
-            train_size: size of the training dataset. Used in
-            `train_test_split`
+            train_size: size of the training dataset. Used in `train_test_split`
             random_state: seed for train / test split
-            stratify_by_target: If `True`, data is split in a stratified
-            fashion, using the y variable as labels. Read more in
-            `sklearn's user guide
-            <https://scikit-learn.org/stable/modules/cross_validation.html
-            #stratification>`.
+            stratify_by_target: If `True`, data is split in a stratified fashion,
+                using the y variable as labels. Read more in [sklearn's user
+                guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             kwargs: Additional keyword arguments to pass to the
-            :class:`Dataset` constructor. Use this to pass e.g. ``feature_names``
-            or ``target_names``.
+                :class:`Dataset` constructor. Use this to pass e.g. ``feature_names``
+                or ``target_names``.
         Returns:
-        Object with the passed X and y arrays split across training
-            and test sets.
+            Object with the passed X and y arrays split across training and test sets.
 
         !!! version-added 0.4.0
 
@@ -364,22 +357,23 @@ class GroupedDataset(Dataset):
         as logical units. For instance, one can group by value of a categorical
         feature, by bin into which a continuous feature falls, or by label.
 
+        Args:
             x_train: training data
             y_train: labels of training data
             x_test: test data
             y_test: labels of test data
             data_groups: Iterable of the same length as ``x_train`` containing
-            a group label for each training data point. The label can be of any
-            type, e.g. ``str`` or ``int``. Data points with the same label will
-            then be grouped by this object and considered as one for effects of
-            valuation.
+                a group label for each training data point. The label can be of any
+                type, e.g. ``str`` or ``int``. Data points with the same label will
+                then be grouped by this object and considered as one for effects of
+                valuation.
             feature_names: names of the covariates' features.
             target_names: names of the labels or targets y
             group_names: names of the groups. If not provided, the labels
-            from ``data_groups`` will be used.
+                from ``data_groups`` will be used.
             description: A textual description of the dataset
             kwargs: Additional keyword arguments to pass to the
-            :class:`Dataset` constructor.
+                :class:`Dataset` constructor.
 
         !!! version-changed 0.6.0
            Added ``group_names`` and forwarding of ``kwargs``
@@ -432,10 +426,11 @@ class GroupedDataset(Dataset):
     ) -> Tuple[NDArray, NDArray]:
         """Returns the data and labels of all samples in the given groups.
 
+        Args:
             indices: group indices whose elements to return. If ``None``,
             all data from all groups are returned.
         Returns:
-        Tuple of training data x and labels y.
+            Tuple of training data x and labels y.
         """
         if indices is None:
             indices = self.indices
@@ -459,27 +454,25 @@ class GroupedDataset(Dataset):
         <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_ and groups
         it.
 
+        Args:
             data: sklearn dataset. The following attributes are supported
-            - ``data``: covariates [required]
-            - ``target``: target variables (labels) [required]
-            - ``feature_names``: the feature names
-            - ``target_names``: the target names
-            - ``DESCR``: a description
-            train_size: size of the training dataset. Used in
-            `train_test_split`.
+                - ``data``: covariates [required]
+                - ``target``: target variables (labels) [required]
+                - ``feature_names``: the feature names
+                - ``target_names``: the target names
+                - ``DESCR``: a description
+            train_size: size of the training dataset. Used in `train_test_split`.
             random_state: seed for train / test split.
             stratify_by_target: If ``True``, data is split in a stratified
-            fashion, using the target variable as labels. Read more in
-            `sklearn's user guide
-            <https://scikit-learn.org/stable/modules/cross_validation.html
-            #stratification>`.
+                fashion, using the target variable as labels. Read more in
+                `sklearn's user guide <https://scikit-learn.org/stable/modules/cross_validation.html#stratification>`.
             data_groups: an array holding the group index or name for each
             data point. The length of this array must be equal to the number of
             data points in the dataset.
             kwargs: Additional keyword arguments to pass to the
-            :class:`Dataset` constructor.
+                :class:`Dataset` constructor.
         Returns:
-        Dataset with the selected sklearn data
+            Dataset with the selected sklearn data
         """
         if data_groups is None:
             raise ValueError(
@@ -515,24 +508,22 @@ class GroupedDataset(Dataset):
         as returned by the `make_*` functions in `sklearn generated datasets
         <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
 
+        Args:
             X: array of shape (n_samples, n_features)
             y: array of shape (n_samples,)
-            train_size: size of the training dataset. Used in
-            ``train_test_split``.
+            train_size: size of the training dataset. Used in ``train_test_split``.
             random_state: seed for train / test split.
             stratify_by_target: If ``True``, data is split in a stratified
-            fashion, using the y variable as labels. Read more in
-            `sklearn's user guide
-            <https://scikit-learn.org/stable/modules/cross_validation.html
-            #stratification>`.
+                fashion, using the y variable as labels. Read more in
+                `sklearn's user guide <https://scikit-learn.org/stable/modules/cross_validation.html#stratification>`.
             data_groups: an array holding the group index or name for each
-            data point. The length of this array must be equal to the number of
-            data points in the dataset.
+                data point. The length of this array must be equal to the number of
+                data points in the dataset.
             kwargs: Additional keyword arguments that will be passed
-            to the :class:`~pydvl.utils.dataset.Dataset` constructor.
+                to the :class:`~pydvl.utils.dataset.Dataset` constructor.
 
         Returns:
-        Dataset with the passed X and y arrays split across training
+            Dataset with the passed X and y arrays split across training
             and test sets.
 
         !!! version-added 0.4.0
@@ -564,12 +555,13 @@ class GroupedDataset(Dataset):
         """Creates a :class:`GroupedDataset` object from the data a
         :class:`Dataset` object and a mapping of data groups.
 
+        Args:
             dataset: The original data.
-            data_groups: An array holding the group index or name for each
-            data point. The length of this array must be equal to the number of
-            data points in the dataset.
+            data_groups: An array holding the group index or name for each data
+                point. The length of this array must be equal to the number of
+                data points in the dataset.
         Returns:
-        A :class:`GroupedDataset` with the initial :class:`Dataset`
+            A :class:`GroupedDataset` with the initial :class:`Dataset`
             grouped by data_groups.
         """
         return cls(
@@ -598,6 +590,7 @@ def load_spotify_dataset(
     If this method is called within the CI pipeline, it will load a reduced
     version of the dataset for testing purposes.
 
+    Args:
         val_size: size of the validation set
         test_size: size of the test set
         min_year: minimum year of the returned data
@@ -634,6 +627,7 @@ def load_wine_dataset(
     """Loads the sklearn wine dataset. More info can be found at
     https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset.
 
+    Args:
         train_size: fraction of points used for training dataset
         test_size: fraction of points used for test dataset
         random_state: fix random seed. If None, no random seed is set.
@@ -692,6 +686,7 @@ def synthetic_classification_dataset(
 ) -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Tuple[Any, Any]]:
     """Sample from a uniform Gaussian mixture model.
 
+    Args:
         mus: 2d-matrix [CxD] with the means of the components in the rows.
         sigma: Standard deviation of each dimension of each component.
         num_samples: The number of samples to generate.
@@ -726,8 +721,10 @@ def synthetic_classification_dataset(
 def decision_boundary_fixed_variance_2d(
     mu_1: np.ndarray, mu_2: np.ndarray
 ) -> Callable[[np.ndarray], np.ndarray]:
-    """
-    Closed-form solution for decision boundary dot(a, b) + b = 0 with fixed variance.
+    """ Closed-form solution for decision boundary dot(a, b) + b = 0 with fixed
+    variance.
+
+    Args:
         mu_1: First mean.
         mu_2: Second mean.
     Returns:

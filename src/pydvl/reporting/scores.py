@@ -20,6 +20,7 @@ def compute_removal_score(
     r"""Fits model and computes score on the test set after incrementally removing
     a percentage of data points from the training set, based on their values.
 
+    Args:
         u: Utility object with model, data, and scoring function.
         values: Data values of data instances in the training set.
         percentages: Sequence of removal percentages.

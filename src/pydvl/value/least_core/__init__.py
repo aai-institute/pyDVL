@@ -62,15 +62,15 @@ def compute_least_core_values(
     - ``montecarlo``:  uses the approximate Monte Carlo Least Core algorithm.
       Implemented in [montecarlo_least_core()][pydvl.value.least_core.montecarlo.montecarlo_least_core].
 
+    Args:
         u: Utility object with model, data, and scoring function
         n_jobs: Number of jobs to run in parallel. Only used for Monte Carlo
-        Least Core.
+            Least Core.
         n_iterations: Number of subsets to sample and evaluate the utility on.
-        Only used for Monte Carlo Least Core.
-        mode: Algorithm to use. See :class:`LeastCoreMode` for available
-        options.
+            Only used for Monte Carlo Least Core.
+        mode: Algorithm to use. See :class:`LeastCoreMode` for available options.
         non_negative_subsidy: If True, the least core subsidy $e$ is constrained
-        to be non-negative.
+            to be non-negative.
         solver_options: Optional dictionary of options passed to the solvers.
 
     Returns:

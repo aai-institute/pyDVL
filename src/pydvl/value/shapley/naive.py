@@ -25,8 +25,10 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
     simple use cases. Please refer to the :mod:`Monte Carlo
     <pydvl.value.shapley.montecarlo>` approximations for practical applications.
 
+    Args:
         u: Utility object with model, data, and scoring function
         progress: Whether to display progress bars for each job.
+
     Returns:
         Object with the data values.
     """
@@ -102,11 +104,13 @@ def combinatorial_exact_shapley(
        [Monte Carlo][pydvl.value.shapley.montecarlo] approximations for practical
        applications.
 
+    Args:
         u: Utility object with model, data, and scoring function
         n_jobs: Number of parallel jobs to use
         config: Object configuring parallel computation, with cluster address,
-        number of cpus, etc.
+            number of cpus, etc.
         progress: Whether to display progress bars for each job.
+
     Returns:
         Object with the data values.
     """

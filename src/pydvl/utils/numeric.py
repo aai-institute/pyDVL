@@ -38,10 +38,10 @@ def powerset(s: NDArray[T]) -> Iterator[Collection[T]]:
     >>> list(powerset(np.array((1,2))))
     [(), (1,), (2,), (1, 2)]
 
+    Args:
          s: The set to use
      Returns:
         An iterator
-     :raises TypeError: If the argument is not an ``Iterable``.
     """
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
@@ -54,6 +54,7 @@ def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) 
     be ε-close to the true quantity, if at least this many permutations are
     sampled.
 
+    Args:
         eps: ε > 0
         delta: 0 < δ <= 1
         u_range: Range of the :class:`~pydvl.utils.utility.Utility` function
@@ -67,9 +68,10 @@ def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) 
 def random_subset(s: NDArray[T], q: float = 0.5) -> NDArray[T]:
     """Returns one subset at random from ``s``.
 
+    Args:
         s: set to sample from
         q: Sampling probability for elements. The default 0.5 yields a
-        uniform distribution over the power set of s.
+            uniform distribution over the power set of s.
     Returns:
         the subset
     """
@@ -92,20 +94,19 @@ def random_powerset(
     :func:`Owen sampling
     <pydvl.value.shapley.montecarlo.owen_sampling_shapley>`.
 
+    Args:
         s: set to sample from
         n_samples: if set, stop the generator after this many steps.
-        Defaults to `np.iinfo(np.int32).max`
+            Defaults to `np.iinfo(np.int32).max`
         q: Sampling probability for elements. The default 0.5 yields a
-        uniform distribution over the power set of s.
+            uniform distribution over the power set of s.
 
     Returns:
         Samples from the power set of s
-    :raises: TypeError: if the data `s` is not a NumPy array
+
     :raises: ValueError: if the element sampling probability is not in [0,1]
 
     """
-    if not isinstance(s, np.ndarray):
-        raise TypeError("Set must be an NDArray")
     if q < 0 or q > 1:
         raise ValueError("Element sampling probability must be in [0,1]")
 
@@ -121,10 +122,12 @@ def random_subset_of_size(s: NDArray[T], size: int) -> NDArray[T]:
     """Samples a random subset of given size uniformly from the powerset
     of ``s``.
 
+    Args:
         s: Set to sample from
         size: Size of the subset to generate
     Returns:
         The subset
+
     :raises ValueError: If size > len(s)
     """
     if size > len(s):
@@ -142,6 +145,7 @@ def random_matrix_with_condition_number(n: int, condition_number: float) -> "NDA
     Also see:
     https://math.stackexchange.com/questions/1351616/condition-number-of-ata.
 
+    Args:
         n: size of the matrix
         condition_number: duh
     Returns:
@@ -173,6 +177,7 @@ def linear_regression_analytical_derivative_d_theta(
     linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
 ) -> "NDArray":
     """
+    Args:
         linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
         x: A np.ndarray of shape [BxM].
         y: A np.nparray of shape [BxN].
@@ -193,11 +198,14 @@ def linear_regression_analytical_derivative_d2_theta(
     linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
 ) -> "NDArray":
     """
-        linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
-        x: A np.ndarray of shape [BxM],
-        y: A np.nparray of shape [BxN].
+    Args:
+        linear_model: A tuple of arrays of shape [NxM] and [N] representing A
+            and b respectively.
+        x: An array of shape [BxM],
+        y: An array of shape [BxN].
     Returns:
-        A np.ndarray of shape [((N+1)*M)x((N+1)*M)], representing the Hessian. It gets averaged over all samples.
+        An array of shape [((N+1)*M)x((N+1)*M)], representing the Hessian.
+        It gets averaged over all samples.
     """
     A, b = linear_model
     n, m = tuple(A.shape)
@@ -217,6 +225,7 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
 ) -> "NDArray":
     """
+    Args:
         linear_model: A tuple of np.ndarray of shape [NxM] and [N] representing A and b respectively.
         x: A np.ndarray of shape [BxM].
         y: A np.nparray of shape [BxN].
@@ -276,7 +285,7 @@ def running_moments(
        This could be generalised to arbitrary moments. See `this paper
        <https://www.osti.gov/biblio/1028931>`_
 
-
+    Args:
         previous_avg: average value at previous step
         previous_variance: variance at previous step
         count: number of points seen so far
@@ -298,6 +307,7 @@ def top_k_value_accuracy(
     """Computes the top-k accuracy for the estimated values by comparing indices
     of the highest k values.
 
+    Args:
         y_true: Exact/true value
         y_pred: Predicted/estimated value
         k: Number of the highest values taken into account

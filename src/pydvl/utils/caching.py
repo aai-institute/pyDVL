@@ -166,27 +166,28 @@ def memcached(
 
        cached_fun = memcached(**asdict(cache_options))(heavy_computation)
 
+    Args:
         client_config: configuration for `pymemcache's Client()
-        <https://pymemcache.readthedocs.io/en/stable/apidoc/pymemcache.client.base.html>`_.
-        Will be merged on top of the default configuration (see below).
-        time_threshold: computations taking less time than this many seconds
-        are not cached.
+            <https://pymemcache.readthedocs.io/en/stable/apidoc/pymemcache.client.base.html>`_.
+            Will be merged on top of the default configuration (see below).
+        time_threshold: computations taking less time than this many seconds are
+            not cached.
         allow_repeated_evaluations: If `True`, repeated calls to a function
-        with the same arguments will be allowed and outputs averaged until the
-        running standard deviation of the mean stabilises below
-        `rtol_stderr * mean`.
-        rtol_stderr: relative tolerance for repeated evaluations. More
-        precisely, :func:`memcached` will stop evaluating the function once the
-        standard deviation of the mean is smaller than `rtol_stderr * mean`.
+            with the same arguments will be allowed and outputs averaged until the
+            running standard deviation of the mean stabilises below
+            `rtol_stderr * mean`.
+        rtol_stderr: relative tolerance for repeated evaluations. More precisely,
+            :func:`memcached` will stop evaluating the function once the
+            standard deviation of the mean is smaller than `rtol_stderr * mean`.
         min_repetitions: minimum number of times that a function evaluation
-        on the same arguments is repeated before returning cached values. Useful
-        for stochastic functions only. If the model training is very noisy, set
-        this number to higher values to reduce variance.
+            on the same arguments is repeated before returning cached values. Useful
+            for stochastic functions only. If the model training is very noisy, set
+            this number to higher values to reduce variance.
         ignore_args: Do not take these keyword arguments into account when
-        hashing the wrapped function for usage as key in memcached. This allows
-        sharing the cache among different jobs for the same experiment run if
-        the callable happens to have "nuisance" parameters like "job_id" which
-        do not affect the result of the computation.
+            hashing the wrapped function for usage as key in memcached. This allows
+            sharing the cache among different jobs for the same experiment run if
+            the callable happens to have "nuisance" parameters like "job_id" which
+            do not affect the result of the computation.
     Returns:
         A wrapped function
 

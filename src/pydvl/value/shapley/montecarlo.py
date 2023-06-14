@@ -69,14 +69,16 @@ def _permutation_montecarlo_shapley(
     :obj:`pydvl.utils.utility.Utility.data` by iterating through randomly
     sampled permutations.
 
+    Args:
         u: Utility object with model, data, and scoring function
         done: Check on the results which decides when to stop
         truncation: A callable which decides whether to interrupt
-        processing a permutation and set all subsequent marginals to zero.
+            processing a permutation and set all subsequent marginals to zero.
         algorithm_name: For the results object. Used internally by different
-        variants of Shapley using this subroutine
+            variants of Shapley using this subroutine
         progress: Whether to display progress bars for each job.
         job_id: id to use for reporting progress (e.g. to place progres bars)
+
     Returns:
         An object with the results
     """
@@ -125,15 +127,17 @@ def permutation_montecarlo_shapley(
     where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
     position where $i$ appears (see [Data valuation][computing-data-values] for details).
 
+    Args:
         u: Utility object with model, data, and scoring function.
         done: function checking whether computation must stop.
-        truncation: An optional callable which decides whether to
-        interrupt processing a permutation and set all subsequent marginals to
-        zero. Typically used to stop computation when the marginal is small.
+        truncation: An optional callable which decides whether to interrupt
+            processing a permutation and set all subsequent marginals to
+            zero. Typically used to stop computation when the marginal is small.
         n_jobs: number of jobs across which to distribute the computation.
-        config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
+        config: Object configuring parallel computation, with cluster address,
+            number of cpus, etc.
         progress: Whether to display progress bars for each job.
+
     Returns:
         Object with the data values.
     """
@@ -167,14 +171,16 @@ def _combinatorial_montecarlo_shapley(
     This is the code that is sent to workers to compute values using the
     combinatorial definition.
 
+    Args:
         indices: Indices of the samples to compute values for.
         u: Utility object with model, data, and scoring function
         done: Check on the results which decides when to stop sampling
-        subsets for an index.
+            subsets for an index.
         progress: Whether to display progress bars for each job.
         job_id: id to use for reporting progress
+
     Returns:
-        A tuple of ndarrays with estimated values and standard errors
+        The results for the indices.
     """
     n = len(u.data)
 
@@ -229,14 +235,16 @@ def combinatorial_montecarlo_shapley(
     Parallelization is done by splitting the set of indices across processes and
     computing the sum over subsets $S \subseteq N \setminus \{i\}$ separately.
 
+    Args:
         u: Utility object with model, data, and scoring function
         done: Stopping criterion for the computation.
         n_jobs: number of parallel jobs across which to distribute the
-        computation. Each worker receives a chunk of
-        [indices][pydvl.utils.dataset.Dataset.indices]
-        config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
+            computation. Each worker receives a chunk of
+            [indices][pydvl.utils.dataset.Dataset.indices]
+        config: Object configuring parallel computation, with cluster address,
+            number of cpus, etc.
         progress: Whether to display progress bars for each job.
+
     Returns:
         Object with the data values.
     """

@@ -27,18 +27,17 @@ class RayExecutor(Executor):
     It shouldn't be initialized directly. You should instead call
     [init_executor()][pydvl.utils.parallel.futures.init_executor].
 
-        max_workers: Maximum number of concurrent tasks. Each task can
-        request itself any number of vCPUs. You must ensure the product
-        of this value and the n_cpus_per_job parameter passed to submit()
-        does not exceed available cluster resources.
-        If set to None, it will default to the total number of vCPUs
-        in the ray cluster.
+        max_workers: Maximum number of concurrent tasks. Each task can request
+            itself any number of vCPUs. You must ensure the product of this
+            value and the n_cpus_per_job parameter passed to submit() does not
+            exceed available cluster resources. If set to `None`, it will
+            default to the total number of vCPUs in the ray cluster.
         config: instance of :class:`~pydvl.utils.config.ParallelConfig`
-        with cluster address, number of cpus, etc.
+            with cluster address, number of cpus, etc.
         cancel_futures_on_exit: If ``True``, all futures will be cancelled
-        when exiting the context created by using this class instance as a
-        context manager. It will be ignored when calling :meth:`shutdown`
-        directly.
+            when exiting the context created by using this class instance as a
+            context manager. It will be ignored when calling :meth:`shutdown`
+            directly.
     """
 
     def __init__(
@@ -92,13 +91,15 @@ class RayExecutor(Executor):
         Schedules the callable to be executed as fn(\*args, \**kwargs)
         and returns a Future instance representing the execution of the callable.
 
+        Args:
             fn: Callable.
             args: Positional arguments that will be passed to ``fn``.
             kwargs: Keyword arguments that will be passed to ``fn``.
-            It can also optionally contain options for the ray remote function
-            as a dictionary as the keyword argument `remote_function_options`.
+                It can also optionally contain options for the ray remote function
+                as a dictionary as the keyword argument `remote_function_options`.
         Returns:
-        A Future representing the given call.
+            A Future representing the given call.
+
         :raises RuntimeError: If a task is submitted after the executor has been shut down.
         """
         with self._shutdown_lock:
@@ -217,7 +218,7 @@ class _WorkItemManagerThread(threading.Thread):
     """Manages submitting the work items and throttling.
 
     It runs in a local thread.
-
+    Args:
         executor: An instance of RayExecutor that owns
         this thread. A weakref will be owned by the manager as well as
         references to internal objects used to introspect the state of

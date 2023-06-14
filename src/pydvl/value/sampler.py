@@ -92,12 +92,13 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
         outer_indices: NDArray[T] = None,
     ):
         """
-        indices: The set of items (indices) to sample from.
-        index_iteration: the order in which indices are iterated over
-        outer_indices: The set of items (indices) over which to iterate
-        when sampling. Subsets are taken from the complement of each index
-        in succession. For embarrassingly parallel computations, this set
-        is sliced and the samplers are used to iterate over the slices.
+        Args:
+            indices: The set of items (indices) to sample from.
+            index_iteration: the order in which indices are iterated over
+            outer_indices: The set of items (indices) over which to iterate
+                when sampling. Subsets are taken from the complement of each index
+                in succession. For embarrassingly parallel computations, this set
+                is sliced and the samplers are used to iterate over the slices.
         """
         self._indices = indices
         self._index_iteration = index_iteration
@@ -194,6 +195,7 @@ class DeterministicCombinatorialSampler(PowersetSampler[T]):
         For every index $i$, each subset of `indices - {i}` has equal
         probability $2^{n-1}$.
 
+        Args:
             indices: The set of items (indices) to sample from.
         """
         # Force sequential iteration

@@ -5,10 +5,10 @@ done in such a way that an approximation to the true Shapley values can be
 computed with guarantees.
 
 !!! Warning
-   This method is very inefficient. Potential improvements to the
-   implementation notwithstanding, convergence seems to be very slow (in terms
-   of evaluations of the utility required). We recommend other Monte Carlo
-   methods instead.
+    This method is very inefficient. Potential improvements to the
+    implementation notwithstanding, convergence seems to be very slow (in terms
+    of evaluations of the utility required). We recommend other Monte Carlo
+    methods instead.
 
 You can read more [in the documentation][computing-data-values].
 
@@ -43,6 +43,7 @@ def _constants(
     """A helper function returning the constants for the algorithm. Pretty ugly,
     yes.
 
+    Args:
         n: The number of data points.
         epsilon: The error tolerance.
         delta: The confidence level.
@@ -99,6 +100,7 @@ def num_samples_eps_delta(
     (ε/√n,δ/(N(N-1))-approximation to all pair-wise differences of Shapley
     values, wrt. $\ell_2$ norm.
 
+    Args:
         eps: ε
         delta: δ
         n: Number of data points
@@ -123,6 +125,7 @@ def _group_testing_shapley(
     Computes utilities of sets sampled using the strategy for estimating the
     differences in Shapley values.
 
+    Args:
         u: Utility object with model, data, and scoring function.
         n_samples: total number of samples (subsets) to use.
         progress: Whether to display progress bars for each job.
@@ -170,22 +173,22 @@ def group_testing_shapley(
     values can be approximated with a Monte Carlo sum. These are then used to
     solve for the individual values in a feasibility problem.
 
+    Args:
         u: Utility object with model, data, and scoring function
         n_samples: Number of tests to perform. Use
-        :func:`num_samples_eps_delta` to estimate this.
+            :func:`num_samples_eps_delta` to estimate this.
         epsilon: From the (ε,δ) sample bound. Use the same as for the
-        estimation of ``n_iterations``.
+            estimation of ``n_iterations``.
         delta: From the (ε,δ) sample bound. Use the same as for the
-        estimation of ``n_iterations``.
+            estimation of ``n_iterations``.
         n_jobs: Number of parallel jobs to use. Each worker performs a chunk
-        of all tests (i.e. utility evaluations).
+            of all tests (i.e. utility evaluations).
         config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
+            address, number of cpus, etc.
         progress: Whether to display progress bars for each job.
-        options: Additional options to pass to `cvxpy.Problem.solve()
-        <https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options>`_.
-        E.g. to change the solver (which defaults to `cvxpy.SCS`) pass
-        `solver=cvxpy.CVXOPT`.
+        options: Additional options to pass to [cvxpy.Problem.solve()](https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options).
+            E.g. to change the solver (which defaults to `cvxpy.SCS`) pass
+            `solver=cvxpy.CVXOPT`.
 
     Returns:
         Object with the data values.

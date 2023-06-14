@@ -97,6 +97,7 @@ class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
     It shouldn't be initialized directly. You should instead call
     [init_parallel_backend()][pydvl.utils.parallel.backend.init_parallel_backend].
 
+    Args:
         config: instance of :class:`~pydvl.utils.config.ParallelConfig` with number of cpus
     """
 
@@ -128,6 +129,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     It shouldn't be initialized directly. You should instead call
     [init_parallel_backend()][pydvl.utils.parallel.backend.init_parallel_backend].
 
+    Args:
         config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
         cluster address, number of cpus, etc.
     """
@@ -165,11 +167,12 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     def wrap(self, fun: Callable, **kwargs) -> Callable:
         """Wraps a function as a ray remote.
 
+        Args:
             fun: the function to wrap
             kwargs: keyword arguments to pass to @ray.remote
 
         Returns:
-        The `.remote` method of the ray `RemoteFunction`.
+            The `.remote` method of the ray `RemoteFunction`.
         """
         if len(kwargs) > 0:
             return ray.remote(**kwargs)(fun).remote  # type: ignore
@@ -203,8 +206,9 @@ def init_parallel_backend(
 ) -> BaseParallelBackend:
     """Initializes the parallel backend and returns an instance of it.
 
+    Args:
         config: instance of :class:`~pydvl.utils.config.ParallelConfig`
-        with cluster address, number of cpus, etc.
+            with cluster address, number of cpus, etc.
 
     :Example:
 
@@ -244,12 +248,14 @@ def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> 
     This number may vary depending on the parallel backend and the resources
     available.
 
+    Args:
         n_jobs: the number of jobs requested. If -1, the number of available
-        CPUs is returned.
+            CPUs is returned.
         config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
-        cluster address, number of cpus, etc.
+            cluster address, number of cpus, etc.
     Returns:
-        the effective number of jobs, guaranteed to be >= 1.
+        The effective number of jobs, guaranteed to be >= 1.
+
     :raises RuntimeError: if the effective number of jobs returned by the backend
         is < 1.
     """

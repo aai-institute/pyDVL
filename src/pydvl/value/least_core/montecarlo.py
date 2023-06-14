@@ -47,18 +47,22 @@ def montecarlo_least_core(
     * $m$ is the number of subsets that will be sampled and whose utility will
       be computed and used to compute the data values.
 
+    Args:
         u: Utility object with model, data, and scoring function
         n_iterations: total number of iterations to use
         n_jobs: number of jobs across which to distribute the computation
         config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
+            address, number of cpus, etc.
         non_negative_subsidy: If True, the least core subsidy $e$ is constrained
-        to be non-negative.
+            to be non-negative.
         solver_options: Dictionary of options that will be used to select a solver
-        and to configure it. Refer to the following page for all possible options:
-        https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
-        options: (Deprecated) Dictionary of solver options. Use solver_options instead.
+            and to configure it. Refer to [cvxpy's
+            documentation](https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options)
+            for all possible options.
+        options: (Deprecated) Dictionary of solver options. Use solver_options
+            instead.
         progress: If True, shows a tqdm progress bar
+
     Returns:
         Object with the data values and the least core value.
     """
@@ -139,6 +143,7 @@ def _montecarlo_least_core(
 ) -> LeastCoreProblem:
     """Computes utility values and the Least Core upper bound matrix for a given number of iterations.
 
+    Args:
         u: Utility object with model, data, and scoring function
         n_iterations: total number of iterations to use
         progress: If True, shows a tqdm progress bar

@@ -42,13 +42,16 @@ def exact_least_core(
 
     Where $N = \{1, 2, \dots, n\}$ are the training set's indices.
 
+    Args:
         u: Utility object with model, data, and scoring function
-        non_negative_subsidy: If True, the least core subsidy $e$ is constrained
-        to be non-negative.
+            non_negative_subsidy: If True, the least core subsidy $e$ is constrained
+            to be non-negative.
         solver_options: Dictionary of options that will be used to select a solver
-        and to configure it. Refer to the following page for all possible options:
-        https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options
-        options: (Deprecated) Dictionary of solver options. Use solver_options instead.
+            and to configure it. Refer to the [cvxpy's
+            documentation](https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options)
+            for all possible options.
+        options: (Deprecated) Dictionary of solver options. Use `solver_options`
+            instead.
         progress: If True, shows a tqdm progress bar
 
     Returns:

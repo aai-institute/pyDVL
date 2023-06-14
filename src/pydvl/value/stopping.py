@@ -95,6 +95,7 @@ class StoppingCriterion(abc.ABC):
     :meth:`completion` should be overridden to provide an overall completion
     value, since the default implementation returns the mean of :attr:`converged`.
 
+    Args:
         modify_result: If ``True`` the status of the input
         :class:`~pydvl.value.result.ValuationResult` is modified in place after
         the call.
@@ -180,14 +181,15 @@ def make_criterion(
     """Create a new :class:`StoppingCriterion` from a function.
     Use this to enable simpler functions to be composed with bitwise operators
 
+    Args:
         fun: The callable to wrap.
         converged: A callable that returns a boolean array indicating what
-        values have converged.
+            values have converged.
         completion: A callable that returns a value between 0 and 1 indicating
-        the rate of completion of the computation. If not provided, the fraction
-        of converged values is used.
+            the rate of completion of the computation. If not provided, the fraction
+            of converged values is used.
         name: The name of the new criterion. If ``None``, the ``__name__`` of
-        the function is used.
+            the function is used.
     Returns:
         A new subclass of :class:`StoppingCriterion`.
     """
@@ -225,20 +227,21 @@ class AbsoluteStandardError(StoppingCriterion):
     criterion returns [Converged][pydvl.utils.status.Status.Converged] if
     $s_i < \epsilon$ for all $i$ and a threshold value $\epsilon \gt 0$.
 
+    Args:
         threshold: A value is considered to have converged if the standard
-        error is below this value. A way of choosing it is to pick some
-        percentage of the range of the values. For Shapley values this is the
-        difference between the maximum and minimum of the utility function (to
-        see this substitute the maximum and minimum values of the utility into
-        the marginal contribution formula).
+            error is below this value. A way of choosing it is to pick some
+            percentage of the range of the values. For Shapley values this is the
+            difference between the maximum and minimum of the utility function (to
+            see this substitute the maximum and minimum values of the utility into
+            the marginal contribution formula).
         fraction: The fraction of values that must have converged for the
-        criterion to return [Converged][pydvl.utils.status.Status.Converged].
+            criterion to return [Converged][pydvl.utils.status.Status.Converged].
         burn_in: The number of iterations to ignore before checking for
-        convergence. This is required because computations typically start with
-        zero variance, as a result of using
-        :meth:`~pydvl.value.result.ValuationResult.empty`. The default is set to
-        an arbitrary minimum which is usually enough but may need to be
-        increased.
+            convergence. This is required because computations typically start with
+            zero variance, as a result of using
+            :meth:`~pydvl.value.result.ValuationResult.empty`. The default is set to
+            an arbitrary minimum which is usually enough but may need to be
+            increased.
     """
 
     def __init__(
@@ -273,9 +276,10 @@ class MaxChecks(StoppingCriterion):
 
     A "check" is one call to the criterion.
 
+    Args:
         n_checks: Threshold: if ``None``, no _check is performed,
-        effectively creating a (never) stopping criterion that always returns
-        ``Pending``.
+            effectively creating a (never) stopping criterion that always returns
+            ``Pending``.
     """
 
     def __init__(self, n_checks: Optional[int], modify_result: bool = True):
@@ -309,9 +313,10 @@ class MaxUpdates(StoppingCriterion):
     number coincides with the maximum number of subsets sampled. For permutation
     samplers, it coincides with the number of permutations sampled.
 
+    Args:
         n_updates: Threshold: if ``None``, no _check is performed,
-        effectively creating a (never) stopping criterion that always returns
-        ``Pending``.
+            effectively creating a (never) stopping criterion that always returns
+            ``Pending``.
     """
 
     def __init__(self, n_updates: Optional[int], modify_result: bool = True):
@@ -347,9 +352,10 @@ class MinUpdates(StoppingCriterion):
     number is a lower bound for the number of subsets sampled. For
     permutation samplers, it lower-bounds the amount of permutations sampled.
 
+    Args:
         n_updates: Threshold: if ``None``, no _check is performed,
-        effectively creating a (never) stopping criterion that always returns
-        ``Pending``.
+            effectively creating a (never) stopping criterion that always returns
+            ``Pending``.
     """
 
     def __init__(self, n_updates: Optional[int], modify_result: bool = True):
@@ -379,10 +385,11 @@ class MaxTime(StoppingCriterion):
 
     Checks the elapsed time since construction
 
+    Args:
         seconds: Threshold: The computation is terminated if the elapsed time
-        between object construction and a _check exceeds this value. If ``None``,
-        no _check is performed, effectively creating a (never) stopping criterion
-        that always returns ``Pending``.
+            between object construction and a _check exceeds this value. If ``None``,
+            no _check is performed, effectively creating a (never) stopping criterion
+            that always returns ``Pending``.
     """
 
     def __init__(self, seconds: Optional[float], modify_result: bool = True):
@@ -431,8 +438,9 @@ class HistoryDeviation(StoppingCriterion):
        This criterion is meant for the reproduction of the results in the paper,
        but we do not recommend using it in practice.
 
+    Args:
         n_steps: Checkpoint values every so many updates and use these saved
-        values to compare.
+            values to compare.
         rtol: Relative tolerance for convergence ($\epsilon$ in the formula).
         pin_converged: If ``True``, once an index has converged, it is pinned
     """

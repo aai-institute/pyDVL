@@ -22,19 +22,18 @@ def shaded_mean_std(
     **kwargs,
 ) -> Axes:
     """The usual mean +- x std deviations plot to aggregate runs of experiments.
-
+    Args:
         data: axis 0 is to be aggregated on (e.g. runs) and axis 1 is the
-        data for each run.
-        abscissa: values for the x axis. Leave empty to use increasing
-        integers.
+            data for each run.
+        abscissa: values for the x axis. Leave empty to use increasing integers.
         num_std: number of standard deviations to shade around the mean.
         mean_color: color for the mean
         shade_color: color for the shaded region
-        title:
-        xlabel:
-        ylabel:
+        title: Title text. To use mathematics, use LaTeX notation.
+        xlabel: Text for the horizontal axis.
+        ylabel: Text for the vertical axis
         ax: If passed, axes object into which to insert the figure. Otherwise,
-        a new figure is created and returned
+            a new figure is created and returned
         kwargs: these are forwarded to the ax.plot() call for the mean.
 
     Returns:
@@ -57,76 +56,6 @@ def shaded_mean_std(
     ax.set_ylabel(ylabel)
 
     return ax
-
-
-def shapley_results(results: dict, filename: str = None):
-    """
-    FIXME: change this to use dataframes
-
-        results: dict
-        filename: For plt.savefig(). Set to None to disable saving.
-
-    Here's an example results dictionary::
-
-        results = {
-            "all_values": num_runs x num_points
-            "backward_scores": num_runs x num_points,
-            "backward_scores_reversed": num_runs x num_points,
-            "backward_random_scores": num_runs x num_points,
-            "forward_scores": num_runs x num_points,
-            "forward_scores_reversed": num_runs x num_points,
-            "forward_random_scores": num_runs x num_points,
-            "max_iterations": int,
-            "score_name" str,
-            "num_points": int
-        }
-    """
-    plt.figure(figsize=(16, 5))
-    num_runs = len(results["all_values"])
-    num_points = len(results["backward_scores"][0])
-    use_points = int(0.6 * num_points)
-
-    plt.subplot(1, 2, 1)
-    values = np.array(results["backward_scores"])[:, :use_points]
-    shaded_mean_std(values, color="b", label="By increasing shapley value")
-
-    values = np.array(results["backward_scores_reversed"])[:, :use_points]
-    shaded_mean_std(values, color="g", label="By decreasing shapley value")
-
-    values = np.array(results["backward_random_scores"])[:, :use_points]
-    shaded_mean_std(values, color="r", linestyle="--", label="At random")
-
-    plt.ylabel(f'Score ({results.get("score_name")})')
-    plt.xlabel("Points removed")
-    plt.title(
-        f"Effect of point removal. "
-        f'MonteCarlo with {results.get("max_iterations")} iterations '
-        f"over {num_runs} runs"
-    )
-    plt.legend()
-
-    plt.subplot(1, 2, 2)
-
-    values = np.array(results["forward_scores"])[:, :use_points]
-    shaded_mean_std(values, color="b", label="By increasing shapley value")
-
-    values = np.array(results["forward_scores_reversed"])[:, :use_points]
-    shaded_mean_std(values, color="g", label="By decreasing shapley value")
-
-    values = np.array(results["forward_random_scores"])[:, :use_points]
-    shaded_mean_std(values, color="r", linestyle="--", label="At random")
-
-    plt.ylabel(f'Score ({results.get("score_name")})')
-    plt.xlabel("Points added")
-    plt.title(
-        f"Effect of point addition. "
-        f'MonteCarlo with {results["max_iterations"]} iterations '
-        f"over {num_runs} runs"
-    )
-    plt.legend()
-
-    if filename:
-        plt.savefig(filename, dpi=300)
 
 
 def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue: float):
@@ -180,12 +109,14 @@ def plot_shapley(
     [compute_shapley_values()][pydvl.value.shapley.common.compute_shapley_values], with error bars
     corresponding to an $\alpha$-level confidence interval.
 
+    Args:
         df: dataframe with the shapley values
         level: confidence level for the error bars
         ax: axes to plot on or None if a new subplots should be created
         title: string, title of the plot
         xlabel: string, x label of the plot
         ylabel: string, y label of the plot
+
     Returns:
         the axes created or used
     """
