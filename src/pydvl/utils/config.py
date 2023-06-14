@@ -43,8 +43,9 @@ class MemcachedClientConfig:
             connected to memcached.
         no_delay: set the `TCP_NODELAY` flag, which may help with performance
             in some cases.
-        serde: a serializer / deserializer ("serde"). The default
-            `PickleSerde` should work in most cases. See `pymemcached's documentation <https://pymemcache.readthedocs.io/en/latest/apidoc/pymemcache.client.base.html#pymemcache.client.base.Client>`_
+        serde: a serializer / deserializer ("serde"). The default `PickleSerde`
+            should work in most cases. See [pymemcached's
+            documentation](https://pymemcache.readthedocs.io/en/latest/apidoc/pymemcache.client.base.html#pymemcache.client.base.Client)
             for details.
     """
 

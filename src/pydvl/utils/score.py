@@ -4,8 +4,7 @@ additional information.
 
 Scorers can be constructed in the same way as in scikit-learn: either from 
 known strings or from a callable. Greater values must be better. If they are not,
-a negated version can be used, see scikit-learn's `make_scorer()
-<https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html>`_.
+a negated version can be used, see scikit-learn's [make_scorer()](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html).
 
 :class:`Scorer` provides additional information about the scoring function, like
 its range and default values, which can be used by some data valuation
@@ -37,7 +36,7 @@ class Scorer:
 
     Args:
         scoring: Either a string or callable that can be passed to
-            `get_scorer <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.get_scorer.html>`_.
+            [get_scorer](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.get_scorer.html).
         default: score to be used when a model cannot be fit, e.g. when too
             little data is passed, or errors arise.
         range: numerical range of the score function. Some Monte Carlo

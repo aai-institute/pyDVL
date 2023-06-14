@@ -34,7 +34,7 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     Returns:
         Object with the data values.
 
-    :raises TypeError: If the model in the utility is not a `KNeighborsClassifier <https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html>`_
+    :raises TypeError: If the model in the utility is not a [KNeighborsClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html)
 
     !!! info "New in version 0.1.0"
 

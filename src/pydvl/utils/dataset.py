@@ -258,7 +258,7 @@ class Dataset:
     ) -> "Dataset":
         """Constructs a :class:`Dataset` object from an
         :class:`sklearn.utils.Bunch`, as returned by the `load_*` functions in
-        `sklearn toy datasets <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_.
+        [sklearn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html).
 
         Args:
             data: sklearn dataset. The following attributes are supported
@@ -471,7 +471,7 @@ class GroupedDataset(Dataset):
             random_state: seed for train / test split.
             stratify_by_target: If ``True``, data is split in a stratified
                 fashion, using the target variable as labels. Read more in
-                `sklearn's user guide <https://scikit-learn.org/stable/modules/cross_validation.html#stratification>`.
+                [sklearn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             data_groups: an array holding the group index or name for each
             data point. The length of this array must be equal to the number of
             data points in the dataset.
@@ -522,7 +522,7 @@ class GroupedDataset(Dataset):
             random_state: seed for train / test split.
             stratify_by_target: If ``True``, data is split in a stratified
                 fashion, using the y variable as labels. Read more in
-                `sklearn's user guide <https://scikit-learn.org/stable/modules/cross_validation.html#stratification>`.
+                [sklearn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             data_groups: an array holding the group index or name for each
                 data point. The length of this array must be equal to the number of
                 data points in the dataset.

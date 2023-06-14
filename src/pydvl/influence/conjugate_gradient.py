@@ -73,9 +73,9 @@ def batched_preconditioned_conjugate_gradient(
         A NDArray of shape [K] representing the solution of Ax=b.
 
     !!! References:
-        .. [1] `Conjugate Gradient Method - Wikipedia <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_.
-        .. [2] `SciPy's implementation of Conjugate Gradient <https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351>`_.
-        .. [3] `Prof. Mert Pilanci., "Conjugate Gradient Method", Stanford University, 2022 <https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf>`_.
+        .. [1] [Conjugate Gradient Method - Wikipedia](https://en.wikipedia.org/wiki/Conjugate_gradient_method).
+        .. [2] [SciPy's implementation of Conjugate Gradient](https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351).
+        .. [3] [Prof. Mert Pilanci., "Conjugate Gradient Method", Stanford University, 2022](https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf).
     """
     warnings.warn(
         "This function is experimental and unstable. Prefer using inversion_method='cg'",

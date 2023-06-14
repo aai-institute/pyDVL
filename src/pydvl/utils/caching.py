@@ -1,18 +1,17 @@
 """ Distributed caching of functions.
 
-pyDVL uses `memcached <https://memcached.org>`_ to cache utility values, through
-`pymemcache <https://pypi.org/project/pymemcache>`_. This allows sharing
+pyDVL uses [memcached](https://memcached.org) to cache utility values, through
+[pymemcache](https://pypi.org/project/pymemcache). This allows sharing
 evaluations across processes and nodes in a cluster. You can run memcached as a
 service, locally or remotely, see :ref:`caching setup`.
 
 !!! Warning
-   Function evaluations are cached with a key based on the function's signature
-   and code. This can lead to undesired cache hits, see :ref:`cache reuse`.
+    Function evaluations are cached with a key based on the function's signature
+    and code. This can lead to undesired cache hits, see :ref:`cache reuse`.
 
-   Remember **not to reuse utility objects for different datasets**.
+    Remember **not to reuse utility objects for different datasets**.
 
-Configuration
--------------
+# Configuration
 
 Memoization is disabled by default but can be enabled easily, see :ref:`caching setup`.
 When enabled, it will be added to any callable used to construct a
@@ -22,23 +21,21 @@ enable the computation of a running average of function values, see
 :ref:`caching stochastic functions`. You can see all configuration options under
 :class:`~pydvl.utils.config.MemcachedConfig`.
 
-.. rubric:: Default configuration
+## Default configuration
 
-.. code-block:: python
-
-   default_config = dict(
-       server=('localhost', 11211),
-       connect_timeout=1.0,
-       timeout=0.1,
-       # IMPORTANT! Disable small packet consolidation:
-       no_delay=True,
-       serde=serde.PickleSerde(pickle_version=PICKLE_VERSION)
-   )
-
+```python
+default_config = dict(
+   server=('localhost', 11211),
+   connect_timeout=1.0,
+   timeout=0.1,
+   # IMPORTANT! Disable small packet consolidation:
+   no_delay=True,
+   serde=serde.PickleSerde(pickle_version=PICKLE_VERSION)
+)
+```
 .. _caching stochastic functions:
 
-Usage with stochastic functions
--------------------------------
+# Usage with stochastic functions
 
 In addition to standard memoization, the decorator :func:`memcached` can compute
 running average and standard error of repeated evaluations for the same input.
@@ -51,8 +48,7 @@ This behaviour can be activated with
 
 .. _cache reuse:
 
-Cache reuse
------------
+# Cache reuse
 
 When working directly with :func:`memcached`, it is essential to only cache pure
 functions. If they have any kind of state, either internal or external (e.g. a
@@ -63,9 +59,9 @@ When a function is wrapped with :func:`memcached` for memoization, its signature
 (input and output names) and code are used as a key for the cache. Alternatively
 you can pass a custom value to be used as key with
 
-.. code-block:: python
-
-   cached_fun = memcached(**asdict(cache_options))(fun, signature=custom_signature)
+```python
+cached_fun = memcached(**asdict(cache_options))(fun, signature=custom_signature)
+```
 
 If you are running experiments with the same :class:`~pydvl.utils.utility.Utility`
 but different datasets, this will lead to evaluations of the utility on new data
@@ -75,8 +71,7 @@ dataset 2 from the point of view of the cache). One solution is to empty the
 cache between runs, but the preferred one is to **use a different Utility
 object for each dataset**.
 
-Unexpected cache misses
------------------------
+# Unexpected cache misses
 
 Because all arguments to a function are used as part of the key for the cache,
 sometimes one must exclude some of them. For example, If a function is going to
@@ -84,7 +79,6 @@ run across multiple processes and some reporting arguments are added (like a
 `job_id` for logging purposes), these will be part of the signature and make the
 functions distinct to the eyes of the cache. This can be avoided with the use of
 [ignore_args][pydvl.utils.config.MemcachedConfig.ignore_args] in the configuration.
-
 
 """
 
