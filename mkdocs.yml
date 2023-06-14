@@ -65,6 +65,7 @@ theme:
     - toc.follow
     # - navigation.tabs
     # - navigation.tabs.sticky
+    - navigation.instant
     - navigation.sections
     - navigation.tracking
     # - navigation.top
