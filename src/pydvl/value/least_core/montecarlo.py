@@ -150,7 +150,7 @@ def _montecarlo_least_core(
         job_id: Integer id used to determine the position of the progress bar
 
     Returns:
-        
+
     """
     n = len(u.data)
 

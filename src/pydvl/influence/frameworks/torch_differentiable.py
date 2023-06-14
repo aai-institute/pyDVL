@@ -54,7 +54,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         self.loss = loss
 
     def num_params(self) -> int:
-        """ Returns the number of parameters of the model """
+        """Returns the number of parameters of the model"""
         model_parameters = filter(lambda p: p.requires_grad, self.model.parameters())
         return sum([np.prod(p.size()) for p in model_parameters])
 

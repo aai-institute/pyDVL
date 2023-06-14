@@ -131,7 +131,7 @@ def _group_testing_shapley(
         job_id: id to use for reporting progress (e.g. to place progres bars)
 
     Returns:
-        
+
     """
     rng = np.random.default_rng()
     n = len(u.data.indices)

@@ -251,7 +251,7 @@ class MapReduceJob(Generic[T, R]):
             n_finished:
 
         Returns:
-        
+
         """
         if self.max_parallel_tasks is None:
             return 0

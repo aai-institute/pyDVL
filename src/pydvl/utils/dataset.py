@@ -734,7 +734,7 @@ def synthetic_classification_dataset(
 def decision_boundary_fixed_variance_2d(
     mu_1: np.ndarray, mu_2: np.ndarray
 ) -> Callable[[np.ndarray], np.ndarray]:
-    """ Closed-form solution for decision boundary dot(a, b) + b = 0 with fixed
+    """Closed-form solution for decision boundary dot(a, b) + b = 0 with fixed
     variance.
 
     Args:

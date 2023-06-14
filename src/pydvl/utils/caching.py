@@ -153,10 +153,10 @@ def memcached(
     !!! Warning
        Do not cache functions with state! See :ref:`cache reuse`
 
-    .. code-block:: python
-       :caption: Example usage
-
-       cached_fun = memcached(**asdict(cache_options))(heavy_computation)
+    !!! example
+        ```python
+        cached_fun = memcached(**asdict(cache_options))(heavy_computation)
+        ```
 
     Args:
         client_config: configuration for `pymemcache's Client()
