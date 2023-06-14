@@ -24,11 +24,11 @@ def exact_least_core(
     r"""Computes the exact Least Core values.
 
     !!! Note
-       If the training set contains more than 20 instances a warning is printed
-       because the computation is very expensive. This method is mostly used for
-       internal testing and simple use cases. Please refer to the
-       [Monte Carlo method][pydvl.value.least_core.montecarlo.montecarlo_least_core]
-       for practical applications.
+        If the training set contains more than 20 instances a warning is printed
+        because the computation is very expensive. This method is mostly used for
+        internal testing and simple use cases. Please refer to the
+        [Monte Carlo method][pydvl.value.least_core.montecarlo.montecarlo_least_core]
+        for practical applications.
 
     The least core is the solution to the following Linear Programming problem:
 

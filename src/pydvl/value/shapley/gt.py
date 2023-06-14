@@ -163,11 +163,11 @@ def group_testing_shapley(
     in :footcite:t:`jia_efficient_2019`.
 
     !!! Warning
-       This method is very inefficient. It requires several orders of magnitude
-       more evaluations of the utility than others in
-       [montecarlo][pydvl.value.shapley.montecarlo]. It also uses several intermediate
-       objects like the results from the runners and the constraint matrices
-       which can become rather large.
+        This method is very inefficient. It requires several orders of magnitude
+        more evaluations of the utility than others in
+        [montecarlo][pydvl.value.shapley.montecarlo]. It also uses several intermediate
+        objects like the results from the runners and the constraint matrices
+        which can become rather large.
 
     By picking a specific distribution over subsets, the differences in Shapley
     values can be approximated with a Monte Carlo sum. These are then used to
@@ -196,8 +196,8 @@ def group_testing_shapley(
     !!! version-added 0.4.0
 
     !!! version-changed 0.5.0
-       Changed the solver to cvxpy instead of scipy's linprog. Added the ability
-       to pass arbitrary options to it.
+        Changed the solver to cvxpy instead of scipy's linprog. Added the ability
+        to pass arbitrary options to it.
     """
 
     n = len(u.data.indices)

@@ -90,8 +90,8 @@ class ValueItem(Generic[IndexT, NameT]):
     order. Comparisons take only the :attr:`value` into account.
 
     !!! Todo
-       Maybe have a mode of comparing similar to `np.isclose`, or taking the
-       :attr:`variance` into account.
+        Maybe have a mode of comparing similar to `np.isclose`, or taking the
+        :attr:`variance` into account.
     """
 
     #: Index of the sample with this value in the original
@@ -483,7 +483,7 @@ class ValuationResult(
         argument is returned.
 
         !!! Warning
-           Abusing this will introduce numerical errors.
+            Abusing this will introduce numerical errors.
 
         Means and standard errors are correctly handled. Statuses are added with
         bit-wise ``&``, see :class:`~pydvl.value.result.Status`.
@@ -496,7 +496,7 @@ class ValuationResult(
         indices, and the values.
 
         !!! Warning
-           FIXME: Arbitrary ``extra_values`` aren't handled.
+            FIXME: Arbitrary ``extra_values`` aren't handled.
 
         """
         # empty results

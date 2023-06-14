@@ -274,16 +274,14 @@ def running_moments(
     """Uses Welford's algorithm to calculate the running average and variance of
      a set of numbers.
 
-    See `Welford's algorithm in wikipedia
-    <https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm>`_
+    See `Welford's algorithm in wikipedia <https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm>`_
 
     !!! Warning
        This is not really using Welford's correction for numerical stability
        for the variance. (FIXME)
 
     !!! Todo
-       This could be generalised to arbitrary moments. See `this paper
-       <https://www.osti.gov/biblio/1028931>`_
+       This could be generalised to arbitrary moments. See `this paper <https://www.osti.gov/biblio/1028931>`_
 
     Args:
         previous_avg: average value at previous step

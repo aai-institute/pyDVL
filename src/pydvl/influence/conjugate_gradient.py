@@ -58,22 +58,21 @@ def batched_preconditioned_conjugate_gradient(
     See also [2]_ and [3]_.
 
     !!! Warning
-
         This function is experimental and unstable. Prefer using inversion_method='cg'
-
+    Args:
         A: A linear function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix. \
-        It has to be positive-definite v.T @ f(v) >= 0.
+            It has to be positive-definite v.T @ f(v) >= 0.
         b: A NDArray of shape [K] representing the targeted result of the matrix multiplication Ax.
         max_iterations: Maximum number of iterations to use in conjugate gradient. Default is 10 times K.
         rtol: Relative tolerance of the residual with respect to the 2-norm of b.
         max_step_size: Maximum step size along a gradient direction. Might be necessary for numerical stability. \
-        See also max_iterations. Default is 10.0.
+            See also max_iterations. Default is 10.0.
         verify_assumptions: True, iff the matrix should be checked for positive-definiteness by a stochastic rule.
 
     Returns:
         A NDArray of shape [K] representing the solution of Ax=b.
 
-    .. note::
+    !!! References:
         .. [1] `Conjugate Gradient Method - Wikipedia <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_.
         .. [2] `SciPy's implementation of Conjugate Gradient <https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351>`_.
         .. [3] `Prof. Mert Pilanci., "Conjugate Gradient Method", Stanford University, 2022 <https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf>`_.

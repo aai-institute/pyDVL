@@ -275,7 +275,7 @@ class Dataset:
             Object with the sklearn dataset
 
         !!! version-changed 0.6.0
-           Added kwargs to pass to the :class:`Dataset` constructor.
+            Added kwargs to pass to the :class:`Dataset` constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
             data.data,
@@ -325,7 +325,7 @@ class Dataset:
         !!! version-added 0.4.0
 
         !!! version-changed 0.6.0
-           Added kwargs to pass to the :class:`Dataset` constructor.
+            Added kwargs to pass to the :class:`Dataset` constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
             X,
@@ -376,7 +376,7 @@ class GroupedDataset(Dataset):
                 :class:`Dataset` constructor.
 
         !!! version-changed 0.6.0
-           Added ``group_names`` and forwarding of ``kwargs``
+        Added ``group_names`` and forwarding of ``kwargs``
         """
         super().__init__(
             x_train=x_train,
@@ -529,7 +529,7 @@ class GroupedDataset(Dataset):
         !!! version-added 0.4.0
 
         !!! version-changed 0.6.0
-           Added kwargs to pass to the :class:`Dataset` constructor.
+            Added kwargs to pass to the :class:`Dataset` constructor.
         """
         if data_groups is None:
             raise ValueError(

@@ -2,7 +2,7 @@
 This module contains Shapley computations for K-Nearest Neighbours.
 
 !!! Todo
-   Implement approximate KNN computation for sublinear complexity)
+    Implement approximate KNN computation for sublinear complexity)
 """
 
 from typing import Dict, Union
@@ -34,8 +34,7 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     Returns:
         Object with the data values.
 
-    :raises TypeError: If the model in the utility is not a `KNeighborsClassifier
-        <https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html>`_
+    :raises TypeError: If the model in the utility is not a `KNeighborsClassifier <https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html>`_
 
     !!! version-added 0.1.0
 

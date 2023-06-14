@@ -98,11 +98,11 @@ def combinatorial_exact_shapley(
     See [Data valuation][computing-data-values] for details.
 
     !!! Note
-       If the length of the training set is > n_jobs*20 this prints a warning
-       because the computation is very expensive. Used mostly for internal testing
-       and simple use cases. Please refer to the
-       [Monte Carlo][pydvl.value.shapley.montecarlo] approximations for practical
-       applications.
+        If the length of the training set is > n_jobs*20 this prints a warning
+        because the computation is very expensive. Used mostly for internal testing
+        and simple use cases. Please refer to the
+        [Monte Carlo][pydvl.value.shapley.montecarlo] approximations for practical
+        applications.
 
     Args:
         u: Utility object with model, data, and scoring function

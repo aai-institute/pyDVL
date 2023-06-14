@@ -126,7 +126,7 @@ def owen_sampling_shapley(
     complement of $S$.
 
     !!! Note
-       The outer integration could be done instead with a quadrature rule.
+        The outer integration could be done instead with a quadrature rule.
 
     Args:
         u: :class:`~pydvl.utils.utility.Utility` object holding data, model
@@ -149,7 +149,7 @@ def owen_sampling_shapley(
     !!! version-added 0.3.0
 
     !!! version-changed 0.5.0
-       Support for parallel computation and enable antithetic sampling.
+        Support for parallel computation and enable antithetic sampling.
 
     """
     map_reduce_job: MapReduceJob[NDArray, ValuationResult] = MapReduceJob(

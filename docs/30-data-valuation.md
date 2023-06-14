@@ -31,7 +31,6 @@ the package [pydvl.value][pydvl.value] , with support from modules
 and [pydvl.utils.utility][pydvl.utils.utility], as detailed below.
 
 !!! Warning
-
     Be sure to read the section on
     [the difficulties using data values][problems-of-data-values].
 
@@ -131,7 +130,6 @@ which is used by some methods by estimate the number of samples necessary, and
 about what default value to use when the model fails to train.
 
 !!! Note
-
     The most important property of a `Scorer` is its default value. Because many
     models will fail to fit on small subsets of the data, it is important to
     provide a sensible default value for the score.
@@ -382,7 +380,6 @@ $$
 $$
 
 !!! Warning
-
     We have reproduced this method in pyDVL for completeness and benchmarking,
     but we don't advocate its use because of the speed and memory cost. Despite
     our best efforts, the number of samples required in practice for convergence
@@ -502,7 +499,6 @@ values = compute_least_core_values(
 ```
 
 !!! Note
-
     Although any number is supported, it is best to choose ``n_iterations`` to be
     at least equal to the number of data points.
 
@@ -544,7 +540,6 @@ and **Beta Shapley** [@kwon_beta_2022], with better numerical and
 rank stability in certain situations.
 
 !!! Note
-
     Shapley values are a particular case of semi-values and can therefore also be
     computed with the methods described here. However, as of version 0.6.0, we
     recommend using [compute_shapley_values][pydvl.value.shapley.compute_shapley_values] instead,

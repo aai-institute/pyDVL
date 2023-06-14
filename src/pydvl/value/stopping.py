@@ -435,8 +435,8 @@ class HistoryDeviation(StoppingCriterion):
     converged.
 
     !!! Warning
-       This criterion is meant for the reproduction of the results in the paper,
-       but we do not recommend using it in practice.
+        This criterion is meant for the reproduction of the results in the paper,
+        but we do not recommend using it in practice.
 
     Args:
         n_steps: Checkpoint values every so many updates and use these saved

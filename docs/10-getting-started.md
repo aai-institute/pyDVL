@@ -8,7 +8,6 @@ alias:
 # Getting started
 
 !!! Warning
-
     Make sure you have read [[installation]] before using the library. 
     In particular read about how caching and parallelization work,
     since they require additional setup.

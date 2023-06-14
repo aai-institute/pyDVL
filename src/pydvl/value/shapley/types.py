@@ -5,7 +5,7 @@ class ShapleyMode(str, Enum):
     """Supported algorithms for the computation of Shapley values.
 
     !!! Todo
-       Make algorithms register themselves here.
+        Make algorithms register themselves here.
     """
 
     ApproShapley = "appro_shapley"  # Alias for PermutationMontecarlo

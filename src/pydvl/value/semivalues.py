@@ -37,10 +37,9 @@ of :footcite:t:`ghorbani_data_2019`, the Banzhaf index of
 :footcite:t:`kwon_beta_2022`.
 
 !!! Note
-   For implementation consistency, we slightly depart from the common definition
-   of semi-values, which includes a factor $1/n$ in the sum over subsets.
-   Instead, we subsume this factor into the coefficient $w(k)$.
-
+    For implementation consistency, we slightly depart from the common definition
+    of semi-values, which includes a factor $1/n$ in the sum over subsets.
+    Instead, we subsume this factor into the coefficient $w(k)$.
 """
 
 import math

@@ -32,10 +32,10 @@ class TruncationPolicy(abc.ABC):
     and :attr:`n_truncations` respectively.
 
     !!! Todo
-       Because the policy objects are copied to the workers, the statistics
-       are not accessible from the
-       :class:`~pydvl.value.shapley.actor.ShapleyCoordinator`. We need to add
-       methods for this.
+        Because the policy objects are copied to the workers, the statistics
+        are not accessible from the
+        :class:`~pydvl.value.shapley.actor.ShapleyCoordinator`. We need to add
+        methods for this.
     """
 
     def __init__(self):
@@ -81,9 +81,10 @@ class NoTruncation(TruncationPolicy):
 class FixedTruncation(TruncationPolicy):
     """Break a permutation after computing a fixed number of marginals.
 
-    u: Utility object with model, data, and scoring function
-    fraction: Fraction of marginals in a permutation to compute before
-    stopping (e.g. 0.5 to compute half of the marginals).
+    Args:
+        u: Utility object with model, data, and scoring function
+        fraction: Fraction of marginals in a permutation to compute before
+        stopping (e.g. 0.5 to compute half of the marginals).
     """
 
     def __init__(self, u: Utility, fraction: float):
@@ -213,8 +214,8 @@ def truncated_montecarlo_shapley(
     criterion.
 
     !!! Todo
-       Think of how to add Robin-Gelman or some other more principled stopping
-       criterion.
+        Think of how to add Robin-Gelman or some other more principled stopping
+        criterion.
 
     Instead of naively implementing the expectation, we sequentially add points
     to a dataset from a permutation and incrementally compute marginal utilities.

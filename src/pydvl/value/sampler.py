@@ -9,10 +9,10 @@ is the index of the element being added to the subset, and ``subset`` is the
 subset of the complement of ``idx``.
 
 !!! Note
-   This is the natural mode of iteration for the combinatorial definition of
-   semi-values, in particular Shapley value. For the computation using
-   permutations, adhering to this interface is not ideal, but we stick to it for
-   consistency.
+    This is the natural mode of iteration for the combinatorial definition of
+    semi-values, in particular Shapley value. For the computation using
+    permutations, adhering to this interface is not ideal, but we stick to it for
+    consistency.
 
 The samplers are used in the [semivalues][pydvl.value.semivalues] module to compute any
 semi-value, in particular Shapley and Beta values, and Banzhaf indices.
@@ -251,8 +251,8 @@ class PermutationSampler(PowersetSampler[T]):
     as required for the permutation definition of semi-values.
 
     !!! Warning
-       This sampler requires caching to be enabled or computation
-       will be doubled wrt. a "direct" implementation of permutation MC
+        This sampler requires caching to be enabled or computation
+        will be doubled wrt. a "direct" implementation of permutation MC
     """
 
     def __iter__(self) -> Iterator[SampleType]:
@@ -279,8 +279,8 @@ class DeterministicPermutationSampler(PermutationSampler[T]):
     definition of semi-values.
 
     !!! Warning
-       This sampler requires caching to be enabled or computation
-       will be doubled wrt. a "direct" implementation of permutation MC
+        This sampler requires caching to be enabled or computation
+        will be doubled wrt. a "direct" implementation of permutation MC
     """
 
     def __iter__(self) -> Iterator[SampleType]:
@@ -296,7 +296,7 @@ class RandomHierarchicalSampler(PowersetSampler[T]):
     """For every index, sample a set size, then a set of that size.
 
     !!! Todo
-       This is unnecessary, but a step towards proper stratified sampling.
+        This is unnecessary, but a step towards proper stratified sampling.
     """
 
     def __iter__(self) -> Iterator[SampleType]:

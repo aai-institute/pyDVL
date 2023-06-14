@@ -2,9 +2,9 @@ r"""
 Monte Carlo approximations to Shapley Data values.
 
 !!! Warning
-   You probably want to use the common interface provided by
-   [compute_shapley_values()][pydvl.value.shapley.compute_shapley_values] instead of directly using
-   the functions in this module.
+    You probably want to use the common interface provided by
+    [compute_shapley_values()][pydvl.value.shapley.compute_shapley_values] instead of directly using
+    the functions in this module.
 
 Because exact computation of Shapley values requires $\mathcal{O}(2^n)$
 re-trainings of the model, several Monte Carlo approximations are available.

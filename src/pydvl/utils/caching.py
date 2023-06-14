@@ -6,7 +6,6 @@ evaluations across processes and nodes in a cluster. You can run memcached as a
 service, locally or remotely, see :ref:`caching setup`.
 
 !!! Warning
-
    Function evaluations are cached with a key based on the function's signature
    and code. This can lead to undesired cache hits, see :ref:`cache reuse`.
 
@@ -158,7 +157,6 @@ def memcached(
     `rtol_stderr * running average`.
 
     !!! Warning
-
        Do not cache functions with state! See :ref:`cache reuse`
 
     .. code-block:: python

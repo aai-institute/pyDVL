@@ -7,14 +7,12 @@ alias:
 
 # Computing influence values
 
-!!! Warning
-   
+!!! Warning 
     Much of the code in the package [pydvl.influence][pydvl.influence]
     is experimental or untested. Package structure and basic API are bound
     to change before v1.0.0
 
 !!! Todo
-
     This section needs rewriting:
 
     - Introduce some theory
@@ -36,7 +34,6 @@ and [compute_influences][pydvl.influence.compute_influences].
 # Influence for OLS
 
 !!! Warning
-
     This will be deprecated. It makes no sense to have
     a separate interface for linear models.
 
