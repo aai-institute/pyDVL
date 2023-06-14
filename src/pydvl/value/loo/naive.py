@@ -15,6 +15,7 @@ def naive_loo(u: Utility, *, progress: bool = True) -> ValuationResult:
     Args:
         u: Utility object with model, data, and scoring function
         progress: If True, display a progress bar
+
     Returns:
         Object with the data values.
     """

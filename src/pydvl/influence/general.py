@@ -71,6 +71,7 @@ def calculate_influence_factors(
         of the loss (s_test in the paper).
         lam: regularization of the hessian
         progress: If True, display progress bars.
+
     Returns:
         A np.ndarray of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
     """
@@ -98,6 +99,7 @@ def _calculate_influences_up(
         y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
         influence_factors: np.ndarray containing influence factors
         progress: If True, display progress bars.
+
     Returns:
         A np.ndarray of size [NxM], where N is number of test points and M number of train points.
     """
@@ -121,9 +123,9 @@ def _calculate_influences_pert(
         y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
         influence_factors: np.ndarray containing influence factors
         progress: If True, display progress bars.
+
     Returns:
-        A np.ndarray of size [NxMxP], where N is number of test points, M number of train points,
-        and P the number of features.
+        A np.ndarray of size [NxMxP], where N is number of test points, M number of train points, and P the number of features.
     """
     all_pert_influences = []
     for i in maybe_progress(
@@ -167,31 +169,31 @@ def compute_influences(
     get the influences over the complete training set. Points with low influence values are (on average)
     less important for model training than points with high influences.
 
+    Args:
         model: A supervised model from a supported framework. Currently, only pytorch nn.Module is supported.
         loss: loss of the model, a callable that, given prediction of the model and real labels, returns a
-        tensor with the loss value.
+            tensor with the loss value.
         x: model input for training
         y: input labels
         x_test: model input for testing
         y_test: test labels
         progress: whether to display progress bars.
         inversion_method: Set the inversion method to a specific one, can be 'direct' for direct inversion
-        (and explicit construction of the Hessian) or 'cg' for conjugate gradient.
+            (and explicit construction of the Hessian) or 'cg' for conjugate gradient.
         influence_type: Which algorithm to use to calculate influences.
-        Currently supported options: 'up' or 'perturbation'. For details refer to https://arxiv.org/pdf/1703.04730.pdf
-        inversion_method_kwargs: kwargs for the inversion method selected.
-        If using the direct method no kwargs are needed. If inversion_method='cg', the following kwargs can be passed:
-        - rtol: relative tolerance to be achieved before terminating computation
-        - max_iterations: maximum conjugate gradient iterations
-        - max_step_size: step size of conjugate gradient
-        - verify_assumptions: True to run tests on convexity of the model.
+            Currently supported options: 'up' or 'perturbation'. For details refer to https://arxiv.org/pdf/1703.04730.pdf
+            inversion_method_kwargs: kwargs for the inversion method selected.
+            If using the direct method no kwargs are needed. If inversion_method='cg', the following kwargs can be passed:
+            - rtol: relative tolerance to be achieved before terminating computation
+            - max_iterations: maximum conjugate gradient iterations
+            - max_step_size: step size of conjugate gradient
+            - verify_assumptions: True to run tests on convexity of the model.
         hessian_regularization: lambda to use in Hessian regularization, i.e. H_reg = H + lambda * 1, with 1 the identity matrix \
-        and H the (simple and regularized) Hessian. Typically used with more complex models to make sure the Hessian \
-        is positive definite.
+            and H the (simple and regularized) Hessian. Typically used with more complex models to make sure the Hessian \
+            is positive definite.
+
     Returns:
-        A np.ndarray specifying the influences. Shape is [NxM] if influence_type is'up', where N is number of test points and
-        M number of train points. If instead influence_type is 'perturbation', output shape is [NxMxP], with P the number of input
-        features.
+        An array specifying the influences. Shape is [NxM] if influence_type is'up', where N is number of test points and M number of train points. If instead influence_type is 'perturbation', output shape is [NxMxP], with P the number of input features.
     """
     if not _TORCH_INSTALLED:
         raise RuntimeWarning("This function requires PyTorch.")

@@ -585,6 +585,7 @@ class ValuationResult(
         Args:
             idx: Data index of the value to update.
             new_value: New value to add to the result.
+
         Returns:
             A reference to the same, modified result.
 
@@ -634,10 +635,11 @@ class ValuationResult(
                 the name of the algorithm used.
             use_names: Whether to use data names instead of indices for the
                 DataFrame's index.
+
         Returns:
             A dataframe with two columns, one for the values, with name
-            given as explained in `column`, and another with standard errors for
-            approximate algorithms. The latter will be named `column+'_stderr'`.
+                given as explained in `column`, and another with standard errors for
+                approximate algorithms. The latter will be named `column+'_stderr'`.
         :raise ImportError: If pandas is not installed
         """
         if not pandas:
@@ -667,13 +669,14 @@ class ValuationResult(
                 ("efficiency" property of Shapley values).
             kwargs: Additional options to pass to the constructor of
                 :class:`ValuationResult`. Use to override status, names, etc.
+
         Returns:
             A valuation result with its status set to
-            [Status.Converged][Status.Converged] by default.
+                [Status.Converged][Status.Converged] by default.
 
         :raises ValueError: If ``size`` is less than 1.
 
-        !!! version-changed 0.6.0
+        !!! info "Changed in version 0.6.0"
             Added parameter ``total``. Check for zero size
         """
         if size < 1:
@@ -710,8 +713,9 @@ class ValuationResult(
 
         Args:
             algorithm: Name of the algorithm used to compute the values
+
         Returns:
-            An instance of :class:`ValuationResult`
+            Object with the results.
         """
         if indices is not None or data_names is not None or n_samples != 0:
             return cls.zeros(
@@ -743,8 +747,9 @@ class ValuationResult(
                 the names will be set to the string representation of the indices.
             n_samples: Number of data points whose values are computed. If
                 not given, the length of ``indices`` will be used.
+
         Returns:
-            An instance of :class:`ValuationResult`
+            Object with the results.
         """
         if indices is None:
             indices = np.arange(n_samples, dtype=np.int_)

@@ -211,8 +211,11 @@ def hvp_to_inv_diag_conditioner(
     """
     This method uses the hvp function to construct a simple pre-conditioner 1/diag(H). It does so while requiring
     only O(d) space in RAM for construction and later execution.
+
+    Args:
         hvp: The callable calculating the Hessian vector product Hv.
         d: The number of dimensions of the hvp callable.
+
     Returns:
         A MatrixVectorProduct for the conditioner.
     """

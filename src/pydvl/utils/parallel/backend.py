@@ -232,6 +232,7 @@ def available_cpus() -> int:
     """Platform-independent count of available cores.
 
     FIXME: do we really need this or is `os.cpu_count` enough? Is this portable?
+
     Returns:
         Number of cores, or 1 if it is not possible to determine.
     """
@@ -253,6 +254,7 @@ def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> 
             CPUs is returned.
         config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
             cluster address, number of cpus, etc.
+
     Returns:
         The effective number of jobs, guaranteed to be >= 1.
 

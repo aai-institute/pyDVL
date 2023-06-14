@@ -118,7 +118,7 @@ def plot_shapley(
         ylabel: string, y label of the plot
 
     Returns:
-        the axes created or used
+        The axes created or used
     """
     if ax is None:
         _, ax = plt.subplots()

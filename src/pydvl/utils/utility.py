@@ -176,10 +176,11 @@ class Utility:
                 The type must be hashable for the caching to work,
                 e.g. wrap the argument with [frozenset][]
                 (rather than `tuple` since order should not matter)
+
         Returns:
             0 if no indices are passed, ``default_score`` if we fail
-            to fit the model or the scorer returns [numpy.NaN][]. Otherwise, the score
-            of the model on the test data.
+                to fit the model or the scorer returns [numpy.NaN][]. Otherwise, the score
+                of the model on the test data.
         """
         if not indices:
             return 0.0

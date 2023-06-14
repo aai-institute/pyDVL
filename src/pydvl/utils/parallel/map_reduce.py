@@ -227,10 +227,11 @@ class MapReduceJob(Generic[T, R]):
             func: Function to wrap
             kwargs: Additional keyword arguments to pass to the backend
             wrapper. These are *not* arguments for the wrapped function.
+
         Returns:
             Remote function that can be called with the same arguments as
-            the wrapped function. Depending on the backend, this may simply be
-            the function itself.
+                the wrapped function. Depending on the backend, this may simply be
+                the function itself.
         """
         return self.parallel_backend.wrap(
             _wrap_func_with_remote_args(func, timeout=self.timeout), **kwargs
@@ -248,6 +249,7 @@ class MapReduceJob(Generic[T, R]):
             jobs:
             n_dispatched:
             n_finished:
+
         Returns:
         
         """

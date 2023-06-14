@@ -1,5 +1,5 @@
 """
-!!! version-added 0.4.0
+!!! info "New in version 0.4.0"
 
 This package holds all routines for the computation of Least Core data values.
 
@@ -76,7 +76,7 @@ def compute_least_core_values(
     Returns:
         ValuationResult object with the computed values.
 
-    !!! version-added 0.5.0
+    !!! info "New in version 0.5.0"
     """
     progress: bool = kwargs.pop("progress", False)
 

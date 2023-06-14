@@ -26,6 +26,7 @@ def compute_removal_score(
         percentages: Sequence of removal percentages.
         remove_best: If True, removes data points in order of decreasing valuation.
         progress: If True, display a progress bar.
+
     Returns:
         Dictionary that maps the percentages to their respective scores.
     """

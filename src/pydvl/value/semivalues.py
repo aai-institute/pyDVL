@@ -101,6 +101,7 @@ def _semivalues(
         done: Stopping criterion.
         progress: Whether to display progress bars for each job.
         job_id: id to use for reporting progress.
+
     Returns:
         Object with the results.
     """
@@ -146,9 +147,9 @@ def semivalues(
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
         progress: Whether to display progress bars for each job.
+
     Returns:
         Object with the results.
-
     """
     map_reduce_job: MapReduceJob[PowersetSampler, ValuationResult] = MapReduceJob(
         sampler,

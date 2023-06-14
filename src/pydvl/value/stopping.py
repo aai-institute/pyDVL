@@ -190,6 +190,7 @@ def make_criterion(
             of converged values is used.
         name: The name of the new criterion. If ``None``, the ``__name__`` of
             the function is used.
+
     Returns:
         A new subclass of :class:`StoppingCriterion`.
     """

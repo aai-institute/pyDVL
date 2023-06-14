@@ -54,11 +54,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         self.loss = loss
 
     def num_params(self) -> int:
-        """
-        Get number of parameters of model f.
-        Returns:
-        Number of parameters as integer.
-        """
+        """ Returns the number of parameters of the model """
         model_parameters = filter(lambda p: p.requires_grad, self.model.parameters())
         return sum([np.prod(p.size()) for p in model_parameters])
 
@@ -70,13 +66,16 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
     ) -> "NDArray":
         """
         Calculates gradient of model parameters wrt each x[i] and y[i] and then
-        returns a array of size [N, P] with N number of points (length of x and y) and P
+        returns an array of size [N, P] with N number of points (length of x and y) and P
         number of parameters of the model.
+        Args:
             x: A np.ndarray [NxD] representing the features x_i.
             y: A np.ndarray [NxK] representing the predicted target values y_i.
             progress: True, iff progress shall be printed.
+
         Returns:
-        A np.ndarray [NxP] representing the gradients with respect to all parameters of the model.
+            An array [NxP] representing the gradients with respect to all parameters
+                of the model.
         """
         x = torch.as_tensor(x).unsqueeze(1)
         y = torch.as_tensor(y)
@@ -116,10 +115,10 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
             y: A np.ndarray [NxK] representing the predicted target values y_i.
             progress: True, iff progress shall be printed.
         Returns:
-        A tuple where: \
-            - first element is a np.ndarray [P] with the gradients of the model. \
-            - second element is the input to the model as a grad parameters. \
-                This can be used for further differentiation. 
+            A tuple where:
+                - first element is a np.ndarray [P] with the gradients of the model.
+                - second element is the input to the model as a grad parameters.
+                  This can be used for further differentiation.
         """
         x = torch.as_tensor(x).requires_grad_(True)
         y = torch.as_tensor(y)
@@ -151,9 +150,11 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
             progress: True, iff progress shall be printed.
             backprop_on: tensor used in the second backpropagation (the first one is along x and y as defined \
             via grad_xy). If None, the model parameters are used.
+
         Returns:
-        A np.ndarray representing the implicit matrix vector product of the model along the given directions.\
-            Output shape is [DxP] if backprop_on is None, otherwise [DxM], with M the number of elements of backprop_on.
+            An array representing the implicit matrix vector product of the model
+                along the given directions. Output shape is [DxP] if backprop_on is None,
+                otherwise [DxM], with M the number of elements of backprop_on.
         """
         v = torch.as_tensor(v)
         if v.ndim == 1:

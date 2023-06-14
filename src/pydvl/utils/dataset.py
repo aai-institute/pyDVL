@@ -16,6 +16,7 @@ Objects of both types are used to construct a :class:`~pydvl.utils.utility.Utili
 object.
 
 """
+from __future__ import annotations
 
 import logging
 from collections import OrderedDict
@@ -152,10 +153,11 @@ class Dataset:
 
         Args:
             indices: Optional indices that will be used to select points from the
-                    training data. If ``None``, the entire training data will be returned.
+                training data. If ``None``, the entire training data will be returned.
+
         Returns:
-            If ``indices`` is not ``None``, the selected x and y arrays
-            from the training data. Otherwise, the entire dataset.
+            If ``indices`` is not ``None``, the selected x and y arrays from the
+                training data. Otherwise, the entire dataset.
         """
         if indices is None:
             return self.x_train, self.y_train
@@ -206,6 +208,7 @@ class Dataset:
         Args:
             indices: Optional indices into the test data. This argument is
                 unused left for compatibility with :meth:`Dataset.get_training_data`.
+
         Returns:
             The entire test data.
         """
@@ -271,10 +274,11 @@ class Dataset:
                 [scikit-learn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             kwargs: Additional keyword arguments to pass to the
                 :class:`Dataset` constructor. Use this to pass e.g. ``is_multi_output``.
+
         Returns:
             Object with the sklearn dataset
 
-        !!! version-changed 0.6.0
+        !!! info "Changed in version 0.6.0"
             Added kwargs to pass to the :class:`Dataset` constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
@@ -319,12 +323,13 @@ class Dataset:
             kwargs: Additional keyword arguments to pass to the
                 :class:`Dataset` constructor. Use this to pass e.g. ``feature_names``
                 or ``target_names``.
+
         Returns:
             Object with the passed X and y arrays split across training and test sets.
 
-        !!! version-added 0.4.0
+        !!! info "New in version 0.4.0"
 
-        !!! version-changed 0.6.0
+        !!! info "Changed in version 0.6.0"
             Added kwargs to pass to the :class:`Dataset` constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
@@ -375,7 +380,7 @@ class GroupedDataset(Dataset):
             kwargs: Additional keyword arguments to pass to the
                 :class:`Dataset` constructor.
 
-        !!! version-changed 0.6.0
+        !!! info "Changed in version 0.6.0"
         Added ``group_names`` and forwarding of ``kwargs``
         """
         super().__init__(
@@ -429,6 +434,7 @@ class GroupedDataset(Dataset):
         Args:
             indices: group indices whose elements to return. If ``None``,
             all data from all groups are returned.
+
         Returns:
             Tuple of training data x and labels y.
         """
@@ -471,6 +477,7 @@ class GroupedDataset(Dataset):
             data points in the dataset.
             kwargs: Additional keyword arguments to pass to the
                 :class:`Dataset` constructor.
+
         Returns:
             Dataset with the selected sklearn data
         """
@@ -523,12 +530,11 @@ class GroupedDataset(Dataset):
                 to the :class:`~pydvl.utils.dataset.Dataset` constructor.
 
         Returns:
-            Dataset with the passed X and y arrays split across training
-            and test sets.
+            Dataset with the passed X and y arrays split across training and test sets.
 
-        !!! version-added 0.4.0
+        !!! info "New in version 0.4.0"
 
-        !!! version-changed 0.6.0
+        !!! info "Changed in version 0.6.0"
             Added kwargs to pass to the :class:`Dataset` constructor.
         """
         if data_groups is None:
@@ -560,9 +566,10 @@ class GroupedDataset(Dataset):
             data_groups: An array holding the group index or name for each data
                 point. The length of this array must be equal to the number of
                 data points in the dataset.
+
         Returns:
-            A :class:`GroupedDataset` with the initial :class:`Dataset`
-            grouped by data_groups.
+            A :class:`GroupedDataset` with the initial :class:`Dataset` grouped
+                by data_groups.
         """
         return cls(
             x_train=dataset.x_train,
@@ -596,6 +603,7 @@ def load_spotify_dataset(
         min_year: minimum year of the returned data
         target_column: column to be returned as y (labels)
         random_state: fixes sklearn random seed
+
     Returns:
         Tuple with 3 elements, each being a list sith [input_data, related_labels]
     """
@@ -623,19 +631,23 @@ def load_spotify_dataset(
 
 def load_wine_dataset(
     train_size: float, test_size: float, random_state: Optional[int] = None
-):
-    """Loads the sklearn wine dataset. More info can be found at
-    https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset.
+) -> tuple:
+    """Loads the [sklearn wine dataset](https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset).
+
+    !!! Fixme
+        Why does this function not return a [Dataset][Dataset] object?
+        And why is it part of this module?
 
     Args:
         train_size: fraction of points used for training dataset
         test_size: fraction of points used for test dataset
         random_state: fix random seed. If None, no random seed is set.
+
     Returns:
-        A tuple of four elements with the first three being input and
-        target values in the form of matrices of shape (N,D) the first
-        and (N,) the second. The fourth element is a list containing names of
-        features of the model. (FIXME doc)
+        A tuple of four elements with the first three being input and target
+            values in the form of matrices of shape (N,D) the first and (N,) the
+            second. The fourth element is a list containing names of features of the
+            model. (FIXME doc)
     """
     try:
         import torch
@@ -693,6 +705,7 @@ def synthetic_classification_dataset(
         train_size: fraction of points used for training dataset
         test_size: fraction of points used for test dataset
         random_seed: fix random seed. If None, no random seed is set.
+
     Returns:
         A tuple of matrix x of shape [NxD] and target vector y of shape [N].
     """
@@ -727,6 +740,7 @@ def decision_boundary_fixed_variance_2d(
     Args:
         mu_1: First mean.
         mu_2: Second mean.
+
     Returns:
         A callable which converts a continuous line (-infty, infty) to the decision boundary in feature space.
     """

@@ -91,8 +91,7 @@ def compute_shapley_values(
             :class:`~pydvl.value.shapley.ShapleyMode` for a list of allowed value.
 
     Returns:
-        A :class:`~pydvl.value.result.ValuationResult` object with the
-        results.
+        A :class:`~pydvl.value.result.ValuationResult` object with the results.
 
     """
     progress: bool = kwargs.pop("progress", False)

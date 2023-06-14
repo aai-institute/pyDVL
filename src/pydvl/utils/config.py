@@ -13,12 +13,12 @@ __all__ = ["ParallelConfig", "MemcachedClientConfig", "MemcachedConfig"]
 class ParallelConfig:
     """Configuration for parallel computation backend.
 
-    backend: Type of backend to use.
-    Defaults to 'ray'
-    address: Address of existing remote or local cluster to use.
-    n_cpus_local: Number of CPUs to use when creating a local ray cluster.
-    This has no effect when using an existing ray cluster.
-    logging_level: Logging level for the parallel backend's worker.
+    Args:
+        backend: Type of backend to use. Defaults to 'ray'
+        address: Address of existing remote or local cluster to use.
+        n_cpus_local: Number of CPUs to use when creating a local ray cluster.
+            This has no effect when using an existing ray cluster.
+        logging_level: Logging level for the parallel backend's worker.
     """
 
     backend: Literal["sequential", "ray"] = "ray"
@@ -35,18 +35,17 @@ class ParallelConfig:
 class MemcachedClientConfig:
     """Configuration of the memcached client.
 
-    server: A tuple of (IP|domain name, port).
-    connect_timeout: How many seconds to wait before raising
-    `ConnectionRefusedError` on failure to connect.
-    timeout: seconds to wait for send or recv calls on the socket
-    connected to memcached.
-    no_delay: set the `TCP_NODELAY` flag, which may help with performance
-    in some cases.
-    serde: a serializer / deserializer ("serde"). The default
-    `PickleSerde` should work in most cases. See `pymemcached's
-    documentation
-    <https://pymemcache.readthedocs.io/en/latest/apidoc/pymemcache.client.base.html#pymemcache.client.base.Client>`_
-    for details.
+    Args:
+        server: A tuple of (IP|domain name, port).
+        connect_timeout: How many seconds to wait before raising
+            `ConnectionRefusedError` on failure to connect.
+        timeout: seconds to wait for send or recv calls on the socket
+            connected to memcached.
+        no_delay: set the `TCP_NODELAY` flag, which may help with performance
+            in some cases.
+        serde: a serializer / deserializer ("serde"). The default
+            `PickleSerde` should work in most cases. See `pymemcached's documentation <https://pymemcache.readthedocs.io/en/latest/apidoc/pymemcache.client.base.html#pymemcache.client.base.Client>`_
+            for details.
     """
 
     server: Tuple[str, int] = ("localhost", 11211)

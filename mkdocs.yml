@@ -11,7 +11,6 @@ plugins:
 - autorefs
 - search
 - section-index
-- mkdocs-version-annotations
 - alias:
     use_relative_link: true
     verbose: true

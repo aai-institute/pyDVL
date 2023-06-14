@@ -12,7 +12,7 @@ computed with guarantees.
 
 You can read more [in the documentation][computing-data-values].
 
-!!! version-added 0.4.0
+!!! info "New in version 0.4.0"
 
 """
 import logging
@@ -50,15 +50,14 @@ def _constants(
         utility_range: The range of the utility function.
 
     Returns:
-        A namedtuple with the constants. The fields are the same as in the
-        paper:
-        - kk: the sample sizes (i.e. an array of 1, 2, ..., n - 1)
-        - Z: the normalization constant
-        - q: the probability of drawing a sample of size k
-        - q_tot: another normalization constant
-        - T: the number of iterations. This will be -1 if the utility_range is
-            infinite. E.g. because the :class:`~pydvl.utils.score.Scorer` does
-            not define a range.
+        A namedtuple with the constants. The fields are the same as in the paper:
+            - kk: the sample sizes (i.e. an array of 1, 2, ..., n - 1)
+            - Z: the normalization constant
+            - q: the probability of drawing a sample of size k
+            - q_tot: another normalization constant
+            - T: the number of iterations. This will be -1 if the utility_range is
+                infinite. E.g. because the :class:`~pydvl.utils.score.Scorer` does
+                not define a range.
     """
     r = utility_range
 
@@ -108,9 +107,9 @@ def num_samples_eps_delta(
         function
     Returns:
         Number of samples from $2^{[n]}$ guaranteeing ε/√n-correct Shapley
-        pair-wise differences of values with probability 1-δ/(N(N-1)).
+            pair-wise differences of values with probability 1-δ/(N(N-1)).
 
-    !!! version-added 0.4.0
+    !!! info "New in version 0.4.0"
 
     """
     constants = _constants(n=n, epsilon=eps, delta=delta, utility_range=utility_range)
@@ -130,6 +129,7 @@ def _group_testing_shapley(
         n_samples: total number of samples (subsets) to use.
         progress: Whether to display progress bars for each job.
         job_id: id to use for reporting progress (e.g. to place progres bars)
+
     Returns:
         
     """
@@ -193,9 +193,9 @@ def group_testing_shapley(
     Returns:
         Object with the data values.
 
-    !!! version-added 0.4.0
+    !!! info "New in version 0.4.0"
 
-    !!! version-changed 0.5.0
+    !!! info "Changed in version 0.5.0"
         Changed the solver to cvxpy instead of scipy's linprog. Added the ability
         to pass arbitrary options to it.
     """

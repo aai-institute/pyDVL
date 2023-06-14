@@ -40,7 +40,8 @@ def powerset(s: NDArray[T]) -> Iterator[Collection[T]]:
 
     Args:
          s: The set to use
-     Returns:
+
+    Returns:
         An iterator
     """
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
@@ -58,9 +59,10 @@ def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) 
         eps: ε > 0
         delta: 0 < δ <= 1
         u_range: Range of the :class:`~pydvl.utils.utility.Utility` function
+
     Returns:
         Number of _permutations_ required to guarantee ε-correct Shapley
-        values with probability 1-δ
+            values with probability 1-δ
     """
     return int(np.ceil(np.log(2 / delta) * 2 * u_range**2 / eps**2))
 
@@ -72,8 +74,9 @@ def random_subset(s: NDArray[T], q: float = 0.5) -> NDArray[T]:
         s: set to sample from
         q: Sampling probability for elements. The default 0.5 yields a
             uniform distribution over the power set of s.
+
     Returns:
-        the subset
+        The subset
     """
     rng = np.random.default_rng()
     selection = rng.uniform(size=len(s)) > q
@@ -125,6 +128,7 @@ def random_subset_of_size(s: NDArray[T], size: int) -> NDArray[T]:
     Args:
         s: Set to sample from
         size: Size of the subset to generate
+
     Returns:
         The subset
 
@@ -148,6 +152,7 @@ def random_matrix_with_condition_number(n: int, condition_number: float) -> "NDA
     Args:
         n: size of the matrix
         condition_number: duh
+
     Returns:
         An (n,n) matrix with the requested condition number.
     """
@@ -178,11 +183,13 @@ def linear_regression_analytical_derivative_d_theta(
 ) -> "NDArray":
     """
     Args:
-        linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
+        linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing
+            A and b respectively.
         x: A np.ndarray of shape [BxM].
         y: A np.nparray of shape [BxN].
+
     Returns:
-        A np.ndarray of shape [Bx((N+1)*M)], where each row vector is [d_theta L(x, y), d_b L(x, y)]
+        An array of shape [Bx((N+1)*M)], where each row vector is [d_theta L(x, y), d_b L(x, y)]
     """
 
     A, b = linear_model
@@ -203,9 +210,10 @@ def linear_regression_analytical_derivative_d2_theta(
             and b respectively.
         x: An array of shape [BxM],
         y: An array of shape [BxN].
+
     Returns:
         An array of shape [((N+1)*M)x((N+1)*M)], representing the Hessian.
-        It gets averaged over all samples.
+            It gets averaged over all samples.
     """
     A, b = linear_model
     n, m = tuple(A.shape)
@@ -229,6 +237,7 @@ def linear_regression_analytical_derivative_d_x_d_theta(
         linear_model: A tuple of np.ndarray of shape [NxM] and [N] representing A and b respectively.
         x: A np.ndarray of shape [BxM].
         y: A np.nparray of shape [BxN].
+
     Returns:
         A np.ndarray of shape [Bx((N+1)*M)xM], representing the derivative.
     """
@@ -288,6 +297,7 @@ def running_moments(
         previous_variance: variance at previous step
         count: number of points seen so far
         new_value: new value in the series of numbers
+
     Returns:
         new_average, new_variance, calculated with the new count
     """
@@ -309,6 +319,7 @@ def top_k_value_accuracy(
         y_true: Exact/true value
         y_pred: Predicted/estimated value
         k: Number of the highest values taken into account
+
     Returns:
         Accuracy
     """

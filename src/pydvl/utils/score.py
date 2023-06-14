@@ -48,7 +48,7 @@ class Scorer:
         name: The name of the scorer. If not provided, the name of the
             function passed will be used.
 
-    !!! version-added 0.5.0
+    !!! info "New in version 0.5.0"
 
     """
 
@@ -105,6 +105,7 @@ def compose_score(
         range: The range of the transformation. This will be used e.g. by
             :class:`~pydvl.utils.utility.Utility` for the range of the composed.
         name: A string representation for the composition, for `str()`.
+
     Returns:
         The composite :class:`Scorer`.
     """

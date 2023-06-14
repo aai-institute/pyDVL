@@ -11,6 +11,5 @@ neoteroi-mkdocs  # Needed for card grid on home page
 mkdocs-gallery
 mkdocs-nbconvert
 mkdocs-git-revision-date-localized-plugin
-mkdocs-version-annotations
 pypandoc
 pypandoc_binary

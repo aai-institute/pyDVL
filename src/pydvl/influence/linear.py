@@ -39,9 +39,9 @@ def compute_linear_influences(
         set.
         influence_type: Which algorithm to use to calculate influences.
         Currently supported options: 'up' or 'perturbation'.
+
     Returns:
-        An array of shape (B, C) with the influences of the training
-        points on the test data.
+        An array of shape (B, C) with the influences of the training points on the test data.
     """
 
     lr = LinearRegression()
@@ -83,21 +83,15 @@ def influences_up_linear_regression_analytical(
      validation set for an ordinary least squares model (Ax+b=y with quadratic
      loss).
 
-    This method uses the
+    Args:
+        linear_model: A tuple of arrays of shapes (N, M) and N representing A and b respectively.
+        x: An array of shape (M, K) containing the features of the training set.
+        y: An array of shape (M, L) containing the targets of the training set.
+        x_test: An array of shape (N, K) containing the features of the test set.
+        y_test: An array of shape (N, L) containing the targets of the test set.
 
-        linear_model: A tuple of arrays of shapes (N, M) and N representing A
-        and b respectively.
-        x: An array of shape (M, K) containing the features of the
-        training set.
-        y: An array of shape (M, L) containing the targets of the
-        training set.
-        x_test: An array of shape (N, K) containing the features of the test
-        set.
-        y_test: An array of shape (N, L) containing the targets of the test
-        set.
     Returns:
-        An array of shape (B, C) with the influences of the training points
-        on the test points.
+        An array of shape (B, C) with the influences of the training points on the test points.
     """
 
     test_grads_analytical = linear_regression_analytical_derivative_d_theta(
@@ -132,19 +126,15 @@ def influences_perturbation_linear_regression_analytical(
     """Calculate the influences of each training sample onto the
     validation set for a linear model Ax+b=y.
 
-        linear_model: A tuple of np.ndarray' of shape (N, M) and (N)
-        representing A and b respectively.
-        x: An array of shape (M, K) containing the features of the
-        input data.
-        y: An array of shape (M, L) containing the targets of the input
-        data.
-        x_test: An array of shape (N, K) containing the features of the test
-        set.
-        y_test: An array of shape (N, L) containing the targets of the test
-        set.
+    Args:
+        linear_model: A tuple of np.ndarray' of shape (N, M) and (N) representing A and b respectively.
+        x: An array of shape (M, K) containing the features of the input data.
+        y: An array of shape (M, L) containing the targets of the input data.
+        x_test: An array of shape (N, K) containing the features of the test set.
+        y_test: An array of shape (N, L) containing the targets of the test set.
+
     Returns:
-        An array of shape (B, C, M) with the influences of the training
-        points on the test points for each feature.
+        An array of shape (B, C, M) with the influences of the training points on the test points for each feature.
     """
 
     test_grads_analytical = linear_regression_analytical_derivative_d_theta(

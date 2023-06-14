@@ -106,8 +106,9 @@ class TorchModelBase(ABC):
         """
         Use internal model to deliver prediction in numpy.
             x: A np.ndarray [NxD] representing the features x_i.
+
         Returns:
-        A np.ndarray [NxK] representing the predicted values.
+            A np.ndarray [NxK] representing the predicted values.
         """
         return self.forward(x).detach().numpy()  # type: ignore
 
@@ -121,8 +122,9 @@ class TorchModelBase(ABC):
         Use internal model to measure how good is prediction through a loss function.
             x: A np.ndarray [NxD] representing the features x_i.
             y: A np.ndarray [NxK] representing the predicted target values y_i.
+
         Returns:
-        The aggregated value over all samples N.
+            The aggregated value over all samples N.
         """
         return score(self.forward(x), y).detach().numpy()  # type: ignore
 
@@ -209,8 +211,9 @@ class TorchBinaryLogisticRegression(nn.Module, TorchModelBase):
         """
         Calculate sigmoid(dot(a, x) + b) using RAM-optimized calculation layout.
             x: Tensor [NxD] representing the features x_i.
+
         Returns:
-        A tensor [N] representing the probabilities for p(y_i).
+            A tensor [N] representing the probabilities for p(y_i).
         """
         x = torch.as_tensor(x)
         return torch.sigmoid(x @ self.A.T + self.b)
@@ -278,7 +281,8 @@ class TorchMLP(nn.Module, TorchModelBase):
         """
         Perform forward-pass through the network.
             x: Tensor input of shape [NxD].
+
         Returns:
-        Tensor output of shape[NxK].
+            Tensor output of shape[NxK].
         """
         return self.layers(x)
