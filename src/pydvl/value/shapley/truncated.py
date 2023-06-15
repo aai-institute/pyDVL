@@ -105,7 +105,7 @@ class FixedTruncation(TruncationPolicy):
 class RelativeTruncation(TruncationPolicy):
     """Break a permutation if the marginal utility is too low.
 
-    This is called "performance tolerance" in :footcite:t:`ghorbani_data_2019`.
+    This is called "performance tolerance" in [@ghorbani_data_2019].
 
     Args:
         u: Utility object with model, data, and scoring function
@@ -209,7 +209,7 @@ def truncated_montecarlo_shapley(
     """Monte Carlo approximation to the Shapley value of data points.
 
     This implements the permutation-based method described in
-    :footcite:t:`ghorbani_data_2019`. It is a Monte Carlo estimate of the sum
+    [@ghorbani_data_2019]. It is a Monte Carlo estimate of the sum
     over all possible permutations of the index set, with a double stopping
     criterion.
 
@@ -220,7 +220,7 @@ def truncated_montecarlo_shapley(
     Instead of naively implementing the expectation, we sequentially add points
     to a dataset from a permutation and incrementally compute marginal utilities.
     We stop computing marginals for a given permutation based on a
-    :class:`TruncationPolicy`. :footcite:t:`ghorbani_data_2019` mention two
+    :class:`TruncationPolicy`. [@ghorbani_data_2019] mention two
     policies: one that stops after a certain fraction of marginals are computed,
     implemented in :class:`FixedTruncation`, and one that stops if the last
     computed utility ("score") is close to the total utility using the standard

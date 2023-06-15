@@ -98,7 +98,7 @@ def owen_sampling_shapley(
     progress: bool = False,
 ) -> ValuationResult:
     r"""Owen sampling of Shapley values as described in
-    :footcite:t:`okhrati_multilinear_2021`.
+    [@okhrati_multilinear_2021].
 
     This function computes a Monte Carlo approximation to
 

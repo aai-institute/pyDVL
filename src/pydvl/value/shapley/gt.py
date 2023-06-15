@@ -1,6 +1,6 @@
 """
 This module implements Group Testing for the approximation of Shapley values, as
-introduced in :footcite:t:`jia_efficient_2019`. The sampling of index subsets is
+introduced in [@jia_efficient_2019]. The sampling of index subsets is
 done in such a way that an approximation to the true Shapley values can be
 computed with guarantees.
 
@@ -94,7 +94,7 @@ def _constants(
 def num_samples_eps_delta(
     eps: float, delta: float, n: int, utility_range: float
 ) -> int:
-    r"""Implements the formula in Theorem 3 of :footcite:t:`jia_efficient_2019`
+    r"""Implements the formula in Theorem 3 of [@jia_efficient_2019]
     which gives a lower bound on the number of samples required to obtain an
     (ε/√n,δ/(N(N-1))-approximation to all pair-wise differences of Shapley
     values, wrt. $\ell_2$ norm.
@@ -159,7 +159,7 @@ def group_testing_shapley(
     **options,
 ) -> ValuationResult:
     """Implements group testing for approximation of Shapley values as described
-    in :footcite:t:`jia_efficient_2019`.
+    in [@jia_efficient_2019].
 
     !!! Warning
         This method is very inefficient. It requires several orders of magnitude

@@ -20,7 +20,7 @@ __all__ = ["knn_shapley"]
 def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     """Computes exact Shapley values for a KNN classifier.
 
-    This implements the method described in :footcite:t:`jia_efficient_2019a`.
+    This implements the method described in [@jia_efficient_2019a].
     It exploits the local structure of K-Nearest Neighbours to reduce the number
     of calls to the utility function to a constant number per index, thus
     reducing computation time to $O(n)$.

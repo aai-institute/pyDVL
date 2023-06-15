@@ -254,8 +254,7 @@ class Utility:
 
 
 class DataUtilityLearning:
-    """Implementation of Data Utility Learning algorithm
-    :footcite:t:`wang_improving_2022`.
+    """Implementation of Data Utility Learning [@wang_improving_2022].
 
     This object wraps a [Utility][pydvl.utils.utility.Utility] and delegates
     calls to it, up until a given budget (number of iterations). Every tuple

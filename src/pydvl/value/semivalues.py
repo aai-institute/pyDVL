@@ -31,10 +31,9 @@ $\tilde{w}(k) = n \choose{n-1}{k} w(k)$ is the weight correction due to the
 reformulation.
 
 
-There are several pre-defined coefficients, including the Shapley value
-of :footcite:t:`ghorbani_data_2019`, the Banzhaf index of
-:footcite:t:`wang_data_2022`, and the Beta coefficient of
-:footcite:t:`kwon_beta_2022`.
+There are several pre-defined coefficients, including the Shapley value of
+[@ghorbani_data_2019], the Banzhaf index of [@wang_data_2022], and the Beta
+coefficient of [@kwon_beta_2022].
 
 !!! Note
     For implementation consistency, we slightly depart from the common definition
@@ -217,12 +216,12 @@ def compute_semivalues(
     The modes supported are:
 
     - [SemiValueMode.Shapley][SemiValueMode.Shapley]: Shapley values.
-    - [SemiValueMode.BetaShapley][SemiValueMode.BetaShapley]: Implements the Beta Shapley semi-value
-        as introduced in :footcite:t:`kwon_beta_2022`. Pass additional keyword
-        arguments ``alpha`` and ``beta`` to set the parameters of the Beta
-        distribution (both default to 1).
-    - [SemiValueMode.Banzhaf][SemiValueMode.Banzhaf]: Implements the Banzhaf semi-value as
-        introduced in :footcite:t:`wang_data_2022`.
+    - [SemiValueMode.BetaShapley][SemiValueMode.BetaShapley]: Implements the
+      Beta Shapley semi-value as introduced in [@kwon_beta_2022]. Pass additional
+      keyword arguments ``alpha`` and ``beta`` to set the parameters of the Beta
+      distribution (both default to 1).
+    - [SemiValueMode.Banzhaf][SemiValueMode.Banzhaf]: Implements the Banzhaf
+      semi-value as introduced in [@wang_data_2022].
 
     Args:
         u: Utility object with model, data, and scoring function.

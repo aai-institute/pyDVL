@@ -418,7 +418,7 @@ class HistoryDeviation(StoppingCriterion):
     r"""A simple check for relative distance to a previous step in the
     computation.
 
-    The method used by :footcite:t:`ghorbani_data_2019` computes the relative
+    The method used by [@ghorbani_data_2019] computes the relative
     distances between the current values $v_i^t$ and the values at the previous
     checkpoint $v_i^{t-\tau}$. If the sum is below a given threshold, the
     computation is terminated.
