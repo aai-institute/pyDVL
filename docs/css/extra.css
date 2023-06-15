@@ -63,3 +63,10 @@ a.autorefs-external:hover::after {
 .nt-card-image:focus {
   filter: invert(32%) sepia(93%) saturate(1535%) hue-rotate(220deg) brightness(102%) contrast(99%);
 }
+.md-header__button.md-logo {
+    padding: 0;
+}
+
+.md-header__button.md-logo img, .md-header__button.md-logo svg {
+  height: 1.9rem;
+}

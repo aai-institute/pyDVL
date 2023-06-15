@@ -54,8 +54,8 @@ plugins:
 theme:
   name: material
   custom_dir: docs/overrides
-  logo: assets/logo.svg
-  favicon: assets/logo.svg
+  logo: assets/signet.svg
+  favicon: assets/signet.svg
   icon:
     repo: fontawesome/brands/github
   features:
