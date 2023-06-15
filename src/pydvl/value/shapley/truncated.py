@@ -33,9 +33,8 @@ class TruncationPolicy(abc.ABC):
 
     !!! Todo
         Because the policy objects are copied to the workers, the statistics
-        are not accessible from the
-        [ShapleyCoordinator][pydvl.value.shapley.actor.ShapleyCoordinator]. We need to add
-        methods for this.
+        are not accessible from the coordinating process. We need to add methods
+        for this.
     """
 
     def __init__(self):

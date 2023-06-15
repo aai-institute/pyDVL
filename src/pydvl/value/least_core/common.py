@@ -219,7 +219,7 @@ def _solve_least_core_linear_program(
     solver_options: dict,
     non_negative_subsidy: bool = False,
 ) -> Tuple[Optional[NDArray[np.float_]], Optional[float]]:
-    """Solves the Least Core's linear program using cvxopt.
+    r"""Solves the Least Core's linear program using cvxopt.
 
     .. math::
 
