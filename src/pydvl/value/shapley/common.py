@@ -55,7 +55,7 @@ def compute_shapley_values(
     - ``owen_sampling``: Uses the Owen continuous extension of the utility
       function to the unit cube. Implemented in
       [owen_sampling_shapley()][pydvl.value.shapley.montecarlo.owen_sampling_shapley]. This
-      method does not take a :class:`~pydvl.value.stopping.StoppingCriterion`
+      method does not take a [StoppingCriterion][pydvl.value.stopping.StoppingCriterion]
       but instead requires a parameter ``q_max`` for the number of subdivisions
       of the unit interval to use for integration, and another parameter
       ``n_samples`` for the number of subsets to sample for each $q$.
@@ -68,7 +68,7 @@ def compute_shapley_values(
     - ``group_testing``: estimates differences of Shapley values and solves a
       constraint satisfaction problem. High sample complexity, not recommended.
       Implemented in [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]. This
-      method does not take a :class:`~pydvl.value.stopping.StoppingCriterion`
+      method does not take a [StoppingCriterion][pydvl.value.stopping.StoppingCriterion]
       but instead requires a parameter ``n_samples`` for the number of
       iterations to run.
 
@@ -78,9 +78,9 @@ def compute_shapley_values(
       [knn_shapley()][pydvl.value.shapley.knn.knn_shapley].
 
     Args:
-        u: :class:`~pydvl.utils.utility.Utility` object with model, data, and
+        u: [Utility][pydvl.utils.utility.Utility] object with model, data, and
             scoring function.
-        done: :class:`~pydvl.value.stopping.StoppingCriterion` object, used to
+        done: [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] object, used to
             determine when to stop the computation for Monte Carlo methods. The
             default is to stop after 100 iterations. See the available criteria
             in [stopping][pydvl.value.stopping]. It is possible to combine several
@@ -88,10 +88,10 @@ def compute_shapley_values(
             others require specific subtypes.
         n_jobs: Number of parallel jobs (available only to some methods)
         mode: Choose which shapley algorithm to use. See
-            :class:`~pydvl.value.shapley.ShapleyMode` for a list of allowed value.
+            [ShapleyMode][pydvl.value.shapley.ShapleyMode] for a list of allowed value.
 
     Returns:
-        A :class:`~pydvl.value.result.ValuationResult` object with the results.
+        A [ValuationResult][pydvl.value.result.ValuationResult] object with the results.
 
     """
     progress: bool = kwargs.pop("progress", False)

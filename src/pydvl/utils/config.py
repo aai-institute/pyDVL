@@ -62,7 +62,7 @@ class MemcachedConfig:
     memoization of function calls.
 
     Instances of this class are typically used as arguments for the construction
-    of a :class:`~pydvl.utils.utility.Utility`.
+    of a [Utility][pydvl.utils.utility.Utility].
 
     Args:
         client_config: Configuration for the connection to the memcached server.

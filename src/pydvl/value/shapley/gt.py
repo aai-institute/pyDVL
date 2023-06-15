@@ -56,7 +56,7 @@ def _constants(
             - q: the probability of drawing a sample of size k
             - q_tot: another normalization constant
             - T: the number of iterations. This will be -1 if the utility_range is
-                infinite. E.g. because the :class:`~pydvl.utils.score.Scorer` does
+                infinite. E.g. because the [Scorer][pydvl.utils.score.Scorer] does
                 not define a range.
     """
     r = utility_range
@@ -103,8 +103,7 @@ def num_samples_eps_delta(
         eps: ε
         delta: δ
         n: Number of data points
-        utility_range: Range of the :class:`~pydvl.utils.utility.Utility`
-        function
+        utility_range: Range of the [Utility][pydvl.utils.utility.Utility] function
     Returns:
         Number of samples from $2^{[n]}$ guaranteeing ε/√n-correct Shapley
             pair-wise differences of values with probability 1-δ/(N(N-1)).

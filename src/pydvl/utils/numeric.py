@@ -58,7 +58,7 @@ def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) 
     Args:
         eps: ε > 0
         delta: 0 < δ <= 1
-        u_range: Range of the :class:`~pydvl.utils.utility.Utility` function
+        u_range: Range of the [Utility][pydvl.utils.utility.Utility] function
 
     Returns:
         Number of _permutations_ required to guarantee ε-correct Shapley

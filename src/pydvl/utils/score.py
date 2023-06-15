@@ -1,15 +1,17 @@
 """
-This module provides a :class:`Scorer` class that wraps scoring functions with
-additional information.
+This module provides a [Scorer][pydvl.utils.score.Scorer] class that wraps
+scoring functions with additional information.
 
 Scorers can be constructed in the same way as in scikit-learn: either from 
 known strings or from a callable. Greater values must be better. If they are not,
-a negated version can be used, see scikit-learn's [make_scorer()](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html).
+a negated version can be used, see scikit-learn's
+[make_scorer()](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html).
 
-:class:`Scorer` provides additional information about the scoring function, like
-its range and default values, which can be used by some data valuation
-methods (like [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]) to estimate
-the number of samples required for a certain quality of approximation.
+[Scorer][pydvl.utils.score.Scorer] provides additional information about the
+scoring function, like its range and default values, which can be used by some
+data valuation methods (like
+[group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]) to
+estimate the number of samples required for a certain quality of approximation.
 """
 from typing import Callable, Optional, Protocol, Tuple, Union
 
@@ -102,11 +104,11 @@ def compose_score(
         scorer: The object to be composed.
         transformation: A scalar transformation
         range: The range of the transformation. This will be used e.g. by
-            :class:`~pydvl.utils.utility.Utility` for the range of the composed.
+            [Utility][pydvl.utils.utility.Utility] for the range of the composed.
         name: A string representation for the composition, for `str()`.
 
     Returns:
-        The composite :class:`Scorer`.
+        The composite [Scorer][pydvl.utils.score.Scorer].
     """
 
     class CompositeScorer(Scorer):

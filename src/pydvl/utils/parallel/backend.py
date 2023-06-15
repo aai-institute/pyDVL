@@ -98,7 +98,8 @@ class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
     [init_parallel_backend()][pydvl.utils.parallel.backend.init_parallel_backend].
 
     Args:
-        config: instance of :class:`~pydvl.utils.config.ParallelConfig` with number of cpus
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+            with number of cpus
     """
 
     def __init__(self, config: ParallelConfig):
@@ -130,8 +131,8 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     [init_parallel_backend()][pydvl.utils.parallel.backend.init_parallel_backend].
 
     Args:
-        config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
-        cluster address, number of cpus, etc.
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+            with cluster address, number of cpus, etc.
     """
 
     def __init__(self, config: ParallelConfig):
@@ -207,7 +208,7 @@ def init_parallel_backend(
     """Initializes the parallel backend and returns an instance of it.
 
     Args:
-        config: instance of :class:`~pydvl.utils.config.ParallelConfig`
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
             with cluster address, number of cpus, etc.
 
     :Example:
@@ -252,7 +253,7 @@ def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> 
     Args:
         n_jobs: the number of jobs requested. If -1, the number of available
             CPUs is returned.
-        config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig] with
             cluster address, number of cpus, etc.
 
     Returns:

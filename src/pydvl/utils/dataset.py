@@ -5,14 +5,14 @@ Shapley and Least Core value computations require evaluation of a scoring functi
 (the *utility*). This is typically the performance of the model on a test set
 (as an approximation to its true expected performance). It is therefore convenient
 to keep both the training data and the test data together to be passed around to
-methods in [least_core][pydvl.value.shapley` and :mod:`~pydvl.value.least_core].
-This is done with :class:`~pydvl.utils.dataset.Dataset`.
+methods in [shapley][pydvl.value.shapley] and [least_core][pydvl.value.least_core].
+This is done with [Dataset][pydvl.utils.dataset.Dataset].
 
 This abstraction layer also seamlessly grouping data points together if one is
 interested in computing their value as a group, see
-:class:`~pydvl.utils.dataset.GroupedDataset`.
+[GroupedDataset][pydvl.utils.dataset.GroupedDataset].
 
-Objects of both types are used to construct a :class:`~pydvl.utils.utility.Utility`
+Objects of both types are used to construct a [Utility][pydvl.utils.utility.Utility]
 object.
 
 """
@@ -147,13 +147,14 @@ class Dataset:
         """Given a set of indices, returns the training data that refer to those
         indices.
 
-        This is used mainly by :class:`~pydvl.utils.utility.Utility` to retrieve
+        This is used mainly by [Utility][pydvl.utils.utility.Utility] to retrieve
         subsets of the data from indices. It is typically **not needed in
         algorithms**.
 
         Args:
-            indices: Optional indices that will be used to select points from the
-                training data. If ``None``, the entire training data will be returned.
+            indices: Optional indices that will be used to select points from
+                the training data. If ``None``, the entire training data will be
+                returned.
 
         Returns:
             If ``indices`` is not ``None``, the selected x and y arrays from the
@@ -174,7 +175,7 @@ class Dataset:
         we generally want to score the trained model on the entire test data.
 
         Additionally, the way this method is used in the
-        :class:`~pydvl.utils.utility.Utility` class, the passed indices will
+        [Utility][pydvl.utils.utility.Utility] class, the passed indices will
         be those of the training data and would not work on the test data.
 
         There may be cases where it is desired to use parts of the test data.
@@ -256,8 +257,8 @@ class Dataset:
         stratify_by_target: bool = False,
         **kwargs,
     ) -> "Dataset":
-        """Constructs a [Dataset][pydvl.utils.Dataset] object from an
-        :class:`sklearn.utils.Bunch`, as returned by the `load_*` functions in
+        """Constructs a [Dataset][pydvl.utils.Dataset] object from a
+        [Bunch][sklearn.utils.Bunch], as returned by the `load_*` functions in
         [sklearn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html).
 
         Args:
@@ -523,14 +524,15 @@ class GroupedDataset(Dataset):
             stratify_by_target: If ``True``, data is split in a stratified
                 fashion, using the y variable as labels. Read more in
                 [sklearn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
-            data_groups: an array holding the group index or name for each
-                data point. The length of this array must be equal to the number of
+            data_groups: an array holding the group index or name for each data
+                point. The length of this array must be equal to the number of
                 data points in the dataset.
-            kwargs: Additional keyword arguments that will be passed
-                to the :class:`~pydvl.utils.dataset.Dataset` constructor.
+            kwargs: Additional keyword arguments that will be passed to the
+                [Dataset][pydvl.utils.Dataset] constructor.
 
         Returns:
-            Dataset with the passed X and y arrays split across training and test sets.
+            Dataset with the passed X and y arrays split across training and
+                test sets.
 
         !!! tip "New in version 0.4.0"
 

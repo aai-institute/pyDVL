@@ -34,7 +34,7 @@ class TruncationPolicy(abc.ABC):
     !!! Todo
         Because the policy objects are copied to the workers, the statistics
         are not accessible from the
-        :class:`~pydvl.value.shapley.actor.ShapleyCoordinator`. We need to add
+        [ShapleyCoordinator][pydvl.value.shapley.actor.ShapleyCoordinator]. We need to add
         methods for this.
     """
 

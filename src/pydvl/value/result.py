@@ -487,7 +487,7 @@ class ValuationResult(
             Abusing this will introduce numerical errors.
 
         Means and standard errors are correctly handled. Statuses are added with
-        bit-wise ``&``, see :class:`~pydvl.value.result.Status`.
+        bit-wise ``&``, see [Status][pydvl.value.result.Status].
         ``data_names`` are taken from the left summand, or if unavailable from
         the right one. The ``algorithm`` string is carried over if both terms
         have the same one or concatenated.

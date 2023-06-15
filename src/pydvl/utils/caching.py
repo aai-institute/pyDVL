@@ -15,11 +15,11 @@ service, locally or remotely, see :ref:`caching setup`.
 
 Memoization is disabled by default but can be enabled easily, see :ref:`caching setup`.
 When enabled, it will be added to any callable used to construct a
-:class:`pydvl.utils.utility.Utility` (done with the decorator [@memcached][pydvl.utils.caching.memcached]).
+[Utility][pydvl.utils.utility.Utility] (done with the decorator [@memcached][pydvl.utils.caching.memcached]).
 Depending on the nature of the utility you might want to
 enable the computation of a running average of function values, see
 :ref:`caching stochastic functions`. You can see all configuration options under
-:class:`~pydvl.utils.config.MemcachedConfig`.
+[MemcachedConfig][pydvl.utils.config.MemcachedConfig].
 
 ## Default configuration
 
@@ -63,7 +63,7 @@ you can pass a custom value to be used as key with
 cached_fun = memcached(**asdict(cache_options))(fun, signature=custom_signature)
 ```
 
-If you are running experiments with the same :class:`~pydvl.utils.utility.Utility`
+If you are running experiments with the same [Utility][pydvl.utils.utility.Utility]
 but different datasets, this will lead to evaluations of the utility on new data
 returning old values because utilities only use sample indices as arguments (so
 there is no way to tell the difference between '1' for dataset A and '1' for

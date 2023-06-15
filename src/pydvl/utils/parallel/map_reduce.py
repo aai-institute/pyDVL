@@ -92,7 +92,7 @@ class MapReduceJob(Generic[T, R]):
             each job. Alternatively, one can use ``itertools.partial``.
         reduce_kwargs: Keyword arguments that will be passed to ``reduce_func``
             in each job. Alternatively, one can use [itertools.partial][].
-        config: Instance of :class:`~pydvl.utils.config.ParallelConfig`
+        config: Instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
             with cluster address, number of cpus, etc.
         n_jobs: Number of parallel jobs to run. Does not accept 0
         timeout: Amount of time in seconds to wait for remote results before

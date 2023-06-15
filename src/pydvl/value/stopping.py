@@ -24,7 +24,7 @@ inherit from this class and implement the abstract methods
 
 Objects of type :class:`StoppingCriterion` can be composed with the binary
 operators ``&`` (*and*), and ``|`` (*or*), following the truth tables of
-:class:`~pydvl.utils.status.Status`. The unary operator ``~`` (*not*) is also
+[Status][pydvl.utils.status.Status]. The unary operator ``~`` (*not*) is also
 supported. See :class:`StoppingCriterion` for details on how these operations
 affect the behavior of the stopping criteria.
 """
@@ -63,19 +63,19 @@ class StoppingCriterion(abc.ABC):
     must stop.
 
     A ``StoppingCriterion`` is a callable taking a
-    :class:`~pydvl.value.result.ValuationResult` and returning a
-    :class:`~pydvl.value.result.Status`. It also keeps track of individual
+    [ValuationResult][pydvl.value.result.ValuationResult] and returning a
+    [Status][pydvl.value.result.Status]. It also keeps track of individual
     convergence of values with :meth:`converged`, and reports the overall
     completion of the computation with :meth:`completion`.
 
     Instances of ``StoppingCriterion`` can be composed with the binary operators
     ``&`` (*and*), and ``|`` (*or*), following the truth tables of
-    :class:`~pydvl.utils.status.Status`. The unary operator ``~`` (*not*) is
+    [Status][pydvl.utils.status.Status]. The unary operator ``~`` (*not*) is
     also supported. These boolean operations act according to the following
     rules:
 
     - The results of :meth:`_check` are combined with the operator. See
-      :class:`~pydvl.utils.status.Status` for the truth tables.
+      [Status][pydvl.utils.status.Status] for the truth tables.
     - The results of :meth:`converged` are combined with the operator (returning
       another boolean array).
     - The :meth:`completion` method returns the min, max, or the complement to 1
@@ -88,8 +88,8 @@ class StoppingCriterion(abc.ABC):
     .. rubric:: Subclassing
 
     Subclassing this class requires implementing a :meth:`_check` method that
-    returns a :class:`~pydvl.utils.status.Status` object based on a given
-    :class:`~pydvl.value.result.ValuationResult`. This method should update the
+    returns a [Status][pydvl.utils.status.Status] object based on a given
+    [ValuationResult][pydvl.value.result.ValuationResult]. This method should update the
     :attr:`converged` attribute, which is a boolean array indicating whether
     the value for each index has converged. When this is not possible,
     :meth:`completion` should be overridden to provide an overall completion
@@ -97,7 +97,7 @@ class StoppingCriterion(abc.ABC):
 
     Args:
         modify_result: If ``True`` the status of the input
-        :class:`~pydvl.value.result.ValuationResult` is modified in place after
+        [ValuationResult][pydvl.value.result.ValuationResult] is modified in place after
         the call.
     """
 
@@ -309,7 +309,7 @@ class MaxUpdates(StoppingCriterion):
     threshold.
 
     This checks the ``counts`` field of a
-    :class:`~pydvl.value.result.ValuationResult`, i.e. the number of times that
+    [ValuationResult][pydvl.value.result.ValuationResult], i.e. the number of times that
     each index has been updated. For powerset samplers, the maximum of this
     number coincides with the maximum number of subsets sampled. For permutation
     samplers, it coincides with the number of permutations sampled.
@@ -348,7 +348,7 @@ class MinUpdates(StoppingCriterion):
     """Terminate as soon as all value updates exceed or equal the given threshold.
 
     This checks the ``counts`` field of a
-    :class:`~pydvl.value.result.ValuationResult`, i.e. the number of times that
+    [ValuationResult][pydvl.value.result.ValuationResult], i.e. the number of times that
     each index has been updated. For powerset samplers, the minimum of this
     number is a lower bound for the number of subsets sampled. For
     permutation samplers, it lower-bounds the amount of permutations sampled.

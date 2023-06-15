@@ -24,7 +24,7 @@ reduce computation :func:`truncated_montecarlo_shapley`.
 
 .. seealso::
    Additionally, you can consider grouping your data points using
-   :class:`~pydvl.utils.dataset.GroupedDataset` and computing the values of the
+   [GroupedDataset][pydvl.utils.dataset.GroupedDataset] and computing the values of the
    groups instead. This is not to be confused with "group testing" as
    implemented in [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]: any of
    the algorithms mentioned above, including Group Testing, can work to valuate

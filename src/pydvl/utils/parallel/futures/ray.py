@@ -32,7 +32,7 @@ class RayExecutor(Executor):
             value and the n_cpus_per_job parameter passed to submit() does not
             exceed available cluster resources. If set to `None`, it will
             default to the total number of vCPUs in the ray cluster.
-        config: instance of :class:`~pydvl.utils.config.ParallelConfig`
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
             with cluster address, number of cpus, etc.
         cancel_futures_on_exit: If ``True``, all futures will be cancelled
             when exiting the context created by using this class instance as a

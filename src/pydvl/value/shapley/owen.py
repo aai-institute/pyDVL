@@ -129,7 +129,7 @@ def owen_sampling_shapley(
         The outer integration could be done instead with a quadrature rule.
 
     Args:
-        u: :class:`~pydvl.utils.utility.Utility` object holding data, model
+        u: [Utility][pydvl.utils.utility.Utility] object holding data, model
             and scoring function.
         n_samples: Numer of sets to sample for each value of q
         max_q: Number of subdivisions for q ∈ [0,1] (the element sampling
