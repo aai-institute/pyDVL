@@ -54,14 +54,14 @@ def compute_shapley_values(
       [truncated_montecarlo_shapley()][pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley].
     - ``owen_sampling``: Uses the Owen continuous extension of the utility
       function to the unit cube. Implemented in
-      [owen_sampling_shapley()][pydvl.value.shapley.montecarlo.owen_sampling_shapley]. This
+      [owen_sampling_shapley()][pydvl.value.shapley.owen.owen_sampling_shapley]. This
       method does not take a [StoppingCriterion][pydvl.value.stopping.StoppingCriterion]
       but instead requires a parameter ``q_max`` for the number of subdivisions
       of the unit interval to use for integration, and another parameter
       ``n_samples`` for the number of subsets to sample for each $q$.
     - ``owen_halved``: Same as 'owen_sampling' but uses correlated samples in the
       expectation. Implemented in
-      [owen_sampling_shapley()][pydvl.value.shapley.montecarlo.owen_sampling_shapley].
+      [owen_sampling_shapley()][pydvl.value.shapley.owen.owen_sampling_shapley].
       This method  requires an additional parameter `q_max` for the number of
       subdivisions of the interval [0,0.5] to use for integration, and another
       parameter ``n_samples`` for the number of subsets to sample for each $q$.
