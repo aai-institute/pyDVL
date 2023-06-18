@@ -311,7 +311,9 @@ def mvp(
     return mvp.detach()  # type: ignore
 
 
-class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
+class TorchTwiceDifferentiable(
+    TwiceDifferentiable[torch.Tensor, nn.Module, torch.device]
+):
     def __init__(
         self,
         model: nn.Module,

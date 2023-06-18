@@ -3,17 +3,22 @@ from typing import Callable, Generic, List, Sequence, Tuple, TypeVar
 
 TensorType = TypeVar("TensorType", bound=Sequence)
 ModelType = TypeVar("ModelType")
+DeviceType = TypeVar("DeviceType")
 
 
-class TwiceDifferentiable(ABC, Generic[TensorType, ModelType]):
+class TwiceDifferentiable(ABC, Generic[TensorType, ModelType, DeviceType]):
     """
     Wraps a differentiable model and loss and provides methods to compute the
     second derivative of the loss wrt. the model parameters.
     """
 
     def __init__(
-        self, model: ModelType, loss: Callable[[TensorType, TensorType], TensorType]
+        self,
+        model: ModelType,
+        loss: Callable[[TensorType, TensorType], TensorType],
+        device: DeviceType,
     ):
+        self.device = device
         pass
 
     @property
