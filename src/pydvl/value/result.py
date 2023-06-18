@@ -17,22 +17,28 @@ with the mean of the values of the two results as values. The variances are
 updated accordingly. See [ValuationResult][pydvl.value.result.ValuationResult] for details.
 
 Results can also be sorted by value, variance or number of updates, see
-:meth:`ValuationResult.sort`. The arrays of [ValuationResult.values][ValuationResult.values],
-[ValuationResult.variances`, :attr:`ValuationResult.counts][ValuationResult.variances`, :attr:`ValuationResult.counts],
-[ValuationResult.indices` and :attr:`ValuationResult.names][ValuationResult.indices` and :attr:`ValuationResult.names] are sorted in
+[sort()][pydvl.value.result.ValuationResult.sort]. The arrays of
+[ValuationResult.values][pydvl.value.result.aluationResult.values],
+[ValuationResult.variances][pydvl.value.result.ValuationResult.variances],
+[ValuationResult.counts][pydvl.value.result.ValuationResult.counts],
+[ValuationResult.indices][pydvl.value.result.ValuationResult.indices],
+[ValuationResult.names][pydvl.value.result.ValuationResult.names] are sorted in
 the same way.
 
-Indexing and slicing of results is supported and [ValueItem][pydvl.value.result.ValueItem] objects are
-returned. These objects can be compared with the usual operators, which take
-only the [ValueItem.value][ValueItem.value] into account.
+Indexing and slicing of results is supported and
+[ValueItem][pydvl.value.result.ValueItem] objects are returned. These objects
+can be compared with the usual operators, which take only the
+[ValueItem.value][pydvl.value.result.ValueItem.value] into account.
 
 # Creating result objects
 
-The most commonly used factory method is :meth:`ValuationResult.zeros`, which
+The most commonly used factory method is
+[ValuationResult.zeros()][pydvl.value.result.ValuationResult.zeros], which
 creates a result object with all values, variances and counts set to zero.
-:meth:`ValuationResult.empty` creates an empty result object, which can be used
-as a starting point for adding results together. Empty results are discarded
-when added to other results. Finally, :meth:`ValuationResult.from_random`
+[ValuationResult.empty()][pydvl.value.result.ValuationResult.empty] creates an
+empty result object, which can be used as a starting point for adding results
+together. Empty results are discarded when added to other results. Finally,
+[ValuationResult.from_random()][pydvl.value.result.ValuationResult.from_random]
 samples random values uniformly.
 
 """

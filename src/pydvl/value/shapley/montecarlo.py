@@ -66,8 +66,8 @@ def _permutation_montecarlo_shapley(
     """Helper function for :func:`permutation_montecarlo_shapley`.
 
     Computes marginal utilities of each training sample in
-    :obj:`pydvl.utils.utility.Utility.data` by iterating through randomly
-    sampled permutations.
+    [Utility.data][pydvl.utils.utility.Utility.data] by iterating through
+    randomly sampled permutations.
 
     Args:
         u: Utility object with model, data, and scoring function

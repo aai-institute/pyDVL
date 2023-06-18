@@ -211,8 +211,9 @@ class MapReduceJob(Generic[T, R]):
         return map_results
 
     def reduce(self, chunks: List["ObjectRef[R]"]) -> R:
-        """Reduces the resulting chunks from a call to :meth:`~pydvl.utils.parallel.map_reduce.MapReduceJob.map`
-        by passing them to a wrapped :func:`reduce_func`."""
+        """Reduces the resulting chunks from a call to
+        [map()][pydvl.utils.parallel.map_reduce.MapReduceJob.map] by passing
+        them to a wrapped `reduce_func`."""
         reduce_func = self._wrap_function(self._reduce_func)
 
         reduce_result = reduce_func(chunks, **self.reduce_kwargs)

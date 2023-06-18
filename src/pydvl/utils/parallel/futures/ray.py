@@ -36,7 +36,8 @@ class RayExecutor(Executor):
             with cluster address, number of cpus, etc.
         cancel_futures_on_exit: If ``True``, all futures will be cancelled
             when exiting the context created by using this class instance as a
-            context manager. It will be ignored when calling :meth:`shutdown`
+            context manager. It will be ignored when calling
+            [shutdown()][pydvl.utils.parallel.futures.ray.RayExecutor.shutdown]
             directly.
     """
 

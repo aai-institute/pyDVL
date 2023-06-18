@@ -17,8 +17,8 @@ stopping criteria.
 
 Alternatively, and in particular if reporting of completion is required, one can
 inherit from this class and implement the abstract methods
-:meth:`~pydvl.value.stopping.StoppingCriterion._check` and
-:meth:`~pydvl.value.stopping.StoppingCriterion.completion`.
+[_check()][pydvl.value.stopping.StoppingCriterion._check] and
+[completion()][pydvl.value.stopping.StoppingCriterion.completion].
 
 .. rubric:: Composing stopping criteria
 
@@ -238,11 +238,11 @@ class AbsoluteStandardError(StoppingCriterion):
         fraction: The fraction of values that must have converged for the
             criterion to return [Converged][pydvl.utils.status.Status.Converged].
         burn_in: The number of iterations to ignore before checking for
-            convergence. This is required because computations typically start with
-            zero variance, as a result of using
-            :meth:`~pydvl.value.result.ValuationResult.empty`. The default is set to
-            an arbitrary minimum which is usually enough but may need to be
-            increased.
+            convergence. This is required because computations typically start
+            with zero variance, as a result of using
+            [empty()][pydvl.value.result.ValuationResult.empty]. The default is
+            set to an arbitrary minimum which is usually enough but may need to
+            be increased.
     """
 
     def __init__(

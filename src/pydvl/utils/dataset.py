@@ -179,12 +179,12 @@ class Dataset:
         be those of the training data and would not work on the test data.
 
         There may be cases where it is desired to use parts of the test data.
-        In those cases, it is recommended to inherit from the [Dataset][pydvl.utils.Dataset]
-        class and to override the :meth:`~Dataset.get_test_data` method.
+        In those cases, it is recommended to inherit from [Dataset][pydvl.utils.Dataset]
+        and override [get_test_data()][Dataset.get_test_data].
 
         For example, the following snippet shows how one could go about
         mapping the training data indices into test data indices
-        inside :meth:`~Dataset.get_test_data`:
+        inside [get_test_data()][Dataset.get_test_data]:
 
         :Example:
 
@@ -208,7 +208,8 @@ class Dataset:
 
         Args:
             indices: Optional indices into the test data. This argument is
-                unused left for compatibility with :meth:`Dataset.get_training_data`.
+                unused left for compatibility with
+                [get_training_data()][pydvl.utils.dataset.Dataset.get_training_data].
 
         Returns:
             The entire test data.
