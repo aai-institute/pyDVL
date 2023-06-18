@@ -164,13 +164,13 @@ Examples for hidden imports and plots are available in the notebooks, e.g. in
 ## Documentation
 
 API documentation and examples from notebooks are built with
-[sphinx](https://www.sphinx-doc.org/) by tox. Doctests are run during this step.
+[mkdocs](https://) by tox. Doctests are run during this step.
 In order to construct the API documentation, tox calls a helper script that
-builds `.rst` files from docstrings and templates. It can be invoked manually
+builds `.md` files from docstrings and templates. It can be invoked manually
 with:
 
 ```bash
-python build_scripts/update_docs.py
+python build_scripts/generate_api_docs.py
 ```
 
 See the documentation inside the script for more details. Notebooks are an
@@ -202,24 +202,22 @@ tox -e docs-dev
 
 ### Using bibliography
 
-Bibliographic citations are managed with the plugin 
-[sphinx-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/en/latest/index.html).
+Bibliographic citations are managed with the plugins 
+[mkdocs-bibtex]() and [...][].
 To enter a citation first add the entry to `docs/pydvl.bib`. For team
 contributor this should be an export of the Zotero folder `software/pydvl` in
 the [TransferLab Zotero library](https://www.zotero.org/groups/2703043/transferlab/library).
 All other contributors just add the bibtex data, and a maintainer will add it to
 the group library upon merging.
 
-To add a citation inside a module or function's docstring, use the sphinx role
-`:footcite:t:`. A references section is automatically added at the bottom of
-each module's auto-generated documentation.
+To add a citation inside a module or function's docstring, use the notation
+`[@citekey]`. A references section is automatically added at the bottom of each
+module's auto-generated documentation.
 
 ### Writing mathematics
 
-In sphinx one can write mathematics with the directives `:math:` (inline) or
-`.. math::` (block). Additionally, we use the extension 
-[sphinx-math-dollar](https://github.com/sympy/sphinx-math-dollar) to allow for
-the more common `$` (inline) and `$$` (block) delimiters in RST files.
+Use LaTeX delimiters `$` and `$$` for inline and displayed mathematics
+respectively.
 
 **Warning: backslashes must be escaped in docstrings!** (although there are
 exceptions). For simplicity, declare the string as "raw" with the prefix `r`:
