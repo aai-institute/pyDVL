@@ -9,7 +9,7 @@ indexing and updating abilities, and conversion to `pandas DataFrames
 
 # Operating on results
 
-Results can be added together with the standard ``+`` operator. Because values
+Results can be added together with the standard `+` operator. Because values
 are typically running averages of iterative algorithms, addition behaves like a
 weighted average of the two results, with the weights being the number of
 updates in each result: adding two results is the same as generating one result
@@ -138,7 +138,7 @@ class ValuationResult(
     any data names (e.g. group names in [GroupedDataset][pydvl.utils.dataset.GroupedDataset]),
     the values themselves, and variance of the computation in the case of Monte
     Carlo methods. `ValuationResults` can be iterated over like any `Sequence`:
-    ``iter(valuation_result)`` returns a generator of
+    `iter(valuation_result)` returns a generator of
     [ValueItem][pydvl.value.result.ValueItem] in the order in which the object
     is sorted.
 
@@ -158,25 +158,25 @@ class ValuationResult(
     # Sorting
 
     Results can be sorted in-place with [sort()][pydvl.value.result.ValuationResult.sort], or alternatively using
-    python's standard ``sorted()`` and ``reversed()`` Note that sorting values
+    python's standard `sorted()` and `reversed()` Note that sorting values
     affects how iterators and the object itself as `Sequence` behave:
-    ``values[0]`` returns a [ValueItem][pydvl.value.result.ValueItem] with the highest or lowest
+    `values[0]` returns a [ValueItem][pydvl.value.result.ValueItem] with the highest or lowest
     ranking point if this object is sorted by descending or ascending value,
-    respectively. If unsorted, ``values[0]`` returns the `ValueItem` at
-    position 0, which has data index ``indices[0]`` in the
+    respectively. If unsorted, `values[0]` returns the `ValueItem` at
+    position 0, which has data index `indices[0]` in the
     [Dataset][pydvl.utils.dataset.Dataset].
 
     The same applies to direct indexing of the `ValuationResult`: the index
     is positional, according to the sorting. It does not refer to the "data
     index". To sort according to data index, use [sort()][pydvl.value.result.ValuationResult.sort] with
-    ``key="index"``.
+    `key="index"`.
 
     In order to access [ValueItem][pydvl.value.result.ValueItem] objects by their data index, use
     [get()][pydvl.value.result.ValuationResult.get].
 
     # Operating on results
 
-    Results can be added to each other with the ``+`` operator. Means and
+    Results can be added to each other with the `+` operator. Means and
     variances are correctly updated, using the `counts` attribute.
 
     Results can also be updated with new values using [update()][pydvl.value.result.ValuationResult.update]. Means and
@@ -188,10 +188,10 @@ class ValuationResult(
         values: An array of values. If omitted, defaults to an empty array
             or to an array of zeros if `indices` are given.
         indices: An optional array of indices in the original dataset. If
-            omitted, defaults to ``np.arange(len(values))``. **Warning:** It is
+            omitted, defaults to `np.arange(len(values))`. **Warning:** It is
             common to pass the indices of a [Dataset][pydvl.utils.dataset.Dataset]
             here. Attention must be paid in a parallel context to copy them to
-            the local process. Just do ``indices=np.copy(data.indices)``.
+            the local process. Just do `indices=np.copy(data.indices)`.
         variance: An optional array of variances in the computation of each value.
         counts: An optional array with the number of updates for each value.
             Defaults to an array of ones.
@@ -325,7 +325,7 @@ class ValuationResult(
         """The indices for the values, possibly sorted.
 
         If the object is unsorted, then these are the same as declared at
-        construction or ``np.arange(len(values))`` if none were passed.
+        construction or `np.arange(len(values))` if none were passed.
         """
         return self._indices[self._sort_positions]
 
@@ -333,7 +333,7 @@ class ValuationResult(
     def names(self) -> NDArray[NameT]:
         """The names for the values, possibly sorted.
         If the object is unsorted, then these are the same as declared at
-        construction or ``np.arange(len(values))`` if none were passed.
+        construction or `np.arange(len(values))` if none were passed.
         """
         return self._names[self._sort_positions]
 
@@ -493,7 +493,7 @@ class ValuationResult(
             Abusing this will introduce numerical errors.
 
         Means and standard errors are correctly handled. Statuses are added with
-        bit-wise ``&``, see [Status][pydvl.value.result.Status].
+        bit-wise `&`, see [Status][pydvl.value.result.Status].
         `data_names` are taken from the left summand, or if unavailable from
         the right one. The `algorithm` string is carried over if both terms
         have the same one or concatenated.
@@ -749,7 +749,7 @@ class ValuationResult(
         Args:
             algorithm: Name of the algorithm used to compute the values
             indices: Data indices to use. A copy will be made. If not given,
-                the indices will be set to the range ``[0, n_samples)``.
+                the indices will be set to the range `[0, n_samples)`.
             data_names: Data names to use. A copy will be made. If not given,
                 the names will be set to the string representation of the indices.
             n_samples: Number of data points whose values are computed. If

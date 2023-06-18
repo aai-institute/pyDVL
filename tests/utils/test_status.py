@@ -51,7 +51,7 @@ def test_not_status():
     """The result of bitwise negation of a Status is `Failed`
     if the status is `Converged`, or `Converged` otherwise:
 
-        ``~P == C, ~C == F, ~F == C``
+        `~P == C, ~C == F, ~F == C`
     """
     assert ~Status.Pending == Status.Converged
     assert ~Status.Converged == Status.Failed

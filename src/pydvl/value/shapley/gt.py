@@ -118,7 +118,8 @@ def num_samples_eps_delta(
 def _group_testing_shapley(
     u: Utility, n_samples: int, progress: bool = False, job_id: int = 1
 ):
-    """Helper function for :func:`group_testing_shapley`.
+    """Helper function for
+    [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley].
 
     Computes utilities of sets sampled using the strategy for estimating the
     differences in Shapley values.
@@ -175,7 +176,8 @@ def group_testing_shapley(
     Args:
         u: Utility object with model, data, and scoring function
         n_samples: Number of tests to perform. Use
-            :func:`num_samples_eps_delta` to estimate this.
+            [num_samples_eps_delta][pydvl.value.shapley.gt.num_samples_eps_delta]
+            to estimate this.
         epsilon: From the (ε,δ) sample bound. Use the same as for the
             estimation of `n_iterations`.
         delta: From the (ε,δ) sample bound. Use the same as for the
@@ -185,7 +187,8 @@ def group_testing_shapley(
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
         progress: Whether to display progress bars for each job.
-        options: Additional options to pass to [cvxpy.Problem.solve()](https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options).
+        options: Additional options to pass to
+            [cvxpy.Problem.solve()](https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options).
             E.g. to change the solver (which defaults to `cvxpy.SCS`) pass
             `solver=cvxpy.CVXOPT`.
 

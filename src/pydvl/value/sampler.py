@@ -4,7 +4,7 @@ Samplers iterate over subsets of indices.
 The classes in this module are used to iterate over indices and subsets of their
 complement in the whole set, as required for the computation of marginal utility
 for semi-values. The elements returned when iterating over any subclass of
-[PowersetSampler][pydvl.value.sampler.PowersetSampler] are tuples of the form ``(idx, subset)``, where `idx`
+[PowersetSampler][pydvl.value.sampler.PowersetSampler] are tuples of the form `(idx, subset)`, where `idx`
 is the index of the element being added to the subset, and `subset` is the
 subset of the complement of `idx`.
 

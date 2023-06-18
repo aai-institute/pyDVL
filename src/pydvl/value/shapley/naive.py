@@ -64,7 +64,8 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 def _combinatorial_exact_shapley(
     indices: Sequence[int], u: Utility, progress: bool
 ) -> NDArray:
-    """Helper function for :func:`combinatorial_exact_shapley`.
+    """Helper function for
+    [combinatorial_exact_shapley()][pydvl.value.shapley.naive.combinatorial_exact_shapley].
 
     Computes the marginal utilities for the set of indices passed and returns
     the value of the samples according to the exact combinatorial definition.

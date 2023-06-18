@@ -35,7 +35,8 @@ def lc_solve_problem(
     solver_options: Optional[dict] = None,
     **options,
 ) -> ValuationResult:
-    """Solves a linear problem prepared by :func:`mclc_prepare_problem`.
+    """Solves a linear problem as prepared by
+    [mclc_prepare_problem()][pydvl.value.least_core.montecarlo.mclc_prepare_problem].
     Useful for parallel execution of multiple experiments by running this as a
     remote task.
 
@@ -237,12 +238,12 @@ def _solve_least_core_linear_program(
     Args:
         A_eq: The equality constraint matrix. Each row of `A_eq` specifies the
             coefficients of a linear equality constraint on `x`.
-        b_eq: The equality constraint vector. Each element of ``A_eq @ x`` must equal
+        b_eq: The equality constraint vector. Each element of `A_eq @ x` must equal
             the corresponding element of `b_eq`.
         A_lb: The inequality constraint matrix. Each row of `A_lb` specifies the
             coefficients of a linear inequality constraint on `x`.
         b_lb: The inequality constraint vector. Each element represents a
-            lower bound on the corresponding value of ``A_lb @ x``.
+            lower bound on the corresponding value of `A_lb @ x`.
             non_negative_subsidy: If True, the least core subsidy $e$ is constrained
             to be non-negative.
         options: Keyword arguments that will be used to select a solver
@@ -311,15 +312,16 @@ def _solve_egalitarian_least_core_quadratic_program(
     $A_{ub}$ and $A_{eq}$ are matrices.
 
     Args:
-        subsidy: Minimal subsidy returned by :func:`_solve_least_core_linear_program`
+        subsidy: Minimal subsidy returned by
+            [_solve_least_core_linear_program()][pydvl.value.least_core.common._solve_least_core_linear_program]
         A_eq: The equality constraint matrix. Each row of `A_eq` specifies the
             coefficients of a linear equality constraint on `x`.
-        b_eq: The equality constraint vector. Each element of ``A_eq @ x`` must equal
+        b_eq: The equality constraint vector. Each element of `A_eq @ x` must equal
             the corresponding element of `b_eq`.
         A_lb: The inequality constraint matrix. Each row of `A_lb` specifies the
             coefficients of a linear inequality constraint on `x`.
         b_lb: The inequality constraint vector. Each element represents a
-            lower bound on the corresponding value of ``A_lb @ x``.
+            lower bound on the corresponding value of `A_lb @ x`.
         solver_options: Keyword arguments that will be used to select a solver
             and to configure it. Refer to [cvxpy's
             documentation](https://www.cvxpy.org/tutorial/advanced/index.html#setting-solver-options)

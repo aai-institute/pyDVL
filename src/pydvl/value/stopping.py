@@ -71,8 +71,8 @@ class StoppingCriterion(abc.ABC):
     completion of the computation with [completion()][pydvl.value.stopping.StoppingCriterion.completion].
 
     Instances of `StoppingCriterion` can be composed with the binary operators
-    ``&`` (*and*), and ``|`` (*or*), following the truth tables of
-    [Status][pydvl.utils.status.Status]. The unary operator ``~`` (*not*) is
+    `&` (*and*), and `|` (*or*), following the truth tables of
+    [Status][pydvl.utils.status.Status]. The unary operator `~` (*not*) is
     also supported. These boolean operations act according to the following
     rules:
 
@@ -89,13 +89,17 @@ class StoppingCriterion(abc.ABC):
 
     # Subclassing
 
-    Subclassing this class requires implementing a [_check()][pydvl.value.stopping.StoppingCriterion._check] method that
+    Subclassing this class requires implementing a
+    [_check()][pydvl.value.stopping.StoppingCriterion._check] method that
     returns a [Status][pydvl.utils.status.Status] object based on a given
-    [ValuationResult][pydvl.value.result.ValuationResult]. This method should update the
-    :attr:`converged` attribute, which is a boolean array indicating whether
-    the value for each index has converged. When this is not possible,
-    [completion()][pydvl.value.stopping.StoppingCriterion.completion] should be overridden to provide an overall completion
-    value, since the default implementation returns the mean of :attr:`converged`.
+    [ValuationResult][pydvl.value.result.ValuationResult]. This method should
+    update the attribute [converged][pydvl.value.result.ValuationResult.converged],
+    which is a boolean array indicating whether the value for each index has
+    converged. When this is not possible,
+    [completion()][pydvl.value.stopping.StoppingCriterion.completion] should be
+    overridden to provide an overall completion value, since the default
+    implementation returns the mean of
+    [converged][pydvl.value.result.ValuationResult.converged].
 
     Args:
         modify_result: If `True` the status of the input

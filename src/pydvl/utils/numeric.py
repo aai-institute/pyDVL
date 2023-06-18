@@ -31,7 +31,8 @@ def powerset(s: NDArray[T]) -> Iterator[Collection[T]]:
     """Returns an iterator for the power set of the argument.
 
      Subsets are generated in sequence by growing size. See
-     :func:`random_powerset` for random sampling.
+     [random_powerset()][pydvl.utils.numeric.random_powerset] for random
+     sampling.
 
     >>> import numpy as np
     >>> from pydvl.utils.numeric import powerset
@@ -42,7 +43,7 @@ def powerset(s: NDArray[T]) -> Iterator[Collection[T]]:
          s: The set to use
 
     Returns:
-        An iterator
+        An iterator over all subsets of the set of indices `s`.
     """
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 

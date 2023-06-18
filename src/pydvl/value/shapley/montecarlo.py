@@ -7,15 +7,18 @@ Monte Carlo approximations to Shapley Data values.
     the functions in this module.
 
 Because exact computation of Shapley values requires $\mathcal{O}(2^n)$
-re-trainings of the model, several Monte Carlo approximations are available.
-The first two sample from the powerset of the training data directly:
-:func:`combinatorial_montecarlo_shapley` and :func:`owen_sampling_shapley`. The
-latter uses a reformulation in terms of a continuous extension of the utility.
+re-trainings of the model, several Monte Carlo approximations are available. The
+first two sample from the powerset of the training data directly:
+[combinatorial_montecarlo_shapley()][pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley]
+and [owen_sampling_shapley()][pydvl.value.shapley.owen.owen_sampling_shapley].
+The latter uses a reformulation in terms of a continuous extension of the
+utility.
 
 Alternatively, employing another reformulation of the expression above as a sum
 over permutations, one has the implementation in
-:func:`permutation_montecarlo_shapley`, or using an early stopping strategy to
-reduce computation :func:`truncated_montecarlo_shapley`.
+[permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley],
+or using an early stopping strategy to reduce computation
+[truncated_montecarlo_shapley()][pydvl.value.shapley.truncated.truncated_montecarlo_shapley].
 
 !!! info "Also see"
    It is also possible to use [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]
@@ -63,7 +66,7 @@ def _permutation_montecarlo_shapley(
     progress: bool = False,
     job_id: int = 1,
 ) -> ValuationResult:
-    """Helper function for :func:`permutation_montecarlo_shapley`.
+    """Helper function for [permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley].
 
     Computes marginal utilities of each training sample in
     [Utility.data][pydvl.utils.utility.Utility.data] by iterating through
@@ -166,7 +169,7 @@ def _combinatorial_montecarlo_shapley(
     progress: bool = False,
     job_id: int = 1,
 ) -> ValuationResult:
-    """Helper function for :func:`combinatorial_montecarlo_shapley`.
+    """Helper function for [combinatorial_montecarlo_shapley()][pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley].
 
     This is the code that is sent to workers to compute values using the
     combinatorial definition.

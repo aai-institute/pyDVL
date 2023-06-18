@@ -115,7 +115,7 @@ class RelativeTruncation(TruncationPolicy):
     Args:
         u: Utility object with model, data, and scoring function
         rtol: Relative tolerance. The permutation is broken if the
-            last computed utility is less than ``total_utility * rtol``.
+            last computed utility is less than `total_utility * rtol`.
     """
 
     def __init__(self, u: Utility, rtol: float):
@@ -225,15 +225,17 @@ def truncated_montecarlo_shapley(
     Instead of naively implementing the expectation, we sequentially add points
     to a dataset from a permutation and incrementally compute marginal utilities.
     We stop computing marginals for a given permutation based on a
-    :class:`TruncationPolicy`. [@ghorbani_data_2019] mention two
-    policies: one that stops after a certain fraction of marginals are computed,
-    implemented in :class:`FixedTruncation`, and one that stops if the last
-    computed utility ("score") is close to the total utility using the standard
-    deviation of the utility as a measure of proximity, implemented in
-    :class:`BootstrapTruncation`.
+    [TruncationPolicy][pydvl.value.shapley.truncated.TruncationPolicy].
+    [@ghorbani_data_2019] mention two policies: one that stops after a certain
+    fraction of marginals are computed, implemented in
+    [FixedTruncation][pydvl.value.shapley.truncated.FixedTruncation], and one
+    that stops if the last computed utility ("score") is close to the total
+    utility using the standard deviation of the utility as a measure of proximity,
+    implemented in
+    [BootstrapTruncation][pydvl.value.shapley.truncated.BootstrapTruncation].
 
-    We keep sampling permutations and updating all shapley values
-    until the :class:`StoppingCriterion` returns `True`.
+    We keep sampling permutations and updating all shapley values until the
+    [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] returns `True`.
 
     Args:
         u: Utility object with model, data, and scoring function

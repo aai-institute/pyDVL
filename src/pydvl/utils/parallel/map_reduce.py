@@ -89,7 +89,7 @@ class MapReduceJob(Generic[T, R]):
         reduce_func: Function that will be applied to the results of
             `map_func` to reduce them.
         map_kwargs: Keyword arguments that will be passed to `map_func` in
-            each job. Alternatively, one can use ``itertools.partial``.
+            each job. Alternatively, one can use `itertools.partial`.
         reduce_kwargs: Keyword arguments that will be passed to `reduce_func`
             in each job. Alternatively, one can use [itertools.partial][].
         config: Instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
@@ -188,7 +188,7 @@ class MapReduceJob(Generic[T, R]):
         return reduce_results
 
     def map(self, inputs: Union[Sequence[T], T]) -> List["ObjectRef[R]"]:
-        """Splits the input data into chunks and calls a wrapped :func:`map_func` on them."""
+        """Splits the input data into chunks and calls a wrapped `map_func` on them."""
         map_results: List["ObjectRef[R]"] = []
 
         map_func = self._wrap_function(self._map_func)
