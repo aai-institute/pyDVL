@@ -89,20 +89,23 @@ class MapReduceJob(Generic[T, R]):
         reduce_func: Function that will be applied to the results of
             `map_func` to reduce them.
         map_kwargs: Keyword arguments that will be passed to `map_func` in
-            each job. Alternatively, one can use `itertools.partial`.
+            each job. Alternatively, one can use
+            [itertools.partial][itertools.partial].
         reduce_kwargs: Keyword arguments that will be passed to `reduce_func`
-            in each job. Alternatively, one can use [itertools.partial][].
+            in each job. Alternatively, one can use
+            [itertools.partial][itertools.partial].
         config: Instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
             with cluster address, number of cpus, etc.
         n_jobs: Number of parallel jobs to run. Does not accept 0
         timeout: Amount of time in seconds to wait for remote results before
             ... TODO
         max_parallel_tasks: Maximum number of jobs to start in parallel. Any
-            tasks above this number won't be submitted to the backend before some
-            are done. This is to avoid swamping the work queue. Note that tasks have
-            a low memory footprint, so this is probably not a big concern, except
-            in the case of an infinite stream (not the case for MapReduceJob). See
-            the [ray docs](https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html)
+            tasks above this number won't be submitted to the backend before
+            some are done. This is to avoid swamping the work queue. Note that
+            tasks have a low memory footprint, so this is probably not a big
+            concern, except in the case of an infinite stream (not the case for
+            MapReduceJob). See the
+            [ray docs](https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html)
 
     Examples:
 

@@ -149,7 +149,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         self,
         v: Union[ObjectRef, Iterable[ObjectRef], T],
         *args,
-        **kwargs,
+        **kwargs: dict,
     ) -> Union[T, Any]:
         timeout: Optional[float] = kwargs.get("timeout", None)
         if isinstance(v, ObjectRef):
@@ -165,7 +165,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         except TypeError:
             return v  # type: ignore
 
-    def wrap(self, fun: Callable, **kwargs) -> Callable:
+    def wrap(self, fun: Callable, **kwargs: dict) -> Callable:
         """Wraps a function as a ray remote.
 
         Args:
@@ -183,7 +183,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         self,
         v: List["ObjectRef"],
         *args,
-        **kwargs,
+        **kwargs: dict,
     ) -> Tuple[List[ObjectRef], List[ObjectRef]]:
         num_returns: int = kwargs.get("num_returns", 1)
         timeout: Optional[float] = kwargs.get("timeout", None)

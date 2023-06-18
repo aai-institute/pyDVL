@@ -18,7 +18,7 @@ updated accordingly. See [ValuationResult][pydvl.value.result.ValuationResult] f
 
 Results can also be sorted by value, variance or number of updates, see
 [sort()][pydvl.value.result.ValuationResult.sort]. The arrays of
-[ValuationResult.values][pydvl.value.result.aluationResult.values],
+[ValuationResult.values][pydvl.value.result.ValuationResult.values],
 [ValuationResult.variances][pydvl.value.result.ValuationResult.variances],
 [ValuationResult.counts][pydvl.value.result.ValuationResult.counts],
 [ValuationResult.indices][pydvl.value.result.ValuationResult.indices],
@@ -93,23 +93,26 @@ class ValueItem(Generic[IndexT, NameT]):
     """The result of a value computation for one datum.
 
     `ValueItems` can be compared with the usual operators, forming a total
-    order. Comparisons take only the [value][pydvl.value.result.ValueItem.value] into account.
+    order. Comparisons take only the `value` into account.
 
-    !!! Todo
+    !!! todo
         Maybe have a mode of comparing similar to `np.isclose`, or taking the
-        [variance][pydvl.value.result.ValueItem.variance] into account.
+        `variance` into account.
+
+    Attributes:
+        index: Index of the sample with this value in the original
+            [Dataset][pydvl.utils.dataset.Dataset]
+        name: Name of the sample if it was provided. Otherwise, `str(index)`
+        value: The value
+        variance: Variance of the value if it was computed with an approximate
+            method
+        count: Number of updates for this value
     """
 
-    #: Index of the sample with this value in the original
-    #  [Dataset][pydvl.utils.dataset.Dataset]
     index: IndexT
-    #: Name of the sample if it was provided. Otherwise, `str(index)`
     name: NameT
-    #: The value
     value: float
-    #: Variance of the value if it was computed with an approximate method
     variance: Optional[float]
-    #: Number of updates for this value
     count: Optional[int]
 
     def __lt__(self, other):
@@ -192,7 +195,7 @@ class ValuationResult(
             common to pass the indices of a [Dataset][pydvl.utils.dataset.Dataset]
             here. Attention must be paid in a parallel context to copy them to
             the local process. Just do `indices=np.copy(data.indices)`.
-        variance: An optional array of variances in the computation of each value.
+        variances: An optional array of variances in the computation of each value.
         counts: An optional array with the number of updates for each value.
             Defaults to an array of ones.
         data_names: Names for the data points. Defaults to index numbers if not set.
@@ -229,7 +232,7 @@ class ValuationResult(
         algorithm: str = "",
         status: Status = Status.Pending,
         sort: bool = False,
-        **extra_values,
+        **extra_values: dict,
     ):
         if variances is not None and len(variances) != len(values):
             raise ValueError("Lengths of values and variances do not match")
@@ -667,7 +670,7 @@ class ValuationResult(
 
     @classmethod
     def from_random(
-        cls, size: int, total: Optional[float] = None, **kwargs
+        cls, size: int, total: Optional[float] = None, **kwargs: dict
     ) -> "ValuationResult":
         """Creates a [ValuationResult][pydvl.value.result.ValuationResult] object and fills it with an array
         of random values from a uniform distribution in [-1,1]. The values can

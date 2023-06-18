@@ -27,7 +27,7 @@ class SupervisedModel(Protocol):
         pass
 
 
-def maybe_add_argument(fun: Callable, new_arg: str):
+def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
     """Wraps a function to accept the given keyword parameter if it doesn't
     already.
 

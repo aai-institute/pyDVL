@@ -204,7 +204,7 @@ def compute_semivalues(
     mode: SemiValueMode = SemiValueMode.Shapley,
     sampler_t: Type[PowersetSampler] = PermutationSampler,
     n_jobs: int = 1,
-    **kwargs,
+    **kwargs: dict,
 ) -> ValuationResult:
     """Entry point for most common semi-value computations. All are implemented
     with permutation sampling.

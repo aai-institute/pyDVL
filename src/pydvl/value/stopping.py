@@ -57,7 +57,7 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-StoppingCriterionCallable = Callable[[ValuationResult], Status]
+StoppingCriterionCallable = Callable[[ValuationResult], Status]  #: Signature for a stopping criterion
 
 
 class StoppingCriterion(abc.ABC):
@@ -93,22 +93,21 @@ class StoppingCriterion(abc.ABC):
     [_check()][pydvl.value.stopping.StoppingCriterion._check] method that
     returns a [Status][pydvl.utils.status.Status] object based on a given
     [ValuationResult][pydvl.value.result.ValuationResult]. This method should
-    update the attribute [converged][pydvl.value.result.ValuationResult.converged],
+    update the attribute [_converged][pydvl.value.stopping.StoppingCriterion._converged],
     which is a boolean array indicating whether the value for each index has
-    converged. When this is not possible,
+    converged. When this does not make sense for a particular stopping criterion,
     [completion()][pydvl.value.stopping.StoppingCriterion.completion] should be
-    overridden to provide an overall completion value, since the default
-    implementation returns the mean of
-    [converged][pydvl.value.result.ValuationResult.converged].
+    overridden to provide an overall completion value, since its default
+    implementation attempts to compute the mean of
+    [_converged][pydvl.value.stopping.StoppingCriterion._converged].
 
     Args:
         modify_result: If `True` the status of the input
-        [ValuationResult][pydvl.value.result.ValuationResult] is modified in place after
-        the call.
+            [ValuationResult][pydvl.value.result.ValuationResult] is modified in
+            place after the call.
     """
 
-    # A boolean array indicating whether the corresponding element has converged
-    _converged: NDArray[np.bool_]
+    _converged: NDArray[np.bool_]  #: A boolean array indicating whether the corresponding element has converged
 
     def __init__(self, modify_result: bool = True):
         self.modify_result = modify_result
@@ -134,6 +133,10 @@ class StoppingCriterion(abc.ABC):
 
         Inheriting classes must set the `_converged` attribute in their
         [_check()][pydvl.value.stopping.StoppingCriterion._check].
+
+        Returns:
+            A boolean array indicating whether the values have converged for
+            each data point.
         """
         return self._converged
 

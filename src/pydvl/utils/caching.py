@@ -43,10 +43,8 @@ This can be useful for stochastic functions with high variance (e.g. model
 training for small sample sizes), but drastically reduces the speed benefits of
 memoization.
 
-This behaviour can be activated with
-[allow_repeated_evaluations][pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations].
-
-.. _cache reuse:
+This behaviour can be activated with the argument `allow_repeated_evaluations`
+to [memcached()][pydvl.utils.caching.memcached].
 
 # Cache reuse
 
@@ -78,9 +76,10 @@ sometimes one must exclude some of them. For example, If a function is going to
 run across multiple processes and some reporting arguments are added (like a
 `job_id` for logging purposes), these will be part of the signature and make the
 functions distinct to the eyes of the cache. This can be avoided with the use of
-[ignore_args][pydvl.utils.config.MemcachedConfig.ignore_args] in the configuration.
+[ignore_args][pydvl.utils.config.MemcachedConfig] in the configuration.
 
 """
+from __future__ import annotations
 
 import logging
 import socket
@@ -91,7 +90,7 @@ from functools import wraps
 from hashlib import blake2b
 from io import BytesIO
 from time import time
-from typing import Callable, Dict, Iterable, Optional, TypeVar, cast
+from typing import Any, Callable, Dict, Iterable, Optional, TypeVar, cast
 
 from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
@@ -109,7 +108,16 @@ T = TypeVar("T")
 
 @dataclass
 class CacheStats:
-    """Statistics gathered by cached functions."""
+    """Statistics gathered by cached functions.
+
+    Attributes:
+        sets: number of times a value was set in the cache
+        misses: number of times a value was not found in the cache
+        hits: number of times a value was found in the cache
+        timeouts: number of times a timeout occurred
+        errors: number of times an error occurred
+        reconnects: number of times the client reconnected to the server
+    """
 
     sets: int = 0
     misses: int = 0
@@ -119,7 +127,8 @@ class CacheStats:
     reconnects: int = 0
 
 
-def serialize(x):
+def serialize(x: Any) -> bytes:
+    """Serialize an object to bytes.    """
     pickled_output = BytesIO()
     pickler = Pickler(pickled_output, PICKLE_VERSION)
     pickler.dump(x)
@@ -133,7 +142,7 @@ def memcached(
     rtol_stderr: float = 0.1,
     min_repetitions: int = 3,
     ignore_args: Optional[Iterable[str]] = None,
-):
+) -> Callable[[Callable[..., T], bytes|None], Callable[..., T]]:
     """
     Transparent, distributed memoization of function calls.
 

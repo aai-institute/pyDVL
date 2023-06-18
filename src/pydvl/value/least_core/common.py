@@ -297,7 +297,7 @@ def _solve_egalitarian_least_core_quadratic_program(
     b_lb: NDArray[np.float_],
     solver_options: dict,
 ) -> Optional[NDArray[np.float_]]:
-    """Solves the egalitarian Least Core's quadratic program using cvxopt.
+    r"""Solves the egalitarian Least Core's quadratic program using cvxopt.
 
     $$
         \text{minimize} \ & \| x \|_2 \\

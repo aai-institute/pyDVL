@@ -24,7 +24,7 @@ def compute_shapley_values(
     done: StoppingCriterion = MaxUpdates(100),
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     n_jobs: int = 1,
-    **kwargs,
+    **kwargs: dict,
 ) -> ValuationResult:
     """Umbrella method to compute Shapley values with any of the available
     algorithms.
@@ -51,7 +51,7 @@ def compute_shapley_values(
     - `truncated_montecarlo`: default option, same as `permutation_montecarlo`
       but stops the computation whenever a certain accuracy is reached.
       Implemented in
-      [truncated_montecarlo_shapley()][pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley].
+      [truncated_montecarlo_shapley()][pydvl.value.shapley.truncated.truncated_montecarlo_shapley].
     - `owen_sampling`: Uses the Owen continuous extension of the utility
       function to the unit cube. Implemented in
       [owen_sampling_shapley()][pydvl.value.shapley.owen.owen_sampling_shapley]. This
@@ -116,7 +116,7 @@ def compute_shapley_values(
             n_jobs=n_jobs,
             progress=progress,
             truncation=truncation,
-            **kwargs,
+            **kwargs
         )
     elif mode == ShapleyMode.CombinatorialExact:
         return combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)

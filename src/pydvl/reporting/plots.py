@@ -19,9 +19,10 @@ def shaded_mean_std(
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     ax: Optional[Axes] = None,
-    **kwargs,
+    **kwargs: dict,
 ) -> Axes:
-    """The usual mean +- x std deviations plot to aggregate runs of experiments.
+    """ The usual mean +- std deviation plot to aggregate runs of experiments.
+
     Args:
         data: axis 0 is to be aggregated on (e.g. runs) and axis 1 is the
             data for each run.
@@ -61,12 +62,13 @@ def shaded_mean_std(
 def spearman_correlation(vv: List[OrderedDict], num_values: int, pvalue: float):
     """Simple matrix plots with spearman correlation for each pair in vv.
 
-    vv: list of OrderedDicts with index: value. Spearman correlation
-    is computed for the keys.
-    num_values: Use only these many values from the data (from the start
-    of the OrderedDicts)
-    pvalue: correlation coefficients for which the p-value is below the
-    threshold `pvalue/len(vv)` will be discarded.
+    Args:
+        vv: list of OrderedDicts with index: value. Spearman correlation
+            is computed for the keys.
+        num_values: Use only these many values from the data (from the start
+            of the OrderedDicts)
+        pvalue: correlation coefficients for which the p-value is below the
+            threshold `pvalue/len(vv)` will be discarded.
     """
     r: np.ndarray = np.ndarray((len(vv), len(vv)))
     p: np.ndarray = np.ndarray((len(vv), len(vv)))

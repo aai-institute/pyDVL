@@ -12,7 +12,7 @@ __all__ = ["init_executor"]
 def init_executor(
     max_workers: Optional[int] = None,
     config: ParallelConfig = ParallelConfig(),
-    **kwargs,
+    **kwargs: dict,
 ) -> Generator[Executor, None, None]:
     """Initializes a futures executor based on the passed parallel configuration object.
 

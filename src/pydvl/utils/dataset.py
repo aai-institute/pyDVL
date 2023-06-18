@@ -257,7 +257,7 @@ class Dataset:
         train_size: float = 0.8,
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> "Dataset":
         """Constructs a [Dataset][pydvl.utils.Dataset] object from a
         [Bunch][sklearn.utils.Bunch], as returned by the `load_*` functions in
@@ -299,7 +299,7 @@ class Dataset:
             feature_names=data.get("feature_names"),
             target_names=data.get("target_names"),
             description=data.get("DESCR"),
-            **kwargs,
+            **kwargs
         )
 
     @classmethod
@@ -310,7 +310,7 @@ class Dataset:
         train_size: float = 0.8,
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> "Dataset":
         """Constructs a [Dataset][pydvl.utils.Dataset] object from X and y numpy arrays  as
         returned by the `make_*` functions in [sklearn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
@@ -357,7 +357,7 @@ class GroupedDataset(Dataset):
         target_names: Optional[Sequence[str]] = None,
         group_names: Optional[Sequence[str]] = None,
         description: Optional[str] = None,
-        **kwargs,
+        **kwargs: dict,
     ):
         """Class for grouping datasets.
 
@@ -436,7 +436,7 @@ class GroupedDataset(Dataset):
 
         Args:
             indices: group indices whose elements to return. If `None`,
-            all data from all groups are returned.
+                all data from all groups are returned.
 
         Returns:
             Tuple of training data x and labels y.
@@ -456,7 +456,7 @@ class GroupedDataset(Dataset):
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
         data_groups: Optional[Sequence] = None,
-        **kwargs,
+        **kwargs: dict,
     ) -> "GroupedDataset":
         """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from a scikit-learn bunch
         as returned by the `load_*` functions in `sklearn toy datasets
@@ -476,8 +476,8 @@ class GroupedDataset(Dataset):
                 fashion, using the target variable as labels. Read more in
                 [sklearn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             data_groups: an array holding the group index or name for each
-            data point. The length of this array must be equal to the number of
-            data points in the dataset.
+                data point. The length of this array must be equal to the number of
+                data points in the dataset.
             kwargs: Additional keyword arguments to pass to the
                 [Dataset][pydvl.utils.Dataset] constructor.
 
@@ -512,7 +512,7 @@ class GroupedDataset(Dataset):
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
         data_groups: Optional[Sequence] = None,
-        **kwargs,
+        **kwargs: dict,
     ) -> "Dataset":
         """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from X and y numpy arrays
         as returned by the `make_*` functions in `sklearn generated datasets
@@ -593,7 +593,7 @@ def load_spotify_dataset(
     min_year: int = 2014,
     target_column: str = "popularity",
     random_state: int = 24,
-):
+) -> tuple[list, list, list]:
     """Loads (and downloads if not already cached) the spotify music dataset.
     More info on the dataset can be found at
     https://www.kaggle.com/datasets/mrmorj/dataset-of-songs-in-spotify.
@@ -609,7 +609,7 @@ def load_spotify_dataset(
         random_state: fixes sklearn random seed
 
     Returns:
-        Tuple with 3 elements, each being a list sith [input_data, related_labels]
+        Tuple with 3 elements, each being a list with [input_data, related_labels]
     """
     root_dir_path = Path(__file__).parent.parent.parent.parent
     file_path = root_dir_path / "data/top_hits_spotify_dataset.csv"
@@ -693,12 +693,12 @@ def load_wine_dataset(
 
 
 def synthetic_classification_dataset(
-    mus: np.ndarray,
+    mus: NDArray,
     sigma: float,
     num_samples: int,
     train_size: float,
     test_size: float,
-    random_seed=None,
+    random_seed: int = None,
 ) -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Tuple[Any, Any]]:
     """Sample from a uniform Gaussian mixture model.
 
@@ -708,7 +708,7 @@ def synthetic_classification_dataset(
         num_samples: The number of samples to generate.
         train_size: fraction of points used for training dataset
         test_size: fraction of points used for test dataset
-        random_seed: fix random seed. If None, no random seed is set.
+        random_seed: fix random seed. If `None`, no random seed is set.
 
     Returns:
         A tuple of matrix x of shape [NxD] and target vector y of shape [N].
@@ -746,7 +746,8 @@ def decision_boundary_fixed_variance_2d(
         mu_2: Second mean.
 
     Returns:
-        A callable which converts a continuous line (-infty, infty) to the decision boundary in feature space.
+        A callable which converts a continuous line (-infty, infty) to the
+        decision boundary in feature space.
     """
     a = np.asarray([[0, 1], [-1, 0]]) @ (mu_2 - mu_1)
     b = (mu_1 + mu_2) / 2

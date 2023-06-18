@@ -89,7 +89,7 @@ class FixedTruncation(TruncationPolicy):
     Args:
         u: Utility object with model, data, and scoring function
         fraction: Fraction of marginals in a permutation to compute before
-        stopping (e.g. 0.5 to compute half of the marginals).
+            stopping (e.g. 0.5 to compute half of the marginals).
     """
 
     def __init__(self, u: Utility, fraction: float):

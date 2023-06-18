@@ -47,7 +47,7 @@ def compute_least_core_values(
     mode: LeastCoreMode = LeastCoreMode.MonteCarlo,
     non_negative_subsidy: bool = False,
     solver_options: Optional[dict] = None,
-    **kwargs,
+    **kwargs: dict,
 ) -> ValuationResult:
     """Umbrella method to compute Least Core values with any of the available
     algorithms.
