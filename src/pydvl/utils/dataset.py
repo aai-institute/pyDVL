@@ -179,12 +179,13 @@ class Dataset:
         be those of the training data and would not work on the test data.
 
         There may be cases where it is desired to use parts of the test data.
-        In those cases, it is recommended to inherit from [Dataset][pydvl.utils.Dataset]
-        and override [get_test_data()][Dataset.get_test_data].
+        In those cases, it is recommended to inherit from
+        [Dataset][pydvl.utils.dataset.Dataset] and override
+        [get_test_data()][pydvl.utils.dataset.Dataset.get_test_data].
 
         For example, the following snippet shows how one could go about
         mapping the training data indices into test data indices
-        inside [get_test_data()][Dataset.get_test_data]:
+        inside [get_test_data()][pydvl.utils.dataset.Dataset.get_test_data]:
 
         :Example:
 
@@ -638,8 +639,8 @@ def load_wine_dataset(
     """Loads the [sklearn wine dataset](https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset).
 
     !!! Fixme
-        Why does this function not return a [Dataset][Dataset] object?
-        And why is it part of this module?
+        Why does this function not return a [Dataset][pydvl.utils.dataset.Dataset]
+        object? And why is it part of this module?
 
     Args:
         train_size: fraction of points used for training dataset

@@ -142,7 +142,7 @@ class ValuationResult(
     [ValueItem][pydvl.value.result.ValueItem] in the order in which the object
     is sorted.
 
-    # Indexing
+    ## Indexing
 
     Indexing can be position-based, when accessing any of the attributes
     [values][pydvl.value.result.ValuationResult.values], [variances][pydvl.value.result.ValuationResult.variances], [counts][pydvl.value.result.ValuationResult.counts] and [indices][pydvl.value.result.ValuationResult.indices], as
@@ -155,7 +155,7 @@ class ValuationResult(
     original dataset. This is the case for the methods [get()][pydvl.value.result.ValuationResult.get] and
     [update()][pydvl.value.result.ValuationResult.update].
 
-    # Sorting
+    ## Sorting
 
     Results can be sorted in-place with [sort()][pydvl.value.result.ValuationResult.sort], or alternatively using
     python's standard `sorted()` and `reversed()` Note that sorting values
@@ -174,7 +174,7 @@ class ValuationResult(
     In order to access [ValueItem][pydvl.value.result.ValueItem] objects by their data index, use
     [get()][pydvl.value.result.ValuationResult.get].
 
-    # Operating on results
+    ## Operating on results
 
     Results can be added to each other with the `+` operator. Means and
     variances are correctly updated, using the `counts` attribute.
@@ -277,15 +277,18 @@ class ValuationResult(
         """Sorts the indices in place by `key`.
 
         Once sorted, iteration over the results, and indexing of all the
-        properties [ValuationResult.values][ValuationResult.values],
-        [ValuationResult.variances][ValuationResult.variances],
-        [ValuationResult.counts][ValuationResult.counts],
-        [ValuationResult.indices][ValuationResult.indices] and
-        [ValuationResult.names][ValuationResult.names] will follow the same order.
+        properties
+        [ValuationResult.values][pydvl.value.result.ValuationResult.values],
+        [ValuationResult.variances][pydvl.value.result.ValuationResult.variances],
+        [ValuationResult.counts][pydvl.value.result.ValuationResult.counts],
+        [ValuationResult.indices][pydvl.value.result.ValuationResult.indices]
+        and [ValuationResult.names][pydvl.value.result.ValuationResult.names]
+        will follow the same order.
 
         Args:
             reverse: Whether to sort in descending order by value.
-            key: The key to sort by. Defaults to [ValueItem.value][ValueItem.value].
+            key: The key to sort by. Defaults to
+                [ValueItem.value][pydvl.value.result.ValueItem.value].
         """
         keymap = {
             "index": "_indices",

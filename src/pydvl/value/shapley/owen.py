@@ -42,8 +42,9 @@ def _owen_sampling_shapley(
     Args:
         indices: Indices to compute the value for
         u: Utility object with model, data, and scoring function
-        method: Either [Full][OwenAlgorithm.Full] for $q \in [0,1]$ or
-            [Halved][OwenAlgorithm.Halved] for $q \in [0,0.5]$ and correlated samples
+        method: Either [Full][pydvl.value.shapley.owen.OwenAlgorithm.Full] for
+            q ∈ [0, 1] or [Halved][pydvl.value.shapley.owen.OwenAlgorithm.Halved]
+            for q ∈ [0, 0.5] and correlated samples
         n_samples: Number of subsets to sample to estimate the integrand
         max_q: number of subdivisions for the integration over $q$
         progress: Whether to display progress bars for each job
