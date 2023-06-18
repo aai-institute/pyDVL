@@ -57,7 +57,9 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-StoppingCriterionCallable = Callable[[ValuationResult], Status]  #: Signature for a stopping criterion
+StoppingCriterionCallable = Callable[
+    [ValuationResult], Status
+]  #: Signature for a stopping criterion
 
 
 class StoppingCriterion(abc.ABC):
@@ -107,7 +109,9 @@ class StoppingCriterion(abc.ABC):
             place after the call.
     """
 
-    _converged: NDArray[np.bool_]  #: A boolean array indicating whether the corresponding element has converged
+    _converged: NDArray[
+        np.bool_
+    ]  #: A boolean array indicating whether the corresponding element has converged
 
     def __init__(self, modify_result: bool = True):
         self.modify_result = modify_result

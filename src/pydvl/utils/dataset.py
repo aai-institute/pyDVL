@@ -299,7 +299,7 @@ class Dataset:
             feature_names=data.get("feature_names"),
             target_names=data.get("target_names"),
             description=data.get("DESCR"),
-            **kwargs
+            **kwargs,
         )
 
     @classmethod

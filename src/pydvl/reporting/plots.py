@@ -21,7 +21,7 @@ def shaded_mean_std(
     ax: Optional[Axes] = None,
     **kwargs: dict,
 ) -> Axes:
-    """ The usual mean +- std deviation plot to aggregate runs of experiments.
+    """The usual mean +- std deviation plot to aggregate runs of experiments.
 
     Args:
         data: axis 0 is to be aggregated on (e.g. runs) and axis 1 is the

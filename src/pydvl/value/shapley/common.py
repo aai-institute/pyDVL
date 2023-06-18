@@ -116,7 +116,7 @@ def compute_shapley_values(
             n_jobs=n_jobs,
             progress=progress,
             truncation=truncation,
-            **kwargs
+            **kwargs,
         )
     elif mode == ShapleyMode.CombinatorialExact:
         return combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)

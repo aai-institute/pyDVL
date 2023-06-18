@@ -128,7 +128,7 @@ class CacheStats:
 
 
 def serialize(x: Any) -> bytes:
-    """Serialize an object to bytes.    """
+    """Serialize an object to bytes."""
     pickled_output = BytesIO()
     pickler = Pickler(pickled_output, PICKLE_VERSION)
     pickler.dump(x)
@@ -142,7 +142,7 @@ def memcached(
     rtol_stderr: float = 0.1,
     min_repetitions: int = 3,
     ignore_args: Optional[Iterable[str]] = None,
-) -> Callable[[Callable[..., T], bytes|None], Callable[..., T]]:
+) -> Callable[[Callable[..., T], bytes | None], Callable[..., T]]:
     """
     Transparent, distributed memoization of function calls.
 
