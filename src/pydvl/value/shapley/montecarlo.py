@@ -17,12 +17,12 @@ over permutations, one has the implementation in
 :func:`permutation_montecarlo_shapley`, or using an early stopping strategy to
 reduce computation :func:`truncated_montecarlo_shapley`.
 
-.. seealso::
+!!! info "Also see"
    It is also possible to use [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]
    to reduce the number of evaluations of the utility. The method is however
    typically outperformed by others in this module.
 
-.. seealso::
+!!! info "Also see"
    Additionally, you can consider grouping your data points using
    [GroupedDataset][pydvl.utils.dataset.GroupedDataset] and computing the values of the
    groups instead. This is not to be confused with "group testing" as

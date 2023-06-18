@@ -47,14 +47,14 @@ class Status(Enum):
 
     :NOT:
 
-    The result of bitwise negation of a Status with ``~`` is ``Failed`` if
-    the status is ``Converged``, or ``Converged`` otherwise:
+    The result of bitwise negation of a Status with ``~`` is `Failed` if
+    the status is `Converged`, or `Converged` otherwise:
 
         ~P == C, ~C == F, ~F == C
 
     :Boolean casting:
 
-    A Status evaluates to ``True`` iff it's ``Converged`` or ``Failed``:
+    A Status evaluates to `True` iff it's `Converged` or `Failed`:
 
         bool(Status.Pending) == False
         bool(Status.Converged) == True
@@ -62,7 +62,7 @@ class Status(Enum):
 
     !!! Warning
         These truth values are **inconsistent** with the usual boolean operations.
-        In particular the XOR of two instances of ``Status`` is not the same as
+        In particular the XOR of two instances of `Status` is not the same as
         the XOR of their boolean values.
     """
 

@@ -48,8 +48,8 @@ def test_and_status():
 
 
 def test_not_status():
-    """The result of bitwise negation of a Status is ``Failed``
-    if the status is ``Converged``, or ``Converged`` otherwise:
+    """The result of bitwise negation of a Status is `Failed`
+    if the status is `Converged`, or `Converged` otherwise:
 
         ``~P == C, ~C == F, ~F == C``
     """

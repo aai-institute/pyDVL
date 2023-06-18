@@ -177,9 +177,9 @@ def group_testing_shapley(
         n_samples: Number of tests to perform. Use
             :func:`num_samples_eps_delta` to estimate this.
         epsilon: From the (ε,δ) sample bound. Use the same as for the
-            estimation of ``n_iterations``.
+            estimation of `n_iterations`.
         delta: From the (ε,δ) sample bound. Use the same as for the
-            estimation of ``n_iterations``.
+            estimation of `n_iterations`.
         n_jobs: Number of parallel jobs to use. Each worker performs a chunk
             of all tests (i.e. utility evaluations).
         config: Object configuring parallel computation, with cluster

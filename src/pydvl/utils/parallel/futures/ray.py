@@ -34,7 +34,7 @@ class RayExecutor(Executor):
             default to the total number of vCPUs in the ray cluster.
         config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
             with cluster address, number of cpus, etc.
-        cancel_futures_on_exit: If ``True``, all futures will be cancelled
+        cancel_futures_on_exit: If `True`, all futures will be cancelled
             when exiting the context created by using this class instance as a
             context manager. It will be ignored when calling
             [shutdown()][pydvl.utils.parallel.futures.ray.RayExecutor.shutdown]
@@ -94,8 +94,8 @@ class RayExecutor(Executor):
 
         Args:
             fn: Callable.
-            args: Positional arguments that will be passed to ``fn``.
-            kwargs: Keyword arguments that will be passed to ``fn``.
+            args: Positional arguments that will be passed to `fn`.
+            kwargs: Keyword arguments that will be passed to `fn`.
                 It can also optionally contain options for the ray remote function
                 as a dictionary as the keyword argument `remote_function_options`.
         Returns:

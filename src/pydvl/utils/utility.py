@@ -41,7 +41,7 @@ class Utility:
     """Convenience wrapper with configurable memoization of the scoring
     function.
 
-    An instance of ``Utility`` holds the triple of model, dataset and scoring
+    An instance of `Utility` holds the triple of model, dataset and scoring
     function which determines the value of data points. This is mosly used for
     the computation of [Shapley Values][shapley-values] and
     [Core Values][core-values].
@@ -72,22 +72,22 @@ class Utility:
             and compose scorers, in particular how to set default values and ranges.
             For convenience, a string can be passed, which will be used to construct
             a [Scorer][pydvl.utils.score.Scorer].
-        default_score: As a convenience when no ``scorer`` object is passed
+        default_score: As a convenience when no `scorer` object is passed
             (where a default value can be provided), this argument also allows to set
             the default score for models that have not been fit, e.g. when too little
             data is passed, or errors arise.
-        score_range: As with ``default_score``, this is a convenience argument
-            for when no ``scorer`` argument is provided, to set the numerical range
+        score_range: As with `default_score`, this is a convenience argument
+            for when no `scorer` argument is provided, to set the numerical range
             of the score function. Some Monte Carlo methods can use this to estimate
             the number of samples required for a certain quality of approximation.
-        catch_errors: set to ``True`` to catch the errors when fit() fails.
+        catch_errors: set to `True` to catch the errors when fit() fails.
             This could happen in several steps of the pipeline, e.g. when too little
             training data is passed, which happens often during Shapley value
             calculations. When this happens, the :attr:`default_score` is returned
             as a score and computation continues.
-        show_warnings: Set to ``False`` to suppress warnings thrown by
+        show_warnings: Set to `False` to suppress warnings thrown by
             ``fit()``.
-        enable_cache: If ``True``, use memcached for memoization.
+        enable_cache: If `True`, use memcached for memoization.
         cache_options: Optional configuration object for memcached.
         clone_before_fit: If True, the model will be cloned before calling
             ``fit()``.
@@ -178,7 +178,7 @@ class Utility:
                 (rather than `tuple` since order should not matter)
 
         Returns:
-            0 if no indices are passed, ``default_score`` if we fail
+            0 if no indices are passed, `default_score` if we fail
                 to fit the model or the scorer returns [numpy.NaN][]. Otherwise, the score
                 of the model on the test data.
         """

@@ -37,7 +37,7 @@ default_config = dict(
 
 # Usage with stochastic functions
 
-In addition to standard memoization, the decorator :func:`memcached` can compute
+In addition to standard memoization, the decorator [memcached()][pydvl.utils.caching.memcached] can compute
 running average and standard error of repeated evaluations for the same input.
 This can be useful for stochastic functions with high variance (e.g. model
 training for small sample sizes), but drastically reduces the speed benefits of
@@ -50,12 +50,12 @@ This behaviour can be activated with
 
 # Cache reuse
 
-When working directly with :func:`memcached`, it is essential to only cache pure
+When working directly with [memcached()][pydvl.utils.caching.memcached], it is essential to only cache pure
 functions. If they have any kind of state, either internal or external (e.g. a
 closure over some data that may change), then the cache will fail to notice this
 and the same value will be returned.
 
-When a function is wrapped with :func:`memcached` for memoization, its signature
+When a function is wrapped with [memcached()][pydvl.utils.caching.memcached] for memoization, its signature
 (input and output names) and code are used as a key for the cache. Alternatively
 you can pass a custom value to be used as key with
 
@@ -169,7 +169,7 @@ def memcached(
             running standard deviation of the mean stabilises below
             `rtol_stderr * mean`.
         rtol_stderr: relative tolerance for repeated evaluations. More precisely,
-            :func:`memcached` will stop evaluating the function once the
+            [memcached()][pydvl.utils.caching.memcached] will stop evaluating the function once the
             standard deviation of the mean is smaller than `rtol_stderr * mean`.
         min_repetitions: minimum number of times that a function evaluation
             on the same arguments is repeated before returning cached values. Useful

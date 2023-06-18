@@ -221,27 +221,26 @@ def _solve_least_core_linear_program(
 ) -> Tuple[Optional[NDArray[np.float_]], Optional[float]]:
     r"""Solves the Least Core's linear program using cvxopt.
 
-    .. math::
-
+    $$
         \text{minimize} \ & e \\
         \mbox{such that} \ & A_{eq} x = b_{eq}, \\
         & A_{lb} x + e \ge b_{lb},\\
         & A_{eq} x = b_{eq},\\
         & x in \mathcal{R}^n , \\
-
-     where :math:`x` is a vector of decision variables; ,
-    :math:`b_{ub}`, :math:`b_{eq}`, :math:`l`, and :math:`u` are vectors; and
-    :math:`A_{ub}` and :math:`A_{eq}` are matrices.
+    $$
+     where $x$ is a vector of decision variables; ,
+    $b_{ub}$, $b_{eq}$, $l$, and $u$ are vectors; and
+    $A_{ub}$ and $A_{eq}$ are matrices.
 
     if `non_negative_subsidy` is True, then an additional constraint $e \ge 0$ is used.
 
     Args:
-        A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies the
-            coefficients of a linear equality constraint on ``x``.
+        A_eq: The equality constraint matrix. Each row of `A_eq` specifies the
+            coefficients of a linear equality constraint on `x`.
         b_eq: The equality constraint vector. Each element of ``A_eq @ x`` must equal
-            the corresponding element of ``b_eq``.
-        A_lb: The inequality constraint matrix. Each row of ``A_lb`` specifies the
-            coefficients of a linear inequality constraint on ``x``.
+            the corresponding element of `b_eq`.
+        A_lb: The inequality constraint matrix. Each row of `A_lb` specifies the
+            coefficients of a linear inequality constraint on `x`.
         b_lb: The inequality constraint vector. Each element represents a
             lower bound on the corresponding value of ``A_lb @ x``.
             non_negative_subsidy: If True, the least core subsidy $e$ is constrained
@@ -299,27 +298,26 @@ def _solve_egalitarian_least_core_quadratic_program(
 ) -> Optional[NDArray[np.float_]]:
     """Solves the egalitarian Least Core's quadratic program using cvxopt.
 
-    .. math::
-
+    $$
         \text{minimize} \ & \| x \|_2 \\
         \mbox{such that} \ & A_{eq} x = b_{eq}, \\
         & A_{lb} x + e \ge b_{lb},\\
         & A_{eq} x = b_{eq},\\
         & x in \mathcal{R}^n , \\
         & e \text{ is a constant.}
-
-     where :math:`x` is a vector of decision variables; ,
-    :math:`b_{ub}`, :math:`b_{eq}`, :math:`l`, and :math:`u` are vectors; and
-    :math:`A_{ub}` and :math:`A_{eq}` are matrices.
+    $$
+     where $x$ is a vector of decision variables; ,
+    $b_{ub}$, $b_{eq}$, $l$, and $u$ are vectors; and
+    $A_{ub}$ and $A_{eq}$ are matrices.
 
     Args:
         subsidy: Minimal subsidy returned by :func:`_solve_least_core_linear_program`
-        A_eq: The equality constraint matrix. Each row of ``A_eq`` specifies the
-            coefficients of a linear equality constraint on ``x``.
+        A_eq: The equality constraint matrix. Each row of `A_eq` specifies the
+            coefficients of a linear equality constraint on `x`.
         b_eq: The equality constraint vector. Each element of ``A_eq @ x`` must equal
-            the corresponding element of ``b_eq``.
-        A_lb: The inequality constraint matrix. Each row of ``A_lb`` specifies the
-            coefficients of a linear inequality constraint on ``x``.
+            the corresponding element of `b_eq`.
+        A_lb: The inequality constraint matrix. Each row of `A_lb` specifies the
+            coefficients of a linear inequality constraint on `x`.
         b_lb: The inequality constraint vector. Each element represents a
             lower bound on the corresponding value of ``A_lb @ x``.
         solver_options: Keyword arguments that will be used to select a solver

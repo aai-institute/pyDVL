@@ -4,9 +4,9 @@ Samplers iterate over subsets of indices.
 The classes in this module are used to iterate over indices and subsets of their
 complement in the whole set, as required for the computation of marginal utility
 for semi-values. The elements returned when iterating over any subclass of
-:class:`PowersetSampler` are tuples of the form ``(idx, subset)``, where ``idx``
-is the index of the element being added to the subset, and ``subset`` is the
-subset of the complement of ``idx``.
+[PowersetSampler][pydvl.value.sampler.PowersetSampler] are tuples of the form ``(idx, subset)``, where `idx`
+is the index of the element being added to the subset, and `subset` is the
+subset of the complement of `idx`.
 
 !!! Note
     This is the natural mode of iteration for the combinatorial definition of
@@ -17,13 +17,13 @@ subset of the complement of ``idx``.
 The samplers are used in the [semivalues][pydvl.value.semivalues] module to compute any
 semi-value, in particular Shapley and Beta values, and Banzhaf indices.
 
-.. rubric:: Slicing of samplers
+# Slicing of samplers
 
 The samplers can be sliced for parallel computation. For those which are
 embarrassingly parallel, this is done by slicing the set of "outer" indices and
 returning new samplers over those slices. This includes all truly powerset-based
-samplers, such as :class:`DeterministicCombinatorialSampler` and
-:class:`UniformSampler`. In contrast, slicing a :class:`PermutationSampler`
+samplers, such as [DeterministicCombinatorialSampler][pydvl.value.sampler.DeterministicCombinatorialSampler] and
+[UniformSampler][pydvl.value.sampler.UniformSampler]. In contrast, slicing a [PermutationSampler][pydvl.value.sampler.PermutationSampler]
 creates a new sampler which iterates over the same indices.
 """
 
@@ -68,13 +68,13 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
     >>>    print(s, end="")
     ()(2,)()(1,)
 
-    .. rubric:: Methods required in subclasses
+    # Methods required in subclasses
 
-    Samplers must define a :meth:`weight` function to be used as a multiplier in
-    Monte Carlo sums, so that the limit expectation coincides with the
-    semi-value.
+    Samplers must implement a [weight()][pydvl.value.sampler.PowersetSampler.weight]
+    function to be used as a multiplier in Monte Carlo sums, so that the limit
+    expectation coincides with the semi-value.
 
-    .. rubric:: Slicing of samplers
+    # Slicing of samplers
 
     The samplers can be sliced for parallel computation. For those which are
     embarrassingly parallel, this is done by slicing the set of "outer" indices

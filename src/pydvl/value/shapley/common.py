@@ -36,45 +36,45 @@ def compute_shapley_values(
     algorithms also accept additional arguments, please refer to the
     documentation of each particular method.
 
-    - ``combinatorial_exact``: uses the combinatorial implementation of data
+    - `combinatorial_exact`: uses the combinatorial implementation of data
       Shapley. Implemented in
       [combinatorial_exact_shapley()][pydvl.value.shapley.naive.combinatorial_exact_shapley].
-    - ``combinatorial_montecarlo``:  uses the approximate Monte Carlo
+    - `combinatorial_montecarlo`:  uses the approximate Monte Carlo
       implementation of combinatorial data Shapley. Implemented in
       [combinatorial_montecarlo_shapley()][pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley].
-    - ``permutation_exact``: uses the permutation-based implementation of data
+    - `permutation_exact`: uses the permutation-based implementation of data
       Shapley. Computation is **not parallelized**. Implemented in
       [permutation_exact_shapley()][pydvl.value.shapley.naive.permutation_exact_shapley].
-    - ``permutation_montecarlo``: uses the approximate Monte Carlo
+    - `permutation_montecarlo`: uses the approximate Monte Carlo
       implementation of permutation data Shapley. Implemented in
       [permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley].
-    - ``truncated_montecarlo``: default option, same as ``permutation_montecarlo``
+    - `truncated_montecarlo`: default option, same as `permutation_montecarlo`
       but stops the computation whenever a certain accuracy is reached.
       Implemented in
       [truncated_montecarlo_shapley()][pydvl.value.shapley.montecarlo.truncated_montecarlo_shapley].
-    - ``owen_sampling``: Uses the Owen continuous extension of the utility
+    - `owen_sampling`: Uses the Owen continuous extension of the utility
       function to the unit cube. Implemented in
       [owen_sampling_shapley()][pydvl.value.shapley.owen.owen_sampling_shapley]. This
       method does not take a [StoppingCriterion][pydvl.value.stopping.StoppingCriterion]
-      but instead requires a parameter ``q_max`` for the number of subdivisions
+      but instead requires a parameter `q_max` for the number of subdivisions
       of the unit interval to use for integration, and another parameter
-      ``n_samples`` for the number of subsets to sample for each $q$.
-    - ``owen_halved``: Same as 'owen_sampling' but uses correlated samples in the
+      `n_samples` for the number of subsets to sample for each $q$.
+    - `owen_halved`: Same as 'owen_sampling' but uses correlated samples in the
       expectation. Implemented in
       [owen_sampling_shapley()][pydvl.value.shapley.owen.owen_sampling_shapley].
       This method  requires an additional parameter `q_max` for the number of
       subdivisions of the interval [0,0.5] to use for integration, and another
-      parameter ``n_samples`` for the number of subsets to sample for each $q$.
-    - ``group_testing``: estimates differences of Shapley values and solves a
+      parameter `n_samples` for the number of subsets to sample for each $q$.
+    - `group_testing`: estimates differences of Shapley values and solves a
       constraint satisfaction problem. High sample complexity, not recommended.
       Implemented in [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]. This
       method does not take a [StoppingCriterion][pydvl.value.stopping.StoppingCriterion]
-      but instead requires a parameter ``n_samples`` for the number of
+      but instead requires a parameter `n_samples` for the number of
       iterations to run.
 
     Additionally, one can use model-specific methods:
 
-    - ``knn``: Exact method for K-Nearest neighbour models. Implemented in
+    - `knn`: Exact method for K-Nearest neighbour models. Implemented in
       [knn_shapley()][pydvl.value.shapley.knn.knn_shapley].
 
     Args:

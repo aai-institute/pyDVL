@@ -91,7 +91,7 @@ def _semivalues(
     job_id: int = 1,
 ) -> ValuationResult:
     r"""Serial computation of semi-values. This is a helper function for
-    :func:`semivalues`.
+    [semivalues()][pydvl.value.semivalues.semivalues].
 
     Args:
         sampler: The subset sampler to use for utility computations.
@@ -209,24 +209,26 @@ def compute_semivalues(
     """Entry point for most common semi-value computations. All are implemented
     with permutation sampling.
 
-    For any other sampling method, use :func:`parallel_semivalues` directly.
+    For any other sampling method, use [parallel_semivalues()][pydvl.value.semivalues.parallel_semivalues] directly.
 
     See [Data valuation][computing-data-values] for an overview of valuation.
 
     The modes supported are:
 
-    - [SemiValueMode.Shapley][SemiValueMode.Shapley]: Shapley values.
-    - [SemiValueMode.BetaShapley][SemiValueMode.BetaShapley]: Implements the
-      Beta Shapley semi-value as introduced in [@kwon_beta_2022]. Pass additional
-      keyword arguments ``alpha`` and ``beta`` to set the parameters of the Beta
-      distribution (both default to 1).
+    - [SemiValueMode.Shapley][pydvl.value.semivalues.SemiValueMode.Shapley]:
+      Shapley values.
+    - [SemiValueMode.BetaShapley][pydvl.value.semivalues.SemiValueMode.BetaShapley]:
+      Implements the Beta Shapley semi-value as introduced in [@kwon_beta_2022].
+      Pass additional keyword arguments `alpha` and `beta` to set the
+      parameters of the Beta distribution (both default to 1).
     - [SemiValueMode.Banzhaf][SemiValueMode.Banzhaf]: Implements the Banzhaf
       semi-value as introduced in [@wang_data_2022].
 
     Args:
         u: Utility object with model, data, and scoring function.
         done: Stopping criterion.
-        mode: The semi-value mode to use. See :class:`SemiValueMode` for a list.
+        mode: The semi-value mode to use. See
+        [SemiValueMode][pydvl.value.semivalues.SemiValueMode] for a list.
         sampler_t: The sampler type to use. See [sampler][pydvl.value.sampler]
             for a list.
         n_jobs: Number of parallel jobs to use.

@@ -312,7 +312,7 @@ integration.
 
 ### Permutation Shapley
 
-An equivalent way of computing Shapley values (``ApproShapley``) appeared in
+An equivalent way of computing Shapley values (`ApproShapley`) appeared in
 [@castro_polynomial_2009] and is the basis for the method most often
 used in practice. It uses permutations over indices instead of subsets:
 
@@ -387,7 +387,7 @@ $$
     Additionally, the CSP can sometimes turn out to be infeasible.
 
 Usage follows the same pattern as every other Shapley method, but with the
-addition of an ``epsilon`` parameter required for the solution of the CSP. It
+addition of an `epsilon` parameter required for the solution of the CSP. It
 should be the same value used to compute the minimum number of samples required.
 This can be done with [num_samples_eps_delta][pydvl.value.shapley.gt.num_samples_eps_delta], but
 note that the number returned will be huge! In practice, fewer samples can be
@@ -499,7 +499,7 @@ values = compute_least_core_values(
 ```
 
 !!! Note
-    Although any number is supported, it is best to choose ``n_iterations`` to be
+    Although any number is supported, it is best to choose `n_iterations` to be
     at least equal to the number of data points.
 
 Because computing the Least Core values requires the solution of a linear and a

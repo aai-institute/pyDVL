@@ -70,8 +70,8 @@ class Dataset:
                 timestamp which can be referenced directly instead of using a row
                 number.
             description: A textual description of the dataset.
-            is_multi_output: set to ``False`` if labels are scalars, or to
-                ``True`` if they are vectors of dimension > 1.
+            is_multi_output: set to `False` if labels are scalars, or to
+                `True` if they are vectors of dimension > 1.
         """
         self.x_train, self.y_train = check_X_y(
             x_train, y_train, multi_output=is_multi_output
@@ -153,11 +153,11 @@ class Dataset:
 
         Args:
             indices: Optional indices that will be used to select points from
-                the training data. If ``None``, the entire training data will be
+                the training data. If `None`, the entire training data will be
                 returned.
 
         Returns:
-            If ``indices`` is not ``None``, the selected x and y arrays from the
+            If `indices` is not `None`, the selected x and y arrays from the
                 training data. Otherwise, the entire dataset.
         """
         if indices is None:
@@ -264,18 +264,18 @@ class Dataset:
 
         Args:
             data: sklearn dataset. The following attributes are supported
-                - ``data``: covariates [required]
-                - ``target``: target variables (labels) [required]
-                - ``feature_names``: the feature names
-                - ``target_names``: the target names
-                - ``DESCR``: a description
+                - `data`: covariates [required]
+                - `target`: target variables (labels) [required]
+                - `feature_names`: the feature names
+                - `target_names`: the target names
+                - `DESCR`: a description
             train_size: size of the training dataset. Used in `train_test_split`
             random_state: seed for train / test split
             stratify_by_target: If `True`, data is split in a stratified
                 fashion, using the target variable as labels. Read more in
                 [scikit-learn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             kwargs: Additional keyword arguments to pass to the
-                [Dataset][pydvl.utils.Dataset] constructor. Use this to pass e.g. ``is_multi_output``.
+                [Dataset][pydvl.utils.Dataset] constructor. Use this to pass e.g. `is_multi_output`.
 
         Returns:
             Object with the sklearn dataset
@@ -323,8 +323,8 @@ class Dataset:
                 using the y variable as labels. Read more in [sklearn's user
                 guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             kwargs: Additional keyword arguments to pass to the
-                [Dataset][pydvl.utils.Dataset] constructor. Use this to pass e.g. ``feature_names``
-                or ``target_names``.
+                [Dataset][pydvl.utils.Dataset] constructor. Use this to pass e.g. `feature_names`
+                or `target_names`.
 
         Returns:
             Object with the passed X and y arrays split across training and test sets.
@@ -369,21 +369,21 @@ class GroupedDataset(Dataset):
             y_train: labels of training data
             x_test: test data
             y_test: labels of test data
-            data_groups: Iterable of the same length as ``x_train`` containing
+            data_groups: Iterable of the same length as `x_train` containing
                 a group label for each training data point. The label can be of any
-                type, e.g. ``str`` or ``int``. Data points with the same label will
+                type, e.g. `str` or `int`. Data points with the same label will
                 then be grouped by this object and considered as one for effects of
                 valuation.
             feature_names: names of the covariates' features.
             target_names: names of the labels or targets y
             group_names: names of the groups. If not provided, the labels
-                from ``data_groups`` will be used.
+                from `data_groups` will be used.
             description: A textual description of the dataset
             kwargs: Additional keyword arguments to pass to the
                 [Dataset][pydvl.utils.Dataset] constructor.
 
         !!! tip "Changed in version 0.6.0"
-        Added ``group_names`` and forwarding of ``kwargs``
+        Added `group_names` and forwarding of `kwargs`
         """
         super().__init__(
             x_train=x_train,
@@ -434,7 +434,7 @@ class GroupedDataset(Dataset):
         """Returns the data and labels of all samples in the given groups.
 
         Args:
-            indices: group indices whose elements to return. If ``None``,
+            indices: group indices whose elements to return. If `None`,
             all data from all groups are returned.
 
         Returns:
@@ -464,14 +464,14 @@ class GroupedDataset(Dataset):
 
         Args:
             data: sklearn dataset. The following attributes are supported
-                - ``data``: covariates [required]
-                - ``target``: target variables (labels) [required]
-                - ``feature_names``: the feature names
-                - ``target_names``: the target names
-                - ``DESCR``: a description
+                - `data`: covariates [required]
+                - `target`: target variables (labels) [required]
+                - `feature_names`: the feature names
+                - `target_names`: the target names
+                - `DESCR`: a description
             train_size: size of the training dataset. Used in `train_test_split`.
             random_state: seed for train / test split.
-            stratify_by_target: If ``True``, data is split in a stratified
+            stratify_by_target: If `True`, data is split in a stratified
                 fashion, using the target variable as labels. Read more in
                 [sklearn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             data_groups: an array holding the group index or name for each
@@ -520,9 +520,9 @@ class GroupedDataset(Dataset):
         Args:
             X: array of shape (n_samples, n_features)
             y: array of shape (n_samples,)
-            train_size: size of the training dataset. Used in ``train_test_split``.
+            train_size: size of the training dataset. Used in `train_test_split`.
             random_state: seed for train / test split.
-            stratify_by_target: If ``True``, data is split in a stratified
+            stratify_by_target: If `True`, data is split in a stratified
                 fashion, using the y variable as labels. Read more in
                 [sklearn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
             data_groups: an array holding the group index or name for each data

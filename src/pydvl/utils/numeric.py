@@ -68,7 +68,7 @@ def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) 
 
 
 def random_subset(s: NDArray[T], q: float = 0.5) -> NDArray[T]:
-    """Returns one subset at random from ``s``.
+    """Returns one subset at random from `s`.
 
     Args:
         s: set to sample from
@@ -122,7 +122,7 @@ def random_powerset(
 
 def random_subset_of_size(s: NDArray[T], size: int) -> NDArray[T]:
     """Samples a random subset of given size uniformly from the powerset
-    of ``s``.
+    of `s`.
 
     Args:
         s: Set to sample from

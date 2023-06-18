@@ -57,9 +57,9 @@ def compute_least_core_values(
     The following algorithms are available. Note that the exact method can only
     work with very small datasets and is thus intended only for testing.
 
-    - ``exact``: uses the complete powerset of the training set for the constraints
+    - `exact`: uses the complete powerset of the training set for the constraints
       [combinatorial_exact_shapley()][pydvl.value.shapley.naive.combinatorial_exact_shapley].
-    - ``montecarlo``:  uses the approximate Monte Carlo Least Core algorithm.
+    - `montecarlo`:  uses the approximate Monte Carlo Least Core algorithm.
       Implemented in [montecarlo_least_core()][pydvl.value.least_core.montecarlo.montecarlo_least_core].
 
     Args:

@@ -44,7 +44,7 @@ class Scorer:
         range: numerical range of the score function. Some Monte Carlo
             methods can use this to estimate the number of samples required for a
             certain quality of approximation. If not provided, it can be read from
-            the ``scoring`` object if it provides it, for instance if it was
+            the `scoring` object if it provides it, for instance if it was
             constructed with [compose_score()][pydvl.utils.types.compose_score].
         name: The name of the scorer. If not provided, the name of the
             function passed will be used.

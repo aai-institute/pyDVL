@@ -65,7 +65,7 @@ class TruncationPolicy(abc.ABC):
             score: Last utility computed.
 
         Returns:
-            ``True`` if the computation should be interrupted.
+            `True` if the computation should be interrupted.
         """
         ret = self._check(idx, score)
         self.n_calls += 1
@@ -233,7 +233,7 @@ def truncated_montecarlo_shapley(
     :class:`BootstrapTruncation`.
 
     We keep sampling permutations and updating all shapley values
-    until the :class:`StoppingCriterion` returns ``True``.
+    until the :class:`StoppingCriterion` returns `True`.
 
     Args:
         u: Utility object with model, data, and scoring function
