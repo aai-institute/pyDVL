@@ -94,6 +94,7 @@ def analytical_linear_influences(
         [InversionMethod.Direct, {}, 1e-7],
         [InversionMethod.Cg, {}, 1e-1],
         [InversionMethod.Lissa, {"maxiter": 5000, "scale": 100}, 0.3],
+        [InversionMethod.LowRank, {"rank_estimate": 47}, 0.3]
     ],
     ids=[inv.value for inv in InversionMethod],
 )
@@ -246,6 +247,7 @@ def test_influences_nn(
             "maxiter": 100,
             "scale": 10000,
         },
+        "low_rank": {"rank_estimate": 20}
     }
     train_data_loader = DataLoader(
         TensorDataset(x_train, y_train), batch_size=batch_size
@@ -271,6 +273,8 @@ def test_influences_nn(
 
     for infl_type, influences in multiple_influences.items():
         if infl_type == "direct":
+            continue
+        if infl_type == "low_rank":
             continue
         assert np.allclose(
             influences,

@@ -14,6 +14,7 @@ from torch import autograd
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
+from .util import LowRankProductRepresentation, get_hvp_function, lanzcos_low_rank_hessian_approx
 from ...utils import maybe_progress
 from .twice_differentiable import TwiceDifferentiable
 
@@ -423,3 +424,63 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
             self.parameters,
             progress=progress,
         )
+
+
+def solve_low_rank(model: TorchTwiceDifferentiable, training_data: DataLoader, b: torch.Tensor, *,
+                   hessian_perturbation: float = 0.0,
+                   rank_estimate: int = 10,
+                   krylov_dimension: Optional[int] = None,
+                   low_rank_representation: Optional[LowRankProductRepresentation] = None,
+                   x0: Optional[torch.Tensor] = None,
+                   tol: float = 1e-6,
+                   max_iter: Optional[int] = None
+                   ) -> torch.Tensor:
+
+    """
+    Solves the linear system Hx = b, where H is the Hessian of the model's loss function and b is the given right-hand
+    side vector. The Hessian is approximated using a low-rank representation.
+
+    :param model: A PyTorch model instance that is twice differentiable, wrapped into :class:`TorchTwiceDifferential`.
+                  The Hessian will be calculated with respect to this model's parameters.
+    :param training_data: A DataLoader instance that provides the model's training data.
+                          Used in calculating the Hessian-vector products.
+    :param b: The right-hand side vector in the system Hx = b.
+    :param hessian_perturbation: Optional regularization parameter added to the Hessian-vector product
+                                 for numerical stability.
+    :param rank_estimate: The number of eigenvalues and corresponding eigenvectors to compute.
+                          Represents the desired rank of the Hessian approximation.
+    :param krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
+                             If not provided, it defaults to $min(model.num_parameters, max(2*rank_estimate + 1, 20))$.
+    :param low_rank_representation: A LowRankProductRepresentation instance containing a previously computed
+                                    low-rank representation of the Hessian.
+                                    If not provided, a new low-rank representation will be computed,
+                                    using provided parameters.
+    :param x0: An optional initial vector to use in the Lanczos algorithm.
+               If `low_rank_representation` is provided, this parameter is ignored.
+    :param tol: The stopping criteria for the Lanczos algorithm.
+                If `low_rank_representation` is provided, this parameter is ignored.
+    :param max_iter: The maximum number of iterations for the Lanczos method.
+                     If `low_rank_representation` is provided, this parameter is ignored.
+    :return: Returns the solution vector x that satisfies the system Hx = b,
+             where H is a low-rank approximation of the Hessian of the model's loss function.
+    """
+
+    if low_rank_representation is None:
+        hessian_vector_product = get_hvp_function(model.model, model.loss, training_data)
+        low_rank_representation = lanzcos_low_rank_hessian_approx(hessian_vp=hessian_vector_product,
+                                                                  matrix_shape=(model.num_params, model.num_params),
+                                                                  hessian_perturbation=hessian_perturbation,
+                                                                  rank_estimate=rank_estimate,
+                                                                  x0=x0,
+                                                                  krylov_dimension=krylov_dimension,
+                                                                  tol=tol,
+                                                                  max_iter=max_iter,
+                                                                  device=model.device if hasattr(model, 'device')
+                                                                  else None)
+    else:
+        logger.info("Using provided low rank representation, ignoring other parameters")
+
+    result = low_rank_representation.projections @ ((low_rank_representation.projections.T @ b.T) / low_rank_representation.eigen_vals.unsqueeze(1))
+    return result.T
+
+
