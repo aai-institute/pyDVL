@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import Callable, Tuple, Optional
+from functools import partial, reduce
+from typing import Callable, Tuple, Optional, Generator
 import logging
 
 import torch
@@ -51,6 +52,26 @@ def hvp(model: torch.nn.Module,
     hessian_vec_prod = torch.autograd.grad(grad_vec_product, params)
     hessian_vec_prod = torch.cat([g.contiguous().view(-1) for g in hessian_vec_prod])
     return hessian_vec_prod
+
+
+def batch_hvp_gen(model: torch.nn.Module,
+                  loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+                  data_loader: DataLoader) -> Generator[Callable[[torch.Tensor], torch.Tensor], None,  None]:
+    """
+    Generates a sequence of batch Hessian-vector product (HVP) computations for the provided model, loss function,
+    and data loader.
+
+    The generator iterates over the data_loader, creating partial function calls for calculating HVPs.
+
+    :param model: The PyTorch model for which the HVP is calculated.
+    :param loss: The loss function used to calculate the gradient and HVP.
+    :param data_loader: PyTorch DataLoader object containing the dataset for which the HVP is calculated.
+    :yield: A partial function H(vec)=hvp(model, loss, inputs, targets, vec) that when called,
+            will compute the Hessian-vector product H(vec) for the given model, loss, inputs and targets.
+    """
+
+    for inputs, targets in iter(data_loader):
+        yield partial(hvp, model, loss, inputs, targets)
 
 
 def avg_gradient(model: torch.nn.Module,
@@ -119,17 +140,8 @@ def get_hvp_function(model: torch.nn.Module,
         return hessian_vec_prod
 
     def avg_hvp_function(vec: torch.Tensor) -> torch.Tensor:
-        hessian_vec_prod_sum = None
-
-        for inputs, targets in iter(data_loader):
-            hessian_vec_prod = hvp(model, loss, inputs, targets, vec)
-
-            if hessian_vec_prod_sum is None:
-                hessian_vec_prod_sum = hessian_vec_prod
-            else:
-                hessian_vec_prod_sum += hessian_vec_prod
-
-        return hessian_vec_prod_sum / len(data_loader)
+        batch_hessians = map(lambda x: x(vec), batch_hvp_gen(model, loss, data_loader))
+        return reduce(lambda x, y: x+y, batch_hessians) / len(data_loader)
 
     return avg_hvp_function if use_hessian_avg else hvp_function
 
