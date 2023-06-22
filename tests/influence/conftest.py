@@ -58,6 +58,7 @@ def linear_torch_model_from_numpy(A: NDArray, b: NDArray) -> torch.nn.Module:
     model.bias.data = torch.as_tensor(b)
     return model
 
+
 def linear_derivative_analytical(
     linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
     x: NDArray[np.float_],

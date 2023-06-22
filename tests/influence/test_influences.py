@@ -18,10 +18,11 @@ from .conftest import (
     linear_analytical_influence_factors,
     linear_derivative_analytical,
     linear_mixed_second_derivative_analytical,
-    linear_model
+    linear_model,
 )
 
 torch.set_default_dtype(torch.float64)
+
 
 def analytical_linear_influences(
     linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
@@ -94,7 +95,11 @@ def analytical_linear_influences(
         [InversionMethod.Direct, {}, 1e-7],
         [InversionMethod.Cg, {}, 1e-1],
         [InversionMethod.Lissa, {"maxiter": 6000, "scale": 100}, 0.3],
-        [InversionMethod.LowRank, {"rank_estimate": 83, "hessian_regularization": 0.01}, 0.4]
+        [
+            InversionMethod.LowRank,
+            {"rank_estimate": 83, "hessian_regularization": 0.01},
+            0.4,
+        ],
     ],
     ids=[inv.value for inv in InversionMethod],
 )
@@ -242,7 +247,9 @@ def test_influences_nn(
     x_test = torch.rand((test_data_len, *input_dim))
     y_test = torch.rand((test_data_len, output_dim))
 
-    num_parameters = sum(p.numel() for p in nn_architecture.parameters() if p.requires_grad)
+    num_parameters = sum(
+        p.numel() for p in nn_architecture.parameters() if p.requires_grad
+    )
 
     inversion_method_kwargs = {
         "direct": {},
@@ -251,7 +258,10 @@ def test_influences_nn(
             "maxiter": 100,
             "scale": 10000,
         },
-        "low_rank": {"rank_estimate": num_parameters - 1, "hessian_regularization": 0.01}
+        "low_rank": {
+            "rank_estimate": num_parameters - 1,
+            "hessian_regularization": 0.01,
+        },
     }
     train_data_loader = DataLoader(
         TensorDataset(x_train, y_train), batch_size=batch_size
@@ -266,7 +276,9 @@ def test_influences_nn(
 
     for inversion_method in InversionMethod:
 
-        hessian_reg = inversion_method_kwargs[inversion_method].pop("hessian_regularization", hessian_reg)
+        hessian_reg = inversion_method_kwargs[inversion_method].pop(
+            "hessian_regularization", hessian_reg
+        )
 
         influences = compute_influences(
             TorchTwiceDifferentiable(nn_architecture, loss),

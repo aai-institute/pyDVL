@@ -1,11 +1,11 @@
+import logging
 from dataclasses import dataclass
 from functools import partial, reduce
-from typing import Callable, Tuple, Optional, Generator
-import logging
+from typing import Callable, Generator, Optional, Tuple
 
 import torch
 from numpy.typing import NDArray
-from scipy.sparse.linalg import eigsh, LinearOperator, ArpackNoConvergence
+from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigsh
 from torch.utils.data import DataLoader
 
 logger = logging.getLogger(__name__)
@@ -23,11 +23,13 @@ def to_model_device(x: torch.Tensor, model: torch.nn.Module) -> torch.Tensor:
     return x
 
 
-def hvp(model: torch.nn.Module,
-        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        x: torch.Tensor,
-        y: torch.Tensor,
-        vec: torch.Tensor) -> torch.Tensor:
+def hvp(
+    model: torch.nn.Module,
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    x: torch.Tensor,
+    y: torch.Tensor,
+    vec: torch.Tensor,
+) -> torch.Tensor:
     """
     Returns H*vec where H is the Hessian of the loss with respect to
     the model parameters.
@@ -54,9 +56,11 @@ def hvp(model: torch.nn.Module,
     return hessian_vec_prod
 
 
-def batch_hvp_gen(model: torch.nn.Module,
-                  loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-                  data_loader: DataLoader) -> Generator[Callable[[torch.Tensor], torch.Tensor], None,  None]:
+def batch_hvp_gen(
+    model: torch.nn.Module,
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    data_loader: DataLoader,
+) -> Generator[Callable[[torch.Tensor], torch.Tensor], None, None]:
     """
     Generates a sequence of batch Hessian-vector product (HVP) computations for the provided model, loss function,
     and data loader.
@@ -74,9 +78,11 @@ def batch_hvp_gen(model: torch.nn.Module,
         yield partial(hvp, model, loss, inputs, targets)
 
 
-def avg_gradient(model: torch.nn.Module,
-                 loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-                 data_loader: DataLoader) -> torch.Tensor:
+def avg_gradient(
+    model: torch.nn.Module,
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    data_loader: DataLoader,
+) -> torch.Tensor:
     """
     Returns the average gradient of the loss function with respect to the model parameters
     :param model: A torch.nn.Module, whose parameters are used for backpropagation.
@@ -107,10 +113,12 @@ def avg_gradient(model: torch.nn.Module,
     return total_grad_xy / total_points
 
 
-def get_hvp_function(model: torch.nn.Module,
-                     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-                     data_loader: DataLoader,
-                     use_hessian_avg: bool = True) -> Callable[[torch.Tensor], torch.Tensor]:
+def get_hvp_function(
+    model: torch.nn.Module,
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    data_loader: DataLoader,
+    use_hessian_avg: bool = True,
+) -> Callable[[torch.Tensor], torch.Tensor]:
     """
     Returns a function that calculates the approximate Hessian-vector product for a given vector. If you want to
     compute the exact hessian, i.e. pulling all data into memory and compute a full gradient computation, use
@@ -136,12 +144,14 @@ def get_hvp_function(model: torch.nn.Module,
 
         grad_vec_product = torch.dot(avg_grad, vec)
         hessian_vec_prod = torch.autograd.grad(grad_vec_product, params)
-        hessian_vec_prod = torch.cat([g.contiguous().view(-1) for g in hessian_vec_prod])
+        hessian_vec_prod = torch.cat(
+            [g.contiguous().view(-1) for g in hessian_vec_prod]
+        )
         return hessian_vec_prod
 
     def avg_hvp_function(vec: torch.Tensor) -> torch.Tensor:
         batch_hessians = map(lambda x: x(vec), batch_hvp_gen(model, loss, data_loader))
-        return reduce(lambda x, y: x+y, batch_hessians) / len(data_loader)
+        return reduce(lambda x, y: x + y, batch_hessians) / len(data_loader)
 
     return avg_hvp_function if use_hessian_avg else hvp_function
 
@@ -154,20 +164,22 @@ class LowRankProductRepresentation:
     :param eigen_vals: diagonal of D
     :param projections: the matrix V
     """
+
     eigen_vals: torch.Tensor
     projections: torch.Tensor
 
 
-def lanzcos_low_rank_hessian_approx(hessian_vp: Callable[[torch.Tensor], torch.Tensor],
-                                    matrix_shape: Tuple[int, int],
-                                    hessian_perturbation: float = 0.0,
-                                    rank_estimate: int = 10,
-                                    krylov_dimension: Optional[int] = None,
-                                    x0: Optional[torch.Tensor] = None,
-                                    tol: float = 1e-6,
-                                    max_iter: Optional[int] = None,
-                                    device: Optional[torch.device] = None,
-                                    ) -> LowRankProductRepresentation:
+def lanzcos_low_rank_hessian_approx(
+    hessian_vp: Callable[[torch.Tensor], torch.Tensor],
+    matrix_shape: Tuple[int, int],
+    hessian_perturbation: float = 0.0,
+    rank_estimate: int = 10,
+    krylov_dimension: Optional[int] = None,
+    x0: Optional[torch.Tensor] = None,
+    tol: float = 1e-6,
+    max_iter: Optional[int] = None,
+    device: Optional[torch.device] = None,
+) -> LowRankProductRepresentation:
     """
     Calculates a low-rank approximation of the Hessian matrix of the model's loss function using the implicitly
     restarted Lanczos algorithm, provided by scipy wrapper to ARPACK.
@@ -207,14 +219,18 @@ def lanzcos_low_rank_hessian_approx(hessian_vp: Callable[[torch.Tensor], torch.T
             tol=tol,
             ncv=krylov_dimension,
             return_eigenvectors=True,
-            v0=x0.cpu().numpy() if x0 is not None else None
+            v0=x0.cpu().numpy() if x0 is not None else None,
         )
     except ArpackNoConvergence as e:
-        logger.warning(f"ARPACK did not converge for parameters {max_iter=}, {tol=}, {krylov_dimension=}, "
-                       f"{rank_estimate=}. \n Returning the best approximation found so far. Use those with care or "
-                       f"modify parameters.\n Original error: {e}")
-        return LowRankProductRepresentation(torch.from_numpy(e.eigenvalues), torch.from_numpy(e.eigenvectors))
+        logger.warning(
+            f"ARPACK did not converge for parameters {max_iter=}, {tol=}, {krylov_dimension=}, "
+            f"{rank_estimate=}. \n Returning the best approximation found so far. Use those with care or "
+            f"modify parameters.\n Original error: {e}"
+        )
+        return LowRankProductRepresentation(
+            torch.from_numpy(e.eigenvalues), torch.from_numpy(e.eigenvectors)
+        )
 
-    return LowRankProductRepresentation(torch.from_numpy(eigen_vals), torch.from_numpy(eigen_vecs))
-
-
+    return LowRankProductRepresentation(
+        torch.from_numpy(eigen_vals), torch.from_numpy(eigen_vecs)
+    )

@@ -14,9 +14,13 @@ from torch import autograd
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from .util import LowRankProductRepresentation, get_hvp_function, lanzcos_low_rank_hessian_approx
 from ...utils import maybe_progress
 from .twice_differentiable import TwiceDifferentiable
+from .util import (
+    LowRankProductRepresentation,
+    get_hvp_function,
+    lanzcos_low_rank_hessian_approx,
+)
 
 __all__ = [
     "TorchTwiceDifferentiable",
@@ -426,15 +430,19 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
         )
 
 
-def solve_low_rank(model: TorchTwiceDifferentiable, training_data: DataLoader, b: torch.Tensor, *,
-                   hessian_perturbation: float = 0.0,
-                   rank_estimate: int = 10,
-                   krylov_dimension: Optional[int] = None,
-                   low_rank_representation: Optional[LowRankProductRepresentation] = None,
-                   x0: Optional[torch.Tensor] = None,
-                   tol: float = 1e-6,
-                   max_iter: Optional[int] = None
-                   ) -> torch.Tensor:
+def solve_low_rank(
+    model: TorchTwiceDifferentiable,
+    training_data: DataLoader,
+    b: torch.Tensor,
+    *,
+    hessian_perturbation: float = 0.0,
+    rank_estimate: int = 10,
+    krylov_dimension: Optional[int] = None,
+    low_rank_representation: Optional[LowRankProductRepresentation] = None,
+    x0: Optional[torch.Tensor] = None,
+    tol: float = 1e-6,
+    max_iter: Optional[int] = None,
+) -> torch.Tensor:
 
     """
     Solves the linear system Hx = b, where H is the Hessian of the model's loss function and b is the given right-hand
@@ -466,22 +474,25 @@ def solve_low_rank(model: TorchTwiceDifferentiable, training_data: DataLoader, b
     """
 
     if low_rank_representation is None:
-        hessian_vector_product = get_hvp_function(model.model, model.loss, training_data)
-        low_rank_representation = lanzcos_low_rank_hessian_approx(hessian_vp=hessian_vector_product,
-                                                                  matrix_shape=(model.num_params, model.num_params),
-                                                                  hessian_perturbation=hessian_perturbation,
-                                                                  rank_estimate=rank_estimate,
-                                                                  x0=x0,
-                                                                  krylov_dimension=krylov_dimension,
-                                                                  tol=tol,
-                                                                  max_iter=max_iter,
-                                                                  device=model.device if hasattr(model, 'device')
-                                                                  else None)
+        hessian_vector_product = get_hvp_function(
+            model.model, model.loss, training_data
+        )
+        low_rank_representation = lanzcos_low_rank_hessian_approx(
+            hessian_vp=hessian_vector_product,
+            matrix_shape=(model.num_params, model.num_params),
+            hessian_perturbation=hessian_perturbation,
+            rank_estimate=rank_estimate,
+            x0=x0,
+            krylov_dimension=krylov_dimension,
+            tol=tol,
+            max_iter=max_iter,
+            device=model.device if hasattr(model, "device") else None,
+        )
     else:
         logger.info("Using provided low rank representation, ignoring other parameters")
 
-    result = low_rank_representation.projections @ (torch.diag_embed(1. / low_rank_representation.eigen_vals) @
-                                                    (low_rank_representation.projections.t() @ b.t()))
+    result = low_rank_representation.projections @ (
+        torch.diag_embed(1.0 / low_rank_representation.eigen_vals)
+        @ (low_rank_representation.projections.t() @ b.t())
+    )
     return result.t()
-
-
