@@ -1,147 +1,33 @@
+import logging
 import os
-import pickle as pkl
 from copy import deepcopy
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import torch.nn as nn
+from numpy.typing import NDArray
 from PIL.JpegImagePlugin import JpegImageFile
-from torch.optim import Adam
-from torchvision.models import ResNet18_Weights, resnet18
 
-from pydvl.influence.model_wrappers import TorchModel
 from pydvl.utils import Dataset
 
-try:
-    import torch
+from .types import Losses
 
-    _TORCH_INSTALLED = True
-except ImportError:
-    _TORCH_INSTALLED = False
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
-
-MODEL_PATH = Path().resolve().parent / "data" / "models"
+logger = logging.getLogger(__name__)
 
 
-def new_resnet_model(output_size: int) -> TorchModel:
-    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-
-    for param in model.parameters():
-        param.requires_grad = False
-
-    # Fine-tune final few layers
-    model.avgpool = nn.AdaptiveAvgPool2d(1)
-    n_features = model.fc.in_features
-    model.fc = nn.Linear(n_features, output_size)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-
-    return TorchModel(model)
-
-
-class TrainingManager:
-    """A simple class to handle persistence of the model for the notebook
-    `influence_imagenet.ipynb`
-    """
-
-    def __init__(
-        self,
-        name: str,
-        model: TorchModel,
-        loss: torch.nn.modules.loss._Loss,
-        train_x: "NDArray[np.float_]",
-        train_y: "NDArray[np.float_]",
-        val_x: "NDArray[np.float_]",
-        val_y: "NDArray[np.float_]",
-        data_dir: Path,
-    ):
-        self.name = name
-        self.model_wrapper = model
-        self.loss = loss
-        self.train_x, self.train_y = train_x, train_y
-        self.val_x, self.val_y = val_x, val_y
-        self.data_dir = data_dir
-        os.makedirs(self.data_dir, exist_ok=True)
-
-    @property
-    def model(self) -> nn.Module:
-        return self.model_wrapper.model
-
-    def train(
-        self,
-        n_epochs: int,
-        lr: float = 0.001,
-        batch_size: int = 1000,
-        use_cache: bool = True,
-    ) -> Tuple["NDArray[np.float_]", "NDArray[np.float_]"]:
-        """
-        :return: Tuple of training_loss, validation_loss
-        """
-        if use_cache:
-            try:
-                training_loss, validation_loss = self.load()
-                print("Cached model found, loading...")
-                return training_loss, validation_loss
-            except:
-                print(f"No pretrained model found. Training for {n_epochs} epochs:")
-
-        optimizer = Adam(self.model.parameters(), lr=lr)
-
-        training_loss, validation_loss = self.model_wrapper.fit(
-            x_train=self.train_x,
-            y_train=self.train_y,
-            x_val=self.val_x,
-            y_val=self.val_y,
-            loss=self.loss,
-            optimizer=optimizer,
-            num_epochs=n_epochs,
-            batch_size=batch_size,
-        )
-        if use_cache:
-            self.save(training_loss, validation_loss)
-
-        return training_loss, validation_loss
-
-    def save(
-        self, training_loss: "NDArray[np.float_]", validation_loss: "NDArray[np.float_]"
-    ):
-        """Saves the model weights and training and validation losses.
-
-        :param training_loss: list of training losses, one per epoch
-        :param validation_loss: list of validation losses, also one per epoch
-        """
-        torch.save(self.model.state_dict(), self.data_dir / f"{self.name}_weights.pth")
-        with open(self.data_dir / f"{self.name}_train_val_loss.pkl", "wb") as file:
-            pkl.dump([training_loss, validation_loss], file)
-
-    def load(self) -> Tuple["NDArray[np.float_]", "NDArray[np.float_]"]:
-        """Loads model weights and training and validation losses.
-        :return: two arrays, one with training and one with validation losses.
-        """
-        self.model.load_state_dict(
-            torch.load(self.data_dir / f"{self.name}_weights.pth")
-        )
-        with open(self.data_dir / f"{self.name}_train_val_loss.pkl", "rb") as file:
-            return pkl.load(file)
-
-
-def plot_dataset(
-    train_ds: Tuple["NDArray[np.float_]", "NDArray[np.int_]"],
-    test_ds: Tuple["NDArray[np.float_]", "NDArray[np.int_]"],
-    x_min: Optional["NDArray[np.float_]"] = None,
-    x_max: Optional["NDArray[np.float_]"] = None,
+def plot_gaussian_blobs(
+    train_ds: Tuple[NDArray[np.float_], NDArray[np.int_]],
+    test_ds: Tuple[NDArray[np.float_], NDArray[np.int_]],
+    x_min: Optional[NDArray[np.float_]] = None,
+    x_max: Optional[NDArray[np.float_]] = None,
     *,
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     legend_title: Optional[str] = None,
     vline: Optional[float] = None,
-    line: Optional["NDArray[np.float_]"] = None,
+    line: Optional[NDArray[np.float_]] = None,
     suptitle: Optional[str] = None,
     s: Optional[float] = None,
     figsize: Tuple[int, int] = (20, 10),
@@ -214,15 +100,15 @@ def plot_dataset(
 
 
 def plot_influences(
-    x: "NDArray[np.float_]",
-    influences: "NDArray[np.float_]",
+    x: NDArray[np.float_],
+    influences: NDArray[np.float_],
     corrupted_indices: Optional[List[int]] = None,
     *,
     ax: Optional[plt.Axes] = None,
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     legend_title: Optional[str] = None,
-    line: Optional["NDArray[np.float_]"] = None,
+    line: Optional[NDArray[np.float_]] = None,
     suptitle: Optional[str] = None,
     colorbar_limits: Optional[Tuple] = None,
 ) -> plt.Axes:
@@ -437,6 +323,14 @@ def load_preprocess_imagenet(
                     processed_ds["labels"].append(item["label"])
         return pd.DataFrame.from_dict(processed_ds)
 
+    def split_ds_by_size(dataset, split_size):
+        split_ds = dataset.train_test_split(
+            train_size=split_size,
+            seed=random_state,
+            stratify_by_column="label",
+        )
+        return split_ds
+
     if os.environ.get("CI"):
         tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="valid")
         if keep_labels is not None:
@@ -463,14 +357,10 @@ def load_preprocess_imagenet(
             lambda item: item["label"] in keep_labels.keys()
         )
 
-    split_ds = tiny_imagenet.train_test_split(
-        train_size=1 - test_size, seed=random_state
-    )
+    split_ds = split_ds_by_size(tiny_imagenet, 1 - test_size)
     test_ds = _process_dataset(split_ds["test"])
 
-    split_ds = split_ds["train"].train_test_split(
-        train_size=train_size, seed=random_state
-    )
+    split_ds = split_ds_by_size(split_ds["train"], train_size)
     train_ds = _process_dataset(split_ds["train"])
     val_ds = _process_dataset(split_ds["test"])
 
@@ -500,7 +390,7 @@ def plot_sample_images(dataset: pd.DataFrame, n_images_per_class: int = 3):
 
 
 def plot_lowest_highest_influence_images(
-    subset_influences: "NDArray[np.float_]",
+    subset_influences: NDArray[np.float_],
     subset_images: List[JpegImageFile],
     num_to_plot: int,
 ):
@@ -531,17 +421,15 @@ def plot_lowest_highest_influence_images(
     plt.show()
 
 
-def plot_losses(
-    training_loss: "NDArray[np.float_]", validation_loss: "NDArray[np.float_]"
-):
+def plot_losses(losses: Losses):
     """Plots the train and validation loss
 
     :param training_loss: list of training losses, one per epoch
     :param validation_loss: list of validation losses, one per epoch
     """
     _, ax = plt.subplots()
-    ax.plot(training_loss, label="Train")
-    ax.plot(validation_loss, label="Val")
+    ax.plot(losses.training, label="Train")
+    ax.plot(losses.validation, label="Val")
     ax.set_ylabel("Loss")
     ax.set_xlabel("Train epoch")
     ax.legend()
@@ -551,7 +439,7 @@ def plot_losses(
 def corrupt_imagenet(
     dataset: pd.DataFrame,
     fraction_to_corrupt: float,
-    avg_influences: "NDArray[np.float_]",
+    avg_influences: NDArray[np.float_],
 ) -> Tuple[pd.DataFrame, Dict[Any, List[int]]]:
     """Given the preprocessed tiny imagenet dataset (or a subset of it), 
     it takes a fraction of the images with the highest influence and (randomly)
@@ -589,10 +477,10 @@ def corrupt_imagenet(
 def compute_mean_corrupted_influences(
     corrupted_dataset: pd.DataFrame,
     corrupted_indices: Dict[Any, List[int]],
-    avg_corrupted_influences: "NDArray[np.float_]",
+    avg_corrupted_influences: NDArray[np.float_],
 ) -> pd.DataFrame:
-    """Given a corrupted dataset, it returns a dataframe with average influence for each class
-    and separately for corrupted (and non) point.
+    """Given a corrupted dataset, it returns a dataframe with average influence for each class,
+    separating corrupted and original points.
 
     :param corrupted_dataset: corrupted dataset as returned by get_corrupted_imagenet
     :param corrupted_indices: list of corrupted indices, as returned by get_corrupted_imagenet
@@ -626,7 +514,7 @@ def compute_mean_corrupted_influences(
 def plot_corrupted_influences_distribution(
     corrupted_dataset: pd.DataFrame,
     corrupted_indices: Dict[Any, List[int]],
-    avg_corrupted_influences: "NDArray[np.float_]",
+    avg_corrupted_influences: NDArray[np.float_],
     figsize: Tuple[int, int] = (16, 8),
 ):
     """Given a corrupted dataset, plots the histogram with the distribution of
@@ -656,14 +544,10 @@ def plot_corrupted_influences_distribution(
         non_corrupted_infl = class_influences[
             ~class_influences.index.isin(corrupted_indices[label])
         ]
-        axes[idx].hist(
-            non_corrupted_infl, label="Non corrupted", density=True, alpha=0.7
-        )
-        axes[idx].hist(
-            corrupted_infl, label="Corrupted", density=True, alpha=0.7, color="green"
-        )
+        axes[idx].hist(non_corrupted_infl, label="Non corrupted", alpha=0.7)
+        axes[idx].hist(corrupted_infl, label="Corrupted", alpha=0.7, color="green")
         axes[idx].set_xlabel("Influence values")
-        axes[idx].set_ylabel("Distribution")
+        axes[idx].set_ylabel("Number of samples")
         axes[idx].set_title(f"Influences for {label=}")
         axes[idx].legend()
     plt.show()

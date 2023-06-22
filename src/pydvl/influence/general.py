@@ -1,33 +1,25 @@
 """
-Contains parallelized influence calculation functions for general models.
+This module contains parallelized influence calculation functions for general
+models, as introduced in :footcite:t:`koh_understanding_2017`.
 """
+from copy import deepcopy
 from enum import Enum
-from typing import TYPE_CHECKING, Callable, Dict, Optional
-
-import numpy as np
-from scipy.sparse.linalg import LinearOperator
+from typing import Any, Dict, Optional
 
 from ..utils import maybe_progress
-from .conjugate_gradient import (
-    batched_preconditioned_conjugate_gradient,
-    conjugate_gradient,
+from .frameworks import (
+    DataLoaderType,
+    ModelType,
+    TensorType,
+    TwiceDifferentiable,
+    cat,
+    einsum,
+    mvp,
+    stack,
 )
-from .frameworks import TorchTwiceDifferentiable
-from .types import MatrixVectorProductInversionAlgorithm, TwiceDifferentiable
+from .inversion import InversionMethod, solve_hvp
 
-try:
-    import torch
-    import torch.nn as nn
-
-    _TORCH_INSTALLED = True
-except ImportError:
-    _TORCH_INSTALLED = False
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
-
-
-__all__ = ["compute_influences", "InfluenceType", "InversionMethod"]
+__all__ = ["compute_influences", "InfluenceType", "compute_influence_factors"]
 
 
 class InfluenceType(str, Enum):
@@ -39,189 +31,196 @@ class InfluenceType(str, Enum):
     Perturbation = "perturbation"
 
 
-class InversionMethod(str, Enum):
-    """
-    Different inversion methods types.
-    """
-
-    Direct = "direct"
-    Cg = "cg"
-    BatchedCg = "batched_cg"
-
-
-def calculate_influence_factors(
-    model: TwiceDifferentiable,
-    x: "NDArray",
-    y: "NDArray",
-    x_test: "NDArray",
-    y_test: "NDArray",
-    inversion_func: MatrixVectorProductInversionAlgorithm,
-    lam: float = 0,
+def compute_influence_factors(
+    model: TwiceDifferentiable[TensorType, ModelType],
+    training_data: DataLoaderType,
+    test_data: DataLoaderType,
+    inversion_method: InversionMethod,
+    *,
+    hessian_perturbation: float = 0.0,
     progress: bool = False,
-) -> "NDArray":
+    **kwargs: Any,
+) -> TensorType:
+    r"""
+    Calculates influence factors of a model for training and test
+    data. Given a test point $z_test = (x_{test}, y_{test})$, a loss
+    $L(z_{test}, \theta)$ ($\theta$ being the parameters of the model) and the
+    Hessian of the model $H_{\theta}$, influence factors are defined as
+    $$s_{test} = H_{\theta}^{-1} \grad_{\theta} L(z_{test}, \theta).$$. They are
+    used for efficient influence calculation. This method first
+    (implicitly) calculates the Hessian and then (explicitly) finds the
+    influence factors for the model using the given inversion method. The
+    parameter ``hessian_perturbation`` is used to regularize the inversion of
+    the Hessian. For more info, refer to :footcite:t:`koh_understanding_2017`,
+    paragraph 3.
+
+    :param model: A model wrapped in the TwiceDifferentiable interface.
+    :param training_data: A DataLoader containing the training data.
+    :param test_data: A DataLoader containing the test data.
+    :param inversion_func: function to use to invert the product of hvp (hessian
+        vector product) and the gradient of the loss (s_test in the paper).
+    :param hessian_perturbation: regularization of the hessian
+    :param progress: If True, display progress bars.
+    :returns: An array of size (N, D) containing the influence factors for each
+        dimension (D) and test sample (N).
     """
-    Calculates the influence factors. For more info, see https://arxiv.org/pdf/1703.04730.pdf, paragraph 3.
+    test_grads = []
+    for x_test, y_test in maybe_progress(
+        test_data, progress, desc="Batch Test Gradients"
+    ):
+        test_grads.append(model.split_grad(x_test, y_test, progress=False))
+    test_grads = cat(test_grads)
+    return solve_hvp(
+        inversion_method,
+        model,
+        training_data,
+        test_grads,
+        hessian_perturbation=hessian_perturbation,
+        progress=progress,
+        **kwargs,
+    )
+
+
+def compute_influences_up(
+    model: TwiceDifferentiable[TensorType, ModelType],
+    input_data: DataLoaderType,
+    influence_factors: TensorType,
+    *,
+    progress: bool = False,
+) -> TensorType:
+    r"""
+    Given the model, the training points and the influence factors, calculates the
+    influences using the upweighting method. More precisely, first it calculates
+    the gradients of the model wrt. each training sample ($\grad_{\theta} L$,
+    with $L$ the loss of a single point and $\theta$ the parameters of the
+    model) and then multiplies each with the influence factors. For more
+    details, refer to section 2.1 of :footcite:t:`koh_understanding_2017`.
+
+    :param model: A model which has to implement the TwiceDifferentiable
+        interface.
+    :param input_data: Data loader containing the samples to calculate the
+        influence of.
+    :param influence_factors: array containing influence factors
+    :param progress: If True, display progress bars.
+    :returns: An array of size [NxM], where N is number of test points and M
+        number of train points.
+    """
+    train_grads = []
+    for x, y in maybe_progress(
+        input_data, progress, desc="Batch Split Input Gradients"
+    ):
+        train_grads.append(model.split_grad(x, y, progress=False))
+    train_grads = cat(train_grads)
+    return einsum("ta,va->tv", influence_factors, train_grads)
+
+
+def compute_influences_pert(
+    model: TwiceDifferentiable[TensorType, ModelType],
+    input_data: DataLoaderType,
+    influence_factors: TensorType,
+    *,
+    progress: bool = False,
+) -> TensorType:
+    r"""
+    Calculates the influence values from the influence factors and the training
+    points using the perturbation method. More precisely, for each training sample it
+    calculates $\grad_{\theta} L$ (with L the loss of the model over the single
+    point and $\theta$ the parameters of the model) and then uses the method
+    TwiceDifferentiable.mvp to efficiently calculate the product of the
+    influence factors and $\grad_x \grad_{\theta} L$. For more details, refer
+    to section 2.2 of :footcite:t:`koh_understanding_2017`.
 
     :param model: A model which has to implement the TwiceDifferentiable interface.
-    :param x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
-    :param y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
-    :param x_test: A np.ndarray of shape [NxK] containing the features of the test set of data points.
-    :param y_test: A np.ndarray of shape [NxL] containing the targets of the test set of data points.
-    :param inversion_func: function to use to invert the product of hvp (hessian vector product) and the gradient
-        of the loss (s_test in the paper).
-    :param lam: regularization of the hessian
+    :param input_data: Data loader containing the samples to calculate the
+        influence of.
+    :param influence_factors: array containing influence factors
     :param progress: If True, display progress bars.
-    :returns: A np.ndarray of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
-    """
-    if not _TORCH_INSTALLED:
-        raise RuntimeWarning("This function requires PyTorch.")
-    grad_xy, _ = model.grad(x, y)
-    hvp = lambda v: model.mvp(grad_xy, v) + lam * v
-    test_grads = model.split_grad(x_test, y_test, progress)
-    return inversion_func(hvp, test_grads)
-
-
-def _calculate_influences_up(
-    model: TwiceDifferentiable,
-    x: "NDArray",
-    y: "NDArray",
-    influence_factors: "NDArray",
-    progress: bool = False,
-) -> "NDArray":
-    """
-    Calculates the influence from the influence factors and the scores of the training points.
-    Uses the upweighting method, as described in section 2.1 of https://arxiv.org/pdf/1703.04730.pdf
-
-    :param model: A model which has to implement the TwiceDifferentiable interface.
-    :param x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
-    :param y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
-    :param influence_factors: np.ndarray containing influence factors
-    :param progress: If True, display progress bars.
-    :returns: A np.ndarray of size [NxM], where N is number of test points and M number of train points.
-    """
-    train_grads = model.split_grad(x, y, progress)
-    return np.einsum("ta,va->tv", influence_factors, train_grads)  # type: ignore
-
-
-def _calculate_influences_pert(
-    model: TwiceDifferentiable,
-    x: "NDArray",
-    y: "NDArray",
-    influence_factors: "NDArray",
-    progress: bool = False,
-) -> "NDArray":
-    """
-    Calculates the influence from the influence factors and the scores of the training points.
-    Uses the perturbation method, as described in section 2.2 of https://arxiv.org/pdf/1703.04730.pdf
-
-    :param model: A model which has to implement the TwiceDifferentiable interface.
-    :param x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
-    :param y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
-    :param influence_factors: np.ndarray containing influence factors
-    :param progress: If True, display progress bars.
-    :returns: A np.ndarray of size [NxMxP], where N is number of test points, M number of train points,
-        and P the number of features.
+    :returns: An array of size [NxMxP], where N is number of test points, M
+        number of train points, and P the number of features.
     """
     all_pert_influences = []
-    for i in maybe_progress(
-        len(x),
+    for x, y in maybe_progress(
+        input_data,
         progress,
-        desc="Influence Perturbation",
+        desc="Batch Influence Perturbation",
     ):
-        grad_xy, tensor_x = model.grad(x[i : i + 1], y[i])
-        perturbation_influences = model.mvp(
-            grad_xy,
-            influence_factors,
-            backprop_on=tensor_x,
-        )
-        all_pert_influences.append(perturbation_influences.reshape((-1, *x[i].shape)))
+        for i in range(len(x)):
+            grad_xy, tensor_x = model.grad(x[i : i + 1], y[i], x_requires_grad=True)
+            perturbation_influences = mvp(
+                grad_xy,
+                influence_factors,
+                backprop_on=tensor_x,
+            )
+            all_pert_influences.append(
+                perturbation_influences.reshape((-1, *x[i].shape))
+            )
 
-    return np.stack(all_pert_influences, axis=1)
+    return stack(all_pert_influences, axis=1)
 
 
-influence_type_function_dict = {
-    "up": _calculate_influences_up,
-    "perturbation": _calculate_influences_pert,
+influence_type_registry = {
+    InfluenceType.Up: compute_influences_up,
+    InfluenceType.Perturbation: compute_influences_pert,
 }
 
 
 def compute_influences(
-    model: "nn.Module",
-    loss: Callable[["torch.Tensor", "torch.Tensor"], "torch.Tensor"],
-    x: "NDArray",
-    y: "NDArray",
-    x_test: "NDArray",
-    y_test: "NDArray",
-    progress: bool = False,
+    differentiable_model: TwiceDifferentiable[TensorType, ModelType],
+    training_data: DataLoaderType,
+    *,
+    test_data: Optional[DataLoaderType] = None,
+    input_data: Optional[DataLoaderType] = None,
     inversion_method: InversionMethod = InversionMethod.Direct,
     influence_type: InfluenceType = InfluenceType.Up,
-    inversion_method_kwargs: Optional[Dict] = None,
-    hessian_regularization: float = 0,
-) -> "NDArray":
-    """
-    Calculates the influence of the training points j on the test points i. First it calculates
-    the influence factors for all test points with respect to the training points, and then uses them to
-    get the influences over the complete training set. Points with low influence values are (on average)
-    less important for model training than points with high influences.
+    hessian_regularization: float = 0.0,
+    progress: bool = False,
+    **kwargs: Any,
+) -> TensorType:
+    r"""
+    Calculates the influence of the input_data point j on the test points i.
+    First it calculates the influence factors of all test points with respect
+    to the model and the training points, and then uses them to get the
+    influences over the complete input_data set.
 
-    :param model: A supervised model from a supported framework. Currently, only pytorch nn.Module is supported.
-    :param loss: loss of the model, a callable that, given prediction of the model and real labels, returns a
-        tensor with the loss value.
-    :param x: model input for training
-    :param y: input labels
-    :param x_test: model input for testing
-    :param y_test: test labels
+    :param differentiable_model: A model wrapped with its loss in TwiceDifferentiable.
+    :param training_data: data loader with the training data, used to calculate
+        the hessian of the model loss.
+    :param test_data: data loader with the test samples. If None, the samples in
+        training_data are used.
+    :param input_data: data loader with the samples to calculate the influences
+        of. If None, the samples in training_data are used.
     :param progress: whether to display progress bars.
-    :param inversion_method: Set the inversion method to a specific one, can be 'direct' for direct inversion
-        (and explicit construction of the Hessian) or 'cg' for conjugate gradient.
     :param influence_type: Which algorithm to use to calculate influences.
-        Currently supported options: 'up' or 'perturbation'. For details refer to https://arxiv.org/pdf/1703.04730.pdf
-    :param inversion_method_kwargs: kwargs for the inversion method selected.
-        If using the direct method no kwargs are needed. If inversion_method='cg', the following kwargs can be passed:
-        - rtol: relative tolerance to be achieved before terminating computation
-        - max_iterations: maximum conjugate gradient iterations
-        - max_step_size: step size of conjugate gradient
-        - verify_assumptions: True to run tests on convexity of the model.
-    :param hessian_regularization: lambda to use in Hessian regularization, i.e. H_reg = H + lambda * 1, with 1 the identity matrix \
-        and H the (simple and regularized) Hessian. Typically used with more complex models to make sure the Hessian \
-        is positive definite.
-    :returns: A np.ndarray specifying the influences. Shape is [NxM] if influence_type is'up', where N is number of test points and
-        M number of train points. If instead influence_type is 'perturbation', output shape is [NxMxP], with P the number of input
-        features.
+        Currently supported options: 'up' or 'perturbation'. For details refer
+        to :footcite:t:`koh_understanding_2017`
+    :param hessian_regularization: lambda to use in Hessian regularization, i.e.
+        H_reg = H + lambda * 1, with 1 the identity matrix and H the (simple and
+        regularized) Hessian. Typically used with more complex models to make
+        sure the Hessian is positive definite.
+    :returns: An array specifying the influences. Shape is [NxM] if
+        influence_type is'up', where N is number of test points and M number of
+        train points. If instead influence_type is 'perturbation', output shape
+        is [NxMxP], with P the number of input features.
     """
-    if not _TORCH_INSTALLED:
-        raise RuntimeWarning("This function requires PyTorch.")
+    if input_data is None:
+        input_data = deepcopy(training_data)
+    if test_data is None:
+        test_data = deepcopy(training_data)
 
-    if inversion_method_kwargs is None:
-        inversion_method_kwargs = dict()
-    differentiable_model = TorchTwiceDifferentiable(model, loss)
-    n_params = differentiable_model.num_params()
-    dict_fact_algos: Dict[Optional[str], MatrixVectorProductInversionAlgorithm] = {
-        "direct": lambda hvp, x: np.linalg.solve(hvp(np.eye(n_params)), x.T).T,  # type: ignore
-        "cg": lambda hvp, x: conjugate_gradient(LinearOperator((n_params, n_params), matvec=hvp), x, progress),  # type: ignore
-        "batched_cg": lambda hvp, x: batched_preconditioned_conjugate_gradient(  # type: ignore
-            hvp, x, **inversion_method_kwargs
-        )[
-            0
-        ],
-    }
-
-    influence_factors = calculate_influence_factors(
+    influence_factors = compute_influence_factors(
         differentiable_model,
-        x,
-        y,
-        x_test,
-        y_test,
-        dict_fact_algos[inversion_method],
-        lam=hessian_regularization,
+        training_data,
+        test_data,
+        inversion_method,
+        hessian_perturbation=hessian_regularization,
         progress=progress,
+        **kwargs,
     )
-    influence_function = influence_type_function_dict[influence_type]
+    compute_influence_type = influence_type_registry[influence_type]
 
-    return influence_function(
+    return compute_influence_type(
         differentiable_model,
-        x,
-        y,
+        input_data,
         influence_factors,
-        progress,
+        progress=progress,
     )

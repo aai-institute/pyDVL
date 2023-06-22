@@ -7,4 +7,5 @@ This package contains algorithms for the computation of the influence function.
    probably change.
 
 """
-from .general import *
+from .frameworks import TorchTwiceDifferentiable, TwiceDifferentiable
+from .general import compute_influence_factors, compute_influences
