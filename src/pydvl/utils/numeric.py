@@ -31,16 +31,19 @@ def powerset(s: NDArray[T]) -> Iterator[Collection[T]]:
     """Returns an iterator for the power set of the argument.
 
      Subsets are generated in sequence by growing size. See
-     :func:`random_powerset` for random sampling.
+     [random_powerset()][pydvl.utils.numeric.random_powerset] for random
+     sampling.
 
     >>> import numpy as np
     >>> from pydvl.utils.numeric import powerset
     >>> list(powerset(np.array((1,2))))
     [(), (1,), (2,), (1, 2)]
 
-     :param s: The set to use
-     :return: An iterator
-     :raises TypeError: If the argument is not an ``Iterable``.
+    Args:
+         s: The set to use
+
+    Returns:
+        An iterator over all subsets of the set of indices `s`.
     """
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
@@ -53,22 +56,28 @@ def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) 
     be ε-close to the true quantity, if at least this many permutations are
     sampled.
 
-    :param eps: ε > 0
-    :param delta: 0 < δ <= 1
-    :param u_range: Range of the :class:`~pydvl.utils.utility.Utility` function
-    :return: Number of _permutations_ required to guarantee ε-correct Shapley
-        values with probability 1-δ
+    Args:
+        eps: ε > 0
+        delta: 0 < δ <= 1
+        u_range: Range of the [Utility][pydvl.utils.utility.Utility] function
+
+    Returns:
+        Number of _permutations_ required to guarantee ε-correct Shapley
+            values with probability 1-δ
     """
     return int(np.ceil(np.log(2 / delta) * 2 * u_range**2 / eps**2))
 
 
 def random_subset(s: NDArray[T], q: float = 0.5) -> NDArray[T]:
-    """Returns one subset at random from ``s``.
+    """Returns one subset at random from `s`.
 
-    :param s: set to sample from
-    :param q: Sampling probability for elements. The default 0.5 yields a
-        uniform distribution over the power set of s.
-    :return: the subset
+    Args:
+        s: set to sample from
+        q: Sampling probability for elements. The default 0.5 yields a
+            uniform distribution over the power set of s.
+
+    Returns:
+        The subset
     """
     rng = np.random.default_rng()
     selection = rng.uniform(size=len(s)) > q
@@ -86,22 +95,21 @@ def random_powerset(
     To generate subsets, `len(s)` Bernoulli draws with probability `q` are
     drawn. The default value of `q = 0.5` provides a uniform distribution over
     the power set of `s`. Other choices can be used e.g. to implement
-    :func:`Owen sampling
-    <pydvl.value.shapley.montecarlo.owen_sampling_shapley>`.
+    :func:`Owen sampling <pydvl.value.shapley.owen.owen_sampling_shapley>`.
 
-    :param s: set to sample from
-    :param n_samples: if set, stop the generator after this many steps.
-        Defaults to `np.iinfo(np.int32).max`
-    :param q: Sampling probability for elements. The default 0.5 yields a
-        uniform distribution over the power set of s.
+    Args:
+        s: set to sample from
+        n_samples: if set, stop the generator after this many steps.
+            Defaults to `np.iinfo(np.int32).max`
+        q: Sampling probability for elements. The default 0.5 yields a
+            uniform distribution over the power set of s.
 
-    :return: Samples from the power set of s
-    :raises: TypeError: if the data `s` is not a NumPy array
+    Returns:
+        Samples from the power set of `s`.
+
     :raises: ValueError: if the element sampling probability is not in [0,1]
 
     """
-    if not isinstance(s, np.ndarray):
-        raise TypeError("Set must be an NDArray")
     if q < 0 or q > 1:
         raise ValueError("Element sampling probability must be in [0,1]")
 
@@ -115,11 +123,15 @@ def random_powerset(
 
 def random_subset_of_size(s: NDArray[T], size: int) -> NDArray[T]:
     """Samples a random subset of given size uniformly from the powerset
-    of ``s``.
+    of `s`.
 
-    :param s: Set to sample from
-    :param size: Size of the subset to generate
-    :return: The subset
+    Args:
+        s: Set to sample from
+        size: Size of the subset to generate
+
+    Returns:
+        The subset
+
     :raises ValueError: If size > len(s)
     """
     if size > len(s):
@@ -137,9 +149,12 @@ def random_matrix_with_condition_number(n: int, condition_number: float) -> "NDA
     Also see:
     https://math.stackexchange.com/questions/1351616/condition-number-of-ata.
 
-    :param n: size of the matrix
-    :param condition_number: duh
-    :return: An (n,n) matrix with the requested condition number.
+    Args:
+        n: size of the matrix
+        condition_number: duh
+
+    Returns:
+        An (n,n) matrix with the requested condition number.
     """
     if n < 2:
         raise ValueError("Matrix size must be at least 2")
@@ -167,10 +182,14 @@ def linear_regression_analytical_derivative_d_theta(
     linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
 ) -> "NDArray":
     """
-    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
-    :param x: A np.ndarray of shape [BxM].
-    :param y: A np.nparray of shape [BxN].
-    :returns: A np.ndarray of shape [Bx((N+1)*M)], where each row vector is [d_theta L(x, y), d_b L(x, y)]
+    Args:
+        linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing
+            A and b respectively.
+        x: A np.ndarray of shape [BxM].
+        y: A np.nparray of shape [BxN].
+
+    Returns:
+        An array of shape [Bx((N+1)*M)], where each row vector is [d_theta L(x, y), d_b L(x, y)]
     """
 
     A, b = linear_model
@@ -186,10 +205,15 @@ def linear_regression_analytical_derivative_d2_theta(
     linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
 ) -> "NDArray":
     """
-    :param linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing A and b respectively.
-    :param x: A np.ndarray of shape [BxM],
-    :param y: A np.nparray of shape [BxN].
-    :returns: A np.ndarray of shape [((N+1)*M)x((N+1)*M)], representing the Hessian. It gets averaged over all samples.
+    Args:
+        linear_model: A tuple of arrays of shape [NxM] and [N] representing A
+            and b respectively.
+        x: An array of shape [BxM],
+        y: An array of shape [BxN].
+
+    Returns:
+        An array of shape [((N+1)*M)x((N+1)*M)], representing the Hessian.
+            It gets averaged over all samples.
     """
     A, b = linear_model
     n, m = tuple(A.shape)
@@ -209,10 +233,13 @@ def linear_regression_analytical_derivative_d_x_d_theta(
     linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
 ) -> "NDArray":
     """
-    :param linear_model: A tuple of np.ndarray of shape [NxM] and [N] representing A and b respectively.
-    :param x: A np.ndarray of shape [BxM].
-    :param y: A np.nparray of shape [BxN].
-    :returns: A np.ndarray of shape [Bx((N+1)*M)xM], representing the derivative.
+    Args:
+        linear_model: A tuple of np.ndarray of shape [NxM] and [N] representing A and b respectively.
+        x: A np.ndarray of shape [BxM].
+        y: A np.nparray of shape [BxN].
+
+    Returns:
+        A np.ndarray of shape [Bx((N+1)*M)xM], representing the derivative.
     """
 
     A, b = linear_model
@@ -256,23 +283,23 @@ def running_moments(
     """Uses Welford's algorithm to calculate the running average and variance of
      a set of numbers.
 
-    See `Welford's algorithm in wikipedia
-    <https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm>`_
+    See [Welford's algorithm in wikipedia](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm)
 
-    .. warning::
+    !!! Warning
        This is not really using Welford's correction for numerical stability
        for the variance. (FIXME)
 
-    .. todo::
-       This could be generalised to arbitrary moments. See `this paper
-       <https://www.osti.gov/biblio/1028931>`_
+    !!! Todo
+       This could be generalised to arbitrary moments. See [this paper](https://www.osti.gov/biblio/1028931)
 
+    Args:
+        previous_avg: average value at previous step
+        previous_variance: variance at previous step
+        count: number of points seen so far
+        new_value: new value in the series of numbers
 
-    :param previous_avg: average value at previous step
-    :param previous_variance: variance at previous step
-    :param count: number of points seen so far
-    :param new_value: new value in the series of numbers
-    :return: new_average, new_variance, calculated with the new count
+    Returns:
+        new_average, new_variance, calculated with the new count
     """
     # broadcasted operations seem not to be supported by mypy, so we ignore the type
     new_average = (new_value + count * previous_avg) / (count + 1)  # type: ignore
@@ -288,10 +315,13 @@ def top_k_value_accuracy(
     """Computes the top-k accuracy for the estimated values by comparing indices
     of the highest k values.
 
-    :param y_true: Exact/true value
-    :param y_pred: Predicted/estimated value
-    :param k: Number of the highest values taken into account
-    :return: Accuracy
+    Args:
+        y_true: Exact/true value
+        y_pred: Predicted/estimated value
+        k: Number of the highest values taken into account
+
+    Returns:
+        Accuracy
     """
     top_k_exact_values = np.argsort(y_true)[-k:]
     top_k_pred_values = np.argsort(y_pred)[-k:]

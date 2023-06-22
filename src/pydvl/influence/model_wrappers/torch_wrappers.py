@@ -58,14 +58,14 @@ class TorchModelBase(ABC):
         It represents a simple machine learning loop, iterating over a number of
         epochs, sampling data with a certain batch size, calculating gradients and updating the parameters through a
         loss function.
-        :param x: Matrix of shape [NxD] representing the features x_i.
-        :param y: Matrix of shape [NxK] representing the prediction targets y_i.
-        :param optimizer: Select either ADAM or ADAM_W.
-        :param scheduler: A pytorch scheduler. If None, no scheduler is used.
-        :param num_epochs: Number of epochs to repeat training.
-        :param batch_size: Batch size to use in training.
-        :param progress: True, iff progress shall be printed.
-        :param tensor_type: accuracy of tensors. Typically 'float' or 'long'
+            x: Matrix of shape [NxD] representing the features x_i.
+            y: Matrix of shape [NxK] representing the prediction targets y_i.
+            optimizer: Select either ADAM or ADAM_W.
+            scheduler: A pytorch scheduler. If None, no scheduler is used.
+            num_epochs: Number of epochs to repeat training.
+            batch_size: Batch size to use in training.
+            progress: True, iff progress shall be printed.
+            tensor_type: accuracy of tensors. Typically 'float' or 'long'
         """
         x_train = torch.as_tensor(x_train).clone()
         y_train = torch.as_tensor(y_train).clone()
@@ -105,8 +105,11 @@ class TorchModelBase(ABC):
     def predict(self, x: torch.Tensor) -> "NDArray[np.float_]":
         """
         Use internal model to deliver prediction in numpy.
-        :param x: A np.ndarray [NxD] representing the features x_i.
-        :returns: A np.ndarray [NxK] representing the predicted values.
+    Args:
+            x: A np.ndarray [NxD] representing the features x_i.
+
+        Returns:
+            A np.ndarray [NxK] representing the predicted values.
         """
         return self.forward(x).detach().numpy()  # type: ignore
 
@@ -118,9 +121,12 @@ class TorchModelBase(ABC):
     ) -> float:
         """
         Use internal model to measure how good is prediction through a loss function.
-        :param x: A np.ndarray [NxD] representing the features x_i.
-        :param y: A np.ndarray [NxK] representing the predicted target values y_i.
-        :returns: The aggregated value over all samples N.
+    Args:
+            x: A np.ndarray [NxD] representing the features x_i.
+            y: A np.ndarray [NxK] representing the predicted target values y_i.
+
+        Returns:
+            The aggregated value over all samples N.
         """
         return score(self.forward(x), y).detach().numpy()  # type: ignore
 
@@ -148,8 +154,8 @@ class TorchLinearRegression(nn.Module, TorchModelBase):
         init: Tuple["NDArray[np.float_]", "NDArray[np.float_]"] = None,
     ):
         """
-        :param n_input: input to the model.
-        :param n_output: output of the model
+            n_input: input to the model.
+            n_output: output of the model
         :param init A tuple with two matrices, namely A of shape [K, D] and b of shape [K]. If set to None Xavier
         uniform initialization is used.
         """
@@ -172,8 +178,10 @@ class TorchLinearRegression(nn.Module, TorchModelBase):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Calculate A @ x + b using RAM-optimized calculation layout.
-        :param x: Tensor [NxD] representing the features x_i.
-        :returns A tensor [NxK] representing the outputs y_i.
+    Args:
+            x: Tensor [NxD] representing the features x_i.
+    Returns:
+        A tensor [NxK] representing the outputs y_i.
         """
         return x @ self.A.T + self.b
 
@@ -189,8 +197,9 @@ class TorchBinaryLogisticRegression(nn.Module, TorchModelBase):
         init: Tuple["NDArray[np.float_]", "NDArray[np.float_]"] = None,
     ):
         """
-        :param n_input: Number of feature inputs to the BinaryLogisticRegressionModel.
-        :param init A tuple representing the initialization for the weight matrix A and the bias b. If set to None
+    Args:
+            n_input: Number of feature inputs to the BinaryLogisticRegressionModel.
+            init: A tuple representing the initialization for the weight matrix A and the bias b. If set to None
         sample the values uniformly using the Xavier rule.
         """
         super().__init__()
@@ -206,8 +215,11 @@ class TorchBinaryLogisticRegression(nn.Module, TorchModelBase):
     def forward(self, x: Union["NDArray[np.float_]", torch.Tensor]) -> torch.Tensor:
         """
         Calculate sigmoid(dot(a, x) + b) using RAM-optimized calculation layout.
-        :param x: Tensor [NxD] representing the features x_i.
-        :returns: A tensor [N] representing the probabilities for p(y_i).
+    Args:
+            x: Tensor [NxD] representing the features x_i.
+
+        Returns:
+            A tensor [N] representing the probabilities for p(y_i).
         """
         x = torch.as_tensor(x)
         return torch.sigmoid(x @ self.A.T + self.b)
@@ -228,12 +240,13 @@ class TorchMLP(nn.Module, TorchModelBase):
         init: List[Tuple["NDArray[np.float_]", "NDArray[np.float_]"]] = None,
     ):
         """
-        :param n_input: Number of feature in input.
-        :param n_output: Output length.
-        :param n_neurons_per_layer: Each integer represents the size of a hidden layer. Overall this list has K - 2
-        :param output_probabilities: True, if the model should output probabilities. In the case of n_output 2 the
+    Args:
+            n_input: Number of feature in input.
+            n_output: Output length.
+            n_neurons_per_layer: Each integer represents the size of a hidden layer. Overall this list has K - 2
+            output_probabilities: True, if the model should output probabilities. In the case of n_output 2 the
         number of outputs reduce to 1.
-        :param init: A list of tuple of np.ndarray representing the internal weights.
+            init: A list of tuple of np.ndarray representing the internal weights.
         """
         super().__init__()
         self.n_input = n_input
@@ -274,7 +287,10 @@ class TorchMLP(nn.Module, TorchModelBase):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Perform forward-pass through the network.
-        :param x: Tensor input of shape [NxD].
-        :returns: Tensor output of shape[NxK].
+    Args:
+            x: Tensor input of shape [NxD].
+
+        Returns:
+            Tensor output of shape[NxK].
         """
         return self.layers(x)

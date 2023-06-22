@@ -52,14 +52,15 @@ class MockProgress(collections.abc.Iterator):
 
 
 def maybe_progress(
-    it: Union[int, Iterable, Iterator], display: bool = False, **kwargs
+    it: Union[int, Iterable, Iterator], display: bool = False, **kwargs: dict
 ) -> Union[tqdm, MockProgress]:
     """Returns either a tqdm progress bar or a mock object which wraps the
     iterator as well, but ignores any accesses to methods or properties.
 
-    :param it: the iterator to wrap
-    :param display: set to True to return a tqdm bar
-    :param kwargs: Keyword arguments that will be forwarded to tqdm
+    Args:
+        it: the iterator to wrap
+        display: set to True to return a tqdm bar
+        kwargs: Keyword arguments that will be forwarded to tqdm
     """
     if isinstance(it, int):
         it = range(it)  # type: ignore

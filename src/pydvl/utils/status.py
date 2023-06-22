@@ -4,16 +4,16 @@ from enum import Enum
 class Status(Enum):
     """Status of a computation.
 
-    Statuses can be combined using bitwise or (``|``) and bitwise and (``&``) to
+    Statuses can be combined using bitwise or (`|`) and bitwise and (`&`) to
     get the status of a combined computation. For example, if we have two
     computations, one that has converged and one that has failed, then the
-    combined status is ``Status.Converged | Status.Failed == Status.Converged``,
-    but ``Status.Converged & Status.Failed == Status.Failed``.
+    combined status is `Status.Converged | Status.Failed == Status.Converged`,
+    but `Status.Converged & Status.Failed == Status.Failed`.
 
 
     :OR:
 
-    The result of bitwise or-ing two valuation statuses with ``|`` is given
+    The result of bitwise or-ing two valuation statuses with `|` is given
     by the following table:
 
     +---+---+---+---+
@@ -30,7 +30,7 @@ class Status(Enum):
 
     :AND:
 
-    The result of bitwise and-ing two valuation statuses with ``&`` is given
+    The result of bitwise and-ing two valuation statuses with `&` is given
     by the following table:
 
     +---+---+---+---+
@@ -47,24 +47,23 @@ class Status(Enum):
 
     :NOT:
 
-    The result of bitwise negation of a Status with ``~`` is ``Failed`` if
-    the status is ``Converged``, or ``Converged`` otherwise:
+    The result of bitwise negation of a Status with `~` is `Failed` if
+    the status is `Converged`, or `Converged` otherwise:
 
         ~P == C, ~C == F, ~F == C
 
     :Boolean casting:
 
-    A Status evaluates to ``True`` iff it's ``Converged`` or ``Failed``:
+    A Status evaluates to `True` iff it's `Converged` or `Failed`:
 
         bool(Status.Pending) == False
         bool(Status.Converged) == True
         bool(Status.Failed) == True
 
-    .. warning::
-       These truth values are **inconsistent** with the usual boolean operations.
-       In particular the XOR of two instances of ``Status`` is not the same as
-       the XOR of their boolean values.
-
+    !!! Warning
+        These truth values are **inconsistent** with the usual boolean operations.
+        In particular the XOR of two instances of `Status` is not the same as
+        the XOR of their boolean values.
     """
 
     Pending = "pending"

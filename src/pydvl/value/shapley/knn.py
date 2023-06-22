@@ -1,8 +1,8 @@
 """
 This module contains Shapley computations for K-Nearest Neighbours.
 
-.. todo::
-   Implement approximate KNN computation for sublinear complexity)
+!!! Todo
+    Implement approximate KNN computation for sublinear complexity)
 """
 
 from typing import Dict, Union
@@ -20,20 +20,23 @@ __all__ = ["knn_shapley"]
 def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     """Computes exact Shapley values for a KNN classifier.
 
-    This implements the method described in :footcite:t:`jia_efficient_2019a`.
+    This implements the method described in [@jia_efficient_2019a].
     It exploits the local structure of K-Nearest Neighbours to reduce the number
     of calls to the utility function to a constant number per index, thus
     reducing computation time to $O(n)$.
 
-    :param u: Utility with a KNN model to extract parameters from. The object
-        will not be modified nor used other than to call `get_params()
-        <https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params>`_
-    :param progress: Whether to display a progress bar.
-    :return: Object with the data values.
-    :raises TypeError: If the model in the utility is not a `KNeighborsClassifier
-        <https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html>`_
+    Args:
+        u: Utility with a KNN model to extract parameters from. The object
+            will not be modified nor used other than to call `get_params()
+            <https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params>`_
+        progress: Whether to display a progress bar.
 
-    .. versionadded:: 0.1.0
+    Returns:
+        Object with the data values.
+
+    :raises TypeError: If the model in the utility is not a [KNeighborsClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html)
+
+    !!! tip "New in version 0.1.0"
 
     """
     if not isinstance(u.model, KNeighborsClassifier):

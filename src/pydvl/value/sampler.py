@@ -4,26 +4,26 @@ Samplers iterate over subsets of indices.
 The classes in this module are used to iterate over indices and subsets of their
 complement in the whole set, as required for the computation of marginal utility
 for semi-values. The elements returned when iterating over any subclass of
-:class:`PowersetSampler` are tuples of the form ``(idx, subset)``, where ``idx``
-is the index of the element being added to the subset, and ``subset`` is the
-subset of the complement of ``idx``.
+[PowersetSampler][pydvl.value.sampler.PowersetSampler] are tuples of the form `(idx, subset)`, where `idx`
+is the index of the element being added to the subset, and `subset` is the
+subset of the complement of `idx`.
 
-.. note::
-   This is the natural mode of iteration for the combinatorial definition of
-   semi-values, in particular Shapley value. For the computation using
-   permutations, adhering to this interface is not ideal, but we stick to it for
-   consistency.
+!!! Note
+    This is the natural mode of iteration for the combinatorial definition of
+    semi-values, in particular Shapley value. For the computation using
+    permutations, adhering to this interface is not ideal, but we stick to it for
+    consistency.
 
-The samplers are used in the :mod:`pydvl.value.semivalues` module to compute any
+The samplers are used in the [semivalues][pydvl.value.semivalues] module to compute any
 semi-value, in particular Shapley and Beta values, and Banzhaf indices.
 
-.. rubric:: Slicing of samplers
+# Slicing of samplers
 
 The samplers can be sliced for parallel computation. For those which are
 embarrassingly parallel, this is done by slicing the set of "outer" indices and
 returning new samplers over those slices. This includes all truly powerset-based
-samplers, such as :class:`DeterministicCombinatorialSampler` and
-:class:`UniformSampler`. In contrast, slicing a :class:`PermutationSampler`
+samplers, such as [DeterministicCombinatorialSampler][pydvl.value.sampler.DeterministicCombinatorialSampler] and
+[UniformSampler][pydvl.value.sampler.UniformSampler]. In contrast, slicing a [PermutationSampler][pydvl.value.sampler.PermutationSampler]
 creates a new sampler which iterates over the same indices.
 """
 
@@ -68,13 +68,13 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
     >>>    print(s, end="")
     ()(2,)()(1,)
 
-    .. rubric:: Methods required in subclasses
+    # Methods required in subclasses
 
-    Samplers must define a :meth:`weight` function to be used as a multiplier in
-    Monte Carlo sums, so that the limit expectation coincides with the
-    semi-value.
+    Samplers must implement a [weight()][pydvl.value.sampler.PowersetSampler.weight]
+    function to be used as a multiplier in Monte Carlo sums, so that the limit
+    expectation coincides with the semi-value.
 
-    .. rubric:: Slicing of samplers
+    # Slicing of samplers
 
     The samplers can be sliced for parallel computation. For those which are
     embarrassingly parallel, this is done by slicing the set of "outer" indices
@@ -92,12 +92,13 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
         outer_indices: NDArray[T] = None,
     ):
         """
-        :param indices: The set of items (indices) to sample from.
-        :param index_iteration: the order in which indices are iterated over
-        :param outer_indices: The set of items (indices) over which to iterate
-            when sampling. Subsets are taken from the complement of each index
-            in succession. For embarrassingly parallel computations, this set
-            is sliced and the samplers are used to iterate over the slices.
+        Args:
+            indices: The set of items (indices) to sample from.
+            index_iteration: the order in which indices are iterated over
+            outer_indices: The set of items (indices) over which to iterate
+                when sampling. Subsets are taken from the complement of each index
+                in succession. For embarrassingly parallel computations, this set
+                is sliced and the samplers are used to iterate over the slices.
         """
         self._indices = indices
         self._index_iteration = index_iteration
@@ -194,7 +195,8 @@ class DeterministicCombinatorialSampler(PowersetSampler[T]):
         For every index $i$, each subset of `indices - {i}` has equal
         probability $2^{n-1}$.
 
-        :param indices: The set of items (indices) to sample from.
+        Args:
+            indices: The set of items (indices) to sample from.
         """
         # Force sequential iteration
         kwargs.update({"index_iteration": PowersetSampler.IndexIteration.Sequential})
@@ -248,9 +250,9 @@ class PermutationSampler(PowersetSampler[T]):
     """Sample permutations of indices and iterate through each returning sets,
     as required for the permutation definition of semi-values.
 
-    .. warning::
-       This sampler requires caching to be enabled or computation
-       will be doubled wrt. a "direct" implementation of permutation MC
+    !!! Warning
+        This sampler requires caching to be enabled or computation
+        will be doubled wrt. a "direct" implementation of permutation MC
     """
 
     def __iter__(self) -> Iterator[SampleType]:
@@ -276,9 +278,9 @@ class DeterministicPermutationSampler(PermutationSampler[T]):
     iterates through them, returning sets as required for the permutation-based
     definition of semi-values.
 
-    .. warning::
-       This sampler requires caching to be enabled or computation
-       will be doubled wrt. a "direct" implementation of permutation MC
+    !!! Warning
+        This sampler requires caching to be enabled or computation
+        will be doubled wrt. a "direct" implementation of permutation MC
     """
 
     def __iter__(self) -> Iterator[SampleType]:
@@ -293,8 +295,8 @@ class DeterministicPermutationSampler(PermutationSampler[T]):
 class RandomHierarchicalSampler(PowersetSampler[T]):
     """For every index, sample a set size, then a set of that size.
 
-    .. todo::
-       This is unnecessary, but a step towards proper stratified sampling.
+    !!! Todo
+        This is unnecessary, but a step towards proper stratified sampling.
     """
 
     def __iter__(self) -> Iterator[SampleType]:

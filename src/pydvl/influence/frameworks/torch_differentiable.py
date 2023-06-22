@@ -44,8 +44,9 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         loss: Callable[["torch.Tensor", "torch.Tensor"], "torch.Tensor"],
     ):
         """
-        :param model: A torch.nn.Module representing a (differentiable) function f(x).
-        :param loss: Loss function L(f(x), y) maps a prediction and a target to a single value.
+    Args:
+        model: A torch.nn.Module representing a (differentiable) function f(x).
+        loss: Loss function L(f(x), y) maps a prediction and a target to a single value.
         """
         if not _TORCH_INSTALLED:
             raise RuntimeWarning("This function requires PyTorch.")
@@ -54,10 +55,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         self.loss = loss
 
     def num_params(self) -> int:
-        """
-        Get number of parameters of model f.
-        :returns: Number of parameters as integer.
-        """
+        """Returns the number of parameters of the model"""
         model_parameters = filter(lambda p: p.requires_grad, self.model.parameters())
         return sum([np.prod(p.size()) for p in model_parameters])
 
@@ -69,12 +67,16 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
     ) -> "NDArray":
         """
         Calculates gradient of model parameters wrt each x[i] and y[i] and then
-        returns a array of size [N, P] with N number of points (length of x and y) and P
+        returns an array of size [N, P] with N number of points (length of x and y) and P
         number of parameters of the model.
-        :param x: A np.ndarray [NxD] representing the features x_i.
-        :param y: A np.ndarray [NxK] representing the predicted target values y_i.
-        :param progress: True, iff progress shall be printed.
-        :returns: A np.ndarray [NxP] representing the gradients with respect to all parameters of the model.
+        Args:
+            x: A np.ndarray [NxD] representing the features x_i.
+            y: A np.ndarray [NxK] representing the predicted target values y_i.
+            progress: True, iff progress shall be printed.
+
+        Returns:
+            An array [NxP] representing the gradients with respect to all parameters
+                of the model.
         """
         x = torch.as_tensor(x).unsqueeze(1)
         y = torch.as_tensor(y)
@@ -110,13 +112,15 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
     ) -> Tuple["NDArray", "torch.Tensor"]:
         """
         Calculates gradient of model parameters wrt x and y.
-        :param x: A np.ndarray [NxD] representing the features x_i.
-        :param y: A np.ndarray [NxK] representing the predicted target values y_i.
-        :param progress: True, iff progress shall be printed.
-        :returns: A tuple where: \
-            - first element is a np.ndarray [P] with the gradients of the model. \
-            - second element is the input to the model as a grad parameters. \
-                This can be used for further differentiation. 
+    Args:
+            x: A np.ndarray [NxD] representing the features x_i.
+            y: A np.ndarray [NxK] representing the predicted target values y_i.
+            progress: True, iff progress shall be printed.
+        Returns:
+            A tuple where:
+                - first element is a np.ndarray [P] with the gradients of the model.
+                - second element is the input to the model as a grad parameters.
+                  This can be used for further differentiation.
         """
         x = torch.as_tensor(x).requires_grad_(True)
         y = torch.as_tensor(y)
@@ -141,15 +145,19 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         This second order derivative can be on the model parameters or on another input parameter, 
         selected via the backprop_on argument.
 
-        :param grad_xy: an array [P] holding the gradients of the model parameters wrt input x and labels y, \
+    Args:
+            grad_xy: an array [P] holding the gradients of the model parameters wrt input x and labels y, \
             where P is the number of parameters of the model. It is typically obtained through self.grad.
-        :param v: A np.ndarray [DxP] or a one dimensional np.array [D] which multiplies the Hessian, \
+            v: A np.ndarray [DxP] or a one dimensional np.array [D] which multiplies the Hessian, \
             where D is the number of directions.
-        :param progress: True, iff progress shall be printed.
-        :param backprop_on: tensor used in the second backpropagation (the first one is along x and y as defined \
+            progress: True, iff progress shall be printed.
+            backprop_on: tensor used in the second backpropagation (the first one is along x and y as defined \
             via grad_xy). If None, the model parameters are used.
-        :returns: A np.ndarray representing the implicit matrix vector product of the model along the given directions.\
-            Output shape is [DxP] if backprop_on is None, otherwise [DxM], with M the number of elements of backprop_on.
+
+        Returns:
+            An array representing the implicit matrix vector product of the model
+                along the given directions. Output shape is [DxP] if backprop_on is None,
+                otherwise [DxM], with M the number of elements of backprop_on.
         """
         v = torch.as_tensor(v)
         if v.ndim == 1:

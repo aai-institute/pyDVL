@@ -41,20 +41,20 @@ class Utility:
     """Convenience wrapper with configurable memoization of the scoring
     function.
 
-    An instance of ``Utility`` holds the triple of model, dataset and scoring
+    An instance of `Utility` holds the triple of model, dataset and scoring
     function which determines the value of data points. This is mosly used for
     the computation of [Shapley Values][shapley-values] and
     [Core Values][core-values].
 
     The Utility expect the model to fulfill
     the [SupervisedModel][pydvl.utils.types.SupervisedModel] interface i.e.
-    to have ``fit()``, ``predict()``, and ``score()`` methods.
+    to have `fit()`, `predict()`, and `score()` methods.
 
     When calling the utility, the model will be
     [cloned](https://scikit-learn.org/stable/modules/generated/sklearn.base
     .clone.html)
     if it is a Sci-Kit Learn model, otherwise a copy is created using
-    ``deepcopy()`` from the builtin [copy](https://docs.python.org/3/
+    `deepcopy()` from the builtin [copy](https://docs.python.org/3/
     library/copy.html) module.
 
     Since evaluating the scoring function requires retraining the model
@@ -67,30 +67,30 @@ class Utility:
         model: Any supervised model. Typical choices can be found at
                 https://scikit-learn.org/stable/supervised_learning.html
         data: Dataset or GroupedDataset instance.
-        scorer: A scoring object. If None, the ``score()`` method of the model
+        scorer: A scoring object. If None, the `score()` method of the model
             will be used. See [score][pydvl.utils.score] for ways to create
             and compose scorers, in particular how to set default values and ranges.
             For convenience, a string can be passed, which will be used to construct
             a [Scorer][pydvl.utils.score.Scorer].
-        default_score: As a convenience when no ``scorer`` object is passed
+        default_score: As a convenience when no `scorer` object is passed
             (where a default value can be provided), this argument also allows to set
             the default score for models that have not been fit, e.g. when too little
             data is passed, or errors arise.
-        score_range: As with ``default_score``, this is a convenience argument
-            for when no ``scorer`` argument is provided, to set the numerical range
-            of the score function. Some Monte Carlo methods can use this to estimate
-            the number of samples required for a certain quality of approximation.
-        catch_errors: set to ``True`` to catch the errors when fit() fails.
-            This could happen in several steps of the pipeline, e.g. when too little
+        score_range: As with `default_score`, this is a convenience argument for
+            when no `scorer` argument is provided, to set the numerical range
+            of the score function. Some Monte Carlo methods can use this to
+            estimate the number of samples required for a certain quality of
+            approximation.
+        catch_errors: set to `True` to catch the errors when `fit()` fails. This
+            could happen in several steps of the pipeline, e.g. when too little
             training data is passed, which happens often during Shapley value
-            calculations. When this happens, the :attr:`default_score` is returned
-            as a score and computation continues.
-        show_warnings: Set to ``False`` to suppress warnings thrown by
-            ``fit()``.
-        enable_cache: If ``True``, use memcached for memoization.
+            calculations. When this happens, the `default_score` is returned as
+            a score and computation continues.
+        show_warnings: Set to `False` to suppress warnings thrown by `fit()`.
+        enable_cache: If `True`, use memcached for memoization.
         cache_options: Optional configuration object for memcached.
-        clone_before_fit: If True, the model will be cloned before calling
-            ``fit()``.
+        clone_before_fit: If `True`, the model will be cloned before calling
+            `fit()`.
 
     Examples:
         >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
@@ -165,7 +165,7 @@ class Utility:
         """Clones the model, fits it on a subset of the training data
         and scores it on the test data.
 
-        If the object is constructed with ``enable_cache = True``, results are
+        If the object is constructed with `enable_cache = True`, results are
         memoized to avoid duplicate computation. This is useful in particular
         when computing utilities of permutations of indices or when randomly
         sampling from the powerset of indices.
@@ -176,10 +176,11 @@ class Utility:
                 The type must be hashable for the caching to work,
                 e.g. wrap the argument with [frozenset][]
                 (rather than `tuple` since order should not matter)
+
         Returns:
-            0 if no indices are passed, ``default_score`` if we fail
-            to fit the model or the scorer returns [numpy.NaN][]. Otherwise, the score
-            of the model on the test data.
+            0 if no indices are passed, `default_score` if we fail
+                to fit the model or the scorer returns [numpy.NaN][]. Otherwise, the score
+                of the model on the test data.
         """
         if not indices:
             return 0.0
@@ -253,8 +254,7 @@ class Utility:
 
 
 class DataUtilityLearning:
-    """Implementation of Data Utility Learning algorithm
-    :footcite:t:`wang_improving_2022`.
+    """Implementation of Data Utility Learning [@wang_improving_2022].
 
     This object wraps a [Utility][pydvl.utils.utility.Utility] and delegates
     calls to it, up until a given budget (number of iterations). Every tuple
@@ -330,8 +330,8 @@ class MinerGameUtility(Utility):
 
     Consider a group of n miners, who have discovered large bars of gold.
 
-    If two miners can carry one piece of gold,
-    then the payoff of a coalition $S$ is:
+    If two miners can carry one piece of gold, then the payoff of a
+    coalition $S$ is:
 
     $${
     v(S) = \left\{\begin{array}{lll}

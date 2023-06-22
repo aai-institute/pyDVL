@@ -27,11 +27,13 @@ def conjugate_gradient(
     Given a matrix and a batch of vectors, it uses conjugate gradient to calculate the solution
     to Ax = y for each y in batch_y.
 
-    :param A: a real, symmetric and positive-definite matrix of shape [NxN]
-    :param batch_y: a matrix of shape [NxP], with P the size of the batch.
-    :param progress: True, iff progress shall be printed.
+    Args:
+        A: a real, symmetric and positive-definite matrix of shape [NxN]
+        batch_y: a matrix of shape [NxP], with P the size of the batch.
+        progress: True, iff progress shall be printed.
 
-    :return: A NDArray of shape [NxP] representing x, the solution of Ax=b.
+    Returns:
+        A NDArray of shape [NxP] representing x, the solution of Ax=b.
     """
     batch_cg = []
     for y in maybe_progress(batch_y, progress, desc="Conjugate gradient"):
@@ -56,25 +58,27 @@ def batched_preconditioned_conjugate_gradient(
 
     See also [2]_ and [3]_.
 
-    .. warning::
-
+    !!! Warning
         This function is experimental and unstable. Prefer using inversion_method='cg'
 
-    :param A: A linear function f : R[k] -> R[k] representing a matrix vector product from dimension K to K or a matrix. \
-        It has to be positive-definite v.T @ f(v) >= 0.
-    :param b: A NDArray of shape [K] representing the targeted result of the matrix multiplication Ax.
-    :param max_iterations: Maximum number of iterations to use in conjugate gradient. Default is 10 times K.
-    :param rtol: Relative tolerance of the residual with respect to the 2-norm of b.
-    :param max_step_size: Maximum step size along a gradient direction. Might be necessary for numerical stability. \
-        See also max_iterations. Default is 10.0.
-    :param verify_assumptions: True, iff the matrix should be checked for positive-definiteness by a stochastic rule.
+    Args:
+        A: A linear function f : R[k] -> R[k] representing a matrix vector product
+            from dimension K to K or a matrix. It has to be positive-definite v.T @ f(v) >= 0.
+        b: An array of shape [K] representing the result of the matrix
+            multiplication Ax.
+        x0:
+        rtol: Relative tolerance of the residual with respect to the 2-norm of b.
+        max_iterations: Maximum number of iterations to use in conjugate gradient. Default is 10 times K.
+        max_step_size: Maximum step size along a gradient direction. Might be necessary for numerical stability. \
+            See also max_iterations. Default is 10.0.
 
-    :return: A NDArray of shape [K] representing the solution of Ax=b.
+    Returns:
+        An of shape [K] representing the solution of Ax=b.
 
-    .. note::
-        .. [1] `Conjugate Gradient Method - Wikipedia <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_.
-        .. [2] `SciPy's implementation of Conjugate Gradient <https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351>`_.
-        .. [3] `Prof. Mert Pilanci., "Conjugate Gradient Method", Stanford University, 2022 <https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf>`_.
+    !!! References:
+        .. [1] [Conjugate Gradient Method - Wikipedia](https://en.wikipedia.org/wiki/Conjugate_gradient_method).
+        .. [2] [SciPy's implementation of Conjugate Gradient](https://github.com/scipy/scipy/blob/v1.8.1/scipy/sparse/linalg/_isolve/iterative.py#L282-L351).
+        .. [3] [Prof. Mert Pilanci., "Conjugate Gradient Method", Stanford University, 2022](https://web.stanford.edu/class/ee364b/lectures/conj_grad_slides.pdf).
     """
     warnings.warn(
         "This function is experimental and unstable. Prefer using inversion_method='cg'",
@@ -183,11 +187,13 @@ def conjugate_gradient_condition_number_based_error_bound(
     Error bound for conjugate gradient based on the condition number of the weight matrix A. Used for testing purposes.
     See also https://math.stackexchange.com/questions/382958/error-for-conjugate-gradient-method. Explicit of the weight
     matrix is required.
-    :param A: Weight matrix of the matrix to be inverted.
-    :param n: Maximum number for executed iterations X in conjugate gradient.
-    :param x0: Initialization solution x0 of conjugate gradient.
-    :param xt: Final solution xt of conjugate gradient after X iterations.
-    :returns: Upper bound for ||x0 - xt||_A.
+    Args:
+        A: Weight matrix of the matrix to be inverted.
+        n: Maximum number for executed iterations X in conjugate gradient.
+        x0: Initialization solution x0 of conjugate gradient.
+        xt: Final solution xt of conjugate gradient after X iterations.
+    Returns:
+        Upper bound for ||x0 - xt||_A.
     """
     eigvals = np.linalg.eigvals(A)
     eigvals = np.sort(eigvals)
@@ -209,9 +215,13 @@ def hvp_to_inv_diag_conditioner(
     """
     This method uses the hvp function to construct a simple pre-conditioner 1/diag(H). It does so while requiring
     only O(d) space in RAM for construction and later execution.
-    :param hvp: The callable calculating the Hessian vector product Hv.
-    :param d: The number of dimensions of the hvp callable.
-    :returns: A MatrixVectorProduct for the conditioner.
+
+    Args:
+        hvp: The callable calculating the Hessian vector product Hv.
+        d: The number of dimensions of the hvp callable.
+
+    Returns:
+        A MatrixVectorProduct for the conditioner.
     """
     diags = np.empty(d)
 

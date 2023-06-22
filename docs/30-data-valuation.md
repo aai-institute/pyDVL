@@ -31,7 +31,6 @@ the package [pydvl.value][pydvl.value] , with support from modules
 and [pydvl.utils.utility][pydvl.utils.utility], as detailed below.
 
 !!! Warning
-
     Be sure to read the section on
     [the difficulties using data values][problems-of-data-values].
 
@@ -131,7 +130,6 @@ which is used by some methods by estimate the number of samples necessary, and
 about what default value to use when the model fails to train.
 
 !!! Note
-
     The most important property of a `Scorer` is its default value. Because many
     models will fail to fit on small subsets of the data, it is important to
     provide a sensible default value for the score.
@@ -314,7 +312,7 @@ integration.
 
 ### Permutation Shapley
 
-An equivalent way of computing Shapley values (``ApproShapley``) appeared in
+An equivalent way of computing Shapley values (`ApproShapley`) appeared in
 [@castro_polynomial_2009] and is the basis for the method most often
 used in practice. It uses permutations over indices instead of subsets:
 
@@ -382,7 +380,6 @@ $$
 $$
 
 !!! Warning
-
     We have reproduced this method in pyDVL for completeness and benchmarking,
     but we don't advocate its use because of the speed and memory cost. Despite
     our best efforts, the number of samples required in practice for convergence
@@ -390,7 +387,7 @@ $$
     Additionally, the CSP can sometimes turn out to be infeasible.
 
 Usage follows the same pattern as every other Shapley method, but with the
-addition of an ``epsilon`` parameter required for the solution of the CSP. It
+addition of an `epsilon` parameter required for the solution of the CSP. It
 should be the same value used to compute the minimum number of samples required.
 This can be done with [num_samples_eps_delta][pydvl.value.shapley.gt.num_samples_eps_delta], but
 note that the number returned will be huge! In practice, fewer samples can be
@@ -502,8 +499,7 @@ values = compute_least_core_values(
 ```
 
 !!! Note
-
-    Although any number is supported, it is best to choose ``n_iterations`` to be
+    Although any number is supported, it is best to choose `n_iterations` to be
     at least equal to the number of data points.
 
 Because computing the Least Core values requires the solution of a linear and a
@@ -544,7 +540,6 @@ and **Beta Shapley** [@kwon_beta_2022], with better numerical and
 rank stability in certain situations.
 
 !!! Note
-
     Shapley values are a particular case of semi-values and can therefore also be
     computed with the methods described here. However, as of version 0.6.0, we
     recommend using [compute_shapley_values][pydvl.value.shapley.compute_shapley_values] instead,

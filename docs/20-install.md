@@ -65,10 +65,9 @@ docker container run -d --rm -p 11211:11211 memcached:latest
 ```
 
 !!! Warning
-
     To read more about caching and how it might affect your usage, in particular
-    about cache reuse and its pitfalls, please the documentation for the module
-    :mod:`pydvl.utils.caching`.
+    about cache reuse and its pitfalls, please read the documentation for the
+    [caching module][pydvl.utils.caching].
 
 # What's next
 

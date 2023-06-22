@@ -76,34 +76,38 @@ def _(v: list, *, timeout: Optional[float] = None) -> List[Any]:
 
 
 class MapReduceJob(Generic[T, R]):
-    """Takes an embarrassingly parallel fun and runs it in ``n_jobs`` parallel
+    """Takes an embarrassingly parallel fun and runs it in `n_jobs` parallel
     jobs, splitting the data evenly into a number of chunks equal to the number of jobs.
 
     Typing information for objects of this class requires the type of the inputs
-    that are split for ``map_func`` and the type of its output.
+    that are split for `map_func` and the type of its output.
 
-    :param inputs: The input that will be split and passed to `map_func`.
-        if it's not a sequence object. It will be repeat ``n_jobs`` number of times.
-    :param map_func: Function that will be applied to the input chunks in each job.
-    :param reduce_func: Function that will be applied to the results of
-        ``map_func`` to reduce them.
-    :param map_kwargs: Keyword arguments that will be passed to ``map_func`` in
-        each job. Alternatively, one can use ``itertools.partial``.
-    :param reduce_kwargs: Keyword arguments that will be passed to ``reduce_func``
-        in each job. Alternatively, one can use :func:`itertools.partial`.
-    :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig`
-        with cluster address, number of cpus, etc.
-    :param n_jobs: Number of parallel jobs to run. Does not accept 0
-    :param timeout: Amount of time in seconds to wait for remote results before
-        ... TODO
-    :param max_parallel_tasks: Maximum number of jobs to start in parallel. Any
-        tasks above this number won't be submitted to the backend before some
-        are done. This is to avoid swamping the work queue. Note that tasks have
-        a low memory footprint, so this is probably not a big concern, except
-        in the case of an infinite stream (not the case for MapReduceJob). See
-        https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html
+    Args:
+        inputs: The input that will be split and passed to `map_func`.
+            if it's not a sequence object. It will be repeat `n_jobs` number of times.
+        map_func: Function that will be applied to the input chunks in each job.
+        reduce_func: Function that will be applied to the results of
+            `map_func` to reduce them.
+        map_kwargs: Keyword arguments that will be passed to `map_func` in
+            each job. Alternatively, one can use
+            [itertools.partial][itertools.partial].
+        reduce_kwargs: Keyword arguments that will be passed to `reduce_func`
+            in each job. Alternatively, one can use
+            [itertools.partial][itertools.partial].
+        config: Instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+            with cluster address, number of cpus, etc.
+        n_jobs: Number of parallel jobs to run. Does not accept 0
+        timeout: Amount of time in seconds to wait for remote results before
+            ... TODO
+        max_parallel_tasks: Maximum number of jobs to start in parallel. Any
+            tasks above this number won't be submitted to the backend before
+            some are done. This is to avoid swamping the work queue. Note that
+            tasks have a low memory footprint, so this is probably not a big
+            concern, except in the case of an infinite stream (not the case for
+            MapReduceJob). See the
+            [ray docs](https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html)
 
-    :Examples:
+    Examples:
 
     A simple usage example with 2 jobs:
 
@@ -187,7 +191,7 @@ class MapReduceJob(Generic[T, R]):
         return reduce_results
 
     def map(self, inputs: Union[Sequence[T], T]) -> List["ObjectRef[R]"]:
-        """Splits the input data into chunks and calls a wrapped :func:`map_func` on them."""
+        """Splits the input data into chunks and calls a wrapped `map_func` on them."""
         map_results: List["ObjectRef[R]"] = []
 
         map_func = self._wrap_function(self._map_func)
@@ -210,8 +214,9 @@ class MapReduceJob(Generic[T, R]):
         return map_results
 
     def reduce(self, chunks: List["ObjectRef[R]"]) -> R:
-        """Reduces the resulting chunks from a call to :meth:`~pydvl.utils.parallel.map_reduce.MapReduceJob.map`
-        by passing them to a wrapped :func:`reduce_func`."""
+        """Reduces the resulting chunks from a call to
+        [map()][pydvl.utils.parallel.map_reduce.MapReduceJob.map] by passing
+        them to a wrapped `reduce_func`."""
         reduce_func = self._wrap_function(self._reduce_func)
 
         reduce_result = reduce_func(chunks, **self.reduce_kwargs)
@@ -222,12 +227,15 @@ class MapReduceJob(Generic[T, R]):
         """Wraps a function with a timeout and remote arguments and puts it on
         the remote backend.
 
-        :param func: Function to wrap
-        :param kwargs: Additional keyword arguments to pass to the backend
+        Args:
+            func: Function to wrap
+            kwargs: Additional keyword arguments to pass to the backend
             wrapper. These are *not* arguments for the wrapped function.
-        :return: Remote function that can be called with the same arguments as
-            the wrapped function. Depending on the backend, this may simply be
-            the function itself.
+
+        Returns:
+            Remote function that can be called with the same arguments as
+                the wrapped function. Depending on the backend, this may simply be
+                the function itself.
         """
         return self.parallel_backend.wrap(
             _wrap_func_with_remote_args(func, timeout=self.timeout), **kwargs
@@ -236,15 +244,18 @@ class MapReduceJob(Generic[T, R]):
     def _backpressure(
         self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int
     ) -> int:
-        """This is used to limit the number of concurrent tasks.
-        If :attr:`~pydvl.utils.parallel.map_reduce.MapReduceJob.max_parallel_tasks` is None then this function
-        is a no-op that simply returns 0.
+        """Used to limit the number of concurrent tasks.
+        If [max_parallel_tasks][pydvl.utils.parallel.map_reduce.MapReduceJob.max_parallel_tasks]
+        is None then this function is a no-op that simply returns 0.
 
-        See https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html
-        :param jobs:
-        :param n_dispatched:
-        :param n_finished:
-        :return:
+        See [ray's documentation](https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html)
+        Args:
+            jobs:
+            n_dispatched:
+            n_finished:
+
+        Returns:
+
         """
         if self.max_parallel_tasks is None:
             return 0

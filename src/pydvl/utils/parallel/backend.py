@@ -95,9 +95,11 @@ class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
     """Class used to run jobs sequentially and locally.
 
     It shouldn't be initialized directly. You should instead call
-    :func:`~pydvl.utils.parallel.backend.init_parallel_backend`.
+    [init_parallel_backend()][pydvl.utils.parallel.backend.init_parallel_backend].
 
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with number of cpus
+    Args:
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+            with number of cpus
     """
 
     def __init__(self, config: ParallelConfig):
@@ -126,10 +128,11 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     """Class used to wrap ray to make it transparent to algorithms.
 
     It shouldn't be initialized directly. You should instead call
-    :func:`~pydvl.utils.parallel.backend.init_parallel_backend`.
+    [init_parallel_backend()][pydvl.utils.parallel.backend.init_parallel_backend].
 
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
-        cluster address, number of cpus, etc.
+    Args:
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+            with cluster address, number of cpus, etc.
     """
 
     def __init__(self, config: ParallelConfig):
@@ -146,7 +149,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         self,
         v: Union[ObjectRef, Iterable[ObjectRef], T],
         *args,
-        **kwargs,
+        **kwargs: dict,
     ) -> Union[T, Any]:
         timeout: Optional[float] = kwargs.get("timeout", None)
         if isinstance(v, ObjectRef):
@@ -162,13 +165,15 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         except TypeError:
             return v  # type: ignore
 
-    def wrap(self, fun: Callable, **kwargs) -> Callable:
+    def wrap(self, fun: Callable, **kwargs: dict) -> Callable:
         """Wraps a function as a ray remote.
 
-        :param fun: the function to wrap
-        :param kwargs: keyword arguments to pass to @ray.remote
+        Args:
+            fun: the function to wrap
+            kwargs: keyword arguments to pass to @ray.remote
 
-        :return: The `.remote` method of the ray `RemoteFunction`.
+        Returns:
+            The `.remote` method of the ray `RemoteFunction`.
         """
         if len(kwargs) > 0:
             return ray.remote(**kwargs)(fun).remote  # type: ignore
@@ -178,7 +183,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         self,
         v: List["ObjectRef"],
         *args,
-        **kwargs,
+        **kwargs: dict,
     ) -> Tuple[List[ObjectRef], List[ObjectRef]]:
         num_returns: int = kwargs.get("num_returns", 1)
         timeout: Optional[float] = kwargs.get("timeout", None)
@@ -202,8 +207,9 @@ def init_parallel_backend(
 ) -> BaseParallelBackend:
     """Initializes the parallel backend and returns an instance of it.
 
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig`
-        with cluster address, number of cpus, etc.
+    Args:
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+            with cluster address, number of cpus, etc.
 
     :Example:
 
@@ -227,7 +233,9 @@ def available_cpus() -> int:
     """Platform-independent count of available cores.
 
     FIXME: do we really need this or is `os.cpu_count` enough? Is this portable?
-    :return: Number of cores, or 1 if it is not possible to determine.
+
+    Returns:
+        Number of cores, or 1 if it is not possible to determine.
     """
     from platform import system
 
@@ -242,11 +250,15 @@ def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> 
     This number may vary depending on the parallel backend and the resources
     available.
 
-    :param n_jobs: the number of jobs requested. If -1, the number of available
-        CPUs is returned.
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
-        cluster address, number of cpus, etc.
-    :return: the effective number of jobs, guaranteed to be >= 1.
+    Args:
+        n_jobs: the number of jobs requested. If -1, the number of available
+            CPUs is returned.
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig] with
+            cluster address, number of cpus, etc.
+
+    Returns:
+        The effective number of jobs, guaranteed to be >= 1.
+
     :raises RuntimeError: if the effective number of jobs returned by the backend
         is < 1.
     """

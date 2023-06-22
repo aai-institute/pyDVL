@@ -8,7 +8,6 @@ alias:
 # Getting started
 
 !!! Warning
-
     Make sure you have read [[installation]] before using the library. 
     In particular read about how caching and parallelization work,
     since they require additional setup.
@@ -30,7 +29,7 @@ introduction and survey of the field, we refer to **the upcoming review** at the
 If you are somewhat familiar with the concepts of data valuation, you can start
 by browsing our worked-out examples illustrating pyDVL's capabilities either:
 
-- :ref:`In this documentation<examples>`.
+- [In this documentation][examples/].
 - Using [binder](https://mybinder.org/>) notebooks, deployed from each
   example's page.
 - Locally, by starting a jupyter server at the root of the project. You will

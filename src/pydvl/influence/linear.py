@@ -31,16 +31,18 @@ def compute_linear_influences(
     validation set for an ordinary least squares model ($y = A x + b$ with
     quadratic loss).
 
-    :param x: An array of shape (M, K) containing the features of training data.
-    :param y: An array of shape (M, L) containing the targets of training data.
-    :param x_test: An array of shape (N, K) containing the features of the
+    Args:
+        x: An array of shape (M, K) containing the features of training data.
+        y: An array of shape (M, L) containing the targets of training data.
+        x_test: An array of shape (N, K) containing the features of the
         test set.
-    :param y_test: An array of shape (N, L) containing the targets of the test
+        y_test: An array of shape (N, L) containing the targets of the test
         set.
-    :param influence_type: Which algorithm to use to calculate influences.
+        influence_type: Which algorithm to use to calculate influences.
         Currently supported options: 'up' or 'perturbation'.
-    :returns: An array of shape (B, C) with the influences of the training
-        points on the test data.
+
+    Returns:
+        An array of shape (B, C) with the influences of the training points on the test data.
     """
 
     lr = LinearRegression()
@@ -82,20 +84,15 @@ def influences_up_linear_regression_analytical(
      validation set for an ordinary least squares model (Ax+b=y with quadratic
      loss).
 
-    This method uses the
+    Args:
+        linear_model: A tuple of arrays of shapes (N, M) and N representing A and b respectively.
+        x: An array of shape (M, K) containing the features of the training set.
+        y: An array of shape (M, L) containing the targets of the training set.
+        x_test: An array of shape (N, K) containing the features of the test set.
+        y_test: An array of shape (N, L) containing the targets of the test set.
 
-    :param linear_model: A tuple of arrays of shapes (N, M) and N representing A
-        and b respectively.
-    :param x: An array of shape (M, K) containing the features of the
-        training set.
-    :param y: An array of shape (M, L) containing the targets of the
-        training set.
-    :param x_test: An array of shape (N, K) containing the features of the test
-        set.
-    :param y_test: An array of shape (N, L) containing the targets of the test
-        set.
-    :returns: An array of shape (B, C) with the influences of the training points
-        on the test points.
+    Returns:
+        An array of shape (B, C) with the influences of the training points on the test points.
     """
 
     test_grads_analytical = linear_regression_analytical_derivative_d_theta(
@@ -130,18 +127,15 @@ def influences_perturbation_linear_regression_analytical(
     """Calculate the influences of each training sample onto the
     validation set for a linear model Ax+b=y.
 
-    :param linear_model: A tuple of np.ndarray' of shape (N, M) and (N)
-        representing A and b respectively.
-    :param x: An array of shape (M, K) containing the features of the
-        input data.
-    :param y: An array of shape (M, L) containing the targets of the input
-        data.
-    :param x_test: An array of shape (N, K) containing the features of the test
-        set.
-    :param y_test: An array of shape (N, L) containing the targets of the test
-        set.
-    :returns: An array of shape (B, C, M) with the influences of the training
-        points on the test points for each feature.
+    Args:
+        linear_model: A tuple of np.ndarray' of shape (N, M) and (N) representing A and b respectively.
+        x: An array of shape (M, K) containing the features of the input data.
+        y: An array of shape (M, L) containing the targets of the input data.
+        x_test: An array of shape (N, K) containing the features of the test set.
+        y_test: An array of shape (N, L) containing the targets of the test set.
+
+    Returns:
+        An array of shape (B, C, M) with the influences of the training points on the test points for each feature.
     """
 
     test_grads_analytical = linear_regression_analytical_derivative_d_theta(

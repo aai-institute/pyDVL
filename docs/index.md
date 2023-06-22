@@ -1,10 +1,8 @@
 ---
-title: Home
+title: pyDVL documentation
 ---
 
-# pyDVL Documentation
-
-Welcome to the pyDVL library for data valuation!
+# The python library for data valuation
 
 pyDVL collects algorithms for data valuation and influence function computation.
 It runs most of them in parallel either locally or in a cluster and supports
