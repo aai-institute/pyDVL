@@ -27,6 +27,7 @@ def conjugate_gradient(
     Given a matrix and a batch of vectors, it uses conjugate gradient to calculate the solution
     to Ax = y for each y in batch_y.
 
+    Args:
         A: a real, symmetric and positive-definite matrix of shape [NxN]
         batch_y: a matrix of shape [NxP], with P the size of the batch.
         progress: True, iff progress shall be printed.
