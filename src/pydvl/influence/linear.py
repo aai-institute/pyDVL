@@ -31,6 +31,7 @@ def compute_linear_influences(
     validation set for an ordinary least squares model ($y = A x + b$ with
     quadratic loss).
 
+    Args:
         x: An array of shape (M, K) containing the features of training data.
         y: An array of shape (M, L) containing the targets of training data.
         x_test: An array of shape (N, K) containing the features of the

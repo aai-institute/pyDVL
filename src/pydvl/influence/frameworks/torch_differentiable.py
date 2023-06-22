@@ -44,6 +44,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         loss: Callable[["torch.Tensor", "torch.Tensor"], "torch.Tensor"],
     ):
         """
+    Args:
         model: A torch.nn.Module representing a (differentiable) function f(x).
         loss: Loss function L(f(x), y) maps a prediction and a target to a single value.
         """
@@ -111,6 +112,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
     ) -> Tuple["NDArray", "torch.Tensor"]:
         """
         Calculates gradient of model parameters wrt x and y.
+    Args:
             x: A np.ndarray [NxD] representing the features x_i.
             y: A np.ndarray [NxK] representing the predicted target values y_i.
             progress: True, iff progress shall be printed.
@@ -143,6 +145,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         This second order derivative can be on the model parameters or on another input parameter, 
         selected via the backprop_on argument.
 
+    Args:
             grad_xy: an array [P] holding the gradients of the model parameters wrt input x and labels y, \
             where P is the number of parameters of the model. It is typically obtained through self.grad.
             v: A np.ndarray [DxP] or a one dimensional np.array [D] which multiplies the Hessian, \

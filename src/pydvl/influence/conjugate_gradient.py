@@ -186,6 +186,7 @@ def conjugate_gradient_condition_number_based_error_bound(
     Error bound for conjugate gradient based on the condition number of the weight matrix A. Used for testing purposes.
     See also https://math.stackexchange.com/questions/382958/error-for-conjugate-gradient-method. Explicit of the weight
     matrix is required.
+    Args:
         A: Weight matrix of the matrix to be inverted.
         n: Maximum number for executed iterations X in conjugate gradient.
         x0: Initialization solution x0 of conjugate gradient.

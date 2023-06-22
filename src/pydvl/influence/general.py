@@ -62,6 +62,7 @@ def calculate_influence_factors(
     """
     Calculates the influence factors. For more info, see https://arxiv.org/pdf/1703.04730.pdf, paragraph 3.
 
+    Args:
         model: A model which has to implement the TwiceDifferentiable interface.
         x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
         y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
@@ -94,6 +95,7 @@ def _calculate_influences_up(
     Calculates the influence from the influence factors and the scores of the training points.
     Uses the upweighting method, as described in section 2.1 of https://arxiv.org/pdf/1703.04730.pdf
 
+    Args:
         model: A model which has to implement the TwiceDifferentiable interface.
         x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
         y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
@@ -118,6 +120,7 @@ def _calculate_influences_pert(
     Calculates the influence from the influence factors and the scores of the training points.
     Uses the perturbation method, as described in section 2.2 of https://arxiv.org/pdf/1703.04730.pdf
 
+    Args:
         model: A model which has to implement the TwiceDifferentiable interface.
         x_train: A np.ndarray of shape [MxK] containing the features of the input data points.
         y_train: A np.ndarray of shape [MxL] containing the targets of the input data points.
