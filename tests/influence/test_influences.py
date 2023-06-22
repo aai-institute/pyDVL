@@ -1,4 +1,3 @@
-import itertools
 from typing import Dict, Tuple
 
 import numpy as np
@@ -19,9 +18,10 @@ from .conftest import (
     linear_analytical_influence_factors,
     linear_derivative_analytical,
     linear_mixed_second_derivative_analytical,
-    linear_model,
+    linear_model
 )
 
+torch.set_default_dtype(torch.float64)
 
 def analytical_linear_influences(
     linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
@@ -93,8 +93,8 @@ def analytical_linear_influences(
     [
         [InversionMethod.Direct, {}, 1e-7],
         [InversionMethod.Cg, {}, 1e-1],
-        [InversionMethod.Lissa, {"maxiter": 5000, "scale": 100}, 0.3],
-        [InversionMethod.LowRank, {"rank_estimate": 47}, 0.3]
+        [InversionMethod.Lissa, {"maxiter": 6000, "scale": 100}, 0.3],
+        [InversionMethod.LowRank, {"rank_estimate": 83, "hessian_regularization": 0.01}, 0.4]
     ],
     ids=[inv.value for inv in InversionMethod],
 )
@@ -106,9 +106,12 @@ def test_influence_linear_model(
     train_set_size: int,
     hessian_reg: float = 0.1,
     test_set_size: int = 20,
-    problem_dimension: Tuple[int, int] = (3, 15),
-    condition_number: float = 3,
+    problem_dimension: Tuple[int, int] = (4, 20),
+    condition_number: float = 2,
 ):
+
+    torch.set_default_dtype(torch.float64)
+    hessian_reg = inversion_method_kwargs.pop("hessian_regularization", hessian_reg)
 
     A, b = linear_model(problem_dimension, condition_number)
     train_data, test_data = add_noise_to_linear_model(
@@ -238,7 +241,8 @@ def test_influences_nn(
     y_train = torch.rand((data_len, output_dim))
     x_test = torch.rand((test_data_len, *input_dim))
     y_test = torch.rand((test_data_len, output_dim))
-    nn_architecture.eval()
+
+    num_parameters = sum(p.numel() for p in nn_architecture.parameters() if p.requires_grad)
 
     inversion_method_kwargs = {
         "direct": {},
@@ -247,7 +251,7 @@ def test_influences_nn(
             "maxiter": 100,
             "scale": 10000,
         },
-        "low_rank": {"rank_estimate": 20}
+        "low_rank": {"rank_estimate": num_parameters - 1, "hessian_regularization": 0.01}
     }
     train_data_loader = DataLoader(
         TensorDataset(x_train, y_train), batch_size=batch_size
@@ -256,8 +260,14 @@ def test_influences_nn(
         TensorDataset(x_test, y_test),
         batch_size=batch_size,
     )
+
+    nn_architecture.eval()
     multiple_influences = {}
+
     for inversion_method in InversionMethod:
+
+        hessian_reg = inversion_method_kwargs[inversion_method].pop("hessian_regularization", hessian_reg)
+
         influences = compute_influences(
             TorchTwiceDifferentiable(nn_architecture, loss),
             training_data=train_data_loader,

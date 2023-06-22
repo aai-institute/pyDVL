@@ -33,23 +33,23 @@ class UtilTestParameters:
 test_parameters = [
     UtilTestParameters(ModelParams(dimension=(30, 16), condition_number=4, train_size=60),
                        batch_size=4,
-                       rank_estimate=50,
+                       rank_estimate=200,
                        regularization=0.0001),
     UtilTestParameters(ModelParams(dimension=(32, 35), condition_number=1e6, train_size=100),
                        batch_size=5,
                        rank_estimate=70,
-                       regularization=0.00001),
+                       regularization=0.001),
     UtilTestParameters(ModelParams(dimension=(25, 15), condition_number=1e3, train_size=90),
                        batch_size=10,
                        rank_estimate=50,
-                       regularization=0.000001),
+                       regularization=0.0001),
     UtilTestParameters(ModelParams(dimension=(30, 15), condition_number=1e4, train_size=120),
                        batch_size=8,
-                       rank_estimate=60,
+                       rank_estimate=160,
                        regularization=0.00001),
     UtilTestParameters(ModelParams(dimension=(40, 13), condition_number=1e5, train_size=900),
                        batch_size=4,
-                       rank_estimate=90,
+                       rank_estimate=250,
                        regularization=0.00001),
 ]
 
@@ -98,20 +98,10 @@ def test_get_hvp_function(model_data, tol: float, use_avg: bool, batch_size: int
 def test_lanzcos_low_rank_hessian_approx(model_data, batch_size: int, rank_estimate, regularization):
     _, _, _, vec, H_analytical = model_data
 
-    # artificially make the analytical hessian low rank
     reg_H_analytical = H_analytical + regularization * torch.eye(H_analytical.shape[0])
-    eig_val_analytical, proj_analytical = scipy.linalg.eigh(reg_H_analytical.numpy())
-    eig_val_analytical, proj_analytical = torch.as_tensor(eig_val_analytical), torch.as_tensor(proj_analytical)
-    idx_analytical = torch.argsort(torch.abs(eig_val_analytical), descending=True)
-    eig_val_analytical = eig_val_analytical[idx_analytical[:rank_estimate]]
-    proj_analytical = proj_analytical[:, idx_analytical[:rank_estimate]]
-    low_rank_approx_analytical = proj_analytical @ torch.diag(eig_val_analytical) @ proj_analytical.t()
-
     low_rank_approx = lanzcos_low_rank_hessian_approx(lambda z: reg_H_analytical @ z,
                                                       reg_H_analytical.shape,
                                                       rank_estimate=rank_estimate)
-
-    D = torch.diag(low_rank_approx.eigen_vals)
-    proj = low_rank_approx.projections
-
-    assert torch.allclose((proj @ D @ proj.t()) @ vec, low_rank_approx_analytical @ vec, rtol=1e-1)
+    approx_result = low_rank_approx.projections @ (torch.diag_embed(low_rank_approx.eigen_vals) @
+                                                   (low_rank_approx.projections.t() @ vec.t()))
+    assert torch.allclose(approx_result, reg_H_analytical @ vec, rtol=1e-1)

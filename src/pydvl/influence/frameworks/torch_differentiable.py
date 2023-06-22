@@ -480,7 +480,8 @@ def solve_low_rank(model: TorchTwiceDifferentiable, training_data: DataLoader, b
     else:
         logger.info("Using provided low rank representation, ignoring other parameters")
 
-    result = low_rank_representation.projections @ ((low_rank_representation.projections.T @ b.T) / low_rank_representation.eigen_vals.unsqueeze(1))
-    return result.T
+    result = low_rank_representation.projections @ (torch.diag_embed(1. / low_rank_representation.eigen_vals) @
+                                                    (low_rank_representation.projections.t() @ b.t()))
+    return result.t()
 
 
