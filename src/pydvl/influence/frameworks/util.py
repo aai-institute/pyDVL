@@ -5,7 +5,6 @@ from typing import Callable, Generator, Optional, Tuple
 
 import torch
 from numpy.typing import NDArray
-from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigsh
 from torch.utils.data import DataLoader
 
 logger = logging.getLogger(__name__)
@@ -179,10 +178,11 @@ def lanzcos_low_rank_hessian_approx(
     tol: float = 1e-6,
     max_iter: Optional[int] = None,
     device: Optional[torch.device] = None,
+    eigen_computation_on_gpu: bool = True,
 ) -> LowRankProductRepresentation:
     """
     Calculates a low-rank approximation of the Hessian matrix of the model's loss function using the implicitly
-    restarted Lanczos algorithm, provided by scipy wrapper to ARPACK.
+    restarted Lanczos algorithm.
 
 
     :param hessian_vp: A function that takes a vector and returns the product of the Hessian of the loss function
@@ -199,38 +199,79 @@ def lanzcos_low_rank_hessian_approx(
                 in the approximated eigenvalue is less than `tol`. Defaults to 1e-6.
     :param max_iter: The maximum number of iterations for the Lanczos method. If not provided, it defaults to
                      $10*model.num_parameters$
-    :param device: The device to use for the hessian vector product.
+    :param device: The device to use for executing the hessian vector product.
+    :param eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation on the provided
+                                     device via cupy implementation.
+                                     Make sure, that either your model is small enough or you use a
+                                     small rank_estimate to fit your device's memory.
+                                     If False, the eigen pair approximation is executed on the CPU by scipy wrapper to
+                                     ARPACK.
     :return: A `LowRankProductRepresentation` instance that contains the top (up until rank_estimate) eigenvalues
              and corresponding eigenvectors of the Hessian.
     """
 
-    def mv(x: NDArray) -> NDArray:
-        x = torch.from_numpy(x)
-        if device is not None:
-            x = x.to(device)
-        y = hessian_vp(x) + hessian_perturbation * x
-        return y.cpu().numpy()
+    if eigen_computation_on_gpu:
+        try:
+            import cupy as cp
+            from cupyx.scipy.sparse.linalg import LinearOperator, eigsh
+            from torch.utils.dlpack import from_dlpack, to_dlpack
+        except ImportError as e:
+            raise ImportError(
+                f"Try to install missing dependencies or set eigen_computation_on_gpu to False: {e}"
+            )
 
-    try:
+        if device is None:
+            raise ValueError(
+                "Without setting an explicit device, cupy is not supported"
+            )
+
+        def mv_cupy(x):
+            x = from_dlpack(x.toDlpack())
+            y = hessian_vp(x) + hessian_perturbation * x
+            return cp.from_dlpack(to_dlpack(y))
+
         eigen_vals, eigen_vecs = eigsh(
-            A=LinearOperator(matrix_shape, matvec=mv),
+            LinearOperator(matrix_shape, matvec=mv_cupy),
             k=rank_estimate,
             maxiter=max_iter,
             tol=tol,
             ncv=krylov_dimension,
             return_eigenvectors=True,
-            v0=x0.cpu().numpy() if x0 is not None else None,
-        )
-    except ArpackNoConvergence as e:
-        logger.warning(
-            f"ARPACK did not converge for parameters {max_iter=}, {tol=}, {krylov_dimension=}, "
-            f"{rank_estimate=}. \n Returning the best approximation found so far. Use those with care or "
-            f"modify parameters.\n Original error: {e}"
         )
         return LowRankProductRepresentation(
-            torch.from_numpy(e.eigenvalues), torch.from_numpy(e.eigenvectors)
+            from_dlpack(eigen_vals.toDlpack()), from_dlpack(eigen_vecs.toDlpack())
         )
 
-    return LowRankProductRepresentation(
-        torch.from_numpy(eigen_vals), torch.from_numpy(eigen_vecs)
-    )
+    else:
+        from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigsh
+
+        def mv_scipy(x: NDArray) -> NDArray:
+            x = torch.from_numpy(x)
+            if device is not None:
+                x = x.to(device)
+            y = hessian_vp(x) + hessian_perturbation * x
+            return y.cpu().numpy()
+
+        try:
+            eigen_vals, eigen_vecs = eigsh(
+                A=LinearOperator(matrix_shape, matvec=mv_scipy),
+                k=rank_estimate,
+                maxiter=max_iter,
+                tol=tol,
+                ncv=krylov_dimension,
+                return_eigenvectors=True,
+                v0=x0.cpu().numpy() if x0 is not None else None,
+            )
+        except ArpackNoConvergence as e:
+            logger.warning(
+                f"ARPACK did not converge for parameters {max_iter=}, {tol=}, {krylov_dimension=}, "
+                f"{rank_estimate=}. \n Returning the best approximation found so far. Use those with care or "
+                f"modify parameters.\n Original error: {e}"
+            )
+            return LowRankProductRepresentation(
+                torch.from_numpy(e.eigenvalues), torch.from_numpy(e.eigenvectors)
+            )
+
+        return LowRankProductRepresentation(
+            torch.from_numpy(eigen_vals), torch.from_numpy(eigen_vecs)
+        )
