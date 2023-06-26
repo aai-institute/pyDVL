@@ -178,7 +178,7 @@ def lanzcos_low_rank_hessian_approx(
     tol: float = 1e-6,
     max_iter: Optional[int] = None,
     device: Optional[torch.device] = None,
-    eigen_computation_on_gpu: bool = True,
+    eigen_computation_on_gpu: bool = False,
 ) -> LowRankProductRepresentation:
     """
     Calculates a low-rank approximation of the Hessian matrix of the model's loss function using the implicitly

@@ -138,3 +138,13 @@ def test_lanzcos_low_rank_hessian_approx(
         @ (low_rank_approx.projections.t() @ vec.t())
     )
     assert torch.allclose(approx_result, reg_H_analytical @ vec, rtol=1e-1)
+
+
+def test_lanzcos_low_rank_hessian_approx_exception():
+    """
+    In case cuda is not available, and cupy is not installed, the call should raise an import exception
+    """
+    with pytest.raises(ImportError):
+        lanzcos_low_rank_hessian_approx(
+            lambda x: x, (3, 3), eigen_computation_on_gpu=True
+        )
