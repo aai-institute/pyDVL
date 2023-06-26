@@ -92,7 +92,7 @@ def solve_hvp(
         )
     elif inversion_method == InversionMethod.LowRank:
         return solve_low_rank(
-            model,
+            model,  # type: ignore # TODO the interface TwiceDifferentiable is not used properly anyhow
             training_data,
             b,
             **kwargs,

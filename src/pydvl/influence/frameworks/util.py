@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 from functools import partial, reduce
-from typing import Callable, Generator, Optional, Tuple
+from typing import Callable, Generator, Iterable, Optional, Tuple
 
 import torch
 from numpy.typing import NDArray
@@ -85,8 +85,8 @@ def avg_gradient(
     """
     Returns the average gradient of the loss function with respect to the model parameters
     :param model: A torch.nn.Module, whose parameters are used for backpropagation.
-    :param loss: A loss function, which is a callable that takes the model's
-                 output and target as input and returns a scalar loss.
+    :param loss: A loss function, which is a callable that takes the model's output and target as input
+    and returns a scalar loss.
     :param data_loader: an instance of :class:`torch.utils.data.DataLoader`
     :return: average of batch gradients
     """
@@ -108,6 +108,9 @@ def avg_gradient(
         else:
             total_grad_xy += flat_grads * num_points_in_batch
         total_points += num_points_in_batch
+
+    if total_grad_xy is None:
+        raise ValueError("DataLoader is empty")
 
     return total_grad_xy / total_points
 
@@ -149,7 +152,9 @@ def get_hvp_function(
         return hessian_vec_prod
 
     def avg_hvp_function(vec: torch.Tensor) -> torch.Tensor:
-        batch_hessians = map(lambda x: x(vec), batch_hvp_gen(model, loss, data_loader))
+        batch_hessians: Iterable[torch.Tensor] = map(
+            lambda x: x(vec), batch_hvp_gen(model, loss, data_loader)
+        )
         return reduce(lambda x, y: x + y, batch_hessians) / len(data_loader)
 
     return avg_hvp_function if use_hessian_avg else hvp_function
@@ -246,11 +251,13 @@ def lanzcos_low_rank_hessian_approx(
         from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigsh
 
         def mv_scipy(x: NDArray) -> NDArray:
-            x = torch.from_numpy(x)
+            x_torch = torch.from_numpy(x)
             if device is not None:
-                x = x.to(device)
-            y = hessian_vp(x) + hessian_perturbation * x
-            return y.cpu().numpy()
+                x_torch = x_torch.to(device)
+            y: NDArray = (
+                (hessian_vp(x_torch) + hessian_perturbation * x_torch).cpu().numpy()
+            )
+            return y
 
         try:
             eigen_vals, eigen_vecs = eigsh(
