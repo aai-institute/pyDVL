@@ -89,6 +89,7 @@ def model_data(request):
     return torch_model, x, y, vec, H_analytical
 
 
+@pytest.mark.torch
 @pytest.mark.parametrize(
     "model_data, tol",
     [(astuple(tp.model_params), 1e-12) for tp in test_parameters],
@@ -100,6 +101,7 @@ def test_hvp(model_data, tol: float):
     assert torch.allclose(Hvp_autograd, H_analytical @ vec, rtol=tol)
 
 
+@pytest.mark.torch
 @pytest.mark.parametrize(
     "use_avg, tol", [(True, 1e-3), (False, 1e-6)], ids=["avg", "full"]
 )
@@ -117,6 +119,7 @@ def test_get_hvp_function(model_data, tol: float, use_avg: bool, batch_size: int
     assert torch.allclose(Hvp_autograd, H_analytical @ vec, rtol=tol)
 
 
+@pytest.mark.torch
 @pytest.mark.parametrize(
     "model_data, batch_size, rank_estimate, regularization",
     [astuple(tp) for tp in test_parameters],
@@ -140,6 +143,7 @@ def test_lanzcos_low_rank_hessian_approx(
     assert torch.allclose(approx_result, reg_H_analytical @ vec, rtol=1e-1)
 
 
+@pytest.mark.torch
 def test_lanzcos_low_rank_hessian_approx_exception():
     """
     In case cuda is not available, and cupy is not installed, the call should raise an import exception
