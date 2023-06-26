@@ -8,6 +8,7 @@ This module contains Shapley computations for K-Nearest Neighbours.
 from typing import Dict, Union
 
 import numpy as np
+from numpy.typing import NDArray
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
 from pydvl.utils import Utility, maybe_progress
@@ -57,7 +58,7 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     # closest to farthest
     _, indices = nns.kneighbors(u.data.x_test)
 
-    values = np.zeros_like(u.data.indices, dtype=np.float_)
+    values: NDArray[np.float_] = np.zeros_like(u.data.indices, dtype=np.float_)
     n = len(u.data)
     yt = u.data.y_train
     iterator = enumerate(zip(u.data.y_test, indices), start=1)

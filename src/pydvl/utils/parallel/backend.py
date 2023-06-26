@@ -233,7 +233,7 @@ def available_cpus() -> int:
 
     if system() != "Linux":
         return os.cpu_count() or 1
-    return len(os.sched_getaffinity(0))
+    return len(os.sched_getaffinity(0))  # type: ignore
 
 
 def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> int:
