@@ -17,46 +17,171 @@ Computing influence values
     - Add example for `TwiceDifferentiable`
     - Improve uninformative examples
 
-There are two ways to compute influences. For linear regression, the influences
-can be computed analytically. For more general models or loss functions, one can
-implement the :class:`TwiceDifferentiable` protocol, which provides the required
-methods for computing the influences.
+pyDVL holds several methods for the efficient computation of influence functions
+(IF) for neural networks. Before delving into the details of the code, we will
+give an overview of the mathematical theory.
 
-pyDVL supports two ways of computing the empirical influence function, namely
-up-weighting of samples and perturbation influences. The choice is done by a
-parameter in the call to the main entry points,
-:func:`~pydvl.influence.linear.compute_linear_influences` and
-:func:`~pydvl.influence.compute_influences`.
+Theory of Influence Functions for Neural Networks
+-------------------------------------------------
 
-Influence for OLS
------------------
-.. warning::
+First introduced in the context of robust statistics, *Hampel, Frank R. [The
+influence curve and its role in robust estimation], 1974*
+(:footcite:t:`hampel1974influence`), influence functions have been popularized
+in the machine learning context with the work *Koh, Pang Wei, and Percy Liang.
+["Understanding Black-box Predictions via Influence Functions"], 2017.*
+(:footcite:t:`koh_understanding_2017`). Informally, their objective is to
+quantify the effect (influence) that each training point has on each test point
+of a neural network. In order to do so, it is necessary to rely on a first order
+approximation that computes influence scores for pre-trained models.
 
-   This will be deprecated. It makes no sense to have a separate interface for
-   linear models.
+Following the formulation of the *Koh,
+Liang*(:footcite:t:`koh_understanding_2017`) paper,  let's start by considering
+some input space $\mathcal{X}$ to a model (e.g. images) and an output space
+$\mathcal{Y}$ (e.g. labels). Let's take $z_i = (x_i, y_i)$ to be the $i$-th
+training point, and $\theta$ to be the (potentially highly) multi-dimensional
+parameters of the neural network (i.e. $\theta$ is a big array with all each
+neurons' weights, including biases, batch normalizations and/or dropout rates).
+We will indicate with $L(z, \theta)$ the loss of the model for point $z$ when
+parameters are $\theta$. 
 
-Because the Hessian of the least squares loss for a regression problem can be
-computed analytically, we provide
-:func:`~pydvl.influence.linear.compute_linear_influences` as a convenience
-function to work with these models.
+Upon training the model, we typically minimize the loss over all points, i.e.
+the optimal parameters are calculated through gradient descent on the following
+formula: $$ \hat{\theta} = \arg \min_\theta \frac{1}{n}\sum_{i=1}^n L(z_i,
+\theta) $$ where $n$ is the total number of training data points. In practice,
+instead of taking the argmin of the loss the training is stopped when the
+validation loss stops decreasing, so full convergence is not achieved.
 
-.. code-block:: python
+For notational  convenience, let's define
+ $$
+\hat{\theta}_{-z} = \arg \min_\theta \frac{1}{n}\sum_{z_i \ne z} L(z_i, \theta)
+\ , $$ i.e. $\hat{\theta}_{-z}$ are the model parameters that minimize the total
+loss when $z$ is not in the training dataset.
 
-   >>> from pydvl.influence.linear import compute_linear_influences
-   >>> compute_linear_influences(
-   ...    x_train,
-   ...    y_train,
-   ...    x_test,
-   ...    y_test
-   ... )
+In order to check the impact of each training point on the model, we would need
+to calculate $\hat{\theta}_{-z}$ for each $z$ in the training dataset, thus
+re-training the model at least ~$n$ times (more if model training is
+stochastic). This is computationally very expensive, especially for big neural
+networks. To circumvent this problem, we can just calculate a first order
+approximation of $\hat{\theta}$. This can be done through single backpropagation
+and without re-training the full model.
+
+Approximating the influence of a point
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Let's define $$ \hat{\theta}_{\epsilon, z} = \arg \min_\theta
+\frac{1}{n}\sum_{i=1}^n L(z_i, \theta) + \epsilon L(z, \theta) \ , $$ which is
+the optimal $\hat{\theta}$ if we were to up-weigh $z$ by an amount $\epsilon$.
+
+From a classical result (a simple derivation is available in Appendix A of [Koh
+and Liang's paper](:footcite:t:`koh_understanding_2017`)), we know that: $$
+\frac{d \ \hat{\theta}_{\epsilon, z}}{d \epsilon} \Big|_{\epsilon=0} =
+-H_{\hat{\theta}}^{-1} \nabla_\theta L(z, \hat{\theta}) $$ where
+$H_{\hat{\theta}} = \frac{1}{n} \sum_{i=1}^n \nabla_\theta^2 L(z_i,
+\hat{\theta})$ is the Hessian of $L$. Importantly, notice that this expression
+is only valid when $\hat{\theta}$ is a minimum of $L$, or otherwise
+$H_{\hat{\theta}}$ cannot be inverted! At the same time, in machine learning
+full convergence is rarely achieved, so direct Hessian inversion is not
+possible. Approximations need to be developed that circumvent the problem of
+inverting the Hessian of the model in all those (frequent) cases where it is not
+positive definite.
+
+We will define the influence of training point $z$ on test point
+$z_{\text{test}}$ as
+
+$$\mathcal{I}(z, z_{\text{test}}) =  L(z_{\text{test}}, \hat{\theta}_{-z}) -
+L(z_{\text{test}}, \hat{\theta}) .$$ Notice that $\mathcal{I}$ is higher for
+points $z$ which positively impact the model score, since the loss is higher
+when they are excluded from training. In practice, one needs to rely on the
+following infinitesimal approximation:
+
+$$
+ \mathcal{I}_{up}(z, z_{\text{test}}) = - \frac{d L(z_{\text{test}},
+ \hat{\theta}_{\epsilon, z})}{d \epsilon} \Big|_{\epsilon=0}
+$$
+
+Using the chain rule and the results calculated above, we thus have:
+
+$$
+ \mathcal{I}_{up}(z, z_{\text{test}}) = - \nabla_\theta L(z_{\text{test}},
+ \hat{\theta})^\top \ \frac{d \hat{\theta}_{\epsilon, z}}{d \epsilon}
+ \Big|_{\epsilon=0} = \nabla_\theta L(z_{\text{test}}, \hat{\theta})^\top \
+ H_{\hat{\theta}}^{-1} \ \nabla_\theta L(z, \hat{\theta})
+$$
+
+All the factors in this expression are gradients of the loss wrt. the model
+parameters $\hat{\theta}$. This can be easily done through one or more
+backpropagation passes.
+
+Perturbation definition of the influence score
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+How would the loss of the model change if, instead of up-weighing an individual point $z$, we were to up-weigh
+only a single feature of that point? Given $z = (x, y)$, we can define
+$z_{\delta} = (x+\delta, y)$, where $\delta$ is a vector of zeros except for a 1
+in the position of the feature we want to up-weigh. In order to approximate the
+effect of modifying a single feature of a single point on the model score we can
+define
+$$
+\hat{\theta}_{\epsilon, z_{\delta} ,-z} = \arg \min_\theta
+\frac{1}{n}\sum_{i=1}^n L(z_i, \theta) + \epsilon L(z_{\delta}, \theta) \ -  \epsilon L(z, \theta), 
+$$
+Similarly to what done in paragraph ???, we up-weigh point $z_{\delta}$, but
+then we also remove the up-weighing for all the features that are not modified
+by $\delta$. From the calculations in ???, it is then easy to see that
+$$
+\frac{d \ \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon} \Big|_{\epsilon=0}
+= -H_{\hat{\theta}}^{-1} \nabla_\theta \Big( L(z_\delta, \hat{\theta}) - L(z, \hat{\theta}) \Big)
+$$
+and if the feature space is continuous and as $\delta \to 0$ we can write
+$$
+\frac{d \ \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon} \Big|_{\epsilon=0}
+= -H_{\hat{\theta}}^{-1} \ \nabla_x \nabla_\theta L(z, \hat{\theta}) \delta + \mathcal{o}(\delta)
+$$
+The influence of each feature of $z$ on the loss of the model can therefore be
+estimated through the following quantity:
+$$
+\mathcal{I}_{pert}(z, z_{\text{test}}) = - \lim_{\delta \to 0} \ \frac{1}{\delta} \frac{d L(z_{\text{test}},
+ \hat{\theta}_{\epsilon, \ z_{\delta}, \ -z})}{d \epsilon} \Big|_{\epsilon=0}
+$$
+which, using the chain rule and the results calculated above, is equal to
+$$
+\mathcal{I}_{pert}(z, z_{\text{test}}) = - \nabla_\theta L(z_{\text{test}},
+ \hat{\theta})^\top \ \frac{d \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon}
+ \Big|_{\epsilon=0} = \nabla_\theta L(z_{\text{test}}, \hat{\theta})^\top \
+ H_{\hat{\theta}}^{-1} \ \nabla_x \nabla_\theta L(z, \hat{\theta})
+$$
+The perturbation definition of the influence score is not straightforward to
+understand, but it has a simple interpretation: it tells how much the loss of
+the model changes when a certain feature of point z is up-weighted. A positive
+perturbation influence score indicates that the feature might have a positive
+effect on the accuracy of the model. It is worth noting that this is just a very
+rough estimate and it is subject to large approximation errors. It can
+nonetheless be used to build train-set attacks, as done in the [original
+paper](:footcite:t:`koh_understanding_2017`). 
 
 
-This method calculates the influence function for each sample in x_train for a
-least squares regression problem.
+Inverting the Hessian: direct and approximate methods
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+As discussed in :ref:`theory of influence functions for neural networks`, in
+machine learning training rarely converges to a global minimum of the loss.
+Despite good apparent convergence, $\hat{\theta}$ might be located in a region
+with flat curvature or close to a saddle point. In particular, the Hessian might
+have vanishing eigenvalues making its direct inversion impossible.
+
+To circumvent this problem, many approximate methods are available. The simplest
+adds a small *hessian perturbation term*, i.e. we invert
+$H_{\hat{\theta}} + \lambda \mathbb{I}$, with $\mathbb{I}$ being the identity
+matrix. This standard trick ensures that the eigenvalues of $H_{\hat{\theta}}$
+are bounded away from zero and therefore the matrix is invertible. In order for
+this regularization not to corrupt the outcome too much, the parameter $\lambda$
+should be as small as possible while still allowing a reliable inversion of
+$H_{\hat{\theta}} + \lambda \mathbb{I}$.
 
 Exact influences using the `TwiceDifferentiable` protocol
 ---------------------------------------------------------
+
+The main entry point of the library is
+:func:`~pydvl.influence.compute_influences`
 
 More generally, influences can be computed for any model which implements the
 :class:`TwiceDifferentiable` protocol, i.e. which is capable of calculating
@@ -100,8 +225,8 @@ inverting the full matrix. In pyDVL this can be done with the parameter
 Perturbation influences
 -----------------------
 
-As mentioned, the method of empirical influence computation can be selected
-in :func:`~pydvl.influence.compute_influences` with `influence_type`:
+As mentioned, the method of empirical influence computation can be selected in
+:func:`~pydvl.influence.compute_influences` with `influence_type`:
 
 .. code-block:: python
 
