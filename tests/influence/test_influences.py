@@ -145,7 +145,7 @@ def test_influence_linear_model(
     )
 
     influence_values = compute_influences(
-        TorchTwiceDifferentiable(linear_layer, loss),
+        TorchTwiceDifferentiable(linear_layer, loss, device=torch.device("cpu")),
         training_data=train_data_loader,
         test_data=test_data_loader,
         input_data=input_data,
@@ -255,7 +255,7 @@ def test_influences_nn(
         "direct": {},
         "cg": {},
         "lissa": {
-            "maxiter": 100,
+            "maxiter": 150,
             "scale": 10000,
         },
         "low_rank": {
@@ -281,7 +281,7 @@ def test_influences_nn(
         )
 
         influences = compute_influences(
-            TorchTwiceDifferentiable(nn_architecture, loss),
+            TorchTwiceDifferentiable(nn_architecture, loss, device=torch.device("cpu")),
             training_data=train_data_loader,
             test_data=test_data_loader,
             progress=True,
