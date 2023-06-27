@@ -2,7 +2,6 @@ from typing import Tuple
 
 import numpy as np
 import pytest
-import torch.nn
 from numpy.typing import NDArray
 from sklearn.preprocessing import MinMaxScaler
 
@@ -42,21 +41,6 @@ def linear_model(problem_dimension: Tuple[int, int], condition_number: float):
     A = A[:output_dimension, :input_dimension]
     b = np.random.uniform(size=[output_dimension])
     return A, b
-
-
-def linear_torch_model_from_numpy(A: NDArray, b: NDArray) -> torch.nn.Module:
-    """
-    Given numpy arrays representing the model $xA^t + b$, the function returns the corresponding torch model
-    :param A:
-    :param b:
-    :return:
-    """
-    output_dimension, input_dimension = tuple(A.shape)
-    model = torch.nn.Linear(input_dimension, output_dimension)
-    model.eval()
-    model.weight.data = torch.as_tensor(A)
-    model.bias.data = torch.as_tensor(b)
-    return model
 
 
 def linear_derivative_analytical(

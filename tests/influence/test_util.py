@@ -3,8 +3,11 @@ from typing import Tuple
 
 import numpy as np
 import pytest
-import scipy
+
+torch = pytest.importorskip("torch")
 import torch
+import torch.nn
+from numpy.typing import NDArray
 from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence.frameworks.util import (
@@ -12,11 +15,7 @@ from pydvl.influence.frameworks.util import (
     hvp,
     lanzcos_low_rank_hessian_approx,
 )
-from tests.influence.conftest import (
-    linear_hessian_analytical,
-    linear_model,
-    linear_torch_model_from_numpy,
-)
+from tests.influence.conftest import linear_hessian_analytical, linear_model
 
 
 @dataclass
@@ -70,6 +69,21 @@ test_parameters = [
         regularization=0.00001,
     ),
 ]
+
+
+def linear_torch_model_from_numpy(A: NDArray, b: NDArray) -> torch.nn.Module:
+    """
+    Given numpy arrays representing the model $xA^t + b$, the function returns the corresponding torch model
+    :param A:
+    :param b:
+    :return:
+    """
+    output_dimension, input_dimension = tuple(A.shape)
+    model = torch.nn.Linear(input_dimension, output_dimension)
+    model.eval()
+    model.weight.data = torch.as_tensor(A)
+    model.bias.data = torch.as_tensor(b)
+    return model
 
 
 @pytest.fixture
