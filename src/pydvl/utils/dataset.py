@@ -16,8 +16,8 @@ Objects of both types are used to construct a :class:`~pydvl.utils.utility.Utili
 object.
 
 """
-
 import logging
+import os
 from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple, Union
@@ -597,13 +597,15 @@ def load_spotify_dataset(
     :param random_state: fixes sklearn random seed
     :return: Tuple with 3 elements, each being a list sith [input_data, related_labels]
     """
-    root_dir_path = Path(__file__).parent.parent.parent.parent
-    file_path = root_dir_path / "data/top_hits_spotify_dataset.csv"
+    root_dir_path = Path(__file__).parent.parent.parent.parent / "data"
+    file_path = root_dir_path / "top_hits_spotify_dataset.csv"
     if file_path.exists():
         data = pd.read_csv(file_path)
     else:
         url = "https://raw.githubusercontent.com/appliedAI-Initiative/pyDVL/develop/data/top_hits_spotify_dataset.csv"
         data = pd.read_csv(url)
+        if not os.path.exists(root_dir_path):
+            os.makedirs(root_dir_path)
         data.to_csv(file_path, index=False)
 
     data = data[data["year"] > min_year]
