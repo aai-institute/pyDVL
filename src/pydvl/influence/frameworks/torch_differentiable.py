@@ -442,6 +442,7 @@ def solve_low_rank(
     x0: Optional[torch.Tensor] = None,
     tol: float = 1e-6,
     max_iter: Optional[int] = None,
+    eigen_computation_on_gpu: bool = False,
 ) -> torch.Tensor:
 
     """
@@ -469,6 +470,12 @@ def solve_low_rank(
                 If `low_rank_representation` is provided, this parameter is ignored.
     :param max_iter: The maximum number of iterations for the Lanczos method.
                      If `low_rank_representation` is provided, this parameter is ignored.
+    :param eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation on the model's
+                                     device via cupy implementation.
+                                     Make sure, that either your model is small enough or you use a
+                                     small rank_estimate to fit your device's memory.
+                                     If False, the eigen pair approximation is executed on the CPU by scipy wrapper to
+                                     ARPACK.
     :return: Returns the solution vector x that satisfies the system Hx = b,
              where H is a low-rank approximation of the Hessian of the model's loss function.
     """
@@ -487,6 +494,7 @@ def solve_low_rank(
             tol=tol,
             max_iter=max_iter,
             device=model.device if hasattr(model, "device") else None,
+            eigen_computation_on_gpu=eigen_computation_on_gpu,
         )
     else:
         logger.info("Using provided low rank representation, ignoring other parameters")
