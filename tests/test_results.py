@@ -326,6 +326,18 @@ def test_adding_random():
             ["a", "b", "c"],
             [0, 2, 3],
         ),
+        # Overlapping indices with different lengths, change order
+        (
+            [1, 2],
+            ["b", "c"],
+            [3, 4],
+            [0, 1, 2],
+            ["a", "b", "c"],
+            [0, 1, 2],
+            [0, 1, 2],
+            ["a", "b", "c"],
+            [0, 2, 3],
+        ),
     ],
 )
 def test_adding_different_indices(
