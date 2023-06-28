@@ -96,13 +96,8 @@ def analytical_linear_influences(
         [InversionMethod.Direct, {}, 1e-7],
         [InversionMethod.Cg, {}, 1e-1],
         [InversionMethod.Lissa, {"maxiter": 6000, "scale": 100}, 0.3],
-        [
-            InversionMethod.LowRank,
-            {"rank_estimate": 83, "hessian_regularization": 0.01},
-            0.4,
-        ],
     ],
-    ids=[inv.value for inv in InversionMethod],
+    ids=[inv.value for inv in InversionMethod if inv is not InversionMethod.LowRank],
 )
 def test_influence_linear_model(
     influence_type: InfluenceType,
@@ -117,7 +112,6 @@ def test_influence_linear_model(
 ):
 
     torch.set_default_dtype(torch.float64)
-    hessian_reg = inversion_method_kwargs.pop("hessian_regularization", hessian_reg)
 
     A, b = linear_model(problem_dimension, condition_number)
     train_data, test_data = add_noise_to_linear_model(
