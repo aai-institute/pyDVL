@@ -1,14 +1,14 @@
-from typing import Callable, Dict, Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 import pytest
-from torch.optim import LBFGS, Adam
 
 torch = pytest.importorskip("torch")
 import torch
 import torch.nn.functional as F
 from numpy.typing import NDArray
 from torch import nn
+from torch.optim import LBFGS
 from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence import TorchTwiceDifferentiable, compute_influences
