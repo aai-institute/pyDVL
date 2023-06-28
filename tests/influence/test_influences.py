@@ -1,7 +1,8 @@
-from typing import Dict, Tuple
+from typing import Callable, Dict, Tuple
 
 import numpy as np
 import pytest
+from torch.optim import LBFGS, Adam
 
 torch = pytest.importorskip("torch")
 import torch
@@ -225,7 +226,46 @@ test_cases = {
 }
 
 
+def create_random_data_loader(
+    input_dim: Tuple[int],
+    output_dim: int,
+    data_len: int,
+    batch_size: int = 1,
+    random_seed: int = 31,
+) -> DataLoader:
+    """Creates DataLoader instances with random data for testing purposes.
+
+    Args:
+        input_dim (Tuple[int]): The dimensions of the input data.
+        output_dim (int): The dimension of the output data.
+        data_len (int): The length of the training dataset to be generated.
+        batch_size (int): The size of the batches to be used in the DataLoader.
+        random_seed (int, optional): The seed for the random number generator. Defaults to 31.
+
+    Returns:
+        DataLoader: DataLoader instances for data.
+    """
+    torch.manual_seed(random_seed)
+    x = torch.rand((data_len, *input_dim))
+    y = torch.rand((data_len, output_dim))
+
+    return DataLoader(TensorDataset(x, y), batch_size=batch_size)
+
+
 @pytest.mark.torch
+@pytest.mark.parametrize(
+    "inversion_method,inversion_method_kwargs",
+    [
+        ("cg", {}),
+        (
+            "lissa",
+            {
+                "maxiter": 150,
+                "scale": 10000,
+            },
+        ),
+    ],
+)
 @pytest.mark.parametrize(
     "nn_architecture, input_dim, output_dim, loss, influence_type",
     test_cases.values(),
@@ -237,75 +277,151 @@ def test_influences_nn(
     output_dim: int,
     loss: nn.modules.loss._Loss,
     influence_type: InfluenceType,
+    inversion_method: InversionMethod,
+    inversion_method_kwargs: Dict,
     data_len: int = 20,
     hessian_reg: float = 1e3,
     test_data_len: int = 10,
     batch_size: int = 10,
 ):
-    x_train = torch.rand((data_len, *input_dim))
-    y_train = torch.rand((data_len, output_dim))
-    x_test = torch.rand((test_data_len, *input_dim))
-    y_test = torch.rand((test_data_len, output_dim))
+
+    train_data_loader = create_random_data_loader(
+        input_dim, output_dim, data_len, batch_size, random_seed=18
+    )
+    test_data_loader = create_random_data_loader(
+        input_dim, output_dim, test_data_len, batch_size, random_seed=19
+    )
+
+    nn_architecture.eval()
+    model = TorchTwiceDifferentiable(nn_architecture, loss, device=torch.device("cpu"))
+
+    direct_influence = compute_influences(
+        model,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        progress=True,
+        influence_type=influence_type,
+        inversion_method=InversionMethod.Direct,
+        hessian_regularization=hessian_reg,
+    )
+
+    approx_influences = compute_influences(
+        model,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        progress=True,
+        influence_type=influence_type,
+        inversion_method=inversion_method,
+        hessian_regularization=hessian_reg,
+        **inversion_method_kwargs,
+    ).numpy()
+    assert not np.any(np.isnan(approx_influences))
+
+    assert np.allclose(approx_influences, direct_influence, rtol=1e-1)
+
+    if influence_type == InfluenceType.Up:
+        assert approx_influences.shape == (test_data_len, data_len)
+
+    if influence_type == InfluenceType.Perturbation:
+        assert approx_influences.shape == (test_data_len, data_len, *input_dim)
+
+    # check that influences are not all constant
+    assert not np.all(approx_influences == approx_influences.item(0))
+
+
+def minimal_training(
+    model: torch.nn.Module,
+    dataloader: DataLoader,
+    loss_function: torch.nn.modules.loss._Loss,
+    lr=0.01,
+    epochs=50,
+):
+    """Trains a PyTorch model using L-BFGS optimizer.
+
+    Args:
+        model (Module): The PyTorch model to be trained.
+        dataloader (DataLoader): DataLoader providing the training data.
+        loss_function (Module): The loss function to be used for training.
+        lr (float, optional): The learning rate for the L-BFGS optimizer. Defaults to 0.01.
+        epochs (int, optional): The number of training epochs. Defaults to 50.
+
+    Returns:
+        Module: The trained model.
+    """
+    model = model.train()
+    optimizer = LBFGS(model.parameters(), lr=lr)
+
+    for epoch in range(epochs):
+        data = torch.cat([inputs for inputs, targets in dataloader])
+        targets = torch.cat([targets for inputs, targets in dataloader])
+
+        def closure():
+            optimizer.zero_grad()
+            outputs = model(data)
+            loss = loss_function(outputs, targets)
+            loss.backward()
+            return loss
+
+        optimizer.step(closure)
+
+    return model
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize(
+    "nn_architecture, input_dim, output_dim, loss, influence_type",
+    test_cases.values(),
+    ids=test_cases.keys(),
+)
+def test_influences_nn_low_rank(
+    nn_architecture: nn.Module,
+    input_dim: Tuple[int],
+    output_dim: int,
+    loss: nn.modules.loss._Loss,
+    influence_type: InfluenceType,
+    data_len: int = 20,
+    hessian_reg: float = 20.0,
+    test_data_len: int = 10,
+):
+    train_data_loader = create_random_data_loader(
+        input_dim, output_dim, data_len, random_seed=31
+    )
+    test_data_loader = create_random_data_loader(
+        input_dim, output_dim, test_data_len, random_seed=42
+    )
+
+    nn_architecture = minimal_training(
+        nn_architecture, train_data_loader, loss, lr=0.3, epochs=100
+    )
+    nn_architecture = nn_architecture.eval()
+
+    model = TorchTwiceDifferentiable(nn_architecture, loss, device=torch.device("cpu"))
+
+    direct_influence = compute_influences(
+        model,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        progress=True,
+        influence_type=influence_type,
+        inversion_method=InversionMethod.Direct,
+        hessian_regularization=hessian_reg,
+    )
 
     num_parameters = sum(
         p.numel() for p in nn_architecture.parameters() if p.requires_grad
     )
 
-    inversion_method_kwargs = {
-        "direct": {},
-        "cg": {},
-        "lissa": {
-            "maxiter": 150,
-            "scale": 10000,
-        },
-        "low_rank": {
-            "rank_estimate": num_parameters - 1,
-            "hessian_regularization": 0.01,
-        },
-    }
-    train_data_loader = DataLoader(
-        TensorDataset(x_train, y_train), batch_size=batch_size
-    )
-    test_data_loader = DataLoader(
-        TensorDataset(x_test, y_test),
-        batch_size=batch_size,
+    low_rank_influence = compute_influences(
+        model,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        progress=True,
+        influence_type=influence_type,
+        inversion_method=InversionMethod.LowRank,
+        hessian_regularization=hessian_reg,
+        # as the hessian of the small shallow networks is in general not low rank, so for these test cases, we choose
+        # the rank estimate as high as possible
+        rank_estimate=num_parameters - 1,
     )
 
-    nn_architecture.eval()
-    multiple_influences = {}
-
-    for inversion_method in InversionMethod:
-
-        hessian_reg = inversion_method_kwargs[inversion_method].pop(
-            "hessian_regularization", hessian_reg
-        )
-
-        influences = compute_influences(
-            TorchTwiceDifferentiable(nn_architecture, loss, device=torch.device("cpu")),
-            training_data=train_data_loader,
-            test_data=test_data_loader,
-            progress=True,
-            influence_type=influence_type,
-            inversion_method=inversion_method,
-            hessian_regularization=hessian_reg,
-            **inversion_method_kwargs[inversion_method],
-        ).numpy()
-        assert not np.any(np.isnan(influences))
-        multiple_influences[inversion_method] = influences
-
-    for infl_type, influences in multiple_influences.items():
-        if infl_type == "direct":
-            continue
-        if infl_type == "low_rank":
-            continue
-        assert np.allclose(
-            influences,
-            multiple_influences["direct"],
-            rtol=1e-1,
-        ), f"Failed method {infl_type}"
-        if influence_type == InfluenceType.Up:
-            assert influences.shape == (test_data_len, data_len)
-        elif influence_type == InfluenceType.Perturbation:
-            assert influences.shape == (test_data_len, data_len, *input_dim)
-    # check that influences are not all constant
-    assert not np.all(influences == influences.item(0))
+    assert np.allclose(direct_influence, low_rank_influence, rtol=1e-2)
