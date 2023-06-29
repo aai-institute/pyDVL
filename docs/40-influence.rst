@@ -202,47 +202,42 @@ this regularization not to corrupt the outcome too much, the parameter $\lambda$
 should be as small as possible while still allowing a reliable inversion of
 $H_{\hat{\theta}} + \lambda \mathbb{I}$.
 
-Exact influences using the `TwiceDifferentiable` protocol
----------------------------------------------------------
+Computing influences
+--------------------
 
 The main entry point of the library is
-:func:`~pydvl.influence.compute_influences`
-
-More generally, influences can be computed for any model which implements the
-:class:`TwiceDifferentiable` protocol, i.e. which is capable of calculating
-second derivative matrix vector products and gradients of the loss evaluated on
-training and test samples.
+:func:`~pydvl.influence.general.compute_influences`. Influences can be computed
+for any model which implements the
+:class:`~pydvl.influence.frameworks.twice_differentiable.TwiceDifferentiable`
+protocol, i.e. which is capable of calculating second derivative matrix vector
+products and gradients of the loss evaluated on training and test samples.
 
 .. code-block:: python
 
    >>> from pydvl.influence import influences
    >>> compute_influences(
    ...    model,
-   ...    x_train,
-   ...    y_train,
-   ...    x_test,
-   ...    y_test,,
+   ...    training_data_loader,
+   ...    test_data_loader
    ... )
 
 
 Approximate matrix inversion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Most often it is not possible to construct the complete Hessian in memory. In
-that case one can use conjugate gradient as a space-efficient approximation to
-inverting the full matrix. In pyDVL this can be done with the parameter
-`inversion_method` of :func:`~pydvl.influence.compute_influences`:
-
+In almost every practical application it is not possible to construct, even less
+invert the complete Hessian in memory. pyDVL offers several approximate
+algorithms to invert it by setting the parameter `inversion_method` of
+:func:`~pydvl.influence.general.compute_influences`. See the documentation for
+allowed values.
 
 .. code-block:: python
 
    >>> from pydvl.influence import compute_influences
    >>> compute_influences(
    ...    model,
-   ...    x_train,
-   ...    y_train,
-   ...    x_test,
-   ...    y_test,
+   ...    training_data_loader,
+   ...    test_data_loader,
    ...    inversion_method="cg"
    ... )
 
@@ -251,18 +246,17 @@ Perturbation influences
 -----------------------
 
 As mentioned, the method of empirical influence computation can be selected in
-:func:`~pydvl.influence.compute_influences` with `influence_type`:
+:func:`~pydvl.influence.general.compute_influences` with `influence_type`:
 
 .. code-block:: python
 
    >>> from pydvl.influence import compute_influences
    >>> compute_influences(
    ...    model,
-   ...    x_train,
-   ...    y_train,
-   ...    x_test,
-   ...    y_test,
-   ...    influence_type="perturbation"
+   ...    training_data_loader,
+   ...    test_data_loader,
+   ...    influence_type="perturbation",
+   ...    inversion_method="lissa"
    ... )
 
 
