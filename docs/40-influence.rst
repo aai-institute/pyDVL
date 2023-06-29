@@ -13,7 +13,7 @@ Computing influence values
 .. todo::
 
    This section needs rewriting:
-    - Explain how the methods differ
+    - Document each approximation method and explain how they differ
     - Add example for ``TwiceDifferentiable``
 
 The influence function (IF) is a method to quantify the effect (influence) that
@@ -59,13 +59,14 @@ $$
 i.e. $\hat{\theta}_{-z}$ are the model parameters that minimize the total loss
 when $z$ is not in the training dataset.
 
-In order to compute the impact of each training point on the model, we would need
-to calculate $\hat{\theta}_{-z}$ for each $z$ in the training dataset, thus
+In order to compute the impact of each training point on the model, we would
+need to calculate $\hat{\theta}_{-z}$ for each $z$ in the training dataset, thus
 re-training the model at least ~$n$ times (more if model training is
 stochastic). This is computationally very expensive, especially for big neural
 networks. To circumvent this problem, we can just calculate a first order
 approximation of $\hat{\theta}$. This can be done through single backpropagation
 and without re-training the full model.
+
 
 Approximating the influence of a point
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -77,7 +78,7 @@ $$
 \frac{1}{n}\sum_{i=1}^n L(z_i, \theta) + \epsilon L(z, \theta),
 $$
 
-which is the optimal $\hat{\theta}$ if we were to up-weigh $z$ by an amount
+which is the optimal $\hat{\theta}$ if we were to up-weight $z$ by an amount
 $\epsilon \gt 0$.
 
 From a classical result (a simple derivation is available in Appendix A of
@@ -129,8 +130,8 @@ backpropagation passes.
 
 Perturbation definition of the influence score
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-How would the loss of the model change if, instead of up-weighing an individual
-point $z$, we were to up-weigh only a single feature of that point? Given $z =
+How would the loss of the model change if, instead of up-weighting an individual
+point $z$, we were to up-weight only a single feature of that point? Given $z =
 (x, y)$, we can define $z_{\delta} = (x+\delta, y)$, where $\delta$ is a vector
 of zeros except for a 1 in the position of the feature we want to up-weigh. In
 order to approximate the effect of modifying a single feature of a single point
@@ -138,11 +139,12 @@ on the model score we can define
 
 $$
 \hat{\theta}_{\epsilon, z_{\delta} ,-z} = \arg \min_\theta
-\frac{1}{n}\sum_{i=1}^n L(z_{i}, \theta) + \epsilon L(z_{\delta}, \theta) - \epsilon L(z, \theta),
+\frac{1}{n}\sum_{i=1}^n L(z_{i}, \theta) + \epsilon L(z_{\delta}, \theta) -
+\epsilon L(z, \theta),
 $$
 
-Similarly to what was done above, we up-weigh point $z_{\delta}$, but
-then we also remove the up-weighing for all the features that are not modified
+Similarly to what was done above, we up-weight point $z_{\delta}$, but
+then we also remove the up-weighting for all the features that are not modified
 by $\delta$. From the calculations in ???, it is then easy to see that
 
 $$
@@ -184,24 +186,6 @@ nonetheless be used to build training-set attacks, as done in
 :footcite:t:`koh_understanding_2017`.
 
 
-Inverting the Hessian: direct and approximate methods
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-As discussed in `The Influence Function`_, in
-machine learning training rarely converges to a global minimum of the loss.
-Despite good apparent convergence, $\hat{\theta}$ might be located in a region
-with flat curvature or close to a saddle point. In particular, the Hessian might
-have vanishing eigenvalues making its direct inversion impossible.
-
-To circumvent this problem, many approximate methods are available. The simplest
-adds a small *hessian perturbation term*, i.e. we invert
-$H_{\hat{\theta}} + \lambda \mathbb{I}$, with $\mathbb{I}$ being the identity
-matrix. This standard trick ensures that the eigenvalues of $H_{\hat{\theta}}$
-are bounded away from zero and therefore the matrix is invertible. In order for
-this regularization not to corrupt the outcome too much, the parameter $\lambda$
-should be as small as possible while still allowing a reliable inversion of
-$H_{\hat{\theta}} + \lambda \mathbb{I}$.
-
 Computing influences
 --------------------
 
@@ -242,11 +226,39 @@ allowed values.
    ... )
 
 
-Perturbation influences
------------------------
+Additionally, and as discussed in `The Influence Function`_, in
+machine learning training rarely converges to a global minimum of the loss.
+Despite good apparent convergence, $\hat{\theta}$ might be located in a region
+with flat curvature or close to a saddle point. In particular, the Hessian might
+have vanishing eigenvalues making its direct inversion impossible.
 
-As mentioned, the method of empirical influence computation can be selected in
-:func:`~pydvl.influence.general.compute_influences` with `influence_type`:
+To circumvent this problem, many approximate methods are available. The simplest
+adds a small *hessian perturbation term*, i.e. we invert
+$H_{\hat{\theta}} + \lambda \mathbb{I}$, with $\mathbb{I}$ being the identity
+matrix. This standard trick ensures that the eigenvalues of $H_{\hat{\theta}}$
+are bounded away from zero and therefore the matrix is invertible. In order for
+this regularization not to corrupt the outcome too much, the parameter $\lambda$
+should be as small as possible while still allowing a reliable inversion of
+$H_{\hat{\theta}} + \lambda \mathbb{I}$.
+
+.. code-block:: python
+
+   >>> from pydvl.influence import compute_influences
+   >>> compute_influences(
+   ...    model,
+   ...    training_data_loader,
+   ...    test_data_loader,
+   ...    inversion_method="cg",
+   ...    hessian_regularization=1e-4
+   ... )
+
+
+Perturbation influences
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The method of empirical influence computation can be selected in
+:func:`~pydvl.influence.general.compute_influences` with the parameter
+`influence_type`:
 
 .. code-block:: python
 
