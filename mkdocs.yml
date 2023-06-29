@@ -7,6 +7,9 @@ copyright: "Copyright &copy; AppliedAI Institute gGmbH"
 watch:
   - src/pydvl
 
+hooks:
+  - build_scripts/copy_notebooks.py
+
 plugins:
   - autorefs
   - search
@@ -14,6 +17,13 @@ plugins:
   - alias:
       use_relative_link: true
       verbose: true
+  - gen-files:
+      scripts:
+        - build_scripts/generate_api_docs.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - mkdocs-jupyter:
+      include: ["docs/examples/*.ipynb"]
   - mkdocstrings:
       enable_inventory: true
       handlers:
@@ -29,27 +39,20 @@ plugins:
             line_length: 80
             show_bases: true
             members_order: source
-            # separate_signature: true
+            show_submodules: false
             show_signature_annotations: false
             signature_crossrefs: true
-            # show_if_no_docstring: true
             merge_init_into_class: true
             docstring_options:
               ignore_init_summary: true
-            # filters: [] # include all members
-  - gen-files:
-      scripts:
-        - build_scripts/generate_api_docs.py
-  - literate-nav:
-      nav_file: SUMMARY.md
   - bibtex:
       bib_file: "docs/assets/pydvl.bib"
       csl_file: "docs/assets/elsevier-harvard.csl"
       cite_inline: true
-  #- git-revision-date-localized:
-  #    enable_creation_date: true
-  #    type: iso_date
-  #    fallback_to_build_date: true
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: iso_date
+      fallback_to_build_date: true
 
 theme:
   name: material
@@ -62,12 +65,11 @@ theme:
     - search.suggest
     - search.highlight
     - toc.follow
-    # - navigation.tabs
-    # - navigation.tabs.sticky
+    - navigation.top
     - navigation.instant
     - navigation.sections
+    - navigation.path
     - navigation.tracking
-    # - navigation.top
     - navigation.footer
     - content.code.copy
     - content.code.annotate
