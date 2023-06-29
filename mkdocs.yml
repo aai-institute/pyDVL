@@ -24,6 +24,11 @@ plugins:
       nav_file: SUMMARY.md
   - mkdocs-jupyter:
       include: ["docs/examples/*.ipynb"]
+      remove_tag_config:
+        remove_cell_tags:
+          - hide
+        remove_input_tags:
+          - hide-input
   - mkdocstrings:
       enable_inventory: true
       handlers:

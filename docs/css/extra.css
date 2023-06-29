@@ -76,3 +76,28 @@ a.autorefs-external:hover::after {
 .highlight .gp, .highlight .go { /* Generic.Prompt, Generic.Output */
     user-select: none;
 }
+
+/* Remove cell input and output prompt */
+.jp-InputArea-prompt, .jp-OutputArea-prompt {
+    display: none !important;
+}
+
+/* Alert boxes */
+.alert {
+  border-radius: 0.375rem;
+  padding: 1rem;
+  position: relative;
+  margin: auto;
+  text-align: center;
+}
+
+.alert-info {
+  background: var(--md-typeset-ins-color);
+  border: 0.1rem solid var(--md-primary-fg-color);
+}
+
+.alert-warning {
+  background: var(--md-warning-bg-color);
+  border: 0.1rem solid var(--md-primary-fg-color);
+  color: black;
+}
