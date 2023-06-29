@@ -730,7 +730,5 @@ nature of every (non-trivial) ML problem can have an effect:
   facilities in pyDVL for cross-validating the utility (note that this would
   require cross-validating the whole value computation).
 
-References
-==========
 
 .. footbibliography::
