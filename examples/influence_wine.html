@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="API Reference" href="../pydvl/index.html" /><link rel="prev" title="Influence functions for data mislabeling" href="influence_synthetic.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
-        <title>Influence functions and neural networks - pyDVL 0.6.2.dev0 documentation</title>
+        <title>Influence functions for outlier detection - pyDVL 0.6.2.dev0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster.custom.css" />
@@ -180,10 +180,9 @@
 <li class="toctree-l2"><a class="reference internal" href="shapley_knn_flowers.html">KNN Shapley</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shapley_utility_learning.html">Data Utility Learning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="least_core_basic.html">Least Core for Data Valuation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_imagenet.html">Influence functions for neural networks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="influence_imagenet.html#Theory-of-influence-functions-for-neural-networks">Theory of influence functions for neural networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_imagenet.html">Influence functions for image classification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Influence functions and neural networks</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Influence functions for outlier detection</a></li>
 </ul>
 </li>
 </ul>
@@ -317,10 +316,10 @@
             }
         }
     }
-</style><section id="Influence-functions-and-neural-networks">
-<h1>Influence functions and neural networks<a class="headerlink" href="#Influence-functions-and-neural-networks" title="Permalink to this heading">#</a></h1>
+</style><section id="Influence-functions-for-outlier-detection">
+<h1>Influence functions for outlier detection<a class="headerlink" href="#Influence-functions-for-outlier-detection" title="Permalink to this heading">#</a></h1>
 <p>This notebook shows how to calculate influences on a NN model using pyDVL for an arbitrary dataset, and how this can be used to find anomalous or corrupted data points.</p>
-<p>It uses the wine dataset from sklearn: given a set of 13 different input parameters regarding a particular bottle, each related to some physical property (e.g. concentration of magnesium, malic acidity, alcoholic percentage, etc), the model will need to predict to which of 3 classes the wine belongs to. For more details, please refer to the <a class="reference external" href="https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset">sklearn documentation</a>.</p>
+<p>It uses the wine dataset from sklearn: given a set of 13 different input parameters regarding a particular bottle, each related to some physical property (e.g. concentration of magnesium, malic acidity, alcoholic percentage, etc.), the model will need to predict to which of 3 classes the wine belongs to. For more details, please refer to the <a class="reference external" href="https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset">sklearn documentation</a>.</p>
 <p>Let’s start by loading the imports, the dataset and splitting it into train, validation and test sets. We will use a large test set to have a less noisy estimate of the average influence.</p>
 <section id="Imports">
 <h2>Imports<a class="headerlink" href="#Imports" title="Permalink to this heading">#</a></h2>
@@ -788,7 +787,7 @@ therefore give quantitative and qualitatively different results if not averaged 
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Influence functions and neural networks</a><ul>
+<li><a class="reference internal" href="#">Influence functions for outlier detection</a><ul>
 <li><a class="reference internal" href="#Imports">Imports</a></li>
 <li><a class="reference internal" href="#Constants">Constants</a></li>
 <li><a class="reference internal" href="#Dataset">Dataset</a></li>

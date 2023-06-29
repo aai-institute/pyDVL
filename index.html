@@ -179,10 +179,9 @@
 <li class="toctree-l2"><a class="reference internal" href="examples/shapley_knn_flowers.html">KNN Shapley</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/shapley_utility_learning.html">Data Utility Learning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/least_core_basic.html">Least Core for Data Valuation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html">Influence functions for neural networks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html#Theory-of-influence-functions-for-neural-networks">Theory of influence functions for neural networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html">Influence functions for image classification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/influence_synthetic.html">Influence functions for data mislabeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples/influence_wine.html">Influence functions and neural networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/influence_wine.html">Influence functions for outlier detection</a></li>
 </ul>
 </li>
 </ul>
@@ -382,16 +381,19 @@ distributed caching of results.</p>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="30-data-valuation.html#problems-of-data-values">Problems of data values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="30-data-valuation.html#references">References</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="40-influence.html">Computing influence values</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="40-influence.html#influence-for-ols">Influence for OLS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="40-influence.html#exact-influences-using-the-twicedifferentiable-protocol">Exact influences using the <cite>TwiceDifferentiable</cite> protocol</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="40-influence.html#approximate-matrix-inversion">Approximate matrix inversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="40-influence.html#the-influence-function">The Influence Function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="40-influence.html#approximating-the-influence-of-a-point">Approximating the influence of a point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="40-influence.html#perturbation-definition-of-the-influence-score">Perturbation definition of the influence score</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="40-influence.html#perturbation-influences">Perturbation influences</a></li>
+<li class="toctree-l2"><a class="reference internal" href="40-influence.html#computing-influences">Computing influences</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="40-influence.html#approximate-matrix-inversion">Approximate matrix inversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="40-influence.html#perturbation-influences">Perturbation influences</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a><ul>
@@ -428,7 +430,7 @@ distributed caching of results.</p>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html">Influence functions for neural networks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html">Influence functions for image classification</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="examples/influence_imagenet.html#Imports-and-setup">Imports and setup</a></li>
 <li class="toctree-l3"><a class="reference internal" href="examples/influence_imagenet.html#Loading-and-preprocessing-the-dataset">Loading and preprocessing the dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="examples/influence_imagenet.html#Model-definition-and-training">Model definition and training</a></li>
@@ -439,12 +441,6 @@ distributed caching of results.</p>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="examples/influence_imagenet.html#Detecting-corrupted-data">Detecting corrupted data</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html#Theory-of-influence-functions-for-neural-networks">Theory of influence functions for neural networks</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="examples/influence_imagenet.html#Upweighting-points">Upweighting points</a></li>
-<li class="toctree-l3"><a class="reference internal" href="examples/influence_imagenet.html#Approximating-the-influence-of-a-point">Approximating the influence of a point</a></li>
-<li class="toctree-l3"><a class="reference internal" href="examples/influence_imagenet.html#Regularizing-the-Hessian">Regularizing the Hessian</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="examples/influence_synthetic.html">Influence functions for data mislabeling</a><ul>
@@ -458,7 +454,7 @@ distributed caching of results.</p>
 <li class="toctree-l3"><a class="reference internal" href="examples/influence_synthetic.html#Appendix:-Calculating-the-decision-boundary">Appendix: Calculating the decision boundary</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="examples/influence_wine.html">Influence functions and neural networks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/influence_wine.html">Influence functions for outlier detection</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Imports">Imports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Constants">Constants</a></li>
 <li class="toctree-l3"><a class="reference internal" href="examples/influence_wine.html#Dataset">Dataset</a></li>
