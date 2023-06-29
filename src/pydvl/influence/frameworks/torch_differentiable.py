@@ -71,7 +71,7 @@ def solve_linear(
     all_y = cat(all_y)
     matrix = model.hessian(
         all_x, all_y, progress=progress
-    ) + hessian_perturbation * identity_tensor(model.num_params)
+    ) + hessian_perturbation * identity_tensor(model.num_params, device=model.device)
     return torch.linalg.solve(matrix, b.T).T
 
 
@@ -154,6 +154,9 @@ def solve_cg(
     optimal = False
 
     for k in range(maxiter):
+        if gamma < stopping_val:
+            optimal = True
+            break
         Ap = hvp(p).squeeze()
         alpha = gamma / torch.sum(torch.matmul(p, Ap)).item()
         x += alpha * p
@@ -162,10 +165,6 @@ def solve_cg(
         beta = gamma_ / gamma
         gamma = gamma_
         p = r + beta * p
-
-        if gamma < stopping_val:
-            optimal = True
-            break
 
     info = {"niter": k, "optimal": optimal}
     return x, info
@@ -274,8 +273,8 @@ def einsum(equation, *operands) -> torch.Tensor:
     return torch.einsum(equation, *operands)
 
 
-def identity_tensor(dim: int) -> torch.Tensor:
-    return torch.eye(dim, dim)
+def identity_tensor(dim: int, **kwargs) -> torch.Tensor:
+    return torch.eye(dim, dim, **kwargs)
 
 
 def mvp(
@@ -317,7 +316,9 @@ def mvp(
     return mvp.detach()  # type: ignore
 
 
-class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor, nn.Module]):
+class TorchTwiceDifferentiable(
+    TwiceDifferentiable[torch.Tensor, nn.Module, torch.device]
+):
     def __init__(
         self,
         model: nn.Module,

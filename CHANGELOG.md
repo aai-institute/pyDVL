@@ -4,6 +4,8 @@
 
 - Fix adding valuation results with overlapping indices and different lengths
   [PR #370](https://github.com/appliedAI-Initiative/pyDVL/pull/370)
+- Fixed bugs in conjugate gradient and `linear_solve`
+  [PR #358](https://github.com/appliedAI-Initiative/pyDVL/pull/358)
 - Major changes to IF interface and functionality
   [PR #278](https://github.com/appliedAI-Initiative/pyDVL/pull/278)
 - **New Method**: Implements solving the hessian equation via spectral low-rank approximation
