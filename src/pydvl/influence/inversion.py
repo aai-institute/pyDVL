@@ -32,7 +32,7 @@ class InversionMethod(str, Enum):
 
 def solve_hvp(
     inversion_method: InversionMethod,
-    model: TwiceDifferentiable[TensorType, ModelType],
+    model: TwiceDifferentiable,
     training_data: DataLoaderType,
     b: TensorType,
     *,

@@ -32,7 +32,7 @@ class InfluenceType(str, Enum):
 
 
 def compute_influence_factors(
-    model: TwiceDifferentiable[TensorType, ModelType],
+    model: TwiceDifferentiable,
     training_data: DataLoaderType,
     test_data: DataLoaderType,
     inversion_method: InversionMethod,
@@ -82,7 +82,7 @@ def compute_influence_factors(
 
 
 def compute_influences_up(
-    model: TwiceDifferentiable[TensorType, ModelType],
+    model: TwiceDifferentiable,
     input_data: DataLoaderType,
     influence_factors: TensorType,
     *,
@@ -115,7 +115,7 @@ def compute_influences_up(
 
 
 def compute_influences_pert(
-    model: TwiceDifferentiable[TensorType, ModelType],
+    model: TwiceDifferentiable,
     input_data: DataLoaderType,
     influence_factors: TensorType,
     *,
@@ -165,7 +165,7 @@ influence_type_registry = {
 
 
 def compute_influences(
-    differentiable_model: TwiceDifferentiable[TensorType, ModelType],
+    differentiable_model: TwiceDifferentiable,
     training_data: DataLoaderType,
     *,
     test_data: Optional[DataLoaderType] = None,
