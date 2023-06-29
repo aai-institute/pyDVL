@@ -6,6 +6,8 @@
   [PR #370](https://github.com/appliedAI-Initiative/pyDVL/pull/370)
 - Fixed bugs in conjugate gradient and `linear_solve`
   [PR #358](https://github.com/appliedAI-Initiative/pyDVL/pull/358)
+- Improvements to IF documentation
+  [PR #371](https://github.com/appliedAI-Initiative/pyDVL/pull/371)
 - Major changes to IF interface and functionality
   [PR #278](https://github.com/appliedAI-Initiative/pyDVL/pull/278)
 
