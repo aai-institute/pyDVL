@@ -16,8 +16,8 @@ Computing influence values
     - Explain how the methods differ
     - Add example for ``TwiceDifferentiable``
 
-The influence function is a method to quantify the effect (influence) that each
-training point has on the parameters of a model, and by extension on any
+The influence function (IF) is a method to quantify the effect (influence) that
+each training point has on the parameters of a model, and by extension on any
 function thereof. In particular, it is possible to estimate how much each
 training sample affects the error on a test point, making the IF really useful
 for understanding and debugging models. It is in a sense similar to, and
@@ -31,23 +31,20 @@ The Influence Function
 -----------------------
 
 First introduced in the context of robust statistics in
-:footcite:t:`hampel1974influence` the IF was popularized in machine learning
-with the work :footcite:t:`koh_understanding_2017`.
+:footcite:t:`hampel1974influence`, the IF was popularized in the context of
+machine learning in :footcite:t:`koh_understanding_2017`. Following their
+formulation, consider an input space $\mathcal{X}$ (e.g. images) and an output
+space $\mathcal{Y}$ (e.g. labels). Let's take $z_i = (x_i, y_i)$, for $i \in
+\{1,...,n\}$ to be the $i$-th training point, and $\theta$ to be the
+(potentially highly) multi-dimensional parameters of a model (e.g. $\theta$ is a
+big array with all of a neural network's parameters, including biases, batch
+normalizations and/or dropout rates). We will denote with $L(z, \theta)$ the
+loss of the model for point $z$ when the parameters are $\theta.$
 
-Following the formulation of :footcite:t:`koh_understanding_2017`, consider an
-input space $\mathcal{X}$ (e.g. images) and an output space $\mathcal{Y}$ (e.g.
-labels). Let's take $z_i = (x_i, y_i)$, for $i \in \{1,...,n\}$ to be the $i$-th
-training point, and $\theta$ to be the (potentially highly) multi-dimensional
-parameters of a model (e.g. $\theta$ is a big array with all of a neural network's
-parameters, including biases, batch normalizations and/or dropout rates).
-We will indicate with $L(z, \theta)$ the loss of the model for point $z$ when
-the parameters are $\theta$.
+To train a model, we typically minimize the loss over all $z_i$, i.e.
+the optimal parameters are
 
-Upon training the model, we typically minimize the loss over all $z_i$, i.e.
-the optimal parameters are calculated with (stochastic) gradient descent on the
-following expression:
-
-$$ \hat{\theta} = \arg \min_\theta \frac{1}{n}\sum_{i=1}^n L(z_i, \theta). $$
+$$\hat{\theta} = \arg \min_\theta \sum_{i=1}^n L(z_i, \theta).$$
 
 In practice, lack of convexity means that one doesn't really obtain the
 minimizer of the loss, and the training is stopped when the validation loss
@@ -55,7 +52,9 @@ stops decreasing.
 
 For notational convenience, let's define
 
-$$ \hat{\theta}_{-z} = \arg \min_\theta \frac{1}{n}\sum_{z_i \ne z} L(z_i, \theta)\ , $$
+$$
+\hat{\theta}_{-z} = \arg \min_\theta \sum_{z_i \ne z} L(z_i, \theta),
+$$
 
 i.e. $\hat{\theta}_{-z}$ are the model parameters that minimize the total loss
 when $z$ is not in the training dataset.
@@ -73,7 +72,8 @@ Approximating the influence of a point
 
 Let's define
 
-$$\hat{\theta}_{\epsilon, z} = \arg \min_\theta
+$$
+\hat{\theta}_{\epsilon, z} = \arg \min_\theta
 \frac{1}{n}\sum_{i=1}^n L(z_i, \theta) + \epsilon L(z, \theta),
 $$
 
@@ -101,8 +101,8 @@ We will define the influence of training point $z$ on test point
 $z_{\text{test}}$ as
 
 $$
-\mathcal{I}(z, z\_{\text{test}}) =  L(z\_{\text{test}}, \hat{\theta}_{-z}) -
-L(z\_{\text{test}}, \hat{\theta}).
+\mathcal{I}(z, z_{\text{test}}) =  L(z_{\text{test}}, \hat{\theta}_{-z}) -
+L(z_{\text{test}}, \hat{\theta}).
 $$
 
 Notice that $\mathcal{I}$ is higher for points $z$ which positively impact the
@@ -110,16 +110,16 @@ model score, since the loss is higher when they are excluded from training. In
 practice, one needs to rely on the following infinitesimal approximation:
 
 $$
-\mathcal{I}_{up}(z, z\_{\text{test}}) = - \frac{d L(z\_{\text{test}},
+\mathcal{I}_{up}(z, z_{\text{test}}) = - \frac{d L(z_{\text{test}},
 \hat{\theta}_{\epsilon, z})}{d \epsilon} \Big|_{\epsilon=0}
 $$
 
 Using the chain rule and the results calculated above, we thus have:
 
 $$
-\mathcal{I}_{up}(z, z\_{\text{test}}) = - \nabla_\theta L(z\_{\text{test}},
+\mathcal{I}_{up}(z, z_{\text{test}}) = - \nabla_\theta L(z_{\text{test}},
 \hat{\theta})^\top \ \frac{d \hat{\theta}_{\epsilon, z}}{d \epsilon}
-\Big|_{\epsilon=0} = \nabla_\theta L(z\_{\text{test}}, \hat{\theta})^\top \
+\Big|_{\epsilon=0} = \nabla_\theta L(z_{\text{test}}, \hat{\theta})^\top \
 H_{\hat{\theta}}^{-1} \ \nabla_\theta L(z, \hat{\theta})
 $$
 
@@ -137,23 +137,23 @@ order to approximate the effect of modifying a single feature of a single point
 on the model score we can define
 
 $$
-\hat{\theta}_{\epsilon, z\_{\delta} ,-z} = \arg \min_\theta
-\frac{1}{n}\sum_{i=1}^n L(z\_i, \theta) + \epsilon L(z\_{\delta}, \theta) - \epsilon L(z, \theta),
+\hat{\theta}_{\epsilon, z_{\delta} ,-z} = \arg \min_\theta
+\frac{1}{n}\sum_{i=1}^n L(z_{i}, \theta) + \epsilon L(z_{\delta}, \theta) - \epsilon L(z, \theta),
 $$
 
-Similarly to what was done above, we up-weigh point $z\_{\delta}$, but
+Similarly to what was done above, we up-weigh point $z_{\delta}$, but
 then we also remove the up-weighing for all the features that are not modified
 by $\delta$. From the calculations in ???, it is then easy to see that
 
 $$
-\frac{d \ \hat{\theta}_{\epsilon, z\_{\delta} ,-z}}{d \epsilon} \Big|_{\epsilon=0}
-= -H_{\hat{\theta}}^{-1} \nabla_\theta \Big( L(z\_\delta, \hat{\theta}) - L(z, \hat{\theta}) \Big)
+\frac{d \ \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon} \Big|_{\epsilon=0}
+= -H_{\hat{\theta}}^{-1} \nabla_\theta \Big( L(z_{\delta}, \hat{\theta}) - L(z, \hat{\theta}) \Big)
 $$
 
 and if the feature space is continuous and as $\delta \to 0$ we can write
 
 $$
-\frac{d \ \hat{\theta}_{\epsilon, z\_{\delta} ,-z}}{d \epsilon} \Big|_{\epsilon=0}
+\frac{d \ \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon} \Big|_{\epsilon=0}
 = -H_{\hat{\theta}}^{-1} \ \nabla_x \nabla_\theta L(z, \hat{\theta}) \delta + \mathcal{o}(\delta)
 $$
 
@@ -161,16 +161,16 @@ The influence of each feature of $z$ on the loss of the model can therefore be
 estimated through the following quantity:
 
 $$
-\mathcal{I}_{pert}(z, z\_{\text{test}}) = - \lim_{\delta \to 0} \ \frac{1}{\delta} \frac{d L(z\_{\text{test}},
-\hat{\theta}_{\epsilon, \ z\_{\delta}, \ -z})}{d \epsilon} \Big|_{\epsilon=0}
+\mathcal{I}_{pert}(z, z_{\text{test}}) = - \lim_{\delta \to 0} \ \frac{1}{\delta} \frac{d L(z_{\text{test}},
+\hat{\theta}_{\epsilon, \ z_{\delta}, \ -z})}{d \epsilon} \Big|_{\epsilon=0}
 $$
 
 which, using the chain rule and the results calculated above, is equal to
 
 $$
-\mathcal{I}_{pert}(z, z\_{\text{test}}) = - \nabla_\theta L(z\_{\text{test}},
-\hat{\theta})^\top \ \frac{d \hat{\theta}_{\epsilon, z\_{\delta} ,-z}}{d \epsilon}
-\Big|_{\epsilon=0} = \nabla_\theta L(z\_{\text{test}}, \hat{\theta})^\top \
+\mathcal{I}_{pert}(z, z_{\text{test}}) = - \nabla_\theta L(z_{\text{test}},
+\hat{\theta})^\top \ \frac{d \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon}
+\Big|_{\epsilon=0} = \nabla_\theta L(z_{\text{test}}, \hat{\theta})^\top \
 H_{\hat{\theta}}^{-1} \ \nabla_x \nabla_\theta L(z, \hat{\theta})
 $$
 
@@ -264,3 +264,6 @@ As mentioned, the method of empirical influence computation can be selected in
    ...    y_test,
    ...    influence_type="perturbation"
    ... )
+
+
+.. footbibliography::
