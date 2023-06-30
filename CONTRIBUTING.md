@@ -147,14 +147,27 @@ all examples of boilerplate code irrelevant to a reader interested in pyDVL's
 functionality. For this reason we choose to isolate this code into separate
 cells which are then hidden in the documentation.
 
-In order to do this, cells are marked with metadata understood by the sphinx
-plugin `nbpshinx`, namely adding the following to the relevant cells:
+In order to do this, cells are marked with tags understood by the mkdocs
+plugin [`mkdocs-jupyter`](https://github.com/danielfrg/mkdocs-jupyter#readme),
+namely adding the following to the relevant cells:
 
 ```yaml
-metadata: {
-  "nbphinx": "hidden"
-}
+"tags": [
+  "hide"
+]
 ```
+
+To hide the cell's input and output.
+
+Or:
+
+```yaml
+"tags": [
+  "hide-input"
+]
+```
+
+To only hide the input 
 
 It is important to leave a warning at the top of the document to avoid confusion.
 Examples for hidden imports and plots are available in the notebooks, e.g. in
@@ -164,24 +177,10 @@ Examples for hidden imports and plots are available in the notebooks, e.g. in
 ## Documentation
 
 API documentation and examples from notebooks are built with
-[mkdocs](https://) by tox. Doctests are run during this step.
-In order to construct the API documentation, tox calls a helper script that
-builds `.md` files from docstrings and templates. It can be invoked manually
-with:
+[mkdocs](https://www.mkdocs.org/) by tox.
 
-```bash
-python build_scripts/generate_api_docs.py
-```
-
-See the documentation inside the script for more details. Notebooks are an
-integral part of the documentation as well, please read
+Notebooks are an integral part of the documentation as well, please read
 [the section on notebooks](#notebooks) above.
-
-It is important to note that sphinx does not listen to changes in the source
-directory. If you want live updating of the auto-generated documentation (i.e.
-any rst files which are not manually created), you can use a file watcher.
-This is not part of the development setup of pyDVL (yet! PRs welcome), but
-modern IDEs provide functionality for this.
 
 Use the **docs** tox environment to build the documentation the same way it is
 done in CI:
@@ -197,8 +196,8 @@ documentation on changes to the `docs` folder:
 tox -e docs-dev
 ```
 
-**Again:** this only rebuilds on changes to `.rst` files and notebooks inside
-`docs`.
+This will rebuild the documentation on changes to `.md` files inside `docs`,
+notebooks and python files.
 
 ### Using bibliography
 
