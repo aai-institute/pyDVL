@@ -9,6 +9,7 @@ watch:
 
 hooks:
   - build_scripts/copy_notebooks.py
+  - build_scripts/copy_changelog.py
 
 plugins:
   - mike
