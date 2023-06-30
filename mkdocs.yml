@@ -11,6 +11,7 @@ hooks:
   - build_scripts/copy_notebooks.py
 
 plugins:
+  - mike
   - autorefs
   - search
   - section-index
@@ -103,6 +104,9 @@ extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 extra:
+  version:
+    provider: mike
+    default: stable
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/appliedAI-Initiative/pyDVL
