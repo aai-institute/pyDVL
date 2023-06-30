@@ -77,7 +77,7 @@ jobs:
       - name: Deploy Docs
         if: ${{ github.ref == 'refs/heads/develop' }}
         run: |
-          export CURRENT_VERSION=$(python setup.py --version --quiet | awk -F. '{print $1"."$2}')
+          export CURRENT_VERSION=$(python setup.py --version --quiet | awk -F. '{print $1"."$2"."$3}')
           export ALIAS=stable
           tox -e docs-deploy
       - name: Build and publish to PyPI
