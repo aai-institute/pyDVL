@@ -64,12 +64,6 @@ jobs:
         path: .tox
     - name: Build Docs
       run: tox -e docs
-    - name: Save built docs
-      uses: actions/upload-artifact@v3
-      with:
-        name: docs
-        path: ./docs/_build
-        retention-days: 1
   base-tests:
     strategy:
       matrix:
@@ -122,19 +116,18 @@ jobs:
         with:
           key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini') }}
           path: .tox
-      - name: Download built docs
-        uses: actions/download-artifact@v3
-        with:
-          name: docs
-          path: ./docs_build
-      - name: Deploy Docs
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Configure Git
         if: ${{ github.ref == 'refs/heads/develop' }}
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs_build/
-          user_name: ${{ env.GITHUB_BOT_USERNAME }}
-          user_email: ${{ env.GITHUB_BOT_EMAIL }}
+        run: |
+          git fetch origin gh-pages --depth=1
+          git config --local user.email ${{ env.GITHUB_BOT_EMAIL }}
+          git config --local user.name ${{ env.GITHUB_BOT_USERNAME }}
+      - name: Deploy Docs
+        if: ${{ github.ref == 'refs/heads/develop' }}
+        run: |
+          export CURRENT_VERSION=$(python setup.py --version --quiet | awk -F. '{print $1"."$2}')
+          export ALIAS=latest
+          tox -e docs-deploy
       - name: Build and publish to TestPyPI
         if: ${{ github.ref == 'refs/heads/develop' }}
         env:
@@ -142,7 +135,6 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
         run: |
           set -x
-          export CURRENT_VERSION=$(python setup.py --version)
           export BUILD_NUMBER=$GITHUB_RUN_NUMBER
           tox -e bump-dev-version
           tox -e publish-test-package
