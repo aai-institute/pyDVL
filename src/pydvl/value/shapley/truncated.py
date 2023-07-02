@@ -169,6 +169,7 @@ class BootstrapTruncation(TruncationPolicy):
     target=True,
     deprecated_in="0.6.2",
     remove_in="0.7.0",
+    args_mapping=dict(coordinator_update_period=None, worker_update_period=None),
 )
 def truncated_montecarlo_shapley(
     u: Utility,
@@ -197,11 +198,5 @@ def truncated_montecarlo_shapley(
     from pydvl.value.shapley.montecarlo import permutation_montecarlo_shapley
 
     return permutation_montecarlo_shapley(
-        u,
-        done=done,
-        truncation=truncation,
-        config=config,
-        n_jobs=n_jobs,
-        coordinator_update_period=coordinator_update_period,
-        worker_update_period=worker_update_period,
-    )
+        u, done=done, truncation=truncation, config=config, n_jobs=n_jobs
+    )  # type: ignore
