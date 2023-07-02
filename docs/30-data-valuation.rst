@@ -351,23 +351,26 @@ The method names ``appro_shapley``, ``permutation_montecarlo`` and
 ``truncated_montecarlo`` are all synonyms. The
 :class:`~pydvl.value.shapley.truncated.TruncationPolicy` for the iteration over
 a single permutation is configured with the argument ``truncation`` of
-:func:`~pydvl.value.shapley.common.compute_shapley_values`. See all derived classes for
-available options.
+:func:`~pydvl.value.shapley.common.compute_shapley_values`. The implementation
+of the methods described in the original paper are in
+:class:`~pydvl.value.shapley.truncated.RelativeTruncation` and
+:class:`~`
 
 
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_shapley_values
+   from pydvl.value import *
 
    model = ...
    data = Dataset(...)
    utility = Utility(model, data)
+   # Truncated Monte Carlo Shapley, configured as in the paper
    values = compute_shapley_values(
        u=utility,
        mode="permutation_montecarlo",
-       done=MaxUpdates(1000),
-       truncation=
+       done=MaxUpdates(1000) | HistoryDeviation(n_steps=100, rtol=0.05),
+       truncation=RelativeTruncation(u, rtol=0.01)
    )
 
 
