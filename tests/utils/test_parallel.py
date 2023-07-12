@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
-from pydvl.utils.parallel.backend import available_cpus, effective_n_jobs
+from pydvl.utils.parallel.backend import effective_n_jobs
 from pydvl.utils.parallel.futures import init_executor
 
 
