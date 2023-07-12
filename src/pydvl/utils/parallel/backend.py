@@ -18,6 +18,7 @@ import joblib
 import ray
 from joblib import Parallel, delayed
 from ray import ObjectRef
+from ray.util.joblib import register_ray
 
 from ..config import ParallelConfig
 
@@ -206,6 +207,8 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         self.config = config_dict
         if not ray.is_initialized():
             ray.init(**self.config)
+        # Register ray joblib backend
+        register_ray()
 
     def get(
         self,

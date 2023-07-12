@@ -1,9 +1,18 @@
 from itertools import accumulate, repeat
-from typing import Callable, Dict, Generic, List, Optional, Sequence, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Sequence,
+    TypeVar,
+    Union,
+)
 
 from joblib import Parallel, delayed
 from numpy.typing import NDArray
-from ray.util.joblib import register_ray
 
 from ..config import ParallelConfig
 from ..types import maybe_add_argument
@@ -13,13 +22,13 @@ __all__ = ["MapReduceJob"]
 
 T = TypeVar("T")
 R = TypeVar("R")
-Identity = lambda x, *args, **kwargs: x
 
 MapFunction = Callable[..., R]
 ReduceFunction = Callable[[List[R]], R]
 
 
-register_ray()
+def identity(x: T, *args: Any, **kwargs: Any) -> T:
+    return x
 
 
 class MapReduceJob(Generic[T, R]):
@@ -41,14 +50,6 @@ class MapReduceJob(Generic[T, R]):
     :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig`
         with cluster address, number of cpus, etc.
     :param n_jobs: Number of parallel jobs to run. Does not accept 0
-    :param timeout: Amount of time in seconds to wait for remote results before
-        ... TODO
-    :param max_parallel_tasks: Maximum number of jobs to start in parallel. Any
-        tasks above this number won't be submitted to the backend before some
-        are done. This is to avoid swamping the work queue. Note that tasks have
-        a low memory footprint, so this is probably not a big concern, except
-        in the case of an infinite stream (not the case for MapReduceJob). See
-        https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html
 
     :Examples:
 
@@ -83,14 +84,13 @@ class MapReduceJob(Generic[T, R]):
         self,
         inputs: Union[Sequence[T], T],
         map_func: MapFunction[R],
-        reduce_func: Optional[ReduceFunction[R]] = None,
+        reduce_func: ReduceFunction[R] = identity,
         map_kwargs: Optional[Dict] = None,
         reduce_kwargs: Optional[Dict] = None,
         config: ParallelConfig = ParallelConfig(),
         *,
         n_jobs: int = -1,
         timeout: Optional[float] = None,
-        max_parallel_tasks: Optional[int] = None,
     ):
         self.config = config
         parallel_backend = init_parallel_backend(self.config)
@@ -98,16 +98,10 @@ class MapReduceJob(Generic[T, R]):
 
         self.timeout = timeout
 
-        self._n_jobs = 1
         # This uses the setter defined below
         self.n_jobs = n_jobs
 
-        self.max_parallel_tasks = max_parallel_tasks
-
         self.inputs_ = inputs
-
-        if reduce_func is None:
-            reduce_func = Identity
 
         if map_kwargs is None:
             self.map_kwargs = dict()
