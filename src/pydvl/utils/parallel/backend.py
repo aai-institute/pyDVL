@@ -122,7 +122,7 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
     ) -> T:
         return v
 
-    def put(self, v: T, *args, **kwargs) -> Union[T]:
+    def put(self, v: T, *args, **kwargs) -> T:
         return v
 
     def wrap(self, fun: Callable, **kwargs) -> Callable:
