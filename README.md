@@ -74,6 +74,9 @@ model. We implement methods from the following papers:
   Influence Functions](http://proceedings.mlr.press/v70/koh17a.html). In
   Proceedings of the 34th International Conference on Machine Learning,
   70:1885–94. Sydney, Australia: PMLR, 2017.
+- Naman Agarwal, Brian Bullins, and Elad Hazan, [Second-Order Stochastic Optimization
+  for Machine Learning in Linear Time](https://www.jmlr.org/papers/v18/16-491.html),
+  Journal of Machine Learning Research 18 (2017): 1-40.
 
 # Installation
 

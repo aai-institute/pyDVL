@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Fix adding valuation results with overlapping indices and different lengths
+  [PR #370](https://github.com/appliedAI-Initiative/pyDVL/pull/370)
+- Fixed bugs in conjugate gradient and `linear_solve`
+  [PR #358](https://github.com/appliedAI-Initiative/pyDVL/pull/358)
+- Improvements to IF documentation
+  [PR #371](https://github.com/appliedAI-Initiative/pyDVL/pull/371)
+- Major changes to IF interface and functionality
+  [PR #278](https://github.com/appliedAI-Initiative/pyDVL/pull/278)
+
 ## 0.6.1 - 🏗 Bug fixes and small improvement
 
 - Fix parsing keyword arguments of `compute_semivalues` dispatch function

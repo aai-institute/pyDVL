@@ -553,17 +553,23 @@ class ValuationResult(
                     f"{other._names.dtype} to {self._names.dtype}"
                 )
 
-        this_names = np.empty_like(indices, dtype=object)
-        other_names = np.empty_like(indices, dtype=object)
-        this_names[this_pos] = self._names
-        other_names[other_pos] = other._names
-        both = np.where(this_pos == other_pos)
+        both_pos = np.intersect1d(this_pos, other_pos)
+
+        if len(both_pos) > 0:
+            this_names = np.empty_like(indices, dtype=object)
+            other_names = np.empty_like(indices, dtype=object)
+            this_names[this_pos] = self._names
+            other_names[other_pos] = other._names
+
+            this_shared_names = np.take(this_names, both_pos)
+            other_shared_names = np.take(other_names, both_pos)
+
+            if np.any(this_shared_names != other_shared_names):
+                raise ValueError(f"Mismatching names in ValuationResults")
+
         names = np.empty_like(indices, dtype=self._names.dtype)
         names[this_pos] = self._names
         names[other_pos] = other._names
-
-        if np.any(other_names[both] != this_names[both]):
-            raise ValueError(f"Mismatching names in ValuationResults")
 
         return ValuationResult(
             algorithm=self.algorithm or other.algorithm or "",
