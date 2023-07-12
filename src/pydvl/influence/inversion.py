@@ -3,7 +3,7 @@ Contains methods to invert the hessian vector product.
 """
 import logging
 from enum import Enum
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 from .frameworks import (
     DataLoaderType,
@@ -39,7 +39,7 @@ def solve_hvp(
     hessian_perturbation: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
-) -> TensorType:
+) -> Tuple[TensorType, Dict]:
     """
     Finds $x$ such that $Ax = b$, where $A$ is the hessian of model,
     and $b$ a vector.
@@ -58,7 +58,8 @@ def solve_hvp(
     :param progress: If True, display progress bars.
 
     :return: An array that solves the inverse problem,
-        i.e. it returns $x$ such that $Ax = b$
+        i.e. it returns $x$ such that $Ax = b$, and a dictionary containing
+        information about the inversion process.
     """
     if inversion_method == InversionMethod.Direct:
         return solve_linear(

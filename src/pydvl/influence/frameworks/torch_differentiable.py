@@ -5,7 +5,7 @@ methods to invert the Hessian vector product. These are used to calculate the
 influence of a training point on the model.
 """
 import logging
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
@@ -25,10 +25,14 @@ __all__ = [
     "as_tensor",
     "stack",
     "cat",
+    "zero_tensor",
+    "transpose_tensor",
     "einsum",
     "mvp",
 ]
 logger = logging.getLogger(__name__)
+
+TORCH_DTYPES = {"float32": torch.float32, "float64": torch.float64}
 
 
 def flatten_all(grad: torch.Tensor) -> torch.Tensor:
@@ -45,7 +49,7 @@ def solve_linear(
     *,
     hessian_perturbation: float = 0.0,
     progress: bool = False,
-) -> torch.Tensor:
+) -> Tuple[torch.Tensor, Dict[str, Any]]:
     """Given a model and training data, it finds x s.t. $Hx = b$, with $H$ being
     the model hessian.
 
@@ -56,7 +60,8 @@ def solve_linear(
     :param progress: If True, display progress bars.
 
     :return: An array that solves the inverse problem,
-        i.e. it returns $x$ such that $Hx = b$
+        i.e. it returns $x$ such that $Hx = b$, and a dictionary containing
+        information about the solution.
     """
     all_x, all_y = [], []
     for x, y in training_data:
@@ -67,7 +72,8 @@ def solve_linear(
     matrix = model.hessian(
         all_x, all_y, progress=progress
     ) + hessian_perturbation * identity_tensor(model.num_params, device=model.device)
-    return torch.linalg.solve(matrix, b.T).T
+    info = {"hessian": matrix}
+    return torch.linalg.solve(matrix, b.T).T, info
 
 
 def solve_batch_cg(
@@ -81,7 +87,7 @@ def solve_batch_cg(
     atol: float = 1e-7,
     maxiter: Optional[int] = None,
     progress: bool = False,
-) -> torch.Tensor:
+) -> Tuple[torch.Tensor, Dict[int, Dict[str, Any]]]:
     """
     Given a model and training data, it uses conjugate gradient to calculate the
     inverse of the Hessian Vector Product. More precisely, it finds x s.t. $Hx =
@@ -98,7 +104,9 @@ def solve_batch_cg(
     :param maxiter: maximum number of iterations. If None, defaults to 10*len(b)
     :param progress: If True, display progress bars.
 
-    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$.
+    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$,
+        and a dictionary containing information about the convergence of CG, one
+        entry for each line of the matrix.
     """
     total_grad_xy = 0
     total_points = 0
@@ -111,10 +119,14 @@ def solve_batch_cg(
         total_grad_xy / total_points, v, backprop_on
     ) + hessian_perturbation * v.type(torch.float64)
     batch_cg = torch.zeros_like(b)
+    info = {}
     for idx, bi in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
-        bi_cg, _ = solve_cg(reg_hvp, bi, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter)
+        bi_cg, bi_info = solve_cg(
+            reg_hvp, bi, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter
+        )
         batch_cg[idx] = bi_cg
-    return batch_cg
+        info[idx] = bi_info
+    return batch_cg, info
 
 
 def solve_cg(
@@ -134,6 +146,9 @@ def solve_cg(
     :param rtol: maximum relative tolerance of result
     :param atol: absolute tolerance of result
     :param maxiter: maximum number of iterations. If None, defaults to 10*len(b)
+
+    :return: A vector x, solution of $Ax=b$, and a dictionary containing
+        information about the convergence of CG.
     """
     if x0 is None:
         x0 = torch.clone(b)
@@ -161,7 +176,7 @@ def solve_cg(
         gamma = gamma_
         p = r + beta * p
 
-    info = {"niter": k, "optimal": optimal}
+    info = {"niter": k, "optimal": optimal, "gamma": gamma}
     return x, info
 
 
@@ -177,7 +192,7 @@ def solve_lissa(
     h0: Optional[torch.Tensor] = None,
     rtol: float = 1e-4,
     progress: bool = False,
-) -> torch.Tensor:
+) -> Tuple[torch.Tensor, Dict[str, Any]]:
     r"""
     Uses LISSA, Linear time Stochastic Second-Order Algorithm, to iteratively
     approximate the inverse Hessian. More precisely, it finds x s.t. $Hx = b$,
@@ -200,7 +215,8 @@ def solve_lissa(
     :param scale: scaling factor, defaults to 10
     :param h0: initial guess for hvp
 
-    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$.
+    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$,
+        and a dictionary containing information about the accuracy of the solution.
     """
     if h0 is None:
         h_estimate = torch.clone(b)
@@ -233,11 +249,16 @@ def solve_lissa(
         max_residual = torch.max(torch.abs(residual / h_estimate))
         if max_residual < rtol:
             break
+    mean_residual = torch.mean(torch.abs(residual / h_estimate))
     logger.info(
         f"Terminated Lissa with {max_residual*100:.2f} % max residual."
-        f" Mean residual: {torch.mean(torch.abs(residual/h_estimate))*100:.5f} %"
+        f" Mean residual: {mean_residual*100:.5f} %"
     )
-    return h_estimate / scale
+    info = {
+        "max_perc_residual": max_residual * 100,
+        "mean_perc_residual": mean_residual * 100,
+    }
+    return h_estimate / scale, info
 
 
 def as_tensor(a: Any, warn=True, **kwargs) -> torch.Tensor:
@@ -259,6 +280,19 @@ def stack(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
 def cat(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
     """Concatenates a sequence of tensors into a single torch tensor"""
     return torch.cat(a, **kwargs)
+
+
+def zero_tensor(
+    shape: Sequence[int], dtype: Union[np.dtype, torch.dtype], **kwargs
+) -> torch.Tensor:
+    """Returns a tensor of shape :attr:`shape` filled with zeros."""
+    if isinstance(dtype, np.dtype):
+        dtype = TORCH_DTYPES[str(dtype)]
+    return torch.zeros(shape, dtype=dtype, **kwargs)
+
+
+def transpose_tensor(a: torch.Tensor, dim0: int, dim1: int) -> torch.Tensor:
+    return torch.transpose(a, dim0, dim1)
 
 
 def einsum(equation, *operands) -> torch.Tensor:

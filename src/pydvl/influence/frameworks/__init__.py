@@ -25,6 +25,8 @@ try:
         solve_linear,
         solve_lissa,
         stack,
+        transpose_tensor,
+        zero_tensor,
     )
 
     TensorType = torch.Tensor
@@ -41,6 +43,8 @@ try:
             "as_tensor",
             "stack",
             "cat",
+            "zero_tensor",
+            "transpose_tensor",
             "einsum",
             "mvp",
         ]
