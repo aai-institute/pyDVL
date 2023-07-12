@@ -21,7 +21,7 @@ class ParallelConfig:
     :param logging_level: Logging level for the parallel backend's worker.
     """
 
-    backend: Literal["sequential", "joblib", "ray"] = "ray"
+    backend: Literal["sequential", "joblib", "ray"] = "joblib"
     address: Optional[Union[str, Tuple[str, int]]] = None
     n_cpus_local: Optional[int] = None
     logging_level: int = logging.WARNING
