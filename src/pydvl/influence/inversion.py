@@ -17,7 +17,7 @@ from .frameworks import (
 
 __all__ = ["solve_hvp"]
 
-from .frameworks.torch_differentiable import solve_low_rank
+from .frameworks.torch_differentiable import solve_arnoldi
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class InversionMethod(str, Enum):
     Direct = "direct"
     Cg = "cg"
     Lissa = "lissa"
-    LowRank = "low_rank"
+    Arnoldi = "arnoldi"
 
 
 def solve_hvp(
@@ -90,8 +90,8 @@ def solve_hvp(
             hessian_perturbation=hessian_perturbation,
             progress=progress,
         )
-    elif inversion_method == InversionMethod.LowRank:
-        return solve_low_rank(
+    elif inversion_method == InversionMethod.Arnoldi:
+        return solve_arnoldi(
             model,  # type: ignore # TODO the interface TwiceDifferentiable is not used properly anyhow
             training_data,
             b,

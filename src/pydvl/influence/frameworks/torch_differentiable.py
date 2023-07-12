@@ -431,7 +431,7 @@ class TorchTwiceDifferentiable(
         )
 
 
-def solve_low_rank(
+def solve_arnoldi(
     model: TorchTwiceDifferentiable,
     training_data: DataLoader,
     b: torch.Tensor,
