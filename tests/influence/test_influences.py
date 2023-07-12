@@ -97,7 +97,7 @@ def analytical_linear_influences(
         [InversionMethod.Cg, {}, 1e-1],
         [InversionMethod.Lissa, {"maxiter": 6000, "scale": 100}, 0.3],
     ],
-    ids=[inv.value for inv in InversionMethod if inv is not InversionMethod.LowRank],
+    ids=[inv.value for inv in InversionMethod if inv is not InversionMethod.Arnoldi],
 )
 def test_influence_linear_model(
     influence_type: InfluenceType,
@@ -367,7 +367,7 @@ def minimal_training(
     test_cases.values(),
     ids=test_cases.keys(),
 )
-def test_influences_nn_low_rank(
+def test_influences_arnoldi(
     nn_architecture: nn.Module,
     input_dim: Tuple[int],
     output_dim: int,
@@ -411,7 +411,7 @@ def test_influences_nn_low_rank(
         test_data=test_data_loader,
         progress=True,
         influence_type=influence_type,
-        inversion_method=InversionMethod.LowRank,
+        inversion_method=InversionMethod.Arnoldi,
         hessian_regularization=hessian_reg,
         # as the hessian of the small shallow networks is in general not low rank, so for these test cases, we choose
         # the rank estimate as high as possible
