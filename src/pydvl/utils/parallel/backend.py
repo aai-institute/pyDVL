@@ -1,7 +1,5 @@
-import atexit
 import os
 from abc import ABCMeta, abstractmethod
-from contextlib import ExitStack
 from dataclasses import asdict
 from typing import (
     Any,
@@ -18,7 +16,7 @@ from typing import (
 
 import joblib
 import ray
-from joblib import Parallel, delayed
+from joblib import delayed
 from ray import ObjectRef
 from ray.util.joblib import register_ray
 
@@ -115,11 +113,6 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
         # In joblib the levels are reversed.
         # 0 means no logging and 50 means log everything to stdout
         verbose = 50 - config_dict["logging_level"]
-        self.parallel = Parallel(n_jobs=config_dict["n_jobs"], verbose=verbose)
-        # Needed to reuse the pool of workers
-        exit_stack = ExitStack()
-        exit_stack.enter_context(self.parallel)
-        atexit.register(exit_stack.close)
 
     def get(
         self,
@@ -151,12 +144,12 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
         if n_jobs < 0:
-            if (eff_n_jobs := self.config["n_jobs"]) is not None:
-                return eff_n_jobs
-            else:
-                return joblib.effective_n_jobs(n_jobs)
+            eff_n_jobs = self.config["n_jobs"]
+            if eff_n_jobs is None:
+                eff_n_jobs = joblib.effective_n_jobs(n_jobs)
         else:
-            return n_jobs
+            eff_n_jobs = min(n_jobs, joblib.effective_n_jobs(n_jobs))
+        return eff_n_jobs
 
 
 class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
@@ -228,11 +221,11 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         )
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
+        ray_cpus = int(ray._private.state.cluster_resources()["CPU"])  # type: ignore
         if n_jobs < 0:
-            ray_cpus = int(ray._private.state.cluster_resources()["CPU"])  # type: ignore
             eff_n_jobs = ray_cpus
         else:
-            eff_n_jobs = n_jobs
+            eff_n_jobs = min(n_jobs, ray_cpus)
         return eff_n_jobs
 
 

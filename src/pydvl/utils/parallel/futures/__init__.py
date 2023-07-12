@@ -1,4 +1,4 @@
-from concurrent.futures import Executor, ThreadPoolExecutor
+from concurrent.futures import Executor
 from contextlib import contextmanager
 from typing import Generator, Optional
 
@@ -50,10 +50,7 @@ def init_executor(
         with RayExecutor(max_workers, config=config, **kwargs) as executor:
             yield executor
     elif config.backend == "joblib":
-        with get_reusable_executor(max_workers=max_workers, timeout=10800) as executor:
-            yield executor
-    elif config.backend == "sequential":
-        with ThreadPoolExecutor(1) as executor:
+        with get_reusable_executor(max_workers=max_workers, **kwargs) as executor:
             yield executor
     else:
         raise NotImplementedError(f"Unexpected parallel type {config.backend}")
