@@ -1,5 +1,7 @@
+import atexit
 import os
 from abc import ABCMeta, abstractmethod
+from contextlib import ExitStack
 from dataclasses import asdict
 from typing import (
     Any,
@@ -94,37 +96,6 @@ class BaseParallelBackend(metaclass=NoPublicConstructor):
         return f"<{self.__class__.__name__}: {self.config}>"
 
 
-class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
-    """Class used to run jobs sequentially and locally.
-
-    It shouldn't be initialized directly. You should instead call
-    :func:`~pydvl.utils.parallel.backend.init_parallel_backend`.
-
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with number of cpus
-    """
-
-    def __init__(self, config: ParallelConfig):
-        self.config = {}
-
-    def get(self, v: Any, *args, **kwargs):
-        return v
-
-    def put(self, v: Any, *args, **kwargs) -> Any:
-        return v
-
-    def wrap(self, fun: Callable, **kwargs) -> Callable:
-        """Wraps a function for sequential execution.
-
-        This is a noop and kwargs are ignored."""
-        return fun
-
-    def wait(self, v: Any, *args, **kwargs) -> Tuple[list, list]:
-        return v, []
-
-    def _effective_n_jobs(self, n_jobs: int) -> int:
-        return 1
-
-
 class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
     """Class used to wrap joblib to make it transparent to algorithms.
 
@@ -146,9 +117,9 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
         verbose = 50 - config_dict["logging_level"]
         self.parallel = Parallel(n_jobs=config_dict["n_jobs"], verbose=verbose)
         # Needed to reuse the pool of workers
-        self.parallel._managed_backend = True
-        self.parallel._calling = False
-        self.parallel._initialize_backend()
+        exit_stack = ExitStack()
+        exit_stack.enter_context(self.parallel)
+        atexit.register(exit_stack.close)
 
     def get(
         self,

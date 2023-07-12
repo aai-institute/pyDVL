@@ -14,14 +14,14 @@ class ParallelConfig:
     """Configuration for parallel computation backend.
 
     :param backend: Type of backend to use.
-        Defaults to 'ray'
+        Defaults to 'joblib'
     :param address: Address of existing remote or local cluster to use.
     :param n_cpus_local: Number of CPUs to use when creating a local ray cluster.
         This has no effect when using an existing ray cluster.
     :param logging_level: Logging level for the parallel backend's worker.
     """
 
-    backend: Literal["sequential", "joblib", "ray"] = "joblib"
+    backend: Literal["joblib", "ray"] = "joblib"
     address: Optional[Union[str, Tuple[str, int]]] = None
     n_cpus_local: Optional[int] = None
     logging_level: int = logging.WARNING

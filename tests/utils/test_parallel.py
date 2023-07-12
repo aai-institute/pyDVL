@@ -13,17 +13,12 @@ from pydvl.utils.parallel.futures import init_executor
 
 def test_effective_n_jobs(parallel_config, num_workers):
     parallel_backend = init_parallel_backend(parallel_config)
-    if parallel_config.backend == "sequential":
-        assert parallel_backend.effective_n_jobs(1) == 1
-        assert parallel_backend.effective_n_jobs(4) == 1
-        assert parallel_backend.effective_n_jobs(-1) == 1
+    assert parallel_backend.effective_n_jobs(1) == 1
+    assert parallel_backend.effective_n_jobs(4) == 4
+    if parallel_config.address is None:
+        assert parallel_backend.effective_n_jobs(-1) == num_workers
     else:
-        assert parallel_backend.effective_n_jobs(1) == 1
-        assert parallel_backend.effective_n_jobs(4) == 4
-        if parallel_config.address is None:
-            assert parallel_backend.effective_n_jobs(-1) == num_workers
-        else:
-            assert parallel_backend.effective_n_jobs(-1) == num_workers
+        assert parallel_backend.effective_n_jobs(-1) == num_workers
 
     for n_jobs in [-1, 1, 2]:
         assert parallel_backend.effective_n_jobs(n_jobs) == effective_n_jobs(
@@ -151,8 +146,8 @@ def test_map_reduce_job_partial_map_and_reduce_func(parallel_config):
 
 
 def test_wrap_function(parallel_config, num_workers):
-    if parallel_config.backend == "joblib":
-        pytest.skip()
+    if parallel_config.backend != "ray":
+        pytest.skip("Only makes sense for ray")
 
     def fun(x, **kwargs):
         return dict(x=x * x, **kwargs)
@@ -166,15 +161,14 @@ def test_wrap_function(parallel_config, num_workers):
     assert ret["x"] == 4
     assert len(ret) == 1  # Ensure that kwargs are not passed to the function
 
-    if parallel_config.backend != "sequential":
-        # Test that the function is executed in different processes
-        def get_pid():
-            time.sleep(2)  # FIXME: waiting less means fewer processes are used?!
-            return os.getpid()
+    # Test that the function is executed in different processes
+    def get_pid():
+        time.sleep(2)  # FIXME: waiting less means fewer processes are used?!
+        return os.getpid()
 
-        wrapped_func = parallel_backend.wrap(get_pid, num_cpus=1)
-        pids = parallel_backend.get([wrapped_func() for _ in range(num_workers)])
-        assert len(set(pids)) == num_workers
+    wrapped_func = parallel_backend.wrap(get_pid, num_cpus=1)
+    pids = parallel_backend.get([wrapped_func() for _ in range(num_workers)])
+    assert len(set(pids)) == num_workers
 
 
 def test_futures_executor_submit(parallel_config):
