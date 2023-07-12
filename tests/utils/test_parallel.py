@@ -9,7 +9,6 @@ import pytest
 from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
 from pydvl.utils.parallel.backend import available_cpus, effective_n_jobs
 from pydvl.utils.parallel.futures import init_executor
-from pydvl.utils.parallel.map_reduce import _get_value
 
 
 def test_effective_n_jobs(parallel_config, num_workers):
@@ -121,50 +120,14 @@ def test_map_reduce_job(map_reduce_job_and_parameters, indices, expected):
         (np.arange(10), 4, np.array_split(np.arange(10), 4)),
     ],
 )
-def test_chunkification(data, n_chunks, expected_chunks):
-    map_reduce_job = MapReduceJob([], map_func=lambda x: x)
+def test_chunkification(parallel_config, data, n_chunks, expected_chunks):
+    map_reduce_job = MapReduceJob([], map_func=lambda x: x, config=parallel_config)
     chunks = list(map_reduce_job._chunkify(data, n_chunks))
-    chunks = map_reduce_job.parallel_backend.get(chunks)
     for x, y in zip(chunks, expected_chunks):
         if not isinstance(x, np.ndarray):
             assert x == y
         else:
             assert (x == y).all()
-
-
-@pytest.mark.parametrize(
-    "max_parallel_tasks, n_finished, n_dispatched, expected_n_finished",
-    [
-        (1, 3, 6, 5),
-        (3, 3, 3, 3),
-        (10, 1, 15, 5),
-        (20, 1, 3, 1),
-    ],
-)
-def test_backpressure(
-    max_parallel_tasks, n_finished, n_dispatched, expected_n_finished
-):
-    def map_func(x):
-        import time
-
-        time.sleep(1)
-        return x
-
-    inputs_ = list(range(n_dispatched))
-
-    map_reduce_job = MapReduceJob(
-        inputs_,
-        map_func=map_func,
-        max_parallel_tasks=max_parallel_tasks,
-        timeout=10,
-    )
-
-    map_func = map_reduce_job._wrap_function(map_func)
-    jobs = [map_func(x) for x in inputs_]
-    n_finished = map_reduce_job._backpressure(
-        jobs, n_finished=n_finished, n_dispatched=n_dispatched
-    )
-    assert n_finished == expected_n_finished
 
 
 def test_map_reduce_job_partial_map_and_reduce_func(parallel_config):
@@ -187,22 +150,10 @@ def test_map_reduce_job_partial_map_and_reduce_func(parallel_config):
     assert result == 150
 
 
-@pytest.mark.parametrize(
-    "x, expected_x",
-    [
-        (None, None),
-        ([0, 1], [0, 1]),
-        (np.arange(3), np.arange(3)),
-    ],
-)
-def test_map_reduce_get_value(x, expected_x, parallel_config):
-    assert np.all(_get_value(x) == expected_x)
-    parallel_backend = init_parallel_backend(parallel_config)
-    x_id = parallel_backend.put(x)
-    assert np.all(_get_value(x_id) == expected_x)
-
-
 def test_wrap_function(parallel_config, num_workers):
+    if parallel_config.backend == "joblib":
+        pytest.skip()
+
     def fun(x, **kwargs):
         return dict(x=x * x, **kwargs)
 

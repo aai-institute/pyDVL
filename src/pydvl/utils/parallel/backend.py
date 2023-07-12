@@ -14,7 +14,9 @@ from typing import (
     Union,
 )
 
+import joblib
 import ray
+from joblib import Parallel, delayed
 from ray import ObjectRef
 
 from ..config import ParallelConfig
@@ -120,6 +122,69 @@ class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
         return 1
+
+
+class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
+    """Class used to wrap joblib to make it transparent to algorithms.
+
+    It shouldn't be initialized directly. You should instead call
+    :func:`~pydvl.utils.parallel.backend.init_parallel_backend`.
+
+    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
+        cluster address, number of cpus, etc.
+    """
+
+    def __init__(self, config: ParallelConfig):
+        config_dict = asdict(config)
+        config_dict.pop("backend")
+        n_cpus_local = config_dict.pop("n_cpus_local")
+        config_dict["n_jobs"] = n_cpus_local
+        self.config = config_dict
+        # In joblib the levels are reversed.
+        # 0 means no logging and 50 means log everything to stdout
+        verbose = 50 - config_dict["logging_level"]
+        self.parallel = Parallel(n_jobs=config_dict["n_jobs"], verbose=verbose)
+        # Needed to reuse the pool of workers
+        self.parallel._managed_backend = True
+        self.parallel._calling = False
+        self.parallel._initialize_backend()
+
+    def get(
+        self,
+        v: T,
+        *args,
+        **kwargs,
+    ) -> T:
+        return v
+
+    def put(self, v: T, *args, **kwargs) -> Union[T]:
+        return v
+
+    def wrap(self, fun: Callable, **kwargs) -> Callable:
+        """Wraps a function as a joblib delayed.
+
+        :param fun: the function to wrap
+
+        :return: The delayed function.
+        """
+        return delayed(fun)  # type: ignore
+
+    def wait(
+        self,
+        v: List[T],
+        *args,
+        **kwargs,
+    ) -> Tuple[List[T], List[T]]:
+        return v, []
+
+    def _effective_n_jobs(self, n_jobs: int) -> int:
+        if n_jobs < 0:
+            if (eff_n_jobs := self.config["n_jobs"]) is not None:
+                return eff_n_jobs
+            else:
+                return joblib.effective_n_jobs(n_jobs)
+        else:
+            return n_jobs
 
 
 class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
