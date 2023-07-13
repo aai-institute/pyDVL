@@ -14,7 +14,7 @@ from pydvl.utils.parallel.futures import init_executor
 def test_effective_n_jobs(parallel_config, num_workers):
     parallel_backend = init_parallel_backend(parallel_config)
     assert parallel_backend.effective_n_jobs(1) == 1
-    assert parallel_backend.effective_n_jobs(4) == 4
+    assert parallel_backend.effective_n_jobs(4) == min(4, num_workers)
     if parallel_config.address is None:
         assert parallel_backend.effective_n_jobs(-1) == num_workers
     else:
