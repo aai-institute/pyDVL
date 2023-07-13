@@ -90,19 +90,8 @@ class MapReduceJob(Generic[T, R]):
 
         self.inputs_ = inputs
 
-        if map_kwargs is None:
-            self.map_kwargs = dict()
-        else:
-            self.map_kwargs = {
-                k: self.parallel_backend.put(v) for k, v in map_kwargs.items()
-            }
-
-        if reduce_kwargs is None:
-            self.reduce_kwargs = dict()
-        else:
-            self.reduce_kwargs = {
-                k: self.parallel_backend.put(v) for k, v in reduce_kwargs.items()
-            }
+        self.map_kwargs = map_kwargs if map_kwargs is not None else dict()
+        self.reduce_kwargs = reduce_kwargs if reduce_kwargs is not None else dict()
 
         self._map_func = maybe_add_argument(map_func, "job_id")
         self._reduce_func = reduce_func
