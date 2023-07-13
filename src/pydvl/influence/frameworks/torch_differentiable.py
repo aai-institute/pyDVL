@@ -5,7 +5,7 @@ methods to invert the Hessian vector product. These are used to calculate the
 influence of a training point on the model.
 """
 import logging
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
@@ -15,7 +15,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
-from .twice_differentiable import TwiceDifferentiable
+from .twice_differentiable import TwiceDifferentiable, iHVPResult
 
 __all__ = [
     "TorchTwiceDifferentiable",
@@ -49,7 +49,7 @@ def solve_linear(
     *,
     hessian_perturbation: float = 0.0,
     progress: bool = False,
-) -> Tuple[torch.Tensor, Dict[str, Any]]:
+) -> iHVPResult:
     """Given a model and training data, it finds x s.t. $Hx = b$, with $H$ being
     the model hessian.
 
@@ -73,7 +73,7 @@ def solve_linear(
         all_x, all_y, progress=progress
     ) + hessian_perturbation * identity_tensor(model.num_params, device=model.device)
     info = {"hessian": matrix}
-    return torch.linalg.solve(matrix, b.T).T, info
+    return iHVPResult(x=torch.linalg.solve(matrix, b.T).T, info=info)
 
 
 def solve_batch_cg(
@@ -87,7 +87,7 @@ def solve_batch_cg(
     atol: float = 1e-7,
     maxiter: Optional[int] = None,
     progress: bool = False,
-) -> Tuple[torch.Tensor, Dict[int, Dict[str, Any]]]:
+) -> iHVPResult:
     """
     Given a model and training data, it uses conjugate gradient to calculate the
     inverse of the Hessian Vector Product. More precisely, it finds x s.t. $Hx =
@@ -121,12 +121,12 @@ def solve_batch_cg(
     batch_cg = torch.zeros_like(b)
     info = {}
     for idx, bi in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
-        bi_cg, bi_info = solve_cg(
+        batch_result = solve_cg(
             reg_hvp, bi, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter
         )
-        batch_cg[idx] = bi_cg
-        info[idx] = bi_info
-    return batch_cg, info
+        batch_cg[idx] = batch_result.x
+        info[idx] = batch_result.info
+    return iHVPResult(x=batch_cg, info=info)
 
 
 def solve_cg(
@@ -137,7 +137,7 @@ def solve_cg(
     rtol: float = 1e-7,
     atol: float = 1e-7,
     maxiter: Optional[int] = None,
-) -> Tuple[torch.Tensor, Dict[str, Any]]:
+) -> iHVPResult:
     """Conjugate gradient solver for the Hessian vector product
 
     :param hvp: a Callable Hvp, operating with tensors of size N
@@ -177,7 +177,7 @@ def solve_cg(
         p = r + beta * p
 
     info = {"niter": k, "optimal": optimal, "gamma": gamma}
-    return x, info
+    return iHVPResult(x=x, info=info)
 
 
 def solve_lissa(
@@ -192,7 +192,7 @@ def solve_lissa(
     h0: Optional[torch.Tensor] = None,
     rtol: float = 1e-4,
     progress: bool = False,
-) -> Tuple[torch.Tensor, Dict[str, Any]]:
+) -> iHVPResult:
     r"""
     Uses LISSA, Linear time Stochastic Second-Order Algorithm, to iteratively
     approximate the inverse Hessian. More precisely, it finds x s.t. $Hx = b$,
@@ -258,7 +258,7 @@ def solve_lissa(
         "max_perc_residual": max_residual * 100,
         "mean_perc_residual": mean_residual * 100,
     }
-    return h_estimate / scale, info
+    return iHVPResult(x=h_estimate / scale, info=info)
 
 
 def as_tensor(a: Any, warn=True, **kwargs) -> torch.Tensor:

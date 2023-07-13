@@ -3,13 +3,13 @@ Contains methods to invert the hessian vector product.
 """
 import logging
 from enum import Enum
-from typing import Any, Dict, Tuple
+from typing import Any
 
 from .frameworks import (
     DataLoaderType,
-    ModelType,
     TensorType,
     TwiceDifferentiable,
+    iHVPResult,
     solve_batch_cg,
     solve_linear,
     solve_lissa,
@@ -39,7 +39,7 @@ def solve_hvp(
     hessian_perturbation: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
-) -> Tuple[TensorType, Dict]:
+) -> iHVPResult:
     """
     Finds $x$ such that $Ax = b$, where $A$ is the hessian of model,
     and $b$ a vector.

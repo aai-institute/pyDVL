@@ -16,7 +16,7 @@ from .frameworks import (
     transpose_tensor,
     zero_tensor,
 )
-from .inversion import InversionMethod, solve_hvp
+from .inversion import InversionMethod, iHVPResult, solve_hvp
 
 __all__ = ["compute_influences", "InfluenceType", "compute_influence_factors"]
 
@@ -39,7 +39,7 @@ def compute_influence_factors(
     hessian_perturbation: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
-) -> Tuple[TensorType, Dict]:
+) -> iHVPResult:
     r"""
     Calculates influence factors of a model for training and test
     data. Given a test point $z_test = (x_{test}, y_{test})$, a loss
@@ -66,6 +66,7 @@ def compute_influence_factors(
     test_grads = zero_tensor(
         shape=(len(test_data.dataset), model.num_params),
         dtype=test_data.dataset[0][0].dtype,
+        device=model.device,
     )
     for batch_idx, (x_test, y_test) in enumerate(
         maybe_progress(test_data, progress, desc="Batch Test Gradients")
@@ -112,6 +113,7 @@ def compute_influences_up(
     grads = zero_tensor(
         shape=(len(input_data.dataset), model.num_params),
         dtype=input_data.dataset[0][0].dtype,
+        device=model.device,
     )
     for batch_idx, (x, y) in enumerate(
         maybe_progress(input_data, progress, desc="Batch Split Input Gradients")
@@ -151,6 +153,7 @@ def compute_influences_pert(
     all_pert_influences = zero_tensor(
         shape=(len(input_data.dataset), len(influence_factors), *input_x.shape),
         dtype=input_x.dtype,
+        device=model.device,
     )
     for batch_idx, (x, y) in enumerate(
         maybe_progress(
@@ -222,7 +225,7 @@ def compute_influences(
     if test_data is None:
         test_data = deepcopy(training_data)
 
-    influence_factors, _ = compute_influence_factors(
+    influence_factors = compute_influence_factors(
         differentiable_model,
         training_data,
         test_data,
@@ -230,7 +233,7 @@ def compute_influences(
         hessian_perturbation=hessian_regularization,
         progress=progress,
         **kwargs,
-    )
+    ).x
     compute_influence_type = influence_type_registry[influence_type]
 
     return compute_influence_type(

@@ -4,9 +4,9 @@
 
 import logging
 
-from .twice_differentiable import TwiceDifferentiable
+from .twice_differentiable import TwiceDifferentiable, iHVPResult
 
-__all__ = ["TwiceDifferentiable"]
+__all__ = ["TwiceDifferentiable", "iHVPResult"]
 logger = logging.getLogger("frameworks")
 
 try:
