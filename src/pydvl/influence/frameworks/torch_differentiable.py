@@ -69,10 +69,11 @@ def solve_linear(
         all_y.append(y)
     all_x = cat(all_x)
     all_y = cat(all_y)
-    matrix = model.hessian(
-        all_x, all_y, progress=progress
-    ) + hessian_perturbation * identity_tensor(model.num_params, device=model.device)
-    info = {"hessian": matrix}
+    hessian = model.hessian(all_x, all_y, progress=progress)
+    matrix = hessian + hessian_perturbation * identity_tensor(
+        model.num_params, device=model.device
+    )
+    info = {"hessian": hessian}
     return iHVPResult(x=torch.linalg.solve(matrix, b.T).T, info=info)
 
 
