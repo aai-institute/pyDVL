@@ -1,21 +1,11 @@
 from itertools import accumulate, repeat
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    List,
-    Optional,
-    Sequence,
-    TypeVar,
-    Union,
-)
+from typing import Any, Collection, Dict, Generic, List, Optional, TypeVar, Union
 
 from joblib import Parallel, delayed
 from numpy.typing import NDArray
 
 from ..config import ParallelConfig
-from ..types import maybe_add_argument
+from ..types import MapFunction, ReduceFunction, maybe_add_argument
 from .backend import init_parallel_backend
 
 __all__ = ["MapReduceJob"]
@@ -23,11 +13,8 @@ __all__ = ["MapReduceJob"]
 T = TypeVar("T")
 R = TypeVar("R")
 
-MapFunction = Callable[..., R]
-ReduceFunction = Callable[[List[R]], R]
 
-
-def identity(x: T, *args: Any, **kwargs: Any) -> T:
+def identity(x: Any, *args: Any, **kwargs: Any) -> Any:
     return x
 
 
@@ -82,7 +69,7 @@ class MapReduceJob(Generic[T, R]):
 
     def __init__(
         self,
-        inputs: Union[Sequence[T], T],
+        inputs: Union[Collection[T], T],
         map_func: MapFunction[R],
         reduce_func: ReduceFunction[R] = identity,
         map_kwargs: Optional[Dict] = None,
@@ -137,8 +124,8 @@ class MapReduceJob(Generic[T, R]):
         return reduce_results
 
     def _chunkify(
-        self, data: Union[NDArray[T], Sequence[T], T], n_chunks: int
-    ) -> List[Union[NDArray[T], Sequence[T], T]]:
+        self, data: Union[NDArray, Collection[T], T], n_chunks: int
+    ) -> List[Union[NDArray, Collection[T], T]]:
         """If data is a Sequence, it splits it into Sequences of size `n_chunks` for each job that we call chunks.
         If instead data is an `ObjectRef` instance, then it yields it repeatedly `n_chunks` number of times.
         """
@@ -151,7 +138,7 @@ class MapReduceJob(Generic[T, R]):
         try:
             # This is used as a check to determine whether data is iterable or not
             # if it's the former, then the value will be used to determine the chunk indices.
-            n = len(data)
+            n = len(data)  # type: ignore
         except TypeError:
             return list(repeat(data, times=n_chunks))
         else:
@@ -172,7 +159,7 @@ class MapReduceJob(Generic[T, R]):
             for start_index, end_index in zip(chunk_indices[:-1], chunk_indices[1:]):
                 if start_index >= end_index:
                     break
-                chunk = data[start_index:end_index]
+                chunk = data[start_index:end_index]  # type: ignore
                 chunks.append(chunk)
 
             return chunks

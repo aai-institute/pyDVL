@@ -144,9 +144,10 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
         if n_jobs < 0:
-            eff_n_jobs = self.config["n_jobs"]
-            if eff_n_jobs is None:
-                eff_n_jobs = joblib.effective_n_jobs(n_jobs)
+            if self.config["n_jobs"] is None:
+                eff_n_jobs: int = joblib.effective_n_jobs(n_jobs)
+            else:
+                eff_n_jobs = self.config["n_jobs"]
         else:
             eff_n_jobs = min(n_jobs, joblib.effective_n_jobs(n_jobs))
         return eff_n_jobs
