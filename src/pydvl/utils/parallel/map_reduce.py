@@ -61,10 +61,10 @@ class MapReduceJob(Generic[T, R]):
     ...     5,
     ...     map_func=lambda x: np.array([x]),
     ...     reduce_func=np.sum,
-    ...     n_jobs=4,
+    ...     n_jobs=2,
     ... )
     >>> map_reduce_job()
-    20
+    10
     """
 
     def __init__(
