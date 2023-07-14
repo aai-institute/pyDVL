@@ -19,10 +19,8 @@ Computing influence values
 The influence function (IF) is a method to quantify the effect (influence) that
 each training point has on the parameters of a model, and by extension on any
 function thereof. In particular, it is possible to estimate how much each
-training sample affects the error on a test point, making the IF really useful
-for understanding and debugging models. It is in a sense similar to, and
-sometimes used with together with valuation functions, but have are more solid
-theoretical foundation.
+training sample affects the error on a test point, making the IF useful
+for understanding and debugging models.
 
 pyDVL implements several methods for the efficient computation of the IF for
 machine learning.
@@ -133,7 +131,7 @@ Perturbation definition of the influence score
 How would the loss of the model change if, instead of up-weighting an individual
 point $z$, we were to up-weight only a single feature of that point? Given $z =
 (x, y)$, we can define $z_{\delta} = (x+\delta, y)$, where $\delta$ is a vector
-of zeros except for a 1 in the position of the feature we want to up-weigh. In
+of zeros except for a 1 in the position of the feature we want to up-weight. In
 order to approximate the effect of modifying a single feature of a single point
 on the model score we can define
 
