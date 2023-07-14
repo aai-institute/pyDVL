@@ -19,7 +19,7 @@ from .twice_differentiable import TwiceDifferentiable
 from .util import (
     LowRankProductRepresentation,
     get_hvp_function,
-    lanzcos_low_rank_hessian_approx,
+    lanzcos_low_rank_hessian_approx, flatten_tensors_to_vector, align_structure,
 )
 
 __all__ = [
@@ -482,9 +482,14 @@ def solve_arnoldi(
     """
 
     if low_rank_representation is None:
-        hessian_vector_product = get_hvp_function(
-            model.model, model.loss, training_data
-        )
+
+        raw_hvp = get_hvp_function(model.model, model.loss, training_data, use_hessian_avg=True)
+        params = dict(model.model.named_parameters())
+
+        def hessian_vector_product(x: torch.Tensor) -> torch.Tensor:
+            output = raw_hvp(align_structure(params, x))
+            return flatten_tensors_to_vector(output.values())
+
         low_rank_representation = lanzcos_low_rank_hessian_approx(
             hessian_vp=hessian_vector_product,
             matrix_shape=(model.num_params, model.num_params),
