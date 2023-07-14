@@ -5,15 +5,19 @@ import pytest
 
 torch = pytest.importorskip("torch")
 import torch.nn
-from torch.nn.functional import mse_loss
 from numpy.typing import NDArray
+from torch.nn.functional import mse_loss
 from torch.utils.data import DataLoader, TensorDataset
 
-from pydvl.influence.frameworks.util import (
+from pydvl.influence.frameworks.functional import (
+    batch_loss_function,
     get_hvp_function,
     hvp,
-    lanzcos_low_rank_hessian_approx, batch_loss_function, align_structure, flatten_tensors_to_vector,
 )
+from pydvl.influence.frameworks.torch_differentiable import (
+    lanzcos_low_rank_hessian_approx,
+)
+from pydvl.influence.frameworks.util import align_structure, flatten_tensors_to_vector
 from tests.influence.conftest import linear_hessian_analytical, linear_model
 
 
@@ -79,9 +83,9 @@ def linear_torch_model_from_numpy(A: NDArray, b: NDArray) -> torch.nn.Module:
     """
     output_dimension, input_dimension = tuple(A.shape)
     model = torch.nn.Linear(input_dimension, output_dimension)
-    #model.eval()
-    #model.weight.data = torch.as_tensor(A)
-    #model.bias.data = torch.as_tensor(b)
+    model.eval()
+    model.weight.data = torch.as_tensor(A, dtype=torch.get_default_dtype())
+    model.bias.data = torch.as_tensor(b, dtype=torch.get_default_dtype())
     return model
 
 
@@ -92,7 +96,11 @@ def model_data(request):
     x = torch.rand(train_size, dimension[-1])
     y = torch.rand(train_size, dimension[0])
     torch_model = linear_torch_model_from_numpy(A, b)
-    vec = {name: torch.rand(*p.shape) for name, p in torch_model.named_parameters() if p.requires_grad}
+    vec = {
+        name: torch.rand(*p.shape)
+        for name, p in torch_model.named_parameters()
+        if p.requires_grad
+    }
     H_analytical = linear_hessian_analytical((A, b), x.numpy())
     H_analytical = torch.as_tensor(H_analytical)
     return torch_model, x, y, vec, H_analytical.to(torch.float32)
