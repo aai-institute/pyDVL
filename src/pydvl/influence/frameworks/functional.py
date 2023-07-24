@@ -5,15 +5,15 @@ import torch
 from torch.func import functional_call, grad, jvp, vjp
 from torch.utils.data import DataLoader
 
-from .util import Input_type, align_structure, to_model_device
+from .util import TensorContainerType, align_structure, to_model_device
 
 
 def hvp(
-    func: Callable[[Input_type], torch.Tensor],
-    params: Input_type,
-    vec: Input_type,
+    func: Callable[[TensorContainerType], TensorContainerType],
+    params: TensorContainerType,
+    vec: TensorContainerType,
     reverse_only: bool = True,
-) -> Input_type:
+) -> TensorContainerType:
     """
     Computes the Hessian-vector product (HVP) for a given function at given parameters.
     This function can operate in two modes, either reverse-mode autodiff only or both
@@ -37,6 +37,7 @@ def hvp(
         >>> hvp_vec = hvp(f, u, v)
         >>> assert torch.allclose(hvp_vec, torch.full((10, ), 2.0))
     """
+    output: TensorContainerType
 
     if reverse_only:
         _, vjp_fn = vjp(grad(func), params)
@@ -71,16 +72,14 @@ def batch_hvp_gen(
 
     for inputs, targets in iter(data_loader):
         batch_loss = batch_loss_function(model, loss, inputs, targets)
-        yield partial(
-            hvp, batch_loss, dict(model.named_parameters()), reverse_only=reverse_only
-        )
+        yield partial(hvp, batch_loss, dict(model.named_parameters()), reverse_only=reverse_only)  # type: ignore
 
 
 def empirical_loss_function(
     model: torch.nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     data_loader: DataLoader,
-) -> Callable[[Dict[str, torch.Tensor]], torch.Tensor]:
+) -> Callable[[Dict[str, torch.Tensor]], Dict[str, torch.Tensor]]:
     """
     Creates a function to compute the empirical loss of a given model on a given dataset.
     If we denote the model parameters with $\theta$, the resulting function approximates
