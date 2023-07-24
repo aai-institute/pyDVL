@@ -19,7 +19,7 @@ DeviceType = TypeVar("DeviceType")
 
 class iHVPResult(NamedTuple):
     x: TensorType
-    info: Dict[str, Union[Any, TensorType]]
+    info: Dict[str, Any]
 
 
 class TwiceDifferentiable(ABC, Generic[TensorType, ModelType, DeviceType]):
