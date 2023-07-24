@@ -124,7 +124,7 @@ def solve_batch_cg(
             reg_hvp, bi, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter
         )
         batch_cg[idx] = batch_result.x
-        info[idx] = batch_result.info
+        info[f"batch_{idx}"] = batch_result.info
     return iHVPResult(x=batch_cg, info=info)
 
 
