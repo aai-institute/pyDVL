@@ -1,11 +1,25 @@
 from abc import ABC
-from collections import namedtuple
-from typing import Callable, Generic, List, Sequence, Tuple, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    NamedTuple,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 TensorType = TypeVar("TensorType", bound=Sequence)
 ModelType = TypeVar("ModelType")
 DeviceType = TypeVar("DeviceType")
-iHVPResult = namedtuple("iHVPResult", ["x", "info"])
+
+
+class iHVPResult(NamedTuple):
+    x: TensorType
+    info: Dict[str, Union[Any, TensorType]]
 
 
 class TwiceDifferentiable(ABC, Generic[TensorType, ModelType, DeviceType]):

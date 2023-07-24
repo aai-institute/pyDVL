@@ -32,8 +32,6 @@ __all__ = [
 ]
 logger = logging.getLogger(__name__)
 
-TORCH_DTYPES = {"float32": torch.float32, "float64": torch.float64}
-
 
 def flatten_all(grad: torch.Tensor) -> torch.Tensor:
     """
@@ -288,7 +286,7 @@ def zero_tensor(
 ) -> torch.Tensor:
     """Returns a tensor of shape :attr:`shape` filled with zeros."""
     if isinstance(dtype, np.dtype):
-        dtype = TORCH_DTYPES[str(dtype)]
+        dtype = getattr(torch, dtype.name)
     return torch.zeros(shape, dtype=dtype, **kwargs)
 
 

@@ -57,7 +57,7 @@ def solve_hvp(
     :param hessian_perturbation: regularization of the hessian
     :param progress: If True, display progress bars.
 
-    :return: An array that solves the inverse problem,
+    :return: An object that containes an array that solves the inverse problem,
         i.e. it returns $x$ such that $Ax = b$, and a dictionary containing
         information about the inversion process.
     """
