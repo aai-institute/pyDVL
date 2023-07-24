@@ -32,13 +32,13 @@ try:
     TensorType = torch.Tensor
     DataLoaderType = torch.utils.data.DataLoader
     ModelType = torch.nn.Module
-    iHVPResult = iHVPResult[torch.Tensor]
 
     __all__.extend(
         [
             "TensorType",
             "ModelType",
-            "iHVPResult" "solve_linear",
+            "iHVPResult",
+            "solve_linear",
             "solve_batch_cg",
             "solve_lissa",
             "as_tensor",
