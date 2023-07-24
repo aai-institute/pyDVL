@@ -6,7 +6,7 @@ import logging
 
 from .twice_differentiable import TwiceDifferentiable, iHVPResult
 
-__all__ = ["TwiceDifferentiable", "iHVPResult"]
+__all__ = ["TwiceDifferentiable"]
 logger = logging.getLogger("frameworks")
 
 try:
@@ -32,12 +32,13 @@ try:
     TensorType = torch.Tensor
     DataLoaderType = torch.utils.data.DataLoader
     ModelType = torch.nn.Module
+    iHVPResult = iHVPResult[torch.Tensor]
 
     __all__.extend(
         [
             "TensorType",
             "ModelType",
-            "solve_linear",
+            "iHVPResult" "solve_linear",
             "solve_batch_cg",
             "solve_lissa",
             "as_tensor",

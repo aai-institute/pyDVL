@@ -9,7 +9,6 @@ from typing import (
     Sequence,
     Tuple,
     TypeVar,
-    Union,
 )
 
 TensorType = TypeVar("TensorType", bound=Sequence)
@@ -17,7 +16,7 @@ ModelType = TypeVar("ModelType")
 DeviceType = TypeVar("DeviceType")
 
 
-class iHVPResult(NamedTuple):
+class iHVPResult(NamedTuple, Generic[TensorType]):
     x: TensorType
     info: Dict[str, Any]
 
