@@ -77,11 +77,6 @@ def pytorch_seed(seed):
 
 
 @pytest.fixture(scope="session")
-def docker_compose_command():
-    return "docker compose"
-
-
-@pytest.fixture(scope="session")
 def do_not_start_memcache(request):
     return request.config.getoption("--do-not-start-memcache")
 
