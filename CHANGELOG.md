@@ -10,6 +10,9 @@
   [PR #371](https://github.com/appliedAI-Initiative/pyDVL/pull/371)
 - Major changes to IF interface and functionality
   [PR #278](https://github.com/appliedAI-Initiative/pyDVL/pull/278)
+- **Breaking Changes** Add new joblib backend and set it as default
+  instead of the ray backend. Simplify the MapReduceJob class.
+  [PR #355](https://github.com/appliedAI-Initiative/pyDVL/pull/355)
 
 ## 0.6.1 - 🏗 Bug fixes and small improvement
 

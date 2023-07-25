@@ -28,7 +28,6 @@ def ray_shutdown():
 
 
 def is_memcache_responsive(hostname, port):
-
     try:
         client = Client(server=(hostname, port))
         client.flush_all()
@@ -75,6 +74,11 @@ def pytorch_seed(seed):
         torch.manual_seed(seed)
     except ImportError:
         pass
+
+
+@pytest.fixture(scope="session")
+def docker_compose_command():
+    return "docker compose"
 
 
 @pytest.fixture(scope="session")
