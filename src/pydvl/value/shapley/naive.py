@@ -1,7 +1,7 @@
 import math
 import warnings
 from itertools import permutations
-from typing import List, Sequence
+from typing import Collection, List
 
 import numpy as np
 from numpy.typing import NDArray
@@ -59,7 +59,7 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 
 
 def _combinatorial_exact_shapley(
-    indices: Sequence[int], u: Utility, progress: bool
+    indices: NDArray, u: Utility, progress: bool
 ) -> NDArray:
     """Helper function for :func:`combinatorial_exact_shapley`.
 
