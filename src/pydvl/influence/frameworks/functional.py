@@ -8,6 +8,11 @@ from torch.utils.data import DataLoader
 from .util import TensorContainerType, align_structure, to_model_device
 
 
+__all__ = [
+    "get_hvp_function",
+]
+
+
 def hvp(
     func: Callable[[TensorContainerType], TensorContainerType],
     params: TensorContainerType,
