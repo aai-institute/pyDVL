@@ -6,12 +6,13 @@ influence of a training point on the model.
 """
 import logging
 from dataclasses import dataclass
+from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
-from numpy._typing import NDArray
+from numpy.typing import NDArray
 from torch import autograd
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
@@ -31,7 +32,9 @@ __all__ = [
     "cat",
     "einsum",
     "mvp",
+    "lanzcos_low_rank_hessian_approx",
 ]
+
 logger = logging.getLogger(__name__)
 
 
@@ -452,7 +455,6 @@ def solve_arnoldi(
     rank_estimate: int = 10,
     krylov_dimension: Optional[int] = None,
     low_rank_representation: Optional[LowRankProductRepresentation] = None,
-    x0: Optional[torch.Tensor] = None,
     tol: float = 1e-6,
     max_iter: Optional[int] = None,
     eigen_computation_on_gpu: bool = False,
@@ -477,8 +479,6 @@ def solve_arnoldi(
                                     low-rank representation of the Hessian.
                                     If not provided, a new low-rank representation will be computed,
                                     using provided parameters.
-    :param x0: An optional initial vector to use in the Lanczos algorithm.
-               If `low_rank_representation` is provided, this parameter is ignored.
     :param tol: The stopping criteria for the Lanczos algorithm.
                 If `low_rank_representation` is provided, this parameter is ignored.
     :param max_iter: The maximum number of iterations for the Lanczos method.
@@ -509,7 +509,6 @@ def solve_arnoldi(
             matrix_shape=(model.num_params, model.num_params),
             hessian_perturbation=hessian_perturbation,
             rank_estimate=rank_estimate,
-            x0=x0,
             krylov_dimension=krylov_dimension,
             tol=tol,
             max_iter=max_iter,
@@ -532,11 +531,11 @@ def lanzcos_low_rank_hessian_approx(
     hessian_perturbation: float = 0.0,
     rank_estimate: int = 10,
     krylov_dimension: Optional[int] = None,
-    x0: Optional[torch.Tensor] = None,
     tol: float = 1e-6,
     max_iter: Optional[int] = None,
     device: Optional[torch.device] = None,
     eigen_computation_on_gpu: bool = False,
+    torch_dtype: torch.dtype = None,
 ) -> LowRankProductRepresentation:
     """
     Calculates a low-rank approximation of the Hessian matrix of the model's loss function using the implicitly
@@ -551,8 +550,6 @@ def lanzcos_low_rank_hessian_approx(
                           Represents the desired rank of the Hessian approximation.
     :param krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
                              If not provided, it defaults to $min(model.num_parameters, max(2*rank_estimate + 1, 20))$.
-    :param x0: An optional initial vector to use in the Lanczos algorithm.
-               If not provided, a random initial vector is used.
     :param tol: The stopping criteria for the Lanczos algorithm, which stops when the difference
                 in the approximated eigenvalue is less than `tol`. Defaults to 1e-6.
     :param max_iter: The maximum number of iterations for the Lanczos method. If not provided, it defaults to
@@ -564,9 +561,12 @@ def lanzcos_low_rank_hessian_approx(
                                      small rank_estimate to fit your device's memory.
                                      If False, the eigen pair approximation is executed on the CPU by scipy wrapper to
                                      ARPACK.
+    :param torch_dtype: if not provided, current torch default dtype is used for conversion to torch
     :return: A `LowRankProductRepresentation` instance that contains the top (up until rank_estimate) eigenvalues
              and corresponding eigenvectors of the Hessian.
     """
+
+    torch_dtype = torch.get_default_dtype() if torch_dtype is None else torch_dtype
 
     if eigen_computation_on_gpu:
         try:
@@ -583,30 +583,19 @@ def lanzcos_low_rank_hessian_approx(
                 "Without setting an explicit device, cupy is not supported"
             )
 
-        def mv_cupy(x):
-            x = from_dlpack(x.toDlpack())
+        def to_torch_conversion_function(x):
+            return from_dlpack(x.toDlpack()).to(torch_dtype)
+
+        def mv(x):
+            x = to_torch_conversion_function(x)
             y = hessian_vp(x) + hessian_perturbation * x
             return cp.from_dlpack(to_dlpack(y))
 
-        eigen_vals, eigen_vecs = eigsh(
-            LinearOperator(matrix_shape, matvec=mv_cupy),
-            k=rank_estimate,
-            maxiter=max_iter,
-            tol=tol,
-            ncv=krylov_dimension,
-            return_eigenvectors=True,
-        )
-        return LowRankProductRepresentation(
-            from_dlpack(eigen_vals.toDlpack()), from_dlpack(eigen_vecs.toDlpack())
-        )
-
     else:
-        from scipy.sparse.linalg import ArpackNoConvergence, LinearOperator, eigsh
+        from scipy.sparse.linalg import LinearOperator, eigsh
 
-        torch_default_dtype = torch.get_default_dtype()
-
-        def mv_scipy(x: NDArray) -> NDArray:
-            x_torch = torch.as_tensor(x, device=device, dtype=torch_default_dtype)
+        def mv(x):
+            x_torch = torch.as_tensor(x, device=device, dtype=torch_dtype)
             y: NDArray = (
                 (hessian_vp(x_torch) + hessian_perturbation * x_torch)
                 .detach()
@@ -615,28 +604,32 @@ def lanzcos_low_rank_hessian_approx(
             )
             return y
 
-        try:
-            eigen_vals, eigen_vecs = eigsh(
-                A=LinearOperator(matrix_shape, matvec=mv_scipy),
-                k=rank_estimate,
-                maxiter=max_iter,
-                tol=tol,
-                ncv=krylov_dimension,
-                return_eigenvectors=True,
-                v0=x0.cpu().numpy() if x0 is not None else None,
-            )
-        except ArpackNoConvergence as e:
-            logger.warning(
-                f"ARPACK did not converge for parameters {max_iter=}, {tol=}, {krylov_dimension=}, "
-                f"{rank_estimate=}. \n Returning the best approximation found so far. Use those with care or "
-                f"modify parameters.\n Original error: {e}"
-            )
-            return LowRankProductRepresentation(
-                torch.as_tensor(e.eigenvalues, dtype=torch_default_dtype),
-                torch.as_tensor(e.eigenvectors, dtype=torch_default_dtype),
-            )
+        to_torch_conversion_function = partial(torch.as_tensor, dtype=torch_dtype)
 
-        return LowRankProductRepresentation(
-            torch.as_tensor(eigen_vals, dtype=torch_default_dtype),
-            torch.as_tensor(eigen_vecs, dtype=torch_default_dtype),
+    from scipy.sparse.linalg import ArpackNoConvergence
+
+    try:
+
+        eigen_vals, eigen_vecs = eigsh(
+            LinearOperator(matrix_shape, matvec=mv),
+            k=rank_estimate,
+            maxiter=max_iter,
+            tol=tol,
+            ncv=krylov_dimension,
+            return_eigenvectors=True,
         )
+
+    except ArpackNoConvergence as e:
+        logger.warning(
+            f"ARPACK did not converge for parameters {max_iter=}, {tol=}, {krylov_dimension=}, "
+            f"{rank_estimate=}. \n Returning the best approximation found so far. Use those with care or "
+            f"modify parameters.\n Original error: {e}"
+        )
+
+        eigen_vals, eigen_vecs = e.eigenvalues, e.eigenvectors
+
+    eigen_vals, eigen_vecs = to_torch_conversion_function(
+        eigen_vals
+    ), to_torch_conversion_function(eigen_vecs)
+
+    return LowRankProductRepresentation(eigen_vals, eigen_vecs)
