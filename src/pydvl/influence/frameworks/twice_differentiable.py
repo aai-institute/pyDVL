@@ -1,4 +1,5 @@
 from abc import ABC
+from dataclasses import dataclass
 from typing import (
     Any,
     Callable,
@@ -16,7 +17,8 @@ ModelType = TypeVar("ModelType")
 DeviceType = TypeVar("DeviceType")
 
 
-class iHVPResult(NamedTuple, Generic[TensorType]):
+@dataclass
+class iHVPResult(Generic[TensorType]):
     x: TensorType
     info: Dict[str, Any]
 

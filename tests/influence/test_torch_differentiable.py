@@ -177,11 +177,9 @@ def test_inversion_methods(
     train_data_loader = DataLoader(list(zip(train_x, train_y)), batch_size=128)
     b = torch.rand(size=(10, mvp_model.num_params), dtype=torch.float64)
 
-    linear_inverse, _ = solve_linear(mvp_model, train_data_loader, b)
-    linear_cg, _ = solve_batch_cg(mvp_model, train_data_loader, b)
-    linear_lissa, _ = solve_lissa(
-        mvp_model, train_data_loader, b, maxiter=5000, scale=5
-    )
+    linear_inverse = solve_linear(mvp_model, train_data_loader, b)
+    linear_cg = solve_batch_cg(mvp_model, train_data_loader, b)
+    linear_lissa = solve_lissa(mvp_model, train_data_loader, b, maxiter=5000, scale=5)
 
-    assert np.allclose(linear_inverse, linear_cg, rtol=1e-1)
-    assert np.allclose(linear_inverse, linear_lissa, rtol=1e-1)
+    assert np.allclose(linear_inverse.x, linear_cg.x, rtol=1e-1)
+    assert np.allclose(linear_inverse.x, linear_lissa.x, rtol=1e-1)
