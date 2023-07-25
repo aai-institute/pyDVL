@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader
 
 from .util import TensorContainerType, align_structure, to_model_device
 
-
 __all__ = [
     "get_hvp_function",
 ]
@@ -20,27 +19,26 @@ def hvp(
     reverse_only: bool = True,
 ) -> TensorContainerType:
     """
-    Computes the Hessian-vector product (HVP) for a given function at given parameters.
-    This function can operate in two modes, either reverse-mode autodiff only or both
-    forward- and reverse-mode autodiff.
+     Computes the Hessian-vector product (HVP) for a given function at given parameters.
+     This function can operate in two modes, either reverse-mode autodiff only or both
+     forward- and reverse-mode autodiff.
 
 
-    Args:
-        func (Callable[[Input_type], torch.Tensor]): The function for which the HVP is computed.
-        params (Input_type): The parameters at which the HVP is computed.
-        vec (Input_type): The vector with which the Hessian is multiplied.
-        reverse_only (bool, optional): Whether to use only reverse-mode autodiff
-            (True, default) or both forward- and reverse-mode autodiff (False).
+    :param func: The function for which the HVP is computed.
+    :param params: The parameters at which the HVP is computed.
+    :param vec: The vector with which the Hessian is multiplied.
+    :param reverse_only: Whether to use only reverse-mode autodiff
+             (True, default) or both forward- and reverse-mode autodiff (False).
 
-    Returns:
-        Input_type: The HVP of the function at the given parameters with the given vector.
+     :return: Input_type: The HVP of the function at the given parameters with the given vector.
 
-    Examples:
-        >>> def f(z): return torch.sum(z**2)
-        >>> u = torch.ones(10, requires_grad=True)
-        >>> v = torch.ones(10)
-        >>> hvp_vec = hvp(f, u, v)
-        >>> assert torch.allclose(hvp_vec, torch.full((10, ), 2.0))
+     :Example:
+
+      >>> def f(z): return torch.sum(z**2)
+      >>> u = torch.ones(10, requires_grad=True)
+      >>> v = torch.ones(10)
+      >>> hvp_vec = hvp(f, u, v)
+      >>> assert torch.allclose(hvp_vec, torch.full((10, ), 2.0))
     """
     output: TensorContainerType
 
@@ -93,14 +91,12 @@ def empirical_loss_function(
 
         f(\theta) = \frac{1}{N}\sum_{i=1}^N \operatorname{loss}(y_i, \operatorname{model}(\theta, x_i)))
 
-    Args:
-        model (torch.nn.Module): The model for which the loss should be computed.
-        loss (Callable[[torch.Tensor, torch.Tensor], torch.Tensor]): The loss function to be used.
-        data_loader (torch.utils.data.DataLoader): The data loader for iterating over the dataset.
+    :param model: The model for which the loss should be computed.
+    :param loss: The loss function to be used.
+    :param data_loader: The data loader for iterating over the dataset.
 
-    Returns:
-        Callable[[torch.nn.parameter.Parameter], torch.Tensor]: A function that computes the empirical loss
-                                                               of the model on the dataset for given model parameters.
+    :return: A function that computes the empirical loss
+                  of the model on the dataset for given model parameters.
 
     """
 
@@ -128,17 +124,15 @@ def batch_loss_function(
     y: torch.Tensor,
 ) -> Callable[[Dict[str, torch.Tensor]], torch.Tensor]:
     """
-    Creates a function to compute the loss of a given model on a given batch of data.
+     Creates a function to compute the loss of a given model on a given batch of data.
 
-    Args:
-        model (torch.nn.Module): The model for which the loss should be computed.
-        loss (Callable[[torch.Tensor, torch.Tensor], torch.Tensor]): The loss function to be used.
-        x (torch.Tensor): The input data for the batch.
-        y (torch.Tensor): The true labels for the batch.
+    :param model: The model for which the loss should be computed.
+    :param loss: The loss function to be used.
+    :param x: The input data for the batch.
+    :param y: The true labels for the batch.
 
-    Returns:
-        Callable[[Dict[str, torch.Tensor]], torch.Tensor]: A function that computes the loss
-                                                           of the model on the batch for given model parameters.
+    :return: A function that computes the loss
+                   of the model on the batch for given model parameters.
     """
 
     def batch_loss(params: Dict[str, torch.Tensor]):
