@@ -1,5 +1,5 @@
 from dataclasses import astuple, dataclass
-from typing import Tuple
+from typing import Any, Dict, Tuple
 
 import pytest
 
@@ -17,7 +17,11 @@ from pydvl.influence.frameworks.functional import (
 from pydvl.influence.frameworks.torch_differentiable import (
     lanzcos_low_rank_hessian_approx,
 )
-from pydvl.influence.frameworks.util import align_structure, flatten_tensors_to_vector
+from pydvl.influence.frameworks.util import (
+    TorchTensorContainerType,
+    align_structure,
+    flatten_tensors_to_vector,
+)
 from tests.influence.conftest import linear_hessian_analytical, linear_model
 
 
@@ -184,3 +188,48 @@ def test_lanzcos_low_rank_hessian_approx_exception():
             lanzcos_low_rank_hessian_approx(
                 lambda x: x, (3, 3), eigen_computation_on_gpu=True
             )
+
+
+@pytest.mark.parametrize(
+    "source,target",
+    [
+        (
+            {"a": torch.randn(5, 5), "b": torch.randn(5, 5)},
+            {"a": torch.randn(5, 5), "b": torch.randn(5, 5)},
+        ),
+        (
+            {"a": torch.randn(5, 5), "b": torch.randn(5, 5)},
+            (torch.randn(5, 5), torch.randn(5, 5)),
+        ),
+        ({"a": torch.randn(5, 5), "b": torch.randn(5, 5)}, torch.randn(50)),
+    ],
+)
+def test_align_structure_success(
+    source: Dict[str, torch.Tensor], target: TorchTensorContainerType
+):
+    result = align_structure(source, target)
+    assert isinstance(result, dict)
+    assert list(result.keys()) == list(source.keys())
+    assert all([result[k].shape == source[k].shape for k in source.keys()])
+
+
+@pytest.mark.parametrize(
+    "source,target",
+    [
+        (
+            {"a": torch.randn(5, 5), "b": torch.randn(5, 5)},
+            {"a": torch.randn(5, 5), "b": torch.randn(3, 3)},
+        ),
+        (
+            {"a": torch.randn(5, 5), "b": torch.randn(5, 5)},
+            {"c": torch.randn(5, 5), "d": torch.randn(5, 5)},
+        ),
+        (
+            {"a": torch.randn(5, 5), "b": torch.randn(5, 5)},
+            "unsupported",
+        ),
+    ],
+)
+def test_align_structure_error(source: Dict[str, torch.Tensor], target: Any):
+    with pytest.raises(ValueError):
+        align_structure(source, target)

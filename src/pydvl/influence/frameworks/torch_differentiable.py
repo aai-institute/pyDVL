@@ -13,6 +13,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from numpy.typing import NDArray
+from scipy.sparse.linalg import ArpackNoConvergence
 from torch import autograd
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
@@ -65,6 +66,7 @@ def solve_linear(
     :return: An array that solves the inverse problem,
         i.e. it returns $x$ such that $Hx = b$
     """
+
     all_x, all_y = [], []
     for x, y in training_data:
         all_x.append(x)
@@ -606,8 +608,6 @@ def lanzcos_low_rank_hessian_approx(
 
         to_torch_conversion_function = partial(torch.as_tensor, dtype=torch_dtype)
 
-    from scipy.sparse.linalg import ArpackNoConvergence
-
     try:
 
         eigen_vals, eigen_vecs = eigsh(
@@ -628,8 +628,7 @@ def lanzcos_low_rank_hessian_approx(
 
         eigen_vals, eigen_vecs = e.eigenvalues, e.eigenvectors
 
-    eigen_vals, eigen_vecs = to_torch_conversion_function(
-        eigen_vals
-    ), to_torch_conversion_function(eigen_vecs)
+    eigen_vals = to_torch_conversion_function(eigen_vals)
+    eigen_vecs = to_torch_conversion_function(eigen_vecs)
 
     return LowRankProductRepresentation(eigen_vals, eigen_vecs)

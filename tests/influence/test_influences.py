@@ -223,17 +223,16 @@ def create_random_data_loader(
     batch_size: int = 1,
     random_seed: int = 31,
 ) -> DataLoader:
-    """Creates DataLoader instances with random data for testing purposes.
+    """
+    Creates DataLoader instances with random data for testing purposes.
 
-    Args:
-        input_dim (Tuple[int]): The dimensions of the input data.
-        output_dim (int): The dimension of the output data.
-        data_len (int): The length of the training dataset to be generated.
-        batch_size (int): The size of the batches to be used in the DataLoader.
-        random_seed (int, optional): The seed for the random number generator. Defaults to 31.
+    :param input_dim: The dimensions of the input data.
+    :param output_dim: The dimension of the output data.
+    :param data_len: The length of the training dataset to be generated.
+    :param batch_size: The size of the batches to be used in the DataLoader.
+    :param random_seed: The seed for the random number generator. Defaults to 31.
 
-    Returns:
-        DataLoader: DataLoader instances for data.
+    :return: DataLoader instances for data.
     """
     torch.manual_seed(random_seed)
     x = torch.rand((data_len, *input_dim))
@@ -326,17 +325,16 @@ def minimal_training(
     lr=0.01,
     epochs=50,
 ):
-    """Trains a PyTorch model using L-BFGS optimizer.
+    """
+    Trains a PyTorch model using L-BFGS optimizer.
 
-    Args:
-        model (Module): The PyTorch model to be trained.
-        dataloader (DataLoader): DataLoader providing the training data.
-        loss_function (Module): The loss function to be used for training.
-        lr (float, optional): The learning rate for the L-BFGS optimizer. Defaults to 0.01.
-        epochs (int, optional): The number of training epochs. Defaults to 50.
+    :param model: The PyTorch model to be trained.
+    :param dataloader: DataLoader providing the training data.
+    :param loss_function: The loss function to be used for training.
+    :param lr: The learning rate for the L-BFGS optimizer. Defaults to 0.01.
+    :param epochs: The number of training epochs. Defaults to 50.
 
-    Returns:
-        Module: The trained model.
+    :return: The trained model.
     """
     model = model.train()
     optimizer = LBFGS(model.parameters(), lr=lr)

@@ -1,7 +1,6 @@
-import copy
 import logging
 import math
-from typing import Dict, Iterable, Tuple, TypeVar, Union
+from typing import Dict, Iterable, Tuple, TypeVar
 
 import torch
 
@@ -11,9 +10,6 @@ logger = logging.getLogger(__name__)
 def to_model_device(x: torch.Tensor, model: torch.nn.Module) -> torch.Tensor:
     """
     Returns the tensor `x` moved to the device of the `model`, if device of model is set
-    :param x:
-    :param model:
-    :return:
     """
     if hasattr(model, "device"):
         return x.to(model.device)
@@ -27,11 +23,8 @@ def flatten_tensors_to_vector(tensors: Iterable[torch.Tensor]) -> torch.Tensor:
     The function takes an iterable of tensors and reshapes each of them into a 1D tensor.
     These reshaped tensors are then concatenated together into a single 1D tensor in the order they were given.
 
-    Parameters:
-    tensors (Iterable[torch.Tensor]): An iterable of tensors to be reshaped and concatenated.
-
-    Returns:
-    torch.Tensor: A 1D tensor that is the concatenation of all the reshaped input tensors.
+    :param tensors: An iterable of tensors to be reshaped and concatenated.
+    :return: A 1D tensor that is the concatenation of all the reshaped input tensors.
     """
 
     return torch.cat([t.contiguous().view(-1) for t in tensors])
@@ -48,17 +41,13 @@ def reshape_vector_to_tensors(
 
     Note: The total number of elements in 'input_vector' must be equal to the sum of the products of the shapes in 'target_shapes'.
 
-    Parameters:
-    input_vector (Tensor): The 1D tensor to be reshaped. Must be 1D.
-    target_shapes (Iterable[Tuple[int, ...]]): An iterable of tuples. Each tuple defines the shape of a tensor to be
-                                                  reshaped from the 'input_vector'.
-
-    Returns:
-    tuple[torch.Tensor]: A tuple of reshaped tensors.
-
-    Raises:
-    ValueError: If 'input_vector' is not a 1D tensor or if the total number of elements in 'input_vector' does not match
-                the sum of the products of the shapes in 'target_shapes'.
+    :param input_vector: The 1D tensor to be reshaped. Must be 1D.
+    :param target_shapes: An iterable of tuples. Each tuple defines the shape of a tensor to be
+           reshaped from the 'input_vector'.
+    :return: A tuple of reshaped tensors.
+    :raises:
+        ValueError: If 'input_vector' is not a 1D tensor or if the total number of elements
+            in 'input_vector' does not match the sum of the products of the shapes in 'target_shapes'.
     """
 
     if input_vector.dim() != 1:
@@ -99,15 +88,12 @@ def align_structure(
     it should be a dictionary with the same keys as `source` and each corresponding
     value in `target` should have the same shape as the value in `source`.
 
-    Args:
-        source (dict): The reference dictionary containing PyTorch tensors.
-        target (Input_type): The input to be harmonized. It can be a dictionary, tuple, or tensor.
+    :param source: The reference dictionary containing PyTorch tensors.
+    :param target: The input to be harmonized. It can be a dictionary, tuple, or tensor.
 
-    Returns:
-        dict: The harmonized version of `target`.
+    :return: The harmonized version of `target`.
 
-    Raises:
-        ValueError: If `target` cannot be harmonized to match `source`.
+    :raises ValueError: If `target` cannot be harmonized to match `source`.
     """
 
     tangent_dict: Dict[str, torch.Tensor]
