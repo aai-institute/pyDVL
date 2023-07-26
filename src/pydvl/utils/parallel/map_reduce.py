@@ -103,7 +103,10 @@ class MapReduceJob(Generic[T, R]):
             backend = "loky"
         else:
             backend = self.config.backend
-        with Parallel(backend=backend, n_jobs=self.n_jobs) as parallel:
+        # In joblib the levels are reversed.
+        # 0 means no logging and 50 means log everything to stdout
+        verbose = 50 - self.config.logging_level
+        with Parallel(backend=backend, n_jobs=self.n_jobs, verbose=verbose) as parallel:
             chunks = self._chunkify(self.inputs_, n_chunks=self.n_jobs)
             map_results: List[R] = parallel(
                 delayed(self._map_func)(next_chunk, job_id=j, **self.map_kwargs)

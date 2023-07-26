@@ -105,14 +105,10 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
     """
 
     def __init__(self, config: ParallelConfig):
-        config_dict = asdict(config)
-        config_dict.pop("backend")
-        n_cpus_local = config_dict.pop("n_cpus_local")
-        config_dict["n_jobs"] = n_cpus_local
-        self.config = config_dict
-        # In joblib the levels are reversed.
-        # 0 means no logging and 50 means log everything to stdout
-        verbose = 50 - config_dict["logging_level"]
+        self.config = {
+            "n_jobs": config.n_cpus_local,
+            "logging_level": config.logging_level,
+        }
 
     def get(
         self,
@@ -162,12 +158,11 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     """
 
     def __init__(self, config: ParallelConfig):
-        config_dict = asdict(config)
-        config_dict.pop("backend")
-        n_cpus_local = config_dict.pop("n_cpus_local")
-        if config_dict.get("address", None) is None:
-            config_dict["num_cpus"] = n_cpus_local
-        self.config = config_dict
+        self.config = {"logging_level": config.logging_level}
+        if config.address is None:
+            self.config["num_cpus"] = config.n_cpus_local
+        else:
+            self.config["address"] = config.address
         if not ray.is_initialized():
             ray.init(**self.config)
         # Register ray joblib backend
