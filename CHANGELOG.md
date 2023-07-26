@@ -15,6 +15,8 @@
   [PR #355](https://github.com/appliedAI-Initiative/pyDVL/pull/355)
 - **Bug fix** Fix installation of dev requirements for Python3.10
   [PR #382](https://github.com/appliedAI-Initiative/pyDVL/pull/382)
+- Decouple ray.init from ParallelConfig 
+  [PR #373](https://github.com/appliedAI-Initiative/pyDVL/pull/383)
 
 ## 0.6.1 - 🏗 Bug fixes and small improvement
 
