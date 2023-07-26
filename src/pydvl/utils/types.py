@@ -2,11 +2,23 @@
 transformations. Some of it probably belongs elsewhere.
 """
 import inspect
-from typing import Callable, Protocol, Type
+from typing import Any, Callable, Protocol, TypeVar
 
 from numpy.typing import NDArray
 
-__all__ = ["SupervisedModel"]
+__all__ = ["SupervisedModel", "MapFunction", "ReduceFunction"]
+
+R = TypeVar("R", covariant=True)
+
+
+class MapFunction(Protocol[R]):
+    def __call__(self, *args: Any, **kwargs: Any) -> R:
+        ...
+
+
+class ReduceFunction(Protocol[R]):
+    def __call__(self, *args: Any, **kwargs: Any) -> R:
+        ...
 
 
 class SupervisedModel(Protocol):
