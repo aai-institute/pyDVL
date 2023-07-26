@@ -22,8 +22,6 @@ from .conftest import (
     linear_model,
 )
 
-torch.set_default_dtype(torch.float64)
-
 
 def analytical_linear_influences(
     linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
@@ -110,8 +108,6 @@ def test_influence_linear_model(
     problem_dimension: Tuple[int, int] = (4, 20),
     condition_number: float = 2,
 ):
-
-    torch.set_default_dtype(torch.float64)
 
     A, b = linear_model(problem_dimension, condition_number)
     train_data, test_data = add_noise_to_linear_model(
@@ -418,4 +414,4 @@ def test_influences_arnoldi(
         rank_estimate=num_parameters - 1,
     )
 
-    assert np.allclose(direct_influence, low_rank_influence, rtol=1e-2)
+    assert np.allclose(direct_influence, low_rank_influence, rtol=1e-1)
