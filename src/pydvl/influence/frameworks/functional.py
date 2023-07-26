@@ -5,7 +5,7 @@ import torch
 from torch.func import functional_call, grad, jvp, vjp
 from torch.utils.data import DataLoader
 
-from .util import TensorContainerType, align_structure, to_model_device
+from .util import TorchTensorContainerType, align_structure, to_model_device
 
 __all__ = [
     "get_hvp_function",
@@ -13,11 +13,11 @@ __all__ = [
 
 
 def hvp(
-    func: Callable[[TensorContainerType], TensorContainerType],
-    params: TensorContainerType,
-    vec: TensorContainerType,
+    func: Callable[[TorchTensorContainerType], TorchTensorContainerType],
+    params: TorchTensorContainerType,
+    vec: TorchTensorContainerType,
     reverse_only: bool = True,
-) -> TensorContainerType:
+) -> TorchTensorContainerType:
     """
      Computes the Hessian-vector product (HVP) for a given function at given parameters.
      This function can operate in two modes, either reverse-mode autodiff only or both
@@ -40,7 +40,7 @@ def hvp(
       >>> hvp_vec = hvp(f, u, v)
       >>> assert torch.allclose(hvp_vec, torch.full((10, ), 2.0))
     """
-    output: TensorContainerType
+    output: TorchTensorContainerType
 
     if reverse_only:
         _, vjp_fn = vjp(grad(func), params)

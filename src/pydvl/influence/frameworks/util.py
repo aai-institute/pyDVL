@@ -82,8 +82,8 @@ def reshape_vector_to_tensors(
     return tuple(tensors)
 
 
-TensorContainerType = TypeVar(
-    "TensorContainerType",
+TorchTensorContainerType = TypeVar(
+    "TorchTensorContainerType",
     torch.Tensor,
     Tuple[torch.Tensor, ...],
     Dict[str, torch.Tensor],
@@ -92,7 +92,7 @@ TensorContainerType = TypeVar(
 
 def align_structure(
     source: Dict[str, torch.Tensor],
-    target: TensorContainerType,
+    target: TorchTensorContainerType,
 ) -> Dict[str, torch.Tensor]:
     """
     This function transforms `target` to have the same structure as `source`, i.e.,
