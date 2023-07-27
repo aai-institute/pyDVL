@@ -106,8 +106,8 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
 
     def __init__(self, config: ParallelConfig):
         self.config = {
-            "n_jobs": config.n_cpus_local,
             "logging_level": config.logging_level,
+            "n_jobs": config.n_cpus_local,
         }
 
     def get(
@@ -158,11 +158,9 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     """
 
     def __init__(self, config: ParallelConfig):
-        self.config = {"logging_level": config.logging_level}
-        if config.address is None:
+        self.config = {"address": config.address, "logging_level": config.logging_level}
+        if self.config["address"] is None:
             self.config["num_cpus"] = config.n_cpus_local
-        else:
-            self.config["address"] = config.address
         if not ray.is_initialized():
             ray.init(**self.config)
         # Register ray joblib backend
@@ -232,6 +230,13 @@ def init_parallel_backend(
         with cluster address, number of cpus, etc.
 
     :Example:
+
+    >>> from pydvl.utils.parallel.backend import init_parallel_backend
+    >>> from pydvl.utils.config import ParallelConfig
+    >>> config = ParallelConfig()
+    >>> parallel_backend = init_parallel_backend(config)
+    >>> parallel_backend
+    <JoblibParallelBackend: {'logging_level': 30, 'n_jobs': None}>
 
     >>> from pydvl.utils.parallel.backend import init_parallel_backend
     >>> from pydvl.utils.config import ParallelConfig
