@@ -150,6 +150,7 @@ def get_hvp_function(
     data_loader: DataLoader,
     use_hessian_avg: bool = True,
     reverse_only: bool = True,
+    track_gradients: bool = False,
 ) -> Callable[[Dict[str, torch.Tensor]], Dict[str, torch.Tensor]]:
     """
     Returns a function that calculates the approximate Hessian-vector product for a given vector. If you want to
@@ -167,11 +168,17 @@ def get_hvp_function(
                             but probably has a way higher memory usage.
     :param reverse_only: Whether to use only reverse-mode autodiff
             (True, default) or both forward- and reverse-mode autodiff (False)
+    :param track_gradients: Whether to track gradients for the resulting tensor of the hessian vector products are
+            (False, default).
+
     :return: A function that takes a single argument, a vector, and returns the product of the Hessian of the
              `loss` function with respect to the `model`'s parameters and the input vector.
 
     """
-    params = dict(model.named_parameters())
+
+    params = {
+        k: p if track_gradients else p.detach() for k, p in model.named_parameters()
+    }
 
     def hvp_function(vec: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         v = align_structure(params, vec)
