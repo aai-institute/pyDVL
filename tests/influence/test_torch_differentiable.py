@@ -48,7 +48,7 @@ def linear_mvp_model(A, b):
     model.weight.data = torch.as_tensor(A)
     model.bias.data = torch.as_tensor(b)
     loss = F.mse_loss
-    return TorchTwiceDifferentiable(model=model, loss=loss)
+    return TorchTwiceDifferentiable(model=model, loss=loss, device=torch.device("cpu"))
 
 
 @pytest.mark.torch

@@ -17,6 +17,8 @@ from .frameworks import (
 
 __all__ = ["solve_hvp"]
 
+from .frameworks.torch_differentiable import solve_arnoldi
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,6 +30,7 @@ class InversionMethod(str, Enum):
     Direct = "direct"
     Cg = "cg"
     Lissa = "lissa"
+    Arnoldi = "arnoldi"
 
 
 def solve_hvp(
@@ -86,6 +89,14 @@ def solve_hvp(
             **kwargs,
             hessian_perturbation=hessian_perturbation,
             progress=progress,
+        )
+    elif inversion_method == InversionMethod.Arnoldi:
+        return solve_arnoldi(
+            model,  # type: ignore # TODO the interface TwiceDifferentiable is not used properly anyhow
+            training_data,
+            b,
+            **kwargs,
+            hessian_perturbation=hessian_perturbation,
         )
     else:
         raise ValueError(f"Unknown inversion method: {inversion_method}")

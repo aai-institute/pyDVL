@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils import Utility, maybe_progress
 from pydvl.utils.status import Status
@@ -20,7 +21,7 @@ def naive_loo(u: Utility, *, progress: bool = True) -> ValuationResult:
     if len(u.data) < 3:
         raise ValueError("Dataset must have at least 2 elements")
 
-    values = np.zeros_like(u.data.indices, dtype=np.float_)
+    values: NDArray[np.float_] = np.zeros_like(u.data.indices, dtype=np.float_)
     all_indices = set(u.data.indices)
     total_utility = u(u.data.indices)
     for i in maybe_progress(u.data.indices, progress):  # type: ignore
