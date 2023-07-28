@@ -6,11 +6,13 @@ from copy import deepcopy
 from enum import Enum
 from typing import Any, Dict, Optional, Tuple
 
+from .frameworks.torch_differentiable import unsqueeze
 from ..utils import maybe_progress
 from .frameworks import (
     DataLoaderType,
     TensorType,
     TwiceDifferentiable,
+    cat,
     einsum,
     mvp,
     transpose_tensor,
@@ -63,18 +65,11 @@ def compute_influence_factors(
     :returns: An array of size (N, D) containing the influence factors for each
         dimension (D) and test sample (N).
     """
-    test_grads = zero_tensor(
-        shape=(len(test_data.dataset), model.num_params),
-        dtype=test_data.dataset[0][0].dtype,
-        device=model.device,
-    )
-    for batch_idx, (x_test, y_test) in enumerate(
-        maybe_progress(test_data, progress, desc="Batch Test Gradients")
-    ):
-        idx = batch_idx * test_data.batch_size
-        test_grads[idx : idx + test_data.batch_size] = model.split_grad(
-            x_test, y_test, progress=False
-        )
+    test_grads = []
+    for x_test, y_test in maybe_progress(test_data, progress, desc="Batch Test Gradients"):
+        test_grad = stack([model.grad(inpt, target) for inpt, target in zip(unsqueeze(x_test, 1), y_test)])
+        test_grads.append(test_grad)
+    test_grads = cat(test_grads)
     return solve_hvp(
         inversion_method,
         model,
@@ -110,19 +105,13 @@ def compute_influences_up(
     :returns: An array of size [NxM], where N is number of influence factors, M
         number of input points.
     """
-    grads = zero_tensor(
-        shape=(len(input_data.dataset), model.num_params),
-        dtype=input_data.dataset[0][0].dtype,
-        device=model.device,
-    )
-    for batch_idx, (x, y) in enumerate(
-        maybe_progress(input_data, progress, desc="Batch Split Input Gradients")
-    ):
-        idx = batch_idx * input_data.batch_size
-        grads[idx : idx + input_data.batch_size] = model.split_grad(
-            x, y, progress=False
-        )
-    return einsum("ta,va->tv", influence_factors, grads)
+    train_grads = []
+    for x, y in maybe_progress(input_data, progress, desc="Batch Split Input Gradients"):
+        train_grad = stack([model.grad(inpt, target) for inpt, target in zip(unsqueeze(x, 1), y)])
+        train_grads.append(train_grad)
+
+    train_grads = cat(train_grads)
+    return einsum("ta,va->tv", influence_factors, train_grads)
 
 
 def compute_influences_pert(
@@ -149,31 +138,26 @@ def compute_influences_pert(
     :returns: An array of size [NxMxP], where N is the number of influence factors, M
         the number of input data, and P the number of features.
     """
-    input_x = input_data.dataset[0][0]
-    all_pert_influences = zero_tensor(
-        shape=(len(input_data.dataset), len(influence_factors), *input_x.shape),
-        dtype=input_x.dtype,
-        device=model.device,
-    )
-    for batch_idx, (x, y) in enumerate(
-        maybe_progress(
-            input_data,
-            progress,
-            desc="Batch Influence Perturbation",
-        )
+    all_pert_influences = []
+    for x, y in maybe_progress(
+        input_data,
+        progress,
+        desc="Batch Influence Perturbation",
     ):
         for i in range(len(x)):
-            grad_xy, tensor_x = model.grad(x[i : i + 1], y[i], x_requires_grad=True)
+            tensor_x = x[i : i + 1]
+            tensor_x = tensor_x.requires_grad_(True)
+            grad_xy = model.grad(tensor_x, y[i], create_graph=True)
             perturbation_influences = mvp(
                 grad_xy,
                 influence_factors,
                 backprop_on=tensor_x,
             )
-            all_pert_influences[
-                batch_idx * input_data.batch_size + i
-            ] = perturbation_influences.reshape((-1, *x[i].shape))
+            all_pert_influences.append(
+                perturbation_influences.reshape((-1, *x[i].shape))
+            )
 
-    return transpose_tensor(all_pert_influences, 0, 1)
+    return stack(all_pert_influences, axis=1)
 
 
 influence_type_registry = {

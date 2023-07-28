@@ -41,7 +41,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def flatten_all(grad: torch.Tensor) -> torch.Tensor:
+def flatten_all(grad: Iterable[torch.Tensor]) -> torch.Tensor:
     """
     Simple function to flatten a pyTorch gradient for use in subsequent calculation
     """
@@ -119,7 +119,7 @@ def solve_batch_cg(
     total_grad_xy = 0
     total_points = 0
     for x, y in maybe_progress(training_data, progress, desc="Batch Train Gradients"):
-        grad_xy, _ = model.grad(x, y)
+        grad_xy = model.grad(x, y, create_graph=True)
         total_grad_xy += grad_xy * len(x)
         total_points += len(x)
     backprop_on = model.parameters
@@ -249,7 +249,7 @@ def solve_lissa(
 
     for _ in maybe_progress(range(maxiter), progress, desc="Lissa"):
         x, y = next(iter(shuffled_training_data))
-        grad_xy, _ = model.grad(x, y)
+        grad_xy = model.grad(x, y, create_graph=True)
         reg_hvp = lambda v: mvp(grad_xy, v, model.parameters) + hessian_perturbation * v
         residual = lissa_step(h_estimate, reg_hvp) - h_estimate
         h_estimate += residual
@@ -313,6 +313,17 @@ def einsum(equation, *operands) -> torch.Tensor:
 
 def identity_tensor(dim: int, **kwargs) -> torch.Tensor:
     return torch.eye(dim, dim, **kwargs)
+
+
+def unsqueeze(x: torch.Tensor, dim: int) -> torch.Tensor:
+    """
+    Add a singleton dimension at a specified position in a tensor.
+
+    :param x: A PyTorch tensor.
+    :param dim: The position at which to add the singleton dimension. Zero-based indexing.
+    :return: A new tensor with an additional singleton dimension.
+    """
+    return x.unsqueeze(dim)
 
 
 def mvp(
@@ -397,57 +408,24 @@ class TorchTwiceDifferentiable(
         """
         return sum([np.prod(p.size()) for p in self.parameters])
 
-    def split_grad(
-        self, x: torch.Tensor, y: torch.Tensor, *, progress: bool = False
-    ) -> torch.Tensor:
-        """
-        Calculates gradient of model parameters wrt each $x[i]$ and $y[i]$ and then
-        returns a array of size [N, P] with N number of points (length of x and y) and P
-        number of parameters of the model.
-
-        :param x: An array [NxD] representing the features $x_i$.
-        :param y: An array [NxK] representing the predicted target values $y_i$.
-        :param progress: True, iff progress shall be printed.
-        :returns: An array [NxP] representing the gradients with respect to
-            all parameters of the model.
-        """
-        x = as_tensor(x, warn=False).to(self.device).unsqueeze(1)
-        y = as_tensor(y, warn=False).to(self.device)
-
-        grads = []
-        for i in maybe_progress(range(len(x)), progress, desc="Split Gradient"):
-            grads.append(
-                flatten_all(
-                    autograd.grad(
-                        self.loss(torch.squeeze(self.model(x[i])), torch.squeeze(y[i])),
-                        self.parameters,
-                    )
-                ).detach()
-            )
-
-        return torch.stack(grads, axis=0)
-
     def grad(
-        self, x: torch.Tensor, y: torch.Tensor, *, x_requires_grad: bool = False
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        self, x: torch.Tensor, y: torch.Tensor, create_graph: bool = False
+    ) -> torch.Tensor:
         """
         Calculates gradient of model parameters wrt the model parameters.
 
         :param x: A matrix [NxD] representing the features $x_i$.
         :param y: A matrix [NxK] representing the target values $y_i$.
-        :param x_requires_grad: If True, the input $x$ is marked as requiring
-            gradients. This is important for further differentiation on input
-            parameters.
         :returns: A tuple where the first element is an array [P] with the
             gradients of the model and second element is the input to the model
             as a grad parameters. This can be used for further differentiation.
         """
-        x = as_tensor(x, warn=False).to(self.device).requires_grad_(x_requires_grad)
-        y = as_tensor(y, warn=False).to(self.device)
+        x = x.to(self.device)
+        y = y.to(self.device)
 
         loss_value = self.loss(torch.squeeze(self.model(x)), torch.squeeze(y))
-        grad_f = torch.autograd.grad(loss_value, self.parameters, create_graph=True)
-        return flatten_all(grad_f), x
+        grad_f = torch.autograd.grad(loss_value, self.parameters, create_graph=create_graph)
+        return flatten_all(grad_f)
 
     def hessian(
         self, x: torch.Tensor, y: torch.Tensor, *, progress: bool = False
@@ -460,7 +438,7 @@ class TorchTwiceDifferentiable(
         """
         x = x.to(self.device)
         y = y.to(self.device)
-        grad_xy, _ = self.grad(x, y)
+        grad_xy = self.grad(x, y, create_graph=True)
         return mvp(
             grad_xy,
             torch.eye(self.num_params, self.num_params, device=self.device),

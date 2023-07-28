@@ -41,31 +41,14 @@ class TwiceDifferentiable(ABC, Generic[TensorType, ModelType, DeviceType]):
         """Returns all the model parameters that require differentiation"""
         pass
 
-    def split_grad(
-        self, x: TensorType, y: TensorType, *, progress: bool = False
-    ) -> TensorType:
-        """
-        Calculate the gradient of the model wrt each input x and labels y.
-        The output is therefore of size [Nxp], with N the amount of points (the
-        length of x and y) and P the number of parameters.
-
-        :param x: An array representing the features $x_i$.
-        :param y: An array representing the predicted target values $y_i$.
-        :param progress: ``True`` to display progress.
-        :return: An array representing the gradients wrt. the parameters of the
-            model.
-        """
-        pass
-
     def grad(
-        self, x: TensorType, y: TensorType, *, x_requires_grad: bool = False
-    ) -> Tuple[TensorType, TensorType]:
+        self, x: TensorType, y: TensorType, create_graph: bool = True
+    ) -> TensorType:
         """
         Calculates gradient of model parameters wrt. the model parameters.
 
         :param x: A matrix representing the features $x_i$.
         :param y: A matrix representing the target values $y_i$.
-        :param x_requires_grad: If True, the input $x$ is marked as requiring
             gradients. This is important for further differentiation on input
             parameters.
         :return: A tuple where: the first element is an array with the
