@@ -190,8 +190,10 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="pydvl/index.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="pydvl/influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/frameworks/functional.html">functional</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/frameworks/util.html">util</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/influence/general.html">general</a></li>
@@ -298,8 +300,14 @@
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>pyDVL<span class="o">[</span>influence<span class="o">]</span>
 </pre></div>
 </div>
-<p>This includes a dependency on <a class="reference external" href="https://pytorch.org/">PyTorch</a> and thus is left
+<p>This includes a dependency on <a class="reference external" href="https://pytorch.org/">PyTorch</a> (Version 2.0 and above) and thus is left
 out by default.</p>
+<p>In the case you use Cuda v11.2 ~ 11.8, you can enable eigen computations (for low-rank approximations)
+with <a class="reference external" href="https://docs.cupy.dev/en/stable/index.html">CuPy</a> on GPU:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>pyDVL<span class="o">[</span>cupy<span class="o">]</span>
+</pre></div>
+</div>
+<p>If you use a different version of Cuda, please install CuPy <a class="reference external" href="https://docs.cupy.dev/en/stable/install.html">manually</a>.</p>
 <p>In order to check the installation you can use:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import pydvl; print(pydvl.__version__)&quot;</span>
 </pre></div>

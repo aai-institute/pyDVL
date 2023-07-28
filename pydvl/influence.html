@@ -190,8 +190,10 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">influence</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="influence/frameworks/functional.html">functional</a></li>
 <li class="toctree-l4"><a class="reference internal" href="influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
 <li class="toctree-l4"><a class="reference internal" href="influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="influence/frameworks/util.html">util</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="influence/general.html">general</a></li>
@@ -327,6 +329,10 @@ probably change.</p>
 <li class="toctree-l2"><a class="reference internal" href="influence/frameworks.html#pydvl.influence.frameworks.cat"><code class="docutils literal notranslate"><span class="pre">cat()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence/frameworks.html#pydvl.influence.frameworks.einsum"><code class="docutils literal notranslate"><span class="pre">einsum()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="influence/frameworks.html#pydvl.influence.frameworks.mvp"><code class="docutils literal notranslate"><span class="pre">mvp()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence/frameworks/functional.html">functional</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="influence/frameworks/functional.html#pydvl.influence.frameworks.functional.get_hvp_function"><code class="docutils literal notranslate"><span class="pre">get_hvp_function()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="influence/frameworks/torch_differentiable.html">torch_differentiable</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="influence/frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="influence/frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable.parameters"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable.parameters</span></code></a></li>
@@ -344,6 +350,7 @@ probably change.</p>
 <li class="toctree-l3"><a class="reference internal" href="influence/frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.cat"><code class="docutils literal notranslate"><span class="pre">cat()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="influence/frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.einsum"><code class="docutils literal notranslate"><span class="pre">einsum()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="influence/frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.mvp"><code class="docutils literal notranslate"><span class="pre">mvp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="influence/frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.lanzcos_low_rank_hessian_approx"><code class="docutils literal notranslate"><span class="pre">lanzcos_low_rank_hessian_approx()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="influence/frameworks/twice_differentiable.html">twice_differentiable</a><ul>
@@ -355,6 +362,13 @@ probably change.</p>
 <li class="toctree-l4"><a class="reference internal" href="influence/frameworks/twice_differentiable.html#pydvl.influence.frameworks.twice_differentiable.TwiceDifferentiable.hessian"><code class="docutils literal notranslate"><span class="pre">TwiceDifferentiable.hessian()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="influence/frameworks/util.html">util</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="influence/frameworks/util.html#pydvl.influence.frameworks.util.to_model_device"><code class="docutils literal notranslate"><span class="pre">to_model_device()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="influence/frameworks/util.html#pydvl.influence.frameworks.util.flatten_tensors_to_vector"><code class="docutils literal notranslate"><span class="pre">flatten_tensors_to_vector()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="influence/frameworks/util.html#pydvl.influence.frameworks.util.reshape_vector_to_tensors"><code class="docutils literal notranslate"><span class="pre">reshape_vector_to_tensors()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="influence/frameworks/util.html#pydvl.influence.frameworks.util.align_structure"><code class="docutils literal notranslate"><span class="pre">align_structure()</span></code></a></li>
 </ul>
 </li>
 </ul>

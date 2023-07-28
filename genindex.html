@@ -188,8 +188,10 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="pydvl/index.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="pydvl/influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/frameworks/functional.html">functional</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pydvl/influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/frameworks/util.html">util</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/influence/general.html">general</a></li>
@@ -301,6 +303,8 @@
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.ParallelConfig.address">address (ParallelConfig attribute)</a>
 </li>
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.algorithm">algorithm (ValuationResult property)</a>
+</li>
+        <li><a href="pydvl/influence/frameworks/util.html#pydvl.influence.frameworks.util.align_structure">align_structure() (in module pydvl.influence.frameworks.util)</a>
 </li>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedConfig.allow_repeated_evaluations">allow_repeated_evaluations (MemcachedConfig attribute)</a>
 </li>
@@ -498,14 +502,16 @@
 </li>
         <li><a href="pydvl/value/shapley/truncated.html#pydvl.value.shapley.truncated.FixedTruncation">FixedTruncation (class in pydvl.value.shapley.truncated)</a>
 </li>
+        <li><a href="pydvl/influence/frameworks/util.html#pydvl.influence.frameworks.util.flatten_tensors_to_vector">flatten_tensors_to_vector() (in module pydvl.influence.frameworks.util)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset.from_arrays">from_arrays() (Dataset class method)</a>
 
         <ul>
           <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.GroupedDataset.from_arrays">(GroupedDataset class method)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.GroupedDataset.from_dataset">from_dataset() (GroupedDataset class method)</a>
 </li>
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.from_random">from_random() (ValuationResult class method)</a>
@@ -526,6 +532,8 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.get">get() (ValuationResult method)</a>
 </li>
+        <li><a href="pydvl/influence/frameworks/functional.html#pydvl.influence.frameworks.functional.get_hvp_function">get_hvp_function() (in module pydvl.influence.frameworks.functional)</a>
+</li>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset.get_test_data">get_test_data() (Dataset method)</a>
 </li>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset.get_training_data">get_training_data() (Dataset method)</a>
@@ -534,10 +542,10 @@
           <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.GroupedDataset.get_training_data">(GroupedDataset method)</a>
 </li>
         </ul></li>
-        <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.GlovesGameUtility">GlovesGameUtility (class in pydvl.utils.utility)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/utils/utility.html#pydvl.utils.utility.GlovesGameUtility">GlovesGameUtility (class in pydvl.utils.utility)</a>
+</li>
         <li><a href="pydvl/influence/frameworks.html#pydvl.influence.frameworks.TorchTwiceDifferentiable.grad">grad() (TorchTwiceDifferentiable method)</a>, <a href="pydvl/influence/frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable.grad">[1]</a>
 
         <ul>
@@ -624,16 +632,18 @@
   <h2>L</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/influence/frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.lanzcos_low_rank_hessian_approx">lanzcos_low_rank_hessian_approx() (in module pydvl.influence.frameworks.torch_differentiable)</a>
+</li>
         <li><a href="pydvl/value/least_core/naive.html#pydvl.value.least_core.naive.lc_prepare_problem">lc_prepare_problem() (in module pydvl.value.least_core.naive)</a>
 </li>
         <li><a href="pydvl/value/least_core/common.html#pydvl.value.least_core.common.lc_solve_problem">lc_solve_problem() (in module pydvl.value.least_core.common)</a>
 </li>
         <li><a href="pydvl/value/least_core/common.html#pydvl.value.least_core.common.lc_solve_problems">lc_solve_problems() (in module pydvl.value.least_core.common)</a>
 </li>
-        <li><a href="pydvl/value/least_core.html#pydvl.value.least_core.LeastCoreMode">LeastCoreMode (class in pydvl.value.least_core)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/value/least_core.html#pydvl.value.least_core.LeastCoreMode">LeastCoreMode (class in pydvl.value.least_core)</a>
+</li>
         <li><a href="pydvl/value/least_core/common.html#pydvl.value.least_core.common.LeastCoreProblem">LeastCoreProblem (class in pydvl.value.least_core.common)</a>
 </li>
         <li><a href="pydvl/utils/dataset.html#pydvl.utils.dataset.load_spotify_dataset">load_spotify_dataset() (in module pydvl.utils.dataset)</a>
@@ -700,9 +710,13 @@
 </li>
           <li><a href="pydvl/influence/frameworks.html#module-pydvl.influence.frameworks">pydvl.influence.frameworks</a>
 </li>
+          <li><a href="pydvl/influence/frameworks/functional.html#module-pydvl.influence.frameworks.functional">pydvl.influence.frameworks.functional</a>
+</li>
           <li><a href="pydvl/influence/frameworks/torch_differentiable.html#module-pydvl.influence.frameworks.torch_differentiable">pydvl.influence.frameworks.torch_differentiable</a>
 </li>
           <li><a href="pydvl/influence/frameworks/twice_differentiable.html#module-pydvl.influence.frameworks.twice_differentiable">pydvl.influence.frameworks.twice_differentiable</a>
+</li>
+          <li><a href="pydvl/influence/frameworks/util.html#module-pydvl.influence.frameworks.util">pydvl.influence.frameworks.util</a>
 </li>
           <li><a href="pydvl/influence/general.html#module-pydvl.influence.general">pydvl.influence.general</a>
 </li>
@@ -919,6 +933,13 @@
 </li>
         </ul></li>
         <li>
+    pydvl.influence.frameworks.functional
+
+        <ul>
+          <li><a href="pydvl/influence/frameworks/functional.html#module-pydvl.influence.frameworks.functional">module</a>
+</li>
+        </ul></li>
+        <li>
     pydvl.influence.frameworks.torch_differentiable
 
         <ul>
@@ -930,6 +951,13 @@
 
         <ul>
           <li><a href="pydvl/influence/frameworks/twice_differentiable.html#module-pydvl.influence.frameworks.twice_differentiable">module</a>
+</li>
+        </ul></li>
+        <li>
+    pydvl.influence.frameworks.util
+
+        <ul>
+          <li><a href="pydvl/influence/frameworks/util.html#module-pydvl.influence.frameworks.util">module</a>
 </li>
         </ul></li>
         <li>
@@ -1023,6 +1051,8 @@
           <li><a href="pydvl/utils/parallel/futures.html#module-pydvl.utils.parallel.futures">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     pydvl.utils.parallel.futures.ray
 
@@ -1030,8 +1060,6 @@
           <li><a href="pydvl/utils/parallel/futures/ray.html#module-pydvl.utils.parallel.futures.ray">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     pydvl.utils.parallel.map_reduce
 
@@ -1258,6 +1286,8 @@
           <li><a href="pydvl/value/shapley/truncated.html#pydvl.value.shapley.truncated.TruncationPolicy.reset">(TruncationPolicy method)</a>
 </li>
         </ul></li>
+        <li><a href="pydvl/influence/frameworks/util.html#pydvl.influence.frameworks.util.reshape_vector_to_tensors">reshape_vector_to_tensors() (in module pydvl.influence.frameworks.util)</a>
+</li>
         <li><a href="pydvl/utils/config.html#pydvl.utils.config.MemcachedConfig.rtol_stderr">rtol_stderr (MemcachedConfig attribute)</a>
 </li>
         <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.running_moments">running_moments() (in module pydvl.utils.numeric)</a>
@@ -1392,10 +1422,12 @@
 </li>
         <li><a href="pydvl/value/result.html#pydvl.value.result.ValuationResult.to_dataframe">to_dataframe() (ValuationResult method)</a>
 </li>
-        <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.top_k_value_accuracy">top_k_value_accuracy() (in module pydvl.utils.numeric)</a>
+        <li><a href="pydvl/influence/frameworks/util.html#pydvl.influence.frameworks.util.to_model_device">to_model_device() (in module pydvl.influence.frameworks.util)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="pydvl/utils/numeric.html#pydvl.utils.numeric.top_k_value_accuracy">top_k_value_accuracy() (in module pydvl.utils.numeric)</a>
+</li>
         <li><a href="pydvl/influence/frameworks.html#pydvl.influence.frameworks.TorchTwiceDifferentiable">TorchTwiceDifferentiable (class in pydvl.influence.frameworks)</a>
 
         <ul>

@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="torch_differentiable" href="frameworks/torch_differentiable.html" /><link rel="prev" title="influence" href="../influence.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="functional" href="frameworks/functional.html" /><link rel="prev" title="influence" href="../influence.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
         <title>frameworks - pyDVL 0.6.2.dev0 documentation</title>
@@ -190,8 +190,10 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../influence.html">influence</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">frameworks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="frameworks/functional.html">functional</a></li>
 <li class="toctree-l4"><a class="reference internal" href="frameworks/torch_differentiable.html">torch_differentiable</a></li>
 <li class="toctree-l4"><a class="reference internal" href="frameworks/twice_differentiable.html">twice_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="frameworks/util.html">util</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="general.html">general</a></li>
@@ -606,6 +608,10 @@ of backprop_on.</p>
 <p class="rubric">Modules in this package</p>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="frameworks/functional.html">functional</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="frameworks/functional.html#pydvl.influence.frameworks.functional.get_hvp_function"><code class="docutils literal notranslate"><span class="pre">get_hvp_function()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="frameworks/torch_differentiable.html">torch_differentiable</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.TorchTwiceDifferentiable.parameters"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable.parameters</span></code></a></li>
@@ -623,6 +629,7 @@ of backprop_on.</p>
 <li class="toctree-l2"><a class="reference internal" href="frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.cat"><code class="docutils literal notranslate"><span class="pre">cat()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.einsum"><code class="docutils literal notranslate"><span class="pre">einsum()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.mvp"><code class="docutils literal notranslate"><span class="pre">mvp()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.lanzcos_low_rank_hessian_approx"><code class="docutils literal notranslate"><span class="pre">lanzcos_low_rank_hessian_approx()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="frameworks/twice_differentiable.html">twice_differentiable</a><ul>
@@ -636,6 +643,13 @@ of backprop_on.</p>
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="frameworks/util.html">util</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="frameworks/util.html#pydvl.influence.frameworks.util.to_model_device"><code class="docutils literal notranslate"><span class="pre">to_model_device()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="frameworks/util.html#pydvl.influence.frameworks.util.flatten_tensors_to_vector"><code class="docutils literal notranslate"><span class="pre">flatten_tensors_to_vector()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="frameworks/util.html#pydvl.influence.frameworks.util.reshape_vector_to_tensors"><code class="docutils literal notranslate"><span class="pre">reshape_vector_to_tensors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="frameworks/util.html#pydvl.influence.frameworks.util.align_structure"><code class="docutils literal notranslate"><span class="pre">align_structure()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
@@ -645,12 +659,12 @@ of backprop_on.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="frameworks/torch_differentiable.html">
+          <a class="next-page" href="frameworks/functional.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">torch_differentiable</div>
+                <div class="title">functional</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
