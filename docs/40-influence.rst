@@ -211,6 +211,29 @@ tends to improve the performance of the model on test point $i$, and vice versa,
 a large negative influence indicates that training point $j$ tends to worsen the
 performance of the model on test point $i$.
 
+Perturbation influences
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The method of empirical influence computation can be selected in
+:func:`~pydvl.influence.general.compute_influences` with the parameter
+`influence_type`:
+
+.. code-block:: python
+
+   >>> from pydvl.influence import compute_influences
+   >>> compute_influences(
+   ...    model,
+   ...    training_data_loader,
+   ...    test_data_loader,
+   ...    influence_type="perturbation",
+   ... )
+
+The result is a tensor with at least three dimensions. The first two dimensions
+are the same as in the case of `influence_type=up` case, i.e. one row per test
+point and one column per training point. The remaining dimensions are the same
+as the number of input features in the data. Therefore, each entry in the tensor
+represents the influence of each feature of each training point on each test
+point.
 
 Approximate matrix inversion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -218,8 +241,7 @@ Approximate matrix inversion
 In almost every practical application it is not possible to construct, even less
 invert the complete Hessian in memory. pyDVL offers several approximate
 algorithms to invert it by setting the parameter `inversion_method` of
-:func:`~pydvl.influence.general.compute_influences`. See the documentation for
-allowed values.
+:func:`~pydvl.influence.general.compute_influences`.
 
 .. code-block:: python
 
@@ -231,8 +253,8 @@ allowed values.
    ...    inversion_method="cg"
    ... )
 
-Each method has its own set of parameters that can be tuned to improve the final
-result. These parameters can be passed directly to
+Each inversion method has its own set of parameters that can be tuned to improve
+the final result. These parameters can be passed directly to
 :func:`~pydvl.influence.general.compute_influences` as keyword arguments. For
 example, the following code sets the maximum number of iterations for conjugate
 gradient to $100$ and the miximum relative error to $0.01$:
@@ -257,9 +279,10 @@ Additionally, and as discussed in :ref:`the introduction
 global minimum of the loss. Despite good apparent convergence, $\hat{\theta}$
 might be located in a region with flat curvature or close to a saddle point. In
 particular, the Hessian might have vanishing eigenvalues making its direct
-inversion impossible.
+inversion impossible. Certain methods, such as the :ref:`Arnoldi method
+<arnoldi_solver>` are robust against these problems, but most are not.
 
-To circumvent this problem, many approximate methods are available. The simplest
+To circumvent this problem, many approximate methods can be implemented. The simplest
 adds a small *hessian perturbation term*, i.e. $H_{\hat{\theta}} + \lambda
 \mathbb{I}$, with $\mathbb{I}$ being the identity matrix. This standard trick
 ensures that the eigenvalues of $H_{\hat{\theta}}$ are bounded away from zero
@@ -296,30 +319,30 @@ training dataset.
 .. code-block:: python
 
    >>> from pydvl.influence import compute_influence_factors
-   >>> compute_influence_factors(
+   >>> influence_factors = compute_influence_factors(
    ...    model,
    ...    training_data_loader,
    ...    test_data_loader,
    ...    inversion_method="cg"
    ... )
 
-Perturbation influences
-^^^^^^^^^^^^^^^^^^^^^^^
+The result is an object of type :class:`~pydvl.influence.framework.iHVPResult`,
+which holds the calculated influence factors (`influence_factors.x`) and a
+dictionary with the info on the inversion process (`influence_factors.info`).
 
-The method of empirical influence computation can be selected in
-:func:`~pydvl.influence.general.compute_influences` with the parameter
-`influence_type`:
+.. _methods_for_inverse_hessian_vector_product_calculation:
 
-.. code-block:: python
+Methods for inverse Hessian-vector product calculation
+------------------------------------------------------
 
-   >>> from pydvl.influence import compute_influences
-   >>> compute_influences(
-   ...    model,
-   ...    training_data_loader,
-   ...    test_data_loader,
-   ...    influence_type="perturbation",
-   ...    inversion_method="lissa"
-   ... )
+Something about iHVP methods.
 
+.. _arnoldi_solver:
+
+Arnoldi solver
+^^^^^^^^^^^^^^
+The Arnoldi method is a Krylov subspace method for approximating the action of a
+matrix on a vector. It is a generalization of the power method for finding
+eigenvectors of a matrix. 
 
 .. footbibliography::
