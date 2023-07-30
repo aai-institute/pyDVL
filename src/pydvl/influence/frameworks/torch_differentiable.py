@@ -493,7 +493,7 @@ def solve_arnoldi(
     tol: float = 1e-6,
     max_iter: Optional[int] = None,
     eigen_computation_on_gpu: bool = False,
-) -> torch.Tensor:
+) -> iHVPResult:
 
     """
     Solves the linear system Hx = b, where H is the Hessian of the model's loss function and b is the given right-hand
