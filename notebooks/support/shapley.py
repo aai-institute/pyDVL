@@ -29,7 +29,7 @@ def load_spotify_dataset(
     :param random_state: fixes sklearn random seed
     :return: Tuple with 3 elements, each being a list sith [input_data, related_labels]
     """
-    root_dir_path = Path(__file__).parent.parent.parent.parent
+    root_dir_path = Path(__file__).parent.parent.parent
     file_path = root_dir_path / "data/top_hits_spotify_dataset.csv"
     if file_path.exists():
         data = pd.read_csv(file_path)
