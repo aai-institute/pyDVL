@@ -123,9 +123,9 @@ def linear_shapley(linear_dataset, scorer, n_jobs):
     return u, exact_values
 
 
-@pytest.fixture(scope="module", params=["sequential", "ray-local", "ray-external"])
+@pytest.fixture(scope="module", params=["joblib", "ray-local", "ray-external"])
 def parallel_config(request):
-    if request.param == "sequential":
+    if "ray" not in request.param:
         yield ParallelConfig(backend=request.param)
     elif request.param == "ray-local":
         yield ParallelConfig(backend="ray")

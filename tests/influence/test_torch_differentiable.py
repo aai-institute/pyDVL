@@ -48,7 +48,7 @@ def linear_mvp_model(A, b):
     model.weight.data = torch.as_tensor(A)
     model.bias.data = torch.as_tensor(b)
     loss = F.mse_loss
-    return TorchTwiceDifferentiable(model=model, loss=loss)
+    return TorchTwiceDifferentiable(model=model, loss=loss, device=torch.device("cpu"))
 
 
 @pytest.mark.torch
@@ -181,5 +181,5 @@ def test_inversion_methods(
     linear_cg = solve_batch_cg(mvp_model, train_data_loader, b)
     linear_lissa = solve_lissa(mvp_model, train_data_loader, b, maxiter=5000, scale=5)
 
-    assert np.allclose(linear_inverse, linear_cg, rtol=1e-1)
-    assert np.allclose(linear_inverse, linear_lissa, rtol=1e-1)
+    assert np.allclose(linear_inverse.x, linear_cg.x, rtol=1e-1)
+    assert np.allclose(linear_inverse.x, linear_lissa.x, rtol=1e-1)

@@ -16,7 +16,6 @@ Objects of both types are used to construct a :class:`~pydvl.utils.utility.Utili
 object.
 
 """
-
 import logging
 from collections import OrderedDict
 from pathlib import Path

@@ -24,6 +24,7 @@ log_level = "INFO"
 markers = [
     "torch: Mark a test function that uses PyTorch"
 ]
+filterwarnings = "ignore::DeprecationWarning:pkg_resources.*:"
 
 [tool.coverage.run]
 branch = true
