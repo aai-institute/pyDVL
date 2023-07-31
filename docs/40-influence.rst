@@ -332,10 +332,79 @@ dictionary with the info on the inversion process (`influence_factors.info`).
 
 .. _methods_for_inverse_hessian_vector_product_calculation:
 
-Methods for inverse Hessian-vector product calculation
-------------------------------------------------------
+Methods for inverse HVP calculation
+-----------------------------------
 
-Something about iHVP methods.
+In order to calculate influence values, pydvl implements several methods for the
+calculation of the inverse Hessian vector product (iHVP). More precisely, given
+a model, training data and a tensor $b$, the function
+:func:`~pydvl.influence.inversion.solve_hvp` will find $x$ such that $H x = b$,
+with $H$ is the hessian of model.
+
+Many different inversion methods can be selected selected via the parameter 
+`inversion_method` of :func:`~pydvl.influence.general.compute_influences`.
+The following paragraphs will offer more detailed exaple of each method.
+
+
+.. _direct_inversion:
+
+Direct inversion 
+^^^^^^^^^^^^^^^^ 
+
+With `inversion_method = "direct"` pyDVL will calculate the inverse Hessian
+using the direct matrix inversion. This means that the Hessian will first be
+explicitly created and then inverted. This method is the most accurate, but also
+the most computationally demanding. It is therefore not recommended for large
+datasets or models with many parameters.
+
+.. code-block:: python
+
+   >>> from pydvl.influence.inversion import solve_hvp
+   >>> solve_hvp(
+   ...    inversion_method="direct",
+   ...    model,
+   ...    training_data_loader,
+   ...    b,
+   ... )
+
+The result, an object of type :class:`~pydvl.influence.framework.iHVPResult`,
+which holds two objects: `influence_factors.x` and `influence_factors.info`. The
+first one is the inverse Hessian vector product, while the second one is a
+dictionary with the info on the inversion process. For this method, the info
+consists of the Hessian matrix itself.
+
+.. _conjugate_gradient:
+
+Conjugate Gradient
+^^^^^^^^^^^^^^^^^^ 
+
+A classical method for solving linear systems of equations is the conjugate
+gradient method. It is an iterative method that does not require the explicit
+inversion of the Hessian matrix. Instead, it only requires the calculation of
+the Hessian vector product. This makes it a good choice for large datasets or
+models with many parameters. It is Nevertheless much slower than the direct
+inversion method and not as accurate. More info on the theory of conjugate
+gradient can be found
+`here <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_
+
+In pyDVL, you can select conjugate gradient with `inversion_method = "cg"`, like
+this:
+
+.. code-block:: python
+
+   >>> from pydvl.influence.inversion import solve_hvp
+   >>> solve_hvp(
+   ...    inversion_method="cg",
+   ...    model,
+   ...    training_data_loader,
+   ...    b,
+   ... )
+
+The resulting :class:`~pydvl.influence.framework.iHVPResult` holds the solution
+of the iHVP, `influence_factors.x`, and some info on the inversion process
+`influence_factors.info`. More specifically, for each batch the infos will
+report the number of iterations, a boolean indicating if the inversion
+converged, and the residual of the inversion.
 
 .. _arnoldi_solver:
 
