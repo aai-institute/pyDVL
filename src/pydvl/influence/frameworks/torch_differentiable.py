@@ -7,7 +7,7 @@ influence of a training point on the model.
 import logging
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
@@ -49,12 +49,11 @@ def flatten_all(grad: Iterable[torch.Tensor]) -> torch.Tensor:
 
 
 def solve_linear(
-    model: TwiceDifferentiable,
+    model: "TorchTwiceDifferentiable",
     training_data: DataLoader,
     b: torch.Tensor,
     *,
     hessian_perturbation: float = 0.0,
-    progress: bool = False,
 ) -> InverseHvpResult:
     """Given a model and training data, it finds x s.t. $Hx = b$, with $H$ being
     the model hessian.
@@ -63,7 +62,6 @@ def solve_linear(
     :param training_data: A DataLoader containing the training data.
     :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
     :param hessian_perturbation: regularization of the hessian
-    :param progress: If True, display progress bars.
 
     :return: An array that solves the inverse problem,
         i.e. it returns $x$ such that $Hx = b$, and a dictionary containing
@@ -76,7 +74,7 @@ def solve_linear(
         all_y.append(y)
     all_x = cat(all_x)
     all_y = cat(all_y)
-    hessian = model.hessian(all_x, all_y, progress=progress)
+    hessian = model.hessian(all_x, all_y)
     matrix = hessian + hessian_perturbation * identity_tensor(
         model.num_params, device=model.device
     )
@@ -85,7 +83,7 @@ def solve_linear(
 
 
 def solve_batch_cg(
-    model: TwiceDifferentiable,
+    model: "TorchTwiceDifferentiable",
     training_data: DataLoader,
     b: torch.Tensor,
     *,
@@ -189,7 +187,7 @@ def solve_cg(
 
 
 def solve_lissa(
-    model: TwiceDifferentiable,
+    model: "TorchTwiceDifferentiable",
     training_data: DataLoader,
     b: torch.Tensor,
     *,
@@ -365,23 +363,16 @@ def mvp(
     return mvp.detach()  # type: ignore
 
 
-class TorchTwiceDifferentiable(
-    TwiceDifferentiable[torch.Tensor, nn.Module, torch.device]
-):
+class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
     def __init__(
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        *,
-        device: torch.device = torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu"
-        ),
     ):
         r"""
         :param model: A (differentiable) function.
         :param loss: :param loss: A differentiable scalar loss $L(\hat{y}, y)$,
             mapping a prediction and a target to a real value.
-        :param device: device to use for computations. Defaults to cuda if available.
         """
         if model.training:
             logger.warning(
@@ -389,16 +380,14 @@ class TorchTwiceDifferentiable(
                 "computation, e.g. due to batch normalization. Please call model.eval() before "
                 "computing influences."
             )
-        self.model = model.to(device)
         self.loss = loss
-        self.device = device
+        self.model = model
+        self.device = model.device if hasattr(model, "device") else torch.device("cpu")
 
     @property
     def parameters(self) -> List[torch.Tensor]:
         """Returns all the model parameters that require differentiating"""
-        return [
-            param for param in self.model.parameters() if param.requires_grad == True
-        ]
+        return [param for param in self.model.parameters() if param.requires_grad]
 
     @property
     def num_params(self) -> int:
@@ -406,7 +395,7 @@ class TorchTwiceDifferentiable(
         Get number of parameters of model f.
         :returns: Number of parameters as integer.
         """
-        return sum([np.prod(p.size()) for p in self.parameters])
+        return sum([p.numel() for p in self.parameters])
 
     def grad(
         self, x: torch.Tensor, y: torch.Tensor, create_graph: bool = False
@@ -416,6 +405,7 @@ class TorchTwiceDifferentiable(
 
         :param x: A matrix [NxD] representing the features $x_i$.
         :param y: A matrix [NxK] representing the target values $y_i$.
+        :param create_graph:
         :returns: A tuple where the first element is an array [P] with the
             gradients of the model and second element is the input to the model
             as a grad parameters. This can be used for further differentiation.
@@ -424,27 +414,57 @@ class TorchTwiceDifferentiable(
         y = y.to(self.device)
 
         loss_value = self.loss(torch.squeeze(self.model(x)), torch.squeeze(y))
-        grad_f = torch.autograd.grad(loss_value, self.parameters, create_graph=create_graph)
+        grad_f = torch.autograd.grad(
+            loss_value, self.parameters, create_graph=create_graph
+        )
         return flatten_all(grad_f)
 
-    def hessian(
-        self, x: torch.Tensor, y: torch.Tensor, *, progress: bool = False
-    ) -> torch.Tensor:
+    def hessian(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """Calculates the explicit hessian of model parameters given data ($x$ and $y$).
         :param x: A matrix [NxD] representing the features $x_i$.
         :param y: A matrix [NxK] representing the target values $y_i$.
-        :param progress: ``True`` to display progress.
         :returns: the hessian of the model, i.e. the second derivative wrt. the model parameters.
         """
-        x = x.to(self.device)
-        y = y.to(self.device)
-        grad_xy = self.grad(x, y, create_graph=True)
-        return mvp(
-            grad_xy,
-            torch.eye(self.num_params, self.num_params, device=self.device),
-            self.parameters,
-            progress=progress,
+
+        def model_func(param):
+            outputs = torch.func.functional_call(
+                self.model,
+                align_structure(
+                    {k: p for k, p in self.model.named_parameters() if p.requires_grad},
+                    param,
+                ),
+                (x.to(self.device),),
+                strict=True,
+            )
+            return self.loss(outputs, y.to(self.device))
+
+        params = flatten_tensors_to_vector(
+            p.detach() for p in self.model.parameters() if p.requires_grad
         )
+        return torch.func.hessian(model_func)(params)
+
+
+def hessian_from_dict(hessian_dict):
+    param_names = list(hessian_dict.keys())
+
+    hessian_rows = []
+
+    for row_name in param_names:
+        row = []
+
+        for col_name in param_names:
+            block = hessian_dict[row_name][col_name]
+
+            # Flatten the block and add it to the row
+            row.append(block.contiguous().view(-1))
+
+        # Concatenate the row blocks and add them to the Hessian
+        hessian_rows.append(torch.cat(row))
+
+    # Concatenate all rows to form the Hessian
+    hessian = torch.stack(hessian_rows)
+
+    return hessian
 
 
 @dataclass

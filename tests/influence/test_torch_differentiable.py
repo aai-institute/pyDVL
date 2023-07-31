@@ -48,7 +48,7 @@ def linear_mvp_model(A, b):
     model.weight.data = torch.as_tensor(A)
     model.bias.data = torch.as_tensor(b)
     loss = F.mse_loss
-    return TorchTwiceDifferentiable(model=model, loss=loss, device=torch.device("cpu"))
+    return TorchTwiceDifferentiable(model=model, loss=loss)
 
 
 @pytest.mark.torch
@@ -77,7 +77,9 @@ def test_linear_grad(
     train_x = torch.as_tensor(train_x).unsqueeze(1)
     train_y = torch.as_tensor(train_y)
 
-    train_grads_autograd = torch.stack([mvp_model.grad(inpt, target) for inpt, target in zip(train_x, train_y)])
+    train_grads_autograd = torch.stack(
+        [mvp_model.grad(inpt, target) for inpt, target in zip(train_x, train_y)]
+    )
 
     assert np.allclose(train_grads_analytical, train_grads_autograd, rtol=1e-5)
 
@@ -104,7 +106,9 @@ def test_linear_hessian(
     mvp_model = linear_mvp_model(A, b)
 
     test_hessian_analytical = linear_hessian_analytical((A, b), train_x)
-    grad_xy = mvp_model.grad(torch.as_tensor(train_x), torch.as_tensor(train_y), create_graph=True)
+    grad_xy = mvp_model.grad(
+        torch.as_tensor(train_x), torch.as_tensor(train_y), create_graph=True
+    )
     estimated_hessian = mvp(
         grad_xy,
         torch.as_tensor(np.eye((input_dimension + 1) * output_dimension)),

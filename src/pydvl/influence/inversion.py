@@ -66,16 +66,15 @@ def solve_hvp(
     """
     if inversion_method == InversionMethod.Direct:
         return solve_linear(
-            model,
+            model,  # type: ignore
             training_data,
             b,
             **kwargs,
             hessian_perturbation=hessian_perturbation,
-            progress=progress,
         )
     elif inversion_method == InversionMethod.Cg:
         return solve_batch_cg(
-            model,
+            model,  # type: ignore
             training_data,
             b,
             **kwargs,
@@ -84,7 +83,7 @@ def solve_hvp(
         )
     elif inversion_method == InversionMethod.Lissa:
         return solve_lissa(
-            model,
+            model,  # type: ignore
             training_data,
             b,
             **kwargs,

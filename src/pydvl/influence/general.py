@@ -4,9 +4,8 @@ models, as introduced in :footcite:t:`koh_understanding_2017`.
 """
 from copy import deepcopy
 from enum import Enum
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
-from .frameworks.torch_differentiable import unsqueeze
 from ..utils import maybe_progress
 from .frameworks import (
     DataLoaderType,
@@ -15,9 +14,9 @@ from .frameworks import (
     cat,
     einsum,
     mvp,
-    transpose_tensor,
-    zero_tensor,
+    stack,
 )
+from .frameworks.torch_differentiable import unsqueeze
 from .inversion import InverseHvpResult, InversionMethod, solve_hvp
 
 __all__ = ["compute_influences", "InfluenceType", "compute_influence_factors"]
@@ -66,8 +65,15 @@ def compute_influence_factors(
         dimension (D) and test sample (N).
     """
     test_grads = []
-    for x_test, y_test in maybe_progress(test_data, progress, desc="Batch Test Gradients"):
-        test_grad = stack([model.grad(inpt, target) for inpt, target in zip(unsqueeze(x_test, 1), y_test)])
+    for x_test, y_test in maybe_progress(
+        test_data, progress, desc="Batch Test Gradients"
+    ):
+        test_grad = stack(
+            [
+                model.grad(inpt, target)
+                for inpt, target in zip(unsqueeze(x_test, 1), y_test)
+            ]
+        )
         test_grads.append(test_grad)
     test_grads = cat(test_grads)
     return solve_hvp(
@@ -106,8 +112,12 @@ def compute_influences_up(
         number of input points.
     """
     train_grads = []
-    for x, y in maybe_progress(input_data, progress, desc="Batch Split Input Gradients"):
-        train_grad = stack([model.grad(inpt, target) for inpt, target in zip(unsqueeze(x, 1), y)])
+    for x, y in maybe_progress(
+        input_data, progress, desc="Batch Split Input Gradients"
+    ):
+        train_grad = stack(
+            [model.grad(inpt, target) for inpt, target in zip(unsqueeze(x, 1), y)]
+        )
         train_grads.append(train_grad)
 
     train_grads = cat(train_grads)
