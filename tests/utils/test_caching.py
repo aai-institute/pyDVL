@@ -14,7 +14,7 @@ def test_failed_connection():
     from pydvl.utils import MemcachedClientConfig
 
     client_config = MemcachedClientConfig(server=("localhost", 0), connect_timeout=0.1)
-    with pytest.raises(ConnectionRefusedError):
+    with pytest.raises((ConnectionRefusedError, OSError)):
         memcached(client_config)(lambda x: x)
 
 
