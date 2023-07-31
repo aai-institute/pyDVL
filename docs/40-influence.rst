@@ -198,10 +198,11 @@ each test point can be calculated via:
 .. code-block:: python
 
    >>> from pydvl.influence import influences
+   >>> from torch.utils.data import DataLoader
    >>> compute_influences(
-   ...    model,
-   ...    training_data_loader,
-   ...    test_data_loader
+   ...    model: TorchTwiceDifferentiable,
+   ...    training_data_loader: DataLoader,
+   ...    test_data_loader: DataLoader,
    ... )
 
 The result is a tensor with one row per test point and one column per training
@@ -222,9 +223,9 @@ The method of empirical influence computation can be selected in
 
    >>> from pydvl.influence import compute_influences
    >>> compute_influences(
-   ...    model,
-   ...    training_data_loader,
-   ...    test_data_loader,
+   ...    model: TorchTwiceDifferentiable,
+   ...    training_data_loader: DataLoader,
+   ...    test_data_loader: DataLoader,
    ...    influence_type="perturbation",
    ... )
 
@@ -247,9 +248,9 @@ algorithms to invert it by setting the parameter `inversion_method` of
 
    >>> from pydvl.influence import compute_influences
    >>> compute_influences(
-   ...    model,
-   ...    training_data_loader,
-   ...    test_data_loader,
+   ...    model: TorchTwiceDifferentiable,
+   ...    training_data_loader: DataLoader,
+   ...    test_data_loader: DataLoader,
    ...    inversion_method="cg"
    ... )
 
@@ -263,9 +264,9 @@ gradient to $100$ and the miximum relative error to $0.01$:
 
    >>> from pydvl.influence import compute_influences
    >>> compute_influences(
-   ...    model,
-   ...    training_data_loader,
-   ...    test_data_loader,
+   ...    model: TorchTwiceDifferentiable,
+   ...    training_data_loader: DataLoader,
+   ...    test_data_loader: DataLoader,
    ...    inversion_method="cg",
    ...    hessian_regularization=1e-4,
    ...    maxiter=100,
@@ -295,9 +296,9 @@ possible while still allowing a reliable inversion of $H_{\hat{\theta}} +
 
    >>> from pydvl.influence import compute_influences
    >>> compute_influences(
-   ...    model,
-   ...    training_data_loader,
-   ...    test_data_loader,
+   ...    model: TorchTwiceDifferentiable,
+   ...    training_data_loader: DataLoader,
+   ...    test_data_loader: DataLoader,
    ...    inversion_method="cg",
    ...    hessian_regularization=1e-4
    ... )
@@ -320,9 +321,9 @@ training dataset.
 
    >>> from pydvl.influence import compute_influence_factors
    >>> influence_factors = compute_influence_factors(
-   ...    model,
-   ...    training_data_loader,
-   ...    test_data_loader,
+   ...    model: TorchTwiceDifferentiable,
+   ...    training_data_loader: DataLoader,
+   ...    test_data_loader: DataLoader,
    ...    inversion_method="cg"
    ... )
 
@@ -362,9 +363,9 @@ datasets or models with many parameters.
    >>> from pydvl.influence.inversion import solve_hvp
    >>> solve_hvp(
    ...    inversion_method="direct",
-   ...    model,
-   ...    training_data_loader,
-   ...    b,
+   ...    model: TorchTwiceDifferentiable,
+   ...    training_data_loader: DataLoader,
+   ...    b: torch.Tensor,
    ... )
 
 The result, an object of type :class:`~pydvl.influence.framework.iHVPResult`,
@@ -395,16 +396,73 @@ this:
    >>> from pydvl.influence.inversion import solve_hvp
    >>> solve_hvp(
    ...    inversion_method="cg",
-   ...    model,
-   ...    training_data_loader,
-   ...    b,
+   ...    mode: TorchTwiceDifferentiable,
+   ...    training_data_loader: DataLoader,
+   ...    b: torch.Tensor,
+   ...    x0: Optional[torch.Tensor] = None,
+   ...    rtol: float = 1e-7,
+   ...    atol: float = 1e-7,
+   ...    maxiter: Optional[int] = None,
    ... )
 
+The addinal optional parameters `x0`, `rtol`, `atol`, and `maxiter` are passed
+to the :func:`~pydvl.influence.frameworks.torch_differentiable.solve_batch_cg`
+function, and are respecively the initial guess for the solution, the relative
+tolerance, the absolute tolerance, and the maximum number of iterations.
+
+The resulting :class:`~pydvl.influence.framework.iHVPResult`
+holds the solution of the iHVP, `influence_factors.x`, and some info on the
+inversion process `influence_factors.info`. More specifically, for each batch
+the infos will report the number of iterations, a boolean indicating if the
+inversion converged, and the residual of the inversion.
+
+.. _lissa_solver:
+
+Linear time Stochastic Second-Order Approximation (LiSSA)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The LiSSA method is a stochastic approximation of the inverse Hessian vector
+product. Compared to :ref:`conjugate gradient
+<conjugate_gradient>` it is faster but less accurate and typically suffers from 
+instability.
+
+In order to find the solution of the HVP, LiSSA iteratively approximates the
+inverse of the Hessian matrix with the following update:
+
+$$H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s},$$
+
+where $d$ and $s$ are a dampening and a scaling factor, which are essential
+for the convergence of the method and they need to be chosen carefully, and I 
+is the identity matrix. More info on the theory of LiSSA can be found in the 
+original paper :footcite:t:`agarwal_2017_second`.
+
+In pyDVL, you can select LiSSA with `inversion_method = "lissa"`, like this:
+
+.. code-block:: python
+
+   >>> from pydvl.influence.inversion import solve_hvp
+   >>> solve_hvp(
+   ...    inversion_method="lissa",
+   ...    model: TorchTwiceDifferentiable,
+   ...    training_data_loader: DataLoader,
+   ...    b: torch.Tensor,
+   ...    maxiter: int = 1000,
+   ...    dampen: float = 0.0,
+   ...    scale: float = 10.0,
+   ...    h0: Optional[torch.Tensor] = None,
+   ...    rtol: float = 1e-4,
+   ... )
+
+with the additional optional parameters `maxiter`, `dampen`, `scale`, `h0`, and
+`rtol`, which are passed to the
+:func:`~pydvl.influence.frameworks.torch_differentiable.solve_lissa` function,
+being the maximum number of iterations, the dampening factor, the scaling
+factor, the initial guess for the solution and the relative tolerance,
+respectively.
+
 The resulting :class:`~pydvl.influence.framework.iHVPResult` holds the solution
-of the iHVP, `influence_factors.x`, and some info on the inversion process
-`influence_factors.info`. More specifically, for each batch the infos will
-report the number of iterations, a boolean indicating if the inversion
-converged, and the residual of the inversion.
+of the iHVP, `influence_factors.x`, and, within `influence_factors.info`, the
+maximum percentage error and the mean percentage error of the approximation.
+
 
 .. _arnoldi_solver:
 

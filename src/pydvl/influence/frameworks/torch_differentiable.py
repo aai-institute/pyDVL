@@ -211,7 +211,8 @@ def solve_lissa(
 
     where $I$ is the identity matrix, $d$ is a dampening term and $s$ a scaling
     factor that are applied to help convergence. For details, see
-    :footcite:t:`koh_understanding_2017`.
+    :footcite:t:`koh_understanding_2017` and the original paper
+    :footcite:t:`agarwal_2017_second`.
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
