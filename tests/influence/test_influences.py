@@ -1,4 +1,5 @@
-from typing import Dict, Tuple
+from dataclasses import dataclass
+from typing import Callable, Dict, Tuple
 
 import numpy as np
 import pytest
@@ -157,63 +158,122 @@ def test_influence_linear_model(
     )
 
 
-conv3d_nn = nn.Sequential(
-    nn.Conv3d(in_channels=5, out_channels=3, kernel_size=2),
-    nn.Flatten(),
-    nn.Linear(24, 3),
-)
-conv2d_nn = nn.Sequential(
-    nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
-    nn.Flatten(),
-    nn.Linear(27, 3),
-)
-conv1d_nn = nn.Sequential(
-    nn.Conv1d(in_channels=5, out_channels=3, kernel_size=2),
-    nn.Flatten(),
-    nn.Linear(6, 3),
-)
-simple_nn_regr = nn.Sequential(nn.Linear(10, 10), nn.Linear(10, 3), nn.Linear(3, 1))
+@pytest.fixture(scope="function")
+def deterministic_seed():
+    torch.manual_seed(31)
+    np.random.seed(31)
+    torch.use_deterministic_algorithms(True)
 
-test_cases = {
-    "conv3d_nn_up": [
-        conv3d_nn,
-        (5, 3, 3, 3),
-        3,
-        nn.MSELoss(),
-        InfluenceType.Up,
-    ],
-    "conv3d_nn_pert": [
-        conv3d_nn,
-        (5, 3, 3, 3),
-        3,
-        nn.SmoothL1Loss(),
-        InfluenceType.Perturbation,
-    ],
-    "conv_2d_nn_up": [conv2d_nn, (5, 5, 5), 3, nn.MSELoss(), InfluenceType.Up],
-    "conv_2d_nn_pert": [
-        conv2d_nn,
-        (5, 5, 5),
-        3,
-        nn.SmoothL1Loss(),
-        InfluenceType.Perturbation,
-    ],
-    "conv_1d_nn_up": [conv1d_nn, (5, 3), 3, nn.MSELoss(), InfluenceType.Up],
-    "conv_1d_pert": [
-        conv1d_nn,
-        (5, 3),
-        3,
-        nn.SmoothL1Loss(),
-        InfluenceType.Perturbation,
-    ],
-    "simple_nn_up": [simple_nn_regr, (10,), 1, nn.MSELoss(), InfluenceType.Up],
-    "simple_nn_pert": [
-        simple_nn_regr,
-        (10,),
-        1,
-        nn.SmoothL1Loss(),
-        InfluenceType.Perturbation,
-    ],
-}
+
+def create_conv3d_nn():
+    return nn.Sequential(
+        nn.Conv3d(in_channels=5, out_channels=3, kernel_size=2),
+        nn.Flatten(),
+        nn.Linear(24, 3),
+    )
+
+
+def create_conv2d_nn():
+    return nn.Sequential(
+        nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
+        nn.Flatten(),
+        nn.Linear(27, 3),
+    )
+
+
+def create_conv1d_nn():
+    return nn.Sequential(
+        nn.Conv1d(in_channels=5, out_channels=3, kernel_size=2),
+        nn.Flatten(),
+        nn.Linear(6, 3),
+    )
+
+
+def create_simple_nn_regr():
+    return nn.Sequential(nn.Linear(10, 10), nn.Linear(10, 3), nn.Linear(3, 1))
+
+
+@dataclass
+class TestCase:
+    case_id: str
+    module_factory: Callable[[], nn.Module]
+    input_dim: Tuple[int, ...]
+    output_dim: int
+    loss: nn.modules.loss._Loss
+    influence_type: InfluenceType
+
+
+@pytest.fixture
+def test_case(request):
+    return request.param
+
+
+test_cases = [
+    TestCase(
+        case_id="conv3d_nn_up",
+        module_factory=create_conv3d_nn,
+        input_dim=(5, 3, 3, 3),
+        output_dim=3,
+        loss=nn.MSELoss(),
+        influence_type=InfluenceType.Up,
+    ),
+    TestCase(
+        case_id="conv3d_nn_pert",
+        module_factory=create_conv3d_nn,
+        input_dim=(5, 3, 3, 3),
+        output_dim=3,
+        loss=nn.SmoothL1Loss(),
+        influence_type=InfluenceType.Perturbation,
+    ),
+    TestCase(
+        case_id="conv2d_nn_up",
+        module_factory=create_conv2d_nn,
+        input_dim=(5, 5, 5),
+        output_dim=3,
+        loss=nn.MSELoss(),
+        influence_type=InfluenceType.Up,
+    ),
+    TestCase(
+        case_id="conv2d_nn_pert",
+        module_factory=create_conv2d_nn,
+        input_dim=(5, 5, 5),
+        output_dim=3,
+        loss=nn.SmoothL1Loss(),
+        influence_type=InfluenceType.Perturbation,
+    ),
+    TestCase(
+        case_id="conv1d_nn_up",
+        module_factory=create_conv1d_nn,
+        input_dim=(5, 3),
+        output_dim=3,
+        loss=nn.MSELoss(),
+        influence_type=InfluenceType.Up,
+    ),
+    TestCase(
+        case_id="conv1d_nn_pert",
+        module_factory=create_conv1d_nn,
+        input_dim=(5, 3),
+        output_dim=3,
+        loss=nn.SmoothL1Loss(),
+        influence_type=InfluenceType.Perturbation,
+    ),
+    TestCase(
+        case_id="simple_nn_up",
+        module_factory=create_simple_nn_regr,
+        input_dim=(10,),
+        output_dim=1,
+        loss=nn.MSELoss(),
+        influence_type=InfluenceType.Up,
+    ),
+    TestCase(
+        case_id="simple_nn_pert",
+        module_factory=create_simple_nn_regr,
+        input_dim=(10,),
+        output_dim=1,
+        loss=nn.SmoothL1Loss(),
+        influence_type=InfluenceType.Perturbation,
+    ),
+]
 
 
 def create_random_data_loader(
@@ -221,7 +281,6 @@ def create_random_data_loader(
     output_dim: int,
     data_len: int,
     batch_size: int = 1,
-    random_seed: int = 31,
 ) -> DataLoader:
     """
     Creates DataLoader instances with random data for testing purposes.
@@ -230,11 +289,9 @@ def create_random_data_loader(
     :param output_dim: The dimension of the output data.
     :param data_len: The length of the training dataset to be generated.
     :param batch_size: The size of the batches to be used in the DataLoader.
-    :param random_seed: The seed for the random number generator. Defaults to 31.
 
     :return: DataLoader instances for data.
     """
-    torch.manual_seed(random_seed)
     x = torch.rand((data_len, *input_dim))
     y = torch.rand((data_len, output_dim))
 
@@ -256,33 +313,37 @@ def create_random_data_loader(
     ],
 )
 @pytest.mark.parametrize(
-    "nn_architecture, input_dim, output_dim, loss, influence_type",
-    test_cases.values(),
-    ids=test_cases.keys(),
+    "test_case",
+    test_cases,
+    ids=[case.case_id for case in test_cases],
+    indirect=["test_case"],
 )
 def test_influences_nn(
-    nn_architecture: nn.Module,
-    input_dim: Tuple[int],
-    output_dim: int,
-    loss: nn.modules.loss._Loss,
-    influence_type: InfluenceType,
+    test_case: TestCase,
     inversion_method: InversionMethod,
     inversion_method_kwargs: Dict,
+    deterministic_seed,
     data_len: int = 20,
     hessian_reg: float = 1e3,
     test_data_len: int = 10,
     batch_size: int = 10,
 ):
+    module_factory = test_case.module_factory
+    input_dim = test_case.input_dim
+    output_dim = test_case.output_dim
+    loss = test_case.loss
+    influence_type = test_case.influence_type
 
     train_data_loader = create_random_data_loader(
-        input_dim, output_dim, data_len, batch_size, random_seed=18
+        input_dim, output_dim, data_len, batch_size
     )
     test_data_loader = create_random_data_loader(
-        input_dim, output_dim, test_data_len, batch_size, random_seed=19
+        input_dim, output_dim, test_data_len, batch_size
     )
 
-    nn_architecture.eval()
-    model = TorchTwiceDifferentiable(nn_architecture, loss, device=torch.device("cpu"))
+    model = module_factory()
+    model.eval()
+    model = TorchTwiceDifferentiable(model, loss, device=torch.device("cpu"))
 
     direct_influence = compute_influences(
         model,
@@ -357,27 +418,28 @@ def minimal_training(
 
 @pytest.mark.torch
 @pytest.mark.parametrize(
-    "nn_architecture, input_dim, output_dim, loss, influence_type",
-    test_cases.values(),
-    ids=test_cases.keys(),
+    "test_case",
+    test_cases,
+    ids=[case.case_id for case in test_cases],
+    indirect=["test_case"],
 )
 def test_influences_arnoldi(
-    nn_architecture: nn.Module,
-    input_dim: Tuple[int],
-    output_dim: int,
-    loss: nn.modules.loss._Loss,
-    influence_type: InfluenceType,
+    test_case: TestCase,
+    deterministic_seed,
     data_len: int = 20,
     hessian_reg: float = 20.0,
     test_data_len: int = 10,
 ):
-    train_data_loader = create_random_data_loader(
-        input_dim, output_dim, data_len, random_seed=31
-    )
-    test_data_loader = create_random_data_loader(
-        input_dim, output_dim, test_data_len, random_seed=42
-    )
+    module_factory = test_case.module_factory
+    input_dim = test_case.input_dim
+    output_dim = test_case.output_dim
+    loss = test_case.loss
+    influence_type = test_case.influence_type
 
+    train_data_loader = create_random_data_loader(input_dim, output_dim, data_len)
+    test_data_loader = create_random_data_loader(input_dim, output_dim, test_data_len)
+
+    nn_architecture = module_factory()
     nn_architecture = minimal_training(
         nn_architecture, train_data_loader, loss, lr=0.3, epochs=100
     )
@@ -413,3 +475,15 @@ def test_influences_arnoldi(
     )
 
     assert np.allclose(direct_influence, low_rank_influence, rtol=1e-1)
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize("run", [1, 2])
+def test_deterministic_seed(deterministic_seed, run):
+    x = torch.rand((5, 5))
+    if run == 1:
+        test_deterministic_seed.x1 = x.clone()  # store the result from the first run
+    else:
+        assert torch.allclose(
+            test_deterministic_seed.x1, x
+        )  # compare with the result from the first run
