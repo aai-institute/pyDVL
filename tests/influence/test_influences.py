@@ -78,6 +78,13 @@ def analytical_linear_influences(
     return result
 
 
+@pytest.fixture(scope="function")
+def deterministic_seed():
+    torch.manual_seed(31)
+    np.random.seed(31)
+    torch.use_deterministic_algorithms(True)
+
+
 @pytest.mark.torch
 @pytest.mark.parametrize(
     "influence_type",
@@ -104,6 +111,7 @@ def test_influence_linear_model(
     inversion_method_kwargs: Dict,
     rtol: float,
     train_set_size: int,
+    deterministic_seed,
     hessian_reg: float = 0.1,
     test_set_size: int = 20,
     problem_dimension: Tuple[int, int] = (4, 20),
@@ -156,13 +164,6 @@ def test_influence_linear_model(
         analytical_influences[upper_quantile_mask],
         rtol=rtol,
     )
-
-
-@pytest.fixture(scope="function")
-def deterministic_seed():
-    torch.manual_seed(31)
-    np.random.seed(31)
-    torch.use_deterministic_algorithms(True)
 
 
 def create_conv3d_nn():
