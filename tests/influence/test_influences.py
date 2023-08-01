@@ -78,13 +78,6 @@ def analytical_linear_influences(
     return result
 
 
-@pytest.fixture(scope="function")
-def deterministic_seed():
-    torch.manual_seed(31)
-    np.random.seed(31)
-    torch.use_deterministic_algorithms(True)
-
-
 @pytest.mark.torch
 @pytest.mark.parametrize(
     "influence_type",
@@ -111,7 +104,6 @@ def test_influence_linear_model(
     inversion_method_kwargs: Dict,
     rtol: float,
     train_set_size: int,
-    deterministic_seed,
     hessian_reg: float = 0.1,
     test_set_size: int = 20,
     problem_dimension: Tuple[int, int] = (4, 20),
@@ -323,7 +315,6 @@ def test_influences_nn(
     test_case: TestCase,
     inversion_method: InversionMethod,
     inversion_method_kwargs: Dict,
-    deterministic_seed,
     data_len: int = 20,
     hessian_reg: float = 1e3,
     test_data_len: int = 10,
@@ -426,7 +417,6 @@ def minimal_training(
 )
 def test_influences_arnoldi(
     test_case: TestCase,
-    deterministic_seed,
     data_len: int = 20,
     hessian_reg: float = 20.0,
     test_data_len: int = 10,
@@ -476,15 +466,3 @@ def test_influences_arnoldi(
     )
 
     assert np.allclose(direct_influence, low_rank_influence, rtol=1e-1)
-
-
-@pytest.mark.torch
-@pytest.mark.parametrize("run", [1, 2])
-def test_deterministic_seed(deterministic_seed, run):
-    x = torch.rand((5, 5))
-    if run == 1:
-        test_deterministic_seed.x1 = x.clone()  # store the result from the first run
-    else:
-        assert torch.allclose(
-            test_deterministic_seed.x1, x
-        )  # compare with the result from the first run

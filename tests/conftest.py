@@ -72,6 +72,7 @@ def pytorch_seed(seed):
         import torch
 
         torch.manual_seed(seed)
+        torch.use_deterministic_algorithms(True, warn_only=True)
     except ImportError:
         pass
 
