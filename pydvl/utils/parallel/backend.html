@@ -295,7 +295,7 @@
 <hr class="docutils" />
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.utils.parallel.backend.init_parallel_backend">
-<span class="sig-name descname"><span class="pre">init_parallel_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseParallelBackend</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L231"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.init_parallel_backend" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">init_parallel_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseParallelBackend</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L224"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.init_parallel_backend" title="Permalink to this definition">#</a></dt>
 <dd><p>Initializes the parallel backend and returns an instance of it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -305,6 +305,14 @@ with cluster address, number of cpus, etc.</p>
 <dt class="field-even">Example<span class="colon">:</span></dt>
 <dd class="field-even"><p></p></dd>
 </dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.parallel.backend</span> <span class="kn">import</span> <span class="n">init_parallel_backend</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.config</span> <span class="kn">import</span> <span class="n">ParallelConfig</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">ParallelConfig</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parallel_backend</span> <span class="o">=</span> <span class="n">init_parallel_backend</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parallel_backend</span>
+<span class="go">&lt;JoblibParallelBackend: {&#39;logging_level&#39;: 30, &#39;n_jobs&#39;: None}&gt;</span>
+</pre></div>
+</div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.parallel.backend</span> <span class="kn">import</span> <span class="n">init_parallel_backend</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.config</span> <span class="kn">import</span> <span class="n">ParallelConfig</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">ParallelConfig</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;ray&quot;</span><span class="p">)</span>
