@@ -327,7 +327,7 @@ training dataset.
    ...    inversion_method="cg"
    ... )
 
-The result is an object of type :class:`~pydvl.influence.framework.iHVPResult`,
+The result is an object of type :class:`~pydvl.influence.framework.IhvpResult`,
 which holds the calculated influence factors (`influence_factors.x`) and a
 dictionary with the info on the inversion process (`influence_factors.info`).
 
@@ -368,7 +368,7 @@ datasets or models with many parameters.
    ...    b: torch.Tensor,
    ... )
 
-The result, an object of type :class:`~pydvl.influence.framework.iHVPResult`,
+The result, an object of type :class:`~pydvl.influence.framework.IhvpResult`,
 which holds two objects: `influence_factors.x` and `influence_factors.info`. The
 first one is the inverse Hessian vector product, while the second one is a
 dictionary with the info on the inversion process. For this method, the info
@@ -410,7 +410,7 @@ to the :func:`~pydvl.influence.frameworks.torch_differentiable.solve_batch_cg`
 function, and are respecively the initial guess for the solution, the relative
 tolerance, the absolute tolerance, and the maximum number of iterations.
 
-The resulting :class:`~pydvl.influence.framework.iHVPResult`
+The resulting :class:`~pydvl.influence.framework.IhvpResult`
 holds the solution of the iHVP, `influence_factors.x`, and some info on the
 inversion process `influence_factors.info`. More specifically, for each batch
 the infos will report the number of iterations, a boolean indicating if the
@@ -459,7 +459,7 @@ being the maximum number of iterations, the dampening factor, the scaling
 factor, the initial guess for the solution and the relative tolerance,
 respectively.
 
-The resulting :class:`~pydvl.influence.framework.iHVPResult` holds the solution
+The resulting :class:`~pydvl.influence.framework.IhvpResult` holds the solution
 of the iHVP, `influence_factors.x`, and, within `influence_factors.info`, the
 maximum percentage error and the mean percentage error of the approximation.
 

@@ -1,26 +1,19 @@
 from abc import ABC
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    List,
-    NamedTuple,
-    Sequence,
-    Tuple,
-    TypeVar,
-)
+from typing import Any, Callable, Dict, Generic, List, Sequence, Tuple, TypeVar
 
 TensorType = TypeVar("TensorType", bound=Sequence)
 ModelType = TypeVar("ModelType")
 DeviceType = TypeVar("DeviceType")
 
 
-@dataclass
-class iHVPResult(Generic[TensorType]):
+@dataclass(frozen=True)
+class IhvpResult(Generic[TensorType]):
     x: TensorType
     info: Dict[str, Any]
+
+    def __iter__(self):
+        return iter((self.x, self.info))
 
 
 class TwiceDifferentiable(ABC, Generic[TensorType, ModelType, DeviceType]):
