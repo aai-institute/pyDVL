@@ -8,7 +8,7 @@ DeviceType = TypeVar("DeviceType")
 
 
 @dataclass(frozen=True)
-class IhvpResult(Generic[TensorType]):
+class InverseHvpResult(Generic[TensorType]):
     x: TensorType
     info: Dict[str, Any]
 

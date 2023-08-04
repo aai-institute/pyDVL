@@ -4,7 +4,7 @@
 
 import logging
 
-from .twice_differentiable import IhvpResult, TwiceDifferentiable
+from .twice_differentiable import InverseHvpResult, TwiceDifferentiable
 
 __all__ = ["TwiceDifferentiable"]
 logger = logging.getLogger("frameworks")
@@ -37,7 +37,7 @@ try:
         [
             "TensorType",
             "ModelType",
-            "IhvpResult",
+            "InverseHvpResult",
             "solve_linear",
             "solve_batch_cg",
             "solve_lissa",

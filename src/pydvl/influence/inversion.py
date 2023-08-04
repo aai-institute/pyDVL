@@ -7,7 +7,7 @@ from typing import Any
 
 from .frameworks import (
     DataLoaderType,
-    IhvpResult,
+    InverseHvpResult,
     TensorType,
     TwiceDifferentiable,
     solve_batch_cg,
@@ -42,7 +42,7 @@ def solve_hvp(
     hessian_perturbation: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
-) -> IhvpResult:
+) -> InverseHvpResult:
     """
     Finds $x$ such that $Ax = b$, where $A$ is the hessian of model,
     and $b$ a vector.

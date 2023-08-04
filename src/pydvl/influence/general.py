@@ -16,7 +16,7 @@ from .frameworks import (
     transpose_tensor,
     zero_tensor,
 )
-from .inversion import IhvpResult, InversionMethod, solve_hvp
+from .inversion import InverseHvpResult, InversionMethod, solve_hvp
 
 __all__ = ["compute_influences", "InfluenceType", "compute_influence_factors"]
 
@@ -39,7 +39,7 @@ def compute_influence_factors(
     hessian_perturbation: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
-) -> IhvpResult:
+) -> InverseHvpResult:
     r"""
     Calculates influence factors of a model for training and test
     data. Given a test point $z_test = (x_{test}, y_{test})$, a loss

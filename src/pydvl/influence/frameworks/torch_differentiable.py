@@ -20,7 +20,7 @@ from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
 from .functional import get_hvp_function
-from .twice_differentiable import IhvpResult, TwiceDifferentiable
+from .twice_differentiable import InverseHvpResult, TwiceDifferentiable
 from .util import align_structure, flatten_tensors_to_vector
 
 __all__ = [
@@ -55,7 +55,7 @@ def solve_linear(
     *,
     hessian_perturbation: float = 0.0,
     progress: bool = False,
-) -> IhvpResult:
+) -> InverseHvpResult:
     """Given a model and training data, it finds x s.t. $Hx = b$, with $H$ being
     the model hessian.
 
@@ -81,7 +81,7 @@ def solve_linear(
         model.num_params, device=model.device
     )
     info = {"hessian": hessian}
-    return IhvpResult(x=torch.linalg.solve(matrix, b.T).T, info=info)
+    return InverseHvpResult(x=torch.linalg.solve(matrix, b.T).T, info=info)
 
 
 def solve_batch_cg(
@@ -95,7 +95,7 @@ def solve_batch_cg(
     atol: float = 1e-7,
     maxiter: Optional[int] = None,
     progress: bool = False,
-) -> IhvpResult:
+) -> InverseHvpResult:
     """
     Given a model and training data, it uses conjugate gradient to calculate the
     inverse of the Hessian Vector Product. More precisely, it finds x s.t. $Hx =
@@ -134,7 +134,7 @@ def solve_batch_cg(
         )
         batch_cg[idx] = batch_result
         info[f"batch_{idx}"] = batch_info
-    return IhvpResult(x=batch_cg, info=info)
+    return InverseHvpResult(x=batch_cg, info=info)
 
 
 def solve_cg(
@@ -145,7 +145,7 @@ def solve_cg(
     rtol: float = 1e-7,
     atol: float = 1e-7,
     maxiter: Optional[int] = None,
-) -> IhvpResult:
+) -> InverseHvpResult:
     """Conjugate gradient solver for the Hessian vector product
 
     :param hvp: a Callable Hvp, operating with tensors of size N
@@ -185,7 +185,7 @@ def solve_cg(
         p = r + beta * p
 
     info = {"niter": k, "optimal": optimal, "gamma": gamma}
-    return IhvpResult(x=x, info=info)
+    return InverseHvpResult(x=x, info=info)
 
 
 def solve_lissa(
@@ -200,7 +200,7 @@ def solve_lissa(
     h0: Optional[torch.Tensor] = None,
     rtol: float = 1e-4,
     progress: bool = False,
-) -> IhvpResult:
+) -> InverseHvpResult:
     r"""
     Uses LISSA, Linear time Stochastic Second-Order Algorithm, to iteratively
     approximate the inverse Hessian. More precisely, it finds x s.t. $Hx = b$,
@@ -267,7 +267,7 @@ def solve_lissa(
         "max_perc_residual": max_residual * 100,
         "mean_perc_residual": mean_residual * 100,
     }
-    return IhvpResult(x=h_estimate / scale, info=info)
+    return InverseHvpResult(x=h_estimate / scale, info=info)
 
 
 def as_tensor(a: Any, warn=True, **kwargs) -> torch.Tensor:
@@ -494,7 +494,7 @@ def solve_arnoldi(
     tol: float = 1e-6,
     max_iter: Optional[int] = None,
     eigen_computation_on_gpu: bool = False,
-) -> IhvpResult:
+) -> InverseHvpResult:
 
     """
     Solves the linear system Hx = b, where H is the Hessian of the model's loss function and b is the given right-hand
@@ -558,7 +558,7 @@ def solve_arnoldi(
         torch.diag_embed(1.0 / low_rank_representation.eigen_vals)
         @ (low_rank_representation.projections.t() @ b.t())
     )
-    return IhvpResult(
+    return InverseHvpResult(
         x=result.t(),
         info={
             "eigenvalues": low_rank_representation.eigen_vals,
