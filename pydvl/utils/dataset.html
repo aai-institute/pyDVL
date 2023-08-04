@@ -613,52 +613,6 @@ grouped by data_groups.</p>
 
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="pydvl.utils.dataset.load_spotify_dataset">
-<span class="sig-name descname"><span class="pre">load_spotify_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_year</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2014</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'popularity'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">24</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/dataset.py#L578"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.dataset.load_spotify_dataset" title="Permalink to this definition">#</a></dt>
-<dd><p>Loads (and downloads if not already cached) the spotify music dataset.
-More info on the dataset can be found at
-<a class="reference external" href="https://www.kaggle.com/datasets/mrmorj/dataset-of-songs-in-spotify">https://www.kaggle.com/datasets/mrmorj/dataset-of-songs-in-spotify</a>.</p>
-<p>If this method is called within the CI pipeline, it will load a reduced
-version of the dataset for testing purposes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>val_size</strong> – size of the validation set</p></li>
-<li><p><strong>test_size</strong> – size of the test set</p></li>
-<li><p><strong>min_year</strong> – minimum year of the returned data</p></li>
-<li><p><strong>target_column</strong> – column to be returned as y (labels)</p></li>
-<li><p><strong>random_state</strong> – fixes sklearn random seed</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Tuple with 3 elements, each being a list sith [input_data, related_labels]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pydvl.utils.dataset.load_wine_dataset">
-<span class="sig-name descname"><span class="pre">load_wine_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/dataset.py#L622"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.dataset.load_wine_dataset" title="Permalink to this definition">#</a></dt>
-<dd><p>Loads the sklearn wine dataset. More info can be found at
-<a class="reference external" href="https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset">https://scikit-learn.org/stable/datasets/toy_dataset.html#wine-recognition-dataset</a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>train_size</strong> – fraction of points used for training dataset</p></li>
-<li><p><strong>test_size</strong> – fraction of points used for test dataset</p></li>
-<li><p><strong>random_state</strong> – fix random seed. If None, no random seed is set.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A tuple of four elements with the first three being input and
-target values in the form of matrices of shape (N,D) the first
-and (N,) the second. The fourth element is a list containing names of
-features of the model. (FIXME doc)</p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 
         </article>
@@ -745,8 +699,6 @@ features of the model. (FIXME doc)</p>
 <li><a class="reference internal" href="#pydvl.utils.dataset.GroupedDataset.from_dataset"><code class="docutils literal notranslate"><span class="pre">GroupedDataset.from_dataset()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#pydvl.utils.dataset.load_spotify_dataset"><code class="docutils literal notranslate"><span class="pre">load_spotify_dataset()</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.utils.dataset.load_wine_dataset"><code class="docutils literal notranslate"><span class="pre">load_wine_dataset()</span></code></a></li>
 </ul>
 </li>
 </ul>

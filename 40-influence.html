@@ -310,27 +310,25 @@ v1.0.0</p>
 </div>
 <p>The influence function (IF) is a method to quantify the effect (influence) that
 each training point has on the parameters of a model, and by extension on any
-function thereof. In particular, it is possible to estimate how much each
-training sample affects the error on a test point, making the IF really useful
-for understanding and debugging models. It is in a sense similar to, and
-sometimes used with together with valuation functions, but have are more solid
-theoretical foundation.</p>
+function thereof. In particular, it allows to estimate how much each training
+sample affects the error on a test point, making the IF useful for understanding
+and debugging models.</p>
 <p>pyDVL implements several methods for the efficient computation of the IF for
 machine learning.</p>
 <section id="the-influence-function">
-<h2>The Influence Function<a class="headerlink" href="#the-influence-function" title="Permalink to this heading">#</a></h2>
+<span id="id2"></span><h2>The Influence Function<a class="headerlink" href="#the-influence-function" title="Permalink to this heading">#</a></h2>
 <p>First introduced in the context of robust statistics in
-Hampel<a class="footnote-reference brackets" href="#footcite-hampel1974influence" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>, the IF was popularized in the context of
-machine learning in Koh and Liang<a class="footnote-reference brackets" href="#footcite-koh-understanding-2017" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. Following their
+Hampel<a class="footnote-reference brackets" href="#footcite-hampel1974influence" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>, the IF was popularized in the context of
+machine learning in Koh and Liang<a class="footnote-reference brackets" href="#footcite-koh-understanding-2017" id="id4" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. Following their
 formulation, consider an input space <span class="math notranslate nohighlight">\(\mathcal{X}\)</span> (e.g. images) and an output
 space <span class="math notranslate nohighlight">\(\mathcal{Y}\)</span> (e.g. labels). Let’s take <span class="math notranslate nohighlight">\(z_i = (x_i, y_i)\)</span>, for <span class="math notranslate nohighlight">\(i \in
 \{1,...,n\}\)</span> to be the <span class="math notranslate nohighlight">\(i\)</span>-th training point, and <span class="math notranslate nohighlight">\(\theta\)</span> to be the
 (potentially highly) multi-dimensional parameters of a model (e.g. <span class="math notranslate nohighlight">\(\theta\)</span> is a
-big array with all of a neural network’s parameters, including biases, batch
-normalizations and/or dropout rates). We will denote with <span class="math notranslate nohighlight">\(L(z, \theta)\)</span> the
-loss of the model for point <span class="math notranslate nohighlight">\(z\)</span> when the parameters are <span class="math notranslate nohighlight">\(\theta.\)</span></p>
-<p>To train a model, we typically minimize the loss over all <span class="math notranslate nohighlight">\(z_i\)</span>, i.e.
-the optimal parameters are</p>
+big array with all of a neural network’s parameters, including biases and/or
+dropout rates). We will denote with <span class="math notranslate nohighlight">\(L(z, \theta)\)</span> the loss of the model for
+point <span class="math notranslate nohighlight">\(z\)</span> when the parameters are <span class="math notranslate nohighlight">\(\theta.\)</span></p>
+<p>To train a model, we typically minimize the loss over all <span class="math notranslate nohighlight">\(z_i\)</span>, i.e. the
+optimal parameters are</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[\hat{\theta} = \arg \min_\theta \sum_{i=1}^n L(z_i, \theta).\]</div>
@@ -342,9 +340,7 @@ stops decreasing.</p>
 <p>For notational convenience, let’s define</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[
-\hat{\theta}_{-z} = \arg \min_\theta \sum_{z_i \ne z} L(z_i, \theta),
-\]</div>
+\[\hat{\theta}_{-z} = \arg \min_\theta \sum_{z_i \ne z} L(z_i, \theta), \]</div>
 </div>
 </p>
 <p>i.e. <span class="math notranslate nohighlight">\(\hat{\theta}_{-z}\)</span> are the model parameters that minimize the total loss
@@ -357,44 +353,39 @@ networks. To circumvent this problem, we can just calculate a first order
 approximation of <span class="math notranslate nohighlight">\(\hat{\theta}\)</span>. This can be done through single backpropagation
 and without re-training the full model.</p>
 <section id="approximating-the-influence-of-a-point">
-<h3>Approximating the influence of a point<a class="headerlink" href="#approximating-the-influence-of-a-point" title="Permalink to this heading">#</a></h3>
+<span id="approximating-influence-of-a-point"></span><h3>Approximating the influence of a point<a class="headerlink" href="#approximating-the-influence-of-a-point" title="Permalink to this heading">#</a></h3>
 <p>Let’s define</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[
-\hat{\theta}_{\epsilon, z} = \arg \min_\theta
-\frac{1}{n}\sum_{i=1}^n L(z_i, \theta) + \epsilon L(z, \theta),
-\]</div>
+\[\hat{\theta}_{\epsilon, z} = \arg \min_\theta \frac{1}{n}\sum_{i=1}^n L(z_i,
+\theta) + \epsilon L(z, \theta), \]</div>
 </div>
 </p>
-<p>which is the optimal <span class="math notranslate nohighlight">\(\hat{\theta}\)</span> if we were to up-weight <span class="math notranslate nohighlight">\(z\)</span> by an amount
-<span class="math notranslate nohighlight">\(\epsilon \gt 0\)</span>.</p>
+<p>which is the optimal <span class="math notranslate nohighlight">\(\hat{\theta}\)</span> when we up-weight <span class="math notranslate nohighlight">\(z\)</span> by an amount <span class="math notranslate nohighlight">\(\epsilon
+\gt 0\)</span>.</p>
 <p>From a classical result (a simple derivation is available in Appendix A of
-Koh and Liang<a class="footnote-reference brackets" href="#footcite-koh-understanding-2017" id="id4" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>), we know that:</p>
+Koh and Liang<a class="footnote-reference brackets" href="#footcite-koh-understanding-2017" id="id5" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>), we know that:</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[
-\frac{d \ \hat{\theta}_{\epsilon, z}}{d \epsilon} \Big|_{\epsilon=0}
-= -H_{\hat{\theta}}^{-1} \nabla_\theta L(z, \hat{\theta}),
-\]</div>
+\[\frac{d \ \hat{\theta}_{\epsilon, z}}{d \epsilon} \Big|_{\epsilon=0} =
+-H_{\hat{\theta}}^{-1} \nabla_\theta L(z, \hat{\theta}), \]</div>
 </div>
 </p>
 <p>where <span class="math notranslate nohighlight">\(H_{\hat{\theta}} = \frac{1}{n} \sum_{i=1}^n \nabla_\theta^2 L(z_i,
-\hat{\theta})\)</span> is the Hessian of <span class="math notranslate nohighlight">\(L\)</span>. Importantly, notice that this expression
-is only valid when <span class="math notranslate nohighlight">\(\hat{\theta}\)</span> is a minimum of <span class="math notranslate nohighlight">\(L\)</span>, or otherwise
-<span class="math notranslate nohighlight">\(H_{\hat{\theta}}\)</span> cannot be inverted! At the same time, in machine learning
-full convergence is rarely achieved, so direct Hessian inversion is not
-possible. Approximations need to be developed that circumvent the problem of
-inverting the Hessian of the model in all those (frequent) cases where it is not
-positive definite.</p>
-<p>We will define the influence of training point <span class="math notranslate nohighlight">\(z\)</span> on test point
-<span class="math notranslate nohighlight">\(z_{\text{test}}\)</span> as</p>
+\hat{\theta})\)</span> is the Hessian of <span class="math notranslate nohighlight">\(L\)</span>. These quantities are also knows as
+<strong>influence factors</strong>.</p>
+<p>Importantly, notice that this expression is only valid when <span class="math notranslate nohighlight">\(\hat{\theta}\)</span> is a
+minimum of <span class="math notranslate nohighlight">\(L\)</span>, or otherwise <span class="math notranslate nohighlight">\(H_{\hat{\theta}}\)</span> cannot be inverted! At the same
+time, in machine learning full convergence is rarely achieved, so direct Hessian
+inversion is not possible. Approximations need to be developed that circumvent
+the problem of inverting the Hessian of the model in all those (frequent) cases
+where it is not positive definite.</p>
+<p>The influence of training point <span class="math notranslate nohighlight">\(z\)</span> on test point <span class="math notranslate nohighlight">\(z_{\text{test}}\)</span> is defined
+as:</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[
-\mathcal{I}(z, z_{\text{test}}) =  L(z_{\text{test}}, \hat{\theta}_{-z}) -
-L(z_{\text{test}}, \hat{\theta}).
-\]</div>
+\[\mathcal{I}(z, z_{\text{test}}) =  L(z_{\text{test}}, \hat{\theta}_{-z}) -
+L(z_{\text{test}}, \hat{\theta}). \]</div>
 </div>
 </p>
 <p>Notice that <span class="math notranslate nohighlight">\(\mathcal{I}\)</span> is higher for points <span class="math notranslate nohighlight">\(z\)</span> which positively impact the
@@ -402,151 +393,114 @@ model score, since the loss is higher when they are excluded from training. In
 practice, one needs to rely on the following infinitesimal approximation:</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[
-\mathcal{I}_{up}(z, z_{\text{test}}) = - \frac{d L(z_{\text{test}},
-\hat{\theta}_{\epsilon, z})}{d \epsilon} \Big|_{\epsilon=0}
-\]</div>
+\[\mathcal{I}_{up}(z, z_{\text{test}}) = - \frac{d L(z_{\text{test}},
+\hat{\theta}_{\epsilon, z})}{d \epsilon} \Big|_{\epsilon=0} \]</div>
 </div>
 </p>
-<p>Using the chain rule and the results calculated above, we thus have:</p>
+<p>Using the chain rule and the results calculated above, we get:</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[
-\mathcal{I}_{up}(z, z_{\text{test}}) = - \nabla_\theta L(z_{\text{test}},
+\[\mathcal{I}_{up}(z, z_{\text{test}}) = - \nabla_\theta L(z_{\text{test}},
 \hat{\theta})^\top \ \frac{d \hat{\theta}_{\epsilon, z}}{d \epsilon}
 \Big|_{\epsilon=0} = \nabla_\theta L(z_{\text{test}}, \hat{\theta})^\top \
-H_{\hat{\theta}}^{-1} \ \nabla_\theta L(z, \hat{\theta})
-\]</div>
+H_{\hat{\theta}}^{-1} \ \nabla_\theta L(z, \hat{\theta}) \]</div>
 </div>
 </p>
-<p>All the factors in this expression are gradients of the loss wrt. the model
-parameters <span class="math notranslate nohighlight">\(\hat{\theta}\)</span>. This can be easily done through one or more
-backpropagation passes.</p>
+<p>All the resulting factors are gradients of the loss wrt. the model parameters
+<span class="math notranslate nohighlight">\(\hat{\theta}\)</span>. This can be easily computed through one or more backpropagation
+passes.</p>
 </section>
 <section id="perturbation-definition-of-the-influence-score">
-<h3>Perturbation definition of the influence score<a class="headerlink" href="#perturbation-definition-of-the-influence-score" title="Permalink to this heading">#</a></h3>
+<span id="id6"></span><h3>Perturbation definition of the influence score<a class="headerlink" href="#perturbation-definition-of-the-influence-score" title="Permalink to this heading">#</a></h3>
 <p>How would the loss of the model change if, instead of up-weighting an individual
 point <span class="math notranslate nohighlight">\(z\)</span>, we were to up-weight only a single feature of that point? Given <span class="math notranslate nohighlight">\(z =
 (x, y)\)</span>, we can define <span class="math notranslate nohighlight">\(z_{\delta} = (x+\delta, y)\)</span>, where <span class="math notranslate nohighlight">\(\delta\)</span> is a vector
-of zeros except for a 1 in the position of the feature we want to up-weigh. In
+of zeros except for a 1 in the position of the feature we want to up-weight. In
 order to approximate the effect of modifying a single feature of a single point
 on the model score we can define</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[
-\hat{\theta}_{\epsilon, z_{\delta} ,-z} = \arg \min_\theta
+\[\hat{\theta}_{\epsilon, z_{\delta} ,-z} = \arg \min_\theta
 \frac{1}{n}\sum_{i=1}^n L(z_{i}, \theta) + \epsilon L(z_{\delta}, \theta) -
-\epsilon L(z, \theta),
-\]</div>
+\epsilon L(z, \theta), \]</div>
 </div>
 </p>
-<p>Similarly to what was done above, we up-weight point <span class="math notranslate nohighlight">\(z_{\delta}\)</span>, but
-then we also remove the up-weighting for all the features that are not modified
-by <span class="math notranslate nohighlight">\(\delta\)</span>. From the calculations in ???, it is then easy to see that</p>
+<p>Similarly to what was done above, we up-weight point <span class="math notranslate nohighlight">\(z_{\delta}\)</span>, but then we
+also remove the up-weighting for all the features that are not modified by
+<span class="math notranslate nohighlight">\(\delta\)</span>. From the calculations in <a class="reference internal" href="#approximating-influence-of-a-point"><span class="std std-ref">the previous section</span></a>, it is then easy to see that</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[
-\frac{d \ \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon} \Big|_{\epsilon=0}
-= -H_{\hat{\theta}}^{-1} \nabla_\theta \Big( L(z_{\delta}, \hat{\theta}) - L(z, \hat{\theta}) \Big)
-\]</div>
+\[\frac{d \ \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon}
+\Big|_{\epsilon=0} = -H_{\hat{\theta}}^{-1} \nabla_\theta \Big( L(z_{\delta},
+\hat{\theta}) - L(z, \hat{\theta}) \Big) \]</div>
 </div>
 </p>
 <p>and if the feature space is continuous and as <span class="math notranslate nohighlight">\(\delta \to 0\)</span> we can write</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[
-\frac{d \ \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon} \Big|_{\epsilon=0}
-= -H_{\hat{\theta}}^{-1} \ \nabla_x \nabla_\theta L(z, \hat{\theta}) \delta + \mathcal{o}(\delta)
-\]</div>
+\[\frac{d \ \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon}
+\Big|_{\epsilon=0} = -H_{\hat{\theta}}^{-1} \ \nabla_x \nabla_\theta L(z,
+\hat{\theta}) \delta + \mathcal{o}(\delta) \]</div>
 </div>
 </p>
 <p>The influence of each feature of <span class="math notranslate nohighlight">\(z\)</span> on the loss of the model can therefore be
 estimated through the following quantity:</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[
-\mathcal{I}_{pert}(z, z_{\text{test}}) = - \lim_{\delta \to 0} \ \frac{1}{\delta} \frac{d L(z_{\text{test}},
-\hat{\theta}_{\epsilon, \ z_{\delta}, \ -z})}{d \epsilon} \Big|_{\epsilon=0}
-\]</div>
+\[\mathcal{I}_{pert}(z, z_{\text{test}}) = - \lim_{\delta \to 0} \
+\frac{1}{\delta} \frac{d L(z_{\text{test}}, \hat{\theta}_{\epsilon, \
+z_{\delta}, \ -z})}{d \epsilon} \Big|_{\epsilon=0} \]</div>
 </div>
 </p>
 <p>which, using the chain rule and the results calculated above, is equal to</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[
-\mathcal{I}_{pert}(z, z_{\text{test}}) = - \nabla_\theta L(z_{\text{test}},
-\hat{\theta})^\top \ \frac{d \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d \epsilon}
-\Big|_{\epsilon=0} = \nabla_\theta L(z_{\text{test}}, \hat{\theta})^\top \
-H_{\hat{\theta}}^{-1} \ \nabla_x \nabla_\theta L(z, \hat{\theta})
-\]</div>
+\[\mathcal{I}_{pert}(z, z_{\text{test}}) = - \nabla_\theta L(z_{\text{test}},
+\hat{\theta})^\top \ \frac{d \hat{\theta}_{\epsilon, z_{\delta} ,-z}}{d
+\epsilon} \Big|_{\epsilon=0} = \nabla_\theta L(z_{\text{test}},
+\hat{\theta})^\top \ H_{\hat{\theta}}^{-1} \ \nabla_x \nabla_\theta L(z,
+\hat{\theta}) \]</div>
 </div>
 </p>
 <p>The perturbation definition of the influence score is not straightforward to
 understand, but it has a simple interpretation: it tells how much the loss of
 the model changes when a certain feature of point z is up-weighted. A positive
 perturbation influence score indicates that the feature might have a positive
-effect on the accuracy of the model. It is worth noting that this is just a very
-rough estimate and it is subject to large approximation errors. It can
-nonetheless be used to build training-set attacks, as done in
-Koh and Liang<a class="footnote-reference brackets" href="#footcite-koh-understanding-2017" id="id5" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>.</p>
+effect on the accuracy of the model.</p>
+<p>It is worth noting that the perturbation influence score is a very rough
+estimate of the impact of a point on the models loss and it is subject to large
+approximation errors. It can nonetheless be used to build training-set attacks,
+as done in Koh and Liang<a class="footnote-reference brackets" href="#footcite-koh-understanding-2017" id="id7" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>.</p>
 </section>
 </section>
 <section id="computing-influences">
 <h2>Computing influences<a class="headerlink" href="#computing-influences" title="Permalink to this heading">#</a></h2>
-<p>The main entry point of the library is
-<a class="reference internal" href="pydvl/influence/general.html#pydvl.influence.general.compute_influences" title="pydvl.influence.general.compute_influences"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_influences()</span></code></a>. Influences can be computed
-for any model which implements the
-<a class="reference internal" href="pydvl/influence/frameworks/twice_differentiable.html#pydvl.influence.frameworks.twice_differentiable.TwiceDifferentiable" title="pydvl.influence.frameworks.twice_differentiable.TwiceDifferentiable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TwiceDifferentiable</span></code></a>
-protocol, i.e. which is capable of calculating second derivative matrix vector
-products and gradients of the loss evaluated on training and test samples.</p>
+<p>The main entry point of the library for influence calculation is
+<a class="reference internal" href="pydvl/influence/general.html#pydvl.influence.general.compute_influences" title="pydvl.influence.general.compute_influences"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_influences()</span></code></a>. Given a pre-trained pytorch
+model with a loss, first an instance of
+<code class="xref py py-func docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable()</span></code> needs to be created.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">TorchTwiceDifferentiable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span>  <span class="n">TorchTwiceDifferentiable</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The device specifies where influence calculation will be run.</p>
+<p>Given training and test data loaders, the influence of each training point on
+each test point can be calculated via:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">influences</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">compute_influences</span><span class="p">(</span>
-<span class="gp">... </span>   <span class="n">model</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">training_data_loader</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">test_data_loader</span>
+<span class="gp">... </span>   <span class="n">model</span><span class="p">:</span> <span class="n">TorchTwiceDifferentiable</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">training_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">test_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
-<section id="approximate-matrix-inversion">
-<h3>Approximate matrix inversion<a class="headerlink" href="#approximate-matrix-inversion" title="Permalink to this heading">#</a></h3>
-<p>In almost every practical application it is not possible to construct, even less
-invert the complete Hessian in memory. pyDVL offers several approximate
-algorithms to invert it by setting the parameter <cite>inversion_method</cite> of
-<a class="reference internal" href="pydvl/influence/general.html#pydvl.influence.general.compute_influences" title="pydvl.influence.general.compute_influences"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_influences()</span></code></a>. See the documentation for
-allowed values.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">compute_influences</span><span class="p">(</span>
-<span class="gp">... </span>   <span class="n">model</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">training_data_loader</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">test_data_loader</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span>
-<span class="gp">... </span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Additionally, and as discussed in <a class="reference internal" href="#the-influence-function">The Influence Function</a>, in
-machine learning training rarely converges to a global minimum of the loss.
-Despite good apparent convergence, <span class="math notranslate nohighlight">\(\hat{\theta}\)</span> might be located in a region
-with flat curvature or close to a saddle point. In particular, the Hessian might
-have vanishing eigenvalues making its direct inversion impossible.</p>
-<p>To circumvent this problem, many approximate methods are available. The simplest
-adds a small <em>hessian perturbation term</em>, i.e. we invert
-<span class="math notranslate nohighlight">\(H_{\hat{\theta}} + \lambda \mathbb{I}\)</span>, with <span class="math notranslate nohighlight">\(\mathbb{I}\)</span> being the identity
-matrix. This standard trick ensures that the eigenvalues of <span class="math notranslate nohighlight">\(H_{\hat{\theta}}\)</span>
-are bounded away from zero and therefore the matrix is invertible. In order for
-this regularization not to corrupt the outcome too much, the parameter <span class="math notranslate nohighlight">\(\lambda\)</span>
-should be as small as possible while still allowing a reliable inversion of
-<span class="math notranslate nohighlight">\(H_{\hat{\theta}} + \lambda \mathbb{I}\)</span>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">compute_influences</span><span class="p">(</span>
-<span class="gp">... </span>   <span class="n">model</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">training_data_loader</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">test_data_loader</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">hessian_regularization</span><span class="o">=</span><span class="mf">1e-4</span>
-<span class="gp">... </span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
+<p>The result is a tensor with one row per test point and one column per training
+point. Thus, each entry <span class="math notranslate nohighlight">\((i, j)\)</span> represents the influence of training point <span class="math notranslate nohighlight">\(j\)</span>
+on test point <span class="math notranslate nohighlight">\(i\)</span>. A large positive influence indicates that training point <span class="math notranslate nohighlight">\(j\)</span>
+tends to improve the performance of the model on test point <span class="math notranslate nohighlight">\(i\)</span>, and vice versa,
+a large negative influence indicates that training point <span class="math notranslate nohighlight">\(j\)</span> tends to worsen the
+performance of the model on test point <span class="math notranslate nohighlight">\(i\)</span>.</p>
 <section id="perturbation-influences">
 <h3>Perturbation influences<a class="headerlink" href="#perturbation-influences" title="Permalink to this heading">#</a></h3>
 <p>The method of empirical influence computation can be selected in
@@ -554,27 +508,234 @@ should be as small as possible while still allowing a reliable inversion of
 <cite>influence_type</cite>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">compute_influences</span><span class="p">(</span>
-<span class="gp">... </span>   <span class="n">model</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">training_data_loader</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">test_data_loader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">model</span><span class="p">:</span> <span class="n">TorchTwiceDifferentiable</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">training_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">test_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
 <span class="gp">... </span>   <span class="n">influence_type</span><span class="o">=</span><span class="s2">&quot;perturbation&quot;</span><span class="p">,</span>
-<span class="gp">... </span>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;lissa&quot;</span>
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="docutils container" id="id6">
+<p>The result is a tensor with at least three dimensions. The first two dimensions
+are the same as in the case of <cite>influence_type=up</cite> case, i.e. one row per test
+point and one column per training point. The remaining dimensions are the same
+as the number of input features in the data. Therefore, each entry in the tensor
+represents the influence of each feature of each training point on each test
+point.</p>
+</section>
+<section id="approximate-matrix-inversion">
+<h3>Approximate matrix inversion<a class="headerlink" href="#approximate-matrix-inversion" title="Permalink to this heading">#</a></h3>
+<p>In almost every practical application it is not possible to construct, even less
+invert the complete Hessian in memory. pyDVL offers several approximate
+algorithms to invert it by setting the parameter <cite>inversion_method</cite> of
+<a class="reference internal" href="pydvl/influence/general.html#pydvl.influence.general.compute_influences" title="pydvl.influence.general.compute_influences"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_influences()</span></code></a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">compute_influences</span><span class="p">(</span>
+<span class="gp">... </span>   <span class="n">model</span><span class="p">:</span> <span class="n">TorchTwiceDifferentiable</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">training_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">test_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Each inversion method has its own set of parameters that can be tuned to improve
+the final result. These parameters can be passed directly to
+<a class="reference internal" href="pydvl/influence/general.html#pydvl.influence.general.compute_influences" title="pydvl.influence.general.compute_influences"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_influences()</span></code></a> as keyword arguments. For
+example, the following code sets the maximum number of iterations for conjugate
+gradient to <span class="math notranslate nohighlight">\(100\)</span> and the miximum relative error to <span class="math notranslate nohighlight">\(0.01\)</span>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">compute_influences</span><span class="p">(</span>
+<span class="gp">... </span>   <span class="n">model</span><span class="p">:</span> <span class="n">TorchTwiceDifferentiable</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">training_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">test_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">hessian_regularization</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">maxiter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="hessian-regularization">
+<h3>Hessian regularization<a class="headerlink" href="#hessian-regularization" title="Permalink to this heading">#</a></h3>
+<p>Additionally, and as discussed in <a class="reference internal" href="#the-influence-function"><span class="std std-ref">the introduction</span></a>, in machine learning training rarely converges to a
+global minimum of the loss. Despite good apparent convergence, <span class="math notranslate nohighlight">\(\hat{\theta}\)</span>
+might be located in a region with flat curvature or close to a saddle point. In
+particular, the Hessian might have vanishing eigenvalues making its direct
+inversion impossible. Certain methods, such as the <a class="reference internal" href="#arnoldi-solver"><span class="std std-ref">Arnoldi method</span></a> are robust against these problems, but most are not.</p>
+<p>To circumvent this problem, many approximate methods can be implemented. The simplest
+adds a small <em>hessian perturbation term</em>, i.e. <span class="math notranslate nohighlight">\(H_{\hat{\theta}} + \lambda
+\mathbb{I}\)</span>, with <span class="math notranslate nohighlight">\(\mathbb{I}\)</span> being the identity matrix. This standard trick
+ensures that the eigenvalues of <span class="math notranslate nohighlight">\(H_{\hat{\theta}}\)</span> are bounded away from zero
+and therefore the matrix is invertible. In order for this regularization not to
+corrupt the outcome too much, the parameter <span class="math notranslate nohighlight">\(\lambda\)</span> should be as small as
+possible while still allowing a reliable inversion of <span class="math notranslate nohighlight">\(H_{\hat{\theta}} +
+\lambda \mathbb{I}\)</span>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influences</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">compute_influences</span><span class="p">(</span>
+<span class="gp">... </span>   <span class="n">model</span><span class="p">:</span> <span class="n">TorchTwiceDifferentiable</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">training_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">test_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">hessian_regularization</span><span class="o">=</span><span class="mf">1e-4</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="influence-factors">
+<h3>Influence factors<a class="headerlink" href="#influence-factors" title="Permalink to this heading">#</a></h3>
+<p>The <a class="reference internal" href="pydvl/influence/general.html#pydvl.influence.general.compute_influences" title="pydvl.influence.general.compute_influences"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_influences()</span></code></a> method offers a fast way
+to obtain the influence scores given a model and a dataset. Nevertheless, it is
+often more convenient to inspect and save some of the intermediate results of
+influence calculation for later use.</p>
+<p>The influence factors(refer to <a class="reference internal" href="#approximating-influence-of-a-point"><span class="std std-ref">the previous paragraph</span></a> for a definition) are typically the most
+computationally demanding part of influence calculation. They can be obtained
+via the <a class="reference internal" href="pydvl/influence/general.html#pydvl.influence.general.compute_influence_factors" title="pydvl.influence.general.compute_influence_factors"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_influence_factors()</span></code></a> method,
+saved, and later used for influence calculation on different subsets of the
+training dataset.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.influence</span> <span class="kn">import</span> <span class="n">compute_influence_factors</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">influence_factors</span> <span class="o">=</span> <span class="n">compute_influence_factors</span><span class="p">(</span>
+<span class="gp">... </span>   <span class="n">model</span><span class="p">:</span> <span class="n">TorchTwiceDifferentiable</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">training_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">test_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The result is an object of type <code class="xref py py-class docutils literal notranslate"><span class="pre">InverseHvpResult</span></code>,
+which holds the calculated influence factors (<cite>influence_factors.x</cite>) and a
+dictionary with the info on the inversion process (<cite>influence_factors.info</cite>).</p>
+</section>
+</section>
+<section id="methods-for-inverse-hvp-calculation">
+<span id="methods-for-inverse-hessian-vector-product-calculation"></span><h2>Methods for inverse HVP calculation<a class="headerlink" href="#methods-for-inverse-hvp-calculation" title="Permalink to this heading">#</a></h2>
+<p>In order to calculate influence values, pydvl implements several methods for the
+calculation of the inverse Hessian vector product (iHVP). More precisely, given
+a model, training data and a tensor <span class="math notranslate nohighlight">\(b\)</span>, the function
+<a class="reference internal" href="pydvl/influence/inversion.html#pydvl.influence.inversion.solve_hvp" title="pydvl.influence.inversion.solve_hvp"><code class="xref py py-func docutils literal notranslate"><span class="pre">solve_hvp()</span></code></a> will find <span class="math notranslate nohighlight">\(x\)</span> such that <span class="math notranslate nohighlight">\(H x = b\)</span>,
+with <span class="math notranslate nohighlight">\(H\)</span> is the hessian of model.</p>
+<p>Many different inversion methods can be selected selected via the parameter
+<cite>inversion_method</cite> of <a class="reference internal" href="pydvl/influence/general.html#pydvl.influence.general.compute_influences" title="pydvl.influence.general.compute_influences"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_influences()</span></code></a>.
+The following paragraphs will offer more detailed exaple of each method.</p>
+<section id="direct-inversion">
+<span id="id8"></span><h3>Direct inversion<a class="headerlink" href="#direct-inversion" title="Permalink to this heading">#</a></h3>
+<p>With <cite>inversion_method = “direct”</cite> pyDVL will calculate the inverse Hessian
+using the direct matrix inversion. This means that the Hessian will first be
+explicitly created and then inverted. This method is the most accurate, but also
+the most computationally demanding. It is therefore not recommended for large
+datasets or models with many parameters.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.influence.inversion</span> <span class="kn">import</span> <span class="n">solve_hvp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve_hvp</span><span class="p">(</span>
+<span class="gp">... </span>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;direct&quot;</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">model</span><span class="p">:</span> <span class="n">TorchTwiceDifferentiable</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">training_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">b</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The result, an object of type <code class="xref py py-class docutils literal notranslate"><span class="pre">InverseHvpResult</span></code>,
+which holds two objects: <cite>influence_factors.x</cite> and <cite>influence_factors.info</cite>. The
+first one is the inverse Hessian vector product, while the second one is a
+dictionary with the info on the inversion process. For this method, the info
+consists of the Hessian matrix itself.</p>
+</section>
+<section id="conjugate-gradient">
+<span id="id9"></span><h3>Conjugate Gradient<a class="headerlink" href="#conjugate-gradient" title="Permalink to this heading">#</a></h3>
+<p>A classical method for solving linear systems of equations is the conjugate
+gradient method. It is an iterative method that does not require the explicit
+inversion of the Hessian matrix. Instead, it only requires the calculation of
+the Hessian vector product. This makes it a good choice for large datasets or
+models with many parameters. It is Nevertheless much slower than the direct
+inversion method and not as accurate. More info on the theory of conjugate
+gradient can be found
+<a class="reference external" href="https://en.wikipedia.org/wiki/Conjugate_gradient_method">here</a></p>
+<p>In pyDVL, you can select conjugate gradient with <cite>inversion_method = “cg”</cite>, like
+this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.influence.inversion</span> <span class="kn">import</span> <span class="n">solve_hvp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve_hvp</span><span class="p">(</span>
+<span class="gp">... </span>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">mode</span><span class="p">:</span> <span class="n">TorchTwiceDifferentiable</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">training_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">b</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">x0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-7</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-7</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">maxiter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The addinal optional parameters <cite>x0</cite>, <cite>rtol</cite>, <cite>atol</cite>, and <cite>maxiter</cite> are passed
+to the <a class="reference internal" href="pydvl/influence/frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.solve_batch_cg" title="pydvl.influence.frameworks.torch_differentiable.solve_batch_cg"><code class="xref py py-func docutils literal notranslate"><span class="pre">solve_batch_cg()</span></code></a>
+function, and are respecively the initial guess for the solution, the relative
+tolerance, the absolute tolerance, and the maximum number of iterations.</p>
+<p>The resulting <code class="xref py py-class docutils literal notranslate"><span class="pre">InverseHvpResult</span></code>
+holds the solution of the iHVP, <cite>influence_factors.x</cite>, and some info on the
+inversion process <cite>influence_factors.info</cite>. More specifically, for each batch
+the infos will report the number of iterations, a boolean indicating if the
+inversion converged, and the residual of the inversion.</p>
+</section>
+<section id="linear-time-stochastic-second-order-approximation-lissa">
+<span id="lissa-solver"></span><h3>Linear time Stochastic Second-Order Approximation (LiSSA)<a class="headerlink" href="#linear-time-stochastic-second-order-approximation-lissa" title="Permalink to this heading">#</a></h3>
+<p>The LiSSA method is a stochastic approximation of the inverse Hessian vector
+product. Compared to <a class="reference internal" href="#conjugate-gradient"><span class="std std-ref">conjugate gradient</span></a> it is faster but less accurate and typically suffers from
+instability.</p>
+<p>In order to find the solution of the HVP, LiSSA iteratively approximates the
+inverse of the Hessian matrix with the following update:</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s},\]</div>
+</div>
+</p>
+<p>where <span class="math notranslate nohighlight">\(d\)</span> and <span class="math notranslate nohighlight">\(s\)</span> are a dampening and a scaling factor, which are essential
+for the convergence of the method and they need to be chosen carefully, and I
+is the identity matrix. More info on the theory of LiSSA can be found in the
+original paper Agarwal <em>et al.</em><a class="footnote-reference brackets" href="#footcite-agarwal-2017-second" id="id10" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a>.</p>
+<p>In pyDVL, you can select LiSSA with <cite>inversion_method = “lissa”</cite>, like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.influence.inversion</span> <span class="kn">import</span> <span class="n">solve_hvp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve_hvp</span><span class="p">(</span>
+<span class="gp">... </span>   <span class="n">inversion_method</span><span class="o">=</span><span class="s2">&quot;lissa&quot;</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">model</span><span class="p">:</span> <span class="n">TorchTwiceDifferentiable</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">training_data_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">b</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">maxiter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">dampen</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">h0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>with the additional optional parameters <cite>maxiter</cite>, <cite>dampen</cite>, <cite>scale</cite>, <cite>h0</cite>, and
+<cite>rtol</cite>, which are passed to the
+<a class="reference internal" href="pydvl/influence/frameworks/torch_differentiable.html#pydvl.influence.frameworks.torch_differentiable.solve_lissa" title="pydvl.influence.frameworks.torch_differentiable.solve_lissa"><code class="xref py py-func docutils literal notranslate"><span class="pre">solve_lissa()</span></code></a> function,
+being the maximum number of iterations, the dampening factor, the scaling
+factor, the initial guess for the solution and the relative tolerance,
+respectively.</p>
+<p>The resulting <code class="xref py py-class docutils literal notranslate"><span class="pre">InverseHvpResult</span></code> holds the solution
+of the iHVP, <cite>influence_factors.x</cite>, and, within <cite>influence_factors.info</cite>, the
+maximum percentage error and the mean percentage error of the approximation.</p>
+</section>
+<section id="arnoldi-solver">
+<span id="id11"></span><h3>Arnoldi solver<a class="headerlink" href="#arnoldi-solver" title="Permalink to this heading">#</a></h3>
+<p>The Arnoldi method is a Krylov subspace method for approximating the action of a
+matrix on a vector. It is a generalization of the power method for finding
+eigenvectors of a matrix.</p>
+<div class="docutils container" id="id12">
 <section id="references">
 <h4>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h4>
 </section>
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="footcite-hampel1974influence" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">1</a><span class="fn-bracket">]</span></span>
 <p>Frank R Hampel. The influence curve and its role in robust estimation. <em>Journal of the american statistical association</em>, 69(346):383–393, 1974.</p>
 </aside>
 <aside class="footnote brackets" id="footcite-koh-understanding-2017" role="note">
 <span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id3">1</a>,<a role="doc-backlink" href="#id4">2</a>,<a role="doc-backlink" href="#id5">3</a>)</span>
+<span class="backrefs">(<a role="doc-backlink" href="#id4">1</a>,<a role="doc-backlink" href="#id5">2</a>,<a role="doc-backlink" href="#id7">3</a>)</span>
 <p>Pang Wei Koh and Percy Liang. Understanding Black-box Predictions via Influence Functions. In <em>Proceedings of the 34th International Conference on Machine Learning</em>, 1885–1894. PMLR, July 2017. URL: <a class="reference external" href="https://proceedings.mlr.press/v70/koh17a.html">https://proceedings.mlr.press/v70/koh17a.html</a> (visited on 2022-05-09), <a class="reference external" href="https://arxiv.org/abs/1703.04730">arXiv:1703.04730</a>.</p>
+</aside>
+<aside class="footnote brackets" id="footcite-agarwal-2017-second" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id10">3</a><span class="fn-bracket">]</span></span>
+<p>Naman Agarwal, Brian Bullins, and Elad Hazan. Second-order stochastic optimization for machine learning in linear time. <em>The Journal of Machine Learning Research</em>, 18(1):4148–4187, 2017.</p>
 </aside>
 </aside>
 </div>
@@ -651,8 +812,17 @@ should be as small as possible while still allowing a reliable inversion of
 </ul>
 </li>
 <li><a class="reference internal" href="#computing-influences">Computing influences</a><ul>
-<li><a class="reference internal" href="#approximate-matrix-inversion">Approximate matrix inversion</a></li>
 <li><a class="reference internal" href="#perturbation-influences">Perturbation influences</a></li>
+<li><a class="reference internal" href="#approximate-matrix-inversion">Approximate matrix inversion</a></li>
+<li><a class="reference internal" href="#hessian-regularization">Hessian regularization</a></li>
+<li><a class="reference internal" href="#influence-factors">Influence factors</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#methods-for-inverse-hvp-calculation">Methods for inverse HVP calculation</a><ul>
+<li><a class="reference internal" href="#direct-inversion">Direct inversion</a></li>
+<li><a class="reference internal" href="#conjugate-gradient">Conjugate Gradient</a></li>
+<li><a class="reference internal" href="#linear-time-stochastic-second-order-approximation-lissa">Linear time Stochastic Second-Order Approximation (LiSSA)</a></li>
+<li><a class="reference internal" href="#arnoldi-solver">Arnoldi solver</a></li>
 </ul>
 </li>
 </ul>

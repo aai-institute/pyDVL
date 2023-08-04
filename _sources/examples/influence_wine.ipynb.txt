@@ -61,7 +61,7 @@
     "from support.common import plot_losses\n",
     "from support.torch import TorchMLP, fit_torch_model\n",
     "from pydvl.influence import compute_influences, TorchTwiceDifferentiable\n",
-    "from pydvl.utils.dataset import load_wine_dataset\n",
+    "from support.shapley import load_wine_dataset\n",
     "from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, f1_score\n",
     "from torch.optim import Adam, lr_scheduler\n",
     "from torch.utils.data import DataLoader, TensorDataset"

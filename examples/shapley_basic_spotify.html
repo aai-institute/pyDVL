@@ -342,7 +342,8 @@
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">autoreload</span>
 <span class="kn">from</span> <span class="nn">pydvl.reporting.plots</span> <span class="kn">import</span> <span class="n">plot_shapley</span>
-<span class="kn">from</span> <span class="nn">pydvl.utils.dataset</span> <span class="kn">import</span> <span class="n">GroupedDataset</span><span class="p">,</span> <span class="n">load_spotify_dataset</span>
+<span class="kn">from</span> <span class="nn">pydvl.utils.dataset</span> <span class="kn">import</span> <span class="n">GroupedDataset</span>
+<span class="kn">from</span> <span class="nn">support.shapley</span> <span class="kn">import</span> <span class="n">load_spotify_dataset</span>
 <span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
@@ -350,7 +351,7 @@
 </section>
 <section id="Loading-and-grouping-the-dataset">
 <h2>Loading and grouping the dataset<a class="headerlink" href="#Loading-and-grouping-the-dataset" title="Permalink to this heading">#</a></h2>
-<p>pyDVL provides a convenience function <a class="reference internal" href="../pydvl/utils/dataset.html#pydvl.utils.dataset.load_spotify_dataset"><span class="std std-ref">load_spotify_dataset()</span></a> which downloads data on songs published after 2014, and splits 30% of data for testing, and 30% of the remaining data for validation. The return value is a triple of training, validation and test data as lists of the form <code class="docutils literal notranslate"><span class="pre">[X_input,</span> <span class="pre">Y_label]</span></code>.</p>
+<p>pyDVL provides a support function for this notebook, <code class="docutils literal notranslate"><span class="pre">load_spotify_dataset()</span></code>, which downloads data on songs published after 2014, and splits 30% of data for testing, and 30% of the remaining data for validation. The return value is a triple of training, validation and test data as lists of the form <code class="docutils literal notranslate"><span class="pre">[X_input,</span> <span class="pre">Y_label]</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
