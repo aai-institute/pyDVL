@@ -4,7 +4,7 @@
 
 import logging
 
-from .twice_differentiable import TwiceDifferentiable
+from .twice_differentiable import InverseHvpResult, TwiceDifferentiable
 
 __all__ = ["TwiceDifferentiable"]
 logger = logging.getLogger("frameworks")
@@ -25,6 +25,8 @@ try:
         solve_linear,
         solve_lissa,
         stack,
+        transpose_tensor,
+        zero_tensor,
     )
 
     TensorType = torch.Tensor
@@ -35,12 +37,15 @@ try:
         [
             "TensorType",
             "ModelType",
+            "InverseHvpResult",
             "solve_linear",
             "solve_batch_cg",
             "solve_lissa",
             "as_tensor",
             "stack",
             "cat",
+            "zero_tensor",
+            "transpose_tensor",
             "einsum",
             "mvp",
         ]

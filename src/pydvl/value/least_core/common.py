@@ -95,7 +95,7 @@ def lc_solve_problem(
         # because given the equality constraint
         # it is the same as using the constraint e >= 0
         # (i.e. setting non_negative_subsidy = True).
-        mask = np.ones_like(b_lb, dtype=bool)
+        mask: NDArray[np.bool_] = np.ones_like(b_lb, dtype=bool)
         mask[total_utility_indices] = False
         b_lb = b_lb[mask]
         A_lb = A_lb[mask]

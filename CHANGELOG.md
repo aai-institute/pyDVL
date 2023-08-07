@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Optimises memory usage in IF calculation
+  [PR #375](https://github.com/appliedAI-Initiative/pyDVL/pull/376)
+- **Breaking Changes**
+  Returns information about hessian inversion to compute_influence_factors,
+  thus changing signature
+  [PR #375](https://github.com/appliedAI-Initiative/pyDVL/pull/376)
 - Fix adding valuation results with overlapping indices and different lengths
   [PR #370](https://github.com/appliedAI-Initiative/pyDVL/pull/370)
 - Fixed bugs in conjugate gradient and `linear_solve`
@@ -10,6 +16,17 @@
   [PR #371](https://github.com/appliedAI-Initiative/pyDVL/pull/371)
 - Major changes to IF interface and functionality
   [PR #278](https://github.com/appliedAI-Initiative/pyDVL/pull/278)
+- **New Method**: Implements solving the hessian equation via spectral low-rank approximation
+  [PR #365](https://github.com/appliedAI-Initiative/pyDVL/pull/365)
+- **Breaking Changes**:
+  - Add new joblib backend and set it as default
+    instead of the ray backend. Simplify the MapReduceJob class.
+    [PR #355](https://github.com/appliedAI-Initiative/pyDVL/pull/355)
+  - Bump torch dependency for influence package to 2.0 [PR #365](https://github.com/appliedAI-Initiative/pyDVL/pull/365)
+- **Bug fix** Fix installation of dev requirements for Python3.10
+  [PR #382](https://github.com/appliedAI-Initiative/pyDVL/pull/382)
+- Decouple ray.init from ParallelConfig 
+  [PR #373](https://github.com/appliedAI-Initiative/pyDVL/pull/383)
 
 ## 0.6.1 - 🏗 Bug fixes and small improvement
 

@@ -3,6 +3,7 @@ import warnings
 from typing import Iterable, Optional
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
@@ -156,7 +157,7 @@ def _montecarlo_least_core(
     for i, subset in enumerate(
         maybe_progress(power_set, progress, total=n_iterations, position=job_id)
     ):
-        indices = np.zeros(n, dtype=bool)
+        indices: NDArray[np.bool_] = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
         A_lb[i, indices] = 1
         utility_values[i] = u(subset)

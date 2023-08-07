@@ -3,11 +3,11 @@ Contains methods to invert the hessian vector product.
 """
 import logging
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
 
 from .frameworks import (
     DataLoaderType,
-    ModelType,
+    InverseHvpResult,
     TensorType,
     TwiceDifferentiable,
     solve_batch_cg,
@@ -16,6 +16,8 @@ from .frameworks import (
 )
 
 __all__ = ["solve_hvp"]
+
+from .frameworks.torch_differentiable import solve_arnoldi
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,7 @@ class InversionMethod(str, Enum):
     Direct = "direct"
     Cg = "cg"
     Lissa = "lissa"
+    Arnoldi = "arnoldi"
 
 
 def solve_hvp(
@@ -39,7 +42,7 @@ def solve_hvp(
     hessian_perturbation: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
-) -> TensorType:
+) -> InverseHvpResult:
     """
     Finds $x$ such that $Ax = b$, where $A$ is the hessian of model,
     and $b$ a vector.
@@ -57,8 +60,9 @@ def solve_hvp(
     :param hessian_perturbation: regularization of the hessian
     :param progress: If True, display progress bars.
 
-    :return: An array that solves the inverse problem,
-        i.e. it returns $x$ such that $Ax = b$
+    :return: An object that containes an array that solves the inverse problem,
+        i.e. it returns $x$ such that $Ax = b$, and a dictionary containing
+        information about the inversion process.
     """
     if inversion_method == InversionMethod.Direct:
         return solve_linear(
@@ -86,6 +90,14 @@ def solve_hvp(
             **kwargs,
             hessian_perturbation=hessian_perturbation,
             progress=progress,
+        )
+    elif inversion_method == InversionMethod.Arnoldi:
+        return solve_arnoldi(
+            model,  # type: ignore # TODO the interface TwiceDifferentiable is not used properly anyhow
+            training_data,
+            b,
+            **kwargs,
+            hessian_perturbation=hessian_perturbation,
         )
     else:
         raise ValueError(f"Unknown inversion method: {inversion_method}")
