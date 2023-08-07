@@ -25,7 +25,6 @@ from torch.utils.data import DataLoader
 
 from pydvl.influence.frameworks.torch_differentiable import (
     TorchTwiceDifferentiable,
-    mvp,
     solve_batch_cg,
     solve_linear,
     solve_lissa,
@@ -109,7 +108,7 @@ def test_linear_hessian(
     grad_xy = mvp_model.grad(
         torch.as_tensor(train_x), torch.as_tensor(train_y), create_graph=True
     )
-    estimated_hessian = mvp(
+    estimated_hessian = mvp_model.mvp(
         grad_xy,
         torch.as_tensor(np.eye((input_dimension + 1) * output_dimension)),
         mvp_model.parameters,
@@ -150,7 +149,7 @@ def test_linear_mixed_derivative(
         tensor_y = torch.as_tensor(train_y[i])
         grad_xy = mvp_model.grad(tensor_x, tensor_y, create_graph=True)
         model_mvp.append(
-            mvp(
+            mvp_model.mvp(
                 grad_xy,
                 np.eye((input_dimension + 1) * output_dimension),
                 backprop_on=tensor_x,

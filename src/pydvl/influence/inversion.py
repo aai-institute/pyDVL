@@ -3,10 +3,9 @@ Contains methods to invert the hessian vector product.
 """
 import logging
 from enum import Enum
-from typing import Any
+from typing import Any, Iterable, TypeVar
 
 from .frameworks import (
-    DataLoaderType,
     InverseHvpResult,
     TensorType,
     TwiceDifferentiable,
@@ -20,6 +19,8 @@ __all__ = ["solve_hvp"]
 from .frameworks.torch_differentiable import solve_arnoldi
 
 logger = logging.getLogger(__name__)
+
+DataLoaderType = TypeVar("DataLoaderType", bound=Iterable)
 
 
 class InversionMethod(str, Enum):

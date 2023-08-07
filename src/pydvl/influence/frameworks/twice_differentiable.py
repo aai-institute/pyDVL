@@ -34,7 +34,7 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
         pass
 
     def grad(
-        self, x: TensorType, y: TensorType, create_graph: bool = True
+        self, x: TensorType, y: TensorType, create_graph: bool = False
     ) -> TensorType:
         """
         Calculates gradient of model parameters wrt. the model parameters.
@@ -61,3 +61,31 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
             model parameters.
         """
         pass
+
+    @staticmethod
+    @abstractmethod
+    def mvp(
+        grad_xy: TensorType,
+        v: TensorType,
+        backprop_on: TensorType,
+        *,
+        progress: bool = False,
+    ) -> TensorType:
+        """
+        Calculates second order derivative of the model along directions v.
+        This second order derivative can be selected through the backprop_on argument.
+
+        :param grad_xy: an array [P] holding the gradients of the model
+            parameters wrt input $x$ and labels $y$, where P is the number of
+            parameters of the model. It is typically obtained through
+            self.grad.
+        :param v: An array ([DxP] or even one dimensional [D]) which
+            multiplies the matrix, where D is the number of directions.
+        :param progress: True, iff progress shall be printed.
+        :param backprop_on: tensor used in the second backpropagation (the first
+            one is along $x$ and $y$ as defined via grad_xy).
+        :returns: A matrix representing the implicit matrix vector product
+            of the model along the given directions. Output shape is [DxP] if
+            backprop_on is None, otherwise [DxM], with M the number of elements
+            of backprop_on.
+        """

@@ -20,7 +20,6 @@ try:
         as_tensor,
         cat,
         einsum,
-        mvp,
         solve_batch_cg,
         solve_linear,
         solve_lissa,

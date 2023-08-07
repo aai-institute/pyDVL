@@ -34,7 +34,6 @@ __all__ = [
     "zero_tensor",
     "transpose_tensor",
     "einsum",
-    "mvp",
     "lanzcos_low_rank_hessian_approx",
 ]
 
@@ -121,7 +120,7 @@ def solve_batch_cg(
         total_grad_xy += grad_xy * len(x)
         total_points += len(x)
     backprop_on = model.parameters
-    reg_hvp = lambda v: mvp(
+    reg_hvp = lambda v: model.mvp(
         total_grad_xy / total_points, v, backprop_on
     ) + hessian_perturbation * v.type(torch.float64)
     batch_cg = torch.zeros_like(b)
@@ -248,7 +247,9 @@ def solve_lissa(
     for _ in maybe_progress(range(maxiter), progress, desc="Lissa"):
         x, y = next(iter(shuffled_training_data))
         grad_xy = model.grad(x, y, create_graph=True)
-        reg_hvp = lambda v: mvp(grad_xy, v, model.parameters) + hessian_perturbation * v
+        reg_hvp = (
+            lambda v: model.mvp(grad_xy, v, model.parameters) + hessian_perturbation * v
+        )
         residual = lissa_step(h_estimate, reg_hvp) - h_estimate
         h_estimate += residual
         if torch.isnan(h_estimate).any():
@@ -322,45 +323,6 @@ def unsqueeze(x: torch.Tensor, dim: int) -> torch.Tensor:
     :return: A new tensor with an additional singleton dimension.
     """
     return x.unsqueeze(dim)
-
-
-def mvp(
-    grad_xy: torch.Tensor,
-    v: torch.Tensor,
-    backprop_on: torch.Tensor,
-    *,
-    progress: bool = False,
-) -> torch.Tensor:
-    """
-    Calculates second order derivative of the model along directions v.
-    This second order derivative can be selected through the backprop_on argument.
-
-    :param grad_xy: an array [P] holding the gradients of the model
-        parameters wrt input $x$ and labels $y$, where P is the number of
-        parameters of the model. It is typically obtained through
-        self.grad.
-    :param v: An array ([DxP] or even one dimensional [D]) which
-        multiplies the matrix, where D is the number of directions.
-    :param progress: True, iff progress shall be printed.
-    :param backprop_on: tensor used in the second backpropagation (the first
-        one is along $x$ and $y$ as defined via grad_xy).
-    :returns: A matrix representing the implicit matrix vector product
-        of the model along the given directions. Output shape is [DxP] if
-        backprop_on is None, otherwise [DxM], with M the number of elements
-        of backprop_on.
-    """
-    device = grad_xy.device
-    v = as_tensor(v, warn=False).to(device)
-    if v.ndim == 1:
-        v = v.unsqueeze(0)
-
-    z = (grad_xy * Variable(v)).sum(dim=1)
-
-    mvp = []
-    for i in maybe_progress(range(len(z)), progress, desc="MVP"):
-        mvp.append(flatten_all(autograd.grad(z[i], backprop_on, retain_graph=True)))
-    mvp = torch.stack([grad.contiguous().view(-1) for grad in mvp])
-    return mvp.detach()  # type: ignore
 
 
 class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
@@ -442,6 +404,48 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
             p.detach() for p in self.model.parameters() if p.requires_grad
         )
         return torch.func.hessian(model_func)(params)
+
+    @staticmethod
+    def mvp(
+        grad_xy: torch.Tensor,
+        v: torch.Tensor,
+        backprop_on: torch.Tensor,
+        *,
+        progress: bool = False,
+    ) -> torch.Tensor:
+        """
+        Calculates second order derivative of the model along directions v.
+        This second order derivative can be selected through the backprop_on argument.
+
+        :param grad_xy: an array [P] holding the gradients of the model
+            parameters wrt input $x$ and labels $y$, where P is the number of
+            parameters of the model. It is typically obtained through
+            self.grad.
+        :param v: An array ([DxP] or even one dimensional [D]) which
+            multiplies the matrix, where D is the number of directions.
+        :param progress: True, iff progress shall be printed.
+        :param backprop_on: tensor used in the second backpropagation (the first
+            one is along $x$ and $y$ as defined via grad_xy).
+        :returns: A matrix representing the implicit matrix vector product
+            of the model along the given directions. Output shape is [DxP] if
+            backprop_on is None, otherwise [DxM], with M the number of elements
+            of backprop_on.
+        """
+        device = grad_xy.device
+        v = as_tensor(v, warn=False).to(device)
+        if v.ndim == 1:
+            v = v.unsqueeze(0)
+
+        z = (grad_xy * Variable(v)).sum(dim=1)
+
+        mvp = []
+        for i in maybe_progress(range(len(z)), progress, desc="MVP"):
+            mvp.append(
+                flatten_tensors_to_vector(
+                    autograd.grad(z[i], backprop_on, retain_graph=True)
+                )
+            )
+        return torch.stack([grad.contiguous().view(-1) for grad in mvp]).detach()
 
 
 @dataclass

@@ -13,7 +13,6 @@ from .frameworks import (
     TwiceDifferentiable,
     cat,
     einsum,
-    mvp,
     stack,
 )
 from .frameworks.torch_differentiable import unsqueeze
@@ -158,7 +157,7 @@ def compute_influences_pert(
             tensor_x = x[i : i + 1]
             tensor_x = tensor_x.requires_grad_(True)
             grad_xy = model.grad(tensor_x, y[i], create_graph=True)
-            perturbation_influences = mvp(
+            perturbation_influences = model.mvp(
                 grad_xy,
                 influence_factors,
                 backprop_on=tensor_x,
