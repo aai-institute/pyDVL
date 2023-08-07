@@ -4,7 +4,7 @@ models, as introduced in :footcite:t:`koh_understanding_2017`.
 """
 from copy import deepcopy
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Callable, Dict, Optional, Type
 
 from ..utils import maybe_progress
 from .frameworks.twice_differentiable import (
@@ -59,7 +59,9 @@ def compute_influence_factors(
     :returns: An array of size (N, D) containing the influence factors for each
         dimension (D) and test sample (N).
     """
-    tensor_util = TensorUtilities.from_twice_differentiable(model)
+    tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
+        model
+    )
     stack = tensor_util.stack
     unsqueeze = tensor_util.unsqueeze
     cat = tensor_util.cat
@@ -81,7 +83,6 @@ def compute_influence_factors(
         training_data,
         cat(test_grads),
         hessian_perturbation=hessian_perturbation,
-        progress=progress,
         **kwargs,
     )
 
@@ -111,7 +112,9 @@ def compute_influences_up(
         number of input points.
     """
 
-    tensor_util = TensorUtilities.from_twice_differentiable(model)
+    tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
+        model
+    )
     stack = tensor_util.stack
     unsqueeze = tensor_util.unsqueeze
     cat = tensor_util.cat
@@ -126,7 +129,7 @@ def compute_influences_up(
         )
         train_grads.append(train_grad)
 
-    return einsum("ta,va->tv", influence_factors, cat(train_grads))
+    return einsum("ta,va->tv", influence_factors, cat(train_grads))  # type: ignore # ToDO fix typing
 
 
 def compute_influences_pert(
@@ -154,7 +157,9 @@ def compute_influences_pert(
         the number of input data, and P the number of features.
     """
 
-    tensor_util = TensorUtilities.from_twice_differentiable(model)
+    tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
+        model
+    )
     stack = tensor_util.stack
 
     all_pert_influences = []
@@ -176,10 +181,10 @@ def compute_influences_pert(
                 perturbation_influences.reshape((-1, *x[i].shape))
             )
 
-    return stack(all_pert_influences, axis=1)
+    return stack(all_pert_influences, axis=1)  # type: ignore # ToDO fix typing
 
 
-influence_type_registry = {
+influence_type_registry: Dict[InfluenceType, Callable[..., TensorType]] = {
     InfluenceType.Up: compute_influences_up,
     InfluenceType.Perturbation: compute_influences_pert,
 }
@@ -196,7 +201,7 @@ def compute_influences(
     hessian_regularization: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
-) -> TensorType:
+) -> TensorType:  # type: ignore # ToDO fix typing
     r"""
     Calculates the influence of the input_data point j on the test points i.
     First it calculates the influence factors of all test points with respect
@@ -237,9 +242,8 @@ def compute_influences(
         progress=progress,
         **kwargs,
     )
-    compute_influence_type = influence_type_registry[influence_type]
 
-    return compute_influence_type(
+    return influence_type_registry[influence_type](
         differentiable_model,
         input_data,
         influence_factors,

@@ -23,7 +23,7 @@ import torch.nn.functional as F
 from torch import nn
 from torch.utils.data import DataLoader
 
-from pydvl.influence.frameworks.torch_differentiable import (
+from pydvl.influence.frameworks import (
     TorchTwiceDifferentiable,
     solve_batch_cg,
     solve_linear,

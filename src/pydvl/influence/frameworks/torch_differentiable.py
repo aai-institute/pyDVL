@@ -18,6 +18,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
+from ..inversion import InversionMethod, InversionRegistry
 from .functional import get_hvp_function
 from .twice_differentiable import InverseHvpResult, TensorUtilities, TwiceDifferentiable
 from .util import align_structure, as_tensor, flatten_tensors_to_vector
@@ -27,233 +28,11 @@ __all__ = [
     "solve_linear",
     "solve_batch_cg",
     "solve_lissa",
+    "solve_arnoldi",
     "lanzcos_low_rank_hessian_approx",
 ]
 
 logger = logging.getLogger(__name__)
-
-
-def solve_linear(
-    model: "TorchTwiceDifferentiable",
-    training_data: DataLoader,
-    b: torch.Tensor,
-    *,
-    hessian_perturbation: float = 0.0,
-) -> InverseHvpResult:
-    """Given a model and training data, it finds x s.t. $Hx = b$, with $H$ being
-    the model hessian.
-
-    :param model: A model wrapped in the TwiceDifferentiable interface.
-    :param training_data: A DataLoader containing the training data.
-    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
-    :param hessian_perturbation: regularization of the hessian
-
-    :return: An array that solves the inverse problem,
-        i.e. it returns $x$ such that $Hx = b$, and a dictionary containing
-        information about the solution.
-    """
-    tensor_util = TensorUtilities.from_twice_differentiable(model)
-    cat = tensor_util.cat
-    eye = tensor_util.eye
-
-    all_x, all_y = [], []
-    for x, y in training_data:
-        all_x.append(x)
-        all_y.append(y)
-    all_x = cat(all_x)
-    all_y = cat(all_y)
-    hessian = model.hessian(all_x, all_y)
-    matrix = hessian + hessian_perturbation * eye(model.num_params, device=model.device)
-    info = {"hessian": hessian}
-    return InverseHvpResult(x=torch.linalg.solve(matrix, b.T).T, info=info)
-
-
-def solve_batch_cg(
-    model: "TorchTwiceDifferentiable",
-    training_data: DataLoader,
-    b: torch.Tensor,
-    *,
-    hessian_perturbation: float = 0.0,
-    x0: Optional[torch.Tensor] = None,
-    rtol: float = 1e-7,
-    atol: float = 1e-7,
-    maxiter: Optional[int] = None,
-    progress: bool = False,
-) -> InverseHvpResult:
-    """
-    Given a model and training data, it uses conjugate gradient to calculate the
-    inverse of the Hessian Vector Product. More precisely, it finds x s.t. $Hx =
-    b$, with $H$ being the model hessian. For more info, see
-    `Wikipedia <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_
-
-    :param model: A model wrapped in the TwiceDifferentiable interface.
-    :param training_data: A DataLoader containing the training data.
-    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
-    :param hessian_perturbation: regularization of the hessian
-    :param x0: initial guess for hvp. If None, defaults to b
-    :param rtol: maximum relative tolerance of result
-    :param atol: absolute tolerance of result
-    :param maxiter: maximum number of iterations. If None, defaults to 10*len(b)
-    :param progress: If True, display progress bars.
-
-    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$,
-        and a dictionary containing information about the convergence of CG, one
-        entry for each line of the matrix.
-    """
-    total_grad_xy = 0
-    total_points = 0
-    for x, y in maybe_progress(training_data, progress, desc="Batch Train Gradients"):
-        grad_xy = model.grad(x, y, create_graph=True)
-        total_grad_xy += grad_xy * len(x)
-        total_points += len(x)
-    backprop_on = model.parameters
-    reg_hvp = lambda v: model.mvp(
-        total_grad_xy / total_points, v, backprop_on
-    ) + hessian_perturbation * v.type(torch.float64)
-    batch_cg = torch.zeros_like(b)
-    info = {}
-    for idx, bi in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
-        batch_result, batch_info = solve_cg(
-            reg_hvp, bi, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter
-        )
-        batch_cg[idx] = batch_result
-        info[f"batch_{idx}"] = batch_info
-    return InverseHvpResult(x=batch_cg, info=info)
-
-
-def solve_cg(
-    hvp: Callable[[torch.Tensor], torch.Tensor],
-    b: torch.Tensor,
-    *,
-    x0: Optional[torch.Tensor] = None,
-    rtol: float = 1e-7,
-    atol: float = 1e-7,
-    maxiter: Optional[int] = None,
-) -> InverseHvpResult:
-    """Conjugate gradient solver for the Hessian vector product
-
-    :param hvp: a Callable Hvp, operating with tensors of size N
-    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
-    :param x0: initial guess for hvp
-    :param rtol: maximum relative tolerance of result
-    :param atol: absolute tolerance of result
-    :param maxiter: maximum number of iterations. If None, defaults to 10*len(b)
-
-    :return: A vector x, solution of $Ax=b$, and a dictionary containing
-        information about the convergence of CG.
-    """
-    if x0 is None:
-        x0 = torch.clone(b)
-    if maxiter is None:
-        maxiter = len(b) * 10
-
-    y_norm = torch.sum(torch.matmul(b, b)).item()
-    stopping_val = max([rtol**2 * y_norm, atol**2])
-
-    x = x0
-    p = r = (b - hvp(x)).squeeze().type(torch.float64)
-    gamma = torch.sum(torch.matmul(r, r)).item()
-    optimal = False
-
-    for k in range(maxiter):
-        if gamma < stopping_val:
-            optimal = True
-            break
-        Ap = hvp(p).squeeze()
-        alpha = gamma / torch.sum(torch.matmul(p, Ap)).item()
-        x += alpha * p
-        r -= alpha * Ap
-        gamma_ = torch.sum(torch.matmul(r, r)).item()
-        beta = gamma_ / gamma
-        gamma = gamma_
-        p = r + beta * p
-
-    info = {"niter": k, "optimal": optimal, "gamma": gamma}
-    return InverseHvpResult(x=x, info=info)
-
-
-def solve_lissa(
-    model: "TorchTwiceDifferentiable",
-    training_data: DataLoader,
-    b: torch.Tensor,
-    *,
-    hessian_perturbation: float = 0.0,
-    maxiter: int = 1000,
-    dampen: float = 0.0,
-    scale: float = 10.0,
-    h0: Optional[torch.Tensor] = None,
-    rtol: float = 1e-4,
-    progress: bool = False,
-) -> InverseHvpResult:
-    r"""
-    Uses LISSA, Linear time Stochastic Second-Order Algorithm, to iteratively
-    approximate the inverse Hessian. More precisely, it finds x s.t. $Hx = b$,
-    with $H$ being the model's second derivative wrt. the parameters.
-    This is done with the update
-
-    $$H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s},$$
-
-    where $I$ is the identity matrix, $d$ is a dampening term and $s$ a scaling
-    factor that are applied to help convergence. For details, see
-    :footcite:t:`koh_understanding_2017` and the original paper
-    :footcite:t:`agarwal_2017_second`.
-
-    :param model: A model wrapped in the TwiceDifferentiable interface.
-    :param training_data: A DataLoader containing the training data.
-    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
-    :param hessian_perturbation: regularization of the hessian
-    :param progress: If True, display progress bars.
-    :param maxiter: maximum number of iterations,
-    :param dampen: dampening factor, defaults to 0 for no dampening
-    :param scale: scaling factor, defaults to 10
-    :param h0: initial guess for hvp
-
-    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$,
-        and a dictionary containing information about the accuracy of the solution.
-    """
-    if h0 is None:
-        h_estimate = torch.clone(b)
-    else:
-        h_estimate = h0
-    shuffled_training_data = DataLoader(
-        training_data.dataset, training_data.batch_size, shuffle=True
-    )
-
-    def lissa_step(
-        h: torch.Tensor, reg_hvp: Callable[[torch.Tensor], torch.Tensor]
-    ) -> torch.Tensor:
-        """Given an estimate of the hessian inverse and the regularised hessian
-        vector product, it computes the next estimate.
-
-        :param h: an estimate of the hessian inverse
-        :param reg_hvp: regularised hessian vector product
-        :return: the next estimate of the hessian inverse
-        """
-        return b + (1 - dampen) * h - reg_hvp(h) / scale
-
-    for _ in maybe_progress(range(maxiter), progress, desc="Lissa"):
-        x, y = next(iter(shuffled_training_data))
-        grad_xy = model.grad(x, y, create_graph=True)
-        reg_hvp = (
-            lambda v: model.mvp(grad_xy, v, model.parameters) + hessian_perturbation * v
-        )
-        residual = lissa_step(h_estimate, reg_hvp) - h_estimate
-        h_estimate += residual
-        if torch.isnan(h_estimate).any():
-            raise RuntimeError("NaNs in h_estimate. Increase scale or dampening.")
-        max_residual = torch.max(torch.abs(residual / h_estimate))
-        if max_residual < rtol:
-            break
-    mean_residual = torch.mean(torch.abs(residual / h_estimate))
-    logger.info(
-        f"Terminated Lissa with {max_residual*100:.2f} % max residual."
-        f" Mean residual: {mean_residual*100:.5f} %"
-    )
-    info = {
-        "max_perc_residual": max_residual * 100,
-        "mean_perc_residual": mean_residual * 100,
-    }
-    return InverseHvpResult(x=h_estimate / scale, info=info)
 
 
 class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
@@ -276,6 +55,10 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
         self.loss = loss
         self.model = model
         self.device = model.device if hasattr(model, "device") else torch.device("cpu")
+
+    @classmethod
+    def tensor_type(cls):
+        return torch.Tensor
 
     @property
     def parameters(self) -> List[torch.Tensor]:
@@ -389,92 +172,8 @@ class LowRankProductRepresentation:
     """
 
     eigen_vals: torch.Tensor
+
     projections: torch.Tensor
-
-
-def solve_arnoldi(
-    model: TorchTwiceDifferentiable,
-    training_data: DataLoader,
-    b: torch.Tensor,
-    *,
-    hessian_perturbation: float = 0.0,
-    rank_estimate: int = 10,
-    krylov_dimension: Optional[int] = None,
-    low_rank_representation: Optional[LowRankProductRepresentation] = None,
-    tol: float = 1e-6,
-    max_iter: Optional[int] = None,
-    eigen_computation_on_gpu: bool = False,
-) -> InverseHvpResult:
-
-    """
-    Solves the linear system Hx = b, where H is the Hessian of the model's loss function and b is the given right-hand
-    side vector. The Hessian is approximated using a low-rank representation.
-
-    :param model: A PyTorch model instance that is twice differentiable, wrapped into :class:`TorchTwiceDifferential`.
-                  The Hessian will be calculated with respect to this model's parameters.
-    :param training_data: A DataLoader instance that provides the model's training data.
-                          Used in calculating the Hessian-vector products.
-    :param b: The right-hand side vector in the system Hx = b.
-    :param hessian_perturbation: Optional regularization parameter added to the Hessian-vector product
-                                 for numerical stability.
-    :param rank_estimate: The number of eigenvalues and corresponding eigenvectors to compute.
-                          Represents the desired rank of the Hessian approximation.
-    :param krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
-                             If not provided, it defaults to $min(model.num_parameters, max(2*rank_estimate + 1, 20))$.
-    :param low_rank_representation: A LowRankProductRepresentation instance containing a previously computed
-                                    low-rank representation of the Hessian.
-                                    If not provided, a new low-rank representation will be computed,
-                                    using provided parameters.
-    :param tol: The stopping criteria for the Lanczos algorithm.
-                If `low_rank_representation` is provided, this parameter is ignored.
-    :param max_iter: The maximum number of iterations for the Lanczos method.
-                     If `low_rank_representation` is provided, this parameter is ignored.
-    :param eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation on the model's
-                                     device via cupy implementation.
-                                     Make sure, that either your model is small enough or you use a
-                                     small rank_estimate to fit your device's memory.
-                                     If False, the eigen pair approximation is executed on the CPU by scipy wrapper to
-                                     ARPACK.
-    :return: Returns the solution vector x that satisfies the system Hx = b,
-             where H is a low-rank approximation of the Hessian of the model's loss function.
-    """
-
-    if low_rank_representation is None:
-
-        raw_hvp = get_hvp_function(
-            model.model, model.loss, training_data, use_hessian_avg=True
-        )
-        params = dict(model.model.named_parameters())
-
-        def hessian_vector_product(x: torch.Tensor) -> torch.Tensor:
-            output = raw_hvp(align_structure(params, x))
-            return flatten_tensors_to_vector(output.values())
-
-        low_rank_representation = lanzcos_low_rank_hessian_approx(
-            hessian_vp=hessian_vector_product,
-            matrix_shape=(model.num_params, model.num_params),
-            hessian_perturbation=hessian_perturbation,
-            rank_estimate=rank_estimate,
-            krylov_dimension=krylov_dimension,
-            tol=tol,
-            max_iter=max_iter,
-            device=model.device if hasattr(model, "device") else None,
-            eigen_computation_on_gpu=eigen_computation_on_gpu,
-        )
-    else:
-        logger.info("Using provided low rank representation, ignoring other parameters")
-
-    result = low_rank_representation.projections @ (
-        torch.diag_embed(1.0 / low_rank_representation.eigen_vals)
-        @ (low_rank_representation.projections.t() @ b.t())
-    )
-    return InverseHvpResult(
-        x=result.t(),
-        info={
-            "eigenvalues": low_rank_representation.eigen_vals,
-            "eigenvectors": low_rank_representation.projections,
-        },
-    )
 
 
 def lanzcos_low_rank_hessian_approx(
@@ -620,3 +319,311 @@ class TorchTensorUtilities(TensorUtilities[torch.Tensor]):
     def eye(dim: int, **kwargs) -> torch.Tensor:
         """Identity tensor of dimension dim"""
         return torch.eye(dim, dim, **kwargs)
+
+
+@InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Direct)
+def solve_linear(
+    model: TorchTwiceDifferentiable,
+    training_data: DataLoader,
+    b: torch.Tensor,
+    hessian_perturbation: float = 0.0,
+) -> InverseHvpResult:
+    """Given a model and training data, it finds x s.t. $Hx = b$, with $H$ being
+    the model hessian.
+
+    :param model: A model wrapped in the TwiceDifferentiable interface.
+    :param training_data: A DataLoader containing the training data.
+    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
+    :param hessian_perturbation: regularization of the hessian
+
+    :return: An array that solves the inverse problem,
+        i.e. it returns $x$ such that $Hx = b$, and a dictionary containing
+        information about the solution.
+    """
+
+    all_x, all_y = [], []
+    for x, y in training_data:
+        all_x.append(x)
+        all_y.append(y)
+    hessian = model.hessian(torch.cat(all_x), torch.cat(all_y))
+    matrix = hessian + hessian_perturbation * torch.eye(
+        model.num_params, device=model.device
+    )
+    info = {"hessian": hessian}
+    return InverseHvpResult(x=torch.linalg.solve(matrix, b.T).T, info=info)
+
+
+@InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Cg)
+def solve_batch_cg(
+    model: TorchTwiceDifferentiable,
+    training_data: DataLoader,
+    b: torch.Tensor,
+    hessian_perturbation: float = 0.0,
+    *,
+    x0: Optional[torch.Tensor] = None,
+    rtol: float = 1e-7,
+    atol: float = 1e-7,
+    maxiter: Optional[int] = None,
+    progress: bool = False,
+) -> InverseHvpResult:
+    """
+    Given a model and training data, it uses conjugate gradient to calculate the
+    inverse of the Hessian Vector Product. More precisely, it finds x s.t. $Hx =
+    b$, with $H$ being the model hessian. For more info, see
+    `Wikipedia <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_
+
+    :param model: A model wrapped in the TwiceDifferentiable interface.
+    :param training_data: A DataLoader containing the training data.
+    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
+    :param hessian_perturbation: regularization of the hessian
+    :param x0: initial guess for hvp. If None, defaults to b
+    :param rtol: maximum relative tolerance of result
+    :param atol: absolute tolerance of result
+    :param maxiter: maximum number of iterations. If None, defaults to 10*len(b)
+    :param progress: If True, display progress bars.
+
+    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$,
+        and a dictionary containing information about the convergence of CG, one
+        entry for each line of the matrix.
+    """
+    total_grad_xy = 0
+    total_points = 0
+    for x, y in maybe_progress(training_data, progress, desc="Batch Train Gradients"):
+        grad_xy = model.grad(x, y, create_graph=True)
+        total_grad_xy += grad_xy * len(x)
+        total_points += len(x)
+    backprop_on = model.parameters
+    reg_hvp = lambda v: model.mvp(
+        total_grad_xy / total_points, v, backprop_on
+    ) + hessian_perturbation * v.type(torch.float64)
+    batch_cg = torch.zeros_like(b)
+    info = {}
+    for idx, bi in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
+        batch_result, batch_info = solve_cg(
+            reg_hvp, bi, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter
+        )
+        batch_cg[idx] = batch_result
+        info[f"batch_{idx}"] = batch_info
+    return InverseHvpResult(x=batch_cg, info=info)
+
+
+def solve_cg(
+    hvp: Callable[[torch.Tensor], torch.Tensor],
+    b: torch.Tensor,
+    *,
+    x0: Optional[torch.Tensor] = None,
+    rtol: float = 1e-7,
+    atol: float = 1e-7,
+    maxiter: Optional[int] = None,
+) -> InverseHvpResult:
+    """Conjugate gradient solver for the Hessian vector product
+
+    :param hvp: a Callable Hvp, operating with tensors of size N
+    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
+    :param x0: initial guess for hvp
+    :param rtol: maximum relative tolerance of result
+    :param atol: absolute tolerance of result
+    :param maxiter: maximum number of iterations. If None, defaults to 10*len(b)
+
+    :return: A vector x, solution of $Ax=b$, and a dictionary containing
+        information about the convergence of CG.
+    """
+    if x0 is None:
+        x0 = torch.clone(b)
+    if maxiter is None:
+        maxiter = len(b) * 10
+
+    y_norm = torch.sum(torch.matmul(b, b)).item()
+    stopping_val = max([rtol**2 * y_norm, atol**2])
+
+    x = x0
+    p = r = (b - hvp(x)).squeeze().type(torch.float64)
+    gamma = torch.sum(torch.matmul(r, r)).item()
+    optimal = False
+
+    for k in range(maxiter):
+        if gamma < stopping_val:
+            optimal = True
+            break
+        Ap = hvp(p).squeeze()
+        alpha = gamma / torch.sum(torch.matmul(p, Ap)).item()
+        x += alpha * p
+        r -= alpha * Ap
+        gamma_ = torch.sum(torch.matmul(r, r)).item()
+        beta = gamma_ / gamma
+        gamma = gamma_
+        p = r + beta * p
+
+    info = {"niter": k, "optimal": optimal, "gamma": gamma}
+    return InverseHvpResult(x=x, info=info)
+
+
+@InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Lissa)
+def solve_lissa(
+    model: TorchTwiceDifferentiable,
+    training_data: DataLoader,
+    b: torch.Tensor,
+    hessian_perturbation: float = 0.0,
+    *,
+    maxiter: int = 1000,
+    dampen: float = 0.0,
+    scale: float = 10.0,
+    h0: Optional[torch.Tensor] = None,
+    rtol: float = 1e-4,
+    progress: bool = False,
+) -> InverseHvpResult:
+    r"""
+    Uses LISSA, Linear time Stochastic Second-Order Algorithm, to iteratively
+    approximate the inverse Hessian. More precisely, it finds x s.t. $Hx = b$,
+    with $H$ being the model's second derivative wrt. the parameters.
+    This is done with the update
+
+    $$H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s},$$
+
+    where $I$ is the identity matrix, $d$ is a dampening term and $s$ a scaling
+    factor that are applied to help convergence. For details, see
+    :footcite:t:`koh_understanding_2017` and the original paper
+    :footcite:t:`agarwal_2017_second`.
+
+    :param model: A model wrapped in the TwiceDifferentiable interface.
+    :param training_data: A DataLoader containing the training data.
+    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
+    :param hessian_perturbation: regularization of the hessian
+    :param progress: If True, display progress bars.
+    :param maxiter: maximum number of iterations,
+    :param dampen: dampening factor, defaults to 0 for no dampening
+    :param scale: scaling factor, defaults to 10
+    :param h0: initial guess for hvp
+
+    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$,
+        and a dictionary containing information about the accuracy of the solution.
+    """
+    if h0 is None:
+        h_estimate = torch.clone(b)
+    else:
+        h_estimate = h0
+    shuffled_training_data = DataLoader(
+        training_data.dataset, training_data.batch_size, shuffle=True
+    )
+
+    def lissa_step(
+        h: torch.Tensor, reg_hvp: Callable[[torch.Tensor], torch.Tensor]
+    ) -> torch.Tensor:
+        """Given an estimate of the hessian inverse and the regularised hessian
+        vector product, it computes the next estimate.
+
+        :param h: an estimate of the hessian inverse
+        :param reg_hvp: regularised hessian vector product
+        :return: the next estimate of the hessian inverse
+        """
+        return b + (1 - dampen) * h - reg_hvp(h) / scale
+
+    for _ in maybe_progress(range(maxiter), progress, desc="Lissa"):
+        x, y = next(iter(shuffled_training_data))
+        grad_xy = model.grad(x, y, create_graph=True)
+        reg_hvp = (
+            lambda v: model.mvp(grad_xy, v, model.parameters) + hessian_perturbation * v
+        )
+        residual = lissa_step(h_estimate, reg_hvp) - h_estimate
+        h_estimate += residual
+        if torch.isnan(h_estimate).any():
+            raise RuntimeError("NaNs in h_estimate. Increase scale or dampening.")
+        max_residual = torch.max(torch.abs(residual / h_estimate))
+        if max_residual < rtol:
+            break
+    mean_residual = torch.mean(torch.abs(residual / h_estimate))
+    logger.info(
+        f"Terminated Lissa with {max_residual*100:.2f} % max residual."
+        f" Mean residual: {mean_residual*100:.5f} %"
+    )
+    info = {
+        "max_perc_residual": max_residual * 100,
+        "mean_perc_residual": mean_residual * 100,
+    }
+    return InverseHvpResult(x=h_estimate / scale, info=info)
+
+
+@InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Arnoldi)
+def solve_arnoldi(
+    model: TorchTwiceDifferentiable,
+    training_data: DataLoader,
+    b: torch.Tensor,
+    hessian_perturbation: float = 0.0,
+    *,
+    rank_estimate: int = 10,
+    krylov_dimension: Optional[int] = None,
+    low_rank_representation: Optional[LowRankProductRepresentation] = None,
+    tol: float = 1e-6,
+    max_iter: Optional[int] = None,
+    eigen_computation_on_gpu: bool = False,
+) -> InverseHvpResult:
+
+    """
+    Solves the linear system Hx = b, where H is the Hessian of the model's loss function and b is the given right-hand
+    side vector. The Hessian is approximated using a low-rank representation.
+
+    :param model: A PyTorch model instance that is twice differentiable, wrapped into :class:`TorchTwiceDifferential`.
+                  The Hessian will be calculated with respect to this model's parameters.
+    :param training_data: A DataLoader instance that provides the model's training data.
+                          Used in calculating the Hessian-vector products.
+    :param b: The right-hand side vector in the system Hx = b.
+    :param hessian_perturbation: Optional regularization parameter added to the Hessian-vector product
+                                 for numerical stability.
+    :param rank_estimate: The number of eigenvalues and corresponding eigenvectors to compute.
+                          Represents the desired rank of the Hessian approximation.
+    :param krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
+                             If not provided, it defaults to $min(model.num_parameters, max(2*rank_estimate + 1, 20))$.
+    :param low_rank_representation: A LowRankProductRepresentation instance containing a previously computed
+                                    low-rank representation of the Hessian.
+                                    If not provided, a new low-rank representation will be computed,
+                                    using provided parameters.
+    :param tol: The stopping criteria for the Lanczos algorithm.
+                If `low_rank_representation` is provided, this parameter is ignored.
+    :param max_iter: The maximum number of iterations for the Lanczos method.
+                     If `low_rank_representation` is provided, this parameter is ignored.
+    :param eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation on the model's
+                                     device via cupy implementation.
+                                     Make sure, that either your model is small enough or you use a
+                                     small rank_estimate to fit your device's memory.
+                                     If False, the eigen pair approximation is executed on the CPU by scipy wrapper to
+                                     ARPACK.
+    :return: Returns the solution vector x that satisfies the system Hx = b,
+             where H is a low-rank approximation of the Hessian of the model's loss function.
+    """
+
+    if low_rank_representation is None:
+
+        raw_hvp = get_hvp_function(
+            model.model, model.loss, training_data, use_hessian_avg=True
+        )
+        params = dict(model.model.named_parameters())
+
+        def hessian_vector_product(x: torch.Tensor) -> torch.Tensor:
+            output = raw_hvp(align_structure(params, x))
+            return flatten_tensors_to_vector(output.values())
+
+        low_rank_representation = lanzcos_low_rank_hessian_approx(
+            hessian_vp=hessian_vector_product,
+            matrix_shape=(model.num_params, model.num_params),
+            hessian_perturbation=hessian_perturbation,
+            rank_estimate=rank_estimate,
+            krylov_dimension=krylov_dimension,
+            tol=tol,
+            max_iter=max_iter,
+            device=model.device if hasattr(model, "device") else None,
+            eigen_computation_on_gpu=eigen_computation_on_gpu,
+        )
+    else:
+        logger.info("Using provided low rank representation, ignoring other parameters")
+
+    result = low_rank_representation.projections @ (
+        torch.diag_embed(1.0 / low_rank_representation.eigen_vals)
+        @ (low_rank_representation.projections.t() @ b.t())
+    )
+    return InverseHvpResult(
+        x=result.t(),
+        info={
+            "eigenvalues": low_rank_representation.eigen_vals,
+            "eigenvectors": low_rank_representation.projections,
+        },
+    )

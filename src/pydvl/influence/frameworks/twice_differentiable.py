@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from typing import Any, Dict, Generic, List, Sequence, Type, TypeVar
 
 TensorType = TypeVar("TensorType", bound=Sequence)
-ModelType = TypeVar("ModelType")
 
 
 @dataclass(frozen=True)
@@ -20,6 +19,11 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
     Wraps a differentiable model and loss and provides methods to compute gradients and
     second derivative of the loss wrt. the model parameters
     """
+
+    @classmethod
+    @abstractmethod
+    def tensor_type(cls):
+        pass
 
     @property
     @abstractmethod
@@ -147,11 +151,12 @@ class TensorUtilities(Generic[TensorType], ABC):
     def eye(dim: int, **kwargs) -> TensorType:
         """Identity tensor of dimension dim"""
 
-    @staticmethod
+    @classmethod
     def from_twice_differentiable(
+        cls,
         twice_diff: TwiceDifferentiable,
     ) -> Type["TensorUtilities"]:
-        tu = TensorUtilities.registry.get(type(twice_diff), None)
+        tu = cls.registry.get(type(twice_diff), None)
 
         if tu is None:
             raise KeyError()
