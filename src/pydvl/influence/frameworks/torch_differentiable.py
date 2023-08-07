@@ -40,13 +40,6 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def flatten_all(grad: Iterable[torch.Tensor]) -> torch.Tensor:
-    """
-    Simple function to flatten a pyTorch gradient for use in subsequent calculation
-    """
-    return torch.cat([el.reshape(-1) for el in grad])
-
-
 def solve_linear(
     model: "TorchTwiceDifferentiable",
     training_data: DataLoader,
@@ -379,7 +372,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
         grad_f = torch.autograd.grad(
             loss_value, self.parameters, create_graph=create_graph
         )
-        return flatten_all(grad_f)
+        return flatten_tensors_to_vector(grad_f)
 
     def hessian(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """Calculates the explicit hessian of model parameters given data ($x$ and $y$).
