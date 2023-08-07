@@ -18,7 +18,6 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
-from ..inversion import InversionMethod, InversionRegistry
 from .functional import get_hvp_function
 from .twice_differentiable import InverseHvpResult, TensorUtilities, TwiceDifferentiable
 from .util import align_structure, as_tensor, flatten_tensors_to_vector
@@ -321,7 +320,6 @@ class TorchTensorUtilities(TensorUtilities[torch.Tensor]):
         return torch.eye(dim, dim, **kwargs)
 
 
-@InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Direct)
 def solve_linear(
     model: TorchTwiceDifferentiable,
     training_data: DataLoader,
@@ -353,7 +351,6 @@ def solve_linear(
     return InverseHvpResult(x=torch.linalg.solve(matrix, b.T).T, info=info)
 
 
-@InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Cg)
 def solve_batch_cg(
     model: TorchTwiceDifferentiable,
     training_data: DataLoader,
@@ -458,7 +455,6 @@ def solve_cg(
     return InverseHvpResult(x=x, info=info)
 
 
-@InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Lissa)
 def solve_lissa(
     model: TorchTwiceDifferentiable,
     training_data: DataLoader,
@@ -543,7 +539,6 @@ def solve_lissa(
     return InverseHvpResult(x=h_estimate / scale, info=info)
 
 
-@InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Arnoldi)
 def solve_arnoldi(
     model: TorchTwiceDifferentiable,
     training_data: DataLoader,
