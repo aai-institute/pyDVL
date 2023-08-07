@@ -596,6 +596,14 @@ def lanzcos_low_rank_hessian_approx(
     else:
         from scipy.sparse.linalg import LinearOperator, eigsh
 
+        if device.type == "cuda":
+            logger.warning(
+                "Device is cuda, but eigen_computation_on_gpu is False, so eigen computation will be on CPU."
+                "To enable GPU computation, set eigen_computation_on_gpu to True."
+            )
+        else:
+            device = torch.device("cpu")
+
         def mv(x):
             x_torch = torch.as_tensor(x, device=device, dtype=torch_dtype)
             y: NDArray = (
@@ -628,7 +636,7 @@ def lanzcos_low_rank_hessian_approx(
 
         eigen_vals, eigen_vecs = e.eigenvalues, e.eigenvectors
 
-    eigen_vals = to_torch_conversion_function(eigen_vals)
-    eigen_vecs = to_torch_conversion_function(eigen_vecs)
+    eigen_vals = to_torch_conversion_function(eigen_vals).to(device)
+    eigen_vecs = to_torch_conversion_function(eigen_vecs).to(device)
 
     return LowRankProductRepresentation(eigen_vals, eigen_vecs)
