@@ -596,7 +596,7 @@ def lanzcos_low_rank_hessian_approx(
     else:
         from scipy.sparse.linalg import LinearOperator, eigsh
 
-        if device.type == "cuda":
+        if device is not None and device.type == "cuda":
             logger.warning(
                 "Device is cuda, but eigen_computation_on_gpu is False, so eigen computation will be on CPU."
                 "To enable GPU computation, set eigen_computation_on_gpu to True."
