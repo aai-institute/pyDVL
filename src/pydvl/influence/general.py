@@ -7,16 +7,12 @@ from enum import Enum
 from typing import Any, Optional
 
 from ..utils import maybe_progress
-from .frameworks import (
-    DataLoaderType,
+from .frameworks.twice_differentiable import (
     TensorType,
+    TensorUtilities,
     TwiceDifferentiable,
-    cat,
-    einsum,
-    stack,
 )
-from .frameworks.torch_differentiable import unsqueeze
-from .inversion import InverseHvpResult, InversionMethod, solve_hvp
+from .inversion import DataLoaderType, InverseHvpResult, InversionMethod, solve_hvp
 
 __all__ = ["compute_influences", "InfluenceType", "compute_influence_factors"]
 
@@ -63,6 +59,11 @@ def compute_influence_factors(
     :returns: An array of size (N, D) containing the influence factors for each
         dimension (D) and test sample (N).
     """
+    tensor_util = TensorUtilities.from_twice_differentiable(model)
+    stack = tensor_util.stack
+    unsqueeze = tensor_util.unsqueeze
+    cat = tensor_util.cat
+
     test_grads = []
     for x_test, y_test in maybe_progress(
         test_data, progress, desc="Batch Test Gradients"
@@ -74,12 +75,11 @@ def compute_influence_factors(
             ]
         )
         test_grads.append(test_grad)
-    test_grads = cat(test_grads)
     return solve_hvp(
         inversion_method,
         model,
         training_data,
-        test_grads,
+        cat(test_grads),
         hessian_perturbation=hessian_perturbation,
         progress=progress,
         **kwargs,
@@ -110,6 +110,13 @@ def compute_influences_up(
     :returns: An array of size [NxM], where N is number of influence factors, M
         number of input points.
     """
+
+    tensor_util = TensorUtilities.from_twice_differentiable(model)
+    stack = tensor_util.stack
+    unsqueeze = tensor_util.unsqueeze
+    cat = tensor_util.cat
+    einsum = tensor_util.einsum
+
     train_grads = []
     for x, y in maybe_progress(
         input_data, progress, desc="Batch Split Input Gradients"
@@ -119,8 +126,7 @@ def compute_influences_up(
         )
         train_grads.append(train_grad)
 
-    train_grads = cat(train_grads)
-    return einsum("ta,va->tv", influence_factors, train_grads)
+    return einsum("ta,va->tv", influence_factors, cat(train_grads))
 
 
 def compute_influences_pert(
@@ -147,6 +153,10 @@ def compute_influences_pert(
     :returns: An array of size [NxMxP], where N is the number of influence factors, M
         the number of input data, and P the number of features.
     """
+
+    tensor_util = TensorUtilities.from_twice_differentiable(model)
+    stack = tensor_util.stack
+
     all_pert_influences = []
     for x, y in maybe_progress(
         input_data,

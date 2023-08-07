@@ -7,9 +7,8 @@ influence of a training point on the model.
 import logging
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Callable, List, Optional, Sequence, Tuple
 
-import numpy as np
 import torch
 import torch.nn as nn
 from numpy.typing import NDArray
@@ -20,20 +19,14 @@ from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
 from .functional import get_hvp_function
-from .twice_differentiable import InverseHvpResult, TwiceDifferentiable
-from .util import align_structure, flatten_tensors_to_vector
+from .twice_differentiable import InverseHvpResult, TensorUtilities, TwiceDifferentiable
+from .util import align_structure, as_tensor, flatten_tensors_to_vector
 
 __all__ = [
     "TorchTwiceDifferentiable",
     "solve_linear",
     "solve_batch_cg",
     "solve_lissa",
-    "as_tensor",
-    "stack",
-    "cat",
-    "zero_tensor",
-    "transpose_tensor",
-    "einsum",
     "lanzcos_low_rank_hessian_approx",
 ]
 
@@ -59,6 +52,9 @@ def solve_linear(
         i.e. it returns $x$ such that $Hx = b$, and a dictionary containing
         information about the solution.
     """
+    tensor_util = TensorUtilities.from_twice_differentiable(model)
+    cat = tensor_util.cat
+    eye = tensor_util.eye
 
     all_x, all_y = [], []
     for x, y in training_data:
@@ -67,9 +63,7 @@ def solve_linear(
     all_x = cat(all_x)
     all_y = cat(all_y)
     hessian = model.hessian(all_x, all_y)
-    matrix = hessian + hessian_perturbation * identity_tensor(
-        model.num_params, device=model.device
-    )
+    matrix = hessian + hessian_perturbation * eye(model.num_params, device=model.device)
     info = {"hessian": hessian}
     return InverseHvpResult(x=torch.linalg.solve(matrix, b.T).T, info=info)
 
@@ -260,62 +254,6 @@ def solve_lissa(
         "mean_perc_residual": mean_residual * 100,
     }
     return InverseHvpResult(x=h_estimate / scale, info=info)
-
-
-def as_tensor(a: Any, warn=True, **kwargs) -> torch.Tensor:
-    """Converts an array into a torch tensor
-
-    :param a: array to convert to tensor
-    :param warn: if True, warns that a will be converted
-    """
-    if warn and not isinstance(a, torch.Tensor):
-        logger.warning("Converting tensor to type torch.Tensor.")
-    return torch.as_tensor(a, **kwargs)
-
-
-def stack(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
-    """Stacks a sequence of tensors into a single torch tensor"""
-    return torch.stack(a, **kwargs)
-
-
-def cat(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
-    """Concatenates a sequence of tensors into a single torch tensor"""
-    return torch.cat(a, **kwargs)
-
-
-def zero_tensor(
-    shape: Sequence[int], dtype: Union[np.dtype, torch.dtype], **kwargs
-) -> torch.Tensor:
-    """Returns a tensor of shape :attr:`shape` filled with zeros."""
-    if isinstance(dtype, np.dtype):
-        dtype = getattr(torch, dtype.name)
-    return torch.zeros(shape, dtype=dtype, **kwargs)
-
-
-def transpose_tensor(a: torch.Tensor, dim0: int, dim1: int) -> torch.Tensor:
-    return torch.transpose(a, dim0, dim1)
-
-
-def einsum(equation, *operands) -> torch.Tensor:
-    """Sums the product of the elements of the input :attr:`operands` along dimensions specified using a notation
-    based on the Einstein summation convention.
-    """
-    return torch.einsum(equation, *operands)
-
-
-def identity_tensor(dim: int, **kwargs) -> torch.Tensor:
-    return torch.eye(dim, dim, **kwargs)
-
-
-def unsqueeze(x: torch.Tensor, dim: int) -> torch.Tensor:
-    """
-    Add a singleton dimension at a specified position in a tensor.
-
-    :param x: A PyTorch tensor.
-    :param dim: The position at which to add the singleton dimension. Zero-based indexing.
-    :return: A new tensor with an additional singleton dimension.
-    """
-    return x.unsqueeze(dim)
 
 
 class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
@@ -644,3 +582,41 @@ def lanzcos_low_rank_hessian_approx(
     eigen_vecs = to_torch_conversion_function(eigen_vecs)
 
     return LowRankProductRepresentation(eigen_vals, eigen_vecs)
+
+
+class TorchTensorUtilities(TensorUtilities[torch.Tensor]):
+
+    twice_differentiable_type = TorchTwiceDifferentiable
+
+    @staticmethod
+    def einsum(equation, *operands) -> torch.Tensor:
+        """Sums the product of the elements of the input :attr:`operands` along dimensions specified using a notation
+        based on the Einstein summation convention.
+        """
+        return torch.einsum(equation, *operands)
+
+    @staticmethod
+    def cat(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
+        """Concatenates a sequence of tensors into a single torch tensor"""
+        return torch.cat(a, **kwargs)
+
+    @staticmethod
+    def stack(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
+        """Stacks a sequence of tensors into a single torch tensor"""
+        return torch.stack(a, **kwargs)
+
+    @staticmethod
+    def unsqueeze(x: torch.Tensor, dim: int) -> torch.Tensor:
+        """
+        Add a singleton dimension at a specified position in a tensor.
+
+        :param x: A PyTorch tensor.
+        :param dim: The position at which to add the singleton dimension. Zero-based indexing.
+        :return: A new tensor with an additional singleton dimension.
+        """
+        return x.unsqueeze(dim)
+
+    @staticmethod
+    def eye(dim: int, **kwargs) -> torch.Tensor:
+        """Identity tensor of dimension dim"""
+        return torch.eye(dim, dim, **kwargs)

@@ -16,21 +16,7 @@ try:
 
     __all__.append("TorchTwiceDifferentiable")
 
-    from .torch_differentiable import (
-        as_tensor,
-        cat,
-        einsum,
-        solve_batch_cg,
-        solve_linear,
-        solve_lissa,
-        stack,
-        transpose_tensor,
-        zero_tensor,
-    )
-
-    TensorType = torch.Tensor
-    DataLoaderType = torch.utils.data.DataLoader
-    ModelType = torch.nn.Module
+    from .torch_differentiable import solve_batch_cg, solve_linear, solve_lissa
 
     __all__.extend(
         [

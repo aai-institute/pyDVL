@@ -5,18 +5,16 @@ import logging
 from enum import Enum
 from typing import Any, Iterable, TypeVar
 
-from .frameworks import (
-    InverseHvpResult,
-    TensorType,
-    TwiceDifferentiable,
-    solve_batch_cg,
-    solve_linear,
-    solve_lissa,
-)
+from .frameworks import solve_batch_cg, solve_linear, solve_lissa
 
 __all__ = ["solve_hvp"]
 
 from .frameworks.torch_differentiable import solve_arnoldi
+from .frameworks.twice_differentiable import (
+    InverseHvpResult,
+    TensorType,
+    TwiceDifferentiable,
+)
 
 logger = logging.getLogger(__name__)
 

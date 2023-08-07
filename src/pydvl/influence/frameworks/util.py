@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Dict, Iterable, Tuple, TypeVar
+from typing import Any, Dict, Iterable, Tuple, TypeVar
 
 import torch
 
@@ -165,3 +165,14 @@ def hessian_from_dict(hessian_dict):
     hessian = torch.stack(hessian_rows)
 
     return hessian
+
+
+def as_tensor(a: Any, warn=True, **kwargs) -> torch.Tensor:
+    """Converts an array into a torch tensor
+
+    :param a: array to convert to tensor
+    :param warn: if True, warns that a will be converted
+    """
+    if warn and not isinstance(a, torch.Tensor):
+        logger.warning("Converting tensor to type torch.Tensor.")
+    return torch.as_tensor(a, **kwargs)

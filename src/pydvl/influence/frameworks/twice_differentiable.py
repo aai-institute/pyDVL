@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Generic, List, Sequence, Tuple, TypeVar
+from typing import Any, Dict, Generic, List, Sequence, Type, TypeVar
 
 TensorType = TypeVar("TensorType", bound=Sequence)
 ModelType = TypeVar("ModelType")
@@ -89,3 +89,71 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
             backprop_on is None, otherwise [DxM], with M the number of elements
             of backprop_on.
         """
+
+
+class TensorUtilities(Generic[TensorType], ABC):
+
+    twice_differentiable_type: Type[TwiceDifferentiable]
+    registry: Dict[Type[TwiceDifferentiable], Type["TensorUtilities"]] = {}
+
+    def __init_subclass__(cls, abstract: bool = False, **kwargs):
+        """
+        Automatically registers non-abstract subclasses in the registry.
+
+        Checks if `twice_differentiable_type` is defined in the subclass and
+        is of correct type. Raises `TypeError` if either attribute is missing or incorrect.
+
+        :param abstract: If True, the subclass won't be registered. Default is False.
+        :param kwargs: Additional keyword arguments.
+        :raise TypeError: If the subclass does not define `twice_differentiable_type`,
+        or if it is not of correct type.
+        """
+        if not abstract:
+            if not hasattr(cls, "twice_differentiable_type") or not isinstance(
+                cls.twice_differentiable_type, type
+            ):
+                raise TypeError(
+                    f"'twice_differentiable_type' must be a Type[TwiceDifferentiable]"
+                )
+
+            cls.registry[cls.twice_differentiable_type] = cls
+
+        super().__init_subclass__(**kwargs)
+
+    @staticmethod
+    @abstractmethod
+    def einsum(equation, *operands) -> TensorType:
+        """Sums the product of the elements of the input :attr:`operands` along dimensions specified using a notation
+        based on the Einstein summation convention.
+        """
+
+    @staticmethod
+    @abstractmethod
+    def cat(a: Sequence[TensorType], **kwargs) -> TensorType:
+        """Concatenates a sequence of tensors into a single torch tensor"""
+
+    @staticmethod
+    @abstractmethod
+    def stack(a: Sequence[TensorType], **kwargs) -> TensorType:
+        """Stacks a sequence of tensors into a single torch tensor"""
+
+    @staticmethod
+    @abstractmethod
+    def unsqueeze(x: TensorType, dim: int) -> TensorType:
+        """Add a singleton dimension at a specified position in a tensor"""
+
+    @staticmethod
+    @abstractmethod
+    def eye(dim: int, **kwargs) -> TensorType:
+        """Identity tensor of dimension dim"""
+
+    @staticmethod
+    def from_twice_differentiable(
+        twice_diff: TwiceDifferentiable,
+    ) -> Type["TensorUtilities"]:
+        tu = TensorUtilities.registry.get(type(twice_diff), None)
+
+        if tu is None:
+            raise KeyError()
+
+        return tu
