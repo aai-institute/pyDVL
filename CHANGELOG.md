@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Optimises memory usage in IF calculation
+  [PR #375](https://github.com/appliedAI-Initiative/pyDVL/pull/376)
+- **Breaking Changes**
+  Returns information about hessian inversion to compute_influence_factors,
+  thus changing signature
+  [PR #375](https://github.com/appliedAI-Initiative/pyDVL/pull/376)
 - Fix adding valuation results with overlapping indices and different lengths
   [PR #370](https://github.com/appliedAI-Initiative/pyDVL/pull/370)
 - Fixed bugs in conjugate gradient and `linear_solve`

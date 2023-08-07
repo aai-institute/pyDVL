@@ -7,7 +7,7 @@ influence of a training point on the model.
 import logging
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
@@ -20,7 +20,7 @@ from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
 from .functional import get_hvp_function
-from .twice_differentiable import TwiceDifferentiable
+from .twice_differentiable import InverseHvpResult, TwiceDifferentiable
 from .util import align_structure, flatten_tensors_to_vector
 
 __all__ = [
@@ -31,6 +31,8 @@ __all__ = [
     "as_tensor",
     "stack",
     "cat",
+    "zero_tensor",
+    "transpose_tensor",
     "einsum",
     "mvp",
     "lanzcos_low_rank_hessian_approx",
@@ -53,7 +55,7 @@ def solve_linear(
     *,
     hessian_perturbation: float = 0.0,
     progress: bool = False,
-) -> torch.Tensor:
+) -> InverseHvpResult:
     """Given a model and training data, it finds x s.t. $Hx = b$, with $H$ being
     the model hessian.
 
@@ -64,7 +66,8 @@ def solve_linear(
     :param progress: If True, display progress bars.
 
     :return: An array that solves the inverse problem,
-        i.e. it returns $x$ such that $Hx = b$
+        i.e. it returns $x$ such that $Hx = b$, and a dictionary containing
+        information about the solution.
     """
 
     all_x, all_y = [], []
@@ -73,10 +76,12 @@ def solve_linear(
         all_y.append(y)
     all_x = cat(all_x)
     all_y = cat(all_y)
-    matrix = model.hessian(
-        all_x, all_y, progress=progress
-    ) + hessian_perturbation * identity_tensor(model.num_params, device=model.device)
-    return torch.linalg.solve(matrix, b.T).T
+    hessian = model.hessian(all_x, all_y, progress=progress)
+    matrix = hessian + hessian_perturbation * identity_tensor(
+        model.num_params, device=model.device
+    )
+    info = {"hessian": hessian}
+    return InverseHvpResult(x=torch.linalg.solve(matrix, b.T).T, info=info)
 
 
 def solve_batch_cg(
@@ -90,7 +95,7 @@ def solve_batch_cg(
     atol: float = 1e-7,
     maxiter: Optional[int] = None,
     progress: bool = False,
-) -> torch.Tensor:
+) -> InverseHvpResult:
     """
     Given a model and training data, it uses conjugate gradient to calculate the
     inverse of the Hessian Vector Product. More precisely, it finds x s.t. $Hx =
@@ -107,7 +112,9 @@ def solve_batch_cg(
     :param maxiter: maximum number of iterations. If None, defaults to 10*len(b)
     :param progress: If True, display progress bars.
 
-    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$.
+    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$,
+        and a dictionary containing information about the convergence of CG, one
+        entry for each line of the matrix.
     """
     total_grad_xy = 0
     total_points = 0
@@ -120,10 +127,14 @@ def solve_batch_cg(
         total_grad_xy / total_points, v, backprop_on
     ) + hessian_perturbation * v.type(torch.float64)
     batch_cg = torch.zeros_like(b)
+    info = {}
     for idx, bi in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
-        bi_cg, _ = solve_cg(reg_hvp, bi, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter)
-        batch_cg[idx] = bi_cg
-    return batch_cg
+        batch_result, batch_info = solve_cg(
+            reg_hvp, bi, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter
+        )
+        batch_cg[idx] = batch_result
+        info[f"batch_{idx}"] = batch_info
+    return InverseHvpResult(x=batch_cg, info=info)
 
 
 def solve_cg(
@@ -134,7 +145,7 @@ def solve_cg(
     rtol: float = 1e-7,
     atol: float = 1e-7,
     maxiter: Optional[int] = None,
-) -> Tuple[torch.Tensor, Dict[str, Any]]:
+) -> InverseHvpResult:
     """Conjugate gradient solver for the Hessian vector product
 
     :param hvp: a Callable Hvp, operating with tensors of size N
@@ -143,6 +154,9 @@ def solve_cg(
     :param rtol: maximum relative tolerance of result
     :param atol: absolute tolerance of result
     :param maxiter: maximum number of iterations. If None, defaults to 10*len(b)
+
+    :return: A vector x, solution of $Ax=b$, and a dictionary containing
+        information about the convergence of CG.
     """
     if x0 is None:
         x0 = torch.clone(b)
@@ -170,8 +184,8 @@ def solve_cg(
         gamma = gamma_
         p = r + beta * p
 
-    info = {"niter": k, "optimal": optimal}
-    return x, info
+    info = {"niter": k, "optimal": optimal, "gamma": gamma}
+    return InverseHvpResult(x=x, info=info)
 
 
 def solve_lissa(
@@ -186,7 +200,7 @@ def solve_lissa(
     h0: Optional[torch.Tensor] = None,
     rtol: float = 1e-4,
     progress: bool = False,
-) -> torch.Tensor:
+) -> InverseHvpResult:
     r"""
     Uses LISSA, Linear time Stochastic Second-Order Algorithm, to iteratively
     approximate the inverse Hessian. More precisely, it finds x s.t. $Hx = b$,
@@ -197,7 +211,8 @@ def solve_lissa(
 
     where $I$ is the identity matrix, $d$ is a dampening term and $s$ a scaling
     factor that are applied to help convergence. For details, see
-    :footcite:t:`koh_understanding_2017`.
+    :footcite:t:`koh_understanding_2017` and the original paper
+    :footcite:t:`agarwal_2017_second`.
 
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
@@ -209,7 +224,8 @@ def solve_lissa(
     :param scale: scaling factor, defaults to 10
     :param h0: initial guess for hvp
 
-    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$.
+    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$,
+        and a dictionary containing information about the accuracy of the solution.
     """
     if h0 is None:
         h_estimate = torch.clone(b)
@@ -242,11 +258,16 @@ def solve_lissa(
         max_residual = torch.max(torch.abs(residual / h_estimate))
         if max_residual < rtol:
             break
+    mean_residual = torch.mean(torch.abs(residual / h_estimate))
     logger.info(
         f"Terminated Lissa with {max_residual*100:.2f} % max residual."
-        f" Mean residual: {torch.mean(torch.abs(residual/h_estimate))*100:.5f} %"
+        f" Mean residual: {mean_residual*100:.5f} %"
     )
-    return h_estimate / scale
+    info = {
+        "max_perc_residual": max_residual * 100,
+        "mean_perc_residual": mean_residual * 100,
+    }
+    return InverseHvpResult(x=h_estimate / scale, info=info)
 
 
 def as_tensor(a: Any, warn=True, **kwargs) -> torch.Tensor:
@@ -268,6 +289,19 @@ def stack(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
 def cat(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
     """Concatenates a sequence of tensors into a single torch tensor"""
     return torch.cat(a, **kwargs)
+
+
+def zero_tensor(
+    shape: Sequence[int], dtype: Union[np.dtype, torch.dtype], **kwargs
+) -> torch.Tensor:
+    """Returns a tensor of shape :attr:`shape` filled with zeros."""
+    if isinstance(dtype, np.dtype):
+        dtype = getattr(torch, dtype.name)
+    return torch.zeros(shape, dtype=dtype, **kwargs)
+
+
+def transpose_tensor(a: torch.Tensor, dim0: int, dim1: int) -> torch.Tensor:
+    return torch.transpose(a, dim0, dim1)
 
 
 def einsum(equation, *operands) -> torch.Tensor:
@@ -460,7 +494,7 @@ def solve_arnoldi(
     tol: float = 1e-6,
     max_iter: Optional[int] = None,
     eigen_computation_on_gpu: bool = False,
-) -> torch.Tensor:
+) -> InverseHvpResult:
 
     """
     Solves the linear system Hx = b, where H is the Hessian of the model's loss function and b is the given right-hand
@@ -524,7 +558,13 @@ def solve_arnoldi(
         torch.diag_embed(1.0 / low_rank_representation.eigen_vals)
         @ (low_rank_representation.projections.t() @ b.t())
     )
-    return result.t()
+    return InverseHvpResult(
+        x=result.t(),
+        info={
+            "eigenvalues": low_rank_representation.eigen_vals,
+            "eigenvectors": low_rank_representation.projections,
+        },
+    )
 
 
 def lanzcos_low_rank_hessian_approx(

@@ -4,20 +4,19 @@ models, as introduced in :footcite:t:`koh_understanding_2017`.
 """
 from copy import deepcopy
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from ..utils import maybe_progress
 from .frameworks import (
     DataLoaderType,
-    ModelType,
     TensorType,
     TwiceDifferentiable,
-    cat,
     einsum,
     mvp,
-    stack,
+    transpose_tensor,
+    zero_tensor,
 )
-from .inversion import InversionMethod, solve_hvp
+from .inversion import InverseHvpResult, InversionMethod, solve_hvp
 
 __all__ = ["compute_influences", "InfluenceType", "compute_influence_factors"]
 
@@ -40,7 +39,7 @@ def compute_influence_factors(
     hessian_perturbation: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
-) -> TensorType:
+) -> InverseHvpResult:
     r"""
     Calculates influence factors of a model for training and test
     data. Given a test point $z_test = (x_{test}, y_{test})$, a loss
@@ -64,12 +63,18 @@ def compute_influence_factors(
     :returns: An array of size (N, D) containing the influence factors for each
         dimension (D) and test sample (N).
     """
-    test_grads = []
-    for x_test, y_test in maybe_progress(
-        test_data, progress, desc="Batch Test Gradients"
+    test_grads = zero_tensor(
+        shape=(len(test_data.dataset), model.num_params),
+        dtype=test_data.dataset[0][0].dtype,
+        device=model.device,
+    )
+    for batch_idx, (x_test, y_test) in enumerate(
+        maybe_progress(test_data, progress, desc="Batch Test Gradients")
     ):
-        test_grads.append(model.split_grad(x_test, y_test, progress=False))
-    test_grads = cat(test_grads)
+        idx = batch_idx * test_data.batch_size
+        test_grads[idx : idx + test_data.batch_size] = model.split_grad(
+            x_test, y_test, progress=False
+        )
     return solve_hvp(
         inversion_method,
         model,
@@ -102,16 +107,22 @@ def compute_influences_up(
         influence of.
     :param influence_factors: array containing influence factors
     :param progress: If True, display progress bars.
-    :returns: An array of size [NxM], where N is number of test points and M
-        number of train points.
+    :returns: An array of size [NxM], where N is number of influence factors, M
+        number of input points.
     """
-    train_grads = []
-    for x, y in maybe_progress(
-        input_data, progress, desc="Batch Split Input Gradients"
+    grads = zero_tensor(
+        shape=(len(input_data.dataset), model.num_params),
+        dtype=input_data.dataset[0][0].dtype,
+        device=model.device,
+    )
+    for batch_idx, (x, y) in enumerate(
+        maybe_progress(input_data, progress, desc="Batch Split Input Gradients")
     ):
-        train_grads.append(model.split_grad(x, y, progress=False))
-    train_grads = cat(train_grads)
-    return einsum("ta,va->tv", influence_factors, train_grads)
+        idx = batch_idx * input_data.batch_size
+        grads[idx : idx + input_data.batch_size] = model.split_grad(
+            x, y, progress=False
+        )
+    return einsum("ta,va->tv", influence_factors, grads)
 
 
 def compute_influences_pert(
@@ -135,14 +146,21 @@ def compute_influences_pert(
         influence of.
     :param influence_factors: array containing influence factors
     :param progress: If True, display progress bars.
-    :returns: An array of size [NxMxP], where N is number of test points, M
-        number of train points, and P the number of features.
+    :returns: An array of size [NxMxP], where N is the number of influence factors, M
+        the number of input data, and P the number of features.
     """
-    all_pert_influences = []
-    for x, y in maybe_progress(
-        input_data,
-        progress,
-        desc="Batch Influence Perturbation",
+    input_x = input_data.dataset[0][0]
+    all_pert_influences = zero_tensor(
+        shape=(len(input_data.dataset), len(influence_factors), *input_x.shape),
+        dtype=input_x.dtype,
+        device=model.device,
+    )
+    for batch_idx, (x, y) in enumerate(
+        maybe_progress(
+            input_data,
+            progress,
+            desc="Batch Influence Perturbation",
+        )
     ):
         for i in range(len(x)):
             grad_xy, tensor_x = model.grad(x[i : i + 1], y[i], x_requires_grad=True)
@@ -151,11 +169,11 @@ def compute_influences_pert(
                 influence_factors,
                 backprop_on=tensor_x,
             )
-            all_pert_influences.append(
-                perturbation_influences.reshape((-1, *x[i].shape))
-            )
+            all_pert_influences[
+                batch_idx * input_data.batch_size + i
+            ] = perturbation_influences.reshape((-1, *x[i].shape))
 
-    return stack(all_pert_influences, axis=1)
+    return transpose_tensor(all_pert_influences, 0, 1)
 
 
 influence_type_registry = {
@@ -207,7 +225,7 @@ def compute_influences(
     if test_data is None:
         test_data = deepcopy(training_data)
 
-    influence_factors = compute_influence_factors(
+    influence_factors, _ = compute_influence_factors(
         differentiable_model,
         training_data,
         test_data,
