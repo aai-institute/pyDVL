@@ -44,9 +44,9 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         loss: Callable[["torch.Tensor", "torch.Tensor"], "torch.Tensor"],
     ):
         """
-    Args:
-        model: A torch.nn.Module representing a (differentiable) function f(x).
-        loss: Loss function L(f(x), y) maps a prediction and a target to a single value.
+        Args:
+            model: A torch.nn.Module representing a (differentiable) function f(x).
+            loss: Loss function L(f(x), y) maps a prediction and a target to a single value.
         """
         if not _TORCH_INSTALLED:
             raise RuntimeWarning("This function requires PyTorch.")
@@ -111,16 +111,16 @@ class TorchTwiceDifferentiable(TwiceDifferentiable):
         y: Union["NDArray", "torch.Tensor"],
     ) -> Tuple["NDArray", "torch.Tensor"]:
         """
-        Calculates gradient of model parameters wrt x and y.
-    Args:
-            x: A np.ndarray [NxD] representing the features x_i.
-            y: A np.ndarray [NxK] representing the predicted target values y_i.
-            progress: True, iff progress shall be printed.
-        Returns:
-            A tuple where:
-                - first element is a np.ndarray [P] with the gradients of the model.
-                - second element is the input to the model as a grad parameters.
-                  This can be used for further differentiation.
+            Calculates gradient of model parameters wrt x and y.
+        Args:
+                x: A np.ndarray [NxD] representing the features x_i.
+                y: A np.ndarray [NxK] representing the predicted target values y_i.
+                progress: True, iff progress shall be printed.
+            Returns:
+                A tuple where:
+                    - first element is a np.ndarray [P] with the gradients of the model.
+                    - second element is the input to the model as a grad parameters.
+                      This can be used for further differentiation.
         """
         x = torch.as_tensor(x).requires_grad_(True)
         y = torch.as_tensor(y)

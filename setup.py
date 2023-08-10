@@ -21,7 +21,7 @@ setup(
     ],
     setup_requires=["wheel"],
     tests_require=["pytest"],
-    extras_require={"influence": ["torch"]},
+    extras_require={"influence": ["torch>=2.0.0"], "cupy": ["cupy-cuda11x>=12.1.0"]},
     author="appliedAI Institute gGmbH",
     long_description=long_description,
     long_description_content_type="text/markdown",

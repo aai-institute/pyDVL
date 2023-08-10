@@ -104,12 +104,12 @@ class TorchModelBase(ABC):
 
     def predict(self, x: torch.Tensor) -> "NDArray[np.float_]":
         """
-        Use internal model to deliver prediction in numpy.
-    Args:
-            x: A np.ndarray [NxD] representing the features x_i.
+            Use internal model to deliver prediction in numpy.
+        Args:
+                x: A np.ndarray [NxD] representing the features x_i.
 
-        Returns:
-            A np.ndarray [NxK] representing the predicted values.
+            Returns:
+                A np.ndarray [NxK] representing the predicted values.
         """
         return self.forward(x).detach().numpy()  # type: ignore
 
@@ -120,13 +120,13 @@ class TorchModelBase(ABC):
         score: Callable[[torch.Tensor, torch.Tensor, Any], torch.Tensor],
     ) -> float:
         """
-        Use internal model to measure how good is prediction through a loss function.
-    Args:
-            x: A np.ndarray [NxD] representing the features x_i.
-            y: A np.ndarray [NxK] representing the predicted target values y_i.
+            Use internal model to measure how good is prediction through a loss function.
+        Args:
+                x: A np.ndarray [NxD] representing the features x_i.
+                y: A np.ndarray [NxK] representing the predicted target values y_i.
 
-        Returns:
-            The aggregated value over all samples N.
+            Returns:
+                The aggregated value over all samples N.
         """
         return score(self.forward(x), y).detach().numpy()  # type: ignore
 
@@ -177,11 +177,11 @@ class TorchLinearRegression(nn.Module, TorchModelBase):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Calculate A @ x + b using RAM-optimized calculation layout.
-    Args:
-            x: Tensor [NxD] representing the features x_i.
-    Returns:
-        A tensor [NxK] representing the outputs y_i.
+            Calculate A @ x + b using RAM-optimized calculation layout.
+        Args:
+                x: Tensor [NxD] representing the features x_i.
+        Returns:
+            A tensor [NxK] representing the outputs y_i.
         """
         return x @ self.A.T + self.b
 
@@ -197,10 +197,10 @@ class TorchBinaryLogisticRegression(nn.Module, TorchModelBase):
         init: Tuple["NDArray[np.float_]", "NDArray[np.float_]"] = None,
     ):
         """
-    Args:
-            n_input: Number of feature inputs to the BinaryLogisticRegressionModel.
-            init: A tuple representing the initialization for the weight matrix A and the bias b. If set to None
-        sample the values uniformly using the Xavier rule.
+        Args:
+                n_input: Number of feature inputs to the BinaryLogisticRegressionModel.
+                init: A tuple representing the initialization for the weight matrix A and the bias b. If set to None
+            sample the values uniformly using the Xavier rule.
         """
         super().__init__()
         self.n_input = n_input
@@ -214,12 +214,12 @@ class TorchBinaryLogisticRegression(nn.Module, TorchModelBase):
 
     def forward(self, x: Union["NDArray[np.float_]", torch.Tensor]) -> torch.Tensor:
         """
-        Calculate sigmoid(dot(a, x) + b) using RAM-optimized calculation layout.
-    Args:
-            x: Tensor [NxD] representing the features x_i.
+            Calculate sigmoid(dot(a, x) + b) using RAM-optimized calculation layout.
+        Args:
+                x: Tensor [NxD] representing the features x_i.
 
-        Returns:
-            A tensor [N] representing the probabilities for p(y_i).
+            Returns:
+                A tensor [N] representing the probabilities for p(y_i).
         """
         x = torch.as_tensor(x)
         return torch.sigmoid(x @ self.A.T + self.b)
@@ -240,13 +240,13 @@ class TorchMLP(nn.Module, TorchModelBase):
         init: List[Tuple["NDArray[np.float_]", "NDArray[np.float_]"]] = None,
     ):
         """
-    Args:
-            n_input: Number of feature in input.
-            n_output: Output length.
-            n_neurons_per_layer: Each integer represents the size of a hidden layer. Overall this list has K - 2
-            output_probabilities: True, if the model should output probabilities. In the case of n_output 2 the
-        number of outputs reduce to 1.
-            init: A list of tuple of np.ndarray representing the internal weights.
+        Args:
+                n_input: Number of feature in input.
+                n_output: Output length.
+                n_neurons_per_layer: Each integer represents the size of a hidden layer. Overall this list has K - 2
+                output_probabilities: True, if the model should output probabilities. In the case of n_output 2 the
+            number of outputs reduce to 1.
+                init: A list of tuple of np.ndarray representing the internal weights.
         """
         super().__init__()
         self.n_input = n_input
@@ -286,11 +286,11 @@ class TorchMLP(nn.Module, TorchModelBase):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Perform forward-pass through the network.
-    Args:
-            x: Tensor input of shape [NxD].
+            Perform forward-pass through the network.
+        Args:
+                x: Tensor input of shape [NxD].
 
-        Returns:
-            Tensor output of shape[NxK].
+            Returns:
+                Tensor output of shape[NxK].
         """
         return self.layers(x)

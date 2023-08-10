@@ -295,7 +295,9 @@ class DataUtilityLearning:
         self._utility_samples: Dict[FrozenSet, Tuple[NDArray[np.bool_], float]] = {}
 
     def _convert_indices_to_boolean_vector(self, x: Iterable[int]) -> NDArray[np.bool_]:
-        boolean_vector = np.zeros((1, len(self.utility.data)), dtype=bool)
+        boolean_vector: NDArray[np.bool_] = np.zeros(
+            (1, len(self.utility.data)), dtype=bool
+        )
         if x is not None:
             boolean_vector[:, tuple(x)] = True
         return boolean_vector

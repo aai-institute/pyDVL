@@ -14,8 +14,11 @@ from typing import (
     Union,
 )
 
+import joblib
 import ray
+from joblib import delayed
 from ray import ObjectRef
+from ray.util.joblib import register_ray
 
 from ..config import ParallelConfig
 
@@ -91,37 +94,60 @@ class BaseParallelBackend(metaclass=NoPublicConstructor):
         return f"<{self.__class__.__name__}: {self.config}>"
 
 
-class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
-    """Class used to run jobs sequentially and locally.
+class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
+    """Class used to wrap joblib to make it transparent to algorithms.
 
     It shouldn't be initialized directly. You should instead call
     [init_parallel_backend()][pydvl.utils.parallel.backend.init_parallel_backend].
 
     Args:
         config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
-            with number of cpus
+            with cluster address, number of cpus, etc.
     """
 
     def __init__(self, config: ParallelConfig):
-        self.config = {}
+        self.config = {
+            "logging_level": config.logging_level,
+            "n_jobs": config.n_cpus_local,
+        }
 
-    def get(self, v: Any, *args, **kwargs):
+    def get(
+        self,
+        v: T,
+        *args,
+        **kwargs,
+    ) -> T:
         return v
 
-    def put(self, v: Any, *args, **kwargs) -> Any:
+    def put(self, v: T, *args, **kwargs) -> T:
         return v
 
     def wrap(self, fun: Callable, **kwargs) -> Callable:
-        """Wraps a function for sequential execution.
+        """Wraps a function as a joblib delayed.
 
-        This is a noop and kwargs are ignored."""
-        return fun
+        Args:
+            fun: the function to wrap
 
-    def wait(self, v: Any, *args, **kwargs) -> Tuple[list, list]:
+        Returns:
+            The delayed function.
+        """
+        return delayed(fun)  # type: ignore
+
+    def wait(
+        self,
+        v: List[T],
+        *args,
+        **kwargs,
+    ) -> Tuple[List[T], List[T]]:
         return v, []
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
-        return 1
+        if self.config["n_jobs"] is None:
+            maximum_n_jobs = joblib.effective_n_jobs()
+        else:
+            maximum_n_jobs = self.config["n_jobs"]
+        eff_n_jobs: int = min(joblib.effective_n_jobs(n_jobs), maximum_n_jobs)
+        return eff_n_jobs
 
 
 class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
@@ -136,14 +162,13 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     """
 
     def __init__(self, config: ParallelConfig):
-        config_dict = asdict(config)
-        config_dict.pop("backend")
-        n_cpus_local = config_dict.pop("n_cpus_local")
-        if config_dict.get("address", None) is None:
-            config_dict["num_cpus"] = n_cpus_local
-        self.config = config_dict
+        self.config = {"address": config.address, "logging_level": config.logging_level}
+        if self.config["address"] is None:
+            self.config["num_cpus"] = config.n_cpus_local
         if not ray.is_initialized():
             ray.init(**self.config)
+        # Register ray joblib backend
+        register_ray()
 
     def get(
         self,
@@ -194,11 +219,11 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         )
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
+        ray_cpus = int(ray._private.state.cluster_resources()["CPU"])  # type: ignore
         if n_jobs < 0:
-            ray_cpus = int(ray._private.state.cluster_resources()["CPU"])  # type: ignore
             eff_n_jobs = ray_cpus
         else:
-            eff_n_jobs = n_jobs
+            eff_n_jobs = min(n_jobs, ray_cpus)
         return eff_n_jobs
 
 
@@ -211,14 +236,21 @@ def init_parallel_backend(
         config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
             with cluster address, number of cpus, etc.
 
-    :Example:
+    Example:
 
-    >>> from pydvl.utils.parallel.backend import init_parallel_backend
-    >>> from pydvl.utils.config import ParallelConfig
-    >>> config = ParallelConfig(backend="ray")
-    >>> parallel_backend = init_parallel_backend(config)
-    >>> parallel_backend
-    <RayParallelBackend: {'address': None, 'logging_level': 30, 'num_cpus': None}>
+        >>> from pydvl.utils.parallel.backend import init_parallel_backend
+        >>> from pydvl.utils.config import ParallelConfig
+        >>> config = ParallelConfig()
+        >>> parallel_backend = init_parallel_backend(config)
+        >>> parallel_backend
+        <JoblibParallelBackend: {'logging_level': 30, 'n_jobs': None}>
+
+        >>> from pydvl.utils.parallel.backend import init_parallel_backend
+        >>> from pydvl.utils.config import ParallelConfig
+        >>> config = ParallelConfig(backend="ray")
+        >>> parallel_backend = init_parallel_backend(config)
+        >>> parallel_backend
+        <RayParallelBackend: {'address': None, 'logging_level': 30, 'num_cpus': None}>
 
     """
     try:
@@ -241,7 +273,7 @@ def available_cpus() -> int:
 
     if system() != "Linux":
         return os.cpu_count() or 1
-    return len(os.sched_getaffinity(0))
+    return len(os.sched_getaffinity(0))  # type: ignore
 
 
 def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> int:
@@ -259,7 +291,8 @@ def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> 
     Returns:
         The effective number of jobs, guaranteed to be >= 1.
 
-    :raises RuntimeError: if the effective number of jobs returned by the backend
+    Raises:
+        RuntimeError if the effective number of jobs returned by the backend
         is < 1.
     """
     parallel_backend = init_parallel_backend(config)

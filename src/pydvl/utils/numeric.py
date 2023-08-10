@@ -12,9 +12,6 @@ from numpy.typing import NDArray
 
 __all__ = [
     "running_moments",
-    "linear_regression_analytical_derivative_d2_theta",
-    "linear_regression_analytical_derivative_d_theta",
-    "linear_regression_analytical_derivative_d_x_d_theta",
     "num_samples_permutation_hoeffding",
     "powerset",
     "random_matrix_with_condition_number",
@@ -140,7 +137,7 @@ def random_subset_of_size(s: NDArray[T], size: int) -> NDArray[T]:
     return rng.choice(s, size=size, replace=False)
 
 
-def random_matrix_with_condition_number(n: int, condition_number: float) -> "NDArray":
+def random_matrix_with_condition_number(n: int, condition_number: float) -> NDArray:
     """Constructs a square matrix with a given condition number.
 
     Taken from:
@@ -176,85 +173,6 @@ def random_matrix_with_condition_number(n: int, condition_number: float) -> "NDA
     P: np.ndarray = U.dot(S).dot(V.T)
     P = P.dot(P.T)
     return P
-
-
-def linear_regression_analytical_derivative_d_theta(
-    linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
-) -> "NDArray":
-    """
-    Args:
-        linear_model: A tuple of np.ndarray' of shape [NxM] and [N] representing
-            A and b respectively.
-        x: A np.ndarray of shape [BxM].
-        y: A np.nparray of shape [BxN].
-
-    Returns:
-        An array of shape [Bx((N+1)*M)], where each row vector is [d_theta L(x, y), d_b L(x, y)]
-    """
-
-    A, b = linear_model
-    n, m = list(A.shape)
-    residuals = x @ A.T + b - y
-    kron_product = np.expand_dims(residuals, axis=2) * np.expand_dims(x, axis=1)
-    test_grads = np.reshape(kron_product, [-1, n * m])
-    full_grads = np.concatenate((test_grads, residuals), axis=1)
-    return full_grads / n  # type: ignore
-
-
-def linear_regression_analytical_derivative_d2_theta(
-    linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
-) -> "NDArray":
-    """
-    Args:
-        linear_model: A tuple of arrays of shape [NxM] and [N] representing A
-            and b respectively.
-        x: An array of shape [BxM],
-        y: An array of shape [BxN].
-
-    Returns:
-        An array of shape [((N+1)*M)x((N+1)*M)], representing the Hessian.
-            It gets averaged over all samples.
-    """
-    A, b = linear_model
-    n, m = tuple(A.shape)
-    d2_theta = np.einsum("ia,ib->iab", x, x)
-    d2_theta = np.mean(d2_theta, axis=0)
-    d2_theta = np.kron(np.eye(n), d2_theta)
-    d2_b = np.eye(n)
-    mean_x = np.mean(x, axis=0, keepdims=True)
-    d_theta_d_b = np.kron(np.eye(n), mean_x)
-    top_matrix = np.concatenate((d2_theta, d_theta_d_b.T), axis=1)
-    bottom_matrix = np.concatenate((d_theta_d_b, d2_b), axis=1)
-    full_matrix = np.concatenate((top_matrix, bottom_matrix), axis=0)
-    return full_matrix / n  # type: ignore
-
-
-def linear_regression_analytical_derivative_d_x_d_theta(
-    linear_model: Tuple["NDArray", "NDArray"], x: "NDArray", y: "NDArray"
-) -> "NDArray":
-    """
-    Args:
-        linear_model: A tuple of np.ndarray of shape [NxM] and [N] representing A and b respectively.
-        x: A np.ndarray of shape [BxM].
-        y: A np.nparray of shape [BxN].
-
-    Returns:
-        A np.ndarray of shape [Bx((N+1)*M)xM], representing the derivative.
-    """
-
-    A, b = linear_model
-    N, M = tuple(A.shape)
-    residuals = x @ A.T + b - y
-    B = len(x)
-    outer_product_matrix = np.einsum("ab,ic->iacb", A, x)
-    outer_product_matrix = np.reshape(outer_product_matrix, [B, M * N, M])
-    tiled_identity = np.tile(np.expand_dims(np.eye(M), axis=0), [B, N, 1])
-    outer_product_matrix += tiled_identity * np.expand_dims(
-        np.repeat(residuals, M, axis=1), axis=2
-    )
-    b_part_derivative = np.tile(np.expand_dims(A, axis=0), [B, 1, 1])
-    full_derivative = np.concatenate((outer_product_matrix, b_part_derivative), axis=1)
-    return full_derivative / N  # type: ignore
 
 
 @overload

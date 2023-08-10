@@ -12,16 +12,15 @@ __all__ = ["ParallelConfig", "MemcachedClientConfig", "MemcachedConfig"]
 @dataclass
 class ParallelConfig:
     """Configuration for parallel computation backend.
-
     Args:
-        backend: Type of backend to use. Defaults to 'ray'
+        backend: Type of backend to use. Defaults to 'joblib'
         address: Address of existing remote or local cluster to use.
         n_cpus_local: Number of CPUs to use when creating a local ray cluster.
             This has no effect when using an existing ray cluster.
         logging_level: Logging level for the parallel backend's worker.
     """
 
-    backend: Literal["sequential", "ray"] = "ray"
+    backend: Literal["joblib", "ray"] = "joblib"
     address: Optional[Union[str, Tuple[str, int]]] = None
     n_cpus_local: Optional[int] = None
     logging_level: int = logging.WARNING

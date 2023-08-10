@@ -19,8 +19,20 @@ To use all features of influence functions use instead:
 pip install pyDVL[influence]
 ```
 
-This includes a dependency on [PyTorch](https://pytorch.org/) and thus is left
-out by default.
+This includes a dependency on [PyTorch](https://pytorch.org/) (Version 2.0 and above) 
+and thus is left out by default.
+
+In the case you use Cuda v11.2 ~ 11.8, you can enable eigen computations
+(for low-rank approximations)
+with [CuPy](https://docs.cupy.dev/en/stable/index.html) on GPU:
+
+```shell
+pip install pyDVL[cupy]
+````
+
+If you use a different version of Cuda,
+please install CuPy [manually](https://docs.cupy.dev/en/stable/install.html).
+
 
 In order to check the installation you can use:
 

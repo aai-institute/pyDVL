@@ -137,7 +137,9 @@ def _group_testing_shapley(
     n = len(u.data.indices)
     const = _constants(n, 1, 1, 1)  # don't care about eps,delta,range
 
-    betas = np.zeros(shape=(n_samples, n), dtype=np.int_)  # indicator vars
+    betas: NDArray[np.int_] = np.zeros(
+        shape=(n_samples, n), dtype=np.int_
+    )  # indicator vars
     uu = np.empty(n_samples)  # utilities
 
     for t in maybe_progress(n_samples, progress=progress, position=job_id):

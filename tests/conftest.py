@@ -28,7 +28,6 @@ def ray_shutdown():
 
 
 def is_memcache_responsive(hostname, port):
-
     try:
         client = Client(server=(hostname, port))
         client.flush_all()
@@ -73,6 +72,8 @@ def pytorch_seed(seed):
         import torch
 
         torch.manual_seed(seed)
+        # TODO if necessary extract this into a separate fixture
+        torch.use_deterministic_algorithms(True, warn_only=True)
     except ImportError:
         pass
 
@@ -84,6 +85,7 @@ def do_not_start_memcache(request):
 
 @pytest.fixture(scope="session")
 def docker_services(
+    docker_compose_command,
     docker_compose_file,
     docker_compose_project_name,
     docker_setup,
@@ -98,6 +100,7 @@ def docker_services(
         yield
     else:
         with get_docker_services(
+            docker_compose_command,
             docker_compose_file,
             docker_compose_project_name,
             docker_setup,

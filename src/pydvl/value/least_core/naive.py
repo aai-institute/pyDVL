@@ -3,6 +3,7 @@ import warnings
 from typing import Optional
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pydvl.utils import Utility, maybe_progress, powerset
 from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
@@ -107,7 +108,7 @@ def lc_prepare_problem(u: Utility, progress: bool = False) -> LeastCoreProblem:
             powerset(u.data.indices), progress, total=powerset_size - 1, position=0
         )
     ):
-        indices = np.zeros(n, dtype=bool)
+        indices: NDArray[np.bool_] = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
         A_lb[i, indices] = 1
         utility_values[i] = u(subset)
