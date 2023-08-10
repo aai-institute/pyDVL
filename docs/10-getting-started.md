@@ -22,7 +22,7 @@ algorithms for data valuation and influence functions. You can read:
 
 We only briefly introduce key concepts in the documentation. For a thorough
 introduction and survey of the field, we refer to **the upcoming review** at the
-[TransferLab website](https://transferlab.appliedai.de/reviews/data-valuation).
+[TransferLab website]({{ transferlab.data_valuation_review }}).
 
 # Running the examples
 
@@ -30,7 +30,7 @@ If you are somewhat familiar with the concepts of data valuation, you can start
 by browsing our worked-out examples illustrating pyDVL's capabilities either:
 
 - [[examples]].
-- Using [binder](https://mybinder.org/>) notebooks, deployed from each
+- Using [binder](https://mybinder.org/) notebooks, deployed from each
   example's page.
 - Locally, by starting a jupyter server at the root of the project. You will
   have to install jupyter first manually since it's not a dependency of the

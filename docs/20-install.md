@@ -62,9 +62,9 @@ the instructions in their documentation for installation.
 memcached is an in-memory key-value store accessible over the network. pyDVL
 uses it to cache certain results and speed-up the computations. You can either
 install it as a package or run it inside a docker container (the simplest). For
-installation instructions, refer to the [Getting started](https://github.com/
-memcached/memcached/wiki#getting-started)  section 
-in memcached's wiki. Then you can run it with:
+installation instructions, refer to the
+[Getting started](https://github.com/memcached/memcached/wiki#getting-started)
+section in memcached's wiki. Then you can run it with:
 
 ```shell
 memcached -u user

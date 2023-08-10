@@ -15,6 +15,7 @@ plugins:
   - mike
   - autorefs
   - search
+  - macros
   - section-index
   - alias:
       use_relative_link: true
@@ -105,6 +106,9 @@ extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 extra:
+  transferlab:
+    website: https://transferlab.appliedai.de
+    data_valuation_review: https://transferlab.appliedai.de/reviews/data-valuation
   version:
     provider: mike
     default: stable

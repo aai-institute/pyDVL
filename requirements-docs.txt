@@ -9,6 +9,7 @@ mkdocs-gen-files
 mkdocs-literate-nav
 mkdocs-section-index
 mkdocs-bibtex
+mkdocs-macros-plugin
 neoteroi-mkdocs  # Needed for card grid on home page
 mkdocs-git-revision-date-localized-plugin
 pypandoc_binary
