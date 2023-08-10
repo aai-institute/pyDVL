@@ -66,7 +66,7 @@ necessary to group samples to valuate them together.
 [Dataset][pydvl.utils.dataset.Dataset] with the same interface which allows this.
 
 You can see an example in action in the
-:doc:`Spotify notebook <examples/shapley_basic_spotify>`, but here's a simple
+[Spotify notebook](../examples/shapley_basic_spotify), but here's a simple
 example grouping a pre-existing `Dataset`. First we construct an array mapping
 each index in the dataset to a group, then use
 [from_dataset][pydvl.utils.dataset.GroupedDataset.from_dataset]:
@@ -175,9 +175,7 @@ As you can see, all that is required is a model to learn the utility itself and
 the fitting and using of the learned model happens behind the scenes.
 
 There is a longer example with an investigation of the results achieved by DUL
-in :doc:`a dedicated notebook <examples/shapley_utility_learning>`.
-
-.. _LOO:
+in [a dedicated notebook](../examples/shapley_utility_learning).
 
 ## Leave-One-Out values
 
@@ -224,7 +222,7 @@ The supported methods are enumerated in
 
 The first algorithm is just a verbatim implementation of the definition. As such
 it returns as exact a value as the utility function allows (see what this means
-in :ref:`problems of data values`).
+in Problems of Data Values][problems-of-data-values]).
 
 The value $v$ of the $i$-th sample in dataset $D$ wrt. utility $u$ is computed
 as a weighted sum of its marginal utility wrt. every possible coalition of
@@ -464,7 +462,7 @@ $$
 
 This first algorithm is just a verbatim implementation of the definition.
 As such it returns as exact a value as the utility function allows
-(see what this means in :ref:`problems of data values`).
+(see what this means in Problems of Data Values][problems-of-data-values]).
 
 ```python
 from pydvl.value import compute_least_core_values
@@ -658,11 +656,11 @@ nature of every (non-trivial) ML problem can have an effect:
   approximations can converge slowly. Massive datasets are thus impractical, at
   least with current techniques. A workaround is to group samples and investigate
   their value together. In pyDVL you can do this using
-  [GroupedDataset][pydvl.utils.dataset.GroupedDataset]. There is a fully worked-out
-  :doc:`example here <examples/shapley_basic_spotify>`. Some algorithms also
-  provide different sampling strategies to reduce the variance, but due to a
-  no-free-lunch-type theorem, no single strategy can be optimal for all
-  utilities.
+  [GroupedDataset][pydvl.utils.dataset.GroupedDataset]. 
+  There is a fully worked-out [example here](../examples/shapley_basic_spotify).
+  Some algorithms also provide different sampling strategies to reduce 
+  the variance, but due to a no-free-lunch-type theorem,
+  no single strategy can be optimal for all utilities.
 
 * **Model size**: Since every evaluation of the utility entails retraining the
   whole model on a subset of the data, large models require great amounts of
