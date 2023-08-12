@@ -42,18 +42,19 @@ of :footcite:t:`ghorbani_data_2019`, the Banzhaf index of
    Instead, we subsume this factor into the coefficient $w(k)$.
 
 """
+from __future__ import annotations
 
 import math
-import operator
+from concurrent.futures import Future
 from enum import Enum
-from functools import reduce
+from functools import partial
 from itertools import takewhile
-from typing import Protocol, Type, cast
+from typing import Any, Iterator, Protocol, Type, cast
 
 import scipy as sp
 from tqdm import tqdm
 
-from pydvl.utils import MapReduceJob, ParallelConfig, Utility
+from pydvl.utils import ParallelConfig, Utility
 from pydvl.value import ValuationResult
 from pydvl.value.sampler import PermutationSampler, PowersetSampler
 from pydvl.value.stopping import MaxUpdates, StoppingCriterion
@@ -63,6 +64,7 @@ __all__ = [
     "beta_coefficient",
     "shapley_coefficient",
     "semivalues",
+    "compute_semivalues",
     "SemiValueMode",
 ]
 
@@ -89,6 +91,7 @@ def _semivalues(
     *,
     progress: bool = False,
     job_id: int = 1,
+    interrupt_flag: Any = None,  # TO DO
 ) -> ValuationResult:
     r"""Serial computation of semi-values. This is a helper function for
     :func:`semivalues`.
@@ -99,6 +102,7 @@ def _semivalues(
     :param done: Stopping criterion.
     :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress.
+    :param interrupt_flag: Flag to check for interrupt.
     :return: Object with the results.
     """
     n = len(u.data.indices)
@@ -131,8 +135,7 @@ def semivalues(
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
 ) -> ValuationResult:
-    """
-    Computes semi-values for a given utility function and subset sampler.
+    """Computes semi-values for a given utility function and subset sampler.
 
     :param sampler: The subset sampler to use for utility computations.
     :param u: Utility object with model, data, and scoring function.
@@ -145,15 +148,61 @@ def semivalues(
     :return: Object with the results.
 
     """
-    map_reduce_job: MapReduceJob[PowersetSampler, ValuationResult] = MapReduceJob(
-        sampler,
-        map_func=_semivalues,
-        reduce_func=lambda results: reduce(operator.add, results),
-        map_kwargs=dict(u=u, coefficient=coefficient, done=done, progress=progress),
-        config=config,
-        n_jobs=n_jobs,
+    from concurrent.futures import FIRST_COMPLETED, wait
+
+    from pydvl.utils import effective_n_jobs, init_executor, init_parallel_backend
+
+    parallel_backend = init_parallel_backend(config)
+    u = parallel_backend.put(u)
+    coefficient = parallel_backend.put(coefficient)
+
+    max_workers = effective_n_jobs(n_jobs, config)
+    n_submitted_jobs = 2 * max_workers  # number of jobs in the queue
+
+    accumulated_result = ValuationResult.zeros(
+        algorithm=f"semivalue-{str(sampler)}-{coefficient.__name__}"
     )
-    return map_reduce_job()
+
+    if isinstance(sampler, PermutationSampler):
+        # TODO: add attribute to allow configuration of multiple updates per job
+        #  (e.g. permutations)
+        updates_per_job = getattr(sampler, "max_samples_parallel", 1)
+
+        with init_executor(
+            max_workers=max_workers, config=config, cancel_futures=True
+        ) as executor:
+            futures: set[Future] = set()
+            while True:
+                completed_futures, futures = wait(
+                    futures, timeout=60, return_when=FIRST_COMPLETED
+                )
+                for future in completed_futures:
+                    accumulated_result += future.result()
+                    if done(accumulated_result):
+                        return accumulated_result
+
+                # Ensure that we always have n_submitted_jobs running
+                for _ in range(n_submitted_jobs - len(futures)):
+                    future = executor.submit(
+                        _semivalues,
+                        sampler=sampler[:],
+                        u=u,
+                        coefficient=coefficient,
+                        done=MaxUpdates(updates_per_job),
+                    )
+                    futures.add(future)
+    else:
+        with init_executor(
+            max_workers=max_workers, config=config, cancel_futures=False
+        ) as executor:
+            results: Iterator[ValuationResult] = executor.map(
+                partial(_semivalues, u=u, coefficient=coefficient, done=done),
+                sampler,
+                chunksize=sampler.n_samples // max_workers,
+            )
+            for r in results:
+                accumulated_result += r
+            return accumulated_result
 
 
 def shapley_coefficient(n: int, k: int) -> float:
