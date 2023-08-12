@@ -1,5 +1,6 @@
 import abc
 import logging
+from typing import cast
 
 import numpy as np
 from deprecate import deprecated
@@ -197,6 +198,9 @@ def truncated_montecarlo_shapley(
     """
     from pydvl.value.shapley.montecarlo import permutation_montecarlo_shapley
 
-    return permutation_montecarlo_shapley(
-        u, done=done, truncation=truncation, config=config, n_jobs=n_jobs
-    )  # type: ignore
+    return cast(
+        ValuationResult,
+        permutation_montecarlo_shapley(
+            u, done=done, truncation=truncation, config=config, n_jobs=n_jobs
+        ),
+    )
