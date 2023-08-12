@@ -200,3 +200,32 @@ def test_futures_executor_map_with_max_workers(parallel_config, num_workers):
     total_time = end_time - start_time
     # We expect the time difference to be > 3 / num_workers, but has to be at least 1
     assert total_time > max(1.0, 3 / num_workers)
+
+
+def test_future_cancellation(parallel_config):
+    if parallel_config.backend != "ray":
+        pytest.skip("Currently this test only works with Ray")
+
+    from pydvl.utils.parallel.futures.ray import CancellationPolicy
+
+    with init_executor(
+        config=parallel_config, cancel_futures=CancellationPolicy.NONE
+    ) as executor:
+        future = executor.submit(lambda x: x + 1, 1)
+
+    assert future.result() == 2
+
+    from ray.exceptions import TaskCancelledError
+
+    with init_executor(
+        config=parallel_config, cancel_futures=CancellationPolicy.ALL
+    ) as executor:
+        start = time.monotonic()
+        future = executor.submit(lambda t: time.sleep(t), 5)
+
+    assert future._state == "FINISHED"
+
+    with pytest.raises(TaskCancelledError):
+        future.result()
+
+    assert time.monotonic() - start < 1
