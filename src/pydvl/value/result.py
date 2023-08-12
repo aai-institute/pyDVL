@@ -66,6 +66,7 @@ from numpy.typing import NDArray
 from pydvl.utils.dataset import Dataset
 from pydvl.utils.numeric import running_moments
 from pydvl.utils.status import Status
+from pydvl.utils.util import arr_or_writeable_copy
 
 try:
     import pandas  # Try to import here for the benefit of mypy
@@ -234,8 +235,12 @@ class ValuationResult(
 
         self._algorithm = algorithm
         self._status = Status(status)  # Just in case we are given a string
-        self._values = values
-        self._variances = np.zeros_like(values) if variances is None else variances
+        self._values = arr_or_writeable_copy(values)
+        self._variances = (
+            np.zeros_like(values)
+            if variances is None
+            else arr_or_writeable_copy(variances)
+        )
         self._counts = np.ones_like(values) if counts is None else counts
         self._sort_order = None
         self._extra_values = extra_values or {}
@@ -526,10 +531,14 @@ class ValuationResult(
         xm[other_pos] = other._values
         vm[other_pos] = other._variances
 
+        # np.maximum(1, n + m) covers case n = m = 0 with
+        n_m_sum = np.maximum(1, n + m)
+
         # Sample mean of n+m samples from two means of n and m samples
-        xnm = (n * xn + m * xm) / (n + m)
+        xnm = (n * xn + m * xm) / n_m_sum
+
         # Sample variance of n+m samples from two sample variances of n and m samples
-        vnm = (n * (vn + xn**2) + m * (vm + xm**2)) / (n + m) - xnm**2
+        vnm = (n * (vn + xn**2) + m * (vm + xm**2)) / n_m_sum - xnm**2
 
         if np.any(vnm < 0):
             if np.any(vnm < -1e-6):
@@ -609,6 +618,15 @@ class ValuationResult(
             count=self._counts[pos] + 1,
         )
         return self
+
+    def scale(self, coefficient: float, indices: Optional[NDArray[IndexT]] = None):
+        """
+        Scales the values and variances of the result by a coefficient.
+        :param coefficient: Coefficient to scale by.
+        :param indices: Indices to scale. If None, all values are scaled.
+        """
+        self._values[self._sort_positions[indices]] *= coefficient
+        self._variances[self._sort_positions[indices]] *= coefficient**2
 
     def get(self, idx: Integral) -> ValueItem:
         """Retrieves a ValueItem by data index, as opposed to sort index, like

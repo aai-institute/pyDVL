@@ -359,6 +359,52 @@ useful in applications.
        u=utility, mode="truncated_montecarlo", done=MaxUpdates(1000)
    )
 
+Classwise Shapley
+^^^^^^^^^^^^^^^^^^
+
+A different schema applicable for classification problems first appeared in
+:footcite:t:`schoch_csshapley_2022`. The key insight is that samples can be beneficial
+for overall performance, while being detrimental for their own class. This could be an
+indication of some problem with the data. CS-Shapley changes the utility to account for
+this effect by decomposing it into a product of two functions: one gives
+priority to in-class accuracy, while the other adds a slight discount which
+increases as the out-of-class accuracy increases.
+
+The value is computed as:
+
+$$
+v_u(x_i) \approx \frac{1}{K \cdot L}
+\sum_{S^{(k)}_{-y_i} \subseteq T_{-y_i} \setminus \{i\}}
+\sum_{\sigma^{(l)} \in \Pi(T_{y_i} \setminus \{i\})}
+[u( \sigma_{\colon i} \cup \{i\} | S_{-y_i} )
+− u( \sigma_{\colon i} |  S_{-y_i})]
+$$
+
+where $K$ is the number of subsets $S^{(k)}_{-y_i}$ sampled from the class complement
+set $T_{-y_i}$ of class c and $L$ is the number of permutations sampled from the class
+indices set $T_{y_i}$. The scoring function used has the form
+
+$$u(S_{y_i}|S_{-y_i}) = a_S(D_{y_i}))) \exp\{a_S(D_{-y_i}))\}.$$
+
+This can be further customised, but that form is shown by the authors to have certain
+desirable properties.
+
+.. code-block:: python
+
+   from pydvl.utils import Dataset, Utility
+   from pydvl.value import compute_shapley_values
+
+   model = ...
+   scoring = ClassWiseScorer("accuracy")
+   data = Dataset(...)
+   utility = Utility(model, data, scoring)
+   values = classwise_shapley(
+        utility,
+        done=HistoryDeviation(n_steps=500, rtol=1e-3),
+        n_resample_complement_sets=10,
+        normalize_values=True
+    )
+
 
 Exact Shapley for KNN
 ^^^^^^^^^^^^^^^^^^^^^

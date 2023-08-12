@@ -279,13 +279,13 @@ class MaxChecks(StoppingCriterion):
 
     def __init__(self, n_checks: Optional[int], modify_result: bool = True):
         super().__init__(modify_result=modify_result)
-        if n_checks is not None and n_checks < 1:
-            raise ValueError("n_iterations must be at least 1 or None")
+        if n_checks is not None and n_checks < 0:
+            raise ValueError("n_iterations must be at least 0 or None")
         self.n_checks = n_checks
         self._count = 0
 
     def _check(self, result: ValuationResult) -> Status:
-        if self.n_checks:
+        if self.n_checks is not None:
             self._count += 1
             if self._count > self.n_checks:
                 self._converged = np.ones_like(result.values, dtype=bool)
@@ -293,7 +293,7 @@ class MaxChecks(StoppingCriterion):
         return Status.Pending
 
     def completion(self) -> float:
-        if self.n_checks:
+        if self.n_checks is not None:
             return min(1.0, self._count / self.n_checks)
         return 0.0
 
@@ -476,7 +476,7 @@ class HistoryDeviation(StoppingCriterion):
             quots = np.divide(diffs, curr[ii], out=diffs, where=curr[ii] != 0)
             # quots holds the quotients when the denominator is non-zero, and
             # the absolute difference, which is just the memory, otherwise.
-            if np.mean(quots) < self.rtol:
+            if len(quots) > 0 and np.mean(quots) < self.rtol:
                 self._converged = self.update_op(
                     self._converged, r.counts > self.n_steps
                 )  # type: ignore

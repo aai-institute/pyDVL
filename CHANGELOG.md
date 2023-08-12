@@ -27,6 +27,8 @@
   [PR #382](https://github.com/appliedAI-Initiative/pyDVL/pull/382)
 - Decouple ray.init from ParallelConfig 
   [PR #373](https://github.com/appliedAI-Initiative/pyDVL/pull/383)
+- **New Method**: Add classwise Shapley algorithm. 
+  [PR #338](https://github.com/appliedAI-Initiative/pyDVL/pull/338)
 
 ## 0.6.1 - 🏗 Bug fixes and small improvement
 

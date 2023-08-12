@@ -25,6 +25,7 @@ class ParallelConfig:
     address: Optional[Union[str, Tuple[str, int]]] = None
     n_cpus_local: Optional[int] = None
     logging_level: int = logging.WARNING
+    _temp_dir: Optional[str] = None
 
     def __post_init__(self) -> None:
         if self.address is not None and self.n_cpus_local is not None:

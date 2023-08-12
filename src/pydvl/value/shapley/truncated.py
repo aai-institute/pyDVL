@@ -1,6 +1,7 @@
 import abc
 import logging
 from concurrent.futures import FIRST_COMPLETED, wait
+from typing import Optional
 
 import numpy as np
 from deprecate import deprecated
@@ -48,7 +49,7 @@ class TruncationPolicy(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def reset(self):
+    def reset(self, u: Optional[Utility] = None):
         """Reset the policy to a state ready for a new permutation."""
         ...
 
@@ -71,7 +72,7 @@ class NoTruncation(TruncationPolicy):
     def _check(self, idx: int, score: float) -> bool:
         return False
 
-    def reset(self):
+    def reset(self, u: Optional[Utility] = None):
         pass
 
 
@@ -94,7 +95,7 @@ class FixedTruncation(TruncationPolicy):
         self.count += 1
         return self.count >= self.max_marginals
 
-    def reset(self):
+    def reset(self, u: Optional[Utility] = None):
         self.count = 0
 
 
@@ -111,14 +112,18 @@ class RelativeTruncation(TruncationPolicy):
     def __init__(self, u: Utility, rtol: float):
         super().__init__()
         self.rtol = rtol
-        logger.info("Computing total utility for permutation truncation.")
-        self.total_utility = u(u.data.indices)
+        self.total_utility = self.reset(u)
+        self._u = u
 
     def _check(self, idx: int, score: float) -> bool:
         return np.allclose(score, self.total_utility, rtol=self.rtol)
 
-    def reset(self):
-        pass
+    def reset(self, u: Optional[Utility] = None) -> float:
+        if u is None:
+            u = self._u
+
+        self.total_utility = u(u.data.indices)
+        return self.total_utility
 
 
 class BootstrapTruncation(TruncationPolicy):
@@ -134,7 +139,6 @@ class BootstrapTruncation(TruncationPolicy):
     def __init__(self, u: Utility, n_samples: int, sigmas: float = 1):
         super().__init__()
         self.n_samples = n_samples
-        logger.info("Computing total utility for permutation truncation.")
         self.total_utility = u(u.data.indices)
         self.count: int = 0
         self.variance: float = 0
@@ -155,7 +159,7 @@ class BootstrapTruncation(TruncationPolicy):
             self.sigmas * np.sqrt(self.variance)
         )
 
-    def reset(self):
+    def reset(self, u: Optional[Utility] = None):
         self.count = 0
         self.variance = self.mean = 0
 
