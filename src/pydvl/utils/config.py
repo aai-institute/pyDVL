@@ -28,6 +28,7 @@ class ParallelConfig:
     wait_timeout: float = 5.0
 
     def __post_init__(self) -> None:
+        # FIXME: this is specific to ray
         if self.address is not None and self.n_cpus_local is not None:
             raise ValueError("When `address` is set, `n_cpus_local` should be None.")
 
