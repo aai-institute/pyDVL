@@ -30,10 +30,12 @@ reduce computation :func:`truncated_montecarlo_shapley`.
    the algorithms mentioned above, including Group Testing, can work to valuate
    groups of samples as units.
 """
+from __future__ import annotations
+
 import logging
 import math
 import operator
-from concurrent.futures import FIRST_COMPLETED, wait
+from concurrent.futures import FIRST_COMPLETED, Future, wait
 from functools import reduce
 from itertools import cycle, takewhile
 from typing import Sequence
@@ -47,6 +49,7 @@ from pydvl.utils import effective_n_jobs, init_executor, init_parallel_backend
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import MapReduceJob
+from pydvl.utils.parallel.futures.ray import CancellationPolicy
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.truncated import NoTruncation, TruncationPolicy
@@ -191,39 +194,28 @@ def permutation_montecarlo_shapley(
 
     parallel_backend = init_parallel_backend(config)
     u = parallel_backend.put(u)
-    # This represents the number of jobs that are running
-    n_jobs = effective_n_jobs(n_jobs, config)
-    # This determines the total number of submitted jobs
-    # including the ones that are running
-    n_submitted_jobs = 2 * n_jobs
+    max_workers = effective_n_jobs(n_jobs, config)
+    n_submitted_jobs = 2 * max_workers  # number of jobs in the executor's queue
 
     accumulated_result = ValuationResult.zeros(algorithm=algorithm)
 
-    with init_executor(max_workers=n_jobs, config=config) as executor:
-        futures = set()
-        # Initial batch of computations
-        for _ in range(n_submitted_jobs):
-            future = executor.submit(
-                _permutation_montecarlo_one_step,
-                u,
-                truncation,
-                algorithm,
-            )
-            futures.add(future)
-        while futures:
-            # Wait for the next futures to complete.
+    with init_executor(
+        max_workers=max_workers, config=config, cancel_futures=CancellationPolicy.ALL
+    ) as executor:
+        futures: set[Future] = set()
+        while True:
             completed_futures, futures = wait(
-                futures, timeout=60, return_when=FIRST_COMPLETED
+                futures, timeout=config.wait_timeout, return_when=FIRST_COMPLETED
             )
+
             for future in completed_futures:
                 accumulated_result += future.result()
+                # we could check outside the loop, but that means more
+                # submissions if the stopping criterion is unstable
                 if done(accumulated_result):
-                    break
-            if done(accumulated_result):
-                break
-            # Submit more computations
-            # The goal is to always have `n_jobs`
-            # computations running
+                    return accumulated_result
+
+            # Ensure that we always have n_submitted_jobs in the queue or running
             for _ in range(n_submitted_jobs - len(futures)):
                 future = executor.submit(
                     _permutation_montecarlo_one_step,
@@ -232,7 +224,6 @@ def permutation_montecarlo_shapley(
                     algorithm,
                 )
                 futures.add(future)
-    return accumulated_result
 
 
 def _combinatorial_montecarlo_shapley(
