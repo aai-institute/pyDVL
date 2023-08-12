@@ -58,9 +58,9 @@ Sequence.register(np.ndarray)
 class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
     """Samplers iterate over subsets of indices.
 
-    This is done in nested loops, where the outer loop iterates over the set of
-    indices, and the inner loop iterates over subsets of the complement of the
-    current index. The outer iteration can be either sequential or at random.
+    This is done in two nested loops, where the outer loop iterates over the set
+    of indices, and the inner loop iterates over subsets of the complement of
+    the current index. The outer iteration can be either sequential or at random.
 
     :Example:
 
@@ -245,8 +245,16 @@ class AntitheticSampler(PowersetSampler[T]):
 
 
 class PermutationSampler(PowersetSampler[T]):
-    """Sample permutations of indices and iterate through each returning sets,
-    as required for the permutation definition of semi-values.
+    """Sample permutations of indices and iterate through each returning
+    increasing subsets, as required for the permutation definition of
+    semi-values.
+
+    This sampler does not implement the two loops described in
+    :class:`~pydvl.value.sampler.PowersetSampler`. Instead, for a permutation
+    ``(3,1,4,2)``, it returns in sequence the tuples of index and sets:
+    ``(3, {})``, ``(1, {3})``, ``(4, {3,1})`` and ``(2, {3,1,4})``.
+
+    Note that the full set is never returned.
 
     .. warning::
        This sampler requires caching to be enabled or computation
