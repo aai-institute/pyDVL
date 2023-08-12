@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import os
 from abc import ABCMeta, abstractmethod
-from dataclasses import asdict
+from concurrent.futures import Executor
 from typing import (
     Any,
     Callable,
@@ -12,11 +14,13 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
 
 import joblib
 import ray
 from joblib import delayed
+from joblib.externals.loky import get_reusable_executor
 from ray import ObjectRef
 from ray.util.joblib import register_ray
 
@@ -25,8 +29,6 @@ from ..config import ParallelConfig
 __all__ = ["init_parallel_backend", "effective_n_jobs", "available_cpus"]
 
 T = TypeVar("T")
-
-_PARALLEL_BACKENDS: Dict[str, "Type[BaseParallelBackend]"] = {}
 
 
 class NoPublicConstructor(ABCMeta):
@@ -47,10 +49,10 @@ class NoPublicConstructor(ABCMeta):
     def __call__(cls, *args, **kwargs):
         raise TypeError(
             f"{cls.__module__}.{cls.__qualname__} cannot be initialized directly. "
-            "Use init_parallel_backend() instead."
+            "Use the proper factory instead."
         )
 
-    def _create(cls, *args: Any, **kwargs: Any):
+    def create(cls, *args: Any, **kwargs: Any):
         return super().__call__(*args, **kwargs)
 
 
@@ -58,11 +60,21 @@ class BaseParallelBackend(metaclass=NoPublicConstructor):
     """Abstract base class for all parallel backends"""
 
     config: Dict[str, Any] = {}
+    BACKENDS: Dict[str, "Type[BaseParallelBackend]"] = {}
 
     def __init_subclass__(cls, *, backend_name: str, **kwargs):
-        global _PARALLEL_BACKENDS
-        _PARALLEL_BACKENDS[backend_name] = cls
         super().__init_subclass__(**kwargs)
+        BaseParallelBackend.BACKENDS[backend_name] = cls
+
+    @classmethod
+    @abstractmethod
+    def executor(
+        cls,
+        max_workers: int | None = None,
+        config: ParallelConfig = ParallelConfig(),
+        **kwargs,
+    ) -> Executor:
+        ...
 
     @abstractmethod
     def get(self, v: Any, *args, **kwargs):
@@ -110,12 +122,16 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
             "n_jobs": config.n_cpus_local,
         }
 
-    def get(
-        self,
-        v: T,
-        *args,
+    @classmethod
+    def executor(
+        cls,
+        max_workers: int | None = None,
+        config: ParallelConfig = ParallelConfig(),
         **kwargs,
-    ) -> T:
+    ) -> Executor:
+        return cast(Executor, get_reusable_executor(max_workers=max_workers, **kwargs))
+
+    def get(self, v: T, *args, **kwargs) -> T:
         return v
 
     def put(self, v: T, *args, **kwargs) -> T:
@@ -130,12 +146,7 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
         """
         return delayed(fun)  # type: ignore
 
-    def wait(
-        self,
-        v: List[T],
-        *args,
-        **kwargs,
-    ) -> Tuple[List[T], List[T]]:
+    def wait(self, v: List[T], *args, **kwargs) -> Tuple[List[T], List[T]]:
         return v, []
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
@@ -166,11 +177,19 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         # Register ray joblib backend
         register_ray()
 
-    def get(
-        self,
-        v: Union[ObjectRef, Iterable[ObjectRef], T],
-        *args,
+    @classmethod
+    def executor(
+        cls,
+        max_workers: int | None = None,
+        config: ParallelConfig = ParallelConfig(),
         **kwargs,
+    ) -> Executor:
+        from pydvl.utils.parallel.futures import RayExecutor
+
+        return RayExecutor(max_workers, config=config, **kwargs)  # type: ignore
+
+    def get(
+        self, v: Union[ObjectRef, Iterable[ObjectRef], T], *args, **kwargs
     ) -> Union[T, Any]:
         timeout: Optional[float] = kwargs.get("timeout", None)
         if isinstance(v, ObjectRef):
@@ -199,10 +218,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         return ray.remote(fun).remote  # type: ignore
 
     def wait(
-        self,
-        v: List["ObjectRef"],
-        *args,
-        **kwargs,
+        self, v: List["ObjectRef"], *args, **kwargs
     ) -> Tuple[List[ObjectRef], List[ObjectRef]]:
         num_returns: int = kwargs.get("num_returns", 1)
         timeout: Optional[float] = kwargs.get("timeout", None)
@@ -247,11 +263,10 @@ def init_parallel_backend(
 
     """
     try:
-        parallel_backend_cls = _PARALLEL_BACKENDS[config.backend]
+        parallel_backend_cls = BaseParallelBackend.BACKENDS[config.backend]
     except KeyError:
         raise NotImplementedError(f"Unexpected parallel backend {config.backend}")
-    parallel_backend = parallel_backend_cls._create(config)
-    return parallel_backend  # type: ignore
+    return parallel_backend_cls.create(config)  # type: ignore
 
 
 def available_cpus() -> int:
