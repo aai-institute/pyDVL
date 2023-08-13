@@ -150,7 +150,7 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
             return self.__class__(
                 self._indices,
                 index_iteration=self._index_iteration,
-                outer_indices=self._indices[key],
+                outer_indices=self._outer_indices[key],
             )
         raise TypeError("Indices must be an iterable or a slice")
 
@@ -162,7 +162,7 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
         return f"{self.__class__.__name__}"
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self._indices})"
+        return f"{self.__class__.__name__}({self._indices}, {self._outer_indices})"
 
     @abc.abstractmethod
     def __iter__(self) -> Iterator[SampleType]:
