@@ -198,7 +198,7 @@ def semivalues(
             results: Iterator[ValuationResult] = executor.map(
                 partial(_semivalues, u=u, coefficient=coefficient, done=done),
                 sampler,
-                chunksize=sampler.n_samples // max_workers,
+                chunksize=max(1, sampler.n_samples // max_workers),
             )
             for r in results:
                 accumulated_result += r
