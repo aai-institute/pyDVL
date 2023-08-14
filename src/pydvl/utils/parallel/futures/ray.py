@@ -6,7 +6,6 @@ import time
 import types
 from concurrent.futures import Executor, Future
 from dataclasses import asdict
-from enum import Enum
 from typing import Any, Callable, Optional, TypeVar
 from weakref import WeakSet, ref
 
@@ -15,29 +14,13 @@ from deprecate import deprecated
 
 from pydvl.utils import ParallelConfig
 
-__all__ = ["CancellationPolicy", "RayExecutor"]
+__all__ = ["RayExecutor"]
+
+from pydvl.utils.parallel.backend import CancellationPolicy
 
 T = TypeVar("T")
 
 logger = logging.getLogger(__name__)
-
-
-class CancellationPolicy(Enum):
-    """Policy to use when cancelling futures after exiting an Executor.
-
-    :cvar NONE: Do not cancel any futures.
-    :cvar PENDING: Cancel all pending futures, but not running ones.
-    :cvar RUNNING: Cancel all running futures, but not pending ones.
-    :cvar ALL: Cancel all pending and running futures.
-    """
-
-    NONE = 0
-    PENDING = 1
-    RUNNING = 2
-    ALL = 3
-
-    def __and__(self, other: "CancellationPolicy") -> bool:
-        return int(self.value) & int(other.value) > 0
 
 
 class RayExecutor(Executor):

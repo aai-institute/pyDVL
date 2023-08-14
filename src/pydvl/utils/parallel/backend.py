@@ -4,6 +4,7 @@ import logging
 import os
 from abc import abstractmethod
 from concurrent.futures import Executor
+from enum import Enum
 from typing import Any, Callable, Iterable, Type, TypeVar, cast
 
 import joblib
@@ -15,7 +16,6 @@ from ray.util.joblib import register_ray
 
 from ..config import ParallelConfig
 from ..types import NoPublicConstructor
-from .futures.ray import CancellationPolicy
 
 __all__ = ["init_parallel_backend", "effective_n_jobs", "available_cpus"]
 
@@ -23,6 +23,27 @@ __all__ = ["init_parallel_backend", "effective_n_jobs", "available_cpus"]
 T = TypeVar("T")
 
 log = logging.getLogger(__name__)
+
+
+class CancellationPolicy(Enum):
+    """Policy to use when cancelling futures after exiting an Executor.
+
+    .. note:
+       Not all backends support all policies.
+
+    :cvar NONE: Do not cancel any futures.
+    :cvar PENDING: Cancel all pending futures, but not running ones.
+    :cvar RUNNING: Cancel all running futures, but not pending ones.
+    :cvar ALL: Cancel all pending and running futures.
+    """
+
+    NONE = 0
+    PENDING = 1
+    RUNNING = 2
+    ALL = 3
+
+    def __and__(self, other: CancellationPolicy) -> bool:
+        return int(self.value) & int(other.value) > 0
 
 
 class BaseParallelBackend(metaclass=NoPublicConstructor):
@@ -169,7 +190,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         else:
             return v
 
-    def put(self, v: T, *args, **kwargs) -> "ObjectRef[T]" | T:
+    def put(self, v: T, *args, **kwargs) -> ObjectRef[T] | T:
         try:
             return ray.put(v, **kwargs)  # type: ignore
         except TypeError:
