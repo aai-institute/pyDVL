@@ -1,12 +1,15 @@
 """
 Samplers iterate over subsets of indices.
 
-The classes in this module are used to iterate over indices and subsets of their
-complement in the whole set, as required for the computation of marginal utility
-for semi-values. The elements returned when iterating over any subclass of
-:class:`PowersetSampler` are tuples of the form ``(idx, subset)``, where ``idx``
-is the index of the element being added to the subset, and ``subset`` is the
-subset of the complement of ``idx``.
+The classes in this module are used to iterate over an index set $I$ as required
+for the computation of marginal utility for semi-values. The elements returned
+when iterating over any subclass of :class:`PowersetSampler` are tuples of the
+form $(i, S)$, where $i$ is an index of interest, and $S \subset I \setminus \{i\}$
+is a subset of the complement of $i$.
+
+The iteration happens in two nested loops. An outer loop iterates over $I$, and
+an inner loop iterates over the powerset of $I \setminus \{i\}$. The outer
+iteration can be either sequential or at random.
 
 .. note::
    This is the natural mode of iteration for the combinatorial definition of
@@ -56,17 +59,30 @@ Sequence.register(np.ndarray)
 
 
 class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
-    """Samplers iterate over subsets of indices.
+    """Samplers are custom iterables over subsets of indices.
+
+    Calling ``iter()`` on a sampler returns an iterator over tuples of the form
+    $(i, S)$, where $i$ is an index of interest, and $S \subset I \setminus \{i\}$
+    is a subset of the complement of $i$.
 
     This is done in two nested loops, where the outer loop iterates over the set
     of indices, and the inner loop iterates over subsets of the complement of
     the current index. The outer iteration can be either sequential or at random.
 
+    .. note::
+       Samplers are **not** iterators themselves, so that each call to ``iter()``
+       e.g. in a for loop creates a new iterator.
+
     :Example:
 
-    >>>for idx, s in DeterministicCombinatorialSampler([1,2]):
-    >>>    print(s, end="")
-    ()(2,)()(1,)
+    .. code-block:: python
+
+       for idx, s in DeterministicCombinatorialSampler(np.arange(2)):
+           print(s, end="")
+
+    Produces the output::
+
+       [][2,][][1,]
 
     .. rubric:: Methods required in subclasses
 
@@ -138,14 +154,14 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
                 yield np.random.choice(self._outer_indices, size=1).item()
 
     @overload
-    def __getitem__(self, key: slice) -> "PowersetSampler[T]":
+    def __getitem__(self, key: slice) -> PowersetSampler[T]:
         ...
 
     @overload
-    def __getitem__(self, key: list[int]) -> "PowersetSampler[T]":
+    def __getitem__(self, key: list[int]) -> PowersetSampler[T]:
         ...
 
-    def __getitem__(self, key: slice | list[int]) -> "PowersetSampler[T]":
+    def __getitem__(self, key: slice | list[int]) -> PowersetSampler[T]:
         if isinstance(key, slice) or isinstance(key, Iterable):
             return self.__class__(
                 self._indices,
@@ -189,10 +205,25 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
 
 class DeterministicCombinatorialSampler(PowersetSampler[T]):
     def __init__(self, indices: NDArray[T], *args, **kwargs):
-        """Uniform deterministic sampling of subsets.
+        """An iterator to perform uniform deterministic sampling of subsets.
 
-        For every index $i$, each subset of `indices - {i}` has equal
-        probability $2^{n-1}$.
+        For every index $i$, each subset of the complement `indices - {i}` is
+        returned.
+
+        .. note::
+           Indices are always iterated over sequentially, irrespective of
+           the value of ``index_iteration`` upon construction.
+
+        :Example:
+
+        .. code-block:: python
+
+           for idx, s in DeterministicCombinatorialSampler(np.arange(2)):
+               print(f"{idx} - {s}", end=", ")
+
+        Produces the output::
+
+            1 - [], 1 - [2], 2 - [], 2 - [1],
 
         :param indices: The set of items (indices) to sample from.
         """
@@ -211,6 +242,27 @@ class DeterministicCombinatorialSampler(PowersetSampler[T]):
 
 
 class UniformSampler(PowersetSampler[T]):
+    """An iterator to perform uniform random sampling of subsets.
+
+    Iterating over every index $i$, either in sequence or at random depending on
+    the value of ``index_iteration``, one subset of the complement
+    ``indices - {i}`` is sampled with equal probability $2^{n-1}$. The
+    iterator never ends.
+
+    :Example:
+
+    .. code-block:: python
+
+       for idx, s in UniformSampler(np.arange(3)):
+           print(f"{idx} - {s}", end=", ")
+
+    Produces the output::
+
+        0 - [1 4], 1 - [2 3], 2 - [0 1 3], 3 - [], 4 - [2], 0 - [1 3 4], 1 - [0 2]
+        (...)
+
+    """
+
     def __iter__(self) -> Iterator[SampleType]:
         while True:
             for idx in self.iterindices():
@@ -229,6 +281,14 @@ class UniformSampler(PowersetSampler[T]):
 
 
 class AntitheticSampler(PowersetSampler[T]):
+    """An iterator to perform uniform random sampling of subsets, and their
+    complements.
+
+    Works as :class:`~pydvl.value.sampler.UniformSampler`, but for every tuple
+    $(i,S)$, it subsequently returns $(i,S^c)$, where $S^c$ is the complement of
+    the set $S$, including the index $i$ itself.
+    """
+
     def __iter__(self) -> Iterator[SampleType]:
         while True:
             for idx in self.iterindices():
@@ -254,7 +314,7 @@ class PermutationSampler(PowersetSampler[T]):
     ``(3,1,4,2)``, it returns in sequence the tuples of index and sets:
     ``(3, {})``, ``(1, {3})``, ``(4, {3,1})`` and ``(2, {3,1,4})``.
 
-    Note that the full set is never returned.
+    Note that the full index set is never returned.
 
     .. warning::
        This sampler requires caching to be enabled or computation
