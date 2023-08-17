@@ -481,6 +481,26 @@ class LowRankProductRepresentation:
     eigen_vals: torch.Tensor
     projections: torch.Tensor
 
+    @property
+    def device(self) -> torch.device:
+        return (
+            self.eigen_vals.device
+            if hasattr(self.eigen_vals, "device")
+            else torch.device("cpu")
+        )
+
+    def to(self, device: torch.device):
+        """
+        Move the representing tensors to a device
+        """
+        return LowRankProductRepresentation(
+            self.eigen_vals.to(device), self.projections.to(device)
+        )
+
+    def __post_init__(self):
+        if self.eigen_vals.device != self.projections.device:
+            raise ValueError("eigen_vals and projections must be on the same device.")
+
 
 def solve_arnoldi(
     model: TorchTwiceDifferentiable,
@@ -512,8 +532,8 @@ def solve_arnoldi(
     :param krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
                              If not provided, it defaults to $min(model.num_parameters, max(2*rank_estimate + 1, 20))$.
     :param low_rank_representation: A LowRankProductRepresentation instance containing a previously computed
-                                    low-rank representation of the Hessian.
-                                    If not provided, a new low-rank representation will be computed,
+                                    low-rank representation of the Hessian. I provided, all other parameters
+                                    are ignored, if not, a new low-rank representation will be computed,
                                     using provided parameters.
     :param tol: The stopping criteria for the Lanczos algorithm.
                 If `low_rank_representation` is provided, this parameter is ignored.
@@ -529,29 +549,42 @@ def solve_arnoldi(
              where H is a low-rank approximation of the Hessian of the model's loss function.
     """
 
+    b_device = b.device if hasattr(b, "device") else torch.device("cpu")
+
     if low_rank_representation is None:
 
-        raw_hvp = get_hvp_function(
-            model.model, model.loss, training_data, use_hessian_avg=True
-        )
-        params = dict(model.model.named_parameters())
+        if b_device.type == "cuda" and not eigen_computation_on_gpu:
+            raise ValueError(
+                "Using 'eigen_computation_on_gpu=False' while 'b' is on a 'cuda' device is not supported. "
+                "To address this, consider the following options:\n"
+                " - Set eigen_computation_on_gpu=True if your model and data are small enough "
+                "and if 'cupy' is available in your environment.\n"
+                " - Move 'b' to the CPU with b.to('cpu').\n"
+                " - Precompute a low rank representation and move it to the 'b' device using:\n"
+                "     low_rank_representation = model_hessian_low_rank(model, training_data, ..., "
+                "eigen_computation_on_gpu=False).to(b.device)"
+            )
 
-        def hessian_vector_product(x: torch.Tensor) -> torch.Tensor:
-            output = raw_hvp(align_structure(params, x))
-            return flatten_tensors_to_vector(output.values())
-
-        low_rank_representation = lanzcos_low_rank_hessian_approx(
-            hessian_vp=hessian_vector_product,
-            matrix_shape=(model.num_params, model.num_params),
+        low_rank_representation = model_hessian_low_rank(
+            model,
+            training_data,
             hessian_perturbation=hessian_perturbation,
             rank_estimate=rank_estimate,
             krylov_dimension=krylov_dimension,
             tol=tol,
             max_iter=max_iter,
-            device=model.device if hasattr(model, "device") else None,
             eigen_computation_on_gpu=eigen_computation_on_gpu,
         )
     else:
+        if b_device.type != low_rank_representation.device.type:
+            raise RuntimeError(
+                f"The devices for 'b' and 'low_rank_representation' do not match.\n"
+                f" - 'b' is on device: {b_device}\n"
+                f" - 'low_rank_representation' is on device: {low_rank_representation.device}\n"
+                f"\nTo resolve this, consider moving 'low_rank_representation' to '{b_device}' by using:\n"
+                f"low_rank_representation = low_rank_representation.to(b.device)"
+            )
+
         logger.info("Using provided low rank representation, ignoring other parameters")
 
     result = low_rank_representation.projections @ (
@@ -580,7 +613,7 @@ def lanzcos_low_rank_hessian_approx(
     torch_dtype: torch.dtype = None,
 ) -> LowRankProductRepresentation:
     """
-    Calculates a low-rank approximation of the Hessian matrix of the model's loss function using the implicitly
+    Calculates a low-rank approximation of the Hessian matrix of a scalar-valued function using the implicitly
     restarted Lanczos algorithm.
 
 
@@ -636,14 +669,6 @@ def lanzcos_low_rank_hessian_approx(
     else:
         from scipy.sparse.linalg import LinearOperator, eigsh
 
-        if device is not None and device.type == "cuda":
-            logger.warning(
-                "Device is cuda, but eigen_computation_on_gpu is False, so eigen computation will be on CPU."
-                "To enable GPU computation, set eigen_computation_on_gpu to True."
-            )
-        else:
-            device = torch.device("cpu")
-
         def mv(x):
             x_torch = torch.as_tensor(x, device=device, dtype=torch_dtype)
             y: NDArray = (
@@ -676,7 +701,66 @@ def lanzcos_low_rank_hessian_approx(
 
         eigen_vals, eigen_vecs = e.eigenvalues, e.eigenvectors
 
-    eigen_vals = to_torch_conversion_function(eigen_vals).to(device)
-    eigen_vecs = to_torch_conversion_function(eigen_vecs).to(device)
+    eigen_vals = to_torch_conversion_function(eigen_vals)
+    eigen_vecs = to_torch_conversion_function(eigen_vecs)
 
     return LowRankProductRepresentation(eigen_vals, eigen_vecs)
+
+
+def model_hessian_low_rank(
+    model: TorchTwiceDifferentiable,
+    training_data: DataLoader,
+    hessian_perturbation: float = 0.0,
+    rank_estimate: int = 10,
+    krylov_dimension: Optional[int] = None,
+    tol: float = 1e-6,
+    max_iter: Optional[int] = None,
+    eigen_computation_on_gpu: bool = False,
+) -> LowRankProductRepresentation:
+    """
+    Calculates a low-rank approximation of the Hessian matrix of the model's loss function using the implicitly
+    restarted Lanczos algorithm.
+
+    :param model: A PyTorch model instance that is twice differentiable, wrapped into :class:`TorchTwiceDifferential`.
+                  The Hessian will be calculated with respect to this model's parameters.
+    :param training_data: A DataLoader instance that provides the model's training data.
+                          Used in calculating the Hessian-vector products.
+    :param hessian_perturbation: Optional regularization parameter added to the Hessian-vector product
+                                 for numerical stability.
+    :param rank_estimate: The number of eigenvalues and corresponding eigenvectors to compute.
+                          Represents the desired rank of the Hessian approximation.
+    :param krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
+                             If not provided, it defaults to $min(model.num_parameters, max(2*rank_estimate + 1, 20))$.
+    :param tol: The stopping criteria for the Lanczos algorithm, which stops when the difference
+                in the approximated eigenvalue is less than `tol`. Defaults to 1e-6.
+    :param max_iter: The maximum number of iterations for the Lanczos method. If not provided, it defaults to
+                     $10*model.num_parameters$
+    :param eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation on the provided
+                                     device via cupy implementation.
+                                     Make sure, that either your model is small enough or you use a
+                                     small rank_estimate to fit your device's memory.
+                                     If False, the eigen pair approximation is executed on the CPU by scipy wrapper to
+                                     ARPACK.
+    :return: A `LowRankProductRepresentation` instance that contains the top (up until rank_estimate) eigenvalues
+             and corresponding eigenvectors of the Hessian.
+    """
+    raw_hvp = get_hvp_function(
+        model.model, model.loss, training_data, use_hessian_avg=True
+    )
+    params = dict(model.model.named_parameters())
+
+    def hessian_vector_product(x: torch.Tensor) -> torch.Tensor:
+        output = raw_hvp(align_structure(params, x))
+        return flatten_tensors_to_vector(output.values())
+
+    return lanzcos_low_rank_hessian_approx(
+        hessian_vp=hessian_vector_product,
+        matrix_shape=(model.num_params, model.num_params),
+        hessian_perturbation=hessian_perturbation,
+        rank_estimate=rank_estimate,
+        krylov_dimension=krylov_dimension,
+        tol=tol,
+        max_iter=max_iter,
+        device=model.device if hasattr(model, "device") else None,
+        eigen_computation_on_gpu=eigen_computation_on_gpu,
+    )
