@@ -144,29 +144,6 @@ def align_structure(
     return tangent_dict
 
 
-def hessian_from_dict(hessian_dict):
-    param_names = list(hessian_dict.keys())
-
-    hessian_rows = []
-
-    for row_name in param_names:
-        row = []
-
-        for col_name in param_names:
-            block = hessian_dict[row_name][col_name]
-
-            # Flatten the block and add it to the row
-            row.append(block.contiguous().view(-1))
-
-        # Concatenate the row blocks and add them to the Hessian
-        hessian_rows.append(torch.cat(row))
-
-    # Concatenate all rows to form the Hessian
-    hessian = torch.stack(hessian_rows)
-
-    return hessian
-
-
 def as_tensor(a: Any, warn=True, **kwargs) -> torch.Tensor:
     """Converts an array into a torch tensor
 
