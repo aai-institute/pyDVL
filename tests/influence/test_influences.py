@@ -13,7 +13,7 @@ from torch.optim import LBFGS
 from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence import InfluenceType, InversionMethod, compute_influences
-from pydvl.influence.frameworks import TorchTwiceDifferentiable
+from pydvl.influence.torch import TorchTwiceDifferentiable
 
 from .conftest import (
     add_noise_to_linear_model,
