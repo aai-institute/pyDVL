@@ -86,10 +86,8 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
 
         :param x: A matrix [NxD] representing the features $x_i$.
         :param y: A matrix [NxK] representing the target values $y_i$.
-        :param create_graph:
-        :returns: A tuple where the first element is an array [P] with the
-            gradients of the model and second element is the input to the model
-            as a grad parameters. This can be used for further differentiation.
+        :param create_graph: If True, the resulting gradient tensor, can be used for further differentiation
+        :returns: An array [P] with the gradients of the model.
         """
         x = x.to(self.device)
         y = y.to(self.device)
@@ -104,7 +102,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
         """Calculates the explicit hessian of model parameters given data ($x$ and $y$).
         :param x: A matrix [NxD] representing the features $x_i$.
         :param y: A matrix [NxK] representing the target values $y_i$.
-        :returns: the hessian of the model, i.e. the second derivative wrt. the model parameters.
+        :returns: A tensor representing the hessian of the model, i.e. the second derivative wrt. the model parameters.
         """
 
         def model_func(param):
@@ -177,7 +175,6 @@ class LowRankProductRepresentation:
     """
 
     eigen_vals: torch.Tensor
-
     projections: torch.Tensor
 
 
@@ -601,14 +598,9 @@ def solve_arnoldi(
         raw_hvp = get_hvp_function(
             model.model, model.loss, training_data, use_hessian_avg=True
         )
-        params = dict(model.model.named_parameters())
-
-        def hessian_vector_product(x: torch.Tensor) -> torch.Tensor:
-            output = raw_hvp(align_structure(params, x))
-            return flatten_tensors_to_vector(output.values())
 
         low_rank_representation = lanzcos_low_rank_hessian_approx(
-            hessian_vp=hessian_vector_product,
+            hessian_vp=raw_hvp,
             matrix_shape=(model.num_params, model.num_params),
             hessian_perturbation=hessian_perturbation,
             rank_estimate=rank_estimate,

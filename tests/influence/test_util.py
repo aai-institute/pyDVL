@@ -94,11 +94,13 @@ def model_data(request):
     x = torch.rand(train_size, dimension[-1])
     y = torch.rand(train_size, dimension[0])
     torch_model = linear_torch_model_from_numpy(A, b)
-    vec = {
-        name: torch.rand(*p.shape)
-        for name, p in torch_model.named_parameters()
-        if p.requires_grad
-    }
+    vec = flatten_tensors_to_vector(
+        tuple(
+            torch.rand(*p.shape)
+            for name, p in torch_model.named_parameters()
+            if p.requires_grad
+        )
+    )
     H_analytical = linear_hessian_analytical((A, b), x.numpy())
     H_analytical = torch.as_tensor(H_analytical)
     return torch_model, x, y, vec, H_analytical.to(torch.float32)
@@ -112,7 +114,6 @@ def model_data(request):
 )
 def test_hvp(model_data, tol: float):
     torch_model, x, y, vec, H_analytical = model_data
-    vec_flat = flatten_tensors_to_vector(vec.values())
 
     params = dict(torch_model.named_parameters())
 
@@ -121,7 +122,7 @@ def test_hvp(model_data, tol: float):
     Hvp_autograd = hvp(f, params, align_structure(params, vec))
 
     flat_Hvp_autograd = flatten_tensors_to_vector(Hvp_autograd.values())
-    assert torch.allclose(flat_Hvp_autograd, H_analytical @ vec_flat, rtol=tol)
+    assert torch.allclose(flat_Hvp_autograd, H_analytical @ vec, rtol=tol)
 
 
 @pytest.mark.torch
@@ -140,10 +141,8 @@ def test_get_hvp_function(model_data, tol: float, use_avg: bool, batch_size: int
     Hvp_autograd = get_hvp_function(
         torch_model, mse_loss, data_loader, use_hessian_avg=use_avg
     )(vec)
-    vec_flat = flatten_tensors_to_vector(vec.values())
-    flat_Hvp_autograd = flatten_tensors_to_vector(Hvp_autograd.values())
 
-    assert torch.allclose(flat_Hvp_autograd, H_analytical @ vec_flat, rtol=tol)
+    assert torch.allclose(Hvp_autograd, H_analytical @ vec, rtol=tol)
 
 
 @pytest.mark.torch
@@ -157,8 +156,6 @@ def test_lanzcos_low_rank_hessian_approx(
 ):
     _, _, _, vec, H_analytical = model_data
 
-    vec_flat = flatten_tensors_to_vector(vec.values())
-
     reg_H_analytical = H_analytical + regularization * torch.eye(H_analytical.shape[0])
     low_rank_approx = lanzcos_low_rank_hessian_approx(
         lambda z: reg_H_analytical @ z,
@@ -167,9 +164,9 @@ def test_lanzcos_low_rank_hessian_approx(
     )
     approx_result = low_rank_approx.projections @ (
         torch.diag_embed(low_rank_approx.eigen_vals)
-        @ (low_rank_approx.projections.t() @ vec_flat.t())
+        @ (low_rank_approx.projections.t() @ vec.t())
     )
-    assert torch.allclose(approx_result, reg_H_analytical @ vec_flat, rtol=1e-1)
+    assert torch.allclose(approx_result, reg_H_analytical @ vec, rtol=1e-1)
 
 
 @pytest.mark.torch
