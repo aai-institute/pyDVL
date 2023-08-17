@@ -19,8 +19,12 @@ from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
 from ..inversion import InversionMethod, InversionRegistry
+from ..twice_differentiable import (
+    InverseHvpResult,
+    TensorUtilities,
+    TwiceDifferentiable,
+)
 from .functional import get_hvp_function
-from .twice_differentiable import InverseHvpResult, TensorUtilities, TwiceDifferentiable
 from .util import align_structure, as_tensor, flatten_tensors_to_vector
 
 __all__ = [

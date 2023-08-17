@@ -7,12 +7,8 @@ from enum import Enum
 from typing import Any, Callable, Dict, Optional, Type
 
 from ..utils import maybe_progress
-from .frameworks.twice_differentiable import (
-    TensorType,
-    TensorUtilities,
-    TwiceDifferentiable,
-)
 from .inversion import DataLoaderType, InverseHvpResult, InversionMethod, solve_hvp
+from .twice_differentiable import TensorType, TensorUtilities, TwiceDifferentiable
 
 __all__ = ["compute_influences", "InfluenceType", "compute_influence_factors"]
 

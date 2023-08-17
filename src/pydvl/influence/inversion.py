@@ -7,13 +7,15 @@ import warnings
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, Tuple, Type, TypeVar
 
-__all__ = ["solve_hvp", "InversionMethod", "InversionRegistry"]
+__all__ = [
+    "solve_hvp",
+    "InversionMethod",
+    "InversionRegistry",
+    "DataLoaderType",
+    "InverseHvpResult",
+]
 
-from .frameworks.twice_differentiable import (
-    InverseHvpResult,
-    TensorType,
-    TwiceDifferentiable,
-)
+from .twice_differentiable import InverseHvpResult, TensorType, TwiceDifferentiable
 
 logger = logging.getLogger(__name__)
 
