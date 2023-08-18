@@ -7,7 +7,7 @@ import pytest
 from pydvl.utils import ParallelConfig, Utility
 from pydvl.value.sampler import (
     AntitheticSampler,
-    DeterministicCombinatorialSampler,
+    DeterministicUniformSampler,
     DeterministicPermutationSampler,
     PermutationSampler,
     PowersetSampler,
@@ -31,7 +31,7 @@ from . import check_values
 @pytest.mark.parametrize(
     "sampler",
     [
-        DeterministicCombinatorialSampler,
+        DeterministicUniformSampler,
         DeterministicPermutationSampler,
         UniformSampler,
         PermutationSampler,
@@ -64,7 +64,7 @@ def test_shapley(
 @pytest.mark.parametrize(
     "sampler",
     [
-        DeterministicCombinatorialSampler,
+        DeterministicUniformSampler,
         DeterministicPermutationSampler,
         UniformSampler,
         PermutationSampler,

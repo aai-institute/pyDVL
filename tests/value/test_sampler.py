@@ -6,7 +6,7 @@ import pytest
 from pydvl.utils import powerset
 from pydvl.value.sampler import (
     AntitheticSampler,
-    DeterministicCombinatorialSampler,
+    DeterministicUniformSampler,
     DeterministicPermutationSampler,
     PermutationSampler,
     RandomHierarchicalSampler,
@@ -17,7 +17,7 @@ from pydvl.value.sampler import (
 @pytest.mark.parametrize(
     "sampler_class",
     [
-        DeterministicCombinatorialSampler,
+        DeterministicUniformSampler,
         UniformSampler,
         PermutationSampler,
         AntitheticSampler,
@@ -38,7 +38,7 @@ def test_proper(sampler_class, indices):
 @pytest.mark.parametrize(
     "sampler_class",
     [
-        DeterministicCombinatorialSampler,
+        DeterministicUniformSampler,
         UniformSampler,
         #    PermutationSampler,
         AntitheticSampler,
