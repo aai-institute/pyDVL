@@ -111,16 +111,10 @@ def _permutation_montecarlo_shapley(
 
 
 def _permutation_montecarlo_one_step(
-    u: Utility,
-    truncation: TruncationPolicy,
-    algorithm: str,
+    u: Utility, truncation: TruncationPolicy, algorithm: str
 ) -> ValuationResult:
-
     result = _permutation_montecarlo_shapley(
-        u,
-        done=MaxChecks(1),
-        truncation=truncation,
-        algorithm_name=algorithm,
+        u, done=MaxChecks(1), truncation=truncation, algorithm_name=algorithm
     )
     nans = np.isnan(result.values).sum()
     if nans > 0:
@@ -134,8 +128,8 @@ def _permutation_montecarlo_one_step(
 
 @deprecated(
     target=True,
-    deprecated_in="0.6.2",
-    remove_in="0.7.0",
+    deprecated_in="0.7.0",
+    remove_in="0.8.0",
     args_mapping=dict(
         coordinator_update_period=None, worker_update_period=None, progress=None
     ),
@@ -218,10 +212,7 @@ def permutation_montecarlo_shapley(
             # Ensure that we always have n_submitted_jobs in the queue or running
             for _ in range(n_submitted_jobs - len(futures)):
                 future = executor.submit(
-                    _permutation_montecarlo_one_step,
-                    u,
-                    truncation,
-                    algorithm,
+                    _permutation_montecarlo_one_step, u, truncation, algorithm
                 )
                 futures.add(future)
 

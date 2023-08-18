@@ -168,8 +168,8 @@ class BootstrapTruncation(TruncationPolicy):
 
 @deprecated(
     target=True,
-    deprecated_in="0.6.2",
-    remove_in="0.7.0",
+    deprecated_in="0.7.0",
+    remove_in="0.8.0",
     args_mapping=dict(coordinator_update_period=None, worker_update_period=None),
 )
 def truncated_montecarlo_shapley(
