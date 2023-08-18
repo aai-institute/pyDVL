@@ -6,8 +6,8 @@ import pytest
 from pydvl.utils import powerset
 from pydvl.value.sampler import (
     AntitheticSampler,
-    DeterministicUniformSampler,
     DeterministicPermutationSampler,
+    DeterministicUniformSampler,
     PermutationSampler,
     RandomHierarchicalSampler,
     UniformSampler,

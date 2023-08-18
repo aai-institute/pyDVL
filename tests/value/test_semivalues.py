@@ -7,8 +7,8 @@ import pytest
 from pydvl.utils import ParallelConfig, Utility
 from pydvl.value.sampler import (
     AntitheticSampler,
-    DeterministicUniformSampler,
     DeterministicPermutationSampler,
+    DeterministicUniformSampler,
     PermutationSampler,
     PowersetSampler,
     UniformSampler,
