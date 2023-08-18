@@ -4,8 +4,6 @@ from typing import Callable, Dict, Tuple
 import numpy as np
 import pytest
 
-from pydvl.influence.frameworks.torch_differentiable import model_hessian_low_rank
-
 torch = pytest.importorskip("torch")
 import torch
 import torch.nn.functional as F
@@ -15,6 +13,7 @@ from torch.optim import LBFGS
 from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence import TorchTwiceDifferentiable, compute_influences
+from pydvl.influence.frameworks.torch_differentiable import model_hessian_low_rank
 from pydvl.influence.general import InfluenceType, InversionMethod
 
 from .conftest import (
@@ -373,7 +372,6 @@ def test_influences_nn(
     assert not np.all(approx_influences == approx_influences.item(0))
 
 
-@pytest.mark.torch
 def minimal_training(
     model: torch.nn.Module,
     dataloader: DataLoader,
