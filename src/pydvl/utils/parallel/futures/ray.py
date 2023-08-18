@@ -46,8 +46,8 @@ class RayExecutor(Executor):
 
     @deprecated(
         target=True,
-        deprecated_in="0.6.2",
-        remove_in="0.7",
+        deprecated_in="0.7.0",
+        remove_in="0.8.0",
         args_mapping={"cancel_futures_on_exit": "cancel_futures"},
     )
     def __init__(
