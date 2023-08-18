@@ -2,10 +2,13 @@
 
 ## Unreleased
 
+- Fixes to parallel computation of generic semi-values: properly handle all
+  samplers and stopping criteria, irrespective of parallel backend
+  [PR #372](https://github.com/appliedAI-Initiative/pyDVL/pull/372)
 - Optimises memory usage in IF calculation
   [PR #375](https://github.com/appliedAI-Initiative/pyDVL/pull/376)
 - **Breaking Changes**
-  Returns information about hessian inversion to compute_influence_factors,
+  Return information about hessian inversion from compute_influence_factors,
   thus changing signature
   [PR #375](https://github.com/appliedAI-Initiative/pyDVL/pull/376)
 - Fix adding valuation results with overlapping indices and different lengths
