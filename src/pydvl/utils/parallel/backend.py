@@ -213,11 +213,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     ) -> tuple[list[ObjectRef], list[ObjectRef]]:
         num_returns: int = kwargs.get("num_returns", 1)
         timeout: float | None = kwargs.get("timeout", None)
-        return ray.wait(  # type: ignore
-            v,
-            num_returns=num_returns,
-            timeout=timeout,
-        )
+        return ray.wait(v, num_returns=num_returns, timeout=timeout)  # type: ignore
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
         ray_cpus = int(ray._private.state.cluster_resources()["CPU"])  # type: ignore
