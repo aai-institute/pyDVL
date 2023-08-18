@@ -4,6 +4,8 @@ from typing import Callable, Dict, Tuple
 import numpy as np
 import pytest
 
+from pydvl.influence.torch.torch_differentiable import model_hessian_low_rank
+
 torch = pytest.importorskip("torch")
 import torch
 import torch.nn.functional as F
@@ -466,3 +468,22 @@ def test_influences_arnoldi(
     )
 
     assert np.allclose(direct_influence, low_rank_influence, rtol=1e-1)
+
+    precomputed_low_rank = model_hessian_low_rank(
+        model,
+        training_data=train_data_loader,
+        hessian_perturbation=hessian_reg,
+        rank_estimate=num_parameters - 1,
+    )
+
+    precomputed_low_rank_influence = compute_influences(
+        model,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        progress=True,
+        influence_type=influence_type,
+        inversion_method=InversionMethod.Arnoldi,
+        low_rank_representation=precomputed_low_rank,
+    )
+
+    assert np.allclose(direct_influence, precomputed_low_rank_influence, rtol=1e-1)
