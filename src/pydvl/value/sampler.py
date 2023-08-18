@@ -54,11 +54,11 @@ __all__ = [
 ]
 
 T = TypeVar("T", bound=np.generic)
-SampleType = Tuple[T, NDArray[T]]
+SampleT = Tuple[T, NDArray[T]]
 Sequence.register(np.ndarray)
 
 
-class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
+class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
     """Samplers are custom iterables over subsets of indices.
 
     Calling ``iter()`` on a sampler returns an iterator over tuples of the form
@@ -181,17 +181,18 @@ class PowersetSampler(abc.ABC, Iterable[SampleType], Generic[T]):
         return f"{self.__class__.__name__}({self._indices}, {self._outer_indices})"
 
     @abc.abstractmethod
-    def __iter__(self) -> Iterator[SampleType]:
+    def __iter__(self) -> Iterator[SampleT]:
         ...
 
+    @classmethod
     @abc.abstractmethod
-    def weight(self, subset: NDArray[T]) -> float:
+    def weight(cls, n: int, subset_len: int) -> float:
         r"""Factor by which to multiply Monte Carlo samples, so that the
         mean converges to the desired expression.
 
         By the Law of Large Numbers, the sample mean of $\delta_i(S_j)$
-        converges
-        to the expectation under the distribution from which $S_j$ is sampled.
+        converges to the expectation under the distribution from which $S_j$ is
+        sampled.
 
         $$ \frac{1}{m}  \sum_{j = 1}^m \delta_i (S_j) c (S_j) \longrightarrow
            \underset{S \sim \mathcal{D}_{- i}}{\mathbb{E}} [\delta_i (S) c (
@@ -231,14 +232,15 @@ class DeterministicCombinatorialSampler(PowersetSampler[T]):
         kwargs.update({"index_iteration": PowersetSampler.IndexIteration.Sequential})
         super().__init__(indices, *args, **kwargs)
 
-    def __iter__(self) -> Iterator[SampleType]:
+    def __iter__(self) -> Iterator[SampleT]:
         for idx in self.iterindices():
             for subset in powerset(self.complement([idx])):
                 yield idx, np.array(subset)
                 self._n_samples += 1
 
-    def weight(self, subset: NDArray[T]) -> float:
-        return float(2 ** (self._n - 1)) if self._n > 0 else 1.0
+    @classmethod
+    def weight(cls, n: int, subset_len: int) -> float:
+        return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
 class UniformSampler(PowersetSampler[T]):
@@ -263,7 +265,7 @@ class UniformSampler(PowersetSampler[T]):
 
     """
 
-    def __iter__(self) -> Iterator[SampleType]:
+    def __iter__(self) -> Iterator[SampleT]:
         while True:
             for idx in self.iterindices():
                 subset = random_subset(self.complement([idx]))
@@ -272,12 +274,12 @@ class UniformSampler(PowersetSampler[T]):
             if self._n_samples == 0:  # Empty index set
                 break
 
-    def weight(self, subset: NDArray[T]) -> float:
+    @classmethod
+    def weight(cls, n: int, subset_len: int) -> float:
         """Correction coming from Monte Carlo integration so that the mean of
         the marginals converges to the value: the uniform distribution over the
-        powerset of a set with n-1 elements has mass 2^{n-1} over each subset.
-        The factor 1 / n corresponds to the one in the Shapley definition."""
-        return float(2 ** (self._n - 1)) if self._n > 0 else 1.0
+        powerset of a set with n-1 elements has mass 2^{n-1} over each subset."""
+        return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
 class AntitheticSampler(PowersetSampler[T]):
@@ -289,7 +291,7 @@ class AntitheticSampler(PowersetSampler[T]):
     the set $S$, including the index $i$ itself.
     """
 
-    def __iter__(self) -> Iterator[SampleType]:
+    def __iter__(self) -> Iterator[SampleT]:
         while True:
             for idx in self.iterindices():
                 subset = random_subset(self.complement([idx]))
@@ -300,8 +302,9 @@ class AntitheticSampler(PowersetSampler[T]):
             if self._n_samples == 0:  # Empty index set
                 break
 
-    def weight(self, subset: NDArray[T]) -> float:
-        return float(2 ** (self._n - 1)) if self._n > 0 else 1.0
+    @classmethod
+    def weight(cls, n: int, subset_len: int) -> float:
+        return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
 class PermutationSampler(PowersetSampler[T]):
@@ -321,9 +324,10 @@ class PermutationSampler(PowersetSampler[T]):
        will be doubled wrt. a "direct" implementation of permutation MC
     """
 
-    def __iter__(self) -> Iterator[SampleType]:
+    def __iter__(self) -> Iterator[SampleT]:
+        rng = np.random.default_rng()  # FIXME: waiting for better rng handling
         while True:
-            permutation = np.random.permutation(self._indices)
+            permutation = rng.permutation(self._indices)
             for i, idx in enumerate(permutation):
                 yield idx, permutation[:i]
                 self._n_samples += 1
@@ -335,8 +339,9 @@ class PermutationSampler(PowersetSampler[T]):
         a copy of the full sampler."""
         return super().__getitem__(slice(None))
 
-    def weight(self, subset: NDArray[T]) -> float:
-        return self._n * math.comb(self._n - 1, len(subset)) if self._n > 0 else 1.0
+    @classmethod
+    def weight(cls, n: int, subset_len: int) -> float:
+        return n * math.comb(n - 1, subset_len) if n > 0 else 1.0
 
 
 class DeterministicPermutationSampler(PermutationSampler[T]):
@@ -347,15 +352,18 @@ class DeterministicPermutationSampler(PermutationSampler[T]):
     .. warning::
        This sampler requires caching to be enabled or computation
        will be doubled wrt. a "direct" implementation of permutation MC
+
+    .. warning::
+       This sampler is not parallelizable, as it always iterates over the whole
+       set of permutations in the same order. Different processes would always
+       return the same values for all indices.
     """
 
-    def __iter__(self) -> Iterator[SampleType]:
+    def __iter__(self) -> Iterator[SampleT]:
         for permutation in permutations(self._indices):
             for i, idx in enumerate(permutation):
                 yield idx, np.array(permutation[:i], dtype=self._indices.dtype)
                 self._n_samples += 1
-            if self._n_samples == 0:  # Empty index set
-                break
 
 
 class RandomHierarchicalSampler(PowersetSampler[T]):
@@ -365,7 +373,7 @@ class RandomHierarchicalSampler(PowersetSampler[T]):
        This is unnecessary, but a step towards proper stratified sampling.
     """
 
-    def __iter__(self) -> Iterator[SampleType]:
+    def __iter__(self) -> Iterator[SampleT]:
         while True:
             for idx in self.iterindices():
                 k = np.random.choice(np.arange(len(self._indices)), size=1).item()
@@ -375,5 +383,6 @@ class RandomHierarchicalSampler(PowersetSampler[T]):
             if self._n_samples == 0:  # Empty index set
                 break
 
-    def weight(self, subset: NDArray[T]) -> float:
-        return float(2 ** (self._n - 1)) if self._n > 0 else 1.0
+    @classmethod
+    def weight(cls, n: int, subset_len: int) -> float:
+        return float(2 ** (n - 1)) if n > 0 else 1.0

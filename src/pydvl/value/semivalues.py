@@ -45,18 +45,17 @@ of :footcite:t:`ghorbani_data_2019`, the Banzhaf index of
 from __future__ import annotations
 
 import math
-from concurrent.futures import Future
 from enum import Enum
 from functools import partial
-from itertools import takewhile
-from typing import Any, Iterator, Protocol, Type, cast
+from typing import Protocol, Tuple, Type, TypeVar, cast
 
+import numpy as np
 import scipy as sp
 from tqdm import tqdm
 
 from pydvl.utils import ParallelConfig, Utility
 from pydvl.value import ValuationResult
-from pydvl.value.sampler import PermutationSampler, PowersetSampler
+from pydvl.value.sampler import PermutationSampler, PowersetSampler, SampleT
 from pydvl.value.stopping import MaxUpdates, StoppingCriterion
 
 __all__ = [
@@ -83,46 +82,23 @@ class SVCoefficient(Protocol):
         ...
 
 
-def _semivalues(
-    sampler: PowersetSampler,
-    u: Utility,
-    coefficient: SVCoefficient,
-    done: StoppingCriterion,
-    *,
-    progress: bool = False,
-    job_id: int = 1,
-    interrupt_flag: Any = None,  # TO DO
-) -> ValuationResult:
-    r"""Serial computation of semi-values. This is a helper function for
+IndexT = TypeVar("IndexT", bound=np.generic)
+MarginalT = Tuple[IndexT, float]
+
+
+def _marginal(u: Utility, coefficient: SVCoefficient, sample: SampleT) -> MarginalT:
+    """Computation of marginal utility. This is a helper function for
     :func:`semivalues`.
 
-    :param sampler: The subset sampler to use for utility computations.
     :param u: Utility object with model, data, and scoring function.
-    :param coefficient: The semivalue coefficient
-    :param done: Stopping criterion.
-    :param progress: Whether to display progress bars for each job.
-    :param job_id: id to use for reporting progress.
-    :param interrupt_flag: Flag to check for interrupt.
-    :return: Object with the results.
+    :param coefficient: The semi-value coefficient and sampler weight
+    :param sample: A tuple of idx, subset from the sampler to compute its
+        marginal utility.
     """
-    n = len(u.data.indices)
-    result = ValuationResult.zeros(
-        algorithm=f"semivalue-{str(sampler)}-{coefficient.__name__}",
-        indices=sampler.indices,
-        data_names=[u.data.data_names[i] for i in sampler.indices],
-    )
-
-    samples = takewhile(lambda _: not done(result), sampler)
-    pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
-    for idx, s in samples:
-        pbar.n = 100 * done.completion()
-        pbar.refresh()
-        marginal = (
-            (u({idx}.union(s)) - u(s)) * coefficient(n, len(s)) * sampler.weight(s)
-        )
-        result.update(idx, marginal)
-
-    return result
+    n = len(u.data)
+    idx, s = sample
+    marginal = (u({idx}.union(s)) - u(s)) * coefficient(n, len(s))
+    return idx, marginal
 
 
 def semivalues(
@@ -148,61 +124,51 @@ def semivalues(
     :return: Object with the results.
 
     """
-    from concurrent.futures import FIRST_COMPLETED, wait
+    from concurrent.futures import FIRST_COMPLETED, Future, wait
 
     from pydvl.utils import effective_n_jobs, init_executor, init_parallel_backend
 
+    result = ValuationResult.zeros(
+        algorithm=f"semivalue-{str(sampler)}-{coefficient.__name__}",
+        indices=u.data.indices,
+        data_names=u.data.data_names,
+    )
+
     parallel_backend = init_parallel_backend(config)
     u = parallel_backend.put(u)
-    coefficient = parallel_backend.put(coefficient)
+    correction = parallel_backend.put(
+        lambda n, k: coefficient(n, k) * sampler.weight(n, k)
+    )
 
     max_workers = effective_n_jobs(n_jobs, config)
     n_submitted_jobs = 2 * max_workers  # number of jobs in the queue
 
-    accumulated_result = ValuationResult.zeros(
-        algorithm=f"semivalue-{str(sampler)}-{coefficient.__name__}"
-    )
+    sampler_it = iter(sampler)
+    job = partial(_marginal, u=u, coefficient=correction)
+    pbar = tqdm(disable=not progress, total=100, unit="%")
 
-    if isinstance(sampler, PermutationSampler):
-        # TODO: add attribute to allow configuration of multiple updates per job
-        #  (e.g. permutations)
-        updates_per_job = getattr(sampler, "max_samples_parallel", 1)
+    with init_executor(
+        max_workers=max_workers, config=config, cancel_futures=True
+    ) as executor:
+        pending: set[Future] = set()
+        while True:
+            pbar.n = 100 * done.completion()
+            pbar.refresh()
 
-        with init_executor(
-            max_workers=max_workers, config=config, cancel_futures=True
-        ) as executor:
-            futures: set[Future] = set()
-            while True:
-                completed_futures, futures = wait(
-                    futures, timeout=60, return_when=FIRST_COMPLETED
-                )
-                for future in completed_futures:
-                    accumulated_result += future.result()
-                    if done(accumulated_result):
-                        return accumulated_result
+            completed, pending = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
+            for future in completed:
+                idx, marginal = future.result()
+                result.update(idx, marginal)
+                if done(result):
+                    return result
 
-                # Ensure that we always have n_submitted_jobs running
-                for _ in range(n_submitted_jobs - len(futures)):
-                    future = executor.submit(
-                        _semivalues,
-                        sampler=sampler[:],
-                        u=u,
-                        coefficient=coefficient,
-                        done=MaxUpdates(updates_per_job),
-                    )
-                    futures.add(future)
-    else:
-        with init_executor(
-            max_workers=max_workers, config=config, cancel_futures=False
-        ) as executor:
-            results: Iterator[ValuationResult] = executor.map(
-                partial(_semivalues, u=u, coefficient=coefficient, done=done),
-                sampler,
-                chunksize=max(1, sampler.n_samples // max_workers),
-            )
-            for r in results:
-                accumulated_result += r
-            return accumulated_result
+            # Ensure that we always have n_submitted_jobs running
+            try:
+                for _ in range(n_submitted_jobs - len(pending)):
+                    pending.add(executor.submit(job, sample=next(sampler_it)))
+            except StopIteration:
+                if len(pending) == 0:
+                    return result
 
 
 def shapley_coefficient(n: int, k: int) -> float:
