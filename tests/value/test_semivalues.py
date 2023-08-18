@@ -4,7 +4,7 @@ from typing import Dict, Type
 import numpy as np
 import pytest
 
-from pydvl.utils import Utility
+from pydvl.utils import ParallelConfig, Utility
 from pydvl.value.sampler import (
     AntitheticSampler,
     DeterministicCombinatorialSampler,
@@ -16,14 +16,13 @@ from pydvl.value.sampler import (
 from pydvl.value.semivalues import (
     SemiValueMode,
     SVCoefficient,
-    _semivalues,
     banzhaf_coefficient,
     beta_coefficient,
     compute_semivalues,
     semivalues,
     shapley_coefficient,
 )
-from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates, StoppingCriterion
+from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates
 
 from . import check_values
 
@@ -39,30 +38,25 @@ from . import check_values
         AntitheticSampler,
     ],
 )
-@pytest.mark.parametrize(
-    "coefficient, criterion",
-    [
-        (shapley_coefficient, AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10)),
-        (
-            beta_coefficient(1, 1),
-            AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10),
-        ),
-    ],
-)
-@pytest.mark.parametrize("method", [_semivalues, semivalues])
+@pytest.mark.parametrize("coefficient", [shapley_coefficient, beta_coefficient(1, 1)])
 def test_shapley(
     num_samples: int,
     analytic_shapley,
     sampler: Type[PowersetSampler],
     coefficient: SVCoefficient,
-    criterion: StoppingCriterion,
-    method,
+    n_jobs: int,
+    parallel_config: ParallelConfig,
 ):
     u, exact_values = analytic_shapley
-    kwargs = dict()
-    if method == semivalues:
-        kwargs.update(dict(n_jobs=2))
-    values = method(sampler(u.data.indices), u, coefficient, criterion, **kwargs)
+    criterion = AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2 ** (num_samples * 2))
+    values = semivalues(
+        sampler(u.data.indices),
+        u,
+        coefficient,
+        criterion,
+        n_jobs=n_jobs,
+        config=parallel_config,
+    )
     check_values(values, exact_values, rtol=0.15)
 
 
@@ -77,20 +71,21 @@ def test_shapley(
         AntitheticSampler,
     ],
 )
-@pytest.mark.parametrize("method", [_semivalues, semivalues])
 def test_banzhaf(
-    num_samples: int, analytic_banzhaf, sampler: Type[PowersetSampler], method
+    num_samples: int,
+    analytic_banzhaf,
+    sampler: Type[PowersetSampler],
+    n_jobs: int,
+    parallel_config: ParallelConfig,
 ):
     u, exact_values = analytic_banzhaf
-    kwargs = dict()
-    if method == semivalues:
-        kwargs.update(dict(n_jobs=2))
-    values = method(
+    values = semivalues(
         sampler(u.data.indices),
         u,
         banzhaf_coefficient,
-        AbsoluteStandardError(0.02, 1.0) | MaxUpdates(300),
-        **kwargs,
+        AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10),
+        n_jobs=n_jobs,
+        config=parallel_config,
     )
     check_values(values, exact_values, rtol=0.15)
 
@@ -138,5 +133,5 @@ def test_dispatch_compute_semi_values(
         mode=semi_value_mode,
         done=MaxUpdates(1),
         **semi_value_mode_kwargs,
-        progress=True,
+        n_jobs=1,
     )
