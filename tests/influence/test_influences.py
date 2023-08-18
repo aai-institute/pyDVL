@@ -373,6 +373,7 @@ def test_influences_nn(
     assert not np.all(approx_influences == approx_influences.item(0))
 
 
+@pytest.mark.torch
 def minimal_training(
     model: torch.nn.Module,
     dataloader: DataLoader,
