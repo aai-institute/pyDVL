@@ -4,8 +4,6 @@ from typing import Callable, Dict, Tuple
 import numpy as np
 import pytest
 
-from pydvl.influence.torch.torch_differentiable import model_hessian_low_rank
-
 torch = pytest.importorskip("torch")
 import torch
 import torch.nn.functional as F
@@ -15,7 +13,7 @@ from torch.optim import LBFGS
 from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence import InfluenceType, InversionMethod, compute_influences
-from pydvl.influence.torch import TorchTwiceDifferentiable
+from pydvl.influence.torch import TorchTwiceDifferentiable, model_hessian_low_rank
 
 from .conftest import (
     add_noise_to_linear_model,

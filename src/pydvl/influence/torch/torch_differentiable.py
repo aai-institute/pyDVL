@@ -35,6 +35,7 @@ __all__ = [
     "solve_arnoldi",
     "lanzcos_low_rank_hessian_approx",
     "as_tensor",
+    "model_hessian_low_rank",
 ]
 
 logger = logging.getLogger(__name__)
