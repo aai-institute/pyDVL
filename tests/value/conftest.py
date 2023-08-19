@@ -126,13 +126,13 @@ def linear_shapley(linear_dataset, scorer, n_jobs):
 @pytest.fixture(scope="module", params=["joblib", "ray-local", "ray-external"])
 def parallel_config(request):
     if "ray" not in request.param:
-        yield ParallelConfig(backend=request.param)
+        yield ParallelConfig(backend=request.param, wait_timeout=0.1)
     elif request.param == "ray-local":
-        yield ParallelConfig(backend="ray")
+        yield ParallelConfig(backend="ray", wait_timeout=0.1)
         ray.shutdown()
     elif request.param == "ray-external":
         # Starts a head-node for the cluster.
         cluster = Cluster(initialize_head=True, head_node_args={"num_cpus": 4})
-        yield ParallelConfig(backend="ray", address=cluster.address)
+        yield ParallelConfig(backend="ray", address=cluster.address, wait_timeout=0.1)
         ray.shutdown()
         cluster.shutdown()
