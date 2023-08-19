@@ -200,7 +200,7 @@ def num_workers():
     if os.getenv("CI"):
         return 2
     # And a maximum of 8 CPUs locally (most tests don't really benefit from more)
-    return max(1, min(available_cpus() - 1, 8))
+    return max(1, min(available_cpus() - 1, 4))
 
 
 @pytest.fixture
