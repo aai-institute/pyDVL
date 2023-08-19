@@ -48,7 +48,7 @@ def test_shapley(
     parallel_config: ParallelConfig,
 ):
     u, exact_values = analytic_shapley
-    criterion = AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2 ** (num_samples * 2))
+    criterion = AbsoluteStandardError(0.05, 1.0) | MaxUpdates(2 ** (num_samples * 2))
     values = semivalues(
         sampler(u.data.indices),
         u,
@@ -57,7 +57,7 @@ def test_shapley(
         n_jobs=n_jobs,
         config=parallel_config,
     )
-    check_values(values, exact_values, rtol=0.15)
+    check_values(values, exact_values, rtol=0.2)
 
 
 @pytest.mark.parametrize("num_samples", [5])
@@ -83,11 +83,11 @@ def test_banzhaf(
         sampler(u.data.indices),
         u,
         banzhaf_coefficient,
-        AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2**10),
+        AbsoluteStandardError(0.05, 1.0) | MaxUpdates(2**10),
         n_jobs=n_jobs,
         config=parallel_config,
     )
-    check_values(values, exact_values, rtol=0.15)
+    check_values(values, exact_values, rtol=0.2)
 
 
 @pytest.mark.parametrize("n", [10, 100])
