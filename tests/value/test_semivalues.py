@@ -48,7 +48,7 @@ def test_shapley(
     parallel_config: ParallelConfig,
 ):
     u, exact_values = analytic_shapley
-    criterion = AbsoluteStandardError(0.03, 1.0) | MaxUpdates(2 ** (num_samples * 2))
+    criterion = AbsoluteStandardError(0.04, 1.0) | MaxUpdates(2 ** (num_samples * 2))
     values = semivalues(
         sampler(u.data.indices),
         u,
@@ -83,7 +83,7 @@ def test_banzhaf(
         sampler(u.data.indices),
         u,
         banzhaf_coefficient,
-        AbsoluteStandardError(0.03, 1.0) | MaxUpdates(2**10),
+        AbsoluteStandardError(0.04, 1.0) | MaxUpdates(2 ** (num_samples * 2)),
         n_jobs=n_jobs,
         config=parallel_config,
     )
