@@ -84,8 +84,6 @@ log = logging.getLogger(__name__)
 class SVCoefficient(Protocol):
     """A coefficient for the computation of semi-values."""
 
-    __name__: str
-
     def __call__(self, n: int, k: int) -> float:
         """Computes the coefficient for a given subset size.
 
@@ -155,7 +153,7 @@ def semivalues(
         )
 
     result = ValuationResult.zeros(
-        algorithm=f"semivalue-{str(sampler)}-{coefficient.__name__}",
+        algorithm=f"semivalue-{str(sampler)}-{coefficient.__name__}",  # type: ignore
         indices=u.data.indices,
         data_names=u.data.data_names,
     )
