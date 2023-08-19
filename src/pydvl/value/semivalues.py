@@ -44,6 +44,7 @@ of :footcite:t:`ghorbani_data_2019`, the Banzhaf index of
 """
 from __future__ import annotations
 
+import logging
 import math
 from enum import Enum
 from typing import Protocol, Tuple, Type, TypeVar, cast
@@ -65,6 +66,8 @@ __all__ = [
     "compute_semivalues",
     "SemiValueMode",
 ]
+
+log = logging.getLogger(__name__)
 
 
 class SVCoefficient(Protocol):
@@ -126,6 +129,12 @@ def semivalues(
     from concurrent.futures import FIRST_COMPLETED, Future, wait
 
     from pydvl.utils import effective_n_jobs, init_executor, init_parallel_backend
+
+    if isinstance(sampler, PermutationSampler) and not u.enable_cache:
+        log.warning(
+            "PermutationSampler requires caching to be enabled or computation "
+            "will be doubled wrt. a 'direct' implementation of permutation MC"
+        )
 
     result = ValuationResult.zeros(
         algorithm=f"semivalue-{str(sampler)}-{coefficient.__name__}",
