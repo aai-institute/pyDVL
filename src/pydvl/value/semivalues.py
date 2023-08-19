@@ -9,13 +9,18 @@ where the coefficients $w(k)$ satisfy the property:
 
 $$\sum_{k=1}^n w(k) = 1.$$
 
+.. note::
+   For implementation consistency, we slightly depart from the common definition
+   of semi-values, which includes a factor $1/n$ in the sum over subsets.
+   Instead, we subsume this factor into the coefficient $w(k)$.
+
 As such, the computation of a semi-value requires two components:
 
 1. A **subset sampler** that generates subsets of the set $D$ of interest.
 2. A **coefficient** $w(k)$ that assigns a weight to each subset size $k$.
 
 Samplers can be found in :mod:`pydvl.value.sampler`, and can be classified into
-two categories: powerset samplers and (one) permutation sampler. Powerset
+two categories: powerset samplers and permutation samplers. Powerset
 samplers generate subsets of $D_{-i}$, while the permutation sampler generates
 permutations of $D$. The former conform to the above definition of semi-values,
 while the latter reformulates it as:
@@ -30,16 +35,18 @@ position where $i$ appears (see :ref:`data valuation` for details), and
 $\tilde{w}(k) = n \choose{n-1}{k} w(k)$ is the weight correction due to the
 reformulation.
 
+.. warning::
+   :class:`~pydvl.value.sampler.PermutationSampler` and
+   :class:`~pydvl.value.sampler.DeterministicPermutationSampler`
+   require caching to be enabled or computation will be doubled wrt. a 'direct'
+   implementation of permutation MC.
 
 There are several pre-defined coefficients, including the Shapley value
 of :footcite:t:`ghorbani_data_2019`, the Banzhaf index of
 :footcite:t:`wang_data_2022`, and the Beta coefficient of
-:footcite:t:`kwon_beta_2022`.
-
-.. note::
-   For implementation consistency, we slightly depart from the common definition
-   of semi-values, which includes a factor $1/n$ in the sum over subsets.
-   Instead, we subsume this factor into the coefficient $w(k)$.
+:footcite:t:`kwon_beta_2022`. For each of these methods, there is a convenience
+wrapper function. Respectively, these are: :func:`compute_shapley_semivalues`,
+:func:`compute_banzhaf_semivalues`, and :func:`compute_beta_shapley_semivalues`.
 
 """
 from __future__ import annotations
@@ -51,6 +58,7 @@ from typing import Protocol, Tuple, Type, TypeVar, cast
 
 import numpy as np
 import scipy as sp
+from deprecate import deprecated
 from tqdm import tqdm
 
 from pydvl.utils import ParallelConfig, Utility
@@ -59,8 +67,11 @@ from pydvl.value.sampler import PermutationSampler, PowersetSampler, SampleT
 from pydvl.value.stopping import MaxUpdates, StoppingCriterion
 
 __all__ = [
-    "banzhaf_coefficient",
+    "compute_banzhaf_semivalues",
+    "compute_beta_shapley_semivalues",
+    "compute_shapley_semivalues",
     "beta_coefficient",
+    "banzhaf_coefficient",
     "shapley_coefficient",
     "semivalues",
     "compute_semivalues",
@@ -103,6 +114,11 @@ def _marginal(u: Utility, coefficient: SVCoefficient, sample: SampleT) -> Margin
     return idx, marginal
 
 
+# @deprecated(
+#     target=compute_semivalues,  # TODO: rename this to compute_semivalues
+#     deprecated_in="0.8.0",
+#     remove_in="0.9.0",
+# )
 def semivalues(
     sampler: PowersetSampler,
     u: Utility,
@@ -215,12 +231,126 @@ def beta_coefficient(alpha: float, beta: float) -> SVCoefficient:
     return cast(SVCoefficient, beta_coefficient_w)
 
 
+def compute_shapley_semivalues(
+    u: Utility,
+    *,
+    done: StoppingCriterion = MaxUpdates(100),
+    sampler_t: Type[PowersetSampler] = PermutationSampler,
+    n_jobs: int = 1,
+    config: ParallelConfig = ParallelConfig(),
+    progress: bool = False,
+) -> ValuationResult:
+    """Computes Shapley values for a given utility function.
+
+    This is a convenience wrapper for :func:`semivalues` with the Shapley
+    coefficient. Use :func:`~pydvl.value.shapley.common.compute_shapley_values`
+    for a more flexible interface and additional methods, including Truncated
+    Monte Carlo.
+
+    :param u: Utility object with model, data, and scoring function.
+    :param done: Stopping criterion.
+    :param sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
+        for a list.
+    :param n_jobs: Number of parallel jobs to use.
+    :param config: Object configuring parallel computation, with cluster
+        address, number of cpus, etc.
+    :param progress: Whether to display a progress bar.
+    """
+    return semivalues(
+        sampler_t(u.data.indices),
+        u,
+        shapley_coefficient,
+        done,
+        n_jobs=n_jobs,
+        config=config,
+        progress=progress,
+    )
+
+
+def compute_banzhaf_semivalues(
+    u: Utility,
+    *,
+    done: StoppingCriterion = MaxUpdates(100),
+    sampler_t: Type[PowersetSampler] = PermutationSampler,
+    n_jobs: int = 1,
+    config: ParallelConfig = ParallelConfig(),
+    progress: bool = False,
+) -> ValuationResult:
+    """Computes Banzhaf values for a given utility function.
+
+    This is a convenience wrapper for :func:`semivalues` with the Banzhaf
+    coefficient.
+
+        :param u: Utility object with model, data, and scoring function.
+    :param done: Stopping criterion.
+    :param sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
+        for a list.
+    :param n_jobs: Number of parallel jobs to use.
+    :param config: Object configuring parallel computation, with cluster
+        address, number of cpus, etc.
+    :param progress: Whether to display a progress bar.
+    """
+    return semivalues(
+        sampler_t(u.data.indices),
+        u,
+        banzhaf_coefficient,
+        done,
+        n_jobs=n_jobs,
+        config=config,
+        progress=progress,
+    )
+
+
+def compute_beta_shapley_semivalues(
+    u: Utility,
+    *,
+    alpha: float = 1,
+    beta: float = 1,
+    done: StoppingCriterion = MaxUpdates(100),
+    sampler_t: Type[PowersetSampler] = PermutationSampler,
+    n_jobs: int = 1,
+    config: ParallelConfig = ParallelConfig(),
+    progress: bool = False,
+) -> ValuationResult:
+    """Computes Beta Shapley values for a given utility function.
+
+    This is a convenience wrapper for :func:`semivalues` with the Beta Shapley
+    coefficient.
+
+    :param u: Utility object with model, data, and scoring function.
+    :param alpha: Alpha parameter of the Beta distribution.
+    :param beta: Beta parameter of the Beta distribution.
+    :param done: Stopping criterion.
+    :param sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
+        for a list.
+    :param n_jobs: Number of parallel jobs to use.
+    :param config: Object configuring parallel computation, with cluster
+        address, number of cpus, etc.
+    :param progress: Whether to display a progress bar.
+    """
+    return semivalues(
+        sampler_t(u.data.indices),
+        u,
+        beta_coefficient(alpha, beta),
+        done,
+        n_jobs=n_jobs,
+        config=config,
+        progress=progress,
+    )
+
+
+@deprecated(
+    target=True,
+    deprecated_in="0.7.0",
+    remove_in="0.8.0",
+)
 class SemiValueMode(str, Enum):
     Shapley = "shapley"
     BetaShapley = "beta_shapley"
     Banzhaf = "banzhaf"
 
 
+@deprecated(target=True, deprecated_in="0.7.0", remove_in="0.8.0")
 def compute_semivalues(
     u: Utility,
     *,
@@ -230,14 +360,16 @@ def compute_semivalues(
     n_jobs: int = 1,
     **kwargs,
 ) -> ValuationResult:
-    """Entry point for most common semi-value computations. All are implemented
-    with permutation sampling.
+    """Convenience entry point for most common semi-value computations.
 
-    For any other sampling method, use :func:`parallel_semivalues` directly.
+    .. warning::
+       This method is deprecated and will be removed in 0.8.0. Use
+       :func:`~pydvl.value.semivalues.compute_shapley_semivalues`,
+       :func:`~pydvl.value.semivalues.compute_banzhaf_semivalues`, or
+       :func:`~pydvl.value.semivalues.compute_beta_shapley_semivalues`instead
 
-    See :ref:`data valuation` for an overview of valuation.
-
-    The modes supported are:
+    The modes supported with this interface are the following. For greater
+    flexibility use :func:`~pydvl.value.semivalues.semivalues` directly.
 
     - :attr:`SemiValueMode.Shapley`: Shapley values.
     - :attr:`SemiValueMode.BetaShapley`: Implements the Beta Shapley semi-value
@@ -246,6 +378,8 @@ def compute_semivalues(
         distribution (both default to 1).
     - :attr:`SemiValueMode.Banzhaf`: Implements the Banzhaf semi-value as
         introduced in :footcite:t:`wang_data_2022`.
+
+    See :ref:`data valuation` for an overview of data valuation.
 
     :param u: Utility object with model, data, and scoring function.
     :param done: Stopping criterion.

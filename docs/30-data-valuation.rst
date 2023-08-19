@@ -629,13 +629,13 @@ of weights which is reported to work better.
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_semivalues
+   from pydvl.value import compute_beta_shapley_semivalues
 
    model = ...
    data = Dataset(...)
    utility = Utility(model, data)
-   values = compute_semivalues(
-       u=utility, mode="beta_shapley", done=MaxUpdates(500), alpha=1, beta=16
+   values = compute_beta_shapley_semivalues(
+       u=utility, alpha=1, beta=16, done=MaxUpdates(500)
    )
 
 .. _banzhaf indices:
@@ -666,12 +666,12 @@ robust to variance in the utility function than Shapley and Beta Shapley values.
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_semivalues
+   from pydvl.value import compute_banzhaf_semivalues
 
    model = ...
    data = Dataset(...)
    utility = Utility(model, data)
-   values = compute_semivalues( u=utility, mode="banzhaf", done=MaxUpdates(500))
+   values = compute_banzhaf_semivalues(u=utility, done=MaxUpdates(500))
 
 
 .. _problems of data values:
