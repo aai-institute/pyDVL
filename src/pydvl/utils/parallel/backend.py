@@ -120,8 +120,10 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
         config: ParallelConfig = ParallelConfig(),
         cancel_futures: CancellationPolicy = CancellationPolicy.NONE,
     ) -> Executor:
-        if cancel_futures is not CancellationPolicy.NONE:
-            log.warning("CancellationPolicy is not supported by the joblib backend")
+        if cancel_futures not in (CancellationPolicy.NONE, False):
+            log.warning(
+                "Cancellation of futures is not supported by the joblib backend"
+            )
         return cast(Executor, get_reusable_executor(max_workers=max_workers))
 
     def get(self, v: T, *args, **kwargs) -> T:
