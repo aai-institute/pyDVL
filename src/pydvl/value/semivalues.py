@@ -46,7 +46,6 @@ from __future__ import annotations
 
 import math
 from enum import Enum
-from functools import partial
 from typing import Protocol, Tuple, Type, TypeVar, cast
 
 import numpy as np
@@ -144,7 +143,6 @@ def semivalues(
     n_submitted_jobs = 2 * max_workers  # number of jobs in the queue
 
     sampler_it = iter(sampler)
-    job = partial(_marginal, u=u, coefficient=correction)
     pbar = tqdm(disable=not progress, total=100, unit="%")
 
     with init_executor(
@@ -165,7 +163,14 @@ def semivalues(
             # Ensure that we always have n_submitted_jobs running
             try:
                 for _ in range(n_submitted_jobs - len(pending)):
-                    pending.add(executor.submit(job, sample=next(sampler_it)))
+                    pending.add(
+                        executor.submit(
+                            _marginal,
+                            u=u,
+                            coefficient=correction,
+                            sample=next(sampler_it),
+                        )
+                    )
             except StopIteration:
                 if len(pending) == 0:
                     return result
