@@ -36,7 +36,7 @@ $\tilde{w}(k) = n \choose{n-1}{k} w(k)$ is the weight correction due to the
 reformulation.
 
 .. warning::
-   :class:`~pydvl.value.sampler.PermutationSampler` and
+   Both :class:`~pydvl.value.sampler.PermutationSampler` and
    :class:`~pydvl.value.sampler.DeterministicPermutationSampler`
    require caching to be enabled or computation will be doubled wrt. a 'direct'
    implementation of permutation MC.
@@ -105,8 +105,10 @@ def _marginal(u: Utility, coefficient: SVCoefficient, sample: SampleT) -> Margin
 
     :param u: Utility object with model, data, and scoring function.
     :param coefficient: The semi-value coefficient and sampler weight
-    :param sample: A tuple of idx, subset from the sampler to compute its
-        marginal utility.
+    :param sample: A tuple of index and subset of indices to compute a marginal
+        utility.
+
+    :return: tuple with index and its marginal utility.
     """
     n = len(u.data)
     idx, s = sample
@@ -138,9 +140,9 @@ def semivalues(
     :param n_jobs: Number of parallel jobs to use.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
-    :param progress: Whether to display progress bars for each job.
-    :return: Object with the results.
+    :param progress: Whether to display a progress bar.
 
+    :return: Object with the results.
     """
     from concurrent.futures import FIRST_COMPLETED, Future, wait
 
@@ -255,6 +257,8 @@ def compute_shapley_semivalues(
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param progress: Whether to display a progress bar.
+
+    :return: Object with the results.
     """
     return semivalues(
         sampler_t(u.data.indices),
@@ -281,7 +285,7 @@ def compute_banzhaf_semivalues(
     This is a convenience wrapper for :func:`semivalues` with the Banzhaf
     coefficient.
 
-        :param u: Utility object with model, data, and scoring function.
+    :param u: Utility object with model, data, and scoring function.
     :param done: Stopping criterion.
     :param sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
         for a list.
@@ -289,6 +293,8 @@ def compute_banzhaf_semivalues(
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param progress: Whether to display a progress bar.
+
+    :return: Object with the results.
     """
     return semivalues(
         sampler_t(u.data.indices),
@@ -327,6 +333,8 @@ def compute_beta_shapley_semivalues(
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param progress: Whether to display a progress bar.
+
+    :return: Object with the results.
     """
     return semivalues(
         sampler_t(u.data.indices),
@@ -366,18 +374,18 @@ def compute_semivalues(
        This method is deprecated and will be removed in 0.8.0. Use
        :func:`~pydvl.value.semivalues.compute_shapley_semivalues`,
        :func:`~pydvl.value.semivalues.compute_banzhaf_semivalues`, or
-       :func:`~pydvl.value.semivalues.compute_beta_shapley_semivalues`instead
+       :func:`~pydvl.value.semivalues.compute_beta_shapley_semivalues` instead
 
     The modes supported with this interface are the following. For greater
     flexibility use :func:`~pydvl.value.semivalues.semivalues` directly.
 
     - :attr:`SemiValueMode.Shapley`: Shapley values.
     - :attr:`SemiValueMode.BetaShapley`: Implements the Beta Shapley semi-value
-        as introduced in :footcite:t:`kwon_beta_2022`. Pass additional keyword
-        arguments ``alpha`` and ``beta`` to set the parameters of the Beta
-        distribution (both default to 1).
+      as introduced in :footcite:t:`kwon_beta_2022`. Pass additional keyword
+      arguments ``alpha`` and ``beta`` to set the parameters of the Beta
+      distribution (both default to 1).
     - :attr:`SemiValueMode.Banzhaf`: Implements the Banzhaf semi-value as
-        introduced in :footcite:t:`wang_data_2022`.
+      introduced in :footcite:t:`wang_data_2022`.
 
     See :ref:`data valuation` for an overview of data valuation.
 
@@ -390,6 +398,8 @@ def compute_semivalues(
     :param n_jobs: Number of parallel jobs to use.
     :param kwargs: Additional keyword arguments passed to
         :func:`~pydvl.value.semivalues.semivalues`.
+
+    :return: Object with the results.
     """
     sampler_instance = sampler_t(u.data.indices)
     if mode == SemiValueMode.Shapley:
