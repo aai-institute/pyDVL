@@ -132,7 +132,6 @@ def memcached_service(docker_ip, docker_services, do_not_start_memcache):
 
 @pytest.fixture(scope="function")
 def memcache_client_config(memcached_service) -> MemcachedClientConfig:
-
     client_config = MemcachedClientConfig(
         server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
     )
@@ -199,7 +198,7 @@ def num_workers():
     # Run with 2 CPUs inside GitHub actions
     if os.getenv("CI"):
         return 2
-    # And a maximum of 8 CPUs locally (most tests don't really benefit from more)
+    # And a maximum of 4 CPUs locally (most tests don't really benefit from more)
     return max(1, min(available_cpus() - 1, 4))
 
 
