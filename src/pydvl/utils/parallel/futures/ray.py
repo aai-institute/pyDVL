@@ -66,7 +66,14 @@ class RayExecutor(Executor):
                 raise ValueError("max_workers must be greater than 0")
             max_workers = max_workers
 
-        self._cancel_futures = cancel_futures
+        if isinstance(cancel_futures, CancellationPolicy):
+            self._cancel_futures = cancel_futures
+        else:
+            self._cancel_futures = (
+                CancellationPolicy.PENDING
+                if cancel_futures
+                else CancellationPolicy.NONE
+            )
 
         config_dict = asdict(config)
         config_dict.pop("backend")
