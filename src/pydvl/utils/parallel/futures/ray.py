@@ -5,7 +5,6 @@ import threading
 import time
 import types
 from concurrent.futures import Executor, Future
-from dataclasses import asdict
 from typing import Any, Callable, Optional, TypeVar
 from weakref import WeakSet, ref
 
@@ -75,14 +74,11 @@ class RayExecutor(Executor):
                 else CancellationPolicy.NONE
             )
 
-        config_dict = asdict(config)
-        config_dict.pop("backend")
-        n_cpus_local = config_dict.pop("n_cpus_local")
-        if config_dict.get("address", None) is None:
-            config_dict["num_cpus"] = n_cpus_local
-        self.config = config_dict
+        self.config = {"address": config.address, "logging_level": config.logging_level}
+        if config.address is None:
+            self.config["num_cpus"] = config.n_cpus_local
+
         if not ray.is_initialized():
-            # FIXME: this couples ParallelConfig to ray's init() parameters
             ray.init(**self.config)
 
         self._max_workers = max_workers
