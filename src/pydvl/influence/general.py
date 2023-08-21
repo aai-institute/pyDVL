@@ -48,7 +48,8 @@ def compute_influence_factors(
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
     :param test_data: A DataLoader containing the test data.
-    :param inversion_method: name of method for computing inverse hessian vector products
+    :param inversion_method: name of method for computing inverse hessian vector
+        products.
     :param hessian_perturbation: regularization of the hessian
     :param progress: If True, display progress bars.
     :returns: An array of size (N, D) containing the influence factors for each

@@ -103,7 +103,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
         """Calculates the explicit hessian of model parameters given data ($x$ and $y$).
         :param x: A matrix [NxD] representing the features $x_i$.
         :param y: A matrix [NxK] representing the target values $y_i$.
-        :returns: A tensor representing the hessian of the model, i.e. the second derivative wrt. the model parameters.
+        :returns: A tensor representing the hessian of the loss wrt. the model parameters.
         """
 
         def model_func(param):
@@ -212,33 +212,37 @@ def lanzcos_low_rank_hessian_approx(
     torch_dtype: torch.dtype = None,
 ) -> LowRankProductRepresentation:
     """
-    Calculates a low-rank approximation of the Hessian matrix of a scalar-valued function using the implicitly
-    restarted Lanczos algorithm.
+    Calculates a low-rank approximation of the Hessian matrix of a scalar-valued
+    function using the implicitly restarted Lanczos algorithm.
 
-
-
-    :param hessian_vp: A function that takes a vector and returns the product of the Hessian of the loss function
-    :param matrix_shape: The shape of the matrix, represented by hessian vector product.
-    :param hessian_perturbation: Optional regularization parameter added to the Hessian-vector product
-                                 for numerical stability.
-    :param rank_estimate: The number of eigenvalues and corresponding eigenvectors to compute.
-                          Represents the desired rank of the Hessian approximation.
-    :param krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
-                             If not provided, it defaults to $min(model.num_parameters, max(2*rank_estimate + 1, 20))$.
-    :param tol: The stopping criteria for the Lanczos algorithm, which stops when the difference
-                in the approximated eigenvalue is less than `tol`. Defaults to 1e-6.
-    :param max_iter: The maximum number of iterations for the Lanczos method. If not provided, it defaults to
-                     $10*model.num_parameters$
+    :param hessian_vp: A function that takes a vector and returns the product of
+        the Hessian of the loss function.
+    :param matrix_shape: The shape of the matrix, represented by hessian vector
+        product.
+    :param hessian_perturbation: Optional regularization parameter added to the
+        Hessian-vector product for numerical stability.
+    :param rank_estimate: The number of eigenvalues and corresponding eigenvectors
+        to compute. Represents the desired rank of the Hessian approximation.
+    :param krylov_dimension: The number of Krylov vectors to use for the Lanczos
+        method. If not provided, it defaults to
+        $min(model.num_parameters, max(2*rank_estimate + 1, 20))$.
+    :param tol: The stopping criteria for the Lanczos algorithm, which stops when
+        the difference in the approximated eigenvalue is less than ``tol``.
+        Defaults to 1e-6.
+    :param max_iter: The maximum number of iterations for the Lanczos method. If
+        not provided, it defaults to ``10 * model.num_parameters``.
     :param device: The device to use for executing the hessian vector product.
-    :param eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation on the provided
-                                     device via cupy implementation.
-                                     Make sure, that either your model is small enough or you use a
-                                     small rank_estimate to fit your device's memory.
-                                     If False, the eigen pair approximation is executed on the CPU by scipy wrapper to
-                                     ARPACK.
-    :param torch_dtype: if not provided, current torch default dtype is used for conversion to torch
-    :return: A `LowRankProductRepresentation` instance that contains the top (up until rank_estimate) eigenvalues
-             and corresponding eigenvectors of the Hessian.
+    :param eigen_computation_on_gpu: If ``True``, tries to execute the eigen pair
+        approximation on the provided device via `cupy <https://cupy.dev/>`_
+        implementation. Make sure that either your model is small enough, or you
+        use a small rank_estimate to fit your device's memory. If ``False``, the
+        eigen pair approximation is executed on the CPU with scipy's wrapper to
+        ARPACK.
+    :param torch_dtype: if not provided, current torch default dtype is used for
+        conversion to torch.
+
+    :return: An object that contains the top- ``rank_estimate`` eigenvalues and
+        corresponding eigenvectors of the Hessian.
     """
 
     torch_dtype = torch.get_default_dtype() if torch_dtype is None else torch_dtype
@@ -366,7 +370,7 @@ class TorchTensorUtilities(TensorUtilities[torch.Tensor]):
     twice_differentiable_type = TorchTwiceDifferentiable
 
     @staticmethod
-    def einsum(equation, *operands) -> torch.Tensor:
+    def einsum(equation: str, *operands) -> torch.Tensor:
         """Sums the product of the elements of the input :attr:`operands` along dimensions specified using a notation
         based on the Einstein summation convention.
         """

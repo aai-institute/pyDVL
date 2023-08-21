@@ -61,7 +61,7 @@ def solve_hvp(
         i.e. it returns $x$ such that $Ax = b$, and a dictionary containing
         information about the inversion process.
     """
-    return InversionRegistry.call_registered(
+    return InversionRegistry.call(
         inversion_method,
         model,
         training_data,
@@ -89,13 +89,16 @@ class InversionRegistry:
         Register a function for a specific model type and inversion method.
 
         The function to be registered must conform to the following signature:
-        `(model: TwiceDifferentiable, training_data: DataLoaderType, b: TensorType, hessian_perturbation: float = 0.0, ...)`.
+        `(model: TwiceDifferentiable, training_data: DataLoaderType, b: TensorType,
+        hessian_perturbation: float = 0.0, ...)`.
 
         :param model_type: The type of the model the function should be registered for.
-        :param inversion_method: The inversion method the function should be registered for.
-        :param overwrite: If True, allows overwriting of an existing registered function for the same model type and inversion method.
-                      If False, logs a warning when attempting to register a function for an already registered model type and inversion method.
-
+        :param inversion_method: The inversion method the function should be
+            registered for.
+        :param overwrite: If ``True``, allows overwriting of an existing registered
+            function for the same model type and inversion method. If ``False``,
+            logs a warning when attempting to register a function for an already
+            registered model type and inversion method.
 
         :raises TypeError: If the provided model_type or inversion_method are of the wrong type.
         :raises ValueError: If the function to be registered does not match the required signature.
@@ -103,10 +106,15 @@ class InversionRegistry:
         """
 
         if not isinstance(model_type, type):
-            raise TypeError(f"'model_type' must be a Type[TwiceDifferentiable]")
+            raise TypeError(
+                f"'model_type' is of type {type(model_type)} but should be a Type[TwiceDifferentiable]"
+            )
 
         if not isinstance(inversion_method, InversionMethod):
-            raise TypeError(f"'inversion_method' must be an InversionMethod")
+            raise TypeError(
+                f"'inversion_method' must be an 'InversionMethod' "
+                f"but has type {type(inversion_method)} instead."
+            )
 
         key = (model_type, inversion_method)
 
@@ -145,7 +153,7 @@ class InversionRegistry:
         return decorator
 
     @classmethod
-    def get_registered(
+    def get(
         cls, model_type: Type[TwiceDifferentiable], inversion_method: InversionMethod
     ) -> Callable[
         [TwiceDifferentiable, DataLoaderType, TensorType, float], InverseHvpResult
@@ -157,7 +165,7 @@ class InversionRegistry:
         return method
 
     @classmethod
-    def call_registered(
+    def call(
         cls,
         inversion_method: InversionMethod,
         model: TwiceDifferentiable,
@@ -181,6 +189,6 @@ class InversionRegistry:
             information about the inversion process.
         """
 
-        return cls.get_registered(type(model), inversion_method)(
+        return cls.get(type(model), inversion_method)(
             model, training_data, b, hessian_perturbation, **kwargs
         )

@@ -15,7 +15,8 @@
 - Improvements to IF documentation
   [PR #371](https://github.com/appliedAI-Initiative/pyDVL/pull/371)
 - Major changes to IF interface and functionality
-  [PR #278](https://github.com/appliedAI-Initiative/pyDVL/pull/278) [PR #394](https://github.com/appliedAI-Initiative/pyDVL/pull/394)
+  [PR #278](https://github.com/appliedAI-Initiative/pyDVL/pull/278)
+  [PR #394](https://github.com/appliedAI-Initiative/pyDVL/pull/394)
 - **New Method**: Implements solving the hessian equation via spectral low-rank approximation
   [PR #365](https://github.com/appliedAI-Initiative/pyDVL/pull/365)
 - **Breaking Changes**:

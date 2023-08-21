@@ -77,9 +77,9 @@ def batch_hvp_gen(
 
     for inputs, targets in iter(data_loader):
         batch_loss = batch_loss_function(model, loss, inputs, targets)
+        model_params = dict(model.named_parameters())
 
         def batch_hvp(vec: torch.Tensor):
-            model_params = dict(model.named_parameters())
             return flatten_tensors_to_vector(
                 hvp(
                     batch_loss,
