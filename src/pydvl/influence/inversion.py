@@ -121,7 +121,8 @@ class InversionRegistry:
         def decorator(func):
             if not overwrite and key in cls.registry:
                 warnings.warn(
-                    f"There is already a function registered for model type {model_type} and inversion method {inversion_method}. "
+                    f"There is already a function registered for model type {model_type} "
+                    f"and inversion method {inversion_method}. "
                     f"To overwrite the existing function {cls.registry.get(key)} with {func}, set overwrite to True."
                 )
             sig = inspect.signature(func)

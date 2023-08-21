@@ -96,7 +96,6 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
 
 
 class TensorUtilities(Generic[TensorType], ABC):
-
     twice_differentiable_type: Type[TwiceDifferentiable]
     registry: Dict[Type[TwiceDifferentiable], Type["TensorUtilities"]] = {}
 
