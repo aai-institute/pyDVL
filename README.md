@@ -112,8 +112,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from pydvl.influence import TorchTwiceDifferentiable, compute_influences
-from pydvl.influence.inversion import InversionMethod
+from pydvl.influence import TorchTwiceDifferentiable, compute_influences, InversionMethod
 
 nn_architecture = nn.Sequential(
     nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
@@ -121,7 +120,7 @@ nn_architecture = nn.Sequential(
     nn.Linear(27, 3),
 )
 loss = nn.MSELoss()
-influence_model = TorchTwiceDifferentiable(nn_architecture, loss)
+model = TorchTwiceDifferentiable(nn_architecture, loss)
 
 input_dim = (5, 5, 5)
 output_dim = 3
@@ -136,7 +135,7 @@ test_data_loader = DataLoader(
 )
 
 influences = compute_influences(
-    influence_model,
+    model,
     training_data=train_data_loader,
     test_data=test_data_loader,
     progress=True,
