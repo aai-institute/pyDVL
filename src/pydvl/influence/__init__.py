@@ -9,3 +9,4 @@ This package contains algorithms for the computation of the influence function.
 """
 from .frameworks import TorchTwiceDifferentiable, TwiceDifferentiable
 from .general import compute_influence_factors, compute_influences
+from .inversion import InversionMethod

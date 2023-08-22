@@ -15,7 +15,7 @@ from .frameworks import (
     solve_lissa,
 )
 
-__all__ = ["solve_hvp"]
+__all__ = ["solve_hvp", "InversionMethod"]
 
 from .frameworks.torch_differentiable import solve_arnoldi
 
