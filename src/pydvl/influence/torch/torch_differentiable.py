@@ -7,7 +7,7 @@ influence of a training point on the model.
 import logging
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, List, Optional, Sequence, Tuple
+from typing import Callable, Generator, List, Optional, Sequence, Tuple
 
 import torch
 import torch.nn as nn
@@ -18,9 +18,12 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
-from ..inversion import InversionMethod, InversionRegistry
+from ..inversion import DataLoaderType, InversionMethod, InversionRegistry
 from ..twice_differentiable import (
+    DataLoaderUtilities,
     InverseHvpResult,
+    ModelType,
+    TensorType,
     TensorUtilities,
     TwiceDifferentiable,
 )
@@ -49,7 +52,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
     ):
         r"""
         :param model: A (differentiable) function.
-        :param loss: :param loss: A differentiable scalar loss $L(\hat{y}, y)$,
+        :param loss:  A differentiable scalar loss $L(\hat{y}, y)$,
             mapping a prediction and a target to a real value.
         """
         if model.training:
@@ -60,7 +63,9 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
             )
         self.loss = loss
         self.model = model
-        self.device = model.device if hasattr(model, "device") else torch.device("cpu")
+        first_param = next(model.parameters())
+        self.device = first_param.device
+        self.dtype = first_param.dtype
 
     @classmethod
     def tensor_type(cls):
@@ -92,6 +97,9 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
         """
         x = x.to(self.device)
         y = y.to(self.device)
+
+        if create_graph and not x.requires_grad:
+            x = x.requires_grad_(True)
 
         loss_value = self.loss(torch.squeeze(self.model(x)), torch.squeeze(y))
         grad_f = torch.autograd.grad(
@@ -286,7 +294,6 @@ def lanzcos_low_rank_hessian_approx(
         to_torch_conversion_function = partial(torch.as_tensor, dtype=torch_dtype)
 
     try:
-
         eigen_vals, eigen_vecs = eigsh(
             LinearOperator(matrix_shape, matvec=mv),
             k=rank_estimate,
@@ -365,8 +372,7 @@ def model_hessian_low_rank(
     )
 
 
-class TorchTensorUtilities(TensorUtilities[torch.Tensor]):
-
+class TorchTensorUtilities(TensorUtilities[torch.Tensor, TorchTwiceDifferentiable]):
     twice_differentiable_type = TorchTwiceDifferentiable
 
     @staticmethod
@@ -375,11 +381,6 @@ class TorchTensorUtilities(TensorUtilities[torch.Tensor]):
         based on the Einstein summation convention.
         """
         return torch.einsum(equation, *operands)
-
-    @staticmethod
-    def cat(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
-        """Concatenates a sequence of tensors into a single torch tensor"""
-        return torch.cat(a, **kwargs)
 
     @staticmethod
     def stack(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
@@ -398,9 +399,57 @@ class TorchTensorUtilities(TensorUtilities[torch.Tensor]):
         return x.unsqueeze(dim)
 
     @staticmethod
-    def eye(dim: int, **kwargs) -> torch.Tensor:
-        """Identity tensor of dimension dim"""
-        return torch.eye(dim, dim, **kwargs)
+    def get_element(x: torch.Tensor, idx: int) -> torch.Tensor:
+        return x[idx]
+
+    @staticmethod
+    def slice(x: torch.Tensor, start: int, stop: int, axis: int = 0) -> torch.Tensor:
+        slicer = [slice(None) for _ in x.shape]
+        slicer[axis] = slice(start, stop)
+        return x[tuple(slicer)]
+
+    @staticmethod
+    def shape(x: torch.Tensor) -> Tuple[int, ...]:
+        return x.shape  # type:ignore
+
+    @staticmethod
+    def reshape(x: torch.Tensor, shape: Tuple[int, ...]) -> torch.Tensor:
+        return x.reshape(shape)
+
+    @staticmethod
+    def cat_gen(
+        a: Generator[torch.Tensor, None, None],
+        resulting_shape: Tuple[int, ...],
+        model: TorchTwiceDifferentiable,
+        axis: int = 0,
+    ) -> torch.Tensor:
+        result = torch.empty(resulting_shape, dtype=model.dtype, device=model.device)
+
+        start_idx = 0
+        for x in a:
+            stop_idx = start_idx + x.shape[axis]
+
+            slicer = [slice(None) for _ in resulting_shape]
+            slicer[axis] = slice(start_idx, stop_idx)
+
+            result[tuple(slicer)] = x
+
+            start_idx = stop_idx
+
+        return result
+
+
+class TorchDataLoaderUtilities(DataLoaderUtilities[DataLoader]):
+
+    data_loader_type = DataLoader
+
+    @staticmethod
+    def len_data(data: DataLoader) -> int:
+        return len(data.dataset)
+
+    @staticmethod
+    def batch_size(data: DataLoader) -> int:
+        return data.batch_size  # type:ignore
 
 
 @InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Direct)
@@ -639,7 +688,6 @@ def solve_arnoldi(
     max_iter: Optional[int] = None,
     eigen_computation_on_gpu: bool = False,
 ) -> InverseHvpResult:
-
     """
     Solves the linear system Hx = b, where H is the Hessian of the model's loss function and b is the given right-hand
     side vector. The Hessian is approximated using a low-rank representation.
@@ -676,7 +724,6 @@ def solve_arnoldi(
     b_device = b.device if hasattr(b, "device") else torch.device("cpu")
 
     if low_rank_representation is None:
-
         if b_device.type == "cuda" and not eigen_computation_on_gpu:
             raise ValueError(
                 "Using 'eigen_computation_on_gpu=False' while 'b' is on a 'cuda' device is not supported. "

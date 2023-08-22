@@ -4,11 +4,18 @@ models, as introduced in :footcite:t:`koh_understanding_2017`.
 """
 from copy import deepcopy
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, Type
+from typing import Any, Callable, Dict, Generator, Optional, Type
 
 from ..utils import maybe_progress
-from .inversion import DataLoaderType, InverseHvpResult, InversionMethod, solve_hvp
-from .twice_differentiable import TensorType, TensorUtilities, TwiceDifferentiable
+from .inversion import InverseHvpResult, InversionMethod, solve_hvp
+from .twice_differentiable import (
+    DataLoaderType,
+    DataLoaderUtilities,
+    ModelType,
+    TensorType,
+    TensorUtilities,
+    TwiceDifferentiable,
+)
 
 __all__ = ["compute_influences", "InfluenceType", "compute_influence_factors"]
 
@@ -58,26 +65,36 @@ def compute_influence_factors(
     tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
         model
     )
+    data_loader_util: Type[DataLoaderUtilities] = DataLoaderUtilities.from_data_loader(
+        test_data
+    )
+
     stack = tensor_util.stack
     unsqueeze = tensor_util.unsqueeze
-    cat = tensor_util.cat
+    cat_gen = tensor_util.cat_gen
+    len_data = data_loader_util.len_data
 
-    test_grads = []
-    for x_test, y_test in maybe_progress(
-        test_data, progress, desc="Batch Test Gradients"
-    ):
-        test_grad = stack(
-            [
-                model.grad(inpt, target)
-                for inpt, target in zip(unsqueeze(x_test, 1), y_test)
-            ]
-        )
-        test_grads.append(test_grad)
+    def test_grads() -> Generator[TensorType, None, None]:
+        for x_test, y_test in maybe_progress(
+            test_data, progress, desc="Batch Test Gradients"
+        ):
+            yield stack(
+                [
+                    model.grad(inpt, target)
+                    for inpt, target in zip(unsqueeze(x_test, 1), y_test)
+                ]
+            )  # type:ignore
+
+    resulting_shape = (len_data(test_data), model.num_params)  # type:ignore
+    rhs = cat_gen(
+        test_grads(), resulting_shape, model  # type:ignore
+    )  # type:ignore
+
     return solve_hvp(
         inversion_method,
         model,
         training_data,
-        cat(test_grads),
+        rhs,
         hessian_perturbation=hessian_perturbation,
         **kwargs,
     )
@@ -111,21 +128,27 @@ def compute_influences_up(
     tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
         model
     )
+    data_loader_util: Type[DataLoaderUtilities] = DataLoaderUtilities.from_data_loader(
+        input_data
+    )
+
     stack = tensor_util.stack
     unsqueeze = tensor_util.unsqueeze
-    cat = tensor_util.cat
+    cat_gen = tensor_util.cat_gen
     einsum = tensor_util.einsum
+    len_data = data_loader_util.len_data
 
-    train_grads = []
-    for x, y in maybe_progress(
-        input_data, progress, desc="Batch Split Input Gradients"
-    ):
-        train_grad = stack(
-            [model.grad(inpt, target) for inpt, target in zip(unsqueeze(x, 1), y)]
-        )
-        train_grads.append(train_grad)
+    def train_grads() -> Generator[TensorType, None, None]:
+        for x, y in maybe_progress(
+            input_data, progress, desc="Batch Split Input Gradients"
+        ):
+            yield stack(
+                [model.grad(inpt, target) for inpt, target in zip(unsqueeze(x, 1), y)]
+            )  # type:ignore
 
-    return einsum("ta,va->tv", influence_factors, cat(train_grads))  # type: ignore # ToDO fix typing
+    resulting_shape = (len_data(input_data), model.num_params)  # type:ignore
+    train_grad_tensor = cat_gen(train_grads(), resulting_shape, model)  # type:ignore
+    return einsum("ta,va->tv", influence_factors, train_grad_tensor)  # type:ignore
 
 
 def compute_influences_pert(
@@ -157,6 +180,10 @@ def compute_influences_pert(
         model
     )
     stack = tensor_util.stack
+    tu_slice = tensor_util.slice
+    reshape = tensor_util.reshape
+    get_element = tensor_util.get_element
+    shape = tensor_util.shape
 
     all_pert_influences = []
     for x, y in maybe_progress(
@@ -165,19 +192,18 @@ def compute_influences_pert(
         desc="Batch Influence Perturbation",
     ):
         for i in range(len(x)):
-            tensor_x = x[i : i + 1]
-            tensor_x = tensor_x.requires_grad_(True)
-            grad_xy = model.grad(tensor_x, y[i], create_graph=True)
+            tensor_x = tu_slice(x, i, i + 1)
+            grad_xy = model.grad(tensor_x, get_element(y, i), create_graph=True)
             perturbation_influences = model.mvp(
                 grad_xy,
                 influence_factors,
                 backprop_on=tensor_x,
             )
             all_pert_influences.append(
-                perturbation_influences.reshape((-1, *x[i].shape))
+                reshape(perturbation_influences, (-1, *shape(get_element(x, i))))
             )
 
-    return stack(all_pert_influences, axis=1)  # type: ignore # ToDO fix typing
+    return stack(all_pert_influences, axis=1)  # type:ignore
 
 
 influence_type_registry: Dict[InfluenceType, Callable[..., TensorType]] = {

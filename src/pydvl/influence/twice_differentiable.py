@@ -1,8 +1,21 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, List, Sequence, Type, TypeVar
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    Generic,
+    Iterable,
+    List,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 TensorType = TypeVar("TensorType", bound=Sequence)
+ModelType = TypeVar("ModelType", bound="TwiceDifferentiable")
+DataLoaderType = TypeVar("DataLoaderType", bound=Iterable)
 
 
 @dataclass(frozen=True)
@@ -95,31 +108,29 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
         """
 
 
-class TensorUtilities(Generic[TensorType], ABC):
+class TensorUtilities(Generic[TensorType, ModelType], ABC):
     twice_differentiable_type: Type[TwiceDifferentiable]
     registry: Dict[Type[TwiceDifferentiable], Type["TensorUtilities"]] = {}
 
-    def __init_subclass__(cls, abstract: bool = False, **kwargs):
+    def __init_subclass__(cls, **kwargs):
         """
         Automatically registers non-abstract subclasses in the registry.
 
         Checks if `twice_differentiable_type` is defined in the subclass and
         is of correct type. Raises `TypeError` if either attribute is missing or incorrect.
 
-        :param abstract: If True, the subclass won't be registered. Default is False.
         :param kwargs: Additional keyword arguments.
         :raise TypeError: If the subclass does not define `twice_differentiable_type`,
         or if it is not of correct type.
         """
-        if not abstract:
-            if not hasattr(cls, "twice_differentiable_type") or not isinstance(
-                cls.twice_differentiable_type, type
-            ):
-                raise TypeError(
-                    f"'twice_differentiable_type' must be a Type[TwiceDifferentiable]"
-                )
+        if not hasattr(cls, "twice_differentiable_type") or not isinstance(
+            cls.twice_differentiable_type, type
+        ):
+            raise TypeError(
+                f"'twice_differentiable_type' must be a Type[TwiceDifferentiable]"
+            )
 
-            cls.registry[cls.twice_differentiable_type] = cls
+        cls.registry[cls.twice_differentiable_type] = cls
 
         super().__init_subclass__(**kwargs)
 
@@ -129,11 +140,6 @@ class TensorUtilities(Generic[TensorType], ABC):
         """Sums the product of the elements of the input :attr:`operands` along dimensions specified using a notation
         based on the Einstein summation convention.
         """
-
-    @staticmethod
-    @abstractmethod
-    def cat(a: Sequence[TensorType], **kwargs) -> TensorType:
-        """Concatenates a sequence of tensors into a single torch tensor"""
 
     @staticmethod
     @abstractmethod
@@ -147,17 +153,110 @@ class TensorUtilities(Generic[TensorType], ABC):
 
     @staticmethod
     @abstractmethod
-    def eye(dim: int, **kwargs) -> TensorType:
-        """Identity tensor of dimension dim"""
+    def get_element(x: TensorType, idx: int) -> TensorType:
+        """Get the tensor element x[i] from the first non-singular dimension"""
+
+    @staticmethod
+    @abstractmethod
+    def slice(x: TensorType, start: int, stop: int, axis: int = 0) -> TensorType:
+        """Slice a tensor in the provided axis"""
+
+    @staticmethod
+    @abstractmethod
+    def shape(x: TensorType) -> Tuple[int, ...]:
+        """Slice a tensor in the provided axis"""
+
+    @staticmethod
+    @abstractmethod
+    def reshape(x: TensorType, shape: Tuple[int, ...]) -> TensorType:
+        """Reshape a tensor to the provided shape"""
+
+    @staticmethod
+    @abstractmethod
+    def cat_gen(
+        a: Generator[TensorType, None, None],
+        resulting_shape: Tuple[int, ...],
+        model: ModelType,
+    ) -> TensorType:
+        """Concatenate tensors from a generator. Resulting tensor is of shape resulting_shape
+        and compatible to model
+        """
 
     @classmethod
     def from_twice_differentiable(
         cls,
         twice_diff: TwiceDifferentiable,
     ) -> Type["TensorUtilities"]:
+        """
+        Factory method to create an instance of `TensorUtilities` from an instance of `TwiceDifferentiable`.
+
+        :param twice_diff: An instance of `TwiceDifferentiable`
+            for which a corresponding `TensorUtilities` object is required.
+        :return: An instance of `TensorUtilities` corresponding to the provided `TwiceDifferentiable` object.
+        :raises KeyError: If there's no registered `TensorUtilities` for the provided `TwiceDifferentiable` type.
+        """
         tu = cls.registry.get(type(twice_diff), None)
 
         if tu is None:
-            raise KeyError()
+            raise KeyError(
+                f"No registered TensorUtilities for the type {type(twice_diff).__name__}"
+            )
 
         return tu
+
+
+class DataLoaderUtilities(Generic[DataLoaderType], ABC):
+
+    data_loader_type: Type[DataLoaderType]
+    registry: Dict[Type[DataLoaderType], Type["DataLoaderUtilities"]] = {}
+
+    def __init_subclass__(cls, **kwargs):
+        """
+        Automatically registers subclasses in the registry.
+
+        Checks if `data_loader_type` is defined in the subclass and
+        is of correct type. Raises `TypeError` if either attribute is missing or incorrect.
+        :param kwargs: Additional keyword arguments.
+        :raise TypeError: If the subclass does not define `twice_differentiable_type`,
+        or if it is not of correct type.
+        """
+        if not hasattr(cls, "data_loader_type") or not isinstance(
+            cls.data_loader_type, type
+        ):
+            raise TypeError(f"'data_loader_type' must be a type object")
+
+        cls.registry[cls.data_loader_type] = cls
+
+        super().__init_subclass__(**kwargs)
+
+    @staticmethod
+    @abstractmethod
+    def len_data(data: DataLoaderType) -> int:
+        """Get the number of data points"""
+
+    @staticmethod
+    @abstractmethod
+    def batch_size(data: DataLoaderType) -> int:
+        """Get the number of batches for data"""
+
+    @classmethod
+    def from_data_loader(
+        cls,
+        data_loader: DataLoaderType,
+    ) -> Type["DataLoaderUtilities"]:
+        """
+        Factory method to create an instance of `DataLoaderUtilities` from a given data loader.
+
+        :param data_loader: An instance of data loader for which a corresponding
+            `DataLoaderUtilities` object is required.
+        :return: An instance of `DataLoaderUtilities` corresponding to the provided data loader.
+        :raises KeyError: If there's no registered `DataLoaderUtilities` for the provided data loader type.
+        """
+        dl_u = cls.registry.get(type(data_loader), None)
+
+        if dl_u is None:
+            raise KeyError(
+                f"No registered DataLoaderUtilities for the type {type(data_loader).__name__}"
+            )
+
+        return dl_u
