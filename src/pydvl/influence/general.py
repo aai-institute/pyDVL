@@ -2,6 +2,7 @@
 This module contains parallelized influence calculation functions for general
 models, as introduced in :footcite:t:`koh_understanding_2017`.
 """
+import logging
 from copy import deepcopy
 from enum import Enum
 from typing import Any, Callable, Dict, Generator, Optional, Type
@@ -10,14 +11,14 @@ from ..utils import maybe_progress
 from .inversion import InverseHvpResult, InversionMethod, solve_hvp
 from .twice_differentiable import (
     DataLoaderType,
-    DataLoaderUtilities,
-    ModelType,
     TensorType,
     TensorUtilities,
     TwiceDifferentiable,
 )
 
 __all__ = ["compute_influences", "InfluenceType", "compute_influence_factors"]
+
+logger = logging.getLogger(__name__)
 
 
 class InfluenceType(str, Enum):
@@ -65,14 +66,11 @@ def compute_influence_factors(
     tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
         model
     )
-    data_loader_util: Type[DataLoaderUtilities] = DataLoaderUtilities.from_data_loader(
-        test_data
-    )
 
     stack = tensor_util.stack
     unsqueeze = tensor_util.unsqueeze
     cat_gen = tensor_util.cat_gen
-    len_data = data_loader_util.len_data
+    cat = tensor_util.cat
 
     def test_grads() -> Generator[TensorType, None, None]:
         for x_test, y_test in maybe_progress(
@@ -85,10 +83,18 @@ def compute_influence_factors(
                 ]
             )  # type:ignore
 
-    resulting_shape = (len_data(test_data), model.num_params)  # type:ignore
-    rhs = cat_gen(
-        test_grads(), resulting_shape, model  # type:ignore
-    )  # type:ignore
+    try:
+        # if provided input_data implements __len__, pre-allocate the result tensor to reduce memory consumption
+        resulting_shape = (len(test_data), model.num_params)  # type:ignore
+        rhs = cat_gen(
+            test_grads(), resulting_shape, model  # type:ignore
+        )  # type:ignore
+    except Exception as e:
+        logger.warning(
+            f"Failed to pre-allocate result tensor: {e}\n"
+            f"Evaluate all resulting tensor and concatenate"
+        )
+        rhs = cat(list(test_grads()))
 
     return solve_hvp(
         inversion_method,
@@ -128,15 +134,12 @@ def compute_influences_up(
     tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
         model
     )
-    data_loader_util: Type[DataLoaderUtilities] = DataLoaderUtilities.from_data_loader(
-        input_data
-    )
 
     stack = tensor_util.stack
     unsqueeze = tensor_util.unsqueeze
     cat_gen = tensor_util.cat_gen
+    cat = tensor_util.cat
     einsum = tensor_util.einsum
-    len_data = data_loader_util.len_data
 
     def train_grads() -> Generator[TensorType, None, None]:
         for x, y in maybe_progress(
@@ -146,8 +149,19 @@ def compute_influences_up(
                 [model.grad(inpt, target) for inpt, target in zip(unsqueeze(x, 1), y)]
             )  # type:ignore
 
-    resulting_shape = (len_data(input_data), model.num_params)  # type:ignore
-    train_grad_tensor = cat_gen(train_grads(), resulting_shape, model)  # type:ignore
+    try:
+        # if provided input_data implements __len__, pre-allocate the result tensor to reduce memory consumption
+        resulting_shape = (len(input_data), model.num_params)  # type:ignore
+        train_grad_tensor = cat_gen(
+            train_grads(), resulting_shape, model  # type:ignore
+        )  # type:ignore
+    except Exception as e:
+        logger.warning(
+            f"Failed to pre-allocate result tensor: {e}\n"
+            f"Evaluate all resulting tensor and concatenate"
+        )
+        train_grad_tensor = cat([x for x in train_grads()])  # type:ignore
+
     return einsum("ta,va->tv", influence_factors, train_grad_tensor)  # type:ignore
 
 

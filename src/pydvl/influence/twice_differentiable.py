@@ -143,6 +143,11 @@ class TensorUtilities(Generic[TensorType, ModelType], ABC):
 
     @staticmethod
     @abstractmethod
+    def cat(a: Sequence[TensorType], **kwargs) -> TensorType:
+        """Concatenates a sequence of tensors into a single torch tensor"""
+
+    @staticmethod
+    @abstractmethod
     def stack(a: Sequence[TensorType], **kwargs) -> TensorType:
         """Stacks a sequence of tensors into a single torch tensor"""
 
@@ -203,60 +208,3 @@ class TensorUtilities(Generic[TensorType, ModelType], ABC):
             )
 
         return tu
-
-
-class DataLoaderUtilities(Generic[DataLoaderType], ABC):
-
-    data_loader_type: Type[DataLoaderType]
-    registry: Dict[Type[DataLoaderType], Type["DataLoaderUtilities"]] = {}
-
-    def __init_subclass__(cls, **kwargs):
-        """
-        Automatically registers subclasses in the registry.
-
-        Checks if `data_loader_type` is defined in the subclass and
-        is of correct type. Raises `TypeError` if either attribute is missing or incorrect.
-        :param kwargs: Additional keyword arguments.
-        :raise TypeError: If the subclass does not define `twice_differentiable_type`,
-        or if it is not of correct type.
-        """
-        if not hasattr(cls, "data_loader_type") or not isinstance(
-            cls.data_loader_type, type
-        ):
-            raise TypeError(f"'data_loader_type' must be a type object")
-
-        cls.registry[cls.data_loader_type] = cls
-
-        super().__init_subclass__(**kwargs)
-
-    @staticmethod
-    @abstractmethod
-    def len_data(data: DataLoaderType) -> int:
-        """Get the number of data points"""
-
-    @staticmethod
-    @abstractmethod
-    def batch_size(data: DataLoaderType) -> int:
-        """Get the number of batches for data"""
-
-    @classmethod
-    def from_data_loader(
-        cls,
-        data_loader: DataLoaderType,
-    ) -> Type["DataLoaderUtilities"]:
-        """
-        Factory method to create an instance of `DataLoaderUtilities` from a given data loader.
-
-        :param data_loader: An instance of data loader for which a corresponding
-            `DataLoaderUtilities` object is required.
-        :return: An instance of `DataLoaderUtilities` corresponding to the provided data loader.
-        :raises KeyError: If there's no registered `DataLoaderUtilities` for the provided data loader type.
-        """
-        dl_u = cls.registry.get(type(data_loader), None)
-
-        if dl_u is None:
-            raise KeyError(
-                f"No registered DataLoaderUtilities for the type {type(data_loader).__name__}"
-            )
-
-        return dl_u

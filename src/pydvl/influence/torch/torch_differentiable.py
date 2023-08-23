@@ -18,12 +18,9 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
-from ..inversion import DataLoaderType, InversionMethod, InversionRegistry
+from ..inversion import InversionMethod, InversionRegistry
 from ..twice_differentiable import (
-    DataLoaderUtilities,
     InverseHvpResult,
-    ModelType,
-    TensorType,
     TensorUtilities,
     TwiceDifferentiable,
 )
@@ -383,6 +380,11 @@ class TorchTensorUtilities(TensorUtilities[torch.Tensor, TorchTwiceDifferentiabl
         return torch.einsum(equation, *operands)
 
     @staticmethod
+    def cat(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
+        """Concatenates a sequence of tensors into a single torch tensor"""
+        return torch.cat(a, **kwargs)
+
+    @staticmethod
     def stack(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
         """Stacks a sequence of tensors into a single torch tensor"""
         return torch.stack(a, **kwargs)
@@ -437,19 +439,6 @@ class TorchTensorUtilities(TensorUtilities[torch.Tensor, TorchTwiceDifferentiabl
             start_idx = stop_idx
 
         return result
-
-
-class TorchDataLoaderUtilities(DataLoaderUtilities[DataLoader]):
-
-    data_loader_type = DataLoader
-
-    @staticmethod
-    def len_data(data: DataLoader) -> int:
-        return len(data.dataset)
-
-    @staticmethod
-    def batch_size(data: DataLoader) -> int:
-        return data.batch_size  # type:ignore
 
 
 @InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Direct)
