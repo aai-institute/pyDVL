@@ -1,11 +1,15 @@
-from functools import partial
 from typing import Callable, Dict, Generator, Iterable
 
 import torch
 from torch.func import functional_call, grad, jvp, vjp
 from torch.utils.data import DataLoader
 
-from .util import TorchTensorContainerType, align_structure, to_model_device
+from .util import (
+    TorchTensorContainerType,
+    align_structure,
+    flatten_tensors_to_vector,
+    to_model_device,
+)
 
 __all__ = [
     "get_hvp_function",
@@ -13,7 +17,7 @@ __all__ = [
 
 
 def hvp(
-    func: Callable[[TorchTensorContainerType], TorchTensorContainerType],
+    func: Callable[[TorchTensorContainerType], torch.Tensor],
     params: TorchTensorContainerType,
     vec: TorchTensorContainerType,
     reverse_only: bool = True,
@@ -24,7 +28,7 @@ def hvp(
      forward- and reverse-mode autodiff.
 
 
-    :param func: The function for which the HVP is computed.
+    :param func: The scalar-valued function for which the HVP is computed.
     :param params: The parameters at which the HVP is computed.
     :param vec: The vector with which the Hessian is multiplied.
     :param reverse_only: Whether to use only reverse-mode autodiff
@@ -56,9 +60,7 @@ def batch_hvp_gen(
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     data_loader: DataLoader,
     reverse_only: bool = True,
-) -> Generator[
-    Callable[[Dict[str, torch.Tensor]], Dict[str, torch.Tensor]], None, None
-]:
+) -> Generator[Callable[[torch.Tensor], torch.Tensor], None, None]:
     """
     Generates a sequence of batch Hessian-vector product (HVP) computations for the provided model, loss function,
     and data loader.
@@ -75,14 +77,26 @@ def batch_hvp_gen(
 
     for inputs, targets in iter(data_loader):
         batch_loss = batch_loss_function(model, loss, inputs, targets)
-        yield partial(hvp, batch_loss, dict(model.named_parameters()), reverse_only=reverse_only)  # type: ignore
+        model_params = dict(model.named_parameters())
+
+        def batch_hvp(vec: torch.Tensor):
+            return flatten_tensors_to_vector(
+                hvp(
+                    batch_loss,
+                    model_params,
+                    align_structure(model_params, vec),
+                    reverse_only=reverse_only,
+                ).values()
+            )
+
+        yield batch_hvp
 
 
 def empirical_loss_function(
     model: torch.nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     data_loader: DataLoader,
-) -> Callable[[Dict[str, torch.Tensor]], Dict[str, torch.Tensor]]:
+) -> Callable[[Dict[str, torch.Tensor]], torch.Tensor]:
     """
     Creates a function to compute the empirical loss of a given model on a given dataset.
     If we denote the model parameters with $\theta$, the resulting function approximates
@@ -151,7 +165,7 @@ def get_hvp_function(
     use_hessian_avg: bool = True,
     reverse_only: bool = True,
     track_gradients: bool = False,
-) -> Callable[[Dict[str, torch.Tensor]], Dict[str, torch.Tensor]]:
+) -> Callable[[torch.Tensor], torch.Tensor]:
     """
     Returns a function that calculates the approximate Hessian-vector product for a given vector. If you want to
     compute the exact hessian, i.e. pulling all data into memory and compute a full gradient computation, use
@@ -180,27 +194,25 @@ def get_hvp_function(
         k: p if track_gradients else p.detach() for k, p in model.named_parameters()
     }
 
-    def hvp_function(vec: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def hvp_function(vec: torch.Tensor) -> torch.Tensor:
         v = align_structure(params, vec)
         empirical_loss = empirical_loss_function(model, loss, data_loader)
-        return hvp(empirical_loss, params, v, reverse_only=reverse_only)
+        return flatten_tensors_to_vector(
+            hvp(empirical_loss, params, v, reverse_only=reverse_only).values()
+        )
 
-    def avg_hvp_function(vec: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def avg_hvp_function(vec: torch.Tensor) -> torch.Tensor:
         v = align_structure(params, vec)
-        batch_hessians: Iterable[Dict[str, torch.Tensor]] = map(
+        batch_hessians_vector_products: Iterable[torch.Tensor] = map(
             lambda x: x(v), batch_hvp_gen(model, loss, data_loader, reverse_only)
         )
 
-        result_dict = {
-            key: to_model_device(torch.zeros_like(p), model)
-            for key, p in params.items()
-        }
         num_batches = len(data_loader)
+        avg_hessian = to_model_device(torch.zeros_like(vec), model)
 
-        for batch_dict in batch_hessians:
-            for key, value in batch_dict.items():
-                result_dict[key] += value
+        for batch_hvp in batch_hessians_vector_products:
+            avg_hessian += batch_hvp
 
-        return {key: value / num_batches for key, value in result_dict.items()}
+        return avg_hessian / float(num_batches)
 
     return avg_hvp_function if use_hessian_avg else hvp_function
