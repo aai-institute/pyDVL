@@ -25,7 +25,7 @@ semi-value, in particular Shapley and Beta values, and Banzhaf indices.
 The samplers can be sliced for parallel computation. For those which are
 embarrassingly parallel, this is done by slicing the set of "outer" indices and
 returning new samplers over those slices. This includes all truly powerset-based
-samplers, such as :class:`DeterministicCombinatorialSampler` and
+samplers, such as :class:`DeterministicUniformSampler` and
 :class:`UniformSampler`. In contrast, slicing a :class:`PermutationSampler`
 creates a new sampler which iterates over the same indices.
 """
@@ -78,7 +78,7 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
 
     .. code-block:: python
 
-       for idx, s in DeterministicCombinatorialSampler(np.arange(2)):
+       for idx, s in DeterministicUniformSampler(np.arange(2)):
            print(s, end="")
 
     Produces the output::
@@ -220,7 +220,7 @@ class DeterministicUniformSampler(PowersetSampler[T]):
 
         .. code-block:: python
 
-           for idx, s in DeterministicCombinatorialSampler(np.arange(2)):
+           for idx, s in DeterministicUniformSampler(np.arange(2)):
                print(f"{idx} - {s}", end=", ")
 
         Produces the output::
