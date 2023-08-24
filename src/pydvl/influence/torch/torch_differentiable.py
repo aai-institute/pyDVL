@@ -34,7 +34,6 @@ __all__ = [
     "solve_lissa",
     "solve_arnoldi",
     "lanzcos_low_rank_hessian_approx",
-    "as_tensor",
     "model_hessian_low_rank",
 ]
 
@@ -42,16 +41,23 @@ logger = logging.getLogger(__name__)
 
 
 class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
+    r"""
+    Wraps a [torch.nn.Module](https://pytorch.org/docs/stable/generated/torch.nn.Module.html)
+    and a loss function and provides methods to compute gradients and
+    second derivative of the loss wrt. the model parameters
+
+    Args:
+        model: A (differentiable) function.
+        loss: A differentiable scalar loss \( L(\hat{y}, y) \),
+            mapping a prediction and a target to a real value.
+    """
+
     def __init__(
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     ):
-        r"""
-        :param model: A (differentiable) function.
-        :param loss:  A differentiable scalar loss $L(\hat{y}, y)$,
-            mapping a prediction and a target to a real value.
-        """
+
         if model.training:
             logger.warning(
                 "Passed model not in evaluation mode. This can create several issues in influence "
@@ -70,28 +76,38 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
 
     @property
     def parameters(self) -> List[torch.Tensor]:
-        """Returns all the model parameters that require differentiating"""
+        """
+        Returns:
+            All model parameters that require differentiating.
+        """
+
         return [param for param in self.model.parameters() if param.requires_grad]
 
     @property
     def num_params(self) -> int:
         """
-        Get number of parameters of model f.
-        :returns: Number of parameters as integer.
+        Get the number of parameters of model f.
+
+        Returns:
+            int: Number of parameters.
         """
         return sum([p.numel() for p in self.parameters])
 
     def grad(
         self, x: torch.Tensor, y: torch.Tensor, create_graph: bool = False
     ) -> torch.Tensor:
-        """
-        Calculates gradient of model parameters wrt the model parameters.
+        r"""
+        Calculates gradient of model parameters with respect to the model parameters.
 
-        :param x: A matrix [NxD] representing the features $x_i$.
-        :param y: A matrix [NxK] representing the target values $y_i$.
-        :param create_graph: If True, the resulting gradient tensor, can be used for further differentiation
-        :returns: An array [P] with the gradients of the model.
+        Args:
+            x: A matrix [NxD] representing the features \( x_i \).
+            y: A matrix [NxK] representing the target values \( y_i \).
+            create_graph (bool): If True, the resulting gradient tensor can be used for further differentiation.
+
+        Returns:
+            An array [P] with the gradients of the model.
         """
+
         x = x.to(self.device)
         y = y.to(self.device)
 
@@ -105,10 +121,15 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
         return flatten_tensors_to_vector(grad_f)
 
     def hessian(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        """Calculates the explicit hessian of model parameters given data ($x$ and $y$).
-        :param x: A matrix [NxD] representing the features $x_i$.
-        :param y: A matrix [NxK] representing the target values $y_i$.
-        :returns: A tensor representing the hessian of the loss wrt. the model parameters.
+        r"""
+        Calculates the explicit hessian of model parameters given data \(x\) and \(y\).
+
+        Args:
+            x: A matrix [NxD] representing the features \(x_i\).
+            y: A matrix [NxK] representing the target values \(y_i\).
+
+        Returns:
+            A tensor representing the hessian of the loss with respect to the model parameters.
         """
 
         def model_func(param):
@@ -136,24 +157,25 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
         *,
         progress: bool = False,
     ) -> torch.Tensor:
-        """
-        Calculates second order derivative of the model along directions v.
-        This second order derivative can be selected through the backprop_on argument.
+        r"""
+        Calculates the second-order derivative of the model along directions v.
+        This second-order derivative can be selected through the `backprop_on` argument.
 
-        :param grad_xy: an array [P] holding the gradients of the model
-            parameters wrt input $x$ and labels $y$, where P is the number of
-            parameters of the model. It is typically obtained through
-            self.grad.
-        :param v: An array ([DxP] or even one dimensional [D]) which
-            multiplies the matrix, where D is the number of directions.
-        :param progress: True, iff progress shall be printed.
-        :param backprop_on: tensor used in the second backpropagation (the first
-            one is along $x$ and $y$ as defined via grad_xy).
-        :returns: A matrix representing the implicit matrix vector product
-            of the model along the given directions. Output shape is [DxP] if
-            backprop_on is None, otherwise [DxM], with M the number of elements
-            of backprop_on.
+        Args:
+            grad_xy: An array [P] holding the gradients of the model parameters with respect to input
+                \(x\) and labels \(y\), where P is the number of parameters of the model.
+                It is typically obtained through `self.grad`.
+            v: An array ([DxP] or even one-dimensional [D]) which multiplies the matrix,
+                where D is the number of directions.
+            progress: If True, progress will be printed.
+            backprop_on: Tensor used in the second backpropagation
+                (the first one is defined via grad_xy).
+
+        Returns:
+            A matrix representing the implicit matrix-vector product of the model along the given directions.
+                The output shape is [DxM], with M being the number of elements of `backprop_on`.
         """
+
         device = grad_xy.device
         v = as_tensor(v, warn=False).to(device)
         if v.ndim == 1:
@@ -173,11 +195,12 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
 
 @dataclass
 class LowRankProductRepresentation:
-    """
-    Representation of a low rank product of the form $H = V D V^T$, where D is a diagonal matrix and
-    V is orthogonal
-    :param eigen_vals: diagonal of D
-    :param projections: the matrix V
+    r"""
+    Representation of a low rank product of the form \(H = V D V^T\), where D is a diagonal matrix and V is orthogonal.
+
+    Args:
+        eigen_vals (tensor or array): Diagonal of D.
+        projections (tensor or matrix): The matrix V.
     """
 
     eigen_vals: torch.Tensor
@@ -216,38 +239,46 @@ def lanzcos_low_rank_hessian_approx(
     eigen_computation_on_gpu: bool = False,
     torch_dtype: torch.dtype = None,
 ) -> LowRankProductRepresentation:
-    """
+    r"""
     Calculates a low-rank approximation of the Hessian matrix of a scalar-valued
-    function using the implicitly restarted Lanczos algorithm.
+    function using the implicitly restarted Lanczos algorithm, i.e.:
 
-    :param hessian_vp: A function that takes a vector and returns the product of
-        the Hessian of the loss function.
-    :param matrix_shape: The shape of the matrix, represented by hessian vector
-        product.
-    :param hessian_perturbation: Optional regularization parameter added to the
-        Hessian-vector product for numerical stability.
-    :param rank_estimate: The number of eigenvalues and corresponding eigenvectors
-        to compute. Represents the desired rank of the Hessian approximation.
-    :param krylov_dimension: The number of Krylov vectors to use for the Lanczos
-        method. If not provided, it defaults to
-        $min(model.num_parameters, max(2*rank_estimate + 1, 20))$.
-    :param tol: The stopping criteria for the Lanczos algorithm, which stops when
-        the difference in the approximated eigenvalue is less than ``tol``.
-        Defaults to 1e-6.
-    :param max_iter: The maximum number of iterations for the Lanczos method. If
-        not provided, it defaults to ``10 * model.num_parameters``.
-    :param device: The device to use for executing the hessian vector product.
-    :param eigen_computation_on_gpu: If ``True``, tries to execute the eigen pair
-        approximation on the provided device via `cupy <https://cupy.dev/>`_
-        implementation. Make sure that either your model is small enough, or you
-        use a small rank_estimate to fit your device's memory. If ``False``, the
-        eigen pair approximation is executed on the CPU with scipy's wrapper to
-        ARPACK.
-    :param torch_dtype: if not provided, current torch default dtype is used for
-        conversion to torch.
+    \[ H_{\text{approx}} = V D V^T\]
 
-    :return: An object that contains the top- ``rank_estimate`` eigenvalues and
-        corresponding eigenvectors of the Hessian.
+    where \(D\) is a diagonal matrix with the top (in absolute value) `rank_estimate` eigenvalues of the Hessian
+    and \(V\) contains the corresponding eigenvectors.
+
+    Args:
+        hessian_vp: A function that takes a vector and returns the product of
+            the Hessian of the loss function.
+        matrix_shape: The shape of the matrix, represented by the hessian vector
+            product.
+        hessian_perturbation: Regularization parameter added to the
+            Hessian-vector product for numerical stability.
+        rank_estimate: The number of eigenvalues and corresponding eigenvectors
+            to compute. Represents the desired rank of the Hessian approximation.
+        krylov_dimension: The number of Krylov vectors to use for the Lanczos
+            method. If not provided, it defaults to
+            \( \min(\text{model.num_parameters}, \max(2 \times \text{rank_estimate} + 1, 20)) \).
+        tol: The stopping criteria for the Lanczos algorithm, which stops when
+            the difference in the approximated eigenvalue is less than `tol`.
+            Defaults to 1e-6.
+        max_iter: The maximum number of iterations for the Lanczos method. If
+            not provided, it defaults to \( 10 \cdot \text{model.num_parameters}\).
+        device: The device to use for executing the hessian vector product.
+        eigen_computation_on_gpu: If True, tries to execute the eigen pair
+            approximation on the provided device via `cupy <https://cupy.dev/>`_
+            implementation. Ensure that either your model is small enough, or you
+            use a small rank_estimate to fit your device's memory. If False, the
+            eigen pair approximation is executed on the CPU with scipy's wrapper to
+            ARPACK.
+        torch_dtype: If not provided, the current torch default dtype is used for
+            conversion to torch.
+
+    Returns:
+        A [LowRankProductRepresentation][pydvl.influence.torch.torch_differentiable.LowRankProductRepresentation]
+            instance that contains the top (up until rank_estimate) eigenvalues
+            and corresponding eigenvectors of the Hessian.
     """
 
     torch_dtype = torch.get_default_dtype() if torch_dtype is None else torch_dtype
@@ -325,32 +356,42 @@ def model_hessian_low_rank(
     max_iter: Optional[int] = None,
     eigen_computation_on_gpu: bool = False,
 ) -> LowRankProductRepresentation:
-    """
+    r"""
     Calculates a low-rank approximation of the Hessian matrix of the model's loss function using the implicitly
-    restarted Lanczos algorithm.
+    restarted Lanczos algorithm, i.e.
 
-    :param model: A PyTorch model instance that is twice differentiable, wrapped into :class:`TorchTwiceDifferential`.
-                  The Hessian will be calculated with respect to this model's parameters.
-    :param training_data: A DataLoader instance that provides the model's training data.
-                          Used in calculating the Hessian-vector products.
-    :param hessian_perturbation: Optional regularization parameter added to the Hessian-vector product
-                                 for numerical stability.
-    :param rank_estimate: The number of eigenvalues and corresponding eigenvectors to compute.
-                          Represents the desired rank of the Hessian approximation.
-    :param krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
-                             If not provided, it defaults to $min(model.num_parameters, max(2*rank_estimate + 1, 20))$.
-    :param tol: The stopping criteria for the Lanczos algorithm, which stops when the difference
-                in the approximated eigenvalue is less than `tol`. Defaults to 1e-6.
-    :param max_iter: The maximum number of iterations for the Lanczos method. If not provided, it defaults to
-                     $10*model.num_parameters$
-    :param eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation on the provided
-                                     device via cupy implementation.
-                                     Make sure, that either your model is small enough or you use a
-                                     small rank_estimate to fit your device's memory.
-                                     If False, the eigen pair approximation is executed on the CPU by scipy wrapper to
-                                     ARPACK.
-    :return: A `LowRankProductRepresentation` instance that contains the top (up until rank_estimate) eigenvalues
-             and corresponding eigenvectors of the Hessian.
+    \[ H_{\text{approx}} = V D V^T\]
+
+    where \(D\) is a diagonal matrix with the top (in absolute value) `rank_estimate` eigenvalues of the Hessian
+    and \(V\) contains the corresponding eigenvectors.
+
+
+    Args:
+        model: A PyTorch model instance that is twice differentiable, wrapped into `TorchTwiceDifferential`.
+            The Hessian will be calculated with respect to this model's parameters.
+        training_data: A DataLoader instance that provides the model's training data.
+            Used in calculating the Hessian-vector products.
+        hessian_perturbation: Optional regularization parameter added to the Hessian-vector product
+            for numerical stability.
+        rank_estimate: The number of eigenvalues and corresponding eigenvectors to compute.
+            Represents the desired rank of the Hessian approximation.
+        krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
+            If not provided, it defaults to min(model.num_parameters, max(2*rank_estimate + 1, 20)).
+        tol: The stopping criteria for the Lanczos algorithm, which stops when the difference
+            in the approximated eigenvalue is less than `tol`. Defaults to 1e-6.
+        max_iter: The maximum number of iterations for the Lanczos method. If not provided, it defaults to
+            10*model.num_parameters.
+        eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation on the provided
+            device via cupy implementation.
+            Make sure, that either your model is small enough or you use a
+            small rank_estimate to fit your device's memory.
+            If False, the eigen pair approximation is executed on the CPU by scipy wrapper to
+            ARPACK.
+
+    Returns:
+        A [LowRankProductRepresentation][pydvl.influence.torch.torch_differentiable.LowRankProductRepresentation]
+            instance that contains the top (up until rank_estimate) eigenvalues
+            and corresponding eigenvectors of the Hessian.
     """
     raw_hvp = get_hvp_function(
         model.model, model.loss, training_data, use_hessian_avg=True
@@ -394,10 +435,14 @@ class TorchTensorUtilities(TensorUtilities[torch.Tensor, TorchTwiceDifferentiabl
         """
         Add a singleton dimension at a specified position in a tensor.
 
-        :param x: A PyTorch tensor.
-        :param dim: The position at which to add the singleton dimension. Zero-based indexing.
-        :return: A new tensor with an additional singleton dimension.
+        Args:
+            x: A PyTorch tensor.
+            dim: The position at which to add the singleton dimension. Zero-based indexing.
+
+        Returns:
+            A new tensor with an additional singleton dimension.
         """
+
         return x.unsqueeze(dim)
 
     @staticmethod
@@ -448,17 +493,18 @@ def solve_linear(
     b: torch.Tensor,
     hessian_perturbation: float = 0.0,
 ) -> InverseHvpResult:
-    """Given a model and training data, it finds x s.t. $Hx = b$, with $H$ being
-    the model hessian.
+    r"""
+    Given a model and training data, it finds x such that \(Hx = b\), with \(H\) being the model hessian.
 
-    :param model: A model wrapped in the TwiceDifferentiable interface.
-    :param training_data: A DataLoader containing the training data.
-    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
-    :param hessian_perturbation: regularization of the hessian
+    Args:
+        model: A model wrapped in the TwiceDifferentiable interface.
+        training_data: A DataLoader containing the training data.
+        b: A vector or matrix, the right hand side of the equation \(Hx = b\).
+        hessian_perturbation: Regularization of the hessian.
 
-    :return: An array that solves the inverse problem,
-        i.e. it returns $x$ such that $Hx = b$, and a dictionary containing
-        information about the solution.
+    Returns:
+        Instance of [InverseHvpResult], having an array that solves the inverse problem,
+        i.e. it returns \(x\) such that \(Hx = b\), and a dictionary containing information about the solution.
     """
 
     all_x, all_y = [], []
@@ -486,26 +532,29 @@ def solve_batch_cg(
     maxiter: Optional[int] = None,
     progress: bool = False,
 ) -> InverseHvpResult:
-    """
+    r"""
     Given a model and training data, it uses conjugate gradient to calculate the
-    inverse of the Hessian Vector Product. More precisely, it finds x s.t. $Hx =
-    b$, with $H$ being the model hessian. For more info, see
-    `Wikipedia <https://en.wikipedia.org/wiki/Conjugate_gradient_method>`_
+    inverse of the Hessian Vector Product. More precisely, it finds x such that \(Hx =
+    b\), with \(H\) being the model hessian. For more info, see
+    [Wikipedia](https://en.wikipedia.org/wiki/Conjugate_gradient_method).
 
-    :param model: A model wrapped in the TwiceDifferentiable interface.
-    :param training_data: A DataLoader containing the training data.
-    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
-    :param hessian_perturbation: regularization of the hessian
-    :param x0: initial guess for hvp. If None, defaults to b
-    :param rtol: maximum relative tolerance of result
-    :param atol: absolute tolerance of result
-    :param maxiter: maximum number of iterations. If None, defaults to 10*len(b)
-    :param progress: If True, display progress bars.
+    Args:
+        model: A model wrapped in the TwiceDifferentiable interface.
+        training_data: A DataLoader containing the training data.
+        b: A vector or matrix, the right hand side of the equation \(Hx = b\).
+        hessian_perturbation: Regularization of the hessian.
+        x0: Initial guess for hvp. If None, defaults to b.
+        rtol: Maximum relative tolerance of result.
+        atol: Absolute tolerance of result.
+        maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
+        progress: If True, display progress bars.
 
-    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$,
-        and a dictionary containing information about the convergence of CG, one
-        entry for each line of the matrix.
+    Returns:
+        Instance of [InverseHvpResult], having a matrix of shape [NxP] with each line being a solution of \(Ax=b\),
+        and a dictionary containing information about the convergence of CG,
+        one entry for each line of the matrix.
     """
+
     total_grad_xy = 0
     total_points = 0
     for x, y in maybe_progress(training_data, progress, desc="Batch Train Gradients"):
@@ -536,18 +585,22 @@ def solve_cg(
     atol: float = 1e-7,
     maxiter: Optional[int] = None,
 ) -> InverseHvpResult:
-    """Conjugate gradient solver for the Hessian vector product
+    r"""
+    Conjugate gradient solver for the Hessian vector product.
 
-    :param hvp: a Callable Hvp, operating with tensors of size N
-    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
-    :param x0: initial guess for hvp
-    :param rtol: maximum relative tolerance of result
-    :param atol: absolute tolerance of result
-    :param maxiter: maximum number of iterations. If None, defaults to 10*len(b)
+    Args:
+        hvp: A callable Hvp, operating with tensors of size N.
+        b: A vector or matrix, the right hand side of the equation \(Hx = b\).
+        x0: Initial guess for hvp.
+        rtol: Maximum relative tolerance of result.
+        atol: Absolute tolerance of result.
+        maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
 
-    :return: A vector x, solution of $Ax=b$, and a dictionary containing
+    Returns:
+        Instance of [InverseHvpResult], with a vector x, solution of \(Ax=b\), and a dictionary containing
         information about the convergence of CG.
     """
+
     if x0 is None:
         x0 = torch.clone(b)
     if maxiter is None:
@@ -594,30 +647,33 @@ def solve_lissa(
 ) -> InverseHvpResult:
     r"""
     Uses LISSA, Linear time Stochastic Second-Order Algorithm, to iteratively
-    approximate the inverse Hessian. More precisely, it finds x s.t. $Hx = b$,
-    with $H$ being the model's second derivative wrt. the parameters.
+    approximate the inverse Hessian. More precisely, it finds x s.t. \(Hx = b\),
+    with \(H\) being the model's second derivative wrt. the parameters.
     This is done with the update
 
-    $$H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s},$$
+    \[H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s},\]
 
-    where $I$ is the identity matrix, $d$ is a dampening term and $s$ a scaling
+    where \(I\) is the identity matrix, \(d\) is a dampening term and \(s\) a scaling
     factor that are applied to help convergence. For details, see
-    :footcite:t:`koh_understanding_2017` and the original paper
-    :footcite:t:`agarwal_2017_second`.
+    [@koh_understanding_2017] and the original paper [@agarwal_2017_second].
 
-    :param model: A model wrapped in the TwiceDifferentiable interface.
-    :param training_data: A DataLoader containing the training data.
-    :param b: a vector or matrix, the right hand side of the equation $Hx = b$.
-    :param hessian_perturbation: regularization of the hessian
-    :param progress: If True, display progress bars.
-    :param maxiter: maximum number of iterations,
-    :param dampen: dampening factor, defaults to 0 for no dampening
-    :param scale: scaling factor, defaults to 10
-    :param h0: initial guess for hvp
+    Args:
+        model: A model wrapped in the TwiceDifferentiable interface.
+        training_data: A DataLoader containing the training data.
+        b: A vector or matrix, the right hand side of the equation \(Hx = b\).
+        hessian_perturbation: Regularization of the hessian.
+        maxiter: Maximum number of iterations.
+        dampen: Dampening factor, defaults to 0 for no dampening.
+        scale: Scaling factor, defaults to 10.
+        h0: Initial guess for hvp.
+        rtol: tolerance to use for early stopping
+        progress: If True, display progress bars.
 
-    :return: A matrix of shape [NxP] with each line being a solution of $Ax=b$,
+    Returns:
+        Instance of [InverseHvpResult], with a matrix of shape [NxP] with each line being a solution of \(Ax=b\),
         and a dictionary containing information about the accuracy of the solution.
     """
+
     if h0 is None:
         h_estimate = torch.clone(b)
     else:
@@ -632,9 +688,12 @@ def solve_lissa(
         """Given an estimate of the hessian inverse and the regularised hessian
         vector product, it computes the next estimate.
 
-        :param h: an estimate of the hessian inverse
-        :param reg_hvp: regularised hessian vector product
-        :return: the next estimate of the hessian inverse
+        Args:
+            h: An estimate of the hessian inverse.
+            reg_hvp: Regularised hessian vector product.
+
+        Returns:
+            The next estimate of the hessian inverse.
         """
         return b + (1 - dampen) * h - reg_hvp(h) / scale
 
@@ -677,37 +736,49 @@ def solve_arnoldi(
     max_iter: Optional[int] = None,
     eigen_computation_on_gpu: bool = False,
 ) -> InverseHvpResult:
-    """
-    Solves the linear system Hx = b, where H is the Hessian of the model's loss function and b is the given right-hand
-    side vector. The Hessian is approximated using a low-rank representation.
+    r"""
+    Solves the linear system Hx = b, where H is the Hessian of the model's loss function and b is the given
+    right-hand side vector.
+    It employs the [implicitly restarted Arnoldi method](https://en.wikipedia.org/wiki/Arnoldi_iteration) for
+    computing a partial eigen decomposition, which is used fo the inversion i.e.
 
-    :param model: A PyTorch model instance that is twice differentiable, wrapped into :class:`TorchTwiceDifferential`.
-                  The Hessian will be calculated with respect to this model's parameters.
-    :param training_data: A DataLoader instance that provides the model's training data.
-                          Used in calculating the Hessian-vector products.
-    :param b: The right-hand side vector in the system Hx = b.
-    :param hessian_perturbation: Optional regularization parameter added to the Hessian-vector product
-                                 for numerical stability.
-    :param rank_estimate: The number of eigenvalues and corresponding eigenvectors to compute.
-                          Represents the desired rank of the Hessian approximation.
-    :param krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
-                             If not provided, it defaults to $min(model.num_parameters, max(2*rank_estimate + 1, 20))$.
-    :param low_rank_representation: A LowRankProductRepresentation instance containing a previously computed
-                                    low-rank representation of the Hessian. I provided, all other parameters
-                                    are ignored, if not, a new low-rank representation will be computed,
-                                    using provided parameters.
-    :param tol: The stopping criteria for the Lanczos algorithm.
-                If `low_rank_representation` is provided, this parameter is ignored.
-    :param max_iter: The maximum number of iterations for the Lanczos method.
-                     If `low_rank_representation` is provided, this parameter is ignored.
-    :param eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation on the model's
-                                     device via cupy implementation.
-                                     Make sure, that either your model is small enough or you use a
-                                     small rank_estimate to fit your device's memory.
-                                     If False, the eigen pair approximation is executed on the CPU by scipy wrapper to
-                                     ARPACK.
-    :return: Returns the solution vector x that satisfies the system Hx = b,
-             where H is a low-rank approximation of the Hessian of the model's loss function.
+    \[x = V D^{-1} V^T b\]
+
+    where \(D\) is a diagonal matrix with the top (in absolute value) `rank_estimate` eigenvalues of the Hessian
+    and \(V\) contains the corresponding eigenvectors.
+
+    Args:
+        model: A PyTorch model instance that is twice differentiable, wrapped into
+            [TorchTwiceDifferential][pydvl.influence.torch.torch_differentiable.TorchTwiceDifferentiable].
+            The Hessian will be calculated with respect to this model's parameters.
+        training_data: A DataLoader instance that provides the model's training data.
+            Used in calculating the Hessian-vector products.
+        b: The right-hand side vector in the system Hx = b.
+        hessian_perturbation: Optional regularization parameter added to the Hessian-vector
+            product for numerical stability.
+        rank_estimate: The number of eigenvalues and corresponding eigenvectors to compute.
+            Represents the desired rank of the Hessian approximation.
+        krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
+            Defaults to min(model's number of parameters, max(2 times rank_estimate + 1, 20)).
+        low_rank_representation: An instance of
+            [LowRankProductRepresentation][pydvl.influence.torch.torch_differentiable.LowRankProductRepresentation]
+            containing a previously computed low-rank representation of the Hessian. If provided, all other parameters
+            are ignored; otherwise, a new low-rank representation is computed
+            using provided parameters.
+        tol: The stopping criteria for the Lanczos algorithm.
+            Ignored if `low_rank_representation` is provided.
+        max_iter: The maximum number of iterations for the Lanczos method.
+            Ignored if `low_rank_representation` is provided.
+        eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation on the model's device
+            via a cupy implementation. Ensure the model size or rank_estimate is appropriate for device memory.
+            If False, the eigen pair approximation is executed on the CPU by the scipy wrapper to ARPACK.
+
+    Returns:
+        Instance of [InverseHvpResult][pydvl.influence.torch.torch_differentiable.InverseHvpResult],
+            having the solution vector x that satisfies the system \(Ax = b\),
+            where \(A\) is a low-rank approximation of the Hessian \(H\) of the model's loss function, and an instance
+            of [LowRankProductRepresentation][pydvl.influence.torch.torch_differentiable.LowRankProductRepresentation],
+            which represents the approximation of H.
     """
 
     b_device = b.device if hasattr(b, "device") else torch.device("cpu")
