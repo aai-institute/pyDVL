@@ -33,7 +33,7 @@ jobs:
     - name: Lint Code
       run: |
         pre-commit run --all --show-diff-on-failure
-        python build_scripts/run_pylint.py >>> (pylint-json2html -f jsonextended -o pylint.html)
+        python build_scripts/run_pylint.py | (pylint-json2html -f jsonextended -o pylint.html)
       shell: bash
     - name: Check Type Hints
       run: mypy src/
