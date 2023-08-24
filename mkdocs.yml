@@ -6,6 +6,7 @@ copyright: "Copyright &copy; AppliedAI Institute gGmbH"
 
 watch:
   - src/pydvl
+  - notebooks
 
 hooks:
   - build_scripts/copy_notebooks.py
@@ -172,7 +173,6 @@ nav:
       - For CNNs: examples/influence_imagenet.ipynb
       - For mislabeled data: examples/influence_synthetic.ipynb
       - For outlier detection: examples/influence_wine.ipynb
-#  - Examples: examples/
   - Code:
     - Changelog: CHANGELOG.md
     - API: api/pydvl/
