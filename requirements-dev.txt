@@ -19,7 +19,6 @@ pytest-docker==2.0.0
 pytest-mock
 pytest-timeout
 pytest-lazy-fixture
-ray[default] >= 0.8
 wheel
 twine==4.0.2
 bump2version
