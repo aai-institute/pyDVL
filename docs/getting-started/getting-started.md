@@ -10,21 +10,21 @@ alias:
 !!! Warning
     Make sure you have read [[installation]] before using the library. 
     In particular read about how caching and parallelization work,
-    since they require additional setup.
+    since they might require additional setup.
+
+## Main concepts
 
 pyDVL aims to be a repository of production-ready, reference implementations of
-algorithms for data valuation and influence functions. You can read:
+algorithms for data valuation and influence functions. Even though we only
+briefly introduce key concepts in the documentation, the following sections 
+should be enough to get you started.
 
 * [[data-valuation]] for key objects and usage patterns for Shapley value
   computation and related methods.
-* [[influence-values]] for instructions on how to compute influence functions (still
-  in a pre-alpha state)
+* [[influence-values]] for instructions on how to compute influence functions.
 
-We only briefly introduce key concepts in the documentation. For a thorough
-introduction and survey of the field, we refer to **the upcoming review** at the
-[TransferLab website]({{ transferlab.data_valuation_review }}).
 
-# Running the examples
+## Running the examples
 
 If you are somewhat familiar with the concepts of data valuation, you can start
 by browsing our worked-out examples illustrating pyDVL's capabilities either:

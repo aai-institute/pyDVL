@@ -1,16 +1,15 @@
 ---
-title: Computing Influence Values
-alias: 
+title: The influence function
+alias:
   name: influence-values
   text: Computing Influence Values
 ---
 
-# Computing influence values
+# The influence function
 
 !!! Warning 
-    Much of the code in the package [pydvl.influence][pydvl.influence]
-    is experimental or untested. Package structure and basic API are bound
-    to change before v1.0.0
+    The code in the package [pydvl.influence][pydvl.influence] is experimental.
+    Package structure and basic API are bound to change before v1.0.0
 
 The influence function (IF) is a method to quantify the effect (influence) that
 each training point has on the parameters of a model, and by extension on any
@@ -18,23 +17,31 @@ function thereof. In particular, it allows to estimate how much each training
 sample affects the error on a test point, making the IF useful for understanding
 and debugging models.
 
+Alas, the influence function relies on some assumptions that can make their
+application difficult. Yet another drawback is that they require the computation
+of the inverse of the Hessian of the model wrt. its parameters, which is
+intractable for large models like deep neural networks. Much of the recent
+research tackles this issue using approximations, like a Neuman series
+[@agarwal_secondorder_2017], with the most successful solution using a low-rank
+approximation that iteratively finds increasing eigenspaces of the Hessian
+[@schioppa_scaling_2021].
+
 pyDVL implements several methods for the efficient computation of the IF for
-machine learning.
+machine learning. In the examples we document some of the difficulties that can
+arise when using the IF.
 
 # The Influence Function
 
-First introduced in the context of robust statistics in
-[@hampel1974influence], the IF was popularized in the context of
-machine learning in [@koh_understanding_2017]. 
+First introduced in the context of robust statistics in [@hampel1974influence],
+the IF was popularized in the context of machine learning in
+[@koh_understanding_2017].
 
-Following their formulation, consider an input space $\mathcal{X}$
-(e.g. images) and an output space $\mathcal{Y}$ (e.g. labels). 
-Let's take $z_i = (x_i, y_i)$, for $i \in  \{1,...,n\}$ to be
-the $i$-th training point, and $\theta$ to be the
-(potentially highly) multi-dimensional parameters of a model
-(e.g. $\theta$ is a big array with all of a neural network's parameters,
-including biases and/or dropout rates).
-We will denote with $L(z, \theta)$ the loss of the model for
+Following their formulation, consider an input space $\mathcal{X}$ (e.g. images)
+and an output space $\mathcal{Y}$ (e.g. labels). Let's take $z_i = (x_i, y_i)$,
+for $i \in  \{1,...,n\}$ to be the $i$-th training point, and $\theta$ to be the
+(potentially highly) multi-dimensional parameters of a model (e.g. $\theta$ is a
+big array with all of a neural network's parameters, including biases and/or
+dropout rates). We will denote with $L(z, \theta)$ the loss of the model for
 point $z$ when the parameters are $\theta.$
 
 To train a model, we typically minimize the loss over all $z_i$, i.e. the

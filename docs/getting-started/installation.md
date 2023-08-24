@@ -47,7 +47,7 @@ You can also install the latest development version from
 pip install pyDVL --index-url https://test.pypi.org/simple/
 ```
 
-# Dependencies
+## Dependencies
 
 pyDVL requires Python >= 3.8, [Memcached](https://memcached.org/) for caching
 and [Ray](https://ray.io) for parallelization. Additionally,
@@ -57,7 +57,7 @@ the [Influence functions][pydvl.influence] module requires PyTorch (see
 ray is used to distribute workloads both locally and across nodes. Please follow
 the instructions in their documentation for installation.
 
-# Setting up the cache
+## Setting up the cache
 
 memcached is an in-memory key-value store accessible over the network. pyDVL
 uses it to cache certain results and speed-up the computations. You can either
@@ -80,9 +80,3 @@ docker container run -d --rm -p 11211:11211 memcached:latest
     To read more about caching and how it might affect your usage, in particular
     about cache reuse and its pitfalls, please read the documentation for the
     [caching module][pydvl.utils.caching].
-
-# What's next
-
-- Read on [[data-valuation]]
-- Read on [[influence-values]]
-- Browse the [[examples]]
