@@ -179,23 +179,23 @@ Examples for hidden imports and plots are available in the notebooks, e.g. in
 ## Documentation
 
 API documentation and examples from notebooks are built with
-[mkdocs](https://www.mkdocs.org/) by tox.
+[mkdocs](https://www.mkdocs.org/).
 
 Notebooks are an integral part of the documentation as well, please read
 [the section on notebooks](#notebooks) above.
 
-Use the **docs** tox environment to build the documentation the same way it is
+Use the following command to build the documentation the same way it is
 done in CI:
 
 ```bash
-tox -e docs
+mkdocs build
 ```
 
-Locally, you can use the **docs-dev** tox environment to continuously rebuild
-documentation on changes to the `docs` folder:
+Locally, you can use this command instead to continuously rebuild
+documentation on changes to the `docs` and `src` folder:
 
 ```bash
-tox -e docs-dev
+mkdocs serve
 ```
 
 This will rebuild the documentation on changes to `.md` files inside `docs`,
