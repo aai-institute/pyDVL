@@ -132,7 +132,7 @@ class RayExecutor(Executor):
             self._start_work_item_manager_thread()
             return future
 
-    def shutdown(self, wait: bool = True, *, cancel_futures: bool = None) -> None:
+    def shutdown(self, wait: bool = True, *, cancel_futures: Optional[bool] = None) -> None:
         """Clean up the resources associated with the Executor.
 
         This method tries to mimic the behaviour of :meth:`Executor.shutdown`
@@ -353,7 +353,6 @@ class _WorkItemManagerThread(threading.Thread):
                     # We cannot cancel a running future object.
                     for future in self.submitted_futures:
                         ray.cancel(future.object_ref)
-                    # FIXME: huh? why is this here?
                     # Make sure we do this only once to not waste time looping
                     # on running processes over and over.
                     executor._cancel_futures = CancellationPolicy.NONE
