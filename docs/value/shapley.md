@@ -24,7 +24,7 @@ Shapley* [@ghorbani_data_2019], which is a Monte Carlo approximation of the
 
 The first algorithm is just a verbatim implementation of the definition. As such
 it returns as exact a value as the utility function allows (see what this means
-in Problems of Data Values][problems-of-data-values]).
+in [Problems of Data Values][problems-of-data-values]).
 
 The value $v$ of the $i$-th sample in dataset $D$ wrt. utility $u$ is computed
 as a weighted sum of its marginal utility wrt. every possible coalition of
@@ -43,7 +43,7 @@ df = values.to_dataframe(column='value')
 ```
 
 We can convert the return value to a
-[pandas.DataFrame][].
+[pandas.DataFrame](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html).
 and name the column with the results as `value`. Please refer to the
 documentation in [shapley][pydvl.value.shapley] and
 [ValuationResult][pydvl.value.result.ValuationResult] for more information.
@@ -78,11 +78,11 @@ stop condition. This is an instance of a
 
 ### Owen sampling
 
-**Owen Sampling** [@okhrati_multilinear_2021] is a practical
-algorithm based on the combinatorial definition. It uses a continuous extension
-of the utility from $\{0,1\}^n$, where a 1 in position $i$ means that sample
-$x_i$ is used to train the model, to $[0,1]^n$. The ensuing expression for
-Shapley value uses integration instead of discrete weights:
+**Owen Sampling** [@okhrati_multilinear_2021] is a practical algorithm based on
+the combinatorial definition. It uses a continuous extension of the utility from
+$\{0,1\}^n$, where a 1 in position $i$ means that sample $x_i$ is used to train
+the model, to $[0,1]^n$. The ensuing expression for Shapley value uses
+integration instead of discrete weights:
 
 $$
 v_u(x_i) = \int_0^1 \mathbb{E}_{S \sim P_q(D \backslash \{ x_i \})}
@@ -106,15 +106,15 @@ Sampling* in the documentation for the function doing the work behind the scenes
 [owen_sampling_shapley][pydvl.value.shapley.owen.owen_sampling_shapley].
 
 Note that in this case we do not pass a
-[StoppingCriterion][pydvl.value.stopping.StoppingCriterion] to the function, but instead
-the number of iterations and the maximum number of samples to use in the
+[StoppingCriterion][pydvl.value.stopping.StoppingCriterion] to the function, but
+instead the number of iterations and the maximum number of samples to use in the
 integration.
 
 ### Permutation Shapley
 
 An equivalent way of computing Shapley values (`ApproShapley`) appeared in
-[@castro_polynomial_2009] and is the basis for the method most often
-used in practice. It uses permutations over indices instead of subsets:
+[@castro_polynomial_2009] and is the basis for the method most often used in
+practice. It uses permutations over indices instead of subsets:
 
 $$
 v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
@@ -129,18 +129,28 @@ combinatorial approach above is that the approximations always fulfill the
 efficiency axiom of Shapley, namely $\sum_{i=1}^n \hat{v}_i = u(D)$ (see
 [@castro_polynomial_2009], Proposition 3.2).
 
-By adding early stopping, the result is the so-called **Truncated Monte Carlo
-Shapley** [@ghorbani_data_2019], which is efficient enough to be
-useful in applications.
+By adding two types of early stopping, the result is the so-called **Truncated
+Monte Carlo Shapley** [@ghorbani_data_2019], which is efficient enough to be
+useful in applications. The first is simply a convergence criterion, of which
+there are [several to choose from][pydvl.value.stopping]. The second is a
+criterion to truncate the iteration over single permutations.
+[RelativeTruncation][pydvl.value.shapley.truncated.RelativeTruncation] chooses
+to stop iterating over samples in a permutation when the marginal utility
+becomes too small.
 
 ```python
-from pydvl.value import compute_shapley_values, MaxUpdates
+from pydvl.value import compute_shapley_values, MaxUpdates, RelativeTruncation
 
 values = compute_shapley_values(
-   u=utility, mode="truncated_montecarlo", done=MaxUpdates(1000)
+    u=utility,
+    mode="permutation_montecarlo",
+    done=MaxUpdates(1000),
+    truncation=RelativeTruncation(utility, rtol=0.01)
 )
 ```
 
+You can see this method in action in
+[this example](../../examples/shapley_basic_spotify/) using the Spotify dataset.
 
 ### Exact Shapley for KNN
 
