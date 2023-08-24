@@ -55,7 +55,7 @@ jobs:
     - name: Install Pandoc
       run: sudo apt-get install --no-install-recommends --yes pandoc
     - name: Build Docs
-      run: mike build
+      run: mkdocs build
   base-tests:
     strategy:
       matrix:
