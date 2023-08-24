@@ -1,15 +1,15 @@
 mike
-mkdocs==1.4.2
-mkdocs-material
+mkdocs==1.5.2
 mkdocstrings[python]>=0.18
-mkdocs-jupyter
 mkdocs-alias-plugin>=0.6.0
 mkdocs-autorefs
-mkdocs-gen-files
-mkdocs-literate-nav
-mkdocs-section-index
 mkdocs-bibtex
+mkdocs-gen-files
+mkdocs-git-revision-date-localized-plugin
+mkdocs-jupyter
+mkdocs-literate-nav
+mkdocs-material
+mkdocs-section-index
 mkdocs-macros-plugin
 neoteroi-mkdocs  # Needed for card grid on home page
-mkdocs-git-revision-date-localized-plugin
 pypandoc_binary
