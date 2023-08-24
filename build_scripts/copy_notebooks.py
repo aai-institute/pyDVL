@@ -30,9 +30,10 @@ def on_pre_build(config):
         except FileNotFoundError:
             pass
         logger.info(
-            f"Copying '{os.fspath(notebook)}' to '{os.fspath(target_filepath)}'"
+            f"Creating symbolic link for '{os.fspath(notebook)}' "
+            f"at '{os.fspath(target_filepath)}'"
         )
-        shutil.copy2(src=notebook, dst=target_filepath)
+        target_filepath.symlink_to(notebook)
 
     logger.info("Finished copying notebooks to examples directory")
 
