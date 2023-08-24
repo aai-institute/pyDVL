@@ -30,6 +30,10 @@ jobs:
       uses: ./.github/actions/python
       with:
         python_version: 3.8
+    - uses: actions/cache@v3
+      with:
+        path: ~/.cache/pre-commit
+        key: pre-commit-${{ env.pythonLocation }}-${{ hashFiles('.pre-commit-config.yaml') }}
     - name: Lint Code
       run: |
         pre-commit run --all --show-diff-on-failure
