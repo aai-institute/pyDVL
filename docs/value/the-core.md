@@ -28,7 +28,7 @@ It satisfies the following 2 properties:
   The sum of payoffs to the agents in any coalition S is at
   least as large as the amount that these agents could earn by
   forming a coalition on their own.
-  $$\sum_{x_i\in S} v_u(x_i) \geq u(S), \forall S \subset D\,$$
+  $$\sum_{x_i \in S} v_u(x_i) \geq u(S), \forall S \subset D\,$$
 
 The second property states that the sum of payoffs to the agents
 in any subcoalition $S$ is at least as large as the amount that

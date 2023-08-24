@@ -85,9 +85,9 @@ $x_i$ is used to train the model, to $[0,1]^n$. The ensuing expression for
 Shapley value uses integration instead of discrete weights:
 
 $$
-v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})}
-[u(S \cup {i}) - u(S)]
-.$$
+v_u(x_i) = \int_0^1 \mathbb{E}_{S \sim P_q(D \backslash \{ x_i \})}
+[u(S \cup \{x_i\}) - u(S)].
+$$
 
 Using Owen sampling follows the same pattern as every other method for Shapley
 values in pyDVL. First construct the dataset and utility, then call
@@ -118,8 +118,8 @@ used in practice. It uses permutations over indices instead of subsets:
 
 $$
 v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
-[u(\sigma_{:i} \cup \{i\}) − u(\sigma_{:i})]
-,$$
+[u(\sigma_{:i} \cup \{x_i\}) − u(\sigma_{:i})],
+$$
 
 where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
 position where $i$ appears. To approximate this sum (which has $\mathcal{O}(n!)$
