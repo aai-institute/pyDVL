@@ -9,7 +9,8 @@ inputs:
     required: true
   title:
     description: Alternative title to use
-    required: true
+    required: false
+    default: ''
   email:
     description: Email to use for git config
     required: true
@@ -28,9 +29,15 @@ runs:
       git fetch origin gh-pages --depth=1
       git config --local user.email ${{ inputs.email }}
       git config --local user.name ${{ inputs.username }}
-      mike deploy ${{ inputs.version }} ${{ inputs.alias }} --title=${{ inputs.title }} --push --update-aliases
+    shell: bash
+  - run: |
+      if [ -z "${{ inputs.title }}" ]
+      then
+        mike deploy ${{ inputs.version }} ${{ inputs.alias }} --push --update-aliases
+      else
+        mike deploy ${{ inputs.version }} ${{ inputs.alias }} --title=${{ inputs.title }} --push --update-aliases
+      fi
     shell: bash
   - if: ${{ inputs.set-default == 'true' }}
     run: mike set-default ${{ inputs.alias }}
     shell: bash
-
