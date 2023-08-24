@@ -120,7 +120,7 @@ python setup.py sdist bdist_wheel
 ## Notebooks
 
 We use notebooks both as documentation (copied over to `docs/examples`) and as
-integration tests. All notebooks in the `notebooks` directory are be executed
+integration tests. All notebooks in the `notebooks` directory are executed
 during the test run. Because run times are typically too long for large
 datasets, you must check for the `CI` environment variable to work
 with smaller ones. For example, you can select a subset of the data:
@@ -200,6 +200,16 @@ tox -e docs-dev
 
 This will rebuild the documentation on changes to `.md` files inside `docs`,
 notebooks and python files.
+
+
+### Adding new pages
+
+Navigation is configured in `mkdocs.yaml` using the nav section. We use the
+plugin [mkdoc-literate-nav](https://oprypin.github.io/mkdocs-literate-nav/)
+which allows fine-grained control of the navigation structure. However, most
+pages are explicitly listed and manually arranged in the `nav` section of the
+configuration.
+
 
 ### Using bibliography
 
