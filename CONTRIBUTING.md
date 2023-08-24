@@ -471,10 +471,9 @@ a GitHub release.
 #### Publish to TestPyPI
 
 We use [bump2version](https://pypi.org/project/bump2version/) to bump
-the build part of the version number and publish a package to TestPyPI from CI.
+the build part of the version number without commiting or tagging the change
+and then publish a package to TestPyPI from CI using Twine.
 
-To do that, we use 2 different tox environments:
-
-- **bump-dev-version**: Uses bump2version to bump the dev version,
-  without committing the new version or creating a corresponding git tag.
-- **publish-test-package**: Builds and publishes a package to TestPyPI
+For more details refer to the
+[.github/workflows/publish.yaml](.github/workflows/publish.yaml) and
+[.github/workflows/tox.yaml](.github/workflows/tox.yaml) files.
