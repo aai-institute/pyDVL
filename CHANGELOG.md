@@ -29,7 +29,7 @@
 - Decouple ray.init from ParallelConfig 
   [PR #373](https://github.com/appliedAI-Initiative/pyDVL/pull/383)
 
-## 0.6.1 - 🏗 Bug fixes and small improvement
+## 0.6.1 - 🏗 Bug fixes and small improvements
 
 - Fix parsing keyword arguments of `compute_semivalues` dispatch function
   [PR #333](https://github.com/appliedAI-Initiative/pyDVL/pull/333)
