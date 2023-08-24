@@ -41,7 +41,6 @@ jobs:
       shell: bash
     - name: Check Type Hints
       run: mypy src/
-      continue-on-error: true
   docs:
     name: Build Docs
     runs-on: ubuntu-latest
