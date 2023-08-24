@@ -292,8 +292,8 @@ def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> 
         The effective number of jobs, guaranteed to be >= 1.
 
     Raises:
-        RuntimeError if the effective number of jobs returned by the backend
-        is < 1.
+        RuntimeError: if the effective number of jobs returned by the backend
+            is < 1.
     """
     parallel_backend = init_parallel_backend(config)
     if (eff_n_jobs := parallel_backend.effective_n_jobs(n_jobs)) < 1:
