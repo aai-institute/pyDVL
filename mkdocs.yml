@@ -109,6 +109,7 @@ extra:
   transferlab:
     website: https://transferlab.appliedai.de
     data_valuation_review: https://transferlab.appliedai.de/reviews/data-valuation
+  copyright_link: https://appliedai-institute.de
   version:
     provider: mike
     default: stable
@@ -117,6 +118,10 @@ extra:
       link: https://github.com/appliedAI-Initiative/pyDVL
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/pyDVL/
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/aai_transferlab
+    - icon: fontawesome/brands/linkedin
+      link: https://de.linkedin.com/company/appliedai-institute-for-europe-ggmbh
 
 markdown_extensions:
   - admonition
