@@ -175,9 +175,9 @@ with different subsets of training data. Each call will retrain the model on a
 subset and evaluate it on the test data using a scoring function. By default,
 [Utility][pydvl.utils.utility.Utility] will use `model.score()`, but it is
 possible to use any scoring function (greater values must be better). In
-particular, the constructor accepts the same types as argument as sklearn's
-[cross_validate](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html>):
-a string, a scorer callable or [None][] for the default.
+particular, the constructor accepts the same types as argument as
+[sklearn.model_selection.cross_validate][]: a string, a scorer callable or
+[None][] for the default.
 
 ```python
 utility = Utility(model, dataset, "explained_variance")
@@ -276,7 +276,7 @@ values = naive_loo(utility)
 The return value of all valuation functions is an object of type
 [ValuationResult][pydvl.value.result.ValuationResult]. This can be iterated over,
 indexed with integers, slices and Iterables, as well as converted to a
-[pandas.DataFrame][https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html].
+[pandas.DataFrame][].
 
 
 ## Problems of data values

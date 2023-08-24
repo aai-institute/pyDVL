@@ -43,6 +43,7 @@ plugins:
             - https://docs.python.org/3/objects.inv
             - https://numpy.org/doc/stable/objects.inv
             - https://pandas.pydata.org/docs/objects.inv
+            - https://scikit-learn.org/stable/objects.inv
           paths: [ src ]  # search packages in the src folder
           options:
             docstring_style: google

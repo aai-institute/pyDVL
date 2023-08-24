@@ -255,7 +255,7 @@ class Dataset:
         **kwargs: dict,
     ) -> "Dataset":
         """Constructs a [Dataset][pydvl.utils.Dataset] object from a
-        [Bunch][sklearn.utils.Bunch], as returned by the `load_*` functions in
+        [sklearn.utils.Bunch][], as returned by the `load_*` functions in
         [sklearn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html).
 
         Args:

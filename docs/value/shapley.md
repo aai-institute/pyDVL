@@ -43,7 +43,7 @@ df = values.to_dataframe(column='value')
 ```
 
 We can convert the return value to a
-[pandas.DataFrame](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html).
+[pandas.DataFrame][].
 and name the column with the results as `value`. Please refer to the
 documentation in [shapley][pydvl.value.shapley] and
 [ValuationResult][pydvl.value.result.ValuationResult] for more information.
