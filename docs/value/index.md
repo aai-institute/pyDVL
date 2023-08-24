@@ -170,9 +170,9 @@ model = sk.svm.SVC()
 utility = Utility(model, dataset)
 ```
 
-The object `utility` is a callable that data valuation methods will execute
-with different subsets of training data. Each call will retrain the model on a
-subset and evaluate it on the test data using a scoring function. By default,
+The object `utility` is a callable that data valuation methods will execute with
+different subsets of training data. Each call will retrain the model on a subset
+and evaluate it on the test data using a scoring function. By default,
 [Utility][pydvl.utils.utility.Utility] will use `model.score()`, but it is
 possible to use any scoring function (greater values must be better). In
 particular, the constructor accepts the same types as argument as

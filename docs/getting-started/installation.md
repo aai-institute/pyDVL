@@ -49,21 +49,26 @@ pip install pyDVL --index-url https://test.pypi.org/simple/
 ## Dependencies
 
 pyDVL requires Python >= 3.8, [Memcached](https://memcached.org/) for caching
-and [Ray](https://ray.io) for parallelization. Additionally,
-the [Influence functions][pydvl.influence] module requires PyTorch (see
- [[installation]]).
+and [Ray](https://ray.io) for parallelization in a cluster (locally it uses joblib).
+Additionally, the [Influence functions][pydvl.influence] module requires PyTorch
+(see [[installation]]).
 
-ray is used to distribute workloads both locally and across nodes. Please follow
-the instructions in their documentation for installation.
+ray is used to distribute workloads across nodes in a cluster (it can be used
+locally as well, but for this we recommend joblib instead). Please follow the
+instructions in their documentation to set up the cluster.
 
 ## Setting up the cache
 
-memcached is an in-memory key-value store accessible over the network. pyDVL
-uses it to cache certain results and speed-up the computations. You can either
-install it as a package or run it inside a docker container (the simplest). For
-installation instructions, refer to the
-[Getting started](https://github.com/memcached/memcached/wiki#getting-started)
-section in memcached's wiki. Then you can run it with:
+[memcached](https://memcached.org/) is an in-memory key-value store accessible
+over the network. pyDVL uses it to cache the computation of the utility function
+and speed-up some computations (in particular, semi-value computations with the
+[PermutationSampler][pydvl.value.sampler.PermutationSampler] but other methods
+may benefit as well).
+
+You can either install it as a package or run it inside a docker container (the
+simplest). For installation instructions, refer to the [Getting
+started](https://github.com/memcached/memcached/wiki#getting-started) section in
+memcached's wiki. Then you can run it with:
 
 ```shell
 memcached -u user

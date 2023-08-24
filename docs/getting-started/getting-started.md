@@ -29,7 +29,7 @@ should be enough to get you started.
 If you are somewhat familiar with the concepts of data valuation, you can start
 by browsing our worked-out examples illustrating pyDVL's capabilities either:
 
-- [[examples]].
+- In the examples under [[data-valuation]] and [[influence-values]].
 - Using [binder](https://mybinder.org/) notebooks, deployed from each
   example's page.
 - Locally, by starting a jupyter server at the root of the project. You will
