@@ -132,7 +132,9 @@ class RayExecutor(Executor):
             self._start_work_item_manager_thread()
             return future
 
-    def shutdown(self, wait: bool = True, *, cancel_futures: Optional[bool] = None) -> None:
+    def shutdown(
+        self, wait: bool = True, *, cancel_futures: Optional[bool] = None
+    ) -> None:
         """Clean up the resources associated with the Executor.
 
         This method tries to mimic the behaviour of :meth:`Executor.shutdown`
@@ -345,42 +347,43 @@ class _WorkItemManagerThread(threading.Thread):
         executor = self.executor_reference()
         with self.shutdown_lock:
             logger.debug("work item manager thread acquired shutdown lock")
-            if executor is not None:
-                executor._shutdown = True
-                if executor._cancel_futures & CancellationPolicy.RUNNING:
-                    logger.debug("forcefully cancelling running futures")
-                    # We cancel the future's object references
-                    # We cannot cancel a running future object.
-                    for future in self.submitted_futures:
-                        ray.cancel(future.object_ref)
-                    # Make sure we do this only once to not waste time looping
-                    # on running processes over and over.
-                    executor._cancel_futures = CancellationPolicy.NONE
+            if executor is None:
+                return
+            executor._shutdown = True
 
-                if executor._cancel_futures & CancellationPolicy.PENDING:
-                    # Drain all work items from the queues,
-                    # and then cancel their associated futures.
-                    # We empty the pending queue first.
-                    logger.debug("cancelling pending work items")
-                    while True:
-                        with self.queue_lock:
-                            try:
-                                work_item = self.pending_queue.get_nowait()
-                            except queue.Empty:
-                                break
-                            if work_item is not None:
-                                work_item.future.cancel()
-                                del work_item
-                    while True:
-                        with self.queue_lock:
-                            try:
-                                work_item = self.work_queue.get_nowait()
-                            except queue.Empty:
-                                break
-                            if work_item is not None:
-                                work_item.future.cancel()
-                                del work_item
-                    # FIXME: huh? why is this here?
-                    # Make sure we do this only once to not waste time looping
-                    # on running processes over and over.
-                    executor._cancel_futures = CancellationPolicy.NONE
+            if executor._cancel_futures & CancellationPolicy.PENDING:
+                # Drain all work items from the queues,
+                # and then cancel their associated futures.
+                # We empty the pending queue first.
+                logger.debug("cancelling pending work items")
+                while True:
+                    with self.queue_lock:
+                        try:
+                            work_item = self.pending_queue.get_nowait()
+                        except queue.Empty:
+                            break
+                        if work_item is not None:
+                            work_item.future.cancel()
+                            del work_item
+                while True:
+                    with self.queue_lock:
+                        try:
+                            work_item = self.work_queue.get_nowait()
+                        except queue.Empty:
+                            break
+                        if work_item is not None:
+                            work_item.future.cancel()
+                            del work_item
+                # Make sure we do this only once to not waste time looping
+                # on running processes over and over.
+                executor._cancel_futures &= ~int(CancellationPolicy.PENDING)
+
+            if executor._cancel_futures & CancellationPolicy.RUNNING:
+                logger.debug("forcefully cancelling running futures")
+                # We cancel the future's object references
+                # We cannot cancel a running future object.
+                for future in self.submitted_futures:
+                    ray.cancel(future.object_ref)
+                # Make sure we do this only once to not waste time looping
+                # on running processes over and over.
+                executor._cancel_futures &= ~int(CancellationPolicy.RUNNING)
