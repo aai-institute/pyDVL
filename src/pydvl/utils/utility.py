@@ -63,6 +63,14 @@ class Utility:
     and across nodes, but must always be enabled for your
     project first, see [Setting up the cache][setting-up-the-cache].
 
+    Attributes:
+        model: The supervised model.
+        data: An object containing the split data.
+        scorer: A scoring function. If None, the `score()` method of the model
+            will be used. See [score][pydvl.utils.score] for ways to create
+            and compose scorers, in particular how to set default values and
+            ranges.
+
     Args:
         model: Any supervised model. Typical choices can be found at
                 https://scikit-learn.org/stable/supervised_learning.html
