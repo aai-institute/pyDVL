@@ -92,7 +92,8 @@ class Utility:
         clone_before_fit: If `True`, the model will be cloned before calling
             `fit()`.
 
-    Examples:
+    ??? Example
+        ``` pycon
         >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
         >>> from sklearn.linear_model import LinearRegression, LogisticRegression
         >>> from sklearn.datasets import load_iris
@@ -100,6 +101,7 @@ class Utility:
         >>> u = Utility(LogisticRegression(random_state=16), dataset)
         >>> u(dataset.indices)
         0.9
+        ```
 
     """
 
@@ -269,7 +271,8 @@ class DataUtilityLearning:
             the given model.
         model: A supervised regression model
 
-    Examples:
+    ??? Example
+        ``` pycon
         >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
         >>> from sklearn.linear_model import LinearRegression, LogisticRegression
         >>> from sklearn.datasets import load_iris
@@ -281,6 +284,7 @@ class DataUtilityLearning:
         ...     _ = wrapped_u((i,))
         >>> wrapped_u((1, 2, 3)) # Subsequent calls will be computed using the fit model for DUL
         0.0
+        ```
 
     """
 

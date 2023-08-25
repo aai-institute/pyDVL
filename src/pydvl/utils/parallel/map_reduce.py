@@ -41,8 +41,10 @@ class MapReduceJob(Generic[T, R]):
             with cluster address, number of cpus, etc.
         n_jobs: Number of parallel jobs to run. Does not accept 0
 
-    Examples:
+    ??? Example
         A simple usage example with 2 jobs:
+
+        ``` pycon
         >>> from pydvl.utils.parallel import MapReduceJob
         >>> import numpy as np
         >>> map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
@@ -53,8 +55,10 @@ class MapReduceJob(Generic[T, R]):
         ... )
         >>> map_reduce_job()
         10
+        ```
 
         When passed a single object as input, it will be repeated for each job:
+        ``` pycon
         >>> from pydvl.utils.parallel import MapReduceJob
         >>> import numpy as np
         >>> map_reduce_job: MapReduceJob[int, np.ndarray] = MapReduceJob(
@@ -65,6 +69,7 @@ class MapReduceJob(Generic[T, R]):
         ... )
         >>> map_reduce_job()
         10
+        ```
     """
 
     def __init__(

@@ -162,7 +162,7 @@ def memcached(
     !!! Warning
         Do not cache functions with state! See :ref:`cache reuse`
 
-    !!! example
+    ??? Example
         ```python
         cached_fun = memcached(**asdict(cache_options))(heavy_computation)
         ```

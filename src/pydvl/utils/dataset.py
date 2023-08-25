@@ -182,8 +182,8 @@ class Dataset:
         mapping the training data indices into test data indices
         inside [get_test_data()][pydvl.utils.dataset.Dataset.get_test_data]:
 
-        Examples:
-
+        ??? Example
+            ```pycon
             >>> from pydvl.utils import Dataset
             >>> import numpy as np
             >>> class DatasetWithTestDataIndices(Dataset):
@@ -201,6 +201,7 @@ class Dataset:
             >>> indices = np.random.choice(dataset.indices, 30, replace=False)
             >>> _ = dataset.get_training_data(indices)
             >>> _ = dataset.get_test_data(indices)
+            ```
 
         Args:
             indices: Optional indices into the test data. This argument is

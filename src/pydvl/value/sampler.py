@@ -82,10 +82,12 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
         Samplers are **not** iterators themselves, so that each call to ``iter()``
         e.g. in a for loop creates a new iterator.
 
-    !!! Example
+    ??? Example
+        ``` pycon
         >>>for idx, s in DeterministicUniformSampler(np.arange(2)):
         >>>    print(s, end="")
         [][2,][][1,]
+        ```
 
     # Methods required in subclasses
 
@@ -219,13 +221,10 @@ class DeterministicUniformSampler(PowersetSampler[T]):
             Indices are always iterated over sequentially, irrespective of
             the value of `index_iteration` upon construction.
 
-        !!! Example
-            ```python
-            for idx, s in DeterministicUniformSampler(np.arange(2)):
-                print(f"{idx} - {s}", end=", ")
-            ```
-            Produces the output:
-            ```
+        ??? Example
+            ``` pycon
+            >>> for idx, s in DeterministicUniformSampler(np.arange(2)):
+            >>>    print(f"{idx} - {s}", end=", ")
             1 - [], 1 - [2], 2 - [], 2 - [1],
             ```
 
@@ -255,7 +254,7 @@ class UniformSampler(PowersetSampler[T]):
     ``indices - {i}`` is sampled with equal probability $2^{n-1}$. The
     iterator never ends.
 
-    !!! Example
+    ??? Example
         The code
         ```python
         for idx, s in UniformSampler(np.arange(3)):
