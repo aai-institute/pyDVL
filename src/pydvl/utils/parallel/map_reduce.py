@@ -32,11 +32,9 @@ class MapReduceJob(Generic[T, R]):
         reduce_func: Function that will be applied to the results of
             `map_func` to reduce them.
         map_kwargs: Keyword arguments that will be passed to `map_func` in
-            each job. Alternatively, one can use
-            [itertools.partial][itertools.partial].
+            each job. Alternatively, one can use [functools.partial][].
         reduce_kwargs: Keyword arguments that will be passed to `reduce_func`
-            in each job. Alternatively, one can use
-            [itertools.partial][itertools.partial].
+            in each job. Alternatively, one can use [functools.partial][].
         config: Instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
             with cluster address, number of cpus, etc.
         n_jobs: Number of parallel jobs to run. Does not accept 0

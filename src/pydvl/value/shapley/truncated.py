@@ -26,10 +26,8 @@ class TruncationPolicy(abc.ABC):
     """A policy for deciding whether to stop computing marginals in a
     permutation.
 
-    Statistics are kept on the number of calls and truncations as
-    [n_calls][pydvl.value.shapley.truncated.TruncationPolicy.n_calls] and
-    [n_truncations][pydvl.value.shapley.truncated.TruncationPolicy.n_truncations]
-    respectively.
+    Statistics are kept on the number of calls and truncations as `n_calls` and
+    `n_truncations` respectively.
 
     Attributes:
         n_calls: Number of calls to the policy.
