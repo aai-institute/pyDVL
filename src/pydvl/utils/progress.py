@@ -52,7 +52,7 @@ class MockProgress(collections.abc.Iterator):
 
 
 def maybe_progress(
-    it: Union[int, Iterable, Iterator], display: bool = False, **kwargs: dict
+    it: Union[int, Iterable, Iterator], display: bool = False, **kwargs
 ) -> Union[tqdm, MockProgress]:
     """Returns either a tqdm progress bar or a mock object which wraps the
     iterator as well, but ignores any accesses to methods or properties.
