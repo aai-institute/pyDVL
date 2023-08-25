@@ -10,14 +10,14 @@ logger = logging.getLogger(__name__)
 root_dir = Path(__file__).parent.parent
 docs_dir = root_dir / "docs"
 changelog_file = root_dir / "CHANGELOG.md"
-changelog_docs_file = docs_dir / changelog_file.name
+target_filepath = docs_dir / changelog_file.name
 
 
 @mkdocs.plugins.event_priority(100)
 def on_pre_build(config):
     logger.info("Temporarily copying changelog to docs directory")
     try:
-        if os.path.getmtime(changelog_file) <= os.path.getmtime(changelog_docs_file):
+        if os.path.getmtime(changelog_file) <= os.path.getmtime(target_filepath):
             logger.info(
                 f"Changelog '{os.fspath(changelog_file)}' hasn't been updated, skipping."
             )
@@ -25,9 +25,10 @@ def on_pre_build(config):
     except FileNotFoundError:
         pass
     logger.info(
-        f"Copying '{os.fspath(changelog_file)}' to '{os.fspath(changelog_docs_file)}'"
+        f"Creating symbolic link for '{os.fspath(changelog_file)}' "
+        f"at '{os.fspath(target_filepath)}'"
     )
-    shutil.copy2(src=changelog_file, dst=changelog_docs_file)
+    target_filepath.symlink_to(changelog_file)
 
     logger.info("Finished copying changelog to docs directory")
 
@@ -35,4 +36,4 @@ def on_pre_build(config):
 @mkdocs.plugins.event_priority(-100)
 def on_shutdown():
     logger.info("Removing temporary changelog in docs directory")
-    changelog_docs_file.unlink()
+    target_filepath.unlink()
