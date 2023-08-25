@@ -44,7 +44,7 @@ and [pydvl.utils.utility][pydvl.utils.utility], as detailed below.
 There are three main families of methods for data valuation: game-theoretic, 
 influence-based and intrinsic. As of v0.7.0 pyDVL supports the first two. Here,
 we focus on game-theoretic concepts and refer to the main documentation on the
-[influence funtion][influence] for the second.
+[influence funtion][the-influence-function] for the second.
 
 ## Game theoretical methods
 
