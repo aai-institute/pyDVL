@@ -42,9 +42,11 @@ class Utility:
     function.
 
     An instance of `Utility` holds the triple of model, dataset and scoring
-    function which determines the value of data points. This is mosly used for
-    the computation of [Shapley Values][shapley-values] and
-    [Core Values][core-values].
+    function which determines the value of data points. This is used for the
+    computation of
+    [all game-theoretic values][game-theoretical-methods]
+    like [Shapley values][pydvl.value.shapley] and
+    [the Least Core][pydvl.value.least_core].
 
     The Utility expect the model to fulfill
     the [SupervisedModel][pydvl.utils.types.SupervisedModel] interface i.e.

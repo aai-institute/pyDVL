@@ -693,7 +693,7 @@ class ValuationResult(
 
         Returns:
             A valuation result with its status set to
-                [Status.Converged][Status.Converged] by default.
+            [Status.Converged][pydvl.utils.status.Status] by default.
 
         :raises ValueError: If `size` is less than 1.
 

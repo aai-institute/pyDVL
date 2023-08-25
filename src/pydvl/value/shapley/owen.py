@@ -136,8 +136,9 @@ def owen_sampling_shapley(
         max_q: Number of subdivisions for q ∈ [0,1] (the element sampling
             probability) used to approximate the outer integral.
         method: Selects the algorithm to use, see the description. Either
-            [Full][pydvl.value.shapley.owen.OwenAlgorithm.Full] for $q \in [0,1]$
-            or [Halved][pydvl.value.shapley.owen.OwenAlgorithm.Halved] for
+            [OwenAlgorithm.Full][pydvl.value.shapley.owen.OwenAlgorithm] for
+            $q \in [0,1]$ or
+            [OwenAlgorithm.Halved][pydvl.value.shapley.owen.OwenAlgorithm] for
             $q \in [0,0.5]$ and correlated samples
         n_jobs: Number of parallel jobs to use. Each worker receives a chunk
             of the total of `max_q` values for q.
