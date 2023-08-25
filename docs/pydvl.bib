@@ -35,15 +35,37 @@
   keywords = {notion}
 }
 
-@article{hampel1974influence,
-  title={The influence curve and its role in robust estimation},
-  author={Hampel, Frank R},
-  journal={Journal of the american statistical association},
-  volume={69},
-  number={346},
-  pages={383--393},
-  year={1974},
-  publisher={Taylor \& Francis}
+@article{hampel_influence_1974,
+  title = {The {{Influence Curve}} and {{Its Role}} in {{Robust Estimation}}},
+  author = {Hampel, Frank R.},
+  year = {1974},
+  journal = {Journal of the American Statistical Association},
+  volume = {69},
+  number = {346},
+  eprint = {2285666},
+  eprinttype = {jstor},
+  pages = {383--393},
+  publisher = {{[American Statistical Association, Taylor \& Francis, Ltd.]}},
+  issn = {0162-1459},
+  url = {https://www.jstor.org/stable/2285666},
+  urldate = {2022-05-09},
+  abstract = {This paper treats essentially the first derivative of an estimator viewed as functional and the ways in which it can be used to study local robustness properties. A theory of robust estimation "near" strict parametric models is briefly sketched and applied to some classical situations. Relations between von Mises functionals, the jackknife and U-statistics are indicated. A number of classical and new estimators are discussed, including trimmed and Winsorized means, Huber-estimators, and more generally maximum likelihood and M-estimators. Finally, a table with some numerical robustness properties is given.}
+}
+
+@misc{hataya_nystrom_2023,
+  title = {Nystrom {{Method}} for {{Accurate}} and {{Scalable Implicit Differentiation}}},
+  author = {Hataya, Ryuichiro and Yamada, Makoto},
+  year = {2023},
+  month = feb,
+  number = {arXiv:2302.09726},
+  eprint = {2302.09726},
+  primaryclass = {cs},
+  publisher = {{arXiv}},
+  url = {http://arxiv.org/abs/2302.09726},
+  urldate = {2023-05-01},
+  abstract = {The essential difficulty of gradient-based bilevel optimization using implicit differentiation is to estimate the inverse Hessian vector product with respect to neural network parameters. This paper proposes to tackle this problem by the Nystrom method and the Woodbury matrix identity, exploiting the low-rankness of the Hessian. Compared to existing methods using iterative approximation, such as conjugate gradient and the Neumann series approximation, the proposed method avoids numerical instability and can be efficiently computed in matrix operations without iterations. As a result, the proposed method works stably in various tasks and is faster than iterative approximations. Throughout experiments including large-scale hyperparameter optimization and meta learning, we demonstrate that the Nystrom method consistently achieves comparable or even superior performance to other approaches. The source code is available from https://github.com/moskomule/hypergrad.},
+  archiveprefix = {arxiv},
+  keywords = {notion}
 }
 
 @inproceedings{jia_efficient_2019,
