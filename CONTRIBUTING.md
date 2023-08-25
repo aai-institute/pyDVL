@@ -472,7 +472,8 @@ a GitHub release.
 
 We use [bump2version](https://pypi.org/project/bump2version/) to bump
 the build part of the version number without commiting or tagging the change
-and then publish a package to TestPyPI from CI using Twine.
+and then publish a package to TestPyPI from CI using Twine. The version
+has the github run number appended. 
 
 For more details refer to the
 [.github/workflows/publish.yaml](.github/workflows/publish.yaml) and
