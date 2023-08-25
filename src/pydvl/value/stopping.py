@@ -321,11 +321,15 @@ class MaxUpdates(StoppingCriterion):
     """Terminate if any number of value updates exceeds or equals the given
     threshold.
 
+    !!! Note
+        If you want to ensure that **all** values have been updated, you
+        probably want [MinUpdates][pydvl.value.stopping.MinUpdates] instead.
+
     This checks the `counts` field of a
-    [ValuationResult][pydvl.value.result.ValuationResult], i.e. the number of times that
-    each index has been updated. For powerset samplers, the maximum of this
-    number coincides with the maximum number of subsets sampled. For permutation
-    samplers, it coincides with the number of permutations sampled.
+    [ValuationResult][pydvl.value.result.ValuationResult], i.e. the number of
+    times that each index has been updated. For powerset samplers, the maximum
+    of this number coincides with the maximum number of subsets sampled. For
+    permutation samplers, it coincides with the number of permutations sampled.
 
     Args:
         n_updates: Threshold: if `None`, no _check is performed,
