@@ -29,7 +29,7 @@ def compute_shapley_values(
     """Umbrella method to compute Shapley values with any of the available
     algorithms.
 
-    See [Data valuation][computing-data-values] for an overview.
+    See [[data-valuation]] for an overview.
 
     The following algorithms are available. Note that the exact methods can only
     work with very small datasets and are thus intended only for testing. Some
@@ -46,12 +46,10 @@ def compute_shapley_values(
       Shapley. Computation is **not parallelized**. Implemented in
       [permutation_exact_shapley()][pydvl.value.shapley.naive.permutation_exact_shapley].
     - `permutation_montecarlo`: uses the approximate Monte Carlo
-      implementation of permutation data Shapley. Implemented in
+      implementation of permutation data Shapley. Accepts a
+      [TruncationPolicy][pydvl.value.shapley.truncated.TruncationPolicy] to stop
+      computing marginals. Implemented in
       [permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley].
-    - `truncated_montecarlo`: default option, same as `permutation_montecarlo`
-      but stops the computation whenever a certain accuracy is reached.
-      Implemented in
-      [truncated_montecarlo_shapley()][pydvl.value.shapley.truncated.truncated_montecarlo_shapley].
     - `owen_sampling`: Uses the Owen continuous extension of the utility
       function to the unit cube. Implemented in
       [owen_sampling_shapley()][pydvl.value.shapley.owen.owen_sampling_shapley]. This
@@ -99,24 +97,18 @@ def compute_shapley_values(
     if mode not in list(ShapleyMode):
         raise ValueError(f"Invalid value encountered in {mode=}")
 
-    if mode == ShapleyMode.TruncatedMontecarlo:
+    if mode in (
+        ShapleyMode.PermutationMontecarlo,
+        ShapleyMode.ApproShapley,
+        ShapleyMode.TruncatedMontecarlo,
+    ):
         truncation = kwargs.pop("truncation", NoTruncation())
-        return truncated_montecarlo_shapley(  # type: ignore
-            u=u, done=done, n_jobs=n_jobs, truncation=truncation, **kwargs
+        return permutation_montecarlo_shapley(  # type: ignore
+            u=u, done=done, truncation=truncation, n_jobs=n_jobs, **kwargs
         )
     elif mode == ShapleyMode.CombinatorialMontecarlo:
         return combinatorial_montecarlo_shapley(
             u, done=done, n_jobs=n_jobs, progress=progress
-        )
-    elif mode in (ShapleyMode.PermutationMontecarlo, ShapleyMode.ApproShapley):
-        truncation = kwargs.pop("truncation", NoTruncation())
-        return permutation_montecarlo_shapley(
-            u,
-            done=done,
-            n_jobs=n_jobs,
-            progress=progress,
-            truncation=truncation,
-            **kwargs,
         )
     elif mode == ShapleyMode.CombinatorialExact:
         return combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)
@@ -152,9 +144,9 @@ def compute_shapley_values(
         delta = kwargs.pop("delta", 0.05)
         return group_testing_shapley(
             u,
-            epsilon=epsilon,
+            epsilon=float(epsilon),
             delta=delta,
-            n_samples=n_samples,
+            n_samples=int(n_samples),
             n_jobs=n_jobs,
             progress=progress,
             **kwargs,

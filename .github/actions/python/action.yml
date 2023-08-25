@@ -1,0 +1,20 @@
+name: Setup Python
+description: Setup Python on GitHub Actions and install dev and docs requirements.
+inputs:
+  python_version:
+    description: Python version to use
+    required: true
+runs:
+  using: "composite"
+  steps:
+  - name: Set up Python ${{ inputs.python_version }}
+    uses: actions/setup-python@v4
+    with:
+      python-version: ${{ inputs.python_version }}
+      cache: 'pip'
+      cache-dependency-path: |
+        requirements-dev.txt
+        requirements-docs.txt
+  - name: Install Dev & Docs Requirements
+    run: pip install -r requirements-dev.txt -r requirements-docs.txt
+    shell: bash

@@ -1,12 +1,15 @@
 """ This module contains types, protocols, decorators and generic function
 transformations. Some of it probably belongs elsewhere.
 """
+from __future__ import annotations
+
 import inspect
+from abc import ABCMeta
 from typing import Any, Callable, Protocol, TypeVar
 
 from numpy.typing import NDArray
 
-__all__ = ["SupervisedModel", "MapFunction", "ReduceFunction"]
+__all__ = ["SupervisedModel", "MapFunction", "ReduceFunction", "NoPublicConstructor"]
 
 R = TypeVar("R", covariant=True)
 
@@ -66,3 +69,28 @@ def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
         return fun(*args, **kwargs)
 
     return wrapper
+
+
+class NoPublicConstructor(ABCMeta):
+    """Metaclass that ensures a private constructor
+
+    If a class uses this metaclass like this:
+
+        class SomeClass(metaclass=NoPublicConstructor):
+            pass
+
+    If you try to instantiate your class (`SomeClass()`),
+    a `TypeError` will be thrown.
+
+    Taken almost verbatim from:
+    https://stackoverflow.com/a/64682734
+    """
+
+    def __call__(cls, *args, **kwargs):
+        raise TypeError(
+            f"{cls.__module__}.{cls.__qualname__} cannot be initialized directly. "
+            "Use the proper factory instead."
+        )
+
+    def create(cls, *args: Any, **kwargs: Any):
+        return super().__call__(*args, **kwargs)
