@@ -1,0 +1,43 @@
+name: Deploy Docs
+description: Deploy documentation from develop or master branch
+inputs:
+  version:
+    description: Version number to use
+    required: true
+  alias:
+    description: Alias to use (latest or stable)
+    required: true
+  title:
+    description: Alternative title to use
+    required: false
+    default: ''
+  email:
+    description: Email to use for git config
+    required: true
+  username:
+    description: Username to use for git config
+    required: true
+  set-default:
+    description: Set alias as the default version
+    required: false
+    default: 'false'
+runs:
+  using: "composite"
+  steps:
+  - run: |
+      # https://github.com/jimporter/mike#deploying-via-ci
+      git fetch origin gh-pages --depth=1
+      git config --local user.email ${{ inputs.email }}
+      git config --local user.name ${{ inputs.username }}
+    shell: bash
+  - run: |
+      if [ -z "${{ inputs.title }}" ]
+      then
+        mike deploy ${{ inputs.version }} ${{ inputs.alias }} --push --update-aliases
+      else
+        mike deploy ${{ inputs.version }} ${{ inputs.alias }} --title=${{ inputs.title }} --push --update-aliases
+      fi
+    shell: bash
+  - if: ${{ inputs.set-default == 'true' }}
+    run: mike set-default ${{ inputs.alias }}
+    shell: bash
