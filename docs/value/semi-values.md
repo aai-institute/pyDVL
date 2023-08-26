@@ -4,29 +4,33 @@ title: Semi-values
 
 # Semi-values
 
-Shapley values are a particular case of a more general concept called semi-value,
+SV is a particular case of a more general concept called semi-value,
 which is a generalization to different weighting schemes. A **semi-value** is
 any valuation function with the form:
 
 $$
-v\_\text{semi}(i) = \sum_{i=1}^n w(k)
-\sum_{S \subset D\_{-i}^{(k)}} [U(S\_{+i})-U(S)],
+v_\text{semi}(i) = \sum_{i=1}^n w(k)
+\sum_{S \subset D_{-i}^{(k)}} [u(S_{+i}) - u(S)],
 $$
 
 where the coefficients $w(k)$ satisfy the property:
 
-$$\sum_{k=1}^n w(k) = 1.$$
+$$\sum_{k=1}^n w(k) = 1,$$
+
+the set $D_{-i}^{(k)}$ contains all subsets of $D$ of size $k$ that do not
+include sample $x_i$, $S_{+i}$ is the set $S$ with $x_i$ added, and $u$ is the
+utility function.
 
 Two instances of this are **Banzhaf indices** [@wang_data_2022],
 and **Beta Shapley** [@kwon_beta_2022], with better numerical and
 rank stability in certain situations.
 
 !!! Note
-    Shapley values are a particular case of semi-values and can therefore also be
-    computed with the methods described here. However, as of version 0.6.0, we
-    recommend using [compute_shapley_values][pydvl.value.shapley.compute_shapley_values] instead,
-    in particular because it implements truncated Monte Carlo sampling for faster
-    computation.
+    Shapley values are a particular case of semi-values and can therefore also
+    be computed with the methods described here. However, as of version 0.6.0,
+    we recommend using
+    [compute_shapley_values][pydvl.value.shapley.compute_shapley_values]
+    instead, in particular because it implements truncation policies for TMCS.
 
 
 ## Beta Shapley

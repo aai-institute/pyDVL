@@ -76,7 +76,7 @@ there are additional desiderata, like having a value function that does not
 increase with repeated samples. Game-theoretic methods are all rooted in axioms
 that by construction ensure different desiderata, but despite their practical
 usefulness, none of them are either necessary or sufficient for all
-applications. For instance, Shapley values try to equitably distribute all value
+applications. For instance, *[SV]s try to equitably distribute all value
 among all samples, failing to identify repeated ones as unnecessary, with e.g. a
 zero value.
 
@@ -252,10 +252,15 @@ in [a dedicated notebook](../examples/shapley_utility_learning).
 
 ### Leave-One-Out values
 
-The Leave-One-Out method is the simplest approach to valuation. It assigns to
-each sample its *marginal utility* as value:
+LOO is the simplest approach to valuation. It assigns to each sample its
+*marginal utility* as value:
 
-$$v_u(x_i) = u(D) − u(D \setminus \{x_i\}).$$
+$$v_u(i) = u(D) − u(D_{-i}).$$
+
+For notational simplicity, we consider the valuation function as defined over
+the indices of the dataset $D$, and $i \in D$ is the index of the sample,
+$D_{-i}$ is the training set without the sample $x_i$, and $u$ is the utility
+function.
 
 For the purposes of data valuation, this is rarely useful beyond serving as a
 baseline for benchmarking. Although in some benchmarks it can perform

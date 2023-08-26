@@ -22,13 +22,13 @@ It satisfies the following 2 properties:
   The payoffs are distributed such that it is not possible
   to make any participant better off
   without making another one worse off.
-  $$\sum_{x_i\in D} v_u(x_i) = u(D)\,$$
+  $$\sum_{i\in D} v(i) = u(D)\,$$
 
 - **Coalitional rationality**:
   The sum of payoffs to the agents in any coalition S is at
   least as large as the amount that these agents could earn by
   forming a coalition on their own.
-  $$\sum_{x_i \in S} v_u(x_i) \geq u(S), \forall S \subset D\,$$
+  $$\sum_{i \in S} v(i) \geq u(S), \forall S \subset D\,$$
 
 The second property states that the sum of payoffs to the agents
 in any subcoalition $S$ is at least as large as the amount that
@@ -41,7 +41,7 @@ By relaxing the coalitional rationality property by a subsidy $e \gt 0$,
 we are then able to find approximate payoffs:
 
 $$
-\sum_{x_i\in S} v_u(x_i) + e \geq u(S), \forall S \subset D, S \neq \emptyset \
+\sum_{i\in S} v(i) + e \geq u(S), \forall S \subset D, S \neq \emptyset \
 ,$$
 
 The least core value $v$ of the $i$-th sample in dataset $D$ wrt.
@@ -50,8 +50,8 @@ utility $u$ is computed by solving the following Linear Program:
 $$
 \begin{array}{lll}
 \text{minimize} & e & \\
-\text{subject to} & \sum_{x_i\in D} v_u(x_i) = u(D) & \\
-& \sum_{x_i\in S} v_u(x_i) + e \geq u(S) &, \forall S \subset D, S \neq \emptyset  \\
+\text{subject to} & \sum_{i\in D} v(i) = u(D) & \\
+& \sum_{i\in S} v(i) + e \geq u(S) &, \forall S \subset D, S \neq \emptyset  \\
 \end{array}
 $$
 
@@ -69,7 +69,7 @@ values = compute_least_core_values(utility, mode="exact")
 
 ## Monte Carlo Least Core
 
-Because the number of subsets $S \subseteq D \setminus \{x_i\}$ is
+Because the number of subsets $S \subseteq D \setminus \{i\}$ is
 $2^{ | D | - 1 }$, one typically must resort to approximations.
 
 The simplest approximation consists in using a fraction of all subsets for the
@@ -79,7 +79,7 @@ $\delta$-*approximate least core* with high probability. I.e. the following
 property holds with probability $1-\Delta$ over the choice of subsets:
 
 $$
-\mathbb{P}_{S\sim D}\left[\sum_{x_i\in S} v_u(x_i) + e^{*} \geq u(S)\right]
+\mathbb{P}_{S\sim D}\left[\sum_{i\in S} v(i) + e^{*} \geq u(S)\right]
 \geq 1 - \delta,
 $$
 

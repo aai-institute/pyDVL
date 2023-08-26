@@ -31,9 +31,12 @@ as a weighted sum of its marginal utility wrt. every possible coalition of
 training samples within the training set:
 
 $$
-v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}}
-\binom{n-1}{ | S | }^{-1} [u(S \cup \{x_i\}) − u(S)]
+v(i) = \frac{1}{n} \sum_{S \subseteq D_{-i}}
+\binom{n-1}{ | S | }^{-1} [u(S_{+i}) − u(S)]
 ,$$
+
+where $D_{-i}$ denotes the set of samples in $D$ excluding $x_i$, and $S_{+i}$
+denotes the set $S$ with $x_i$ added.
 
 ```python
 from pydvl.value import compute_shapley_values
@@ -50,7 +53,7 @@ documentation in [shapley][pydvl.value.shapley] and
 
 ### Monte Carlo Combinatorial Shapley
 
-Because the number of subsets $S \subseteq D \setminus \{x_i\}$ is
+Because the number of subsets $S \subseteq D_{-i}$ is
 $2^{ | D | - 1 }$, one typically must resort to approximations. The simplest
 one is done via Monte Carlo sampling of the powerset $\mathcal{P}(D)$. In pyDVL
 this simple technique is called "Monte Carlo Combinatorial". The method has very
@@ -85,8 +88,7 @@ the model, to $[0,1]^n$. The ensuing expression for Shapley value uses
 integration instead of discrete weights:
 
 $$
-v_u(x_i) = \int_0^1 \mathbb{E}_{S \sim P_q(D \backslash \{ x_i \})}
-[u(S \cup \{x_i\}) - u(S)].
+v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{-i})} [u(S_{+i}) - u(S)].
 $$
 
 Using Owen sampling follows the same pattern as every other method for Shapley
