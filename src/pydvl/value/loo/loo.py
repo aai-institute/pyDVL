@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from concurrent.futures import FIRST_COMPLETED, Future, wait
+
 from tqdm import tqdm
 
 from pydvl.utils import ParallelConfig, Utility, effective_n_jobs, init_executor
@@ -12,7 +15,7 @@ def loo(
     *,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
-    progress: bool = True
+    progress: bool = True,
 ) -> ValuationResult:
     r"""Computes leave one out value:
 

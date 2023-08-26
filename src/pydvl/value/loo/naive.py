@@ -2,6 +2,7 @@ from deprecate import deprecated
 
 from pydvl.utils import Utility
 from pydvl.value.result import ValuationResult
+
 from .loo import loo
 
 __all__ = ["naive_loo"]
