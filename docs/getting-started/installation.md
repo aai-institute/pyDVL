@@ -61,7 +61,7 @@ instructions in their documentation to set up the cluster.
 
 [memcached](https://memcached.org/) is an in-memory key-value store accessible
 over the network. pyDVL uses it to cache the computation of the utility function
-and speed-up some computations (in particular, semi-value computations with the
+and speed up some computations (in particular, semi-value computations with the
 [PermutationSampler][pydvl.value.sampler.PermutationSampler] but other methods
 may benefit as well).
 
@@ -80,7 +80,6 @@ To run memcached inside a container in daemon mode instead, do:
 docker container run -d --rm -p 11211:11211 memcached:latest
 ```
 
-!!! Warning
-    To read more about caching and how it might affect your usage, in particular
-    about cache reuse and its pitfalls, please read the documentation for the
-    [caching module][pydvl.utils.caching].
+!!! tip "Using the cache"
+    Continue reading about the cache in the [First Steps](getting-started.md#caching)
+    and the documentation for the [caching module][pydvl.utils.caching].
