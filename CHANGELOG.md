@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Enabled parallel computation for Leave-One-Out values
-  [PR #...]()
+  [PR #406](https://github.com/appliedAI-Initiative/pyDVL/pull/406)
 - Fixes to parallel computation of generic semi-values: properly handle all
   samplers and stopping criteria, irrespective of parallel backend
   [PR #372](https://github.com/appliedAI-Initiative/pyDVL/pull/372)
