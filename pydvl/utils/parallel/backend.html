@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="futures" href="futures.html" /><link rel="prev" title="parallel" href="../parallel.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
@@ -189,15 +189,15 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/frameworks/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/frameworks/util.html">util</a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="../../influence/general.html">general</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../influence/inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../influence/torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../influence/torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../influence/torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../influence/twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -295,14 +295,14 @@
 <hr class="docutils" />
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.utils.parallel.backend.init_parallel_backend">
-<span class="sig-name descname"><span class="pre">init_parallel_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseParallelBackend</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L224"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.init_parallel_backend" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">init_parallel_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseParallelBackend</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L226"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.init_parallel_backend" title="Permalink to this definition">#</a></dt>
 <dd><p>Initializes the parallel backend and returns an instance of it.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>config</strong> – instance of <a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelConfig</span></code></a>
 with cluster address, number of cpus, etc.</p>
 </dd>
-<dt class="field-even">Example<span class="colon">:</span></dt>
+<dt class="field-even">Example</dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.parallel.backend</span> <span class="kn">import</span> <span class="n">init_parallel_backend</span>
@@ -325,12 +325,12 @@ with cluster address, number of cpus, etc.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.utils.parallel.backend.effective_n_jobs">
-<span class="sig-name descname"><span class="pre">effective_n_jobs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='joblib',</span> <span class="pre">address=None,</span> <span class="pre">n_cpus_local=None,</span> <span class="pre">logging_level=30)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L270"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.effective_n_jobs" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">effective_n_jobs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='joblib',</span> <span class="pre">address=None,</span> <span class="pre">n_cpus_local=None,</span> <span class="pre">logging_level=30,</span> <span class="pre">wait_timeout=1.0)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L269"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.effective_n_jobs" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the effective number of jobs.</p>
 <p>This number may vary depending on the parallel backend and the resources
 available.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>n_jobs</strong> – the number of jobs requested. If -1, the number of available
 CPUs is returned.</p></li>
@@ -338,10 +338,10 @@ CPUs is returned.</p></li>
 cluster address, number of cpus, etc.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the effective number of jobs, guaranteed to be &gt;= 1.</p>
 </dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><strong>RuntimeError</strong> – if the effective number of jobs returned by the backend
 is &lt; 1.</p>
 </dd>
@@ -350,7 +350,7 @@ is &lt; 1.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.utils.parallel.backend.available_cpus">
-<span class="sig-name descname"><span class="pre">available_cpus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L257"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.available_cpus" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">available_cpus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backend.py#L256"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backend.available_cpus" title="Permalink to this definition">#</a></dt>
 <dd><p>Platform-independent count of available cores.</p>
 <p>FIXME: do we really need this or is <cite>os.cpu_count</cite> enough? Is this portable?
 :return: Number of cores, or 1 if it is not possible to determine.</p>

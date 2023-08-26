@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="numeric" href="numeric.html" /><link rel="prev" title="config" href="config.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
@@ -189,15 +189,15 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/util.html">util</a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="../influence/general.html">general</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../influence/inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../influence/twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -326,12 +326,12 @@ indices.</p>
 subsets of the data from indices. It is typically <strong>not needed in
 algorithms</strong>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>indices</strong> – Optional indices that will be used to select points
 from the training data. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the entire training data will
 be returned.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>If <code class="docutils literal notranslate"><span class="pre">indices</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, the selected x and y arrays
 from the training data. Otherwise, the entire dataset.</p>
 </dd>
@@ -354,7 +354,7 @@ class and to override the <a class="reference internal" href="#pydvl.utils.datas
 mapping the training data indices into test data indices
 inside <a class="reference internal" href="#pydvl.utils.dataset.Dataset.get_test_data" title="pydvl.utils.dataset.Dataset.get_test_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_test_data()</span></code></a>:</p>
 <dl class="field-list">
-<dt class="field-odd">Example<span class="colon">:</span></dt>
+<dt class="field-odd">Example</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">DatasetWithTestDataIndices</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
@@ -375,12 +375,12 @@ inside <a class="reference internal" href="#pydvl.utils.dataset.Dataset.get_test
 </pre></div>
 </div>
 </dd>
-<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dt class="field-even">Parameters</dt>
 <dd class="field-even"><p><strong>indices</strong> – Optional indices into the test data. This argument
 is unused and is left as is to keep the same interface as
 <a class="reference internal" href="#pydvl.utils.dataset.Dataset.get_training_data" title="pydvl.utils.dataset.Dataset.get_training_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Dataset.get_training_data()</span></code></a>.</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>The entire test data.</p>
 </dd>
 </dl>
@@ -418,7 +418,7 @@ is unused and is left as is to keep the same interface as
 <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.utils.Bunch</span></code>, as returned by the <cite>load_*</cite> functions in
 <a class="reference external" href="https://scikit-learn.org/stable/datasets/toy_dataset.html">sklearn toy datasets</a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> – sklearn dataset. The following attributes are supported
 - <code class="docutils literal notranslate"><span class="pre">data</span></code>: covariates [required]
@@ -438,7 +438,7 @@ fashion, using the target variable as labels. Read more in
 <a class="reference internal" href="#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a> constructor. Use this to pass e.g. <code class="docutils literal notranslate"><span class="pre">is_multi_output</span></code>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Object with the sklearn dataset</p>
 </dd>
 </dl>
@@ -453,7 +453,7 @@ fashion, using the target variable as labels. Read more in
 <dd><p>Constructs a <a class="reference internal" href="#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a> object from X and y numpy arrays  as
 returned by the <cite>make_*</cite> functions in <a class="reference external" href="https://scikit-learn.org/stable/datasets/sample_generators.html">sklearn generated datasets</a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> – numpy array of shape (n_samples, n_features)</p></li>
 <li><p><strong>y</strong> – numpy array of shape (n_samples,)</p></li>
@@ -470,7 +470,7 @@ fashion, using the y variable as labels. Read more in
 or <code class="docutils literal notranslate"><span class="pre">target_names</span></code>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Object with the passed X and y arrays split across training
 and test sets.</p>
 </dd>
@@ -506,11 +506,11 @@ and test sets.</p>
 <span class="sig-name descname"><span class="pre">get_training_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">ScalarType</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">ScalarType</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pydvl.utils.dataset.GroupedDataset.get_training_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the data and labels of all samples in the given groups.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>indices</strong> – group indices whose elements to return. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
 all data from all groups are returned.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Tuple of training data x and labels y.</p>
 </dd>
 </dl>
@@ -523,7 +523,7 @@ all data from all groups are returned.</p>
 as returned by the <cite>load_*</cite> functions in <a class="reference external" href="https://scikit-learn.org/stable/datasets/toy_dataset.html">sklearn toy datasets</a> and groups
 it.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> – sklearn dataset. The following attributes are supported
 - <code class="docutils literal notranslate"><span class="pre">data</span></code>: covariates [required]
@@ -546,7 +546,7 @@ data points in the dataset.</p></li>
 <a class="reference internal" href="#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a> constructor.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Dataset with the selected sklearn data</p>
 </dd>
 </dl>
@@ -558,7 +558,7 @@ data points in the dataset.</p></li>
 <dd><p>Constructs a <a class="reference internal" href="#pydvl.utils.dataset.GroupedDataset" title="pydvl.utils.dataset.GroupedDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedDataset</span></code></a> object from X and y numpy arrays
 as returned by the <cite>make_*</cite> functions in <a class="reference external" href="https://scikit-learn.org/stable/datasets/sample_generators.html">sklearn generated datasets</a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> – array of shape (n_samples, n_features)</p></li>
 <li><p><strong>y</strong> – array of shape (n_samples,)</p></li>
@@ -577,7 +577,7 @@ data points in the dataset.</p></li>
 to the <a class="reference internal" href="#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a> constructor.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Dataset with the passed X and y arrays split across training
 and test sets.</p>
 </dd>
@@ -596,7 +596,7 @@ and test sets.</p>
 <dd><p>Creates a <a class="reference internal" href="#pydvl.utils.dataset.GroupedDataset" title="pydvl.utils.dataset.GroupedDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedDataset</span></code></a> object from the data a
 <a class="reference internal" href="#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a> object and a mapping of data groups.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dataset</strong> – The original data.</p></li>
 <li><p><strong>data_groups</strong> – An array holding the group index or name for each
@@ -604,7 +604,7 @@ data point. The length of this array must be equal to the number of
 data points in the dataset.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A <a class="reference internal" href="#pydvl.utils.dataset.GroupedDataset" title="pydvl.utils.dataset.GroupedDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedDataset</span></code></a> with the initial <a class="reference internal" href="#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a>
 grouped by data_groups.</p>
 </dd>

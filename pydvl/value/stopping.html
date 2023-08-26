@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="prev" title="types" href="shapley/types.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
@@ -189,15 +189,15 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/util.html">util</a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="../influence/general.html">general</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../influence/inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../influence/twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -321,7 +321,7 @@ affect the behavior of the stopping criteria.</p>
 <dd><p>Create a new <a class="reference internal" href="#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code></a> from a function.
 Use this to enable simpler functions to be composed with bitwise operators</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>fun</strong> – The callable to wrap.</p></li>
 <li><p><strong>converged</strong> – A callable that returns a boolean array indicating what
@@ -333,7 +333,7 @@ of converged values is used.</p></li>
 the function is used.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A new subclass of <a class="reference internal" href="#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code></a>.</p>
 </dd>
 </dl>
@@ -344,11 +344,11 @@ the function is used.</p></li>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AbsoluteStandardError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">burn_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modify_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/stopping.py#L220"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.stopping.AbsoluteStandardError" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code></a></p>
 <p>Determine convergence based on the standard error of the values.</p>
-<p>If <span class="math notranslate nohighlight">\(s_i\)</span> is the standard error for datum <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(v_i\)</span> its value, then this
-criterion returns <a class="reference internal" href="../utils/status.html#pydvl.utils.status.Status.Converged" title="pydvl.utils.status.Status.Converged"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Converged</span></code></a> if
-<span class="math notranslate nohighlight">\(s_i &lt; \epsilon\)</span> for all <span class="math notranslate nohighlight">\(i\)</span> and a threshold value <span class="math notranslate nohighlight">\(\epsilon \gt 0\)</span>.</p>
+<p>If <span class="math notranslate nohighlight">\(s_i\)</span> is the standard error for datum <span class="math notranslate nohighlight">\(i\)</span>, then this criterion returns
+<a class="reference internal" href="../utils/status.html#pydvl.utils.status.Status.Converged" title="pydvl.utils.status.Status.Converged"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Converged</span></code></a> if <span class="math notranslate nohighlight">\(s_i &lt; \epsilon\)</span> for all <span class="math notranslate nohighlight">\(i\)</span>
+and a threshold value <span class="math notranslate nohighlight">\(\epsilon \gt 0\)</span>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>threshold</strong> – A value is considered to have converged if the standard
 error is below this value. A way of choosing it is to pick some
@@ -406,7 +406,7 @@ the value for each index has converged. When this is not possible,
 <a class="reference internal" href="#pydvl.value.stopping.StoppingCriterion.completion" title="pydvl.value.stopping.StoppingCriterion.completion"><code class="xref py py-meth docutils literal notranslate"><span class="pre">completion()</span></code></a> should be overridden to provide an overall completion
 value, since the default implementation returns the mean of <a class="reference internal" href="#pydvl.value.stopping.StoppingCriterion.converged" title="pydvl.value.stopping.StoppingCriterion.converged"><code class="xref py py-attr docutils literal notranslate"><span class="pre">converged</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>modify_result</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code> the status of the input
 <a class="reference internal" href="result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValuationResult</span></code></a> is modified in place after
 the call.</p>
@@ -448,7 +448,7 @@ for each data point.</p>
 <p>Terminate as soon as the number of checks exceeds the threshold.</p>
 <p>A “check” is one call to the criterion.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>n_checks</strong> – Threshold: if <code class="docutils literal notranslate"><span class="pre">None</span></code>, no _check is performed,
 effectively creating a (never) stopping criterion that always returns
 <code class="docutils literal notranslate"><span class="pre">Pending</span></code>.</p>
@@ -469,13 +469,18 @@ computation.</p>
 <dd><p>Bases: <a class="reference internal" href="#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code></a></p>
 <p>Terminate if any number of value updates exceeds or equals the given
 threshold.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you want to ensure that <strong>all</strong> values have been updated, you probably
+want <a class="reference internal" href="#pydvl.value.stopping.MinUpdates" title="pydvl.value.stopping.MinUpdates"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinUpdates</span></code></a> instead.</p>
+</div>
 <p>This checks the <code class="docutils literal notranslate"><span class="pre">counts</span></code> field of a
 <a class="reference internal" href="result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValuationResult</span></code></a>, i.e. the number of times that
 each index has been updated. For powerset samplers, the maximum of this
 number coincides with the maximum number of subsets sampled. For permutation
 samplers, it coincides with the number of permutations sampled.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>n_updates</strong> – Threshold: if <code class="docutils literal notranslate"><span class="pre">None</span></code>, no _check is performed,
 effectively creating a (never) stopping criterion that always returns
 <code class="docutils literal notranslate"><span class="pre">Pending</span></code>.</p>
@@ -492,7 +497,7 @@ computation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.value.stopping.MinUpdates">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MinUpdates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_updates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modify_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/stopping.py#L340"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.stopping.MinUpdates" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MinUpdates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_updates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modify_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/stopping.py#L344"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.stopping.MinUpdates" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code></a></p>
 <p>Terminate as soon as all value updates exceed or equal the given threshold.</p>
 <p>This checks the <code class="docutils literal notranslate"><span class="pre">counts</span></code> field of a
@@ -501,7 +506,7 @@ each index has been updated. For powerset samplers, the minimum of this
 number is a lower bound for the number of subsets sampled. For
 permutation samplers, it lower-bounds the amount of permutations sampled.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>n_updates</strong> – Threshold: if <code class="docutils literal notranslate"><span class="pre">None</span></code>, no _check is performed,
 effectively creating a (never) stopping criterion that always returns
 <code class="docutils literal notranslate"><span class="pre">Pending</span></code>.</p>
@@ -518,12 +523,12 @@ computation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.value.stopping.MaxTime">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MaxTime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seconds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modify_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/stopping.py#L376"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.stopping.MaxTime" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MaxTime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seconds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modify_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/stopping.py#L380"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.stopping.MaxTime" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code></a></p>
 <p>Terminate if the computation time exceeds the given number of seconds.</p>
 <p>Checks the elapsed time since construction</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>seconds</strong> – Threshold: The computation is terminated if the elapsed time
 between object construction and a _check exceeds this value. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
 no _check is performed, effectively creating a (never) stopping criterion
@@ -541,11 +546,11 @@ computation.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.value.stopping.HistoryDeviation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">HistoryDeviation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin_converged</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modify_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/stopping.py#L408"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.stopping.HistoryDeviation" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">HistoryDeviation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin_converged</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modify_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/stopping.py#L412"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.stopping.HistoryDeviation" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code></a></p>
 <p>A simple check for relative distance to a previous step in the
 computation.</p>
-<p>The method used by Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> computes the relative
+<p>The method used by Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id1">1</a> computes the relative
 distances between the current values <span class="math notranslate nohighlight">\(v_i^t\)</span> and the values at the previous
 checkpoint <span class="math notranslate nohighlight">\(v_i^{t-\tau}\)</span>. If the sum is below a given threshold, the
 computation is terminated.</p>
@@ -568,7 +573,7 @@ converged.</p>
 but we do not recommend using it in practice.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>n_steps</strong> – Checkpoint values every so many updates and use these saved
 values to compare.</p></li>
@@ -583,12 +588,11 @@ values to compare.</p></li>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h2>
 </section>
-<aside class="footnote-list brackets">
-<aside class="footnote brackets" id="footcite-ghorbani-data-2019" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
-<p>Amirata Ghorbani and James Zou. Data Shapley: Equitable Valuation of Data for Machine Learning. In <em>Proceedings of the 36th International Conference on Machine Learning, PMLR</em>, 2242–2251. PMLR, May 2019. URL: <a class="reference external" href="http://proceedings.mlr.press/v97/ghorbani19c.html">http://proceedings.mlr.press/v97/ghorbani19c.html</a> (visited on 2020-11-01), <a class="reference external" href="https://arxiv.org/abs/1904.02868">arXiv:1904.02868</a>.</p>
-</aside>
-</aside>
+<dl class="footnote brackets">
+<dt class="label" id="footcite-ghorbani-data-2019"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Amirata Ghorbani and James Zou. Data Shapley: Equitable Valuation of Data for Machine Learning. In <em>Proceedings of the 36th International Conference on Machine Learning, PMLR</em>, 2242–2251. PMLR, May 2019. URL: <a class="reference external" href="http://proceedings.mlr.press/v97/ghorbani19c.html">http://proceedings.mlr.press/v97/ghorbani19c.html</a> (visited on 2020-11-01), <a class="reference external" href="https://arxiv.org/abs/1904.02868">arXiv:1904.02868</a>.</p>
+</dd>
+</dl>
 </div>
 </section>
 

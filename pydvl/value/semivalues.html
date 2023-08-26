@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="shapley" href="shapley.html" /><link rel="prev" title="sampler" href="sampler.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
@@ -189,15 +189,15 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/util.html">util</a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="../influence/general.html">general</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../influence/inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../influence/twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -306,13 +306,19 @@ semi-values. A <strong>semi-value</strong> is any valuation function with the fo
 \[\sum_{k=1}^n w(k) = 1.\]</div>
 </div>
 </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For implementation consistency, we slightly depart from the common definition
+of semi-values, which includes a factor <span class="math notranslate nohighlight">\(1/n\)</span> in the sum over subsets.
+Instead, we subsume this factor into the coefficient <span class="math notranslate nohighlight">\(w(k)\)</span>.</p>
+</div>
 <p>As such, the computation of a semi-value requires two components:</p>
 <ol class="arabic simple">
 <li><p>A <strong>subset sampler</strong> that generates subsets of the set <span class="math notranslate nohighlight">\(D\)</span> of interest.</p></li>
 <li><p>A <strong>coefficient</strong> <span class="math notranslate nohighlight">\(w(k)\)</span> that assigns a weight to each subset size <span class="math notranslate nohighlight">\(k\)</span>.</p></li>
 </ol>
 <p>Samplers can be found in <a class="reference internal" href="sampler.html#module-pydvl.value.sampler" title="pydvl.value.sampler"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.value.sampler</span></code></a>, and can be classified into
-two categories: powerset samplers and (one) permutation sampler. Powerset
+two categories: powerset samplers and permutation samplers. Powerset
 samplers generate subsets of <span class="math notranslate nohighlight">\(D_{-i}\)</span>, while the permutation sampler generates
 permutations of <span class="math notranslate nohighlight">\(D\)</span>. The former conform to the above definition of semi-values,
 while the latter reformulates it as:</p>
@@ -328,38 +334,120 @@ v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
 position where <span class="math notranslate nohighlight">\(i\)</span> appears (see <a class="reference internal" href="../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for details), and
 <span class="math notranslate nohighlight">\(\tilde{w}(k) = n \choose{n-1}{k} w(k)\)</span> is the weight correction due to the
 reformulation.</p>
-<p>There are several pre-defined coefficients, including the Shapley value
-of Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>, the Banzhaf index of
-Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>, and the Beta coefficient of
-Kwon and Zou<a class="footnote-reference brackets" href="#footcite-kwon-beta-2022" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>For implementation consistency, we slightly depart from the common definition
-of semi-values, which includes a factor <span class="math notranslate nohighlight">\(1/n\)</span> in the sum over subsets.
-Instead, we subsume this factor into the coefficient <span class="math notranslate nohighlight">\(w(k)\)</span>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Both <a class="reference internal" href="sampler.html#pydvl.value.sampler.PermutationSampler" title="pydvl.value.sampler.PermutationSampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">PermutationSampler</span></code></a> and
+<a class="reference internal" href="sampler.html#pydvl.value.sampler.DeterministicPermutationSampler" title="pydvl.value.sampler.DeterministicPermutationSampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">DeterministicPermutationSampler</span></code></a>
+require caching to be enabled or computation will be doubled wrt. a ‘direct’
+implementation of permutation MC.</p>
 </div>
+<p>There are several pre-defined coefficients, including the Shapley value
+of Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id1">1</a>, the Banzhaf index of
+Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id2">2</a>, and the Beta coefficient of
+Kwon and Zou<a class="footnote-reference brackets" href="#footcite-kwon-beta-2022" id="id3">3</a>. For each of these methods, there is a convenience
+wrapper function. Respectively, these are: <a class="reference internal" href="#pydvl.value.semivalues.compute_shapley_semivalues" title="pydvl.value.semivalues.compute_shapley_semivalues"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_shapley_semivalues()</span></code></a>,
+<a class="reference internal" href="#pydvl.value.semivalues.compute_banzhaf_semivalues" title="pydvl.value.semivalues.compute_banzhaf_semivalues"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_banzhaf_semivalues()</span></code></a>, and <a class="reference internal" href="#pydvl.value.semivalues.compute_beta_shapley_semivalues" title="pydvl.value.semivalues.compute_beta_shapley_semivalues"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_beta_shapley_semivalues()</span></code></a>.</p>
 <hr class="docutils" />
 <dl class="py function">
-<dt class="sig sig-object py" id="pydvl.value.semivalues.banzhaf_coefficient">
-<span class="sig-name descname"><span class="pre">banzhaf_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/semivalues.py#L163"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.semivalues.banzhaf_coefficient" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="pydvl.value.semivalues.compute_banzhaf_semivalues">
+<span class="sig-name descname"><span class="pre">compute_banzhaf_semivalues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u:</span> <span class="pre">~pydvl.utils.utility.Utility</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done:</span> <span class="pre">~pydvl.value.stopping.StoppingCriterion</span> <span class="pre">=</span> <span class="pre">&lt;pydvl.value.stopping.MaxUpdates</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampler_t:</span> <span class="pre">~typing.Type[~pydvl.value.sampler.PowersetSampler]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'pydvl.value.sampler.PermutationSampler'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config:</span> <span class="pre">~pydvl.utils.config.ParallelConfig</span> <span class="pre">=</span> <span class="pre">ParallelConfig(backend='joblib'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_cpus_local=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_level=30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait_timeout=1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/semivalues.py#L272"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.semivalues.compute_banzhaf_semivalues" title="Permalink to this definition">#</a></dt>
+<dd><p>Computes Banzhaf values for a given utility function.</p>
+<p>This is a convenience wrapper for <a class="reference internal" href="#pydvl.value.semivalues.semivalues" title="pydvl.value.semivalues.semivalues"><code class="xref py py-func docutils literal notranslate"><span class="pre">semivalues()</span></code></a> with the Banzhaf
+coefficient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Utility object with model, data, and scoring function.</p></li>
+<li><p><strong>done</strong> – Stopping criterion.</p></li>
+<li><p><strong>sampler_t</strong> – The sampler type to use. See <a class="reference internal" href="sampler.html#module-pydvl.value.sampler" title="pydvl.value.sampler"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.value.sampler</span></code></a>
+for a list.</p></li>
+<li><p><strong>n_jobs</strong> – Number of parallel jobs to use.</p></li>
+<li><p><strong>config</strong> – Object configuring parallel computation, with cluster
+address, number of cpus, etc.</p></li>
+<li><p><strong>progress</strong> – Whether to display a progress bar.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Object with the results.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pydvl.value.semivalues.compute_beta_shapley_semivalues">
+<span class="sig-name descname"><span class="pre">compute_beta_shapley_semivalues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u:</span> <span class="pre">~pydvl.utils.utility.Utility</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done:</span> <span class="pre">~pydvl.value.stopping.StoppingCriterion</span> <span class="pre">=</span> <span class="pre">&lt;pydvl.value.stopping.MaxUpdates</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampler_t:</span> <span class="pre">~typing.Type[~pydvl.value.sampler.PowersetSampler]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'pydvl.value.sampler.PermutationSampler'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config:</span> <span class="pre">~pydvl.utils.config.ParallelConfig</span> <span class="pre">=</span> <span class="pre">ParallelConfig(backend='joblib'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_cpus_local=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_level=30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait_timeout=1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/semivalues.py#L308"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.semivalues.compute_beta_shapley_semivalues" title="Permalink to this definition">#</a></dt>
+<dd><p>Computes Beta Shapley values for a given utility function.</p>
+<p>This is a convenience wrapper for <a class="reference internal" href="#pydvl.value.semivalues.semivalues" title="pydvl.value.semivalues.semivalues"><code class="xref py py-func docutils literal notranslate"><span class="pre">semivalues()</span></code></a> with the Beta Shapley
+coefficient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Utility object with model, data, and scoring function.</p></li>
+<li><p><strong>alpha</strong> – Alpha parameter of the Beta distribution.</p></li>
+<li><p><strong>beta</strong> – Beta parameter of the Beta distribution.</p></li>
+<li><p><strong>done</strong> – Stopping criterion.</p></li>
+<li><p><strong>sampler_t</strong> – The sampler type to use. See <a class="reference internal" href="sampler.html#module-pydvl.value.sampler" title="pydvl.value.sampler"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.value.sampler</span></code></a>
+for a list.</p></li>
+<li><p><strong>n_jobs</strong> – Number of parallel jobs to use.</p></li>
+<li><p><strong>config</strong> – Object configuring parallel computation, with cluster
+address, number of cpus, etc.</p></li>
+<li><p><strong>progress</strong> – Whether to display a progress bar.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Object with the results.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pydvl.value.semivalues.compute_shapley_semivalues">
+<span class="sig-name descname"><span class="pre">compute_shapley_semivalues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u:</span> <span class="pre">~pydvl.utils.utility.Utility</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done:</span> <span class="pre">~pydvl.value.stopping.StoppingCriterion</span> <span class="pre">=</span> <span class="pre">&lt;pydvl.value.stopping.MaxUpdates</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampler_t:</span> <span class="pre">~typing.Type[~pydvl.value.sampler.PowersetSampler]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'pydvl.value.sampler.PermutationSampler'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config:</span> <span class="pre">~pydvl.utils.config.ParallelConfig</span> <span class="pre">=</span> <span class="pre">ParallelConfig(backend='joblib'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_cpus_local=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_level=30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait_timeout=1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/semivalues.py#L234"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.semivalues.compute_shapley_semivalues" title="Permalink to this definition">#</a></dt>
+<dd><p>Computes Shapley values for a given utility function.</p>
+<p>This is a convenience wrapper for <a class="reference internal" href="#pydvl.value.semivalues.semivalues" title="pydvl.value.semivalues.semivalues"><code class="xref py py-func docutils literal notranslate"><span class="pre">semivalues()</span></code></a> with the Shapley
+coefficient. Use <a class="reference internal" href="shapley/common.html#pydvl.value.shapley.common.compute_shapley_values" title="pydvl.value.shapley.common.compute_shapley_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code></a>
+for a more flexible interface and additional methods, including Truncated
+Monte Carlo.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Utility object with model, data, and scoring function.</p></li>
+<li><p><strong>done</strong> – Stopping criterion.</p></li>
+<li><p><strong>sampler_t</strong> – The sampler type to use. See <a class="reference internal" href="sampler.html#module-pydvl.value.sampler" title="pydvl.value.sampler"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.value.sampler</span></code></a>
+for a list.</p></li>
+<li><p><strong>n_jobs</strong> – Number of parallel jobs to use.</p></li>
+<li><p><strong>config</strong> – Object configuring parallel computation, with cluster
+address, number of cpus, etc.</p></li>
+<li><p><strong>progress</strong> – Whether to display a progress bar.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Object with the results.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.value.semivalues.beta_coefficient">
-<span class="sig-name descname"><span class="pre">beta_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SVCoefficient</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/semivalues.py#L167"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.semivalues.beta_coefficient" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">beta_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SVCoefficient</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/semivalues.py#L212"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.semivalues.beta_coefficient" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pydvl.value.semivalues.banzhaf_coefficient">
+<span class="sig-name descname"><span class="pre">banzhaf_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/semivalues.py#L208"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.semivalues.banzhaf_coefficient" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.value.semivalues.shapley_coefficient">
-<span class="sig-name descname"><span class="pre">shapley_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/semivalues.py#L159"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.semivalues.shapley_coefficient" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">shapley_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/semivalues.py#L204"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.semivalues.shapley_coefficient" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.value.semivalues.semivalues">
-<span class="sig-name descname"><span class="pre">semivalues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sampler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sampler.html#pydvl.value.sampler.PowersetSampler" title="pydvl.value.sampler.PowersetSampler"><span class="pre">PowersetSampler</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SVCoefficient</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="stopping.html#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><span class="pre">StoppingCriterion</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='joblib',</span> <span class="pre">address=None,</span> <span class="pre">n_cpus_local=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/semivalues.py#L124"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.semivalues.semivalues" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">semivalues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sampler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sampler.html#pydvl.value.sampler.PowersetSampler" title="pydvl.value.sampler.PowersetSampler"><span class="pre">PowersetSampler</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SVCoefficient</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="stopping.html#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><span class="pre">StoppingCriterion</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='joblib',</span> <span class="pre">address=None,</span> <span class="pre">n_cpus_local=None,</span> <span class="pre">logging_level=30,</span> <span class="pre">wait_timeout=1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/semivalues.py#L122"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.semivalues.semivalues" title="Permalink to this definition">#</a></dt>
 <dd><p>Computes semi-values for a given utility function and subset sampler.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sampler</strong> – The subset sampler to use for utility computations.</p></li>
 <li><p><strong>u</strong> – Utility object with model, data, and scoring function.</p></li>
@@ -368,55 +456,73 @@ Instead, we subsume this factor into the coefficient <span class="math notransla
 <li><p><strong>n_jobs</strong> – Number of parallel jobs to use.</p></li>
 <li><p><strong>config</strong> – Object configuring parallel computation, with cluster
 address, number of cpus, etc.</p></li>
-<li><p><strong>progress</strong> – Whether to display progress bars for each job.</p></li>
+<li><p><strong>progress</strong> – Whether to display a progress bar.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Object with the results.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="pydvl.value.semivalues.SemiValueMode">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SemiValueMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/semivalues.py#L189"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.semivalues.SemiValueMode" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>An enumeration.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.value.semivalues.SemiValueMode.Shapley">
-<span class="sig-name descname"><span class="pre">Shapley</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'shapley'</span></em><a class="headerlink" href="#pydvl.value.semivalues.SemiValueMode.Shapley" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.value.semivalues.SemiValueMode.BetaShapley">
-<span class="sig-name descname"><span class="pre">BetaShapley</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'beta_shapley'</span></em><a class="headerlink" href="#pydvl.value.semivalues.SemiValueMode.BetaShapley" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.value.semivalues.SemiValueMode.Banzhaf">
-<span class="sig-name descname"><span class="pre">Banzhaf</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'banzhaf'</span></em><a class="headerlink" href="#pydvl.value.semivalues.SemiValueMode.Banzhaf" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dl class="py function">
+<dt class="sig sig-object py" id="pydvl.value.semivalues.compute_semivalues">
+<span class="sig-name descname"><span class="pre">compute_semivalues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u:</span> <span class="pre">~pydvl.utils.utility.Utility</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done:</span> <span class="pre">~pydvl.value.stopping.StoppingCriterion</span> <span class="pre">=</span> <span class="pre">&lt;pydvl.value.stopping.MaxUpdates</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode:</span> <span class="pre">~pydvl.value.semivalues.SemiValueMode</span> <span class="pre">=</span> <span class="pre">SemiValueMode.Shapley</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampler_t:</span> <span class="pre">~typing.Type[~pydvl.value.sampler.PowersetSampler]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'pydvl.value.sampler.PermutationSampler'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/semivalues.py#L360"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.semivalues.compute_semivalues" title="Permalink to this definition">#</a></dt>
+<dd><p>Convenience entry point for most common semi-value computations.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This method is deprecated and will be removed in 0.8.0. Use
+<a class="reference internal" href="#pydvl.value.semivalues.compute_shapley_semivalues" title="pydvl.value.semivalues.compute_shapley_semivalues"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_shapley_semivalues()</span></code></a>,
+<a class="reference internal" href="#pydvl.value.semivalues.compute_banzhaf_semivalues" title="pydvl.value.semivalues.compute_banzhaf_semivalues"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_banzhaf_semivalues()</span></code></a>, or
+<a class="reference internal" href="#pydvl.value.semivalues.compute_beta_shapley_semivalues" title="pydvl.value.semivalues.compute_beta_shapley_semivalues"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_beta_shapley_semivalues()</span></code></a> instead</p>
+</div>
+<p>The modes supported with this interface are the following. For greater
+flexibility use <a class="reference internal" href="#pydvl.value.semivalues.semivalues" title="pydvl.value.semivalues.semivalues"><code class="xref py py-func docutils literal notranslate"><span class="pre">semivalues()</span></code></a> directly.</p>
+<ul class="simple">
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">SemiValueMode.Shapley</span></code>: Shapley values.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">SemiValueMode.BetaShapley</span></code>: Implements the Beta Shapley semi-value
+as introduced in Kwon and Zou<a class="footnote-reference brackets" href="#footcite-kwon-beta-2022" id="id4">3</a>. Pass additional keyword
+arguments <code class="docutils literal notranslate"><span class="pre">alpha</span></code> and <code class="docutils literal notranslate"><span class="pre">beta</span></code> to set the parameters of the Beta
+distribution (both default to 1).</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">SemiValueMode.Banzhaf</span></code>: Implements the Banzhaf semi-value as
+introduced in Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id5">2</a>.</p></li>
+</ul>
+<p>See <a class="reference internal" href="../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for an overview of data valuation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Utility object with model, data, and scoring function.</p></li>
+<li><p><strong>done</strong> – Stopping criterion.</p></li>
+<li><p><strong>mode</strong> – The semi-value mode to use. See <code class="xref py py-class docutils literal notranslate"><span class="pre">SemiValueMode</span></code> for a
+list.</p></li>
+<li><p><strong>sampler_t</strong> – The sampler type to use. See <a class="reference internal" href="sampler.html#module-pydvl.value.sampler" title="pydvl.value.sampler"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.value.sampler</span></code></a>
+for a list.</p></li>
+<li><p><strong>n_jobs</strong> – Number of parallel jobs to use.</p></li>
+<li><p><strong>kwargs</strong> – Additional keyword arguments passed to
+<a class="reference internal" href="#pydvl.value.semivalues.semivalues" title="pydvl.value.semivalues.semivalues"><code class="xref py py-func docutils literal notranslate"><span class="pre">semivalues()</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Object with the results.</p>
+</dd>
+</dl>
 </dd></dl>
 
-<div class="docutils container" id="id4">
+<div class="docutils container" id="id6">
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h2>
 </section>
-<aside class="footnote-list brackets">
-<aside class="footnote brackets" id="footcite-ghorbani-data-2019" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
-<p>Amirata Ghorbani and James Zou. Data Shapley: Equitable Valuation of Data for Machine Learning. In <em>Proceedings of the 36th International Conference on Machine Learning, PMLR</em>, 2242–2251. PMLR, May 2019. URL: <a class="reference external" href="http://proceedings.mlr.press/v97/ghorbani19c.html">http://proceedings.mlr.press/v97/ghorbani19c.html</a> (visited on 2020-11-01), <a class="reference external" href="https://arxiv.org/abs/1904.02868">arXiv:1904.02868</a>.</p>
-</aside>
-<aside class="footnote brackets" id="footcite-wang-data-2022" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
-<p>Jiachen T. Wang and Ruoxi Jia. Data Banzhaf: A Robust Data Valuation Framework for Machine Learning. October 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2205.15466">http://arxiv.org/abs/2205.15466</a> (visited on 2022-10-28), <a class="reference external" href="https://arxiv.org/abs/arXiv:2205.15466">arXiv:arXiv:2205.15466</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2205.15466">doi:10.48550/arXiv.2205.15466</a>.</p>
-</aside>
-<aside class="footnote brackets" id="footcite-kwon-beta-2022" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">3</a><span class="fn-bracket">]</span></span>
-<p>Yongchan Kwon and James Zou. Beta Shapley: a Unified and Noise-reduced Data Valuation Framework for Machine Learning. In <em>Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022,</em>, volume 151. Valencia, Spain, January 2022. PMLR. URL: <a class="reference external" href="http://arxiv.org/abs/2110.14049">http://arxiv.org/abs/2110.14049</a> (visited on 2022-04-06), <a class="reference external" href="https://arxiv.org/abs/2110.14049">arXiv:2110.14049</a>.</p>
-</aside>
-</aside>
+<dl class="footnote brackets">
+<dt class="label" id="footcite-ghorbani-data-2019"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Amirata Ghorbani and James Zou. Data Shapley: Equitable Valuation of Data for Machine Learning. In <em>Proceedings of the 36th International Conference on Machine Learning, PMLR</em>, 2242–2251. PMLR, May 2019. URL: <a class="reference external" href="http://proceedings.mlr.press/v97/ghorbani19c.html">http://proceedings.mlr.press/v97/ghorbani19c.html</a> (visited on 2020-11-01), <a class="reference external" href="https://arxiv.org/abs/1904.02868">arXiv:1904.02868</a>.</p>
+</dd>
+<dt class="label" id="footcite-wang-data-2022"><span class="brackets">2</span><span class="fn-backref">(<a href="#id2">1</a>,<a href="#id5">2</a>)</span></dt>
+<dd><p>Jiachen T. Wang and Ruoxi Jia. Data Banzhaf: A Robust Data Valuation Framework for Machine Learning. October 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2205.15466">http://arxiv.org/abs/2205.15466</a> (visited on 2022-10-28), <a class="reference external" href="https://arxiv.org/abs/arXiv:2205.15466">arXiv:arXiv:2205.15466</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2205.15466">doi:10.48550/arXiv.2205.15466</a>.</p>
+</dd>
+<dt class="label" id="footcite-kwon-beta-2022"><span class="brackets">3</span><span class="fn-backref">(<a href="#id3">1</a>,<a href="#id4">2</a>)</span></dt>
+<dd><p>Yongchan Kwon and James Zou. Beta Shapley: a Unified and Noise-reduced Data Valuation Framework for Machine Learning. In <em>Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022,</em>, volume 151. Valencia, Spain, January 2022. PMLR. URL: <a class="reference external" href="http://arxiv.org/abs/2110.14049">http://arxiv.org/abs/2110.14049</a> (visited on 2022-04-06), <a class="reference external" href="https://arxiv.org/abs/2110.14049">arXiv:2110.14049</a>.</p>
+</dd>
+</dl>
 </div>
 </section>
 
@@ -483,16 +589,14 @@ address, number of cpus, etc.</p></li>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">semivalues</a><ul>
-<li><a class="reference internal" href="#pydvl.value.semivalues.banzhaf_coefficient"><code class="docutils literal notranslate"><span class="pre">banzhaf_coefficient()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.semivalues.compute_banzhaf_semivalues"><code class="docutils literal notranslate"><span class="pre">compute_banzhaf_semivalues()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.semivalues.compute_beta_shapley_semivalues"><code class="docutils literal notranslate"><span class="pre">compute_beta_shapley_semivalues()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.semivalues.compute_shapley_semivalues"><code class="docutils literal notranslate"><span class="pre">compute_shapley_semivalues()</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.value.semivalues.beta_coefficient"><code class="docutils literal notranslate"><span class="pre">beta_coefficient()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.value.semivalues.banzhaf_coefficient"><code class="docutils literal notranslate"><span class="pre">banzhaf_coefficient()</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.value.semivalues.shapley_coefficient"><code class="docutils literal notranslate"><span class="pre">shapley_coefficient()</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.value.semivalues.semivalues"><code class="docutils literal notranslate"><span class="pre">semivalues()</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.value.semivalues.SemiValueMode"><code class="docutils literal notranslate"><span class="pre">SemiValueMode</span></code></a><ul>
-<li><a class="reference internal" href="#pydvl.value.semivalues.SemiValueMode.Shapley"><code class="docutils literal notranslate"><span class="pre">SemiValueMode.Shapley</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.value.semivalues.SemiValueMode.BetaShapley"><code class="docutils literal notranslate"><span class="pre">SemiValueMode.BetaShapley</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.value.semivalues.SemiValueMode.Banzhaf"><code class="docutils literal notranslate"><span class="pre">SemiValueMode.Banzhaf</span></code></a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#pydvl.value.semivalues.compute_semivalues"><code class="docutils literal notranslate"><span class="pre">compute_semivalues()</span></code></a></li>
 </ul>
 </li>
 </ul>

@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="least_core" href="value/least_core.html" /><link rel="prev" title="utility" href="utils/utility.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
@@ -189,15 +189,15 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="influence/frameworks/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="influence/frameworks/util.html">util</a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="influence/general.html">general</a></li>
 <li class="toctree-l3"><a class="reference internal" href="influence/inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="influence/torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="influence/torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="influence/torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="influence/twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -369,8 +369,8 @@ implemented here.</p>
 <li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.AntitheticSampler.weight"><code class="docutils literal notranslate"><span class="pre">AntitheticSampler.weight()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.DeterministicCombinatorialSampler"><code class="docutils literal notranslate"><span class="pre">DeterministicCombinatorialSampler</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.DeterministicCombinatorialSampler.weight"><code class="docutils literal notranslate"><span class="pre">DeterministicCombinatorialSampler.weight()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.DeterministicUniformSampler"><code class="docutils literal notranslate"><span class="pre">DeterministicUniformSampler</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.DeterministicUniformSampler.weight"><code class="docutils literal notranslate"><span class="pre">DeterministicUniformSampler.weight()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="value/sampler.html#pydvl.value.sampler.DeterministicPermutationSampler"><code class="docutils literal notranslate"><span class="pre">DeterministicPermutationSampler</span></code></a></li>
@@ -402,16 +402,14 @@ implemented here.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="value/semivalues.html">semivalues</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.banzhaf_coefficient"><code class="docutils literal notranslate"><span class="pre">banzhaf_coefficient()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.compute_banzhaf_semivalues"><code class="docutils literal notranslate"><span class="pre">compute_banzhaf_semivalues()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.compute_beta_shapley_semivalues"><code class="docutils literal notranslate"><span class="pre">compute_beta_shapley_semivalues()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.compute_shapley_semivalues"><code class="docutils literal notranslate"><span class="pre">compute_shapley_semivalues()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.beta_coefficient"><code class="docutils literal notranslate"><span class="pre">beta_coefficient()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.banzhaf_coefficient"><code class="docutils literal notranslate"><span class="pre">banzhaf_coefficient()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.shapley_coefficient"><code class="docutils literal notranslate"><span class="pre">shapley_coefficient()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.semivalues"><code class="docutils literal notranslate"><span class="pre">semivalues()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.SemiValueMode"><code class="docutils literal notranslate"><span class="pre">SemiValueMode</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.SemiValueMode.Shapley"><code class="docutils literal notranslate"><span class="pre">SemiValueMode.Shapley</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.SemiValueMode.BetaShapley"><code class="docutils literal notranslate"><span class="pre">SemiValueMode.BetaShapley</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.SemiValueMode.Banzhaf"><code class="docutils literal notranslate"><span class="pre">SemiValueMode.Banzhaf</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="value/semivalues.html#pydvl.value.semivalues.compute_semivalues"><code class="docutils literal notranslate"><span class="pre">compute_semivalues()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="value/shapley.html">shapley</a><ul>

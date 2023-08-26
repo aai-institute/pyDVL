@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="sampler" href="sampler.html" /><link rel="prev" title="naive" href="loo/naive.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
@@ -189,15 +189,15 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/util.html">util</a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="../influence/general.html">general</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../influence/inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../influence/twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -363,7 +363,7 @@ variances are correctly updated, using the <code class="docutils literal notrans
 variances are updated accordingly using the Welford algorithm.</p>
 <p>Empty objects behave in a special way, see <a class="reference internal" href="#pydvl.value.result.ValuationResult.empty" title="pydvl.value.result.ValuationResult.empty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">empty()</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>values</strong> – An array of values. If omitted, defaults to an empty array
 or to an array of zeros if <code class="docutils literal notranslate"><span class="pre">indices</span></code> are given.</p></li>
@@ -386,7 +386,7 @@ this affects usage as an iterable or sequence.</p></li>
 This can contain, for example, the least core value.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If input arrays have mismatching lengths.</p>
 </dd>
 </dl>
@@ -400,7 +400,7 @@ properties <a class="reference internal" href="#pydvl.value.result.ValuationResu
 <a class="reference internal" href="#pydvl.value.result.ValuationResult.indices" title="pydvl.value.result.ValuationResult.indices"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ValuationResult.indices</span></code></a> and <a class="reference internal" href="#pydvl.value.result.ValuationResult.names" title="pydvl.value.result.ValuationResult.names"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ValuationResult.names</span></code></a> will
 follow the same order.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>reverse</strong> – Whether to sort in descending order by value.</p></li>
 <li><p><strong>key</strong> – The key to sort by. Defaults to <a class="reference internal" href="#pydvl.value.result.ValueItem.value" title="pydvl.value.result.ValueItem.value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ValueItem.value</span></code></a>.</p></li>
@@ -465,16 +465,16 @@ construction or <code class="docutils literal notranslate"><span class="pre">np.
 <dd><p>Updates the result in place with a new value, using running mean
 and variance.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>idx</strong> – Data index of the value to update.</p></li>
 <li><p><strong>new_value</strong> – New value to add to the result.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A reference to the same, modified result.</p>
 </dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><strong>IndexError</strong> – If the index is not found.</p>
 </dd>
 </dl>
@@ -493,7 +493,7 @@ the indexing operator.
 <span class="sig-name descname"><span class="pre">to_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#pydvl.value.result.ValuationResult.to_dataframe" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns values as a dataframe.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>column</strong> – Name for the column holding the data value. Defaults to
 the name of the algorithm used.</p></li>
@@ -501,12 +501,12 @@ the name of the algorithm used.</p></li>
 DataFrame’s index.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A dataframe with two columns, one for the values, with name
 given as explained in <cite>column</cite>, and another with standard errors for
 approximate algorithms. The latter will be named <cite>column+’_stderr’</cite>.</p>
 </dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><strong>ImportError</strong> – If pandas is not installed</p>
 </dd>
 </dl>
@@ -519,7 +519,7 @@ approximate algorithms. The latter will be named <cite>column+’_stderr’</cit
 of random values from a uniform distribution in [-1,1]. The values can
 be made to sum up to a given total number (doing so will change their range).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>size</strong> – Number of values to generate</p></li>
 <li><p><strong>total</strong> – If set, the values are normalized to sum to this number
@@ -528,11 +528,11 @@ be made to sum up to a given total number (doing so will change their range).</p
 <a class="reference internal" href="#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValuationResult</span></code></a>. Use to override status, names, etc.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A valuation result with its status set to
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">Status.Converged</span></code> by default.</p>
 </dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">size</span></code> is less than 1.</p>
 </dd>
 </dl>
@@ -548,10 +548,10 @@ be made to sum up to a given total number (doing so will change their range).</p
 <p>Empty results are characterised by having an empty array of values. When
 another result is added to an empty one, the empty one is discarded.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>algorithm</strong> – Name of the algorithm used to compute the values</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>An instance of <a class="reference internal" href="#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValuationResult</span></code></a></p>
 </dd>
 </dl>
@@ -564,7 +564,7 @@ another result is added to an empty one, the empty one is discarded.</p>
 <p>Empty results are characterised by having an empty array of values. When
 another result is added to an empty one, the empty one is ignored.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>algorithm</strong> – Name of the algorithm used to compute the values</p></li>
 <li><p><strong>indices</strong> – Data indices to use. A copy will be made. If not given,
@@ -575,7 +575,7 @@ the names will be set to the string representation of the indices.</p></li>
 not given, the length of <code class="docutils literal notranslate"><span class="pre">indices</span></code> will be used.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>An instance of <a class="reference internal" href="#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValuationResult</span></code></a></p>
 </dd>
 </dl>

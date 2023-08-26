@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="gt" href="gt.html" /><link rel="prev" title="shapley" href="../shapley.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
@@ -189,15 +189,15 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/frameworks/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/frameworks/util.html">util</a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="../../influence/general.html">general</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../influence/inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../influence/torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../influence/torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../influence/torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../influence/twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -314,12 +314,9 @@ implementation of combinatorial data Shapley. Implemented in
 Shapley. Computation is <strong>not parallelized</strong>. Implemented in
 <a class="reference internal" href="naive.html#pydvl.value.shapley.naive.permutation_exact_shapley" title="pydvl.value.shapley.naive.permutation_exact_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">permutation_exact_shapley()</span></code></a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">permutation_montecarlo</span></code>: uses the approximate Monte Carlo
-implementation of permutation data Shapley. Implemented in
+implementation of permutation data Shapley. Accepts a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">TruncationPolicy</span></code> to stop computing marginals. Implemented in
 <a class="reference internal" href="montecarlo.html#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley" title="pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">permutation_montecarlo_shapley()</span></code></a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">truncated_montecarlo</span></code>: default option, same as <code class="docutils literal notranslate"><span class="pre">permutation_montecarlo</span></code>
-but stops the computation whenever a certain accuracy is reached.
-Implemented in
-<code class="xref py py-func docutils literal notranslate"><span class="pre">truncated_montecarlo_shapley()</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">owen_sampling</span></code>: Uses the Owen continuous extension of the utility
 function to the unit cube. Implemented in
 <code class="xref py py-func docutils literal notranslate"><span class="pre">owen_sampling_shapley()</span></code>. This
@@ -346,7 +343,7 @@ iterations to run.</p></li>
 <a class="reference internal" href="knn.html#pydvl.value.shapley.knn.knn_shapley" title="pydvl.value.shapley.knn.knn_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">knn_shapley()</span></code></a>.</p></li>
 </ul>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> – <a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> object with model, data, and
 scoring function.</p></li>
@@ -361,7 +358,7 @@ require specific subtypes.</p></li>
 <code class="xref py py-class docutils literal notranslate"><span class="pre">ShapleyMode</span></code> for a list of allowed value.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A <a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValuationResult</span></code></a> object with the
 results.</p>
 </dd>

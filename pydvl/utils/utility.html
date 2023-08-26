@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="value" href="../value.html" /><link rel="prev" title="types" href="types.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
@@ -189,15 +189,15 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/util.html">util</a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="../influence/general.html">general</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../influence/inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../influence/twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -328,7 +328,7 @@ the results of each execution. Caching is available both locally
 and across nodes, but must always be enabled for your
 project first, see <a class="reference internal" href="../../20-install.html#caching-setup"><span class="std std-ref">how to set up the cache</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> – Any supervised model. Typical choices can be found at
 <a class="reference external" href="https://scikit-learn.org/stable/supervised_learning.html">https://scikit-learn.org/stable/supervised_learning.html</a></p></li>
@@ -359,7 +359,7 @@ as a score and computation continues.</p></li>
 <code class="docutils literal notranslate"><span class="pre">fit()</span></code>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Example<span class="colon">:</span></dt>
+<dt class="field-even">Example</dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Utility</span><span class="p">,</span> <span class="n">DataUtilityLearning</span><span class="p">,</span> <span class="n">Dataset</span>
@@ -406,7 +406,7 @@ See <code class="xref py py-class docutils literal notranslate"><span class="pre
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataUtilityLearning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_budget</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#pydvl.utils.types.SupervisedModel" title="pydvl.utils.types.SupervisedModel"><span class="pre">SupervisedModel</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/utility.py#L246"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.utility.DataUtilityLearning" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Implementation of Data Utility Learning algorithm
-Wang <em>et al.</em><a class="footnote-reference brackets" href="#footcite-wang-improving-2022" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+Wang <em>et al.</em><a class="footnote-reference brackets" href="#footcite-wang-improving-2022" id="id1">1</a>.</p>
 <p>This object wraps a <a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> and delegates
 calls to it, up until a given budget (number of iterations). Every tuple
 of input and output (a so-called <em>utility sample</em>) is stored. Once the
@@ -414,7 +414,7 @@ budget is exhausted, <cite>DataUtilityLearning</cite> fits the given model to th
 utility samples. Subsequent calls will use the learned model to predict the
 utility instead of delegating.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> – The <a class="reference internal" href="#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> to learn.</p></li>
 <li><p><strong>training_budget</strong> – Number of utility samples to collect before fitting
@@ -422,7 +422,7 @@ the given model</p></li>
 <li><p><strong>model</strong> – A supervised regression model</p></li>
 </ul>
 </dd>
-<dt class="field-even">Example<span class="colon">:</span></dt>
+<dt class="field-even">Example</dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Utility</span><span class="p">,</span> <span class="n">DataUtilityLearning</span><span class="p">,</span> <span class="n">Dataset</span>
@@ -469,7 +469,7 @@ then the core consists of the single payoff where each miner gets 1/2.</p>
 <p>If there is an odd number of miners, then the core is empty.</p>
 <p>Taken from: <a class="reference external" href="https://en.wikipedia.org/wiki/Core_(game_theory">https://en.wikipedia.org/wiki/Core_(game_theory</a>)</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>n_miners</strong> – Number of miners that participate in the game.</p>
 </dd>
 </dl>
@@ -518,7 +518,7 @@ v(S) = \min( \mid S \cap L \mid, \mid S \cap R \mid )
 <p>Where <span class="math notranslate nohighlight">\(L\)</span>, respectively <span class="math notranslate nohighlight">\(R\)</span>, is the set of players with left gloves,
 respectively right gloves.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>left</strong> – Number of players with a left glove.</p></li>
 <li><p><strong>right</strong> – Number of player with a right glove.</p></li>
@@ -556,12 +556,11 @@ respectively right gloves.</p>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h2>
 </section>
-<aside class="footnote-list brackets">
-<aside class="footnote brackets" id="footcite-wang-improving-2022" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
-<p>Tianhao Wang, Yu Yang, and Ruoxi Jia. Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning. In <em>International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning</em>. arXiv, April 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2107.06336v2">http://arxiv.org/abs/2107.06336v2</a> (visited on 2022-05-19), <a class="reference external" href="https://arxiv.org/abs/2107.06336v2">arXiv:2107.06336v2</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2107.06336">doi:10.48550/arXiv.2107.06336</a>.</p>
-</aside>
-</aside>
+<dl class="footnote brackets">
+<dt class="label" id="footcite-wang-improving-2022"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Tianhao Wang, Yu Yang, and Ruoxi Jia. Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning. In <em>International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning</em>. arXiv, April 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2107.06336v2">http://arxiv.org/abs/2107.06336v2</a> (visited on 2022-05-19), <a class="reference external" href="https://arxiv.org/abs/2107.06336v2">arXiv:2107.06336v2</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2107.06336">doi:10.48550/arXiv.2107.06336</a>.</p>
+</dd>
+</dl>
 </div>
 </section>
 

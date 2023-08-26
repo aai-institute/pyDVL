@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="naive" href="naive.html" /><link rel="prev" title="knn" href="knn.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
@@ -189,15 +189,15 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/frameworks/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/frameworks/util.html">util</a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="../../influence/general.html">general</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../influence/inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../influence/torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../influence/torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../influence/torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../influence/twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -326,9 +326,9 @@ groups of samples as units.</p>
 <hr class="docutils" />
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley">
-<span class="sig-name descname"><span class="pre">permutation_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u:</span> <span class="pre">~pydvl.utils.utility.Utility</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done:</span> <span class="pre">~pydvl.value.stopping.StoppingCriterion</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncation:</span> <span class="pre">~pydvl.value.shapley.truncated.TruncationPolicy</span> <span class="pre">=</span> <span class="pre">&lt;pydvl.value.shapley.truncated.NoTruncation</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config:</span> <span class="pre">~pydvl.utils.config.ParallelConfig</span> <span class="pre">=</span> <span class="pre">ParallelConfig(backend='joblib'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_cpus_local=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/montecarlo.py#L107"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley" title="Permalink to this definition">#</a></dt>
-<dd><p>Computes an approximate Shapley value by sampling independent index
-permutations to approximate the sum:</p>
+<span class="sig-name descname"><span class="pre">permutation_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u:</span> <span class="pre">~pydvl.utils.utility.Utility</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done:</span> <span class="pre">~pydvl.value.stopping.StoppingCriterion</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncation:</span> <span class="pre">~pydvl.value.shapley.truncated.TruncationPolicy</span> <span class="pre">=</span> <span class="pre">&lt;pydvl.value.shapley.truncated.NoTruncation</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config:</span> <span class="pre">~pydvl.utils.config.ParallelConfig</span> <span class="pre">=</span> <span class="pre">ParallelConfig(backend='joblib'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_cpus_local=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_level=30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait_timeout=1.0)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/montecarlo.py#L137"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley" title="Permalink to this definition">#</a></dt>
+<dd><p>Computes an approximate Shapley value by sampling independent
+permutations of the index set, approximating the sum:</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[
@@ -337,10 +337,28 @@ v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
 \]</div>
 </div>
 </p>
-<p>where <span class="math notranslate nohighlight">\(\sigma_{:i}\)</span> denotes the set of indices in permutation sigma before the
-position where <span class="math notranslate nohighlight">\(i\)</span> appears (see <a class="reference internal" href="../../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for details).</p>
+<p>where <span class="math notranslate nohighlight">\(\sigma_{:i}\)</span> denotes the set of indices in permutation sigma before
+the position where <span class="math notranslate nohighlight">\(i\)</span> appears (see <a class="reference internal" href="../../../30-data-valuation.html#data-valuation"><span class="std std-ref">Computing data values</span></a> for details).</p>
+<p>This implements the method described in Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id1">1</a>
+with a double stopping criterion.</p>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>Think of how to add Robin-Gelman or some other more principled stopping
+criterion.</p>
+</div>
+<p>Instead of naively implementing the expectation, we sequentially add points
+to coalitions from a permutation and incrementally compute marginal utilities.
+We stop computing marginals for a given permutation based on a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">TruncationPolicy</span></code>. Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id3">1</a> mention two
+policies: one that stops after a certain fraction of marginals are computed,
+implemented in <code class="xref py py-class docutils literal notranslate"><span class="pre">FixedTruncation</span></code>, and one that stops if the last
+computed utility (“score”) is close to the total utility using the standard
+deviation of the utility as a measure of proximity, implemented in
+<code class="xref py py-class docutils literal notranslate"><span class="pre">BootstrapTruncation</span></code>.</p>
+<p>We keep sampling permutations and updating all shapley values
+until the <code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code> returns <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> – Utility object with model, data, and scoring function.</p></li>
 <li><p><strong>done</strong> – function checking whether computation must stop.</p></li>
@@ -353,7 +371,7 @@ address, number of cpus, etc.</p></li>
 <li><p><strong>progress</strong> – Whether to display progress bars for each job.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Object with the data values.</p>
 </dd>
 </dl>
@@ -361,7 +379,7 @@ address, number of cpus, etc.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley">
-<span class="sig-name descname"><span class="pre">combinatorial_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../stopping.html#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><span class="pre">StoppingCriterion</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='joblib',</span> <span class="pre">address=None,</span> <span class="pre">n_cpus_local=None,</span> <span class="pre">logging_level=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/montecarlo.py#L203"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">combinatorial_montecarlo_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">done</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../stopping.html#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><span class="pre">StoppingCriterion</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='joblib',</span> <span class="pre">address=None,</span> <span class="pre">n_cpus_local=None,</span> <span class="pre">logging_level=30,</span> <span class="pre">wait_timeout=1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/montecarlo.py#L268"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley" title="Permalink to this definition">#</a></dt>
 <dd><p>Computes an approximate Shapley value using the combinatorial
 definition:</p>
 <p><div class="math-wrapper docutils container">
@@ -380,7 +398,7 @@ subsets for each <span class="math notranslate nohighlight">\(i\)</span>. Prefer
 <p>Parallelization is done by splitting the set of indices across processes and
 computing the sum over subsets <span class="math notranslate nohighlight">\(S \subseteq N \setminus \{i\}\)</span> separately.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
 <li><p><strong>done</strong> – Stopping criterion for the computation.</p></li>
@@ -392,12 +410,22 @@ address, number of cpus, etc.</p></li>
 <li><p><strong>progress</strong> – Whether to display progress bars for each job.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Object with the data values.</p>
 </dd>
 </dl>
 </dd></dl>
 
+<div class="docutils container" id="id4">
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h2>
+</section>
+<dl class="footnote brackets">
+<dt class="label" id="footcite-ghorbani-data-2019"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id3">2</a>)</span></dt>
+<dd><p>Amirata Ghorbani and James Zou. Data Shapley: Equitable Valuation of Data for Machine Learning. In <em>Proceedings of the 36th International Conference on Machine Learning, PMLR</em>, 2242–2251. PMLR, May 2019. URL: <a class="reference external" href="http://proceedings.mlr.press/v97/ghorbani19c.html">http://proceedings.mlr.press/v97/ghorbani19c.html</a> (visited on 2020-11-01), <a class="reference external" href="https://arxiv.org/abs/1904.02868">arXiv:1904.02868</a>.</p>
+</dd>
+</dl>
+</div>
 </section>
 
         </article>

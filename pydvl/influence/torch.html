@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="status" href="status.html" /><link rel="prev" title="progress" href="progress.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="functional" href="torch/functional.html" /><link rel="prev" title="inversion" href="inversion.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
-        <title>score - pyDVL 0.6.2.dev0 documentation</title>
+        <title>torch - pyDVL 0.6.2.dev0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/tooltipster.custom.css" />
@@ -147,7 +147,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -188,16 +188,16 @@
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2 has-children"><a class="reference internal" href="../influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../influence/general.html">general</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../influence/inversion.html">inversion</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../influence/torch/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/torch/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/torch/util.html">util</a></li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../influence.html">influence</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="general.html">general</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inversion.html">inversion</a></li>
+<li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">torch</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch/util.html">util</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../influence/twice_differentiable.html">twice_differentiable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -205,25 +205,25 @@
 <li class="toctree-l3"><a class="reference internal" href="../reporting/scores.html">scores</a></li>
 </ul>
 </li>
-<li class="toctree-l2 current has-children"><a class="reference internal" href="../utils.html">utils</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="caching.html">caching</a></li>
-<li class="toctree-l3"><a class="reference internal" href="config.html">config</a></li>
-<li class="toctree-l3"><a class="reference internal" href="dataset.html">dataset</a></li>
-<li class="toctree-l3"><a class="reference internal" href="numeric.html">numeric</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="parallel.html">parallel</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="parallel/backend.html">backend</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="parallel/futures.html">futures</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="parallel/futures/ray.html">ray</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../utils/caching.html">caching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../utils/config.html">config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../utils/dataset.html">dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../utils/numeric.html">numeric</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../utils/parallel.html">parallel</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../utils/parallel/backend.html">backend</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../utils/parallel/futures.html">futures</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../utils/parallel/futures/ray.html">ray</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="parallel/map_reduce.html">map_reduce</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../utils/parallel/map_reduce.html">map_reduce</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="progress.html">progress</a></li>
-<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">score</a></li>
-<li class="toctree-l3"><a class="reference internal" href="status.html">status</a></li>
-<li class="toctree-l3"><a class="reference internal" href="types.html">types</a></li>
-<li class="toctree-l3"><a class="reference internal" href="utility.html">utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../utils/progress.html">progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../utils/score.html">score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../utils/status.html">status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../utils/types.html">types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../utils/utility.html">utility</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../value.html">value</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -284,99 +284,50 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <section id="module-pydvl.utils.score">
-<span id="score"></span><h1>score<a class="headerlink" href="#module-pydvl.utils.score" title="Permalink to this heading">#</a></h1>
-<p>This module provides a <a class="reference internal" href="#pydvl.utils.score.Scorer" title="pydvl.utils.score.Scorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code></a> class that wraps scoring functions with
-additional information.</p>
-<p>Scorers can be constructed in the same way as in scikit-learn: either from
-known strings or from a callable. Greater values must be better. If they are not,
-a negated version can be used, see scikit-learn’s <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html">make_scorer()</a>.</p>
-<p><a class="reference internal" href="#pydvl.utils.score.Scorer" title="pydvl.utils.score.Scorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code></a> provides additional information about the scoring function, like
-its range and default values, which can be used by some data valuation
-methods (like <a class="reference internal" href="../value/shapley/gt.html#pydvl.value.shapley.gt.group_testing_shapley" title="pydvl.value.shapley.gt.group_testing_shapley"><code class="xref py py-func docutils literal notranslate"><span class="pre">group_testing_shapley()</span></code></a>) to estimate
-the number of samples required for a certain quality of approximation.</p>
-<hr class="docutils" />
-<dl class="py class">
-<dt class="sig sig-object py" id="pydvl.utils.score.Scorer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Scorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scoring</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScorerCallable</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">nan</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(-inf,</span> <span class="pre">inf)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/score.py#L34"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.score.Scorer" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>A scoring callable that takes a model, data, and labels and returns a
-scalar.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>scoring</strong> – Either a string or callable that can be passed to
-<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.get_scorer.html">get_scorer</a>.</p></li>
-<li><p><strong>default</strong> – score to be used when a model cannot be fit, e.g. when too
-little data is passed, or errors arise.</p></li>
-<li><p><strong>range</strong> – numerical range of the score function. Some Monte Carlo
-methods can use this to estimate the number of samples required for a
-certain quality of approximation. If not provided, it can be read from
-the <code class="docutils literal notranslate"><span class="pre">scoring</span></code> object if it provides it, for instance if it was
-constructed with <code class="xref py py-func docutils literal notranslate"><span class="pre">compose_score()</span></code>.</p></li>
-<li><p><strong>name</strong> – The name of the scorer. If not provided, the name of the
-function passed will be used.</p></li>
+          <section id="module-pydvl.influence.torch">
+<span id="torch"></span><h1>torch<a class="headerlink" href="#module-pydvl.influence.torch" title="Permalink to this heading">#</a></h1>
+<p class="rubric">Modules in this package</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="torch/functional.html">functional</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="torch/functional.html#pydvl.influence.torch.functional.get_hvp_function"><code class="docutils literal notranslate"><span class="pre">get_hvp_function()</span></code></a></li>
 </ul>
-</dd>
-</dl>
-<div class="versionadded">
-<p><span class="versionmodified added">New in version 0.5.0.</span></p>
-</div>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.utils.score.Scorer.range">
-<span class="sig-name descname"><span class="pre">range</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pydvl.utils.score.Scorer.range" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pydvl.utils.score.compose_score">
-<span class="sig-name descname"><span class="pre">compose_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scorer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.utils.score.Scorer" title="pydvl.utils.score.Scorer"><span class="pre">Scorer</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#pydvl.utils.score.Scorer" title="pydvl.utils.score.Scorer"><span class="pre">Scorer</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/score.py#L84"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.score.compose_score" title="Permalink to this definition">#</a></dt>
-<dd><p>Composes a scoring function with an arbitrary scalar transformation.</p>
-<p>Useful to squash unbounded scores into ranges manageable by data valuation
-methods.</p>
-<div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">Example usage</span><a class="headerlink" href="#id1" title="Permalink to this code">#</a></div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sigmoid</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">))</span>
-<span class="n">compose_score</span><span class="p">(</span><span class="n">Scorer</span><span class="p">(</span><span class="s2">&quot;r2&quot;</span><span class="p">),</span> <span class="n">sigmoid</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;squashed r2&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>scorer</strong> – The object to be composed.</p></li>
-<li><p><strong>transformation</strong> – A scalar transformation</p></li>
-<li><p><strong>range</strong> – The range of the transformation. This will be used e.g. by
-<a class="reference internal" href="utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> for the range of the composed.</p></li>
-<li><p><strong>name</strong> – A string representation for the composition, for <cite>str()</cite>.</p></li>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="torch/torch_differentiable.html">torch_differentiable</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.TorchTwiceDifferentiable"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.TorchTwiceDifferentiable.tensor_type"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable.tensor_type()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.TorchTwiceDifferentiable.parameters"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable.parameters</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.TorchTwiceDifferentiable.num_params"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable.num_params</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.TorchTwiceDifferentiable.grad"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable.grad()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.TorchTwiceDifferentiable.hessian"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable.hessian()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.TorchTwiceDifferentiable.mvp"><code class="docutils literal notranslate"><span class="pre">TorchTwiceDifferentiable.mvp()</span></code></a></li>
 </ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The composite <a class="reference internal" href="#pydvl.utils.score.Scorer" title="pydvl.utils.score.Scorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code></a>.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py data">
-<dt class="sig sig-object py" id="pydvl.utils.score.squashed_r2">
-<span class="sig-name descname"><span class="pre">squashed_r2</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">SquashedR2</span> <span class="pre">(scorer=r2)</span></em><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/score.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.score.squashed_r2" title="Permalink to this definition">#</a></dt>
-<dd><p>A scorer that squashes the R² score into the range [0, 1] using a sigmoid.</p>
-</dd></dl>
-
-<dl class="py data">
-<dt class="sig sig-object py" id="pydvl.utils.score.squashed_variance">
-<span class="sig-name descname"><span class="pre">squashed_variance</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">SquashedExplainedVariance</span> <span class="pre">(scorer=explained_variance)</span></em><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/score.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.score.squashed_variance" title="Permalink to this definition">#</a></dt>
-<dd><p>A scorer that squashes the explained variance score into the range [0, 1] using
-a sigmoid.</p>
-</dd></dl>
-
+</li>
+<li class="toctree-l2"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.solve_linear"><code class="docutils literal notranslate"><span class="pre">solve_linear()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.solve_batch_cg"><code class="docutils literal notranslate"><span class="pre">solve_batch_cg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.solve_lissa"><code class="docutils literal notranslate"><span class="pre">solve_lissa()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.solve_arnoldi"><code class="docutils literal notranslate"><span class="pre">solve_arnoldi()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.lanzcos_low_rank_hessian_approx"><code class="docutils literal notranslate"><span class="pre">lanzcos_low_rank_hessian_approx()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.as_tensor"><code class="docutils literal notranslate"><span class="pre">as_tensor()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="torch/torch_differentiable.html#pydvl.influence.torch.torch_differentiable.model_hessian_low_rank"><code class="docutils literal notranslate"><span class="pre">model_hessian_low_rank()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="torch/util.html">util</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="torch/util.html#pydvl.influence.torch.util.to_model_device"><code class="docutils literal notranslate"><span class="pre">to_model_device()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="torch/util.html#pydvl.influence.torch.util.flatten_tensors_to_vector"><code class="docutils literal notranslate"><span class="pre">flatten_tensors_to_vector()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="torch/util.html#pydvl.influence.torch.util.reshape_vector_to_tensors"><code class="docutils literal notranslate"><span class="pre">reshape_vector_to_tensors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="torch/util.html#pydvl.influence.torch.util.align_structure"><code class="docutils literal notranslate"><span class="pre">align_structure()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="torch/util.html#pydvl.influence.torch.util.as_tensor"><code class="docutils literal notranslate"><span class="pre">as_tensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
 </section>
 
         </article>
@@ -384,23 +335,23 @@ a sigmoid.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="status.html">
+          <a class="next-page" href="torch/functional.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">status</div>
+                <div class="title">functional</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="progress.html">
+          <a class="prev-page" href="inversion.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">progress</div>
+                <div class="title">inversion</div>
                 
               </div>
             </a>
@@ -429,33 +380,8 @@ a sigmoid.</p>
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">score</a><ul>
-<li><a class="reference internal" href="#pydvl.utils.score.Scorer"><code class="docutils literal notranslate"><span class="pre">Scorer</span></code></a><ul>
-<li><a class="reference internal" href="#pydvl.utils.score.Scorer.range"><code class="docutils literal notranslate"><span class="pre">Scorer.range</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#pydvl.utils.score.compose_score"><code class="docutils literal notranslate"><span class="pre">compose_score()</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.utils.score.squashed_r2"><code class="docutils literal notranslate"><span class="pre">squashed_r2</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.utils.score.squashed_variance"><code class="docutils literal notranslate"><span class="pre">squashed_variance</span></code></a></li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>

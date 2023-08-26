@@ -2,8 +2,8 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="reporting" href="../reporting.html" /><link rel="prev" title="general" href="general.html" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="torch" href="torch.html" /><link rel="prev" title="general" href="general.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
         <title>inversion - pyDVL 0.6.2.dev0 documentation</title>
@@ -189,15 +189,15 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../influence.html">influence</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3 has-children"><a class="reference internal" href="frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="frameworks/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="frameworks/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="frameworks/twice_differentiable.html">twice_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="frameworks/util.html">util</a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="general.html">general</a></li>
 <li class="toctree-l3 current current-page"><a class="current reference internal" href="#">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -296,7 +296,7 @@
 <hr class="docutils" />
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.influence.inversion.solve_hvp">
-<span class="sig-name descname"><span class="pre">solve_hvp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inversion_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.influence.inversion.InversionMethod" title="pydvl.influence.inversion.InversionMethod"><span class="pre">InversionMethod</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="frameworks/twice_differentiable.html#pydvl.influence.frameworks.twice_differentiable.TwiceDifferentiable" title="pydvl.influence.frameworks.twice_differentiable.TwiceDifferentiable"><span class="pre">TwiceDifferentiable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataLoader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian_perturbation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="frameworks/twice_differentiable.html#pydvl.influence.frameworks.twice_differentiable.InverseHvpResult" title="pydvl.influence.frameworks.twice_differentiable.InverseHvpResult"><span class="pre">InverseHvpResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/inversion.py#L36"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.inversion.solve_hvp" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">solve_hvp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inversion_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.influence.inversion.InversionMethod" title="pydvl.influence.inversion.InversionMethod"><span class="pre">InversionMethod</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="twice_differentiable.html#pydvl.influence.twice_differentiable.TwiceDifferentiable" title="pydvl.influence.twice_differentiable.TwiceDifferentiable"><span class="pre">TwiceDifferentiable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataLoaderType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TensorType</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian_perturbation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="twice_differentiable.html#pydvl.influence.twice_differentiable.InverseHvpResult" title="pydvl.influence.twice_differentiable.InverseHvpResult"><span class="pre">InverseHvpResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/inversion.py#L38"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.inversion.solve_hvp" title="Permalink to this definition">#</a></dt>
 <dd><p>Finds <span class="math notranslate nohighlight">\(x\)</span> such that <span class="math notranslate nohighlight">\(Ax = b\)</span>, where <span class="math notranslate nohighlight">\(A\)</span> is the hessian of model,
 and <span class="math notranslate nohighlight">\(b\)</span> a vector.
 Depending on the inversion method, the hessian is either calculated directly
@@ -304,20 +304,18 @@ and then inverted, or implicitly and then inverted through matrix vector
 product. The method also allows to add a small regularization term (hessian_perturbation)
 to facilitate inversion of non fully trained models.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>inversion_method</strong> – </p></li>
 <li><p><strong>model</strong> – A model wrapped in the TwiceDifferentiable interface.</p></li>
-<li><p><strong>x</strong> – An array containing the features of the input data points.</p></li>
-<li><p><strong>y</strong> – labels for x</p></li>
+<li><p><strong>training_data</strong> – </p></li>
 <li><p><strong>b</strong> – Array as the right hand side of the equation <span class="math notranslate nohighlight">\(Ax = b\)</span></p></li>
-<li><p><strong>kwargs</strong> – kwargs to pass to the inversion method</p></li>
 <li><p><strong>hessian_perturbation</strong> – regularization of the hessian</p></li>
-<li><p><strong>progress</strong> – If True, display progress bars.</p></li>
+<li><p><strong>kwargs</strong> – kwargs to pass to the inversion method</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>An object that containes an array that solves the inverse problem,
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An object that contains an array that solves the inverse problem,
 i.e. it returns <span class="math notranslate nohighlight">\(x\)</span> such that <span class="math notranslate nohighlight">\(Ax = b\)</span>, and a dictionary containing
 information about the inversion process.</p>
 </dd>
@@ -326,7 +324,7 @@ information about the inversion process.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pydvl.influence.inversion.InversionMethod">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InversionMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/inversion.py#L25"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.inversion.InversionMethod" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InversionMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/inversion.py#L27"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.inversion.InversionMethod" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>Different inversion methods types.</p>
 <dl class="py attribute">
@@ -351,6 +349,95 @@ information about the inversion process.</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.influence.inversion.InversionRegistry">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InversionRegistry</span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/inversion.py#L76"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.inversion.InversionRegistry" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A registry to hold inversion methods for different models.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.influence.inversion.InversionRegistry.registry">
+<span class="sig-name descname"><span class="pre">registry</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="twice_differentiable.html#pydvl.influence.twice_differentiable.TwiceDifferentiable" title="pydvl.influence.twice_differentiable.TwiceDifferentiable"><span class="pre">TwiceDifferentiable</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#pydvl.influence.inversion.InversionMethod" title="pydvl.influence.inversion.InversionMethod"><span class="pre">InversionMethod</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#pydvl.influence.inversion.InversionRegistry.registry" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydvl.influence.inversion.InversionRegistry.register">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="twice_differentiable.html#pydvl.influence.twice_differentiable.TwiceDifferentiable" title="pydvl.influence.twice_differentiable.TwiceDifferentiable"><span class="pre">TwiceDifferentiable</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inversion_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.influence.inversion.InversionMethod" title="pydvl.influence.inversion.InversionMethod"><span class="pre">InversionMethod</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pydvl.influence.inversion.InversionRegistry.register" title="Permalink to this definition">#</a></dt>
+<dd><p>Register a function for a specific model type and inversion method.</p>
+<p>The function to be registered must conform to the following signature:
+<cite>(model: TwiceDifferentiable, training_data: DataLoaderType, b: TensorType,
+hessian_perturbation: float = 0.0, …)</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_type</strong> – The type of the model the function should be registered for.</p></li>
+<li><p><strong>inversion_method</strong> – The inversion method the function should be
+registered for.</p></li>
+<li><p><strong>overwrite</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, allows overwriting of an existing registered
+function for the same model type and inversion method. If <code class="docutils literal notranslate"><span class="pre">False</span></code>,
+logs a warning when attempting to register a function for an already
+registered model type and inversion method.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>TypeError</strong> – If the provided model_type or inversion_method are of the wrong type.</p></li>
+<li><p><strong>ValueError</strong> – If the function to be registered does not match the required signature.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A decorator for registering a function.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydvl.influence.inversion.InversionRegistry.get">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="twice_differentiable.html#pydvl.influence.twice_differentiable.TwiceDifferentiable" title="pydvl.influence.twice_differentiable.TwiceDifferentiable"><span class="pre">TwiceDifferentiable</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inversion_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.influence.inversion.InversionMethod" title="pydvl.influence.inversion.InversionMethod"><span class="pre">InversionMethod</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="twice_differentiable.html#pydvl.influence.twice_differentiable.TwiceDifferentiable" title="pydvl.influence.twice_differentiable.TwiceDifferentiable"><span class="pre">TwiceDifferentiable</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataLoaderType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">TensorType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="twice_differentiable.html#pydvl.influence.twice_differentiable.InverseHvpResult" title="pydvl.influence.twice_differentiable.InverseHvpResult"><span class="pre">InverseHvpResult</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pydvl.influence.inversion.InversionRegistry.get" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydvl.influence.inversion.InversionRegistry.call">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inversion_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.influence.inversion.InversionMethod" title="pydvl.influence.inversion.InversionMethod"><span class="pre">InversionMethod</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="twice_differentiable.html#pydvl.influence.twice_differentiable.TwiceDifferentiable" title="pydvl.influence.twice_differentiable.TwiceDifferentiable"><span class="pre">TwiceDifferentiable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataLoaderType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TensorType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian_perturbation</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="twice_differentiable.html#pydvl.influence.twice_differentiable.InverseHvpResult" title="pydvl.influence.twice_differentiable.InverseHvpResult"><span class="pre">InverseHvpResult</span></a></span></span><a class="headerlink" href="#pydvl.influence.inversion.InversionRegistry.call" title="Permalink to this definition">#</a></dt>
+<dd><blockquote>
+<div><p>Call a registered function with the provided parameters.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inversion_method</strong> – The inversion method to use.</p></li>
+<li><p><strong>model</strong> – A model wrapped in the TwiceDifferentiable interface.</p></li>
+<li><p><strong>training_data</strong> – The training data to use.</p></li>
+<li><p><strong>b</strong> – Array as the right hand side of the equation <span class="math notranslate nohighlight">\(Ax = b\)</span>.</p></li>
+<li><p><strong>hessian_perturbation</strong> – Regularization of the hessian.</p></li>
+<li><p><strong>kwargs</strong> – Additional keyword arguments to pass to the inversion method.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An object that contains an array that solves the inverse problem,
+i.e. it returns <span class="math notranslate nohighlight">\(x\)</span> such that <span class="math notranslate nohighlight">\(Ax = b\)</span>, and a dictionary containing
+information about the inversion process.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pydvl.influence.inversion.InverseHvpResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InverseHvpResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/inversion.py#L0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.inversion.InverseHvpResult" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorType</span></code>]</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.influence.inversion.InverseHvpResult.x">
+<span class="sig-name descname"><span class="pre">x</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">TensorType</span></em><a class="headerlink" href="#pydvl.influence.inversion.InverseHvpResult.x" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pydvl.influence.inversion.InverseHvpResult.info">
+<span class="sig-name descname"><span class="pre">info</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pydvl.influence.inversion.InverseHvpResult.info" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -358,12 +445,12 @@ information about the inversion process.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../reporting.html">
+          <a class="next-page" href="torch.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">reporting</div>
+                <div class="title">torch</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -422,6 +509,18 @@ information about the inversion process.</p>
 <li><a class="reference internal" href="#pydvl.influence.inversion.InversionMethod.Cg"><code class="docutils literal notranslate"><span class="pre">InversionMethod.Cg</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.influence.inversion.InversionMethod.Lissa"><code class="docutils literal notranslate"><span class="pre">InversionMethod.Lissa</span></code></a></li>
 <li><a class="reference internal" href="#pydvl.influence.inversion.InversionMethod.Arnoldi"><code class="docutils literal notranslate"><span class="pre">InversionMethod.Arnoldi</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pydvl.influence.inversion.InversionRegistry"><code class="docutils literal notranslate"><span class="pre">InversionRegistry</span></code></a><ul>
+<li><a class="reference internal" href="#pydvl.influence.inversion.InversionRegistry.registry"><code class="docutils literal notranslate"><span class="pre">InversionRegistry.registry</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.influence.inversion.InversionRegistry.register"><code class="docutils literal notranslate"><span class="pre">InversionRegistry.register()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.influence.inversion.InversionRegistry.get"><code class="docutils literal notranslate"><span class="pre">InversionRegistry.get()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.influence.inversion.InversionRegistry.call"><code class="docutils literal notranslate"><span class="pre">InversionRegistry.call()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pydvl.influence.inversion.InverseHvpResult"><code class="docutils literal notranslate"><span class="pre">InverseHvpResult</span></code></a><ul>
+<li><a class="reference internal" href="#pydvl.influence.inversion.InverseHvpResult.x"><code class="docutils literal notranslate"><span class="pre">InverseHvpResult.x</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.influence.inversion.InverseHvpResult.info"><code class="docutils literal notranslate"><span class="pre">InverseHvpResult.info</span></code></a></li>
 </ul>
 </li>
 </ul>

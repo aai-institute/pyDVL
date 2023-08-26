@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="ray" href="futures/ray.html" /><link rel="prev" title="backend" href="backend.html" />
+<link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="torch_differentiable" href="torch_differentiable.html" /><link rel="prev" title="torch" href="../torch.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
-        <title>futures - pyDVL 0.6.2.dev0 documentation</title>
+        <title>functional - pyDVL 0.6.2.dev0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.custom.css" />
@@ -188,16 +188,16 @@
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../influence/general.html">general</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../influence/inversion.html">inversion</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../../influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/torch/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/torch/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../influence/torch/util.html">util</a></li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../../influence.html">influence</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../general.html">general</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../inversion.html">inversion</a></li>
+<li class="toctree-l3 current has-children"><a class="reference internal" href="../torch.html">torch</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="util.html">util</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../influence/twice_differentiable.html">twice_differentiable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -205,25 +205,25 @@
 <li class="toctree-l3"><a class="reference internal" href="../../reporting/scores.html">scores</a></li>
 </ul>
 </li>
-<li class="toctree-l2 current has-children"><a class="reference internal" href="../../utils.html">utils</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="../caching.html">caching</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../config.html">config</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../dataset.html">dataset</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../numeric.html">numeric</a></li>
-<li class="toctree-l3 current has-children"><a class="reference internal" href="../parallel.html">parallel</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="backend.html">backend</a></li>
-<li class="toctree-l4 current has-children current-page"><a class="current reference internal" href="#">futures</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="futures/ray.html">ray</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../utils/caching.html">caching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../utils/config.html">config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../utils/dataset.html">dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../utils/numeric.html">numeric</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../utils/parallel.html">parallel</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/parallel/backend.html">backend</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../utils/parallel/futures.html">futures</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../utils/parallel/futures/ray.html">ray</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="map_reduce.html">map_reduce</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/parallel/map_reduce.html">map_reduce</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../progress.html">progress</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../score.html">score</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../status.html">status</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../types.html">types</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../utility.html">utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../utils/progress.html">progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../utils/score.html">score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../utils/status.html">status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../utils/types.html">types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../utils/utility.html">utility</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../value.html">value</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -290,65 +290,40 @@
           </label>
         </div>
         <article role="main">
-          <section id="module-pydvl.utils.parallel.futures">
-<span id="futures"></span><h1>futures<a class="headerlink" href="#module-pydvl.utils.parallel.futures" title="Permalink to this heading">#</a></h1>
+          <section id="module-pydvl.influence.torch.functional">
+<span id="functional"></span><h1>functional<a class="headerlink" href="#module-pydvl.influence.torch.functional" title="Permalink to this heading">#</a></h1>
+<hr class="docutils" />
 <dl class="py function">
-<dt class="sig sig-object py" id="pydvl.utils.parallel.futures.init_executor">
-<span class="sig-name descname"><span class="pre">init_executor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='joblib',</span> <span class="pre">address=None,</span> <span class="pre">n_cpus_local=None,</span> <span class="pre">logging_level=30,</span> <span class="pre">wait_timeout=1.0)</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><span class="pre">Executor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/futures/__init__.py#L16"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.futures.init_executor" title="Permalink to this definition">#</a></dt>
-<dd><p>Initializes a futures executor based on the passed parallel configuration object.</p>
+<dt class="sig sig-object py" id="pydvl.influence.torch.functional.get_hvp_function">
+<span class="sig-name descname"><span class="pre">get_hvp_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_loader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataLoader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_hessian_avg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">track_gradients</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/torch/functional.py#L161"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.torch.functional.get_hvp_function" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns a function that calculates the approximate Hessian-vector product for a given vector. If you want to
+compute the exact hessian, i.e. pulling all data into memory and compute a full gradient computation, use
+the function <code class="xref py py-func docutils literal notranslate"><span class="pre">hvp()</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>max_workers</strong> – Maximum number of concurrent tasks.</p></li>
-<li><p><strong>config</strong> – instance of <a class="reference internal" href="../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelConfig</span></code></a> with
-cluster address, number of cpus, etc.</p></li>
-<li><p><strong>kwargs</strong> – Optional parameters that will be passed to the executor,
-e.g. <code class="docutils literal notranslate"><span class="pre">cancel_futures</span></code> for executors that support it, like
-<a class="reference internal" href="futures/ray.html#pydvl.utils.parallel.futures.ray.RayExecutor" title="pydvl.utils.parallel.futures.ray.RayExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">RayExecutor</span></code></a>.</p></li>
+<li><p><strong>model</strong> – A PyTorch module representing the model whose loss function’s Hessian is to be computed.</p></li>
+<li><p><strong>loss</strong> – A callable that takes the model’s output and target as input and returns the scalar loss.</p></li>
+<li><p><strong>data_loader</strong> – A DataLoader instance that provides batches of data for calculating the Hessian-vector product.
+Each batch from the DataLoader is assumed to return a tuple where the first element
+is the model’s input and the second element is the target output.</p></li>
+<li><p><strong>use_hessian_avg</strong> – If True, it will use batch-wise Hessian computation. If False, the function averages
+the batch gradients and perform backpropagation on the full (averaged) gradient,
+which is more accurate than averaging the batch hessians,
+but probably has a way higher memory usage.</p></li>
+<li><p><strong>reverse_only</strong> – Whether to use only reverse-mode autodiff
+(True, default) or both forward- and reverse-mode autodiff (False)</p></li>
+<li><p><strong>track_gradients</strong> – Whether to track gradients for the resulting tensor of the hessian vector products are
+(False, default).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Example</dt>
-<dd class="field-even"><p></p></dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A function that takes a single argument, a vector, and returns the product of the Hessian of the
+<cite>loss</cite> function with respect to the <cite>model</cite>’s parameters and the input vector.</p>
+</dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.parallel.futures</span> <span class="kn">import</span> <span class="n">init_executor</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.config</span> <span class="kn">import</span> <span class="n">ParallelConfig</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">ParallelConfig</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;ray&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">init_executor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="k">pass</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.parallel.futures</span> <span class="kn">import</span> <span class="n">init_executor</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">init_executor</span><span class="p">()</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">future</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="gp">... </span>    <span class="n">result</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
-<span class="gp">...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-<span class="go">2</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils.parallel.futures</span> <span class="kn">import</span> <span class="n">init_executor</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">init_executor</span><span class="p">()</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">executor</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)))</span>
-<span class="gp">...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
-<span class="go">[1, 2, 3, 4, 5]</span>
-</pre></div>
-</div>
 </dd></dl>
 
-<p class="rubric">Modules in this package</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="futures/ray.html">ray</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="futures/ray.html#pydvl.utils.parallel.futures.ray.RayExecutor"><code class="docutils literal notranslate"><span class="pre">RayExecutor</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="futures/ray.html#pydvl.utils.parallel.futures.ray.RayExecutor.submit"><code class="docutils literal notranslate"><span class="pre">RayExecutor.submit()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="futures/ray.html#pydvl.utils.parallel.futures.ray.RayExecutor.shutdown"><code class="docutils literal notranslate"><span class="pre">RayExecutor.shutdown()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</div>
 </section>
 
         </article>
@@ -356,23 +331,23 @@ e.g. <code class="docutils literal notranslate"><span class="pre">cancel_futures
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="futures/ray.html">
+          <a class="next-page" href="torch_differentiable.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">ray</div>
+                <div class="title">torch_differentiable</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="backend.html">
+          <a class="prev-page" href="../torch.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">backend</div>
+                <div class="title">torch</div>
                 
               </div>
             </a>
@@ -413,8 +388,8 @@ e.g. <code class="docutils literal notranslate"><span class="pre">cancel_futures
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">futures</a><ul>
-<li><a class="reference internal" href="#pydvl.utils.parallel.futures.init_executor"><code class="docutils literal notranslate"><span class="pre">init_executor()</span></code></a></li>
+<li><a class="reference internal" href="#">functional</a><ul>
+<li><a class="reference internal" href="#pydvl.influence.torch.functional.get_hvp_function"><code class="docutils literal notranslate"><span class="pre">get_hvp_function()</span></code></a></li>
 </ul>
 </li>
 </ul>

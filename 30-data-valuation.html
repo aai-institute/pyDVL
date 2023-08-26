@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Computing influence values" href="40-influence.html" /><link rel="prev" title="Installing pyDVL" href="20-install.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
@@ -189,15 +189,15 @@
 <ul>
 <li class="toctree-l1 has-children"><a class="reference internal" href="pydvl/index.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="pydvl/influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/frameworks/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/frameworks/util.html">util</a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/influence/general.html">general</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pydvl/influence/inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/influence/twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="pydvl/reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -419,7 +419,7 @@ when constructing the <cite>Utility</cite> object. The two following calls are e
 <p>Because each evaluation of the utility entails a full retrain of the model with
 a new subset of the training set, it is natural to try to learn this mapping
 from subsets to scores. This is the idea behind <strong>Data Utility Learning (DUL)</strong>
-(Wang <em>et al.</em><a class="footnote-reference brackets" href="#footcite-wang-improving-2022" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>) and in pyDVL it’s as simple as wrapping the
+(Wang <em>et al.</em><a class="footnote-reference brackets" href="#footcite-wang-improving-2022" id="id1">1</a>) and in pyDVL it’s as simple as wrapping the
 <cite>Utility</cite> inside <a class="reference internal" href="pydvl/utils/utility.html#pydvl.utils.utility.DataUtilityLearning" title="pydvl.utils.utility.DataUtilityLearning"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataUtilityLearning</span></code></a>:</p>
 <p>As you can see, all that is required is a model to learn the utility itself and
 the fitting and using of the learned model happens behind the scenes.</p>
@@ -522,7 +522,7 @@ stop condition. This is an instance of a
 </section>
 <section id="owen-sampling">
 <h3>Owen sampling<a class="headerlink" href="#owen-sampling" title="Permalink to this heading">#</a></h3>
-<p><strong>Owen Sampling</strong> (Okhrati and Lipani<a class="footnote-reference brackets" href="#footcite-okhrati-multilinear-2021" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>) is a practical
+<p><strong>Owen Sampling</strong> (Okhrati and Lipani<a class="footnote-reference brackets" href="#footcite-okhrati-multilinear-2021" id="id3">2</a>) is a practical
 algorithm based on the combinatorial definition. It uses a continuous extension
 of the utility from <span class="math notranslate nohighlight">\(\{0,1\}^n\)</span>, where a 1 in position <span class="math notranslate nohighlight">\(i\)</span> means that sample
 <span class="math notranslate nohighlight">\(x_i\)</span> is used to train the model, to <span class="math notranslate nohighlight">\([0,1]^n\)</span>. The ensuing expression for
@@ -537,7 +537,7 @@ v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})}
 </p>
 <p>Using Owen sampling follows the same pattern as every other method for Shapley
 values in pyDVL. First construct the dataset and utility, then call
-<code class="xref py py-func docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code>:</p>
+<a class="reference internal" href="pydvl/value/shapley/common.html#pydvl.value.shapley.common.compute_shapley_values" title="pydvl.value.shapley.common.compute_shapley_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code></a>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
 <span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
 
@@ -559,8 +559,8 @@ integration.</p>
 </section>
 <section id="permutation-shapley">
 <h3>Permutation Shapley<a class="headerlink" href="#permutation-shapley" title="Permalink to this heading">#</a></h3>
-<p>An equivalent way of computing Shapley values (<code class="docutils literal notranslate"><span class="pre">ApproShapley</span></code>) appeared in
-Castro <em>et al.</em><a class="footnote-reference brackets" href="#footcite-castro-polynomial-2009" id="id4" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a> and is the basis for the method most often
+<p>An equivalent way of computing Shapley values (<strong>ApproShapley</strong>) appeared in
+Castro <em>et al.</em><a class="footnote-reference brackets" href="#footcite-castro-polynomial-2009" id="id4">3</a> and is the basis for the method most often
 used in practice. It uses permutations over indices instead of subsets:</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
@@ -576,18 +576,30 @@ terms!) one uses Monte Carlo sampling of permutations, something which has
 surprisingly low sample complexity. One notable difference wrt. the
 combinatorial approach above is that the approximations always fulfill the
 efficiency axiom of Shapley, namely <span class="math notranslate nohighlight">\(\sum_{i=1}^n \hat{v}_i = u(D)\)</span> (see
-Castro <em>et al.</em><a class="footnote-reference brackets" href="#footcite-castro-polynomial-2009" id="id5" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a>, Proposition 3.2).</p>
-<p>By adding early stopping, the result is the so-called <strong>Truncated Monte Carlo
-Shapley</strong> (Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id6" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>), which is efficient enough to be
-useful in applications.</p>
+Castro <em>et al.</em><a class="footnote-reference brackets" href="#footcite-castro-polynomial-2009" id="id5">3</a>, Proposition 3.2).</p>
+<p>By adding early stopping within single permutations, the result is the so-called
+<strong>Truncated Monte Carlo Shapley</strong> (Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id6">4</a>), which is
+efficient enough to be useful in applications.</p>
+<p>The method names <code class="docutils literal notranslate"><span class="pre">appro_shapley</span></code>, <code class="docutils literal notranslate"><span class="pre">permutation_montecarlo</span></code> and
+<code class="docutils literal notranslate"><span class="pre">truncated_montecarlo</span></code> are all synonyms. The
+<a class="reference internal" href="pydvl/value/shapley/truncated.html#pydvl.value.shapley.truncated.TruncationPolicy" title="pydvl.value.shapley.truncated.TruncationPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">TruncationPolicy</span></code></a> for the iteration over
+a single permutation is configured with the argument <code class="docutils literal notranslate"><span class="pre">truncation</span></code> of
+<a class="reference internal" href="pydvl/value/shapley/common.html#pydvl.value.shapley.common.compute_shapley_values" title="pydvl.value.shapley.common.compute_shapley_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code></a>. The implementation
+of the methods described in the original paper are in
+<a class="reference internal" href="pydvl/value/shapley/truncated.html#pydvl.value.shapley.truncated.RelativeTruncation" title="pydvl.value.shapley.truncated.RelativeTruncation"><code class="xref py py-class docutils literal notranslate"><span class="pre">RelativeTruncation</span></code></a> and
+<code class="xref py py-class docutils literal notranslate"></code></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
-<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="o">*</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<span class="c1"># Truncated Monte Carlo Shapley, configured as in the paper</span>
 <span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
-    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;truncated_montecarlo&quot;</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;permutation_montecarlo&quot;</span><span class="p">,</span>
+    <span class="n">done</span><span class="o">=</span><span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> <span class="o">|</span> <span class="n">HistoryDeviation</span><span class="p">(</span><span class="n">n_steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.05</span><span class="p">),</span>
+    <span class="n">truncation</span><span class="o">=</span><span class="n">RelativeTruncation</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -597,7 +609,7 @@ useful in applications.</p>
 <p>It is possible to exploit the local structure of K-Nearest Neighbours to reduce
 the amount of subsets to consider: because no sample besides the K closest
 affects the score, most are irrelevant and it is possible to compute a value in
-linear time. This method was introduced by Jia <em>et al.</em><a class="footnote-reference brackets" href="#footcite-jia-efficient-2019a" id="id7" role="doc-noteref"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></a>,
+linear time. This method was introduced by Jia <em>et al.</em><a class="footnote-reference brackets" href="#footcite-jia-efficient-2019a" id="id7">5</a>,
 and can be used in pyDVL with:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
 <span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
@@ -612,7 +624,7 @@ and can be used in pyDVL with:</p>
 </section>
 <section id="group-testing">
 <h3>Group testing<a class="headerlink" href="#group-testing" title="Permalink to this heading">#</a></h3>
-<p>An alternative approach introduced in Jia <em>et al.</em><a class="footnote-reference brackets" href="#footcite-jia-efficient-2019a" id="id8" role="doc-noteref"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></a>
+<p>An alternative approach introduced in Jia <em>et al.</em><a class="footnote-reference brackets" href="#footcite-jia-efficient-2019a" id="id8">5</a>
 first approximates the differences of values with a Monte Carlo sum. With</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
@@ -742,7 +754,7 @@ As such it returns as exact a value as the utility function allows
 <p>Because the number of subsets <span class="math notranslate nohighlight">\(S \subseteq D \setminus \{x_i\}\)</span> is
 <span class="math notranslate nohighlight">\(2^{ | D | - 1 }\)</span>, one typically must resort to approximations.</p>
 <p>The simplest approximation consists in using a fraction of all subsets for the
-constraints. Yan and Procaccia<a class="footnote-reference brackets" href="#footcite-yan-if-2021" id="id9" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a> show that a quantity of order
+constraints. Yan and Procaccia<a class="footnote-reference brackets" href="#footcite-yan-if-2021" id="id9">6</a> show that a quantity of order
 <span class="math notranslate nohighlight">\(\mathcal{O}((n - \log \Delta ) / \delta^2)\)</span> is enough to obtain a so-called
 <span class="math notranslate nohighlight">\(\delta\)</span>-<em>approximate least core</em> with high probability. I.e. the following
 property holds with probability <span class="math notranslate nohighlight">\(1-\Delta\)</span> over the choice of subsets:</p>
@@ -814,8 +826,8 @@ v\_\text{semi}(i) = \sum_{i=1}^n w(k)
 \[\sum_{k=1}^n w(k) = 1.\]</div>
 </div>
 </p>
-<p>Two instances of this are <strong>Banzhaf indices</strong> (Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id10" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a>),
-and <strong>Beta Shapley</strong> (Kwon and Zou<a class="footnote-reference brackets" href="#footcite-kwon-beta-2022" id="id11" role="doc-noteref"><span class="fn-bracket">[</span>8<span class="fn-bracket">]</span></a>), with better numerical and
+<p>Two instances of this are <strong>Banzhaf indices</strong> (Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id10">7</a>),
+and <strong>Beta Shapley</strong> (Kwon and Zou<a class="footnote-reference brackets" href="#footcite-kwon-beta-2022" id="id11">8</a>), with better numerical and
 rank stability in certain situations.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -842,17 +854,17 @@ w(k) := \frac{B(k+\beta, n-k+1+\alpha)}{B(\alpha, \beta)},
 <p>where <span class="math notranslate nohighlight">\(B\)</span> is the <a class="reference external" href="https://en.wikipedia.org/wiki/Beta_function">Beta function</a>,
 and <span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span> are parameters that control the weighting of the
 subsets. Setting both to 1 recovers Shapley values, and setting <span class="math notranslate nohighlight">\(\alpha = 1\)</span>, and
-<span class="math notranslate nohighlight">\(\beta = 16\)</span> is reported in Kwon and Zou<a class="footnote-reference brackets" href="#footcite-kwon-beta-2022" id="id12" role="doc-noteref"><span class="fn-bracket">[</span>8<span class="fn-bracket">]</span></a> to be a good choice for
+<span class="math notranslate nohighlight">\(\beta = 16\)</span> is reported in Kwon and Zou<a class="footnote-reference brackets" href="#footcite-kwon-beta-2022" id="id12">8</a> to be a good choice for
 some applications. See however <a class="reference internal" href="#banzhaf-indices"><span class="std std-ref">Banzhaf indices</span></a> for an alternative choice
 of weights which is reported to work better.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
-<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_semivalues</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_beta_shapley_semivalues</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-<span class="n">values</span> <span class="o">=</span> <span class="n">compute_semivalues</span><span class="p">(</span>
-    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;beta_shapley&quot;</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">500</span><span class="p">),</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">16</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_beta_shapley_semivalues</span><span class="p">(</span>
+    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -876,15 +888,15 @@ constant:</p>
 any choice of weight function <span class="math notranslate nohighlight">\(w\)</span>, one can always construct a utility with
 higher variance where <span class="math notranslate nohighlight">\(w\)</span> is greater. Therefore, in a worst-case sense, the best
 one can do is to pick a constant weight.</p>
-<p>The authors of Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id14" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a> show that Banzhaf indices are more
+<p>The authors of Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id14">7</a> show that Banzhaf indices are more
 robust to variance in the utility function than Shapley and Beta Shapley values.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
-<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_semivalues</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_banzhaf_semivalues</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-<span class="n">values</span> <span class="o">=</span> <span class="n">compute_semivalues</span><span class="p">(</span> <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;banzhaf&quot;</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">500</span><span class="p">))</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_banzhaf_semivalues</span><span class="p">(</span><span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">500</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
@@ -903,8 +915,8 @@ utility for low sample sizes, and hence unreliable Monte Carlo approximations
 to the values. Nevertheless, in practice it is only the ranking of samples
 that matters, and this tends to be accurate (wrt. to the true ranking) despite
 inaccurate values.</p>
-<p>pyDVL offers a dedicated <code class="xref py py-func docutils literal notranslate"><span class="pre">function</span> <span class="pre">composition</span></code> for scorer functions which can be used to
-squash a score. The following is defined in module <code class="xref py py-mod docutils literal notranslate"><span class="pre">scorer</span></code>:</p>
+<p>pyDVL offers a dedicated <a class="reference internal" href="pydvl/utils/score.html#pydvl.utils.score.compose_score" title="pydvl.utils.score.compose_score"><code class="xref py py-func docutils literal notranslate"><span class="pre">function</span> <span class="pre">composition</span></code></a> for scorer functions which can be used to
+squash a score. The following is defined in module <a class="reference internal" href="pydvl/utils/score.html#module-pydvl.utils.score" title="pydvl.utils.score"><code class="xref py py-mod docutils literal notranslate"><span class="pre">score</span></code></a>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)))</span>
 
@@ -926,7 +938,7 @@ variance, as will their Monte Carlo estimates. One workaround in pyDVL is to
 configure the caching system to allow multiple evaluations of the utility for
 every index set. A moving average is computed and returned once the standard
 error is small, see <a class="reference internal" href="pydvl/utils/config.html#pydvl.utils.config.MemcachedConfig" title="pydvl.utils.config.MemcachedConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">MemcachedConfig</span></code></a>.</p>
-<p>Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id16" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a> prove that by relaxing one of the Shapley axioms
+<p>Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id16">7</a> prove that by relaxing one of the Shapley axioms
 and considering the general class of semi-values, of which Shapley is an
 instance, one can prove that a choice of constant weights is the best one can
 do in a utility-agnostic setting. So-called <em>Data Banzhaf</em> is on our to-do
@@ -954,44 +966,32 @@ require cross-validating the whole value computation).</p></li>
 <section id="references">
 <h3>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h3>
 </section>
-<aside class="footnote-list brackets">
-<aside class="footnote brackets" id="footcite-wang-improving-2022" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
-<p>Tianhao Wang, Yu Yang, and Ruoxi Jia. Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning. In <em>International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning</em>. arXiv, April 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2107.06336v2">http://arxiv.org/abs/2107.06336v2</a> (visited on 2022-05-19), <a class="reference external" href="https://arxiv.org/abs/2107.06336v2">arXiv:2107.06336v2</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2107.06336">doi:10.48550/arXiv.2107.06336</a>.</p>
-</aside>
-<aside class="footnote brackets" id="footcite-okhrati-multilinear-2021" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">2</a><span class="fn-bracket">]</span></span>
-<p>Ramin Okhrati and Aldo Lipani. A Multilinear Sampling Algorithm to Estimate Shapley Values. In <em>2020 25th International Conference on Pattern Recognition (ICPR)</em>, 7992–7999. IEEE, January 2021. URL: <a class="reference external" href="https://ieeexplore.ieee.org/abstract/document/9412511">https://ieeexplore.ieee.org/abstract/document/9412511</a>, <a class="reference external" href="https://arxiv.org/abs/2010.12082">arXiv:2010.12082</a>, <a class="reference external" href="https://doi.org/10.1109/ICPR48806.2021.9412511">doi:10.1109/ICPR48806.2021.9412511</a>.</p>
-</aside>
-<aside class="footnote brackets" id="footcite-castro-polynomial-2009" role="note">
-<span class="label"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id4">1</a>,<a role="doc-backlink" href="#id5">2</a>)</span>
-<p>Javier Castro, Daniel Gómez, and Juan Tejada. Polynomial calculation of the Shapley value based on sampling. <em>Computers &amp; Operations Research</em>, 36(5):1726–1730, May 2009. URL: <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0305054808000804">http://www.sciencedirect.com/science/article/pii/S0305054808000804</a> (visited on 2020-11-21), <a class="reference external" href="https://doi.org/10.1016/j.cor.2008.04.004">doi:10.1016/j.cor.2008.04.004</a>.</p>
-</aside>
-<aside class="footnote brackets" id="footcite-ghorbani-data-2019" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id6">4</a><span class="fn-bracket">]</span></span>
-<p>Amirata Ghorbani and James Zou. Data Shapley: Equitable Valuation of Data for Machine Learning. In <em>Proceedings of the 36th International Conference on Machine Learning, PMLR</em>, 2242–2251. PMLR, May 2019. URL: <a class="reference external" href="http://proceedings.mlr.press/v97/ghorbani19c.html">http://proceedings.mlr.press/v97/ghorbani19c.html</a> (visited on 2020-11-01), <a class="reference external" href="https://arxiv.org/abs/1904.02868">arXiv:1904.02868</a>.</p>
-</aside>
-<aside class="footnote brackets" id="footcite-jia-efficient-2019a" role="note">
-<span class="label"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id7">1</a>,<a role="doc-backlink" href="#id8">2</a>)</span>
-<p>Ruoxi Jia, David Dao, Boxin Wang, Frances Ann Hubis, Nezihe Merve Gurel, Bo Li, Ce Zhang, Costas Spanos, and Dawn Song. Efficient task-specific data valuation for nearest neighbor algorithms. <em>Proceedings of the VLDB Endowment</em>, 12(11):1610–1623, July 2019. URL: <a class="reference external" href="https://doi.org/10.14778/3342263.3342637">https://doi.org/10.14778/3342263.3342637</a> (visited on 2021-02-12), <a class="reference external" href="https://doi.org/10.14778/3342263.3342637">doi:10.14778/3342263.3342637</a>.</p>
-</aside>
-<aside class="footnote brackets" id="footcite-yan-if-2021" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id9">6</a><span class="fn-bracket">]</span></span>
-<p>Tom Yan and Ariel D. Procaccia. If You Like Shapley Then You’ll Love the Core. In <em>Proceedings of the 35th AAAI Conference on Artificial Intelligence, 2021</em>, volume 6, 5751–5759. Virtual conference, May 2021. Association for the Advancement of Artificial Intelligence. URL: <a class="reference external" href="https://ojs.aaai.org/index.php/AAAI/article/view/16721">https://ojs.aaai.org/index.php/AAAI/article/view/16721</a> (visited on 2021-04-23), <a class="reference external" href="https://doi.org/10.1609/aaai.v35i6.16721">doi:10.1609/aaai.v35i6.16721</a>.</p>
-</aside>
-<aside class="footnote brackets" id="footcite-wang-data-2022" role="note">
-<span class="label"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id10">1</a>,<a role="doc-backlink" href="#id14">2</a>,<a role="doc-backlink" href="#id16">3</a>)</span>
-<p>Jiachen T. Wang and Ruoxi Jia. Data Banzhaf: A Robust Data Valuation Framework for Machine Learning. October 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2205.15466">http://arxiv.org/abs/2205.15466</a> (visited on 2022-10-28), <a class="reference external" href="https://arxiv.org/abs/arXiv:2205.15466">arXiv:arXiv:2205.15466</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2205.15466">doi:10.48550/arXiv.2205.15466</a>.</p>
-</aside>
-<aside class="footnote brackets" id="footcite-kwon-beta-2022" role="note">
-<span class="label"><span class="fn-bracket">[</span>8<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id11">1</a>,<a role="doc-backlink" href="#id12">2</a>)</span>
-<p>Yongchan Kwon and James Zou. Beta Shapley: a Unified and Noise-reduced Data Valuation Framework for Machine Learning. In <em>Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022,</em>, volume 151. Valencia, Spain, January 2022. PMLR. URL: <a class="reference external" href="http://arxiv.org/abs/2110.14049">http://arxiv.org/abs/2110.14049</a> (visited on 2022-04-06), <a class="reference external" href="https://arxiv.org/abs/2110.14049">arXiv:2110.14049</a>.</p>
-</aside>
-</aside>
+<dl class="footnote brackets">
+<dt class="label" id="footcite-wang-improving-2022"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Tianhao Wang, Yu Yang, and Ruoxi Jia. Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning. In <em>International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning</em>. arXiv, April 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2107.06336v2">http://arxiv.org/abs/2107.06336v2</a> (visited on 2022-05-19), <a class="reference external" href="https://arxiv.org/abs/2107.06336v2">arXiv:2107.06336v2</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2107.06336">doi:10.48550/arXiv.2107.06336</a>.</p>
+</dd>
+<dt class="label" id="footcite-okhrati-multilinear-2021"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
+<dd><p>Ramin Okhrati and Aldo Lipani. A Multilinear Sampling Algorithm to Estimate Shapley Values. In <em>2020 25th International Conference on Pattern Recognition (ICPR)</em>, 7992–7999. IEEE, January 2021. URL: <a class="reference external" href="https://ieeexplore.ieee.org/abstract/document/9412511">https://ieeexplore.ieee.org/abstract/document/9412511</a>, <a class="reference external" href="https://arxiv.org/abs/2010.12082">arXiv:2010.12082</a>, <a class="reference external" href="https://doi.org/10.1109/ICPR48806.2021.9412511">doi:10.1109/ICPR48806.2021.9412511</a>.</p>
+</dd>
+<dt class="label" id="footcite-castro-polynomial-2009"><span class="brackets">3</span><span class="fn-backref">(<a href="#id4">1</a>,<a href="#id5">2</a>)</span></dt>
+<dd><p>Javier Castro, Daniel Gómez, and Juan Tejada. Polynomial calculation of the Shapley value based on sampling. <em>Computers &amp; Operations Research</em>, 36(5):1726–1730, May 2009. URL: <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0305054808000804">http://www.sciencedirect.com/science/article/pii/S0305054808000804</a> (visited on 2020-11-21), <a class="reference external" href="https://doi.org/10.1016/j.cor.2008.04.004">doi:10.1016/j.cor.2008.04.004</a>.</p>
+</dd>
+<dt class="label" id="footcite-ghorbani-data-2019"><span class="brackets"><a class="fn-backref" href="#id6">4</a></span></dt>
+<dd><p>Amirata Ghorbani and James Zou. Data Shapley: Equitable Valuation of Data for Machine Learning. In <em>Proceedings of the 36th International Conference on Machine Learning, PMLR</em>, 2242–2251. PMLR, May 2019. URL: <a class="reference external" href="http://proceedings.mlr.press/v97/ghorbani19c.html">http://proceedings.mlr.press/v97/ghorbani19c.html</a> (visited on 2020-11-01), <a class="reference external" href="https://arxiv.org/abs/1904.02868">arXiv:1904.02868</a>.</p>
+</dd>
+<dt class="label" id="footcite-jia-efficient-2019a"><span class="brackets">5</span><span class="fn-backref">(<a href="#id7">1</a>,<a href="#id8">2</a>)</span></dt>
+<dd><p>Ruoxi Jia, David Dao, Boxin Wang, Frances Ann Hubis, Nezihe Merve Gurel, Bo Li, Ce Zhang, Costas Spanos, and Dawn Song. Efficient task-specific data valuation for nearest neighbor algorithms. <em>Proceedings of the VLDB Endowment</em>, 12(11):1610–1623, July 2019. URL: <a class="reference external" href="https://doi.org/10.14778/3342263.3342637">https://doi.org/10.14778/3342263.3342637</a> (visited on 2021-02-12), <a class="reference external" href="https://doi.org/10.14778/3342263.3342637">doi:10.14778/3342263.3342637</a>.</p>
+</dd>
+<dt class="label" id="footcite-yan-if-2021"><span class="brackets"><a class="fn-backref" href="#id9">6</a></span></dt>
+<dd><p>Tom Yan and Ariel D. Procaccia. If You Like Shapley Then You’ll Love the Core. In <em>Proceedings of the 35th AAAI Conference on Artificial Intelligence, 2021</em>, volume 6, 5751–5759. Virtual conference, May 2021. Association for the Advancement of Artificial Intelligence. URL: <a class="reference external" href="https://ojs.aaai.org/index.php/AAAI/article/view/16721">https://ojs.aaai.org/index.php/AAAI/article/view/16721</a> (visited on 2021-04-23), <a class="reference external" href="https://doi.org/10.1609/aaai.v35i6.16721">doi:10.1609/aaai.v35i6.16721</a>.</p>
+</dd>
+<dt class="label" id="footcite-wang-data-2022"><span class="brackets">7</span><span class="fn-backref">(<a href="#id10">1</a>,<a href="#id14">2</a>,<a href="#id16">3</a>)</span></dt>
+<dd><p>Jiachen T. Wang and Ruoxi Jia. Data Banzhaf: A Robust Data Valuation Framework for Machine Learning. October 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2205.15466">http://arxiv.org/abs/2205.15466</a> (visited on 2022-10-28), <a class="reference external" href="https://arxiv.org/abs/arXiv:2205.15466">arXiv:arXiv:2205.15466</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2205.15466">doi:10.48550/arXiv.2205.15466</a>.</p>
+</dd>
+<dt class="label" id="footcite-kwon-beta-2022"><span class="brackets">8</span><span class="fn-backref">(<a href="#id11">1</a>,<a href="#id12">2</a>)</span></dt>
+<dd><p>Yongchan Kwon and James Zou. Beta Shapley: a Unified and Noise-reduced Data Valuation Framework for Machine Learning. In <em>Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022,</em>, volume 151. Valencia, Spain, January 2022. PMLR. URL: <a class="reference external" href="http://arxiv.org/abs/2110.14049">http://arxiv.org/abs/2110.14049</a> (visited on 2022-04-06), <a class="reference external" href="https://arxiv.org/abs/2110.14049">arXiv:2110.14049</a>.</p>
+</dd>
+</dl>
 </div>
 </section>
 </section>

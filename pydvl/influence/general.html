@@ -2,8 +2,8 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="inversion" href="inversion.html" /><link rel="prev" title="util" href="frameworks/util.html" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="inversion" href="inversion.html" /><link rel="prev" title="influence" href="../influence.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
         <title>general - pyDVL 0.6.2.dev0 documentation</title>
@@ -189,15 +189,15 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../influence.html">influence</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3 has-children"><a class="reference internal" href="frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="frameworks/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="frameworks/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="frameworks/twice_differentiable.html">twice_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="frameworks/util.html">util</a></li>
-</ul>
-</li>
 <li class="toctree-l3 current current-page"><a class="current reference internal" href="#">general</a></li>
 <li class="toctree-l3"><a class="reference internal" href="inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -293,17 +293,17 @@
           <section id="module-pydvl.influence.general">
 <span id="general"></span><h1>general<a class="headerlink" href="#module-pydvl.influence.general" title="Permalink to this heading">#</a></h1>
 <p>This module contains parallelized influence calculation functions for general
-models, as introduced in Koh and Liang<a class="footnote-reference brackets" href="#footcite-koh-understanding-2017" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+models, as introduced in Koh and Liang<a class="footnote-reference brackets" href="#footcite-koh-understanding-2017" id="id1">1</a>.</p>
 <hr class="docutils" />
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.influence.general.compute_influences">
-<span class="sig-name descname"><span class="pre">compute_influences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">differentiable_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="frameworks/twice_differentiable.html#pydvl.influence.frameworks.twice_differentiable.TwiceDifferentiable" title="pydvl.influence.frameworks.twice_differentiable.TwiceDifferentiable"><span class="pre">TwiceDifferentiable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataLoader</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inversion_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="inversion.html#pydvl.influence.inversion.InversionMethod" title="pydvl.influence.inversion.InversionMethod"><span class="pre">InversionMethod</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">InversionMethod.Direct</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">influence_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.influence.general.InfluenceType" title="pydvl.influence.general.InfluenceType"><span class="pre">InfluenceType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">InfluenceType.Up</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian_regularization</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/general.py#L185"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.general.compute_influences" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">compute_influences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">differentiable_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="twice_differentiable.html#pydvl.influence.twice_differentiable.TwiceDifferentiable" title="pydvl.influence.twice_differentiable.TwiceDifferentiable"><span class="pre">TwiceDifferentiable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataLoaderType</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoaderType</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoaderType</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inversion_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="inversion.html#pydvl.influence.inversion.InversionMethod" title="pydvl.influence.inversion.InversionMethod"><span class="pre">InversionMethod</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">InversionMethod.Direct</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">influence_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.influence.general.InfluenceType" title="pydvl.influence.general.InfluenceType"><span class="pre">InfluenceType</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">InfluenceType.Up</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian_regularization</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TensorType</span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/general.py#L229"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.general.compute_influences" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculates the influence of the input_data point j on the test points i.
 First it calculates the influence factors of all test points with respect
 to the model and the training points, and then uses them to get the
 influences over the complete input_data set.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>differentiable_model</strong> – A model wrapped with its loss in TwiceDifferentiable.</p></li>
 <li><p><strong>training_data</strong> – data loader with the training data, used to calculate
@@ -315,14 +315,14 @@ of. If None, the samples in training_data are used.</p></li>
 <li><p><strong>progress</strong> – whether to display progress bars.</p></li>
 <li><p><strong>influence_type</strong> – Which algorithm to use to calculate influences.
 Currently supported options: ‘up’ or ‘perturbation’. For details refer
-to Koh and Liang<a class="footnote-reference brackets" href="#footcite-koh-understanding-2017" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p></li>
+to Koh and Liang<a class="footnote-reference brackets" href="#footcite-koh-understanding-2017" id="id2">1</a></p></li>
 <li><p><strong>hessian_regularization</strong> – lambda to use in Hessian regularization, i.e.
 H_reg = H + lambda * 1, with 1 the identity matrix and H the (simple and
 regularized) Hessian. Typically used with more complex models to make
 sure the Hessian is positive definite.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>An array specifying the influences. Shape is [NxM] if
 influence_type is’up’, where N is number of test points and M number of
 train points. If instead influence_type is ‘perturbation’, output shape
@@ -350,7 +350,7 @@ is [NxMxP], with P the number of input features.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pydvl.influence.general.compute_influence_factors">
-<span class="sig-name descname"><span class="pre">compute_influence_factors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="frameworks/twice_differentiable.html#pydvl.influence.frameworks.twice_differentiable.TwiceDifferentiable" title="pydvl.influence.frameworks.twice_differentiable.TwiceDifferentiable"><span class="pre">TwiceDifferentiable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataLoader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataLoader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inversion_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="inversion.html#pydvl.influence.inversion.InversionMethod" title="pydvl.influence.inversion.InversionMethod"><span class="pre">InversionMethod</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian_perturbation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="frameworks/twice_differentiable.html#pydvl.influence.frameworks.twice_differentiable.InverseHvpResult" title="pydvl.influence.frameworks.twice_differentiable.InverseHvpResult"><span class="pre">InverseHvpResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/general.py#L33"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.general.compute_influence_factors" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">compute_influence_factors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="twice_differentiable.html#pydvl.influence.twice_differentiable.TwiceDifferentiable" title="pydvl.influence.twice_differentiable.TwiceDifferentiable"><span class="pre">TwiceDifferentiable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataLoaderType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataLoaderType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inversion_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="inversion.html#pydvl.influence.inversion.InversionMethod" title="pydvl.influence.inversion.InversionMethod"><span class="pre">InversionMethod</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian_perturbation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="twice_differentiable.html#pydvl.influence.twice_differentiable.InverseHvpResult" title="pydvl.influence.twice_differentiable.InverseHvpResult"><span class="pre">InverseHvpResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/influence/general.py#L33"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.influence.general.compute_influence_factors" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculates influence factors of a model for training and test
 data. Given a test point <span class="math notranslate nohighlight">\(z_test = (x_{test}, y_{test})\)</span>, a loss
 <span class="math notranslate nohighlight">\(L(z_{test}, \theta)\)</span> (<span class="math notranslate nohighlight">\(\theta\)</span> being the parameters of the model) and the
@@ -364,21 +364,21 @@ used for efficient influence calculation. This method first
 (implicitly) calculates the Hessian and then (explicitly) finds the
 influence factors for the model using the given inversion method. The
 parameter <code class="docutils literal notranslate"><span class="pre">hessian_perturbation</span></code> is used to regularize the inversion of
-the Hessian. For more info, refer to Koh and Liang<a class="footnote-reference brackets" href="#footcite-koh-understanding-2017" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>,
+the Hessian. For more info, refer to Koh and Liang<a class="footnote-reference brackets" href="#footcite-koh-understanding-2017" id="id3">1</a>,
 paragraph 3.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> – A model wrapped in the TwiceDifferentiable interface.</p></li>
 <li><p><strong>training_data</strong> – A DataLoader containing the training data.</p></li>
 <li><p><strong>test_data</strong> – A DataLoader containing the test data.</p></li>
-<li><p><strong>inversion_func</strong> – function to use to invert the product of hvp (hessian
-vector product) and the gradient of the loss (s_test in the paper).</p></li>
+<li><p><strong>inversion_method</strong> – name of method for computing inverse hessian vector
+products.</p></li>
 <li><p><strong>hessian_perturbation</strong> – regularization of the hessian</p></li>
 <li><p><strong>progress</strong> – If True, display progress bars.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>An array of size (N, D) containing the influence factors for each
 dimension (D) and test sample (N).</p>
 </dd>
@@ -389,13 +389,11 @@ dimension (D) and test sample (N).</p>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h2>
 </section>
-<aside class="footnote-list brackets">
-<aside class="footnote brackets" id="footcite-koh-understanding-2017" role="note">
-<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id2">2</a>,<a role="doc-backlink" href="#id3">3</a>)</span>
-<p>Pang Wei Koh and Percy Liang. Understanding Black-box Predictions via Influence Functions. In <em>Proceedings of the 34th International Conference on Machine Learning</em>, 1885–1894. PMLR, July 2017. URL: <a class="reference external" href="https://proceedings.mlr.press/v70/koh17a.html">https://proceedings.mlr.press/v70/koh17a.html</a> (visited on 2022-05-09), <a class="reference external" href="https://arxiv.org/abs/1703.04730">arXiv:1703.04730</a>.</p>
-</aside>
-</aside>
+<dl class="footnote brackets">
+<dt class="label" id="footcite-koh-understanding-2017"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id2">2</a>,<a href="#id3">3</a>)</span></dt>
+<dd><p>Pang Wei Koh and Percy Liang. Understanding Black-box Predictions via Influence Functions. In <em>Proceedings of the 34th International Conference on Machine Learning</em>, 1885–1894. PMLR, July 2017. URL: <a class="reference external" href="https://proceedings.mlr.press/v70/koh17a.html">https://proceedings.mlr.press/v70/koh17a.html</a> (visited on 2022-05-09), <a class="reference external" href="https://arxiv.org/abs/1703.04730">arXiv:1703.04730</a>.</p>
+</dd>
+</dl>
 </div>
 </section>
 
@@ -413,14 +411,14 @@ dimension (D) and test sample (N).</p>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="frameworks/util.html">
+          <a class="prev-page" href="../influence.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">util</div>
+                <div class="title">influence</div>
                 
               </div>
             </a>

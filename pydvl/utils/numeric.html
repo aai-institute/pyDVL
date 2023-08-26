@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="parallel" href="parallel.html" /><link rel="prev" title="dataset" href="dataset.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
@@ -189,15 +189,15 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="../influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../influence/frameworks.html">frameworks</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/functional.html">functional</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/torch_differentiable.html">torch_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/twice_differentiable.html">twice_differentiable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../influence/frameworks/util.html">util</a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="../influence/general.html">general</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../influence/inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../influence/torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../influence/twice_differentiable.html">twice_differentiable</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -315,7 +315,7 @@ for the variance. (FIXME)</p>
 <p>This could be generalised to arbitrary moments. See <a class="reference external" href="https://www.osti.gov/biblio/1028931">this paper</a></p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>previous_avg</strong> – average value at previous step</p></li>
 <li><p><strong>previous_variance</strong> – variance at previous step</p></li>
@@ -323,7 +323,7 @@ for the variance. (FIXME)</p>
 <li><p><strong>new_value</strong> – new value in the series of numbers</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>new_average, new_variance, calculated with the new count</p>
 </dd>
 </dl>
@@ -338,14 +338,14 @@ obtain an (ε,δ)-approximation.</p>
 be ε-close to the true quantity, if at least this many permutations are
 sampled.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>eps</strong> – ε &gt; 0</p></li>
 <li><p><strong>delta</strong> – 0 &lt; δ &lt;= 1</p></li>
 <li><p><strong>u_range</strong> – Range of the <a class="reference internal" href="utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> function</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Number of _permutations_ required to guarantee ε-correct Shapley
 values with probability 1-δ</p>
 </dd>
@@ -368,13 +368,13 @@ values with probability 1-δ</p>
 </div>
 <blockquote>
 <div><dl class="field-list simple">
-<dt class="field-odd">param s<span class="colon">:</span></dt>
+<dt class="field-odd">param s</dt>
 <dd class="field-odd"><p>The set to use</p>
 </dd>
-<dt class="field-even">return<span class="colon">:</span></dt>
+<dt class="field-even">return</dt>
 <dd class="field-even"><p>An iterator</p>
 </dd>
-<dt class="field-odd">raises TypeError<span class="colon">:</span></dt>
+<dt class="field-odd">raises TypeError</dt>
 <dd class="field-odd"><p>If the argument is not an <code class="docutils literal notranslate"><span class="pre">Iterable</span></code>.</p>
 </dd>
 </dl>
@@ -390,13 +390,13 @@ values with probability 1-δ</p>
 <p>Also see:
 <a class="reference external" href="https://math.stackexchange.com/questions/1351616/condition-number-of-ata">https://math.stackexchange.com/questions/1351616/condition-number-of-ata</a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>n</strong> – size of the matrix</p></li>
 <li><p><strong>condition_number</strong> – duh</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>An (n,n) matrix with the requested condition number.</p>
 </dd>
 </dl>
@@ -407,14 +407,14 @@ values with probability 1-δ</p>
 <span class="sig-name descname"><span class="pre">random_subset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/numeric.py#L62"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.numeric.random_subset" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns one subset at random from <code class="docutils literal notranslate"><span class="pre">s</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>s</strong> – set to sample from</p></li>
 <li><p><strong>q</strong> – Sampling probability for elements. The default 0.5 yields a
 uniform distribution over the power set of s.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the subset</p>
 </dd>
 </dl>
@@ -431,7 +431,7 @@ drawn. The default value of <cite>q = 0.5</cite> provides a uniform distribution
 the power set of <cite>s</cite>. Other choices can be used e.g. to implement
 <code class="xref py py-func docutils literal notranslate"><span class="pre">Owen</span> <span class="pre">sampling</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>s</strong> – set to sample from</p></li>
 <li><p><strong>n_samples</strong> – if set, stop the generator after this many steps.
@@ -440,13 +440,13 @@ Defaults to <cite>np.iinfo(np.int32).max</cite></p></li>
 uniform distribution over the power set of s.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Samples from the power set of s</p>
 </dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p>TypeError: if the data <cite>s</cite> is not a NumPy array</p>
 </dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dt class="field-even">Raises</dt>
 <dd class="field-even"><p>ValueError: if the element sampling probability is not in [0,1]</p>
 </dd>
 </dl>
@@ -458,16 +458,16 @@ uniform distribution over the power set of s.</p></li>
 <dd><p>Samples a random subset of given size uniformly from the powerset
 of <code class="docutils literal notranslate"><span class="pre">s</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>s</strong> – Set to sample from</p></li>
 <li><p><strong>size</strong> – Size of the subset to generate</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The subset</p>
 </dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – If size &gt; len(s)</p>
 </dd>
 </dl>
@@ -479,14 +479,14 @@ of <code class="docutils literal notranslate"><span class="pre">s</span></code>.
 <dd><p>Computes the top-k accuracy for the estimated values by comparing indices
 of the highest k values.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>y_true</strong> – Exact/true value</p></li>
 <li><p><strong>y_pred</strong> – Predicted/estimated value</p></li>
 <li><p><strong>k</strong> – Number of the highest values taken into account</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Accuracy</p>
 </dd>
 </dl>
