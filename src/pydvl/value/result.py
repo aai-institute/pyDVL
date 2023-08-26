@@ -258,7 +258,9 @@ class ValuationResult(
         self._indices = indices
         self._positions = {idx: pos for pos, idx in enumerate(indices)}
 
-        self._sort_positions = np.arange(len(self._values), dtype=np.int_)
+        self._sort_positions: NDArray[np.int_] = np.arange(
+            len(self._values), dtype=np.int_
+        )
         if sort:
             self.sort()
 
@@ -510,12 +512,12 @@ class ValuationResult(
         this_pos = np.searchsorted(indices, self._indices)
         other_pos = np.searchsorted(indices, other._indices)
 
-        n = np.zeros_like(indices, dtype=int)
-        m = np.zeros_like(indices, dtype=int)
-        xn = np.zeros_like(indices, dtype=float)
-        xm = np.zeros_like(indices, dtype=float)
-        vn = np.zeros_like(indices, dtype=float)
-        vm = np.zeros_like(indices, dtype=float)
+        n: NDArray[np.int_] = np.zeros_like(indices, dtype=int)
+        m: NDArray[np.int_] = np.zeros_like(indices, dtype=int)
+        xn: NDArray[np.int_] = np.zeros_like(indices, dtype=float)
+        xm: NDArray[np.int_] = np.zeros_like(indices, dtype=float)
+        vn: NDArray[np.int_] = np.zeros_like(indices, dtype=float)
+        vm: NDArray[np.int_] = np.zeros_like(indices, dtype=float)
 
         n[this_pos] = self._counts
         xn[this_pos] = self._values
@@ -553,17 +555,23 @@ class ValuationResult(
                     f"{other._names.dtype} to {self._names.dtype}"
                 )
 
-        this_names = np.empty_like(indices, dtype=object)
-        other_names = np.empty_like(indices, dtype=object)
-        this_names[this_pos] = self._names
-        other_names[other_pos] = other._names
-        both = np.where(this_pos == other_pos)
+        both_pos = np.intersect1d(this_pos, other_pos)
+
+        if len(both_pos) > 0:
+            this_names: NDArray = np.empty_like(indices, dtype=object)
+            other_names: NDArray = np.empty_like(indices, dtype=object)
+            this_names[this_pos] = self._names
+            other_names[other_pos] = other._names
+
+            this_shared_names = np.take(this_names, both_pos)
+            other_shared_names = np.take(other_names, both_pos)
+
+            if np.any(this_shared_names != other_shared_names):
+                raise ValueError(f"Mismatching names in ValuationResults")
+
         names = np.empty_like(indices, dtype=self._names.dtype)
         names[this_pos] = self._names
         names[other_pos] = other._names
-
-        if np.any(other_names[both] != this_names[both]):
-            raise ValueError(f"Mismatching names in ValuationResults")
 
         return ValuationResult(
             algorithm=self.algorithm or other.algorithm or "",

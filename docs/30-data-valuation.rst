@@ -300,7 +300,7 @@ v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})}
 
 Using Owen sampling follows the same pattern as every other method for Shapley
 values in pyDVL. First construct the dataset and utility, then call
-:func:`~pydvl.value.shapley.compute_shapley_values`:
+:func:`~pydvl.value.shapley.common.compute_shapley_values`:
 
 .. code-block:: python
 
@@ -326,7 +326,7 @@ integration.
 Permutation Shapley
 ^^^^^^^^^^^^^^^^^^^
 
-An equivalent way of computing Shapley values (``ApproShapley``) appeared in
+An equivalent way of computing Shapley values (**ApproShapley**) appeared in
 :footcite:t:`castro_polynomial_2009` and is the basis for the method most often
 used in practice. It uses permutations over indices instead of subsets:
 
@@ -343,20 +343,34 @@ combinatorial approach above is that the approximations always fulfill the
 efficiency axiom of Shapley, namely $\sum_{i=1}^n \hat{v}_i = u(D)$ (see
 :footcite:t:`castro_polynomial_2009`, Proposition 3.2).
 
-By adding early stopping, the result is the so-called **Truncated Monte Carlo
-Shapley** (:footcite:t:`ghorbani_data_2019`), which is efficient enough to be
-useful in applications.
+By adding early stopping within single permutations, the result is the so-called
+**Truncated Monte Carlo Shapley** (:footcite:t:`ghorbani_data_2019`), which is
+efficient enough to be useful in applications.
+
+The method names ``appro_shapley``, ``permutation_montecarlo`` and
+``truncated_montecarlo`` are all synonyms. The
+:class:`~pydvl.value.shapley.truncated.TruncationPolicy` for the iteration over
+a single permutation is configured with the argument ``truncation`` of
+:func:`~pydvl.value.shapley.common.compute_shapley_values`. The implementation
+of the methods described in the original paper are in
+:class:`~pydvl.value.shapley.truncated.RelativeTruncation` and
+:class:`~`
+
 
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_shapley_values
+   from pydvl.value import *
 
    model = ...
    data = Dataset(...)
    utility = Utility(model, data)
+   # Truncated Monte Carlo Shapley, configured as in the paper
    values = compute_shapley_values(
-       u=utility, mode="truncated_montecarlo", done=MaxUpdates(1000)
+       u=utility,
+       mode="permutation_montecarlo",
+       done=MaxUpdates(1000) | HistoryDeviation(n_steps=100, rtol=0.05),
+       truncation=RelativeTruncation(u, rtol=0.01)
    )
 
 
@@ -615,13 +629,13 @@ of weights which is reported to work better.
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_semivalues
+   from pydvl.value import compute_beta_shapley_semivalues
 
    model = ...
    data = Dataset(...)
    utility = Utility(model, data)
-   values = compute_semivalues(
-       u=utility, mode="beta_shapley", done=MaxUpdates(500), alpha=1, beta=16
+   values = compute_beta_shapley_semivalues(
+       u=utility, alpha=1, beta=16, done=MaxUpdates(500)
    )
 
 .. _banzhaf indices:
@@ -652,12 +666,12 @@ robust to variance in the utility function than Shapley and Beta Shapley values.
 .. code-block:: python
 
    from pydvl.utils import Dataset, Utility
-   from pydvl.value import compute_semivalues
+   from pydvl.value import compute_banzhaf_semivalues
 
    model = ...
    data = Dataset(...)
    utility = Utility(model, data)
-   values = compute_semivalues( u=utility, mode="banzhaf", done=MaxUpdates(500))
+   values = compute_banzhaf_semivalues(u=utility, done=MaxUpdates(500))
 
 
 .. _problems of data values:
@@ -679,8 +693,8 @@ nature of every (non-trivial) ML problem can have an effect:
   inaccurate values.
 
   pyDVL offers a dedicated :func:`function composition
-  <pydvl.utils.types.compose_score>` for scorer functions which can be used to
-  squash a score. The following is defined in module :mod:`~pydvl.utils.scorer`:
+  <pydvl.utils.score.compose_score>` for scorer functions which can be used to
+  squash a score. The following is defined in module :mod:`~pydvl.utils.score`:
 
   .. code-block:: python
 
@@ -730,7 +744,5 @@ nature of every (non-trivial) ML problem can have an effect:
   facilities in pyDVL for cross-validating the utility (note that this would
   require cross-validating the whole value computation).
 
-References
-==========
 
 .. footbibliography::

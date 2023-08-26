@@ -1,78 +1,21 @@
-import inspect
-from functools import singledispatch, update_wrapper
 from itertools import accumulate, repeat
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    List,
-    Optional,
-    Sequence,
-    TypeVar,
-    Union,
-)
+from typing import Any, Collection, Dict, Generic, List, Optional, TypeVar, Union
 
-import numpy as np
-import ray
+from joblib import Parallel, delayed
 from numpy.typing import NDArray
-from ray import ObjectRef
 
 from ..config import ParallelConfig
-from ..types import maybe_add_argument
+from ..types import MapFunction, ReduceFunction, maybe_add_argument
 from .backend import init_parallel_backend
 
 __all__ = ["MapReduceJob"]
 
 T = TypeVar("T")
 R = TypeVar("R")
-Identity = lambda x, *args, **kwargs: x
-
-MapFunction = Callable[..., R]
-ReduceFunction = Callable[[List[R]], R]
-ChunkifyInputType = Union[NDArray[T], Sequence[T], T]
 
 
-def _wrap_func_with_remote_args(func: Callable, *, timeout: Optional[float] = None):
-    def wrapper(*args, **kwargs):
-        args = list(args)
-        for i, v in enumerate(args[:]):
-            args[i] = _get_value(v, timeout=timeout)
-        for k, v in kwargs.items():
-            kwargs[k] = _get_value(v, timeout=timeout)
-        return func(*args, **kwargs)
-
-    try:
-        inspect.signature(func)
-        wrapper = update_wrapper(wrapper, func)
-    except ValueError:
-        # Doing it manually here because using update_wrapper from functools
-        # on numpy functions doesn't work with ray for some unknown reason.
-        wrapper.__name__ = func.__name__
-        wrapper.__qualname__ = func.__qualname__
-        wrapper.__doc__ = func.__doc__
-    return wrapper
-
-
-@singledispatch
-def _get_value(v: Any, *, timeout: Optional[float] = None) -> Any:
-    return v
-
-
-@_get_value.register
-def _(v: ObjectRef, *, timeout: Optional[float] = None) -> Any:
-    return ray.get(v, timeout=timeout)
-
-
-@_get_value.register
-def _(v: np.ndarray, *, timeout: Optional[float] = None) -> NDArray:
-    return v
-
-
-# Careful to use list as hint. The dispatch does not work with typing generics
-@_get_value.register
-def _(v: list, *, timeout: Optional[float] = None) -> List[Any]:
-    return [_get_value(x, timeout=timeout) for x in v]
+def identity(x: Any, *args: Any, **kwargs: Any) -> Any:
+    return x
 
 
 class MapReduceJob(Generic[T, R]):
@@ -94,14 +37,6 @@ class MapReduceJob(Generic[T, R]):
     :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig`
         with cluster address, number of cpus, etc.
     :param n_jobs: Number of parallel jobs to run. Does not accept 0
-    :param timeout: Amount of time in seconds to wait for remote results before
-        ... TODO
-    :param max_parallel_tasks: Maximum number of jobs to start in parallel. Any
-        tasks above this number won't be submitted to the backend before some
-        are done. This is to avoid swamping the work queue. Note that tasks have
-        a low memory footprint, so this is probably not a big concern, except
-        in the case of an infinite stream (not the case for MapReduceJob). See
-        https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html
 
     :Examples:
 
@@ -126,24 +61,23 @@ class MapReduceJob(Generic[T, R]):
     ...     5,
     ...     map_func=lambda x: np.array([x]),
     ...     reduce_func=np.sum,
-    ...     n_jobs=4,
+    ...     n_jobs=2,
     ... )
     >>> map_reduce_job()
-    20
+    10
     """
 
     def __init__(
         self,
-        inputs: Union[Sequence[T], T],
+        inputs: Union[Collection[T], T],
         map_func: MapFunction[R],
-        reduce_func: Optional[ReduceFunction[R]] = None,
+        reduce_func: ReduceFunction[R] = identity,
         map_kwargs: Optional[Dict] = None,
         reduce_kwargs: Optional[Dict] = None,
         config: ParallelConfig = ParallelConfig(),
         *,
         n_jobs: int = -1,
         timeout: Optional[float] = None,
-        max_parallel_tasks: Optional[int] = None,
     ):
         self.config = config
         parallel_backend = init_parallel_backend(self.config)
@@ -151,30 +85,13 @@ class MapReduceJob(Generic[T, R]):
 
         self.timeout = timeout
 
-        self._n_jobs = 1
         # This uses the setter defined below
         self.n_jobs = n_jobs
 
-        self.max_parallel_tasks = max_parallel_tasks
-
         self.inputs_ = inputs
 
-        if reduce_func is None:
-            reduce_func = Identity
-
-        if map_kwargs is None:
-            self.map_kwargs = dict()
-        else:
-            self.map_kwargs = {
-                k: self.parallel_backend.put(v) for k, v in map_kwargs.items()
-            }
-
-        if reduce_kwargs is None:
-            self.reduce_kwargs = dict()
-        else:
-            self.reduce_kwargs = {
-                k: self.parallel_backend.put(v) for k, v in reduce_kwargs.items()
-            }
+        self.map_kwargs = map_kwargs if map_kwargs is not None else dict()
+        self.reduce_kwargs = reduce_kwargs if reduce_kwargs is not None else dict()
 
         self._map_func = maybe_add_argument(map_func, "job_id")
         self._reduce_func = reduce_func
@@ -182,83 +99,25 @@ class MapReduceJob(Generic[T, R]):
     def __call__(
         self,
     ) -> R:
-        map_results = self.map(self.inputs_)
-        reduce_results = self.reduce(map_results)
+        if self.config.backend == "joblib":
+            backend = "loky"
+        else:
+            backend = self.config.backend
+        # In joblib the levels are reversed.
+        # 0 means no logging and 50 means log everything to stdout
+        verbose = 50 - self.config.logging_level
+        with Parallel(backend=backend, n_jobs=self.n_jobs, verbose=verbose) as parallel:
+            chunks = self._chunkify(self.inputs_, n_chunks=self.n_jobs)
+            map_results: List[R] = parallel(
+                delayed(self._map_func)(next_chunk, job_id=j, **self.map_kwargs)
+                for j, next_chunk in enumerate(chunks)
+            )
+        reduce_results: R = self._reduce_func(map_results, **self.reduce_kwargs)
         return reduce_results
 
-    def map(self, inputs: Union[Sequence[T], T]) -> List["ObjectRef[R]"]:
-        """Splits the input data into chunks and calls a wrapped :func:`map_func` on them."""
-        map_results: List["ObjectRef[R]"] = []
-
-        map_func = self._wrap_function(self._map_func)
-
-        total_n_jobs = 0
-        total_n_finished = 0
-
-        chunks = self._chunkify(inputs, n_chunks=self.n_jobs)
-
-        for j, next_chunk in enumerate(chunks):
-            result = map_func(next_chunk, job_id=j, **self.map_kwargs)
-            map_results.append(result)
-            total_n_jobs += 1
-
-            total_n_finished = self._backpressure(
-                map_results,
-                n_dispatched=total_n_jobs,
-                n_finished=total_n_finished,
-            )
-        return map_results
-
-    def reduce(self, chunks: List["ObjectRef[R]"]) -> R:
-        """Reduces the resulting chunks from a call to :meth:`~pydvl.utils.parallel.map_reduce.MapReduceJob.map`
-        by passing them to a wrapped :func:`reduce_func`."""
-        reduce_func = self._wrap_function(self._reduce_func)
-
-        reduce_result = reduce_func(chunks, **self.reduce_kwargs)
-        result = self.parallel_backend.get(reduce_result, timeout=self.timeout)
-        return result  # type: ignore
-
-    def _wrap_function(self, func: Callable, **kwargs) -> Callable:
-        """Wraps a function with a timeout and remote arguments and puts it on
-        the remote backend.
-
-        :param func: Function to wrap
-        :param kwargs: Additional keyword arguments to pass to the backend
-            wrapper. These are *not* arguments for the wrapped function.
-        :return: Remote function that can be called with the same arguments as
-            the wrapped function. Depending on the backend, this may simply be
-            the function itself.
-        """
-        return self.parallel_backend.wrap(
-            _wrap_func_with_remote_args(func, timeout=self.timeout), **kwargs
-        )
-
-    def _backpressure(
-        self, jobs: List[ObjectRef], n_dispatched: int, n_finished: int
-    ) -> int:
-        """This is used to limit the number of concurrent tasks.
-        If :attr:`~pydvl.utils.parallel.map_reduce.MapReduceJob.max_parallel_tasks` is None then this function
-        is a no-op that simply returns 0.
-
-        See https://docs.ray.io/en/latest/ray-core/patterns/limit-pending-tasks.html
-        :param jobs:
-        :param n_dispatched:
-        :param n_finished:
-        :return:
-        """
-        if self.max_parallel_tasks is None:
-            return 0
-        while (n_in_flight := n_dispatched - n_finished) > self.max_parallel_tasks:
-            wait_for_num_jobs = n_in_flight - self.max_parallel_tasks
-            finished_jobs, _ = self.parallel_backend.wait(
-                jobs,
-                num_returns=wait_for_num_jobs,
-                timeout=10,  # FIXME make parameter?
-            )
-            n_finished += len(finished_jobs)
-        return n_finished
-
-    def _chunkify(self, data: ChunkifyInputType, n_chunks: int) -> List["ObjectRef[T]"]:
+    def _chunkify(
+        self, data: Union[NDArray, Collection[T], T], n_chunks: int
+    ) -> List[Union[NDArray, Collection[T], T]]:
         """If data is a Sequence, it splits it into Sequences of size `n_chunks` for each job that we call chunks.
         If instead data is an `ObjectRef` instance, then it yields it repeatedly `n_chunks` number of times.
         """
@@ -266,16 +125,14 @@ class MapReduceJob(Generic[T, R]):
             raise ValueError("Number of chunks should be greater than 0")
 
         if n_chunks == 1:
-            data_id = self.parallel_backend.put(data)
-            return [data_id]
+            return [data]
 
         try:
             # This is used as a check to determine whether data is iterable or not
             # if it's the former, then the value will be used to determine the chunk indices.
-            n = len(data)
+            n = len(data)  # type: ignore
         except TypeError:
-            data_id = self.parallel_backend.put(data)
-            return list(repeat(data_id, times=n_chunks))
+            return list(repeat(data, times=n_chunks))
         else:
             # This is very much inspired by numpy's array_split function
             # The difference is that it only uses built-in functions
@@ -294,8 +151,8 @@ class MapReduceJob(Generic[T, R]):
             for start_index, end_index in zip(chunk_indices[:-1], chunk_indices[1:]):
                 if start_index >= end_index:
                     break
-                chunk_id = self.parallel_backend.put(data[start_index:end_index])
-                chunks.append(chunk_id)
+                chunk = data[start_index:end_index]  # type: ignore
+                chunks.append(chunk)
 
             return chunks
 

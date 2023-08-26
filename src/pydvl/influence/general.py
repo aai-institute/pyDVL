@@ -2,24 +2,23 @@
 This module contains parallelized influence calculation functions for general
 models, as introduced in :footcite:t:`koh_understanding_2017`.
 """
+import logging
 from copy import deepcopy
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Generator, Optional, Type
 
 from ..utils import maybe_progress
-from .frameworks import (
+from .inversion import InverseHvpResult, InversionMethod, solve_hvp
+from .twice_differentiable import (
     DataLoaderType,
-    ModelType,
     TensorType,
+    TensorUtilities,
     TwiceDifferentiable,
-    cat,
-    einsum,
-    mvp,
-    stack,
 )
-from .inversion import InversionMethod, solve_hvp
 
 __all__ = ["compute_influences", "InfluenceType", "compute_influence_factors"]
+
+logger = logging.getLogger(__name__)
 
 
 class InfluenceType(str, Enum):
@@ -32,7 +31,7 @@ class InfluenceType(str, Enum):
 
 
 def compute_influence_factors(
-    model: TwiceDifferentiable[TensorType, ModelType],
+    model: TwiceDifferentiable,
     training_data: DataLoaderType,
     test_data: DataLoaderType,
     inversion_method: InversionMethod,
@@ -40,7 +39,7 @@ def compute_influence_factors(
     hessian_perturbation: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
-) -> TensorType:
+) -> InverseHvpResult:
     r"""
     Calculates influence factors of a model for training and test
     data. Given a test point $z_test = (x_{test}, y_{test})$, a loss
@@ -57,32 +56,58 @@ def compute_influence_factors(
     :param model: A model wrapped in the TwiceDifferentiable interface.
     :param training_data: A DataLoader containing the training data.
     :param test_data: A DataLoader containing the test data.
-    :param inversion_func: function to use to invert the product of hvp (hessian
-        vector product) and the gradient of the loss (s_test in the paper).
+    :param inversion_method: name of method for computing inverse hessian vector
+        products.
     :param hessian_perturbation: regularization of the hessian
     :param progress: If True, display progress bars.
     :returns: An array of size (N, D) containing the influence factors for each
         dimension (D) and test sample (N).
     """
-    test_grads = []
-    for x_test, y_test in maybe_progress(
-        test_data, progress, desc="Batch Test Gradients"
-    ):
-        test_grads.append(model.split_grad(x_test, y_test, progress=False))
-    test_grads = cat(test_grads)
+    tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
+        model
+    )
+
+    stack = tensor_util.stack
+    unsqueeze = tensor_util.unsqueeze
+    cat_gen = tensor_util.cat_gen
+    cat = tensor_util.cat
+
+    def test_grads() -> Generator[TensorType, None, None]:
+        for x_test, y_test in maybe_progress(
+            test_data, progress, desc="Batch Test Gradients"
+        ):
+            yield stack(
+                [
+                    model.grad(inpt, target)
+                    for inpt, target in zip(unsqueeze(x_test, 1), y_test)
+                ]
+            )  # type:ignore
+
+    try:
+        # if provided input_data implements __len__, pre-allocate the result tensor to reduce memory consumption
+        resulting_shape = (len(test_data), model.num_params)  # type:ignore
+        rhs = cat_gen(
+            test_grads(), resulting_shape, model  # type:ignore
+        )  # type:ignore
+    except Exception as e:
+        logger.warning(
+            f"Failed to pre-allocate result tensor: {e}\n"
+            f"Evaluate all resulting tensor and concatenate"
+        )
+        rhs = cat(list(test_grads()))
+
     return solve_hvp(
         inversion_method,
         model,
         training_data,
-        test_grads,
+        rhs,
         hessian_perturbation=hessian_perturbation,
-        progress=progress,
         **kwargs,
     )
 
 
 def compute_influences_up(
-    model: TwiceDifferentiable[TensorType, ModelType],
+    model: TwiceDifferentiable,
     input_data: DataLoaderType,
     influence_factors: TensorType,
     *,
@@ -102,20 +127,46 @@ def compute_influences_up(
         influence of.
     :param influence_factors: array containing influence factors
     :param progress: If True, display progress bars.
-    :returns: An array of size [NxM], where N is number of test points and M
-        number of train points.
+    :returns: An array of size [NxM], where N is number of influence factors, M
+        number of input points.
     """
-    train_grads = []
-    for x, y in maybe_progress(
-        input_data, progress, desc="Batch Split Input Gradients"
-    ):
-        train_grads.append(model.split_grad(x, y, progress=False))
-    train_grads = cat(train_grads)
-    return einsum("ta,va->tv", influence_factors, train_grads)
+
+    tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
+        model
+    )
+
+    stack = tensor_util.stack
+    unsqueeze = tensor_util.unsqueeze
+    cat_gen = tensor_util.cat_gen
+    cat = tensor_util.cat
+    einsum = tensor_util.einsum
+
+    def train_grads() -> Generator[TensorType, None, None]:
+        for x, y in maybe_progress(
+            input_data, progress, desc="Batch Split Input Gradients"
+        ):
+            yield stack(
+                [model.grad(inpt, target) for inpt, target in zip(unsqueeze(x, 1), y)]
+            )  # type:ignore
+
+    try:
+        # if provided input_data implements __len__, pre-allocate the result tensor to reduce memory consumption
+        resulting_shape = (len(input_data), model.num_params)  # type:ignore
+        train_grad_tensor = cat_gen(
+            train_grads(), resulting_shape, model  # type:ignore
+        )  # type:ignore
+    except Exception as e:
+        logger.warning(
+            f"Failed to pre-allocate result tensor: {e}\n"
+            f"Evaluate all resulting tensor and concatenate"
+        )
+        train_grad_tensor = cat([x for x in train_grads()])  # type:ignore
+
+    return einsum("ta,va->tv", influence_factors, train_grad_tensor)  # type:ignore
 
 
 def compute_influences_pert(
-    model: TwiceDifferentiable[TensorType, ModelType],
+    model: TwiceDifferentiable,
     input_data: DataLoaderType,
     influence_factors: TensorType,
     *,
@@ -135,9 +186,19 @@ def compute_influences_pert(
         influence of.
     :param influence_factors: array containing influence factors
     :param progress: If True, display progress bars.
-    :returns: An array of size [NxMxP], where N is number of test points, M
-        number of train points, and P the number of features.
+    :returns: An array of size [NxMxP], where N is the number of influence factors, M
+        the number of input data, and P the number of features.
     """
+
+    tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
+        model
+    )
+    stack = tensor_util.stack
+    tu_slice = tensor_util.slice
+    reshape = tensor_util.reshape
+    get_element = tensor_util.get_element
+    shape = tensor_util.shape
+
     all_pert_influences = []
     for x, y in maybe_progress(
         input_data,
@@ -145,27 +206,28 @@ def compute_influences_pert(
         desc="Batch Influence Perturbation",
     ):
         for i in range(len(x)):
-            grad_xy, tensor_x = model.grad(x[i : i + 1], y[i], x_requires_grad=True)
-            perturbation_influences = mvp(
+            tensor_x = tu_slice(x, i, i + 1)
+            grad_xy = model.grad(tensor_x, get_element(y, i), create_graph=True)
+            perturbation_influences = model.mvp(
                 grad_xy,
                 influence_factors,
                 backprop_on=tensor_x,
             )
             all_pert_influences.append(
-                perturbation_influences.reshape((-1, *x[i].shape))
+                reshape(perturbation_influences, (-1, *shape(get_element(x, i))))
             )
 
-    return stack(all_pert_influences, axis=1)
+    return stack(all_pert_influences, axis=1)  # type:ignore
 
 
-influence_type_registry = {
+influence_type_registry: Dict[InfluenceType, Callable[..., TensorType]] = {
     InfluenceType.Up: compute_influences_up,
     InfluenceType.Perturbation: compute_influences_pert,
 }
 
 
 def compute_influences(
-    differentiable_model: TwiceDifferentiable[TensorType, ModelType],
+    differentiable_model: TwiceDifferentiable,
     training_data: DataLoaderType,
     *,
     test_data: Optional[DataLoaderType] = None,
@@ -175,7 +237,7 @@ def compute_influences(
     hessian_regularization: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
-) -> TensorType:
+) -> TensorType:  # type: ignore # ToDO fix typing
     r"""
     Calculates the influence of the input_data point j on the test points i.
     First it calculates the influence factors of all test points with respect
@@ -207,7 +269,7 @@ def compute_influences(
     if test_data is None:
         test_data = deepcopy(training_data)
 
-    influence_factors = compute_influence_factors(
+    influence_factors, _ = compute_influence_factors(
         differentiable_model,
         training_data,
         test_data,
@@ -216,9 +278,8 @@ def compute_influences(
         progress=progress,
         **kwargs,
     )
-    compute_influence_type = influence_type_registry[influence_type]
 
-    return compute_influence_type(
+    return influence_type_registry[influence_type](
         differentiable_model,
         input_data,
         influence_factors,

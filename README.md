@@ -74,6 +74,9 @@ model. We implement methods from the following papers:
   Influence Functions](http://proceedings.mlr.press/v70/koh17a.html). In
   Proceedings of the 34th International Conference on Machine Learning,
   70:1885–94. Sydney, Australia: PMLR, 2017.
+- Naman Agarwal, Brian Bullins, and Elad Hazan, [Second-Order Stochastic Optimization
+  for Machine Learning in Linear Time](https://www.jmlr.org/papers/v18/16-491.html),
+  Journal of Machine Learning Research 18 (2017): 1-40.
 
 # Installation
 
@@ -96,6 +99,54 @@ documentation.
 
 # Usage
 
+### Influence Functions
+
+For influence computation, follow these steps:
+
+1. Wrap your model and loss in a `TorchTwiceDifferential` object
+2. Compute influence factors by providing training data and inversion method
+
+Using the conjugate gradient algorithm, this would look like:
+```python
+import torch
+from torch import nn
+from torch.utils.data import DataLoader, TensorDataset
+
+from pydvl.influence import TorchTwiceDifferentiable, compute_influences, InversionMethod
+
+nn_architecture = nn.Sequential(
+    nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
+    nn.Flatten(),
+    nn.Linear(27, 3),
+)
+loss = nn.MSELoss()
+model = TorchTwiceDifferentiable(nn_architecture, loss)
+
+input_dim = (5, 5, 5)
+output_dim = 3
+
+train_data_loader = DataLoader(
+    TensorDataset(torch.rand((10, *input_dim)), torch.rand((10, output_dim))),
+    batch_size=2,
+)
+test_data_loader = DataLoader(
+    TensorDataset(torch.rand((5, *input_dim)), torch.rand((5, output_dim))),
+    batch_size=1,
+)
+
+influences = compute_influences(
+    model,
+    training_data=train_data_loader,
+    test_data=test_data_loader,
+    progress=True,
+    inversion_method=InversionMethod.Cg,
+    hessian_regularization=1e-1,
+    maxiter=200,
+)
+```
+
+
+### Shapley Values
 The steps required to compute values for your samples are:
 
 1. Create a `Dataset` object with your train and test splits.

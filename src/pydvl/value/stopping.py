@@ -220,9 +220,9 @@ def make_criterion(
 class AbsoluteStandardError(StoppingCriterion):
     r"""Determine convergence based on the standard error of the values.
 
-    If $s_i$ is the standard error for datum $i$ and $v_i$ its value, then this
-    criterion returns :attr:`~pydvl.utils.status.Status.Converged` if
-    $s_i < \epsilon$ for all $i$ and a threshold value $\epsilon \gt 0$.
+    If $s_i$ is the standard error for datum $i$, then this criterion returns
+    :attr:`~pydvl.utils.status.Status.Converged` if $s_i < \epsilon$ for all $i$
+    and a threshold value $\epsilon \gt 0$.
 
     :param threshold: A value is considered to have converged if the standard
         error is below this value. A way of choosing it is to pick some
@@ -301,6 +301,10 @@ class MaxChecks(StoppingCriterion):
 class MaxUpdates(StoppingCriterion):
     """Terminate if any number of value updates exceeds or equals the given
     threshold.
+
+    .. note::
+       If you want to ensure that **all** values have been updated, you probably
+       want :class:`MinUpdates` instead.
 
     This checks the ``counts`` field of a
     :class:`~pydvl.value.result.ValuationResult`, i.e. the number of times that

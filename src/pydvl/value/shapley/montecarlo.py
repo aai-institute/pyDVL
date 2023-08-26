@@ -30,24 +30,30 @@ reduce computation :func:`truncated_montecarlo_shapley`.
    the algorithms mentioned above, including Group Testing, can work to valuate
    groups of samples as units.
 """
+from __future__ import annotations
+
 import logging
 import math
 import operator
+from concurrent.futures import FIRST_COMPLETED, Future, wait
 from functools import reduce
 from itertools import cycle, takewhile
 from typing import Sequence
 
 import numpy as np
+from deprecate import deprecated
 from numpy.typing import NDArray
 from tqdm import tqdm
 
+from pydvl.utils import effective_n_jobs, init_executor, init_parallel_backend
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import MapReduceJob
+from pydvl.utils.parallel.futures.ray import CancellationPolicy
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.truncated import NoTruncation, TruncationPolicy
-from pydvl.value.stopping import StoppingCriterion
+from pydvl.value.stopping import MaxChecks, StoppingCriterion
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +110,30 @@ def _permutation_montecarlo_shapley(
     return result
 
 
+def _permutation_montecarlo_one_step(
+    u: Utility, truncation: TruncationPolicy, algorithm: str
+) -> ValuationResult:
+    result = _permutation_montecarlo_shapley(
+        u, done=MaxChecks(1), truncation=truncation, algorithm_name=algorithm
+    )
+    nans = np.isnan(result.values).sum()
+    if nans > 0:
+        logger.warning(
+            f"{nans} NaN values in current permutation, ignoring. "
+            "Consider setting a default value for the Scorer"
+        )
+        result = ValuationResult.empty(algorithm="truncated_montecarlo_shapley")
+    return result
+
+
+@deprecated(
+    target=True,
+    deprecated_in="0.7.0",
+    remove_in="0.8.0",
+    args_mapping=dict(
+        coordinator_update_period=None, worker_update_period=None, progress=None
+    ),
+)
 def permutation_montecarlo_shapley(
     u: Utility,
     done: StoppingCriterion,
@@ -111,18 +141,37 @@ def permutation_montecarlo_shapley(
     truncation: TruncationPolicy = NoTruncation(),
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
-    progress: bool = False,
 ) -> ValuationResult:
-    r"""Computes an approximate Shapley value by sampling independent index
-    permutations to approximate the sum:
+    r"""Computes an approximate Shapley value by sampling independent
+    permutations of the index set, approximating the sum:
 
     $$
     v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
     \tilde{w}( | \sigma_{:i} | )[u(\sigma_{:i} \cup \{i\}) − u(\sigma_{:i})],
     $$
 
-    where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
-    position where $i$ appears (see :ref:`data valuation` for details).
+    where $\sigma_{:i}$ denotes the set of indices in permutation sigma before
+    the position where $i$ appears (see :ref:`data valuation` for details).
+
+    This implements the method described in :footcite:t:`ghorbani_data_2019`
+    with a double stopping criterion.
+
+    .. todo::
+       Think of how to add Robin-Gelman or some other more principled stopping
+       criterion.
+
+    Instead of naively implementing the expectation, we sequentially add points
+    to coalitions from a permutation and incrementally compute marginal utilities.
+    We stop computing marginals for a given permutation based on a
+    :class:`TruncationPolicy`. :footcite:t:`ghorbani_data_2019` mention two
+    policies: one that stops after a certain fraction of marginals are computed,
+    implemented in :class:`FixedTruncation`, and one that stops if the last
+    computed utility ("score") is close to the total utility using the standard
+    deviation of the utility as a measure of proximity, implemented in
+    :class:`BootstrapTruncation`.
+
+    We keep sampling permutations and updating all shapley values
+    until the :class:`StoppingCriterion` returns ``True``.
 
     :param u: Utility object with model, data, and scoring function.
     :param done: function checking whether computation must stop.
@@ -135,21 +184,37 @@ def permutation_montecarlo_shapley(
     :param progress: Whether to display progress bars for each job.
     :return: Object with the data values.
     """
+    algorithm = "permutation_montecarlo_shapley"
 
-    map_reduce_job: MapReduceJob[Utility, ValuationResult] = MapReduceJob(
-        u,
-        map_func=_permutation_montecarlo_shapley,
-        reduce_func=lambda results: reduce(operator.add, results),
-        map_kwargs=dict(
-            algorithm_name="permutation_montecarlo_shapley",
-            done=done,
-            truncation=truncation,
-            progress=progress,
-        ),
-        config=config,
-        n_jobs=n_jobs,
-    )
-    return map_reduce_job()
+    parallel_backend = init_parallel_backend(config)
+    u = parallel_backend.put(u)
+    max_workers = effective_n_jobs(n_jobs, config)
+    n_submitted_jobs = 2 * max_workers  # number of jobs in the executor's queue
+
+    accumulated_result = ValuationResult.zeros(algorithm=algorithm)
+
+    with init_executor(
+        max_workers=max_workers, config=config, cancel_futures=CancellationPolicy.ALL
+    ) as executor:
+        futures: set[Future] = set()
+        while True:
+            completed_futures, futures = wait(
+                futures, timeout=config.wait_timeout, return_when=FIRST_COMPLETED
+            )
+
+            for future in completed_futures:
+                accumulated_result += future.result()
+                # we could check outside the loop, but that means more
+                # submissions if the stopping criterion is unstable
+                if done(accumulated_result):
+                    return accumulated_result
+
+            # Ensure that we always have n_submitted_jobs in the queue or running
+            for _ in range(n_submitted_jobs - len(futures)):
+                future = executor.submit(
+                    _permutation_montecarlo_one_step, u, truncation, algorithm
+                )
+                futures.add(future)
 
 
 def _combinatorial_montecarlo_shapley(

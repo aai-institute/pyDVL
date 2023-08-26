@@ -1,5 +1,5 @@
-import itertools
-from typing import Dict, Tuple
+from dataclasses import dataclass
+from typing import Callable, Dict, Tuple
 
 import numpy as np
 import pytest
@@ -9,10 +9,11 @@ import torch
 import torch.nn.functional as F
 from numpy.typing import NDArray
 from torch import nn
+from torch.optim import LBFGS
 from torch.utils.data import DataLoader, TensorDataset
 
-from pydvl.influence import TorchTwiceDifferentiable, compute_influences
-from pydvl.influence.general import InfluenceType, InversionMethod
+from pydvl.influence import InfluenceType, InversionMethod, compute_influences
+from pydvl.influence.torch import TorchTwiceDifferentiable, model_hessian_low_rank
 
 from .conftest import (
     add_noise_to_linear_model,
@@ -93,9 +94,9 @@ def analytical_linear_influences(
     [
         [InversionMethod.Direct, {}, 1e-7],
         [InversionMethod.Cg, {}, 1e-1],
-        [InversionMethod.Lissa, {"maxiter": 5000, "scale": 100}, 0.3],
+        [InversionMethod.Lissa, {"maxiter": 6000, "scale": 100}, 0.3],
     ],
-    ids=[inv.value for inv in InversionMethod],
+    ids=[inv.value for inv in InversionMethod if inv is not InversionMethod.Arnoldi],
 )
 def test_influence_linear_model(
     influence_type: InfluenceType,
@@ -105,8 +106,8 @@ def test_influence_linear_model(
     train_set_size: int,
     hessian_reg: float = 0.1,
     test_set_size: int = 20,
-    problem_dimension: Tuple[int, int] = (3, 15),
-    condition_number: float = 3,
+    problem_dimension: Tuple[int, int] = (4, 20),
+    condition_number: float = 2,
 ):
 
     A, b = linear_model(problem_dimension, condition_number)
@@ -157,129 +158,330 @@ def test_influence_linear_model(
     )
 
 
-conv3d_nn = nn.Sequential(
-    nn.Conv3d(in_channels=5, out_channels=3, kernel_size=2),
-    nn.Flatten(),
-    nn.Linear(24, 3),
-)
-conv2d_nn = nn.Sequential(
-    nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
-    nn.Flatten(),
-    nn.Linear(27, 3),
-)
-conv1d_nn = nn.Sequential(
-    nn.Conv1d(in_channels=5, out_channels=3, kernel_size=2),
-    nn.Flatten(),
-    nn.Linear(6, 3),
-)
-simple_nn_regr = nn.Sequential(nn.Linear(10, 10), nn.Linear(10, 3), nn.Linear(3, 1))
+def create_conv3d_nn():
+    return nn.Sequential(
+        nn.Conv3d(in_channels=5, out_channels=3, kernel_size=2),
+        nn.Flatten(),
+        nn.Linear(24, 3),
+    )
 
-test_cases = {
-    "conv3d_nn_up": [
-        conv3d_nn,
-        (5, 3, 3, 3),
-        3,
-        nn.MSELoss(),
-        InfluenceType.Up,
-    ],
-    "conv3d_nn_pert": [
-        conv3d_nn,
-        (5, 3, 3, 3),
-        3,
-        nn.SmoothL1Loss(),
-        InfluenceType.Perturbation,
-    ],
-    "conv_2d_nn_up": [conv2d_nn, (5, 5, 5), 3, nn.MSELoss(), InfluenceType.Up],
-    "conv_2d_nn_pert": [
-        conv2d_nn,
-        (5, 5, 5),
-        3,
-        nn.SmoothL1Loss(),
-        InfluenceType.Perturbation,
-    ],
-    "conv_1d_nn_up": [conv1d_nn, (5, 3), 3, nn.MSELoss(), InfluenceType.Up],
-    "conv_1d_pert": [
-        conv1d_nn,
-        (5, 3),
-        3,
-        nn.SmoothL1Loss(),
-        InfluenceType.Perturbation,
-    ],
-    "simple_nn_up": [simple_nn_regr, (10,), 1, nn.MSELoss(), InfluenceType.Up],
-    "simple_nn_pert": [
-        simple_nn_regr,
-        (10,),
-        1,
-        nn.SmoothL1Loss(),
-        InfluenceType.Perturbation,
-    ],
-}
+
+def create_conv2d_nn():
+    return nn.Sequential(
+        nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
+        nn.Flatten(),
+        nn.Linear(27, 3),
+    )
+
+
+def create_conv1d_nn():
+    return nn.Sequential(
+        nn.Conv1d(in_channels=5, out_channels=3, kernel_size=2),
+        nn.Flatten(),
+        nn.Linear(6, 3),
+    )
+
+
+def create_simple_nn_regr():
+    return nn.Sequential(nn.Linear(10, 10), nn.Linear(10, 3), nn.Linear(3, 1))
+
+
+@dataclass
+class TestCase:
+    case_id: str
+    module_factory: Callable[[], nn.Module]
+    input_dim: Tuple[int, ...]
+    output_dim: int
+    loss: nn.modules.loss._Loss
+    influence_type: InfluenceType
+
+
+@pytest.fixture
+def test_case(request):
+    return request.param
+
+
+test_cases = [
+    TestCase(
+        case_id="conv3d_nn_up",
+        module_factory=create_conv3d_nn,
+        input_dim=(5, 3, 3, 3),
+        output_dim=3,
+        loss=nn.MSELoss(),
+        influence_type=InfluenceType.Up,
+    ),
+    TestCase(
+        case_id="conv3d_nn_pert",
+        module_factory=create_conv3d_nn,
+        input_dim=(5, 3, 3, 3),
+        output_dim=3,
+        loss=nn.SmoothL1Loss(),
+        influence_type=InfluenceType.Perturbation,
+    ),
+    TestCase(
+        case_id="conv2d_nn_up",
+        module_factory=create_conv2d_nn,
+        input_dim=(5, 5, 5),
+        output_dim=3,
+        loss=nn.MSELoss(),
+        influence_type=InfluenceType.Up,
+    ),
+    TestCase(
+        case_id="conv2d_nn_pert",
+        module_factory=create_conv2d_nn,
+        input_dim=(5, 5, 5),
+        output_dim=3,
+        loss=nn.SmoothL1Loss(),
+        influence_type=InfluenceType.Perturbation,
+    ),
+    TestCase(
+        case_id="conv1d_nn_up",
+        module_factory=create_conv1d_nn,
+        input_dim=(5, 3),
+        output_dim=3,
+        loss=nn.MSELoss(),
+        influence_type=InfluenceType.Up,
+    ),
+    TestCase(
+        case_id="conv1d_nn_pert",
+        module_factory=create_conv1d_nn,
+        input_dim=(5, 3),
+        output_dim=3,
+        loss=nn.SmoothL1Loss(),
+        influence_type=InfluenceType.Perturbation,
+    ),
+    TestCase(
+        case_id="simple_nn_up",
+        module_factory=create_simple_nn_regr,
+        input_dim=(10,),
+        output_dim=1,
+        loss=nn.MSELoss(),
+        influence_type=InfluenceType.Up,
+    ),
+    TestCase(
+        case_id="simple_nn_pert",
+        module_factory=create_simple_nn_regr,
+        input_dim=(10,),
+        output_dim=1,
+        loss=nn.SmoothL1Loss(),
+        influence_type=InfluenceType.Perturbation,
+    ),
+]
+
+
+def create_random_data_loader(
+    input_dim: Tuple[int],
+    output_dim: int,
+    data_len: int,
+    batch_size: int = 1,
+) -> DataLoader:
+    """
+    Creates DataLoader instances with random data for testing purposes.
+
+    :param input_dim: The dimensions of the input data.
+    :param output_dim: The dimension of the output data.
+    :param data_len: The length of the training dataset to be generated.
+    :param batch_size: The size of the batches to be used in the DataLoader.
+
+    :return: DataLoader instances for data.
+    """
+    x = torch.rand((data_len, *input_dim))
+    y = torch.rand((data_len, output_dim))
+
+    return DataLoader(TensorDataset(x, y), batch_size=batch_size)
 
 
 @pytest.mark.torch
 @pytest.mark.parametrize(
-    "nn_architecture, input_dim, output_dim, loss, influence_type",
-    test_cases.values(),
-    ids=test_cases.keys(),
+    "inversion_method,inversion_method_kwargs",
+    [
+        ("cg", {}),
+        (
+            "lissa",
+            {
+                "maxiter": 150,
+                "scale": 10000,
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "test_case",
+    test_cases,
+    ids=[case.case_id for case in test_cases],
+    indirect=["test_case"],
 )
 def test_influences_nn(
-    nn_architecture: nn.Module,
-    input_dim: Tuple[int],
-    output_dim: int,
-    loss: nn.modules.loss._Loss,
-    influence_type: InfluenceType,
+    test_case: TestCase,
+    inversion_method: InversionMethod,
+    inversion_method_kwargs: Dict,
     data_len: int = 20,
     hessian_reg: float = 1e3,
     test_data_len: int = 10,
     batch_size: int = 10,
 ):
-    x_train = torch.rand((data_len, *input_dim))
-    y_train = torch.rand((data_len, output_dim))
-    x_test = torch.rand((test_data_len, *input_dim))
-    y_test = torch.rand((test_data_len, output_dim))
-    nn_architecture.eval()
+    module_factory = test_case.module_factory
+    input_dim = test_case.input_dim
+    output_dim = test_case.output_dim
+    loss = test_case.loss
+    influence_type = test_case.influence_type
 
-    inversion_method_kwargs = {
-        "direct": {},
-        "cg": {},
-        "lissa": {
-            "maxiter": 100,
-            "scale": 10000,
-        },
-    }
-    train_data_loader = DataLoader(
-        TensorDataset(x_train, y_train), batch_size=batch_size
+    train_data_loader = create_random_data_loader(
+        input_dim, output_dim, data_len, batch_size
     )
-    test_data_loader = DataLoader(
-        TensorDataset(x_test, y_test),
-        batch_size=batch_size,
+    test_data_loader = create_random_data_loader(
+        input_dim, output_dim, test_data_len, batch_size
     )
-    multiple_influences = {}
-    for inversion_method in InversionMethod:
-        influences = compute_influences(
-            TorchTwiceDifferentiable(nn_architecture, loss),
-            training_data=train_data_loader,
-            test_data=test_data_loader,
-            progress=True,
-            influence_type=influence_type,
-            inversion_method=inversion_method,
-            hessian_regularization=hessian_reg,
-            **inversion_method_kwargs[inversion_method],
-        ).numpy()
-        assert not np.any(np.isnan(influences))
-        multiple_influences[inversion_method] = influences
 
-    for infl_type, influences in multiple_influences.items():
-        if infl_type == "direct":
-            continue
-        assert np.allclose(
-            influences,
-            multiple_influences["direct"],
-            rtol=1e-1,
-        ), f"Failed method {infl_type}"
-        if influence_type == InfluenceType.Up:
-            assert influences.shape == (test_data_len, data_len)
-        elif influence_type == InfluenceType.Perturbation:
-            assert influences.shape == (test_data_len, data_len, *input_dim)
+    model = module_factory()
+    model.eval()
+    model = TorchTwiceDifferentiable(model, loss)
+
+    direct_influence = compute_influences(
+        model,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        progress=True,
+        influence_type=influence_type,
+        inversion_method=InversionMethod.Direct,
+        hessian_regularization=hessian_reg,
+    )
+
+    approx_influences = compute_influences(
+        model,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        progress=True,
+        influence_type=influence_type,
+        inversion_method=inversion_method,
+        hessian_regularization=hessian_reg,
+        **inversion_method_kwargs,
+    ).numpy()
+    assert not np.any(np.isnan(approx_influences))
+
+    assert np.allclose(approx_influences, direct_influence, rtol=1e-1)
+
+    if influence_type == InfluenceType.Up:
+        assert approx_influences.shape == (test_data_len, data_len)
+
+    if influence_type == InfluenceType.Perturbation:
+        assert approx_influences.shape == (test_data_len, data_len, *input_dim)
+
     # check that influences are not all constant
-    assert not np.all(influences == influences.item(0))
+    assert not np.all(approx_influences == approx_influences.item(0))
+
+
+def minimal_training(
+    model: torch.nn.Module,
+    dataloader: DataLoader,
+    loss_function: torch.nn.modules.loss._Loss,
+    lr=0.01,
+    epochs=50,
+):
+    """
+    Trains a PyTorch model using L-BFGS optimizer.
+
+    :param model: The PyTorch model to be trained.
+    :param dataloader: DataLoader providing the training data.
+    :param loss_function: The loss function to be used for training.
+    :param lr: The learning rate for the L-BFGS optimizer. Defaults to 0.01.
+    :param epochs: The number of training epochs. Defaults to 50.
+
+    :return: The trained model.
+    """
+    model = model.train()
+    optimizer = LBFGS(model.parameters(), lr=lr)
+
+    for epoch in range(epochs):
+        data = torch.cat([inputs for inputs, targets in dataloader])
+        targets = torch.cat([targets for inputs, targets in dataloader])
+
+        def closure():
+            optimizer.zero_grad()
+            outputs = model(data)
+            loss = loss_function(outputs, targets)
+            loss.backward()
+            return loss
+
+        optimizer.step(closure)
+
+    return model
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize(
+    "test_case",
+    test_cases,
+    ids=[case.case_id for case in test_cases],
+    indirect=["test_case"],
+)
+def test_influences_arnoldi(
+    test_case: TestCase,
+    data_len: int = 20,
+    hessian_reg: float = 20.0,
+    test_data_len: int = 10,
+):
+    module_factory = test_case.module_factory
+    input_dim = test_case.input_dim
+    output_dim = test_case.output_dim
+    loss = test_case.loss
+    influence_type = test_case.influence_type
+
+    train_data_loader = create_random_data_loader(input_dim, output_dim, data_len)
+    test_data_loader = create_random_data_loader(input_dim, output_dim, test_data_len)
+
+    nn_architecture = module_factory()
+    nn_architecture = minimal_training(
+        nn_architecture, train_data_loader, loss, lr=0.3, epochs=100
+    )
+    nn_architecture = nn_architecture.eval()
+
+    model = TorchTwiceDifferentiable(nn_architecture, loss)
+
+    direct_influence = compute_influences(
+        model,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        progress=True,
+        influence_type=influence_type,
+        inversion_method=InversionMethod.Direct,
+        hessian_regularization=hessian_reg,
+    )
+
+    num_parameters = sum(
+        p.numel() for p in nn_architecture.parameters() if p.requires_grad
+    )
+
+    low_rank_influence = compute_influences(
+        model,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        progress=True,
+        influence_type=influence_type,
+        inversion_method=InversionMethod.Arnoldi,
+        hessian_regularization=hessian_reg,
+        # as the hessian of the small shallow networks is in general not low rank, so for these test cases, we choose
+        # the rank estimate as high as possible
+        rank_estimate=num_parameters - 1,
+    )
+
+    assert np.allclose(direct_influence, low_rank_influence, rtol=1e-1)
+
+    precomputed_low_rank = model_hessian_low_rank(
+        model,
+        training_data=train_data_loader,
+        hessian_perturbation=hessian_reg,
+        rank_estimate=num_parameters - 1,
+    )
+
+    precomputed_low_rank_influence = compute_influences(
+        model,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        progress=True,
+        influence_type=influence_type,
+        inversion_method=InversionMethod.Arnoldi,
+        low_rank_representation=precomputed_low_rank,
+    )
+
+    assert np.allclose(direct_influence, precomputed_low_rank_influence, rtol=1e-1)

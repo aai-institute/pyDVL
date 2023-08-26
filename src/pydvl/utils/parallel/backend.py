@@ -1,65 +1,68 @@
-import os
-from abc import ABCMeta, abstractmethod
-from dataclasses import asdict
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from __future__ import annotations
 
+import logging
+import os
+from abc import abstractmethod
+from concurrent.futures import Executor
+from enum import Flag, auto
+from typing import Any, Callable, Iterable, Type, TypeVar, cast
+
+import joblib
 import ray
+from joblib import delayed
+from joblib.externals.loky import get_reusable_executor
 from ray import ObjectRef
+from ray.util.joblib import register_ray
 
 from ..config import ParallelConfig
+from ..types import NoPublicConstructor
 
 __all__ = ["init_parallel_backend", "effective_n_jobs", "available_cpus"]
 
+
 T = TypeVar("T")
 
-_PARALLEL_BACKENDS: Dict[str, "Type[BaseParallelBackend]"] = {}
+log = logging.getLogger(__name__)
 
 
-class NoPublicConstructor(ABCMeta):
-    """Metaclass that ensures a private constructor
+class CancellationPolicy(Flag):
+    """Policy to use when cancelling futures after exiting an Executor.
 
-    If a class uses this metaclass like this:
+    .. note:
+       Not all backends support all policies.
 
-        class SomeClass(metaclass=NoPublicConstructor):
-            pass
-
-    If you try to instantiate your class (`SomeClass()`),
-    a `TypeError` will be thrown.
-
-    Taken almost verbatim from:
-    https://stackoverflow.com/a/64682734
+    :cvar NONE: Do not cancel any futures.
+    :cvar PENDING: Cancel all pending futures, but not running ones.
+    :cvar RUNNING: Cancel all running futures, but not pending ones.
+    :cvar ALL: Cancel all pending and running futures.
     """
 
-    def __call__(cls, *args, **kwargs):
-        raise TypeError(
-            f"{cls.__module__}.{cls.__qualname__} cannot be initialized directly. "
-            "Use init_parallel_backend() instead."
-        )
-
-    def _create(cls, *args: Any, **kwargs: Any):
-        return super().__call__(*args, **kwargs)
+    NONE = 0
+    PENDING = auto()
+    RUNNING = auto()
+    ALL = PENDING | RUNNING
 
 
 class BaseParallelBackend(metaclass=NoPublicConstructor):
-    """Abstract base class for all parallel backends"""
+    """Abstract base class for all parallel backends."""
 
-    config: Dict[str, Any] = {}
+    config: dict[str, Any] = {}
+    BACKENDS: dict[str, "Type[BaseParallelBackend]"] = {}
 
     def __init_subclass__(cls, *, backend_name: str, **kwargs):
-        global _PARALLEL_BACKENDS
-        _PARALLEL_BACKENDS[backend_name] = cls
         super().__init_subclass__(**kwargs)
+        BaseParallelBackend.BACKENDS[backend_name] = cls
+
+    @classmethod
+    @abstractmethod
+    def executor(
+        cls,
+        max_workers: int | None = None,
+        config: ParallelConfig = ParallelConfig(),
+        cancel_futures: CancellationPolicy = CancellationPolicy.PENDING,
+    ) -> Executor:
+        """Returns an executor for the parallel backend."""
+        ...
 
     @abstractmethod
     def get(self, v: Any, *args, **kwargs):
@@ -91,35 +94,60 @@ class BaseParallelBackend(metaclass=NoPublicConstructor):
         return f"<{self.__class__.__name__}: {self.config}>"
 
 
-class SequentialParallelBackend(BaseParallelBackend, backend_name="sequential"):
-    """Class used to run jobs sequentially and locally.
+class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
+    """Class used to wrap joblib to make it transparent to algorithms.
 
     It shouldn't be initialized directly. You should instead call
     :func:`~pydvl.utils.parallel.backend.init_parallel_backend`.
 
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with number of cpus
+    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
+        cluster address, number of cpus, etc.
     """
 
     def __init__(self, config: ParallelConfig):
-        self.config = {}
+        self.config = {
+            "logging_level": config.logging_level,
+            "n_jobs": config.n_cpus_local,
+        }
 
-    def get(self, v: Any, *args, **kwargs):
+    @classmethod
+    def executor(
+        cls,
+        max_workers: int | None = None,
+        config: ParallelConfig = ParallelConfig(),
+        cancel_futures: CancellationPolicy = CancellationPolicy.NONE,
+    ) -> Executor:
+        if cancel_futures not in (CancellationPolicy.NONE, False):
+            log.warning(
+                "Cancellation of futures is not supported by the joblib backend"
+            )
+        return cast(Executor, get_reusable_executor(max_workers=max_workers))
+
+    def get(self, v: T, *args, **kwargs) -> T:
         return v
 
-    def put(self, v: Any, *args, **kwargs) -> Any:
+    def put(self, v: T, *args, **kwargs) -> T:
         return v
 
     def wrap(self, fun: Callable, **kwargs) -> Callable:
-        """Wraps a function for sequential execution.
+        """Wraps a function as a joblib delayed.
 
-        This is a noop and kwargs are ignored."""
-        return fun
+        :param fun: the function to wrap
 
-    def wait(self, v: Any, *args, **kwargs) -> Tuple[list, list]:
+        :return: The delayed function.
+        """
+        return delayed(fun)  # type: ignore
+
+    def wait(self, v: list[T], *args, **kwargs) -> tuple[list[T], list[T]]:
         return v, []
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
-        return 1
+        if self.config["n_jobs"] is None:
+            maximum_n_jobs = joblib.effective_n_jobs()
+        else:
+            maximum_n_jobs = self.config["n_jobs"]
+        eff_n_jobs: int = min(joblib.effective_n_jobs(n_jobs), maximum_n_jobs)
+        return eff_n_jobs
 
 
 class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
@@ -133,22 +161,27 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     """
 
     def __init__(self, config: ParallelConfig):
-        config_dict = asdict(config)
-        config_dict.pop("backend")
-        n_cpus_local = config_dict.pop("n_cpus_local")
-        if config_dict.get("address", None) is None:
-            config_dict["num_cpus"] = n_cpus_local
-        self.config = config_dict
+        self.config = {"address": config.address, "logging_level": config.logging_level}
+        if self.config["address"] is None:
+            self.config["num_cpus"] = config.n_cpus_local
         if not ray.is_initialized():
             ray.init(**self.config)
+        # Register ray joblib backend
+        register_ray()
 
-    def get(
-        self,
-        v: Union[ObjectRef, Iterable[ObjectRef], T],
-        *args,
-        **kwargs,
-    ) -> Union[T, Any]:
-        timeout: Optional[float] = kwargs.get("timeout", None)
+    @classmethod
+    def executor(
+        cls,
+        max_workers: int | None = None,
+        config: ParallelConfig = ParallelConfig(),
+        cancel_futures: CancellationPolicy = CancellationPolicy.PENDING,
+    ) -> Executor:
+        from pydvl.utils.parallel.futures.ray import RayExecutor
+
+        return RayExecutor(max_workers, config=config, cancel_futures=cancel_futures)  # type: ignore
+
+    def get(self, v: ObjectRef | Iterable[ObjectRef] | T, *args, **kwargs) -> T | Any:
+        timeout: float | None = kwargs.get("timeout", None)
         if isinstance(v, ObjectRef):
             return ray.get(v, timeout=timeout)
         elif isinstance(v, Iterable):
@@ -156,7 +189,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         else:
             return v
 
-    def put(self, v: T, *args, **kwargs) -> Union["ObjectRef[T]", T]:
+    def put(self, v: T, *args, **kwargs) -> ObjectRef[T] | T:
         try:
             return ray.put(v, **kwargs)  # type: ignore
         except TypeError:
@@ -175,37 +208,35 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         return ray.remote(fun).remote  # type: ignore
 
     def wait(
-        self,
-        v: List["ObjectRef"],
-        *args,
-        **kwargs,
-    ) -> Tuple[List[ObjectRef], List[ObjectRef]]:
+        self, v: list[ObjectRef], *args, **kwargs
+    ) -> tuple[list[ObjectRef], list[ObjectRef]]:
         num_returns: int = kwargs.get("num_returns", 1)
-        timeout: Optional[float] = kwargs.get("timeout", None)
-        return ray.wait(  # type: ignore
-            v,
-            num_returns=num_returns,
-            timeout=timeout,
-        )
+        timeout: float | None = kwargs.get("timeout", None)
+        return ray.wait(v, num_returns=num_returns, timeout=timeout)  # type: ignore
 
     def _effective_n_jobs(self, n_jobs: int) -> int:
+        ray_cpus = int(ray._private.state.cluster_resources()["CPU"])  # type: ignore
         if n_jobs < 0:
-            ray_cpus = int(ray._private.state.cluster_resources()["CPU"])  # type: ignore
             eff_n_jobs = ray_cpus
         else:
-            eff_n_jobs = n_jobs
+            eff_n_jobs = min(n_jobs, ray_cpus)
         return eff_n_jobs
 
 
-def init_parallel_backend(
-    config: ParallelConfig,
-) -> BaseParallelBackend:
+def init_parallel_backend(config: ParallelConfig) -> BaseParallelBackend:
     """Initializes the parallel backend and returns an instance of it.
 
     :param config: instance of :class:`~pydvl.utils.config.ParallelConfig`
         with cluster address, number of cpus, etc.
 
     :Example:
+
+    >>> from pydvl.utils.parallel.backend import init_parallel_backend
+    >>> from pydvl.utils.config import ParallelConfig
+    >>> config = ParallelConfig()
+    >>> parallel_backend = init_parallel_backend(config)
+    >>> parallel_backend
+    <JoblibParallelBackend: {'logging_level': 30, 'n_jobs': None}>
 
     >>> from pydvl.utils.parallel.backend import init_parallel_backend
     >>> from pydvl.utils.config import ParallelConfig
@@ -216,11 +247,10 @@ def init_parallel_backend(
 
     """
     try:
-        parallel_backend_cls = _PARALLEL_BACKENDS[config.backend]
+        parallel_backend_cls = BaseParallelBackend.BACKENDS[config.backend]
     except KeyError:
         raise NotImplementedError(f"Unexpected parallel backend {config.backend}")
-    parallel_backend = parallel_backend_cls._create(config)
-    return parallel_backend  # type: ignore
+    return parallel_backend_cls.create(config)  # type: ignore
 
 
 def available_cpus() -> int:
@@ -233,7 +263,7 @@ def available_cpus() -> int:
 
     if system() != "Linux":
         return os.cpu_count() or 1
-    return len(os.sched_getaffinity(0))
+    return len(os.sched_getaffinity(0))  # type: ignore
 
 
 def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> int:
