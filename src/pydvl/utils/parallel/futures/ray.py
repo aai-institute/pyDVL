@@ -379,7 +379,7 @@ class _WorkItemManagerThread(threading.Thread):
                             del work_item
                 # Make sure we do this only once to not waste time looping
                 # on running processes over and over.
-                executor._cancel_futures &= ~int(CancellationPolicy.PENDING)
+                executor._cancel_futures &= ~CancellationPolicy.PENDING
 
             if executor._cancel_futures & CancellationPolicy.RUNNING:
                 logger.debug("forcefully cancelling running futures")
@@ -389,4 +389,4 @@ class _WorkItemManagerThread(threading.Thread):
                     ray.cancel(future.object_ref)
                 # Make sure we do this only once to not waste time looping
                 # on running processes over and over.
-                executor._cancel_futures &= ~int(CancellationPolicy.RUNNING)
+                executor._cancel_futures &= ~CancellationPolicy.RUNNING

@@ -4,7 +4,7 @@ import logging
 import os
 from abc import abstractmethod
 from concurrent.futures import Executor
-from enum import Enum
+from enum import Flag, auto
 from typing import Any, Callable, Iterable, Type, TypeVar, cast
 
 import joblib
@@ -25,7 +25,7 @@ T = TypeVar("T")
 log = logging.getLogger(__name__)
 
 
-class CancellationPolicy(Enum):
+class CancellationPolicy(Flag):
     """Policy to use when cancelling futures after exiting an Executor.
 
     .. note:
@@ -38,12 +38,9 @@ class CancellationPolicy(Enum):
     """
 
     NONE = 0
-    PENDING = 1
-    RUNNING = 2
-    ALL = 3
-
-    def __and__(self, other: CancellationPolicy) -> bool:
-        return int(self.value) & int(other.value) > 0
+    PENDING = auto()
+    RUNNING = auto()
+    ALL = PENDING | RUNNING
 
 
 class BaseParallelBackend(metaclass=NoPublicConstructor):
