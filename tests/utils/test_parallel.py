@@ -206,7 +206,7 @@ def test_future_cancellation(parallel_config):
     if parallel_config.backend != "ray":
         pytest.skip("Currently this test only works with Ray")
 
-    from pydvl.utils.parallel.futures.ray import CancellationPolicy
+    from pydvl.utils.parallel import CancellationPolicy
 
     with init_executor(
         config=parallel_config, cancel_futures=CancellationPolicy.NONE
