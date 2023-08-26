@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Made ray an optional dependency, relying on joblib as default parallel backend
+  [PR #408](https://github.com/appliedAI-Initiative/pyDVL/pull/408)
 - Fixes to parallel computation of generic semi-values: properly handle all
   samplers and stopping criteria, irrespective of parallel backend
   [PR #372](https://github.com/appliedAI-Initiative/pyDVL/pull/372)
