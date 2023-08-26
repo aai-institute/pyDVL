@@ -1,4 +1,4 @@
-"""
+r"""
 Samplers iterate over subsets of indices.
 
 The classes in this module are used to iterate over indices and subsets of their
