@@ -77,6 +77,7 @@ theme:
     - content.code.annotate
     - content.code.copy
     - navigation.footer
+#    - content.tooltips  # insiders only
 #    - navigation.indexes
     - navigation.instant
     - navigation.path
@@ -130,6 +131,7 @@ extra:
       link: https://de.linkedin.com/company/appliedai-institute-for-europe-ggmbh
 
 markdown_extensions:
+  - abbr
   - admonition
   - attr_list
   - footnotes
@@ -149,7 +151,9 @@ markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      auto_append:
+        - docs_includes/abbreviations.md
   - pymdownx.superfences
   - pymdownx.details
 
@@ -160,6 +164,7 @@ nav:
     - First steps: getting-started/getting-started.md
   - Data Valuation:
     - Introduction: value/index.md
+    - Notation: value/notation.md
     - Shapley Values: value/shapley.md
     - Semi-values: value/semi-values.md
     - The core: value/the-core.md
