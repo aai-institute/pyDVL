@@ -28,7 +28,7 @@ def loo(
     :param progress: If True, display a progress bar
     :return: Object with the data values.
 
-    .. versionchanged:: 0.7.0
+    .. versionadded:: 0.7.0
         Renamed from `naive_loo` and added parallel computation.
     """
 
