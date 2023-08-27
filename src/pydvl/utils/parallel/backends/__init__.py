@@ -1,7 +1,4 @@
-try:
-    from .joblib import *
-except ImportError:
-    pass
+from .joblib import *
 
 try:
     from .ray import *
