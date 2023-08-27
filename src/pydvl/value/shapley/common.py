@@ -24,7 +24,7 @@ def compute_shapley_values(
     done: StoppingCriterion = MaxUpdates(100),
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     n_jobs: int = 1,
-    **kwargs: dict,
+    **kwargs,
 ) -> ValuationResult:
     """Umbrella method to compute Shapley values with any of the available
     algorithms.

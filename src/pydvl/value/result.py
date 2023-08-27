@@ -232,7 +232,7 @@ class ValuationResult(
         algorithm: str = "",
         status: Status = Status.Pending,
         sort: bool = False,
-        **extra_values: dict,
+        **extra_values,
     ):
         if variances is not None and len(variances) != len(values):
             raise ValueError("Lengths of values and variances do not match")
@@ -678,7 +678,7 @@ class ValuationResult(
 
     @classmethod
     def from_random(
-        cls, size: int, total: Optional[float] = None, **kwargs: dict
+        cls, size: int, total: Optional[float] = None, **kwargs
     ) -> "ValuationResult":
         """Creates a [ValuationResult][pydvl.value.result.ValuationResult] object and fills it with an array
         of random values from a uniform distribution in [-1,1]. The values can
