@@ -199,7 +199,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         except TypeError:
             return v  # type: ignore
 
-    def wrap(self, fun: Callable, **kwargs: dict) -> Callable:
+    def wrap(self, fun: Callable, **kwargs) -> Callable:
         """Wraps a function as a ray remote.
 
         Args:
@@ -214,7 +214,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         return ray.remote(fun).remote  # type: ignore
 
     def wait(
-        self, v: list[ObjectRef], *args, **kwargs: dict
+        self, v: list[ObjectRef], *args, **kwargs
     ) -> tuple[list[ObjectRef], list[ObjectRef]]:
         num_returns: int = kwargs.get("num_returns", 1)
         timeout: float | None = kwargs.get("timeout", None)

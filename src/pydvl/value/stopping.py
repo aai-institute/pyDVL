@@ -219,7 +219,7 @@ def make_criterion(
     class WrappedCriterion(StoppingCriterion):
         def __init__(self, modify_result: bool = True):
             super().__init__(modify_result=modify_result)
-            self._name = name or fun.__name__
+            self._name = name or getattr(fun, "__name__", "WrappedCriterion")
 
         def _check(self, result: ValuationResult) -> Status:
             return fun(result)
