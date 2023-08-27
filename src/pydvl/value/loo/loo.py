@@ -7,10 +7,10 @@ from tqdm import tqdm
 from pydvl.utils import ParallelConfig, Utility, effective_n_jobs, init_executor
 from pydvl.value.result import ValuationResult
 
-__all__ = ["loo"]
+__all__ = ["compute_loo"]
 
 
-def loo(
+def compute_loo(
     u: Utility,
     *,
     n_jobs: int = 1,

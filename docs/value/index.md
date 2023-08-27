@@ -273,9 +273,9 @@ indicative of low value or not depends on each one's goals and definitions, but
 other methods are typically preferable.
 
 ```python
-from pydvl.value.loo.naive import naive_loo
+from pydvl.value.loo import compute_loo
 
-values = naive_loo(utility)
+values = compute_loo(utility, n_jobs=-1)
 ```
 
 The return value of all valuation functions is an object of type
