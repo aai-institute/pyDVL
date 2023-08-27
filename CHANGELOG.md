@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- Implemented exact games in Castro et al. 2009 and 2017
-  [PR #341](https://github.com/appliedAI-Initiative/pyDVL/pull/341)
+- Enabled parallel computation for Leave-One-Out values
+  [PR #406](https://github.com/appliedAI-Initiative/pyDVL/pull/406)
 - Fixes to parallel computation of generic semi-values: properly handle all
   samplers and stopping criteria, irrespective of parallel backend
   [PR #372](https://github.com/appliedAI-Initiative/pyDVL/pull/372)
@@ -33,6 +33,8 @@
   [PR #382](https://github.com/appliedAI-Initiative/pyDVL/pull/382)
 - Decouple ray.init from ParallelConfig 
   [PR #373](https://github.com/appliedAI-Initiative/pyDVL/pull/383)
+- Implemented exact games in Castro et al. 2009 and 2017
+  [PR #341](https://github.com/appliedAI-Initiative/pyDVL/pull/341)
 
 ## 0.6.1 - 🏗 Bug fixes and small improvement
 

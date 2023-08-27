@@ -14,11 +14,9 @@ from pydvl.value.sampler import (
     UniformSampler,
 )
 from pydvl.value.semivalues import (
-    SemiValueMode,
     SVCoefficient,
     banzhaf_coefficient,
     beta_coefficient,
-    compute_semivalues,
     semivalues,
     shapley_coefficient,
 )
