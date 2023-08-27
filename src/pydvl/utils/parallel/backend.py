@@ -99,19 +99,22 @@ def init_parallel_backend(config: ParallelConfig) -> BaseParallelBackend:
 
     :Example:
 
-    >>> from pydvl.utils.parallel.backend import init_parallel_backend
-    >>> from pydvl.utils.config import ParallelConfig
-    >>> config = ParallelConfig()
-    >>> parallel_backend = init_parallel_backend(config)
-    >>> parallel_backend
-    <JoblibParallelBackend: {'logging_level': 30, 'n_jobs': None}>
+    ``` python
+    config = ParallelConfig()
+    parallel_backend = init_parallel_backend(config)
+    ```
 
-    >>> from pydvl.utils.parallel.backend import init_parallel_backend
-    >>> from pydvl.utils.config import ParallelConfig
-    >>> config = ParallelConfig(backend="ray")
-    >>> parallel_backend = init_parallel_backend(config)
-    >>> parallel_backend
-    <RayParallelBackend: {'address': None, 'logging_level': 30, 'num_cpus': None}>
+    Creates a parallel backend instance with the default configuration, which
+    is a local joblib backend.
+
+    To create a parallel backend instance with a different backend, e.g. ray,
+    you can pass the backend name as a string to the constructor of
+    :class:`~pydvl.utils.config.ParallelConfig`:
+
+    .. code-block:: python
+
+       config = ParallelConfig(backend="ray")
+       parallel_backend = init_parallel_backend(config)
 
     """
     try:
