@@ -81,5 +81,5 @@ docker container run -d --rm -p 11211:11211 memcached:latest
 ```
 
 !!! tip "Using the cache"
-    Continue reading about the cache in the [First Steps](getting-started.md#caching)
+    Continue reading about the cache in the [First Steps](first-steps.md#caching)
     and the documentation for the [caching module][pydvl.utils.caching].

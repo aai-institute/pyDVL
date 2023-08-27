@@ -45,11 +45,12 @@ keep in mind when using pyDVL.
 ## Caching
 
 pyDVL uses [memcached](https://memcached.org/) to cache the computation of the
-utility function and speed up some computations.
+utility function and speed up some computations (see the [installation
+guide](installation.md/#setting-up-the-cache)).
 
 Caching of the utility function is disabled by default. When it is enabled it
 takes into account the data indices passed as argument and the utility function
-wrapped into the [Utility][pydvl.value.utility.Utility] object. This means that
+wrapped into the [Utility][pydvl.utils.utility.Utility] object. This means that
 care must be taken when reusing the same utility function with different data,
 see the documentation for the [caching module][pydvl.utils.caching] for more
 information.
