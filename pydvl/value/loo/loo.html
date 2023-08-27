@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="truncated" href="truncated.html" /><link rel="prev" title="naive" href="naive.html" />
+<link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="naive" href="naive.html" /><link rel="prev" title="loo" href="../loo.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
-        <title>owen - pyDVL 0.6.2.dev0 documentation</title>
+        <title>loo - pyDVL 0.6.2.dev0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/tooltipster.custom.css" />
@@ -238,23 +238,23 @@
 <li class="toctree-l4"><a class="reference internal" href="../least_core/naive.html">naive</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="../loo/loo.html">loo</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../loo/naive.html">naive</a></li>
+<li class="toctree-l3 current has-children"><a class="reference internal" href="../loo.html">loo</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">loo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="naive.html">naive</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../result.html">result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../sampler.html">sampler</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../semivalues.html">semivalues</a></li>
-<li class="toctree-l3 current has-children"><a class="reference internal" href="../shapley.html">shapley</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="common.html">common</a></li>
-<li class="toctree-l4"><a class="reference internal" href="gt.html">gt</a></li>
-<li class="toctree-l4"><a class="reference internal" href="knn.html">knn</a></li>
-<li class="toctree-l4"><a class="reference internal" href="montecarlo.html">montecarlo</a></li>
-<li class="toctree-l4"><a class="reference internal" href="naive.html">naive</a></li>
-<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">owen</a></li>
-<li class="toctree-l4"><a class="reference internal" href="truncated.html">truncated</a></li>
-<li class="toctree-l4"><a class="reference internal" href="types.html">types</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../shapley/common.html">common</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../shapley/gt.html">gt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../shapley/knn.html">knn</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../shapley/montecarlo.html">montecarlo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../shapley/naive.html">naive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../shapley/owen.html">owen</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../shapley/truncated.html">truncated</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../shapley/types.html">types</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../stopping.html">stopping</a></li>
@@ -296,80 +296,26 @@
           </label>
         </div>
         <article role="main">
-          <section id="module-pydvl.value.shapley.owen">
-<span id="owen"></span><h1>owen<a class="headerlink" href="#module-pydvl.value.shapley.owen" title="Permalink to this heading">#</a></h1>
+          <section id="module-pydvl.value.loo.loo">
+<span id="loo"></span><h1>loo<a class="headerlink" href="#module-pydvl.value.loo.loo" title="Permalink to this heading">#</a></h1>
 <hr class="docutils" />
-<dl class="py class">
-<dt class="sig sig-object py" id="pydvl.value.shapley.owen.OwenAlgorithm">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OwenAlgorithm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/owen.py#L18"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.owen.OwenAlgorithm" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>An enumeration.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.value.shapley.owen.OwenAlgorithm.Standard">
-<span class="sig-name descname"><span class="pre">Standard</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'standard'</span></em><a class="headerlink" href="#pydvl.value.shapley.owen.OwenAlgorithm.Standard" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pydvl.value.shapley.owen.OwenAlgorithm.Antithetic">
-<span class="sig-name descname"><span class="pre">Antithetic</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'antithetic'</span></em><a class="headerlink" href="#pydvl.value.shapley.owen.OwenAlgorithm.Antithetic" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
 <dl class="py function">
-<dt class="sig sig-object py" id="pydvl.value.shapley.owen.owen_sampling_shapley">
-<span class="sig-name descname"><span class="pre">owen_sampling_shapley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#pydvl.value.shapley.owen.OwenAlgorithm" title="pydvl.value.shapley.owen.OwenAlgorithm"><span class="pre">OwenAlgorithm</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">OwenAlgorithm.Standard</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='joblib',</span> <span class="pre">address=None,</span> <span class="pre">n_cpus_local=None,</span> <span class="pre">logging_level=30,</span> <span class="pre">wait_timeout=1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/shapley/owen.py#L87"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.shapley.owen.owen_sampling_shapley" title="Permalink to this definition">#</a></dt>
-<dd><p>Owen sampling of Shapley values as described in
-Okhrati and Lipani<a class="footnote-reference brackets" href="#footcite-okhrati-multilinear-2021" id="id1">1</a>.</p>
-<p>This function computes a Monte Carlo approximation to</p>
+<dt class="sig sig-object py" id="pydvl.value.loo.loo.loo">
+<span class="sig-name descname"><span class="pre">loo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><span class="pre">Utility</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../utils/config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='joblib',</span> <span class="pre">address=None,</span> <span class="pre">n_cpus_local=None,</span> <span class="pre">logging_level=30,</span> <span class="pre">wait_timeout=1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><span class="pre">ValuationResult</span></a></span></span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/value/loo/loo.py#L13"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.value.loo.loo.loo" title="Permalink to this definition">#</a></dt>
+<dd><p>Computes leave one out value:</p>
 <p><div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
-\[v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{i\}})}
-[u(S \cup \{i\}) - u(S)]\]</div>
+\[v(i) = u(D) - u(D \setminus \{i\}) \]</div>
 </div>
 </p>
-<p>using one of two methods. The first one, selected with the argument <code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">=</span>
-<span class="pre">OwenAlgorithm.Standard</span></code>, approximates the integral with:</p>
-<p><div class="math-wrapper docutils container">
-<div class="math notranslate nohighlight">
-\[\hat{v}_u(i) = \frac{1}{Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m
-\cup \{i\}) - u(S^{(q_j)}_m)],\]</div>
-</div>
-</p>
-<p>where <span class="math notranslate nohighlight">\(q_j = \frac{j}{Q} \in [0,1]\)</span> and the sets <span class="math notranslate nohighlight">\(S^{(q_j)}\)</span> are such that a
-sample <span class="math notranslate nohighlight">\(x \in S^{(q_j)}\)</span> if a draw from a <span class="math notranslate nohighlight">\(Ber(q_j)\)</span> distribution is 1.</p>
-<p>The second method, selected with the argument <code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">=</span>
-<span class="pre">OwenAlgorithm.Antithetic</span></code>, uses correlated samples in the inner sum to
-reduce the variance:</p>
-<p><div class="math-wrapper docutils container">
-<div class="math notranslate nohighlight">
-\[\hat{v}_u(i) = \frac{1}{2 Q M} \sum_{j=0}^Q \sum_{m=1}^M [u(S^{(q_j)}_m
-\cup \{i\}) - u(S^{(q_j)}_m) + u((S^{(q_j)}_m)^c \cup \{i\}) - u((S^{(
-q_j)}_m)^c)],\]</div>
-</div>
-</p>
-<p>where now <span class="math notranslate nohighlight">\(q_j = \frac{j}{2Q} \in [0,\frac{1}{2}]\)</span>, and <span class="math notranslate nohighlight">\(S^c\)</span> is the
-complement of <span class="math notranslate nohighlight">\(S\)</span>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The outer integration could be done instead with a quadrature rule.</p>
-</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – <a class="reference internal" href="../../utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> object holding data, model
-and scoring function.</p></li>
-<li><p><strong>n_samples</strong> – Numer of sets to sample for each value of q</p></li>
-<li><p><strong>max_q</strong> – Number of subdivisions for q ∈ [0,1] (the element sampling
-probability) used to approximate the outer integral.</p></li>
-<li><p><strong>method</strong> – Selects the algorithm to use, see the description. Either
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">Full</span></code> for <span class="math notranslate nohighlight">\(q \in [0,1]\)</span> or
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">Halved</span></code> for <span class="math notranslate nohighlight">\(q \in [0,0.5]\)</span> and correlated samples</p></li>
-<li><p><strong>n_jobs</strong> – Number of parallel jobs to use. Each worker receives a chunk
-of the total of <cite>max_q</cite> values for q.</p></li>
+<li><p><strong>u</strong> – Utility object with model, data, and scoring function</p></li>
+<li><p><strong>n_jobs</strong> – Number of parallel jobs to use</p></li>
 <li><p><strong>config</strong> – Object configuring parallel computation, with cluster
 address, number of cpus, etc.</p></li>
-<li><p><strong>progress</strong> – Whether to display progress bars for each job.</p></li>
+<li><p><strong>progress</strong> – If True, display a progress bar</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -377,23 +323,10 @@ address, number of cpus, etc.</p></li>
 </dd>
 </dl>
 <div class="versionadded">
-<p><span class="versionmodified added">New in version 0.3.0.</span></p>
-</div>
-<div class="versionchanged">
-<p><span class="versionmodified changed">Changed in version 0.5.0: </span>Support for parallel computation and enable antithetic sampling.</p>
+<p><span class="versionmodified added">New in version 0.7.0: </span>Renamed from <cite>naive_loo</cite> and added parallel computation.</p>
 </div>
 </dd></dl>
 
-<div class="docutils container" id="id2">
-<section id="references">
-<h2>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h2>
-</section>
-<dl class="footnote brackets">
-<dt class="label" id="footcite-okhrati-multilinear-2021"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p>Ramin Okhrati and Aldo Lipani. A Multilinear Sampling Algorithm to Estimate Shapley Values. In <em>2020 25th International Conference on Pattern Recognition (ICPR)</em>, 7992–7999. IEEE, January 2021. URL: <a class="reference external" href="https://ieeexplore.ieee.org/abstract/document/9412511">https://ieeexplore.ieee.org/abstract/document/9412511</a>, <a class="reference external" href="https://arxiv.org/abs/2010.12082">arXiv:2010.12082</a>, <a class="reference external" href="https://doi.org/10.1109/ICPR48806.2021.9412511">doi:10.1109/ICPR48806.2021.9412511</a>.</p>
-</dd>
-</dl>
-</div>
 </section>
 
         </article>
@@ -401,23 +334,23 @@ address, number of cpus, etc.</p></li>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="truncated.html">
+          <a class="next-page" href="naive.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">truncated</div>
+                <div class="title">naive</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="naive.html">
+          <a class="prev-page" href="../loo.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">naive</div>
+                <div class="title">loo</div>
                 
               </div>
             </a>
@@ -458,13 +391,8 @@ address, number of cpus, etc.</p></li>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">owen</a><ul>
-<li><a class="reference internal" href="#pydvl.value.shapley.owen.OwenAlgorithm"><code class="docutils literal notranslate"><span class="pre">OwenAlgorithm</span></code></a><ul>
-<li><a class="reference internal" href="#pydvl.value.shapley.owen.OwenAlgorithm.Standard"><code class="docutils literal notranslate"><span class="pre">OwenAlgorithm.Standard</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.value.shapley.owen.OwenAlgorithm.Antithetic"><code class="docutils literal notranslate"><span class="pre">OwenAlgorithm.Antithetic</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#pydvl.value.shapley.owen.owen_sampling_shapley"><code class="docutils literal notranslate"><span class="pre">owen_sampling_shapley()</span></code></a></li>
+<li><a class="reference internal" href="#">loo</a><ul>
+<li><a class="reference internal" href="#pydvl.value.loo.loo.loo"><code class="docutils literal notranslate"><span class="pre">loo()</span></code></a></li>
 </ul>
 </li>
 </ul>

@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="map_reduce" href="../map_reduce.html" /><link rel="prev" title="futures" href="../futures.html" />
+<link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="ray" href="ray.html" /><link rel="prev" title="backends" href="../backends.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
-        <title>ray - pyDVL 0.6.2.dev0 documentation</title>
+        <title>joblib - pyDVL 0.6.2.dev0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/tooltipster.custom.css" />
@@ -212,13 +212,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../../numeric.html">numeric</a></li>
 <li class="toctree-l3 current has-children"><a class="reference internal" href="../../parallel.html">parallel</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="../backend.html">backend</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="../backends.html">backends</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="../backends/joblib.html">joblib</a></li>
-<li class="toctree-l5"><a class="reference internal" href="../backends/ray.html">ray</a></li>
+<li class="toctree-l4 current has-children"><a class="reference internal" href="../backends.html">backends</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l5 current current-page"><a class="current reference internal" href="#">joblib</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ray.html">ray</a></li>
 </ul>
 </li>
-<li class="toctree-l4 current has-children"><a class="reference internal" href="../futures.html">futures</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l5 current current-page"><a class="current reference internal" href="#">ray</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../futures.html">futures</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../futures/ray.html">ray</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../map_reduce.html">map_reduce</a></li>
@@ -296,82 +296,56 @@
           </label>
         </div>
         <article role="main">
-          <section id="module-pydvl.utils.parallel.futures.ray">
-<span id="ray"></span><h1>ray<a class="headerlink" href="#module-pydvl.utils.parallel.futures.ray" title="Permalink to this heading">#</a></h1>
+          <section id="module-pydvl.utils.parallel.backends.joblib">
+<span id="joblib"></span><h1>joblib<a class="headerlink" href="#module-pydvl.utils.parallel.backends.joblib" title="Permalink to this heading">#</a></h1>
 <hr class="docutils" />
 <dl class="py class">
-<dt class="sig sig-object py" id="pydvl.utils.parallel.futures.ray.RayExecutor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RayExecutor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='joblib',</span> <span class="pre">address=None,</span> <span class="pre">n_cpus_local=None,</span> <span class="pre">logging_level=30,</span> <span class="pre">wait_timeout=1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cancel_futures</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../backend.html#pydvl.utils.parallel.backend.CancellationPolicy" title="pydvl.utils.parallel.backend.CancellationPolicy"><span class="pre">CancellationPolicy</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">CancellationPolicy.ALL</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/futures/ray.py#L25"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.futures.ray.RayExecutor" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Executor</span></code></p>
-<p>Asynchronous executor using Ray that implements the concurrent.futures API.</p>
+<dt class="sig sig-object py" id="pydvl.utils.parallel.backends.joblib.JoblibParallelBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">JoblibParallelBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/src/pydvl/utils/parallel/backends/joblib.py#L18"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydvl.utils.parallel.backends.joblib.JoblibParallelBackend" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../backend.html#pydvl.utils.parallel.backend.BaseParallelBackend" title="pydvl.utils.parallel.backend.BaseParallelBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseParallelBackend</span></code></a></p>
+<p>Class used to wrap joblib to make it transparent to algorithms.</p>
 <p>It shouldn’t be initialized directly. You should instead call
-<a class="reference internal" href="../futures.html#pydvl.utils.parallel.futures.init_executor" title="pydvl.utils.parallel.futures.init_executor"><code class="xref py py-func docutils literal notranslate"><span class="pre">init_executor()</span></code></a>.</p>
+<a class="reference internal" href="../backend.html#pydvl.utils.parallel.backend.init_parallel_backend" title="pydvl.utils.parallel.backend.init_parallel_backend"><code class="xref py py-func docutils literal notranslate"><span class="pre">init_parallel_backend()</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>max_workers</strong> – Maximum number of concurrent tasks. Each task can
-request itself any number of vCPUs. You must ensure the product
-of this value and the n_cpus_per_job parameter passed to submit()
-does not exceed available cluster resources.
-If set to None, it will default to the total number of vCPUs
-in the ray cluster.</p></li>
-<li><p><strong>config</strong> – instance of <a class="reference internal" href="../../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelConfig</span></code></a>
-with cluster address, number of cpus, etc.</p></li>
-<li><p><strong>cancel_futures</strong> – Select which futures will be cancelled
-when exiting this context manager. Pending is the default, which
-will cancel all pending futures, but not running ones, as done by
-<code class="xref py py-class docutils literal notranslate"><span class="pre">concurrent.futures.ProcessPoolExecutor</span></code>. Additionally, <cite>All</cite>
-cancels all pending and running futures, and <cite>None</cite> doesn’t cancel any.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>config</strong> – instance of <a class="reference internal" href="../../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelConfig</span></code></a> with
+cluster address, number of cpus, etc.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="pydvl.utils.parallel.futures.ray.RayExecutor.submit">
-<span class="sig-name descname"><span class="pre">submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Future</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pydvl.utils.parallel.futures.ray.RayExecutor.submit" title="Permalink to this definition">#</a></dt>
-<dd><p>Submits a callable to be executed with the given arguments.</p>
-<p>Schedules the callable to be executed as fn(*args, **kwargs)
-and returns a Future instance representing the execution of the callable.</p>
+<dt class="sig sig-object py" id="pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.executor">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">executor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../config.html#pydvl.utils.config.ParallelConfig" title="pydvl.utils.config.ParallelConfig"><span class="pre">ParallelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelConfig(backend='joblib',</span> <span class="pre">address=None,</span> <span class="pre">n_cpus_local=None,</span> <span class="pre">logging_level=30,</span> <span class="pre">wait_timeout=1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cancel_futures</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../backend.html#pydvl.utils.parallel.backend.CancellationPolicy" title="pydvl.utils.parallel.backend.CancellationPolicy"><span class="pre">CancellationPolicy</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">CancellationPolicy.NONE</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Executor</span></span></span><a class="headerlink" href="#pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.executor" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns an executor for the parallel backend.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">T</span></span></span><a class="headerlink" href="#pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.get" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">T</span></span></span><a class="headerlink" href="#pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.put" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.wrap">
+<span class="sig-name descname"><span class="pre">wrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fun</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.wrap" title="Permalink to this definition">#</a></dt>
+<dd><p>Wraps a function as a joblib delayed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>fn</strong> – Callable.</p></li>
-<li><p><strong>args</strong> – Positional arguments that will be passed to <code class="docutils literal notranslate"><span class="pre">fn</span></code>.</p></li>
-<li><p><strong>kwargs</strong> – Keyword arguments that will be passed to <code class="docutils literal notranslate"><span class="pre">fn</span></code>.
-It can also optionally contain options for the ray remote function
-as a dictionary as the keyword argument <cite>remote_function_options</cite>.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>fun</strong> – the function to wrap</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A Future representing the given call.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – If a task is submitted after the executor has been shut down.</p>
+<dd class="field-even"><p>The delayed function.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="pydvl.utils.parallel.futures.ray.RayExecutor.shutdown">
-<span class="sig-name descname"><span class="pre">shutdown</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wait</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cancel_futures</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#pydvl.utils.parallel.futures.ray.RayExecutor.shutdown" title="Permalink to this definition">#</a></dt>
-<dd><p>Clean up the resources associated with the Executor.</p>
-<p>This method tries to mimic the behaviour of <code class="xref py py-meth docutils literal notranslate"><span class="pre">Executor.shutdown()</span></code>
-while allowing one more value for <code class="docutils literal notranslate"><span class="pre">cancel_futures</span></code> which instructs it
-to use the <code class="xref py py-class docutils literal notranslate"><span class="pre">CancellationPolicy</span></code> defined upon construction.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>wait</strong> – Whether to wait for pending futures to finish.</p></li>
-<li><p><strong>cancel_futures</strong> – Overrides the executor’s default policy for
-cancelling futures on exit. If <code class="docutils literal notranslate"><span class="pre">True</span></code>, all pending futures are
-cancelled, and if <code class="docutils literal notranslate"><span class="pre">False</span></code>, no futures are cancelled. If <code class="docutils literal notranslate"><span class="pre">None</span></code>
-(default), the executor’s policy set at initialization is used.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
-</dd></dl>
+<dt class="sig sig-object py" id="pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.wait">
+<span class="sig-name descname"><span class="pre">wait</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.wait" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -382,23 +356,23 @@ cancelled, and if <code class="docutils literal notranslate"><span class="pre">F
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../map_reduce.html">
+          <a class="next-page" href="ray.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">map_reduce</div>
+                <div class="title">ray</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="../futures.html">
+          <a class="prev-page" href="../backends.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">futures</div>
+                <div class="title">backends</div>
                 
               </div>
             </a>
@@ -439,10 +413,13 @@ cancelled, and if <code class="docutils literal notranslate"><span class="pre">F
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">ray</a><ul>
-<li><a class="reference internal" href="#pydvl.utils.parallel.futures.ray.RayExecutor"><code class="docutils literal notranslate"><span class="pre">RayExecutor</span></code></a><ul>
-<li><a class="reference internal" href="#pydvl.utils.parallel.futures.ray.RayExecutor.submit"><code class="docutils literal notranslate"><span class="pre">RayExecutor.submit()</span></code></a></li>
-<li><a class="reference internal" href="#pydvl.utils.parallel.futures.ray.RayExecutor.shutdown"><code class="docutils literal notranslate"><span class="pre">RayExecutor.shutdown()</span></code></a></li>
+<li><a class="reference internal" href="#">joblib</a><ul>
+<li><a class="reference internal" href="#pydvl.utils.parallel.backends.joblib.JoblibParallelBackend"><code class="docutils literal notranslate"><span class="pre">JoblibParallelBackend</span></code></a><ul>
+<li><a class="reference internal" href="#pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.executor"><code class="docutils literal notranslate"><span class="pre">JoblibParallelBackend.executor()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.get"><code class="docutils literal notranslate"><span class="pre">JoblibParallelBackend.get()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.put"><code class="docutils literal notranslate"><span class="pre">JoblibParallelBackend.put()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.wrap"><code class="docutils literal notranslate"><span class="pre">JoblibParallelBackend.wrap()</span></code></a></li>
+<li><a class="reference internal" href="#pydvl.utils.parallel.backends.joblib.JoblibParallelBackend.wait"><code class="docutils literal notranslate"><span class="pre">JoblibParallelBackend.wait()</span></code></a></li>
 </ul>
 </li>
 </ul>
