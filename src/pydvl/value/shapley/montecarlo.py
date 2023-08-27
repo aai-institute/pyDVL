@@ -59,14 +59,8 @@ logger = logging.getLogger(__name__)
 __all__ = ["permutation_montecarlo_shapley", "combinatorial_montecarlo_shapley"]
 
 
-def _permutation_montecarlo_shapley(
-    u: Utility,
-    *,
-    done: StoppingCriterion,
-    truncation: TruncationPolicy,
-    algorithm_name: str = "permutation_montecarlo_shapley",
-    progress: bool = False,
-    job_id: int = 1,
+def _permutation_montecarlo_one_step(
+    u: Utility, truncation: TruncationPolicy, algorithm_name: str
 ) -> ValuationResult:
     """Helper function for :func:`permutation_montecarlo_shapley`.
 
@@ -75,53 +69,39 @@ def _permutation_montecarlo_shapley(
     sampled permutations.
 
     :param u: Utility object with model, data, and scoring function
-    :param done: Check on the results which decides when to stop
     :param truncation: A callable which decides whether to interrupt
         processing a permutation and set all subsequent marginals to zero.
     :param algorithm_name: For the results object. Used internally by different
         variants of Shapley using this subroutine
-    :param progress: Whether to display progress bars for each job.
-    :param job_id: id to use for reporting progress (e.g. to place progres bars)
+
     :return: An object with the results
     """
+
     result = ValuationResult.zeros(
         algorithm=algorithm_name, indices=u.data.indices, data_names=u.data.data_names
     )
 
-    pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
-    while not done(result):
-        pbar.n = 100 * done.completion()
-        pbar.refresh()
-        prev_score = 0.0
-        permutation = np.random.permutation(u.data.indices)
-        permutation_done = False
-        truncation.reset()
-        for i, idx in enumerate(permutation):
-            if permutation_done:
-                score = prev_score
-            else:
-                score = u(permutation[: i + 1])
-            marginal = score - prev_score
-            result.update(idx, marginal)
-            prev_score = score
-            if not permutation_done and truncation(i, score):
-                permutation_done = True
-    return result
-
-
-def _permutation_montecarlo_one_step(
-    u: Utility, truncation: TruncationPolicy, algorithm: str
-) -> ValuationResult:
-    result = _permutation_montecarlo_shapley(
-        u, done=MaxChecks(1), truncation=truncation, algorithm_name=algorithm
-    )
+    prev_score = 0.0
+    permutation = np.random.permutation(u.data.indices)
+    permutation_done = False
+    truncation.reset()
+    for i, idx in enumerate(permutation):
+        if permutation_done:
+            score = prev_score
+        else:
+            score = u(permutation[: i + 1])
+        marginal = score - prev_score
+        result.update(idx, marginal)
+        prev_score = score
+        if not permutation_done and truncation(i, score):
+            permutation_done = True
     nans = np.isnan(result.values).sum()
     if nans > 0:
         logger.warning(
             f"{nans} NaN values in current permutation, ignoring. "
             "Consider setting a default value for the Scorer"
         )
-        result = ValuationResult.empty(algorithm="truncated_montecarlo_shapley")
+        result = ValuationResult.empty(algorithm=algorithm_name)
     return result
 
 
@@ -140,6 +120,7 @@ def permutation_montecarlo_shapley(
     truncation: TruncationPolicy = NoTruncation(),
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
+    progress: bool = False,
 ) -> ValuationResult:
     r"""Computes an approximate Shapley value by sampling independent
     permutations of the index set, approximating the sum:
@@ -190,30 +171,35 @@ def permutation_montecarlo_shapley(
     max_workers = effective_n_jobs(n_jobs, config)
     n_submitted_jobs = 2 * max_workers  # number of jobs in the executor's queue
 
-    accumulated_result = ValuationResult.zeros(algorithm=algorithm)
+    result = ValuationResult.zeros(algorithm=algorithm)
+
+    pbar = tqdm(disable=not progress, total=100, unit="%")
 
     with init_executor(
         max_workers=max_workers, config=config, cancel_futures=CancellationPolicy.ALL
     ) as executor:
-        futures: set[Future] = set()
+        pending: set[Future] = set()
         while True:
-            completed_futures, futures = wait(
-                futures, timeout=config.wait_timeout, return_when=FIRST_COMPLETED
+            pbar.n = 100 * done.completion()
+            pbar.refresh()
+
+            completed, pending = wait(
+                pending, timeout=config.wait_timeout, return_when=FIRST_COMPLETED
             )
 
-            for future in completed_futures:
-                accumulated_result += future.result()
+            for future in completed:
+                result += future.result()
                 # we could check outside the loop, but that means more
                 # submissions if the stopping criterion is unstable
-                if done(accumulated_result):
-                    return accumulated_result
+                if done(result):
+                    return result
 
             # Ensure that we always have n_submitted_jobs in the queue or running
-            for _ in range(n_submitted_jobs - len(futures)):
+            for _ in range(n_submitted_jobs - len(pending)):
                 future = executor.submit(
                     _permutation_montecarlo_one_step, u, truncation, algorithm
                 )
-                futures.add(future)
+                pending.add(future)
 
 
 def _combinatorial_montecarlo_shapley(
