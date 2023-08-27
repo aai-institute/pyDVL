@@ -197,9 +197,9 @@ definitions, but other methods are typically preferable.
 
 .. code-block:: python
 
-   from pydvl.value.loo.naive import naive_loo
+   from pydvl.value.loo import loo
    utility = Utility(...)
-   values = naive_loo(utility)
+   values = loo(utility)
 
 The return value of all valuation functions is an object of type
 :class:`~pydvl.value.result.ValuationResult`. This can be iterated over,
