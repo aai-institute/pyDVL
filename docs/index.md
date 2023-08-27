@@ -20,7 +20,6 @@ If you're a first time user of pyDVL, we recommend you to go through the
 - title: Data valuation
   image: ./assets/material-code.svg
   url: value/
-- 
 - title: Influence Function
   image: ./assets/material-computer.svg
   url: influence/
