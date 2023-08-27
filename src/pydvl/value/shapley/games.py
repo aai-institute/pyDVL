@@ -56,6 +56,10 @@ class DummyModel(SupervisedModel):
     def predict(self, x: NDArray) -> NDArray:
         return x
 
+    def score(self, x: NDArray, y: NDArray) -> float:
+        # Dummy, will be overriden
+        return 0
+
 
 def symmetric_voting_game(num_samples: int = 1000) -> SolvedGame:
     """A symmetric voting game defined in :footcite:t:`castro_polynomial_2009`
@@ -71,8 +75,8 @@ def symmetric_voting_game(num_samples: int = 1000) -> SolvedGame:
         num_samples, "Dummy data for the symmetric voting game in Castro " "et al. 2009"
     )
 
-    def symmetric_voting_score(model: SupervisedModel, x: NDArray, y: NDArray) -> float:
-        return 1 if len(x) > len(data) // 2 else 0
+    def symmetric_voting_score(model: SupervisedModel, X: NDArray, y: NDArray) -> float:
+        return 1 if len(X) > len(data) // 2 else 0
 
     u = Utility(
         DummyModel(),
@@ -82,7 +86,7 @@ def symmetric_voting_game(num_samples: int = 1000) -> SolvedGame:
         show_warnings=True,
         enable_cache=False,
     )
-    values = ValuationResult(
+    values: ValuationResult[np.int_, int] = ValuationResult(
         algorithm="exact_shapley",
         status=Status.Converged,
         indices=data.indices,
@@ -173,9 +177,9 @@ def asymmetric_voting_game() -> SolvedGame:
     threshold = np.sum(weight_table) / 2
 
     def assymetric_voting_game_score(
-        model: SupervisedModel, x: NDArray, y: NDArray
+        model: SupervisedModel, X: NDArray, y: NDArray
     ) -> float:
-        return 1 if np.sum(weight_table[x]) > threshold else 0
+        return 1 if np.sum(weight_table[X]) > threshold else 0
 
     data = _dummy_dataset(
         n, "Dummy data for the asymmetric voting game in Castro et al. 2009"
@@ -190,7 +194,7 @@ def asymmetric_voting_game() -> SolvedGame:
         enable_cache=False,
     )
 
-    values = ValuationResult(
+    values: ValuationResult[np.int_, int] = ValuationResult(
         algorithm="exact_shapley",
         status=Status.Converged,
         indices=data.indices,
@@ -218,9 +222,9 @@ def shoes_game(num_samples: int = 1000) -> SolvedGame:
 
     m = len(data) // 2
 
-    def shoe_game_score(model: SupervisedModel, x: NDArray, y: NDArray) -> float:
-        left_shoes = np.sum(x < m).item()
-        right_shoes = np.sum(x >= m).item()
+    def shoe_game_score(model: SupervisedModel, X: NDArray, y: NDArray) -> float:
+        left_shoes = np.sum(X < m).item()
+        right_shoes = np.sum(X >= m).item()
         return min(left_shoes, right_shoes)
 
     u = Utility(
@@ -232,7 +236,7 @@ def shoes_game(num_samples: int = 1000) -> SolvedGame:
         enable_cache=False,
     )
 
-    values = ValuationResult(
+    values: ValuationResult[np.int_, int] = ValuationResult(
         algorithm="exact_shapley",
         status=Status.Converged,
         indices=data.indices,
@@ -279,8 +283,8 @@ def airport_game() -> SolvedGame:
         score_table[r] = c
         exact_values[r] = v
 
-    def airport_game_score(model: SupervisedModel, x: NDArray, y: NDArray) -> float:
-        return max(score_table[x])
+    def airport_game_score(model: SupervisedModel, X: NDArray, y: NDArray) -> float:
+        return max(score_table[X]) or 0.0
 
     data = _dummy_dataset(100, "A dummy dataset for...")
 
@@ -293,7 +297,7 @@ def airport_game() -> SolvedGame:
         enable_cache=False,
     )
 
-    values = ValuationResult(
+    values: ValuationResult[np.int_, int] = ValuationResult(
         algorithm="exact_shapley",
         status=Status.Converged,
         indices=data.indices,
@@ -326,11 +330,11 @@ def minimum_spanning_tree_game() -> SolvedGame:
     assert np.all(graph == graph.T)
 
     def minimum_spanning_tree_score(
-        model: SupervisedModel, x: NDArray, y: NDArray
+        model: SupervisedModel, X: NDArray, y: NDArray
     ) -> float:
-        partial_graph = sp.sparse.csr_array(graph[np.ix_(x, x)])
+        partial_graph = sp.sparse.csr_array(graph[np.ix_(X, X)])
         span_tree = sp.sparse.csgraph.minimum_spanning_tree(partial_graph)
-        return span_tree.sum()
+        return span_tree.sum() or 0
 
     u = Utility(
         model=DummyModel(),
@@ -341,7 +345,7 @@ def minimum_spanning_tree_game() -> SolvedGame:
         enable_cache=False,
     )
 
-    values = ValuationResult(
+    values: ValuationResult[np.int_, int] = ValuationResult(
         algorithm="exact_shapley",
         status=Status.Converged,
         indices=data.indices,
