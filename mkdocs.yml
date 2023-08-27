@@ -13,10 +13,23 @@ hooks:
   - build_scripts/copy_changelog.py
 
 plugins:
-  - mike
   - autorefs
-  - search
+  - glightbox:
+      touchNavigation: true
+      loop: false
+      effect: zoom
+      slide_effect: slide
+      width: 100%
+      height: auto
+      zoomable: true
+      draggable: true
+      skip_classes:
+        - custom-skip-class-name
+      auto_caption: true
+      caption_position: bottom
   - macros
+  - mike
+  - search
   - section-index
   - alias:
       use_relative_link: true
@@ -135,6 +148,8 @@ markdown_extensions:
   - admonition
   - attr_list
   - footnotes
+  - markdown_captions
+  - md_in_html
   - neoteroi.cards
   - toc:
       permalink: True
@@ -161,7 +176,7 @@ nav:
   - Home: index.md
   - Getting Started:
     - Installation: getting-started/installation.md
-    - First steps: getting-started/getting-started.md
+    - First steps: getting-started/first-steps.md
   - Data Valuation:
     - Introduction: value/index.md
     - Notation: value/notation.md

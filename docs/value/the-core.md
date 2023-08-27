@@ -113,3 +113,26 @@ problems = [mclc_prepare_problem(utility, n_iterations=n_iterations)
     for _ in range(n_experiments)]
 values = lc_solve_problems(problems)
 ```
+
+## Method comparison
+
+The TransferLab team reproduced the results of the original paper in a
+publication for the 2022 MLRC [@benmerzoug_re_2023].
+
+![Best sample removal on binary image
+classification](img/mclc-best-removal-10k-natural.svg){ align=left width=50% class=invertible}
+
+Roughly speaking, MCLC performs better in identifying **high value** points, as
+measured by best-sample removal tasks. In all other aspects, it performs worse
+or similarly to TMCS at comparable sample budgets. But using an equal number of
+subsets is more computationally expensive because of the need to solve large
+linear and quadratic optimization problems.
+
+
+![Worst sample removal on binary image
+classification](img/mclc-worst-removal-10k-natural.svg){ align=right width=50% class=invertible}
+
+For these reasons we recommend some variation of SV like TMCS for outlier
+detection, data cleaning and pruning, and perhaps MCLC for the selection of
+interesting points to be inspected for the improvement of data collection or
+model design.
