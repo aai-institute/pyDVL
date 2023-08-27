@@ -5,7 +5,11 @@ from typing import Generator, Optional
 
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.parallel.backend import BaseParallelBackend
-from pydvl.utils.parallel.futures.ray import RayExecutor
+
+try:
+    from pydvl.utils.parallel.futures.ray import RayExecutor
+except ImportError:
+    pass
 
 __all__ = ["init_executor"]
 
@@ -27,28 +31,24 @@ def init_executor(
         e.g. ``cancel_futures`` for executors that support it, like
         :class:`~pydvl.utils.parallel.futures.ray.RayExecutor`.
 
-    :Example:
+    :Examples:
 
-    >>> from pydvl.utils.parallel.futures import init_executor
-    >>> from pydvl.utils.config import ParallelConfig
-    >>> config = ParallelConfig(backend="ray")
-    >>> with init_executor(max_workers=3, config=config) as executor:
-    ...     pass
+    .. code-block:: python
 
-    >>> from pydvl.utils.parallel.futures import init_executor
-    >>> with init_executor() as executor:
-    ...     future = executor.submit(lambda x: x + 1, 1)
-    ...     result = future.result()
-    ...
-    >>> print(result)
-    2
+       from pydvl.utils.parallel.futures import init_executor
+       from pydvl.utils.config import ParallelConfig
+       config = ParallelConfig(backend="ray")
+       with init_executor(max_workers=1, config=config) as executor:
+           future = executor.submit(lambda x: x + 1, 1)
+           result = future.result()
+       assert result == 2
 
-    >>> from pydvl.utils.parallel.futures import init_executor
-    >>> with init_executor() as executor:
-    ...     results = list(executor.map(lambda x: x + 1, range(5)))
-    ...
-    >>> print(results)
-    [1, 2, 3, 4, 5]
+    .. code-block:: python
+
+       from pydvl.utils.parallel.futures import init_executor
+       with init_executor() as executor:
+           results = list(executor.map(lambda x: x + 1, range(5)))
+       assert results == [1, 2, 3, 4, 5]
 
     """
     try:

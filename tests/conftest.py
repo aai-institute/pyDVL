@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
 
 import numpy as np
 import pytest
-import ray
 from pymemcache.client import Client
 from sklearn import datasets
 from sklearn.utils import Bunch
@@ -19,12 +18,6 @@ if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
 
 EXCEPTIONS_TYPE = Optional[Sequence[Type[BaseException]]]
-
-
-@pytest.fixture(scope="session", autouse=True)
-def ray_shutdown():
-    yield
-    ray.shutdown()
 
 
 def is_memcache_responsive(hostname, port):

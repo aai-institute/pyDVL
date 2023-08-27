@@ -15,7 +15,7 @@ from pydvl.utils import ParallelConfig
 
 __all__ = ["RayExecutor"]
 
-from pydvl.utils.parallel.backend import CancellationPolicy
+from pydvl.utils.parallel import CancellationPolicy
 
 T = TypeVar("T")
 

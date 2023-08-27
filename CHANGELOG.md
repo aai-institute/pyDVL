@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Made ray an optional dependency, relying on joblib as default parallel backend
+  [PR #408](https://github.com/appliedAI-Initiative/pyDVL/pull/408)
 - Enabled parallel computation for Leave-One-Out values
   [PR #406](https://github.com/appliedAI-Initiative/pyDVL/pull/406)
 - Fixes to parallel computation of generic semi-values: properly handle all
@@ -22,13 +24,15 @@
 - Major changes to IF interface and functionality
   [PR #278](https://github.com/appliedAI-Initiative/pyDVL/pull/278)
   [PR #394](https://github.com/appliedAI-Initiative/pyDVL/pull/394)
-- **New Method**: Implements solving the hessian equation via spectral low-rank approximation
+- **New Method**: Implements solving the hessian equation via spectral low-rank
+  approximation
   [PR #365](https://github.com/appliedAI-Initiative/pyDVL/pull/365)
 - **Breaking Changes**:
   - Add new joblib backend and set it as default
     instead of the ray backend. Simplify the MapReduceJob class.
     [PR #355](https://github.com/appliedAI-Initiative/pyDVL/pull/355)
-  - Bump torch dependency for influence package to 2.0 [PR #365](https://github.com/appliedAI-Initiative/pyDVL/pull/365)
+  - Bump torch dependency for influence package to 2.0
+    [PR #365](https://github.com/appliedAI-Initiative/pyDVL/pull/365)
 - **Bug fix** Fix installation of dev requirements for Python3.10
   [PR #382](https://github.com/appliedAI-Initiative/pyDVL/pull/382)
 - Decouple ray.init from ParallelConfig 

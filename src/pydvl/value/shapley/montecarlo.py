@@ -48,8 +48,7 @@ from tqdm import tqdm
 from pydvl.utils import effective_n_jobs, init_executor, init_parallel_backend
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
-from pydvl.utils.parallel import MapReduceJob
-from pydvl.utils.parallel.futures.ray import CancellationPolicy
+from pydvl.utils.parallel import CancellationPolicy, MapReduceJob
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.truncated import NoTruncation, TruncationPolicy
