@@ -31,10 +31,13 @@ def powerset(s: NDArray[T]) -> Iterator[Collection[T]]:
      [random_powerset()][pydvl.utils.numeric.random_powerset] for random
      sampling.
 
-    >>> import numpy as np
-    >>> from pydvl.utils.numeric import powerset
-    >>> list(powerset(np.array((1,2))))
-    [(), (1,), (2,), (1, 2)]
+    ??? Example
+        ``` pycon
+        >>> import numpy as np
+        >>> from pydvl.utils.numeric import powerset
+        >>> list(powerset(np.array((1,2))))
+        [(), (1,), (2,), (1, 2)]
+        ```
 
     Args:
          s: The set to use

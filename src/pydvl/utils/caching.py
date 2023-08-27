@@ -37,25 +37,25 @@ default_config = dict(
 
 # Usage with stochastic functions
 
-In addition to standard memoization, the decorator [memcached()][pydvl.utils.caching.memcached] can compute
-running average and standard error of repeated evaluations for the same input.
-This can be useful for stochastic functions with high variance (e.g. model
-training for small sample sizes), but drastically reduces the speed benefits of
-memoization.
+In addition to standard memoization, the decorator
+[memcached()][pydvl.utils.caching.memcached] can compute running average and
+standard error of repeated evaluations for the same input. This can be useful
+for stochastic functions with high variance (e.g. model training for small
+sample sizes), but drastically reduces the speed benefits of memoization.
 
 This behaviour can be activated with the argument `allow_repeated_evaluations`
 to [memcached()][pydvl.utils.caching.memcached].
 
 # Cache reuse
 
-When working directly with [memcached()][pydvl.utils.caching.memcached], it is essential to only cache pure
-functions. If they have any kind of state, either internal or external (e.g. a
-closure over some data that may change), then the cache will fail to notice this
-and the same value will be returned.
+When working directly with [memcached()][pydvl.utils.caching.memcached],  it is
+essential to only cache pure functions. If they have any kind of state, either
+internal or external (e.g. a closure over some data that may change), then the
+cache will fail to notice this and the same value will be returned.
 
-When a function is wrapped with [memcached()][pydvl.utils.caching.memcached] for memoization, its signature
-(input and output names) and code are used as a key for the cache. Alternatively
-you can pass a custom value to be used as key with
+When a function is wrapped with [memcached()][pydvl.utils.caching.memcached] for
+memoization, its signature (input and output names) and code are used as a key
+for the cache. Alternatively you can pass a custom value to be used as key with
 
 ```python
 cached_fun = memcached(**asdict(cache_options))(fun, signature=custom_signature)
@@ -162,7 +162,7 @@ def memcached(
     !!! Warning
         Do not cache functions with state! See :ref:`cache reuse`
 
-    !!! example
+    ??? Example
         ```python
         cached_fun = memcached(**asdict(cache_options))(heavy_computation)
         ```

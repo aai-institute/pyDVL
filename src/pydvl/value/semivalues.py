@@ -48,7 +48,7 @@ convenience wrapper function. Respectively, these are:
 [compute_shapley_semivalues][pydvl.value.semivalues.compute_shapley_semivalues],
 [compute_banzhaf_semivalues][pydvl.value.semivalues.compute_banzhaf_semivalues],
 and [compute_beta_shapley_semivalues][pydvl.value.semivalues.compute_beta_shapley_semivalues].
-       instead.
+instead.
 """
 from __future__ import annotations
 
@@ -253,16 +253,18 @@ def compute_shapley_semivalues(
     for a more flexible interface and additional methods, including Truncated
     Monte Carlo.
 
-    :param u: Utility object with model, data, and scoring function.
-    :param done: Stopping criterion.
-    :param sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
-        for a list.
-    :param n_jobs: Number of parallel jobs to use.
-    :param config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
-    :param progress: Whether to display a progress bar.
+    Args:
+        u: Utility object with model, data, and scoring function.
+        done: Stopping criterion.
+        sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
+            for a list.
+        n_jobs: Number of parallel jobs to use.
+        config: Object configuring parallel computation, with cluster
+            address, number of cpus, etc.
+        progress: Whether to display a progress bar.
 
-    :return: Object with the results.
+    Returns:
+        Object with the results.
     """
     return semivalues(
         sampler_t(u.data.indices),
@@ -289,16 +291,18 @@ def compute_banzhaf_semivalues(
     This is a convenience wrapper for :func:`semivalues` with the Banzhaf
     coefficient.
 
-    :param u: Utility object with model, data, and scoring function.
-    :param done: Stopping criterion.
-    :param sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
-        for a list.
-    :param n_jobs: Number of parallel jobs to use.
-    :param config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
-    :param progress: Whether to display a progress bar.
+    Args:
+        u: Utility object with model, data, and scoring function.
+        done: Stopping criterion.
+        sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler` for a
+            list.
+        n_jobs: Number of parallel jobs to use.
+        config: Object configuring parallel computation, with cluster address,
+            number of cpus, etc.
+        progress: Whether to display a progress bar.
 
-    :return: Object with the results.
+    Returns:
+        Object with the results.
     """
     return semivalues(
         sampler_t(u.data.indices),
@@ -327,18 +331,18 @@ def compute_beta_shapley_semivalues(
     This is a convenience wrapper for :func:`semivalues` with the Beta Shapley
     coefficient.
 
-    :param u: Utility object with model, data, and scoring function.
-    :param alpha: Alpha parameter of the Beta distribution.
-    :param beta: Beta parameter of the Beta distribution.
-    :param done: Stopping criterion.
-    :param sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
-        for a list.
-    :param n_jobs: Number of parallel jobs to use.
-    :param config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
-    :param progress: Whether to display a progress bar.
+    Args:
+        u: Utility object with model, data, and scoring function.
+        alpha: Alpha parameter of the Beta distribution.
+        beta: Beta parameter of the Beta distribution.
+        done: Stopping criterion.
+        sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler` for a list.
+        n_jobs: Number of parallel jobs to use.
+        config: Object configuring parallel computation, with cluster address, number of cpus, etc.
+        progress: Whether to display a progress bar.
 
-    :return: Object with the results.
+    Returns:
+        Object with the results.
     """
     return semivalues(
         sampler_t(u.data.indices),

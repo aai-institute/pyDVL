@@ -1,5 +1,5 @@
 ---
-title: pyDVL documentation
+title: Home
 ---
 
 # The python library for data valuation
@@ -15,18 +15,18 @@ If you're a first time user of pyDVL, we recommend you to go through the
 
 - title: To the installation guide
   image: ./assets/material-toolbox.svg
-  url: 20-install
+  url: getting-started/installation.md
 
-- title: To the code
+- title: Data valuation
   image: ./assets/material-code.svg
-  url: https://github.com/appliedAI-Initiative/pyDVL
+  url: value/
+- title: Influence Function
+  image: ./assets/material-computer.svg
+  url: influence/
 
 - title: Browse the API
   image: ./assets/material-description.svg
-  url: code-reference/pydvl
+  url: api/pydvl/
 
-- title: To the examples
-  image: ./assets/material-computer.svg
-  url: examples
 
 ::/cards::

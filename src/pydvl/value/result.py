@@ -28,7 +28,7 @@ the same way.
 Indexing and slicing of results is supported and
 [ValueItem][pydvl.value.result.ValueItem] objects are returned. These objects
 can be compared with the usual operators, which take only the
-[ValueItem.value][pydvl.value.result.ValueItem.value] into account.
+[ValueItem.value][pydvl.value.result.ValueItem] into account.
 
 # Creating result objects
 
@@ -293,7 +293,7 @@ class ValuationResult(
         Args:
             reverse: Whether to sort in descending order by value.
             key: The key to sort by. Defaults to
-                [ValueItem.value][pydvl.value.result.ValueItem.value].
+                [ValueItem.value][pydvl.value.result.ValueItem].
         """
         keymap = {
             "index": "_indices",
@@ -693,7 +693,7 @@ class ValuationResult(
 
         Returns:
             A valuation result with its status set to
-                [Status.Converged][Status.Converged] by default.
+            [Status.Converged][pydvl.utils.status.Status] by default.
 
         :raises ValueError: If `size` is less than 1.
 

@@ -236,22 +236,23 @@ def init_parallel_backend(config: ParallelConfig) -> BaseParallelBackend:
         config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
             with cluster address, number of cpus, etc.
 
-    Example:
-
+    ??? Example
+        ```pycon
         >>> from pydvl.utils.parallel.backend import init_parallel_backend
         >>> from pydvl.utils.config import ParallelConfig
         >>> config = ParallelConfig()
         >>> parallel_backend = init_parallel_backend(config)
         >>> parallel_backend
         <JoblibParallelBackend: {'logging_level': 30, 'n_jobs': None}>
-
+        ```
+        ``` pycon
         >>> from pydvl.utils.parallel.backend import init_parallel_backend
         >>> from pydvl.utils.config import ParallelConfig
         >>> config = ParallelConfig(backend="ray")
         >>> parallel_backend = init_parallel_backend(config)
         >>> parallel_backend
         <RayParallelBackend: {'address': None, 'logging_level': 30, 'num_cpus': None}>
-
+        ```
     """
     try:
         parallel_backend_cls = BaseParallelBackend.BACKENDS[config.backend]
@@ -291,8 +292,8 @@ def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> 
         The effective number of jobs, guaranteed to be >= 1.
 
     Raises:
-        RuntimeError if the effective number of jobs returned by the backend
-        is < 1.
+        RuntimeError: if the effective number of jobs returned by the backend
+            is < 1.
     """
     parallel_backend = init_parallel_backend(config)
     if (eff_n_jobs := parallel_backend.effective_n_jobs(n_jobs)) < 1:

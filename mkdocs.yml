@@ -6,16 +6,30 @@ copyright: "Copyright &copy; AppliedAI Institute gGmbH"
 
 watch:
   - src/pydvl
+  - notebooks
 
 hooks:
   - build_scripts/copy_notebooks.py
   - build_scripts/copy_changelog.py
 
 plugins:
-  - mike
   - autorefs
-  - search
+  - glightbox:
+      touchNavigation: true
+      loop: false
+      effect: zoom
+      slide_effect: slide
+      width: 100%
+      height: auto
+      zoomable: true
+      draggable: true
+      skip_classes:
+        - custom-skip-class-name
+      auto_caption: true
+      caption_position: bottom
   - macros
+  - mike
+  - search
   - section-index
   - alias:
       use_relative_link: true
@@ -25,6 +39,8 @@ plugins:
         - build_scripts/generate_api_docs.py
   - literate-nav:
       nav_file: SUMMARY.md
+      implicit_index: false
+      tab_length: 2
   - mkdocs-jupyter:
       include: ["docs/examples/*.ipynb"]
       remove_tag_config:
@@ -40,6 +56,7 @@ plugins:
             - https://docs.python.org/3/objects.inv
             - https://numpy.org/doc/stable/objects.inv
             - https://pandas.pydata.org/docs/objects.inv
+            - https://scikit-learn.org/stable/objects.inv
           paths: [ src ]  # search packages in the src folder
           options:
             docstring_style: google
@@ -70,17 +87,20 @@ theme:
   icon:
     repo: fontawesome/brands/github
   features:
+    - content.code.annotate
+    - content.code.copy
+    - navigation.footer
+#    - content.tooltips  # insiders only
+#    - navigation.indexes
+    - navigation.instant
+    - navigation.path
+#    - navigation.sections
+#    - navigation.tabs
+    - navigation.top
+    - navigation.tracking
     - search.suggest
     - search.highlight
     - toc.follow
-    - navigation.top
-    - navigation.instant
-    - navigation.sections
-    - navigation.path
-    - navigation.tracking
-    - navigation.footer
-    - content.code.copy
-    - content.code.annotate
   palette: # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -109,6 +129,7 @@ extra:
   transferlab:
     website: https://transferlab.appliedai.de
     data_valuation_review: https://transferlab.appliedai.de/reviews/data-valuation
+  copyright_link: https://appliedai-institute.de
   version:
     provider: mike
     default: stable
@@ -117,11 +138,18 @@ extra:
       link: https://github.com/appliedAI-Initiative/pyDVL
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/pyDVL/
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/aai_transferlab
+    - icon: fontawesome/brands/linkedin
+      link: https://de.linkedin.com/company/appliedai-institute-for-europe-ggmbh
 
 markdown_extensions:
+  - abbr
   - admonition
   - attr_list
   - footnotes
+  - markdown_captions
+  - md_in_html
   - neoteroi.cards
   - toc:
       permalink: True
@@ -138,6 +166,34 @@ markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      auto_append:
+        - docs_includes/abbreviations.md
   - pymdownx.superfences
   - pymdownx.details
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - First steps: getting-started/first-steps.md
+  - Data Valuation:
+    - Introduction: value/index.md
+    - Notation: value/notation.md
+    - Shapley Values: value/shapley.md
+    - Semi-values: value/semi-values.md
+    - The core: value/the-core.md
+    - Examples:
+      - Shapley values: examples/shapley_basic_spotify.ipynb
+      - KNN Shapley: examples/shapley_knn_flowers.ipynb
+      - Data utility learning: examples/shapley_utility_learning.ipynb
+      - Least Core: examples/least_core_basic.ipynb
+  - The Influence Function:
+    - Introduction: influence/index.md
+    - Examples:
+      - For CNNs: examples/influence_imagenet.ipynb
+      - For mislabeled data: examples/influence_synthetic.ipynb
+      - For outlier detection: examples/influence_wine.ipynb
+  - Code:
+    - Changelog: CHANGELOG.md
+    - API: api/pydvl/

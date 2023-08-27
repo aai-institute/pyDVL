@@ -75,8 +75,8 @@ def _permutation_montecarlo_shapley(
     """Helper function for [permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley].
 
     Computes marginal utilities of each training sample in
-    [Utility.data][pydvl.utils.utility.Utility.data] by iterating through
-    randomly sampled permutations.
+    [u.data][pydvl.utils.utility.Utility] by iterating through randomly
+    sampled permutations.
 
     Args:
         u: Utility object with model, data, and scoring function
@@ -295,7 +295,7 @@ def combinatorial_montecarlo_shapley(
     \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)]$$
 
     This consists of randomly sampling subsets of the power set of the training
-    indices in [data][pydvl.utils.utility.Utility.data], and computing their
+    indices in [u.data][pydvl.utils.utility.Utility], and computing their
     marginal utilities. See [Data valuation][computing-data-values] for details.
 
     Note that because sampling is done with replacement, the approximation is

@@ -42,9 +42,11 @@ class Utility:
     function.
 
     An instance of `Utility` holds the triple of model, dataset and scoring
-    function which determines the value of data points. This is mosly used for
-    the computation of [Shapley Values][shapley-values] and
-    [Core Values][core-values].
+    function which determines the value of data points. This is used for the
+    computation of
+    [all game-theoretic values][game-theoretical-methods]
+    like [Shapley values][pydvl.value.shapley] and
+    [the Least Core][pydvl.value.least_core].
 
     The Utility expect the model to fulfill
     the [SupervisedModel][pydvl.utils.types.SupervisedModel] interface i.e.
@@ -62,6 +64,14 @@ class Utility:
     the results of each execution. Caching is available both locally
     and across nodes, but must always be enabled for your
     project first, see [Setting up the cache][setting-up-the-cache].
+
+    Attributes:
+        model: The supervised model.
+        data: An object containing the split data.
+        scorer: A scoring function. If None, the `score()` method of the model
+            will be used. See [score][pydvl.utils.score] for ways to create
+            and compose scorers, in particular how to set default values and
+            ranges.
 
     Args:
         model: Any supervised model. Typical choices can be found at
@@ -92,7 +102,8 @@ class Utility:
         clone_before_fit: If `True`, the model will be cloned before calling
             `fit()`.
 
-    Examples:
+    ??? Example
+        ``` pycon
         >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
         >>> from sklearn.linear_model import LinearRegression, LogisticRegression
         >>> from sklearn.datasets import load_iris
@@ -100,6 +111,7 @@ class Utility:
         >>> u = Utility(LogisticRegression(random_state=16), dataset)
         >>> u(dataset.indices)
         0.9
+        ```
 
     """
 
@@ -269,7 +281,8 @@ class DataUtilityLearning:
             the given model.
         model: A supervised regression model
 
-    Examples:
+    ??? Example
+        ``` pycon
         >>> from pydvl.utils import Utility, DataUtilityLearning, Dataset
         >>> from sklearn.linear_model import LinearRegression, LogisticRegression
         >>> from sklearn.datasets import load_iris
@@ -281,6 +294,7 @@ class DataUtilityLearning:
         ...     _ = wrapped_u((i,))
         >>> wrapped_u((1, 2, 3)) # Subsequent calls will be computed using the fit model for DUL
         0.0
+        ```
 
     """
 

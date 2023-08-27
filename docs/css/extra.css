@@ -101,3 +101,11 @@ a.autorefs-external:hover::after {
   border: 0.1rem solid var(--md-primary-fg-color);
   color: black;
 }
+
+
+body[data-md-color-scheme="default"] .invertible img {
+}
+
+body[data-md-color-scheme="slate"] .invertible img {
+    filter: invert(100%) hue-rotate(180deg);
+}

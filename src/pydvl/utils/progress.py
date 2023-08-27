@@ -1,3 +1,10 @@
+"""
+!!! Warning
+    This module is deprecated and will be removed in a future release.
+    It implements a wrapper for the [tqdm](https://tqdm.github.io/) progress bar
+    iterator for easy toggling, but this functionality is already provided by
+    the `disable` argument of `tqdm`.
+"""
 import collections.abc
 from typing import Iterable, Iterator, Union
 
