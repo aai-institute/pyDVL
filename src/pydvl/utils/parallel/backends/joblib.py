@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 from concurrent.futures import Executor
-from typing import Callable, cast
+from typing import Callable, TypeVar, cast
 
 import joblib
 from joblib import delayed
 from joblib.externals.loky import get_reusable_executor
 
 from pydvl.utils import ParallelConfig
-from pydvl.utils.parallel.backend import BaseParallelBackend, CancellationPolicy, T, log
+from pydvl.utils.parallel.backend import BaseParallelBackend, CancellationPolicy, log
+
+__all__ = ["JoblibParallelBackend"]
+
+T = TypeVar("T")
 
 
 class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):

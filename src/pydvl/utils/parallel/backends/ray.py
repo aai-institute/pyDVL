@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 from concurrent.futures import Executor
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, TypeVar
 
 import ray
 from ray import ObjectRef
 from ray.util.joblib import register_ray
 
 from pydvl.utils import ParallelConfig
-from pydvl.utils.parallel.backend import BaseParallelBackend, CancellationPolicy, T
+from pydvl.utils.parallel.backend import BaseParallelBackend, CancellationPolicy
+
+__all__ = ["RayParallelBackend"]
+
+
+T = TypeVar("T")
 
 
 class RayParallelBackend(BaseParallelBackend, backend_name="ray"):

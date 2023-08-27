@@ -19,8 +19,6 @@ __all__ = [
 ]
 
 
-T = TypeVar("T")
-
 log = logging.getLogger(__name__)
 
 
