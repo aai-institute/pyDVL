@@ -1,8 +1,6 @@
 import numpy as np
 import pytest
-import ray
 from numpy.typing import NDArray
-from ray.cluster_utils import Cluster
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
