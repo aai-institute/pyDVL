@@ -11,10 +11,8 @@ from pymemcache.client import Client
 from sklearn import datasets
 from sklearn.utils import Bunch
 
-from pydvl.utils import Dataset, MemcachedClientConfig, Utility
+from pydvl.utils import Dataset, MemcachedClientConfig
 from pydvl.utils.parallel.backend import available_cpus
-from pydvl.value.shapley.classwise import ClasswiseScorer
-from tests.misc import ClosedFormLinearClassifier
 
 if TYPE_CHECKING:
     from _pytest.config import Config
@@ -413,24 +411,3 @@ def pytest_terminal_summary(
 ):
     tolerate_session = terminalreporter.config._tolerate_session
     tolerate_session.display(terminalreporter)
-
-
-@pytest.fixture(scope="function")
-def dataset_alt_seq_full() -> Dataset:
-    x_train = np.arange(1, 5).reshape([-1, 1])
-    y_train = np.array([0, 0, 1, 1])
-    x_test = x_train
-    y_test = np.array([0, 0, 0, 1])
-    return Dataset(x_train, y_train, x_test, y_test)
-
-
-@pytest.fixture(scope="function")
-def linear_classifier_cs_scorer(
-    dataset_alt_seq_full: Dataset,
-) -> Utility:
-    return Utility(
-        ClosedFormLinearClassifier(),
-        dataset_alt_seq_full,
-        ClasswiseScorer("accuracy"),
-        catch_errors=False,
-    )

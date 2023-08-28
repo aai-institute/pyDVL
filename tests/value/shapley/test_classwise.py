@@ -8,15 +8,15 @@ from typing import Dict, Tuple, cast
 import numpy as np
 import pandas as pd
 import pytest
+from numpy._typing import NDArray
 
-from pydvl.utils import Utility, powerset
+from pydvl.utils import Dataset, Utility, powerset
 from pydvl.value import MaxChecks, ValuationResult
 from pydvl.value.shapley.classwise import (
     ClasswiseScorer,
     compute_classwise_shapley_values,
 )
 from pydvl.value.shapley.truncated import NoTruncation
-from tests.misc import ThresholdClassifier
 from tests.value import check_values
 
 
@@ -901,3 +901,58 @@ def test_cs_scorer_on_alt_seq_cf_linear_classifier_cs_score(
                 in_cls_acc_0 == target_accuracies_zero.iloc[set_zero_idx, set_one_idx]
             )
             assert in_cls_acc_1 == target_accuracies_one.iloc[set_zero_idx, set_one_idx]
+
+
+class ThresholdClassifier:
+    def fit(self, x: NDArray, y: NDArray) -> float:
+        raise NotImplementedError("Mock model")
+
+    def predict(self, x: NDArray) -> NDArray:
+        y = 0.5 < x
+        return y[:, 0].astype(int)
+
+    def score(self, x: NDArray, y: NDArray) -> float:
+        raise NotImplementedError("Mock model")
+
+
+class ClosedFormLinearClassifier:
+    def __init__(self):
+        self._beta = None
+
+    def fit(self, x: NDArray, y: NDArray) -> float:
+        v = x[:, 0]
+        self._beta = np.dot(v, y) / np.dot(v, v)
+        return -1
+
+    def predict(self, x: NDArray) -> NDArray:
+        if self._beta is None:
+            raise AttributeError("Model not fitted")
+
+        x = x[:, 0]
+        probs = self._beta * x
+        return np.clip(np.round(probs + 1e-10), 0, 1).astype(int)
+
+    def score(self, x: NDArray, y: NDArray) -> float:
+        pred_y = self.predict(x)
+        return np.sum(pred_y == y) / 4
+
+
+@pytest.fixture(scope="function")
+def linear_classifier_cs_scorer(
+    dataset_alt_seq_full: Dataset,
+) -> Utility:
+    return Utility(
+        ClosedFormLinearClassifier(),
+        dataset_alt_seq_full,
+        ClasswiseScorer("accuracy"),
+        catch_errors=False,
+    )
+
+
+@pytest.fixture(scope="function")
+def dataset_alt_seq_full() -> Dataset:
+    x_train = np.arange(1, 5).reshape([-1, 1])
+    y_train = np.array([0, 0, 1, 1])
+    x_test = x_train
+    y_test = np.array([0, 0, 0, 1])
+    return Dataset(x_train, y_train, x_test, y_test)
