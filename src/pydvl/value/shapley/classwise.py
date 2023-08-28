@@ -175,7 +175,7 @@ def _classwise_shapley_one_step(
         result += permutation_montecarlo_classwise_shapley(
             u,
             label,
-            done=MaxChecks(n_resample_complement_sets - 1),
+            done=MaxChecks(n_resample_complement_sets),
             truncation=truncation,
             use_default_scorer_value=use_default_scorer_value,
             min_elements_per_label=min_elements_per_label,

@@ -220,9 +220,9 @@ def make_criterion(
 class AbsoluteStandardError(StoppingCriterion):
     r"""Determine convergence based on the standard error of the values.
 
-    If $s_i$ is the standard error for datum $i$ and $v_i$ its value, then this
-    criterion returns :attr:`~pydvl.utils.status.Status.Converged` if
-    $s_i < \epsilon$ for all $i$ and a threshold value $\epsilon \gt 0$.
+    If $s_i$ is the standard error for datum $i$, then this criterion returns
+    :attr:`~pydvl.utils.status.Status.Converged` if $s_i < \epsilon$ for all $i$
+    and a threshold value $\epsilon \gt 0$.
 
     :param threshold: A value is considered to have converged if the standard
         error is below this value. A way of choosing it is to pick some
@@ -279,21 +279,21 @@ class MaxChecks(StoppingCriterion):
 
     def __init__(self, n_checks: Optional[int], modify_result: bool = True):
         super().__init__(modify_result=modify_result)
-        if n_checks is not None and n_checks < 0:
-            raise ValueError("n_iterations must be at least 0 or None")
+        if n_checks is not None and n_checks < 1:
+            raise ValueError("n_iterations must be at least 1 or None")
         self.n_checks = n_checks
         self._count = 0
 
     def _check(self, result: ValuationResult) -> Status:
-        if self.n_checks is not None:
+        if self.n_checks:
             self._count += 1
-            if self._count > self.n_checks:
+            if self._count >= self.n_checks:
                 self._converged = np.ones_like(result.values, dtype=bool)
                 return Status.Converged
         return Status.Pending
 
     def completion(self) -> float:
-        if self.n_checks is not None:
+        if self.n_checks:
             return min(1.0, self._count / self.n_checks)
         return 0.0
 
@@ -301,6 +301,10 @@ class MaxChecks(StoppingCriterion):
 class MaxUpdates(StoppingCriterion):
     """Terminate if any number of value updates exceeds or equals the given
     threshold.
+
+    .. note::
+       If you want to ensure that **all** values have been updated, you probably
+       want :class:`MinUpdates` instead.
 
     This checks the ``counts`` field of a
     :class:`~pydvl.value.result.ValuationResult`, i.e. the number of times that

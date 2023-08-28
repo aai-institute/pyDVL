@@ -781,7 +781,7 @@ def test_classwise_shapley(
     )
     values = compute_classwise_shapley_values(
         linear_classifier_cs_scorer,
-        done=MaxChecks(n_samples - 1),
+        done=MaxChecks(n_samples),
         truncation=NoTruncation(),
         n_resample_complement_sets=n_resample_complement_sets,
         **args,
