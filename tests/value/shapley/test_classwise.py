@@ -1,8 +1,6 @@
 """
 Test cases for the class wise shapley value.
 """
-import random
-from random import seed
 from typing import Dict, Tuple, cast
 
 import numpy as np
@@ -956,3 +954,21 @@ def dataset_alt_seq_full() -> Dataset:
     x_test = x_train
     y_test = np.array([0, 0, 0, 1])
     return Dataset(x_train, y_train, x_test, y_test)
+
+
+@pytest.fixture(scope="function")
+def dataset_alt_seq_simple(
+    request,
+) -> Tuple[NDArray[np.float_], NDArray[np.int_], Dict[str, float]]:
+    """
+    The label set is represented as 0000011100011111, with adjustable left and right
+    margins. The left margin denotes the percentage of zeros at the beginning, while the
+    right margin denotes the percentage of ones at the end. Accuracy can be efficiently
+    calculated using a closed-form solution.
+    """
+    n_element, left_margin, right_margin = request.param
+    x = np.linspace(0, 1, n_element)
+    y = ((left_margin <= x) & (x < 0.5)) | ((1 - right_margin) <= x)
+    y = y.astype(int)
+    x = np.expand_dims(x, -1)
+    return x, y, {"left_margin": left_margin, "right_margin": right_margin}

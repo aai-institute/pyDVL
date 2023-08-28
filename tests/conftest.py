@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
 
 import numpy as np
 import pytest
-import ray
 from pymemcache.client import Client
 from sklearn import datasets
 from sklearn.utils import Bunch
@@ -19,12 +18,6 @@ if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
 
 EXCEPTIONS_TYPE = Optional[Sequence[Type[BaseException]]]
-
-
-@pytest.fixture(scope="session", autouse=True)
-def ray_shutdown():
-    yield
-    ray.shutdown()
 
 
 def is_memcache_responsive(hostname, port):
@@ -132,7 +125,6 @@ def memcached_service(docker_ip, docker_services, do_not_start_memcache):
 
 @pytest.fixture(scope="function")
 def memcache_client_config(memcached_service) -> MemcachedClientConfig:
-
     client_config = MemcachedClientConfig(
         server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
     )
@@ -199,8 +191,8 @@ def num_workers():
     # Run with 2 CPUs inside GitHub actions
     if os.getenv("CI"):
         return 2
-    # And a maximum of 8 CPUs locally (most tests don't really benefit from more)
-    return max(1, min(available_cpus() - 1, 8))
+    # And a maximum of 4 CPUs locally (most tests don't really benefit from more)
+    return max(1, min(available_cpus() - 1, 4))
 
 
 @pytest.fixture

@@ -8,7 +8,7 @@ from copy import copy
 from typing import Callable, Optional, Tuple, cast
 
 import numpy as np
-from numpy._typing import NDArray
+from numpy.typing import NDArray
 from tqdm import tqdm
 
 from pydvl.utils import (
@@ -22,15 +22,13 @@ from pydvl.utils import (
     random_powerset_group_conditional,
 )
 from pydvl.value.result import ValuationResult
-from pydvl.value.shapley.montecarlo import _permutation_montecarlo_shapley_rollout
+from pydvl.value.shapley.montecarlo import permutation_montecarlo_shapley_rollout
 from pydvl.value.shapley.truncated import TruncationPolicy
 from pydvl.value.stopping import MaxChecks, StoppingCriterion
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "compute_classwise_shapley_values",
-]
+__all__ = ["compute_classwise_shapley_values", "ClasswiseScorer"]
 
 
 def compute_classwise_shapley_values(
@@ -438,7 +436,7 @@ def _permutation_montecarlo_classwise_shapley(
             min_elements_per_group=min_elements_per_label,
         )
     ):
-        result += _permutation_montecarlo_shapley_rollout(
+        result += permutation_montecarlo_shapley_rollout(
             u,
             indices_permutation,
             additional_indices=subset_complement,

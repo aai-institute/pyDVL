@@ -177,7 +177,7 @@ def lineno_from_object_name(source_file, object_name):
 
 # this is useful for keeping the docs build environment small. Add heavy requirements here
 # and all other requirements to docs/requirements.txt
-autodoc_mock_imports = []
+autodoc_mock_imports = ["ray"]
 
 autodoc_default_options = {
     "exclude-members": "log",

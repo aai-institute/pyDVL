@@ -23,9 +23,8 @@ import torch.nn.functional as F
 from torch import nn
 from torch.utils.data import DataLoader
 
-from pydvl.influence.frameworks.torch_differentiable import (
+from pydvl.influence.torch import (
     TorchTwiceDifferentiable,
-    mvp,
     solve_batch_cg,
     solve_linear,
     solve_lissa,
@@ -48,7 +47,7 @@ def linear_mvp_model(A, b):
     model.weight.data = torch.as_tensor(A)
     model.bias.data = torch.as_tensor(b)
     loss = F.mse_loss
-    return TorchTwiceDifferentiable(model=model, loss=loss, device=torch.device("cpu"))
+    return TorchTwiceDifferentiable(model=model, loss=loss)
 
 
 @pytest.mark.torch
@@ -74,7 +73,13 @@ def test_linear_grad(
     mvp_model = linear_mvp_model(A, b)
 
     train_grads_analytical = linear_derivative_analytical((A, b), train_x, train_y)
-    train_grads_autograd = mvp_model.split_grad(train_x, train_y)
+    train_x = torch.as_tensor(train_x).unsqueeze(1)
+    train_y = torch.as_tensor(train_y)
+
+    train_grads_autograd = torch.stack(
+        [mvp_model.grad(inpt, target) for inpt, target in zip(train_x, train_y)]
+    )
+
     assert np.allclose(train_grads_analytical, train_grads_autograd, rtol=1e-5)
 
 
@@ -100,10 +105,12 @@ def test_linear_hessian(
     mvp_model = linear_mvp_model(A, b)
 
     test_hessian_analytical = linear_hessian_analytical((A, b), train_x)
-    grad_xy, _ = mvp_model.grad(train_x, train_y)
-    estimated_hessian = mvp(
+    grad_xy = mvp_model.grad(
+        torch.as_tensor(train_x), torch.as_tensor(train_y), create_graph=True
+    )
+    estimated_hessian = mvp_model.mvp(
         grad_xy,
-        np.eye((input_dimension + 1) * output_dimension),
+        torch.as_tensor(np.eye((input_dimension + 1) * output_dimension)),
         mvp_model.parameters,
     )
     assert np.allclose(test_hessian_analytical, estimated_hessian, rtol=1e-5)
@@ -138,9 +145,11 @@ def test_linear_mixed_derivative(
     )
     model_mvp = []
     for i in range(len(train_x)):
-        grad_xy, tensor_x = mvp_model.grad(train_x[i], train_y[i], x_requires_grad=True)
+        tensor_x = torch.as_tensor(train_x[i]).requires_grad_(True)
+        tensor_y = torch.as_tensor(train_y[i])
+        grad_xy = mvp_model.grad(tensor_x, tensor_y, create_graph=True)
         model_mvp.append(
-            mvp(
+            mvp_model.mvp(
                 grad_xy,
                 np.eye((input_dimension + 1) * output_dimension),
                 backprop_on=tensor_x,

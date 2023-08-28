@@ -12,8 +12,8 @@ from torch import nn
 from torch.optim import LBFGS
 from torch.utils.data import DataLoader, TensorDataset
 
-from pydvl.influence import TorchTwiceDifferentiable, compute_influences
-from pydvl.influence.general import InfluenceType, InversionMethod
+from pydvl.influence import InfluenceType, InversionMethod, compute_influences
+from pydvl.influence.torch import TorchTwiceDifferentiable, model_hessian_low_rank
 
 from .conftest import (
     add_noise_to_linear_model,
@@ -137,7 +137,7 @@ def test_influence_linear_model(
     )
 
     influence_values = compute_influences(
-        TorchTwiceDifferentiable(linear_layer, loss, device=torch.device("cpu")),
+        TorchTwiceDifferentiable(linear_layer, loss),
         training_data=train_data_loader,
         test_data=test_data_loader,
         input_data=input_data,
@@ -335,7 +335,7 @@ def test_influences_nn(
 
     model = module_factory()
     model.eval()
-    model = TorchTwiceDifferentiable(model, loss, device=torch.device("cpu"))
+    model = TorchTwiceDifferentiable(model, loss)
 
     direct_influence = compute_influences(
         model,
@@ -436,7 +436,7 @@ def test_influences_arnoldi(
     )
     nn_architecture = nn_architecture.eval()
 
-    model = TorchTwiceDifferentiable(nn_architecture, loss, device=torch.device("cpu"))
+    model = TorchTwiceDifferentiable(nn_architecture, loss)
 
     direct_influence = compute_influences(
         model,
@@ -466,3 +466,22 @@ def test_influences_arnoldi(
     )
 
     assert np.allclose(direct_influence, low_rank_influence, rtol=1e-1)
+
+    precomputed_low_rank = model_hessian_low_rank(
+        model,
+        training_data=train_data_loader,
+        hessian_perturbation=hessian_reg,
+        rank_estimate=num_parameters - 1,
+    )
+
+    precomputed_low_rank_influence = compute_influences(
+        model,
+        training_data=train_data_loader,
+        test_data=test_data_loader,
+        progress=True,
+        influence_type=influence_type,
+        inversion_method=InversionMethod.Arnoldi,
+        low_rank_representation=precomputed_low_rank,
+    )
+
+    assert np.allclose(direct_influence, precomputed_low_rank_influence, rtol=1e-1)

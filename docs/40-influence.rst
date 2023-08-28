@@ -31,7 +31,7 @@ The Influence Function
 -----------------------
 
 First introduced in the context of robust statistics in
-:footcite:t:`hampel1974influence`, the IF was popularized in the context of
+:footcite:t:`hampel_influence_1974`, the IF was popularized in the context of
 machine learning in :footcite:t:`koh_understanding_2017`. Following their
 formulation, consider an input space $\mathcal{X}$ (e.g. images) and an output
 space $\mathcal{Y}$ (e.g. labels). Let's take $z_i = (x_i, y_i)$, for $i \in

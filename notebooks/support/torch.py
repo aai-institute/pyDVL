@@ -13,7 +13,7 @@ from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 from torchvision.models import ResNet18_Weights, resnet18
 
-from pydvl.influence.frameworks import as_tensor
+from pydvl.influence.torch import as_tensor
 from pydvl.utils import maybe_progress
 
 from .types import Losses

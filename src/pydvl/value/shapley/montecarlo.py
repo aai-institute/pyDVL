@@ -30,75 +30,129 @@ reduce computation :func:`truncated_montecarlo_shapley`.
    the algorithms mentioned above, including Group Testing, can work to valuate
    groups of samples as units.
 """
+from __future__ import annotations
+
 import logging
 import math
 import operator
+from concurrent.futures import FIRST_COMPLETED, Future, wait
 from functools import reduce
 from itertools import cycle, takewhile
 from typing import Optional, Sequence
 
 import numpy as np
+from deprecate import deprecated
 from numpy.typing import NDArray
 from tqdm import tqdm
 
-from pydvl.utils import Dataset
+from pydvl.utils import Dataset, effective_n_jobs, init_executor, init_parallel_backend
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
-from pydvl.utils.parallel import MapReduceJob
+from pydvl.utils.parallel import CancellationPolicy, MapReduceJob
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.truncated import NoTruncation, TruncationPolicy
-from pydvl.value.stopping import StoppingCriterion
+from pydvl.value.stopping import MaxChecks, StoppingCriterion
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "permutation_montecarlo_shapley",
+    "permutation_montecarlo_shapley_rollout",
     "combinatorial_montecarlo_shapley",
 ]
 
 
-def _permutation_montecarlo_shapley(
+def permutation_montecarlo_shapley_rollout(
     u: Utility,
-    *,
-    done: StoppingCriterion,
+    permutation: NDArray[np.int_],
     truncation: TruncationPolicy,
-    algorithm_name: str = "permutation_montecarlo_shapley",
-    progress: bool = False,
-    job_id: int = 1,
+    algorithm_name: str,
+    additional_indices: Optional[NDArray[np.int_]] = None,
+    use_default_scorer_value: bool = True,
 ) -> ValuationResult:
-    """Helper function for :func:`permutation_montecarlo_shapley`.
-
-    Computes marginal utilities of each training sample in
-    :obj:`pydvl.utils.utility.Utility.data` by iterating through randomly
-    sampled permutations.
-
-    :param u: Utility object with model, data, and scoring function
-    :param done: Check on the results which decides when to stop
-    :param truncation: A callable which decides whether to interrupt
-        processing a permutation and set all subsequent marginals to zero.
-    :param algorithm_name: For the results object. Used internally by different
-        variants of Shapley using this subroutine
-    :param progress: Whether to display progress bars for each job.
-    :param job_id: id to use for reporting progress (e.g. to place progres bars)
-    :return: An object with the results
     """
+    A truncated version of a permutation-based MC estimator.
+    values. It generates a permutation p[i] of the class label indices and iterates over
+    all subsets starting from the empty set to the full set of indices.
+
+    :param u: Utility object containing model, data, and scoring function.
+    :param permutation: Permutation of indices to be considered.
+    :param truncation: Callable which decides whether to interrupt processing a
+        permutation and set all subsequent marginals to zero.
+    :param additional_indices: Set of additional indices for data points which should be
+        always considered.
+    :param use_default_scorer_value: Use default scorer value even if additional_indices
+        is not None.
+    :return: ValuationResult object containing computed data values.
+    """
+    if (
+        additional_indices is not None
+        and len(np.intersect1d(permutation, additional_indices)) > 0
+    ):
+        raise ValueError(
+            "The class label set and the complement set have to be disjoint."
+        )
+
     result = ValuationResult.zeros(
-        algorithm=algorithm_name, indices=u.data.indices, data_names=u.data.data_names
+        algorithm=algorithm_name,
+        indices=u.data.indices,
+        data_names=u.data.data_names,
     )
 
-    pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
-    while not done(result):
-        pbar.n = 100 * done.completion()
-        pbar.refresh()
-        permutation = np.random.permutation(u.data.indices)
-        result += _permutation_montecarlo_shapley_rollout(
-            u, permutation, truncation=truncation, algorithm_name=algorithm_name
+    prev_score = (
+        u.default_score
+        if (
+            use_default_scorer_value
+            or additional_indices is None
+            or additional_indices is not None
+            and len(additional_indices) == 0
         )
+        else u(additional_indices)
+    )
+
+    truncation_u = u
+    if additional_indices is not None:
+        # hack to calculate the correct value in reset.
+        truncation_indices = np.sort(np.concatenate((permutation, additional_indices)))
+        truncation_u = Utility(
+            u.model,
+            Dataset(
+                u.data.x_train[truncation_indices],
+                u.data.y_train[truncation_indices],
+                u.data.x_test,
+                u.data.y_test,
+            ),
+            u.scorer,
+        )
+    truncation.reset(truncation_u)
+
+    is_terminated = False
+    for i, idx in enumerate(permutation):
+        if is_terminated or (is_terminated := truncation(i, prev_score)):
+            score = prev_score
+        else:
+            score = u(
+                np.concatenate((permutation[: i + 1], additional_indices))
+                if additional_indices is not None and len(additional_indices) > 0
+                else permutation[: i + 1]
+            )
+
+        marginal = score - prev_score
+        result.update(idx, marginal)
+        prev_score = score
 
     return result
 
 
+@deprecated(
+    target=True,
+    deprecated_in="0.7.0",
+    remove_in="0.8.0",
+    args_mapping=dict(
+        coordinator_update_period=None, worker_update_period=None, progress=None
+    ),
+)
 def permutation_montecarlo_shapley(
     u: Utility,
     done: StoppingCriterion,
@@ -108,16 +162,36 @@ def permutation_montecarlo_shapley(
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
 ) -> ValuationResult:
-    r"""Computes an approximate Shapley value by sampling independent index
-    permutations to approximate the sum:
+    r"""Computes an approximate Shapley value by sampling independent
+    permutations of the index set, approximating the sum:
 
     $$
     v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
     \tilde{w}( | \sigma_{:i} | )[u(\sigma_{:i} \cup \{i\}) − u(\sigma_{:i})],
     $$
 
-    where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
-    position where $i$ appears (see :ref:`data valuation` for details).
+    where $\sigma_{:i}$ denotes the set of indices in permutation sigma before
+    the position where $i$ appears (see :ref:`data valuation` for details).
+
+    This implements the method described in :footcite:t:`ghorbani_data_2019`
+    with a double stopping criterion.
+
+    .. todo::
+       Think of how to add Robin-Gelman or some other more principled stopping
+       criterion.
+
+    Instead of naively implementing the expectation, we sequentially add points
+    to coalitions from a permutation and incrementally compute marginal utilities.
+    We stop computing marginals for a given permutation based on a
+    :class:`TruncationPolicy`. :footcite:t:`ghorbani_data_2019` mention two
+    policies: one that stops after a certain fraction of marginals are computed,
+    implemented in :class:`FixedTruncation`, and one that stops if the last
+    computed utility ("score") is close to the total utility using the standard
+    deviation of the utility as a measure of proximity, implemented in
+    :class:`BootstrapTruncation`.
+
+    We keep sampling permutations and updating all shapley values
+    until the :class:`StoppingCriterion` returns ``True``.
 
     :param u: Utility object with model, data, and scoring function.
     :param done: function checking whether computation must stop.
@@ -130,21 +204,43 @@ def permutation_montecarlo_shapley(
     :param progress: Whether to display progress bars for each job.
     :return: Object with the data values.
     """
+    algorithm = "permutation_montecarlo_shapley"
 
-    map_reduce_job: MapReduceJob[Utility, ValuationResult] = MapReduceJob(
-        u,
-        map_func=_permutation_montecarlo_shapley,
-        reduce_func=lambda results: reduce(operator.add, results),
-        map_kwargs=dict(
-            algorithm_name="permutation_montecarlo_shapley",
-            done=done,
-            truncation=truncation,
-            progress=progress,
-        ),
-        config=config,
-        n_jobs=n_jobs,
-    )
-    return map_reduce_job()
+    parallel_backend = init_parallel_backend(config)
+    u = parallel_backend.put(u)
+    max_workers = effective_n_jobs(n_jobs, config)
+    n_submitted_jobs = 2 * max_workers  # number of jobs in the executor's queue
+
+    result = ValuationResult.zeros(algorithm=algorithm)
+
+    pbar = tqdm(disable=not progress, total=100, unit="%")
+
+    with init_executor(
+        max_workers=max_workers, config=config, cancel_futures=CancellationPolicy.ALL
+    ) as executor:
+        pending: set[Future] = set()
+        while True:
+            pbar.n = 100 * done.completion()
+            pbar.refresh()
+
+            completed, pending = wait(
+                pending, timeout=config.wait_timeout, return_when=FIRST_COMPLETED
+            )
+
+            for future in completed:
+                result += future.result()
+                # we could check outside the loop, but that means more
+                # submissions if the stopping criterion is unstable
+                if done(result):
+                    return result
+
+            # Ensure that we always have n_submitted_jobs in the queue or running
+            for _ in range(n_submitted_jobs - len(pending)):
+                p = np.random.permutation(u.data.indices)
+                future = executor.submit(
+                    permutation_montecarlo_shapley_rollout, u, p, truncation, algorithm
+                )
+                pending.add(future)
 
 
 def _combinatorial_montecarlo_shapley(
@@ -241,86 +337,3 @@ def combinatorial_montecarlo_shapley(
         config=config,
     )
     return map_reduce_job()
-
-
-def _permutation_montecarlo_shapley_rollout(
-    u: Utility,
-    permutation: NDArray[np.int_],
-    *,
-    truncation: TruncationPolicy,
-    algorithm_name: str,
-    additional_indices: Optional[NDArray[np.int_]] = None,
-    use_default_scorer_value: bool = True,
-) -> ValuationResult:
-    """
-    A truncated version of a permutation-based MC estimator.
-    values. It generates a permutation p[i] of the class label indices and iterates over
-    all subsets starting from the empty set to the full set of indices.
-
-    :param u: Utility object containing model, data, and scoring function.
-    :param permutation: Permutation of indices to be considered.
-    :param truncation: Callable which decides whether to interrupt processing a
-        permutation and set all subsequent marginals to zero.
-    :param additional_indices: Set of additional indices for data points which should be
-        always considered.
-    :param use_default_scorer_value: Use default scorer value even if additional_indices
-        is not None.
-    :return: ValuationResult object containing computed data values.
-    """
-    if (
-        additional_indices is not None
-        and len(np.intersect1d(permutation, additional_indices)) > 0
-    ):
-        raise ValueError(
-            "The class label set and the complement set have to be disjoint."
-        )
-
-    result = ValuationResult.zeros(
-        algorithm=algorithm_name,
-        indices=u.data.indices,
-        data_names=u.data.data_names,
-    )
-
-    prev_score = (
-        u.default_score
-        if (
-            use_default_scorer_value
-            or additional_indices is None
-            or additional_indices is not None
-            and len(additional_indices) == 0
-        )
-        else u(additional_indices)
-    )
-
-    truncation_u = u
-    if additional_indices is not None:
-        # hack to calculate the correct value in reset.
-        truncation_indices = np.sort(np.concatenate((permutation, additional_indices)))
-        truncation_u = Utility(
-            u.model,
-            Dataset(
-                u.data.x_train[truncation_indices],
-                u.data.y_train[truncation_indices],
-                u.data.x_test,
-                u.data.y_test,
-            ),
-            u.scorer,
-        )
-    truncation.reset(truncation_u)
-
-    is_terminated = False
-    for i, idx in enumerate(permutation):
-        if is_terminated or (is_terminated := truncation(i, prev_score)):
-            score = prev_score
-        else:
-            score = u(
-                np.concatenate((permutation[: i + 1], additional_indices))
-                if additional_indices is not None and len(additional_indices) > 0
-                else permutation[: i + 1]
-            )
-
-        marginal = score - prev_score
-        result.update(idx, marginal)
-        prev_score = score
-
-    return result
