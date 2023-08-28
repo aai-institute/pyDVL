@@ -66,7 +66,7 @@ def compute_classwise_shapley_values(
         label.
     :param n_jobs: Number of parallel jobs to run.
     :param config: Parallel configuration.
-    :param progress: Whether to display progress bars for each job.
+    :param progress: Whether to display a progress bar.
     :return: ValuationResult object containing computed data values.
     """
 
