@@ -11,8 +11,9 @@ from pymemcache.client import Client
 from sklearn import datasets
 from sklearn.utils import Bunch
 
-from pydvl.utils import ClasswiseScorer, Dataset, MemcachedClientConfig, Utility
+from pydvl.utils import Dataset, MemcachedClientConfig, Utility
 from pydvl.utils.parallel.backend import available_cpus
+from pydvl.value.shapley.classwise import ClasswiseScorer
 from tests.misc import ClosedFormLinearClassifier
 
 if TYPE_CHECKING:
