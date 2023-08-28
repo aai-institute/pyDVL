@@ -47,9 +47,9 @@ def compute_classwise_shapley_values(
     progress: bool = False,
 ) -> ValuationResult:
     """
-    Computes the classwise Shapley value by parallel processing. Independent workers
-    are spawned to process the data in parallel. Once the data is aggregated, the values
-    can be optionally normalized, depending on ``normalize_values``.
+    Computes the classwise Shapley values as described in
+    footcite:t:`schoch_csshapley_2022`. The values can be optionally normalized,
+    depending on ``normalize_values``.
 
     :param u: Utility object containing model, data, and scoring function. The scoring
         function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
