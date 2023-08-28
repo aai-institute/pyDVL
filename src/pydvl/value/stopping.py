@@ -136,7 +136,7 @@ class StoppingCriterion(abc.ABC):
         """
         if self.converged.size == 0:
             return 0.0
-        return np.mean(self.converged).item()
+        return float(np.mean(self.converged).item())
 
     @property
     def converged(self) -> NDArray[np.bool_]:
