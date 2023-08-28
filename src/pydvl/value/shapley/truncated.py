@@ -1,15 +1,13 @@
 import abc
 import logging
-from concurrent.futures import FIRST_COMPLETED, wait
+from typing import cast
 
 import numpy as np
 from deprecate import deprecated
 
 from pydvl.utils import ParallelConfig, Utility, running_moments
-from pydvl.utils.parallel.backend import effective_n_jobs, init_parallel_backend
-from pydvl.utils.parallel.futures import init_executor
 from pydvl.value import ValuationResult
-from pydvl.value.stopping import MaxChecks, StoppingCriterion
+from pydvl.value.stopping import StoppingCriterion
 
 __all__ = [
     "TruncationPolicy",
@@ -28,10 +26,8 @@ class TruncationPolicy(abc.ABC):
     """A policy for deciding whether to stop computing marginals in a
     permutation.
 
-    Statistics are kept on the number of calls and truncations as
-    [n_calls][pydvl.value.shapley.truncated.TruncationPolicy.n_calls] and
-    [n_truncations][pydvl.value.shapley.truncated.TruncationPolicy.n_truncations]
-    respectively.
+    Statistics are kept on the number of calls and truncations as `n_calls` and
+    `n_truncations` respectively.
 
     Attributes:
         n_calls: Number of calls to the policy.
@@ -85,6 +81,13 @@ class NoTruncation(TruncationPolicy):
 
 class FixedTruncation(TruncationPolicy):
     """Break a permutation after computing a fixed number of marginals.
+
+    The experiments in Appendix B of [@ghorbani_data_2019] show that when the
+    training set size is large enough, one can simply truncate the iteration
+    over permutations after a fixed number of steps. This happens because beyond
+    a certain number of samples in a training set, the model becomes insensitive
+    to new ones. Alas, this strongly depends on the data distribution and the
+    model and there is no automatic way of estimating this number.
 
     Args:
         u: Utility object with model, data, and scoring function
@@ -171,34 +174,10 @@ class BootstrapTruncation(TruncationPolicy):
         self.variance = self.mean = 0
 
 
-def _permutation_montecarlo_one_step(
-    u: Utility,
-    truncation: TruncationPolicy,
-    algorithm: str,
-) -> ValuationResult:
-    # Avoid circular imports
-    from .montecarlo import _permutation_montecarlo_shapley
-
-    result = _permutation_montecarlo_shapley(
-        u,
-        done=MaxChecks(1),
-        truncation=truncation,
-        algorithm_name=algorithm,
-    )
-    nans = np.isnan(result.values).sum()
-    if nans > 0:
-        logger.warning(
-            f"{nans} NaN values in current permutation, ignoring. "
-            "Consider setting a default value for the Scorer"
-        )
-        result = ValuationResult.empty(algorithm="truncated_montecarlo_shapley")
-    return result
-
-
 @deprecated(
     target=True,
-    deprecated_in="0.6.1",
-    remove_in="0.7.0",
+    deprecated_in="0.7.0",
+    remove_in="0.8.0",
     args_mapping=dict(coordinator_update_period=None, worker_update_period=None),
 )
 def truncated_montecarlo_shapley(
@@ -211,31 +190,14 @@ def truncated_montecarlo_shapley(
     coordinator_update_period: int = 10,
     worker_update_period: int = 5,
 ) -> ValuationResult:
-    """Monte Carlo approximation to the Shapley value of data points.
-
-    This implements the permutation-based method described in
-    [@ghorbani_data_2019]. It is a Monte Carlo estimate of the sum
-    over all possible permutations of the index set, with a double stopping
-    criterion.
+    """
+    !!! Warning
+        This method is deprecated and only a wrapper for
+        [permutation_montecarlo_shapley][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley].
 
     !!! Todo
         Think of how to add Robin-Gelman or some other more principled stopping
         criterion.
-
-    Instead of naively implementing the expectation, we sequentially add points
-    to a dataset from a permutation and incrementally compute marginal utilities.
-    We stop computing marginals for a given permutation based on a
-    [TruncationPolicy][pydvl.value.shapley.truncated.TruncationPolicy].
-    [@ghorbani_data_2019] mention two policies: one that stops after a certain
-    fraction of marginals are computed, implemented in
-    [FixedTruncation][pydvl.value.shapley.truncated.FixedTruncation], and one
-    that stops if the last computed utility ("score") is close to the total
-    utility using the standard deviation of the utility as a measure of proximity,
-    implemented in
-    [BootstrapTruncation][pydvl.value.shapley.truncated.BootstrapTruncation].
-
-    We keep sampling permutations and updating all shapley values until the
-    [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] returns `True`.
 
     Args:
         u: Utility object with model, data, and scoring function
@@ -246,57 +208,14 @@ def truncated_montecarlo_shapley(
         config: Object configuring parallel computation, with cluster address,
             number of cpus, etc.
         n_jobs: Number of permutation monte carlo jobs to run concurrently.
-        coordinator_update_period: in seconds. How often to check the
-            accumulated results from the workers for convergence.
-        worker_update_period: interval in seconds between different updates to
-            and from the coordinator
-
     Returns:
         Object with the data values.
     """
-    algorithm = "truncated_montecarlo_shapley"
+    from pydvl.value.shapley.montecarlo import permutation_montecarlo_shapley
 
-    parallel_backend = init_parallel_backend(config)
-    u = parallel_backend.put(u)
-    # This represents the number of jobs that are running
-    n_jobs = effective_n_jobs(n_jobs, config)
-    # This determines the total number of submitted jobs
-    # including the ones that are running
-    n_submitted_jobs = 2 * n_jobs
-
-    accumulated_result = ValuationResult.zeros(algorithm=algorithm)
-
-    with init_executor(max_workers=n_jobs, config=config) as executor:
-        futures = set()
-        # Initial batch of computations
-        for _ in range(n_submitted_jobs):
-            future = executor.submit(
-                _permutation_montecarlo_one_step,
-                u,
-                truncation,
-                algorithm,
-            )
-            futures.add(future)
-        while futures:
-            # Wait for the next futures to complete.
-            completed_futures, futures = wait(
-                futures, timeout=60, return_when=FIRST_COMPLETED
-            )
-            for future in completed_futures:
-                accumulated_result += future.result()
-                if done(accumulated_result):
-                    break
-            if done(accumulated_result):
-                break
-            # Submit more computations
-            # The goal is to always have `n_jobs`
-            # computations running
-            for _ in range(n_submitted_jobs - len(futures)):
-                future = executor.submit(
-                    _permutation_montecarlo_one_step,
-                    u,
-                    truncation,
-                    algorithm,
-                )
-                futures.add(future)
-    return accumulated_result
+    return cast(
+        ValuationResult,
+        permutation_montecarlo_shapley(
+            u, done=done, truncation=truncation, config=config, n_jobs=n_jobs
+        ),
+    )

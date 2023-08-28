@@ -18,8 +18,8 @@ that can be composed with other stopping criteria.
 
 Alternatively, and in particular if reporting of completion is required, one can
 inherit from this class and implement the abstract methods
-[_check()][pydvl.value.stopping.StoppingCriterion._check] and
-[completion()][pydvl.value.stopping.StoppingCriterion.completion].
+[_check][pydvl.value.stopping.StoppingCriterion._check] and
+[completion][pydvl.value.stopping.StoppingCriterion.completion].
 
 # Composing stopping criteria
 
@@ -34,7 +34,7 @@ these operations affect the behavior of the stopping criteria.
 import abc
 import logging
 from time import time
-from typing import Callable, Optional, Type
+from typing import Callable, Optional, Protocol, Type
 
 import numpy as np
 from deprecate import deprecated, void
@@ -57,9 +57,12 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-StoppingCriterionCallable = Callable[
-    [ValuationResult], Status
-]  #: Signature for a stopping criterion
+
+class StoppingCriterionCallable(Protocol):
+    """Signature for a stopping criterion"""
+
+    def __call__(self, result: ValuationResult) -> Status:
+        ...
 
 
 class StoppingCriterion(abc.ABC):
@@ -69,8 +72,10 @@ class StoppingCriterion(abc.ABC):
     A `StoppingCriterion` is a callable taking a
     [ValuationResult][pydvl.value.result.ValuationResult] and returning a
     [Status][pydvl.value.result.Status]. It also keeps track of individual
-    convergence of values with [converged()][pydvl.value.stopping.StoppingCriterion.converged], and reports the overall
-    completion of the computation with [completion()][pydvl.value.stopping.StoppingCriterion.completion].
+    convergence of values with
+    [converged][pydvl.value.stopping.StoppingCriterion.converged], and reports
+    the overall completion of the computation with
+    [completion][pydvl.value.stopping.StoppingCriterion.completion].
 
     Instances of `StoppingCriterion` can be composed with the binary operators
     `&` (*and*), and `|` (*or*), following the truth tables of
@@ -78,27 +83,30 @@ class StoppingCriterion(abc.ABC):
     also supported. These boolean operations act according to the following
     rules:
 
-    - The results of [_check()][pydvl.value.stopping.StoppingCriterion._check] are combined with the operator. See
-      [Status][pydvl.utils.status.Status] for the truth tables.
-    - The results of [converged()][pydvl.value.stopping.StoppingCriterion.converged] are combined with the operator (returning
-      another boolean array).
-    - The [completion()][pydvl.value.stopping.StoppingCriterion.completion] method returns the min, max, or the complement to 1
-      of the completions of the operands, for AND, OR and NOT respectively. This
-      is required for cases where one of the criteria does not keep track of the
-      convergence of single values, e.g. [MaxUpdates][pydvl.value.stopping.MaxUpdates], because
-      [completion()][pydvl.value.stopping.StoppingCriterion.completion] by default returns the mean of the boolean convergence
-      array.
+    - The results of [_check][pydvl.value.stopping.StoppingCriterion._check] are
+      combined with the operator. See [Status][pydvl.utils.status.Status] for
+      the truth tables.
+    - The results of
+      [converged][pydvl.value.stopping.StoppingCriterion.converged] are combined
+      with the operator (returning another boolean array).
+    - The [completion][pydvl.value.stopping.StoppingCriterion.completion]
+      method returns the min, max, or the complement to 1 of the completions of
+      the operands, for AND, OR and NOT respectively. This is required for cases
+      where one of the criteria does not keep track of the convergence of single
+      values, e.g. [MaxUpdates][pydvl.value.stopping.MaxUpdates], because
+      [completion][pydvl.value.stopping.StoppingCriterion.completion] by
+      default returns the mean of the boolean convergence array.
 
     # Subclassing
 
     Subclassing this class requires implementing a
-    [_check()][pydvl.value.stopping.StoppingCriterion._check] method that
+    [_check][pydvl.value.stopping.StoppingCriterion._check] method that
     returns a [Status][pydvl.utils.status.Status] object based on a given
     [ValuationResult][pydvl.value.result.ValuationResult]. This method should
     update the attribute [_converged][pydvl.value.stopping.StoppingCriterion._converged],
     which is a boolean array indicating whether the value for each index has
     converged. When this does not make sense for a particular stopping criterion,
-    [completion()][pydvl.value.stopping.StoppingCriterion.completion] should be
+    [completion][pydvl.value.stopping.StoppingCriterion.completion] should be
     overridden to provide an overall completion value, since its default
     implementation attempts to compute the mean of
     [_converged][pydvl.value.stopping.StoppingCriterion._converged].
@@ -136,7 +144,7 @@ class StoppingCriterion(abc.ABC):
         for each data point.
 
         Inheriting classes must set the `_converged` attribute in their
-        [_check()][pydvl.value.stopping.StoppingCriterion._check].
+        [_check][pydvl.value.stopping.StoppingCriterion._check].
 
         Returns:
             A boolean array indicating whether the values have converged for
@@ -149,7 +157,7 @@ class StoppingCriterion(abc.ABC):
         return type(self).__name__
 
     def __call__(self, result: ValuationResult) -> Status:
-        """Calls [_check()][pydvl.value.stopping.StoppingCriterion._check], maybe updating the result."""
+        """Calls [_check][pydvl.value.stopping.StoppingCriterion._check], maybe updating the result."""
         if len(result) == 0:
             logger.warning(
                 "At least one iteration finished but no results where generated. "
@@ -211,7 +219,7 @@ def make_criterion(
     class WrappedCriterion(StoppingCriterion):
         def __init__(self, modify_result: bool = True):
             super().__init__(modify_result=modify_result)
-            self._name = name or fun.__name__
+            self._name = name or getattr(fun, "__name__", "WrappedCriterion")
 
         def _check(self, result: ValuationResult) -> Status:
             return fun(result)
@@ -238,18 +246,18 @@ class AbsoluteStandardError(StoppingCriterion):
     r"""Determine convergence based on the standard error of the values.
 
     If $s_i$ is the standard error for datum $i$ and $v_i$ its value, then this
-    criterion returns [Converged][pydvl.utils.status.Status.Converged] if
+    criterion returns [Converged][pydvl.utils.status.Status] if
     $s_i < \epsilon$ for all $i$ and a threshold value $\epsilon \gt 0$.
 
     Args:
         threshold: A value is considered to have converged if the standard
             error is below this value. A way of choosing it is to pick some
-            percentage of the range of the values. For Shapley values this is the
-            difference between the maximum and minimum of the utility function (to
-            see this substitute the maximum and minimum values of the utility into
-            the marginal contribution formula).
+            percentage of the range of the values. For Shapley values this is
+            the difference between the maximum and minimum of the utility
+            function (to see this substitute the maximum and minimum values of
+            the utility into the marginal contribution formula).
         fraction: The fraction of values that must have converged for the
-            criterion to return [Converged][pydvl.utils.status.Status.Converged].
+            criterion to return [Converged][pydvl.utils.status.Status].
         burn_in: The number of iterations to ignore before checking for
             convergence. This is required because computations typically start
             with zero variance, as a result of using
@@ -321,11 +329,15 @@ class MaxUpdates(StoppingCriterion):
     """Terminate if any number of value updates exceeds or equals the given
     threshold.
 
+    !!! Note
+        If you want to ensure that **all** values have been updated, you
+        probably want [MinUpdates][pydvl.value.stopping.MinUpdates] instead.
+
     This checks the `counts` field of a
-    [ValuationResult][pydvl.value.result.ValuationResult], i.e. the number of times that
-    each index has been updated. For powerset samplers, the maximum of this
-    number coincides with the maximum number of subsets sampled. For permutation
-    samplers, it coincides with the number of permutations sampled.
+    [ValuationResult][pydvl.value.result.ValuationResult], i.e. the number of
+    times that each index has been updated. For powerset samplers, the maximum
+    of this number coincides with the maximum number of subsets sampled. For
+    permutation samplers, it coincides with the number of permutations sampled.
 
     Args:
         n_updates: Threshold: if `None`, no _check is performed,

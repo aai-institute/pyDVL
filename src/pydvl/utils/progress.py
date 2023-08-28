@@ -1,3 +1,10 @@
+"""
+!!! Warning
+    This module is deprecated and will be removed in a future release.
+    It implements a wrapper for the [tqdm](https://tqdm.github.io/) progress bar
+    iterator for easy toggling, but this functionality is already provided by
+    the `disable` argument of `tqdm`.
+"""
 import collections.abc
 from typing import Iterable, Iterator, Union
 
@@ -52,7 +59,7 @@ class MockProgress(collections.abc.Iterator):
 
 
 def maybe_progress(
-    it: Union[int, Iterable, Iterator], display: bool = False, **kwargs: dict
+    it: Union[int, Iterable, Iterator], display: bool = False, **kwargs
 ) -> Union[tqdm, MockProgress]:
     """Returns either a tqdm progress bar or a mock object which wraps the
     iterator as well, but ignores any accesses to methods or properties.

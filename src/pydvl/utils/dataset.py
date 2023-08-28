@@ -182,8 +182,8 @@ class Dataset:
         mapping the training data indices into test data indices
         inside [get_test_data()][pydvl.utils.dataset.Dataset.get_test_data]:
 
-        Examples:
-
+        ??? Example
+            ```pycon
             >>> from pydvl.utils import Dataset
             >>> import numpy as np
             >>> class DatasetWithTestDataIndices(Dataset):
@@ -201,6 +201,7 @@ class Dataset:
             >>> indices = np.random.choice(dataset.indices, 30, replace=False)
             >>> _ = dataset.get_training_data(indices)
             >>> _ = dataset.get_test_data(indices)
+            ```
 
         Args:
             indices: Optional indices into the test data. This argument is
@@ -252,10 +253,10 @@ class Dataset:
         train_size: float = 0.8,
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
-        **kwargs: dict,
+        **kwargs,
     ) -> "Dataset":
         """Constructs a [Dataset][pydvl.utils.Dataset] object from a
-        [Bunch][sklearn.utils.Bunch], as returned by the `load_*` functions in
+        [sklearn.utils.Bunch][], as returned by the `load_*` functions in
         [sklearn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html).
 
         Args:
@@ -305,7 +306,7 @@ class Dataset:
         train_size: float = 0.8,
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
-        **kwargs: dict,
+        **kwargs,
     ) -> "Dataset":
         """Constructs a [Dataset][pydvl.utils.Dataset] object from X and y numpy arrays  as
         returned by the `make_*` functions in [sklearn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
@@ -352,7 +353,7 @@ class GroupedDataset(Dataset):
         target_names: Optional[Sequence[str]] = None,
         group_names: Optional[Sequence[str]] = None,
         description: Optional[str] = None,
-        **kwargs: dict,
+        **kwargs,
     ):
         """Class for grouping datasets.
 
@@ -451,7 +452,7 @@ class GroupedDataset(Dataset):
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
         data_groups: Optional[Sequence] = None,
-        **kwargs: dict,
+        **kwargs,
     ) -> "GroupedDataset":
         """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from a scikit-learn bunch
         as returned by the `load_*` functions in `sklearn toy datasets
@@ -507,7 +508,7 @@ class GroupedDataset(Dataset):
         random_state: Optional[int] = None,
         stratify_by_target: bool = False,
         data_groups: Optional[Sequence] = None,
-        **kwargs: dict,
+        **kwargs,
     ) -> "Dataset":
         """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from X and y numpy arrays
         as returned by the `make_*` functions in `sklearn generated datasets

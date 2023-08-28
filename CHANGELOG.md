@@ -2,10 +2,17 @@
 
 ## Unreleased
 
+- Made ray an optional dependency, relying on joblib as default parallel backend
+  [PR #408](https://github.com/appliedAI-Initiative/pyDVL/pull/408)
+- Enabled parallel computation for Leave-One-Out values
+  [PR #406](https://github.com/appliedAI-Initiative/pyDVL/pull/406)
+- Fixes to parallel computation of generic semi-values: properly handle all
+  samplers and stopping criteria, irrespective of parallel backend
+  [PR #372](https://github.com/appliedAI-Initiative/pyDVL/pull/372)
 - Optimises memory usage in IF calculation
   [PR #375](https://github.com/appliedAI-Initiative/pyDVL/pull/376)
 - **Breaking Changes**
-  Returns information about hessian inversion to compute_influence_factors,
+  Return information about hessian inversion from compute_influence_factors,
   thus changing signature
   [PR #375](https://github.com/appliedAI-Initiative/pyDVL/pull/376)
 - Fix adding valuation results with overlapping indices and different lengths
@@ -17,19 +24,21 @@
 - Major changes to IF interface and functionality
   [PR #278](https://github.com/appliedAI-Initiative/pyDVL/pull/278)
   [PR #394](https://github.com/appliedAI-Initiative/pyDVL/pull/394)
-- **New Method**: Implements solving the hessian equation via spectral low-rank approximation
+- **New Method**: Implements solving the hessian equation via spectral low-rank
+  approximation
   [PR #365](https://github.com/appliedAI-Initiative/pyDVL/pull/365)
 - **Breaking Changes**:
   - Add new joblib backend and set it as default
     instead of the ray backend. Simplify the MapReduceJob class.
     [PR #355](https://github.com/appliedAI-Initiative/pyDVL/pull/355)
-  - Bump torch dependency for influence package to 2.0 [PR #365](https://github.com/appliedAI-Initiative/pyDVL/pull/365)
+  - Bump torch dependency for influence package to 2.0
+    [PR #365](https://github.com/appliedAI-Initiative/pyDVL/pull/365)
 - **Bug fix** Fix installation of dev requirements for Python3.10
   [PR #382](https://github.com/appliedAI-Initiative/pyDVL/pull/382)
 - Decouple ray.init from ParallelConfig 
   [PR #373](https://github.com/appliedAI-Initiative/pyDVL/pull/383)
 
-## 0.6.1 - 🏗 Bug fixes and small improvement
+## 0.6.1 - 🏗 Bug fixes and small improvements
 
 - Fix parsing keyword arguments of `compute_semivalues` dispatch function
   [PR #333](https://github.com/appliedAI-Initiative/pyDVL/pull/333)

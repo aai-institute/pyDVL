@@ -19,7 +19,7 @@ def shaded_mean_std(
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
     ax: Optional[Axes] = None,
-    **kwargs: dict,
+    **kwargs,
 ) -> Axes:
     """The usual mean +- std deviation plot to aggregate runs of experiments.
 

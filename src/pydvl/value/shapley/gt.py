@@ -159,7 +159,7 @@ def group_testing_shapley(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
-    **options: dict,
+    **options,
 ) -> ValuationResult:
     """Implements group testing for approximation of Shapley values as described
     in [@jia_efficient_2019].

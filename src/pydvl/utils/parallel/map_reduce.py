@@ -32,17 +32,17 @@ class MapReduceJob(Generic[T, R]):
         reduce_func: Function that will be applied to the results of
             `map_func` to reduce them.
         map_kwargs: Keyword arguments that will be passed to `map_func` in
-            each job. Alternatively, one can use
-            [itertools.partial][itertools.partial].
+            each job. Alternatively, one can use [functools.partial][].
         reduce_kwargs: Keyword arguments that will be passed to `reduce_func`
-            in each job. Alternatively, one can use
-            [itertools.partial][itertools.partial].
+            in each job. Alternatively, one can use [functools.partial][].
         config: Instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
             with cluster address, number of cpus, etc.
         n_jobs: Number of parallel jobs to run. Does not accept 0
 
-    Examples:
+    ??? Example
         A simple usage example with 2 jobs:
+
+        ``` pycon
         >>> from pydvl.utils.parallel import MapReduceJob
         >>> import numpy as np
         >>> map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
@@ -53,8 +53,10 @@ class MapReduceJob(Generic[T, R]):
         ... )
         >>> map_reduce_job()
         10
+        ```
 
         When passed a single object as input, it will be repeated for each job:
+        ``` pycon
         >>> from pydvl.utils.parallel import MapReduceJob
         >>> import numpy as np
         >>> map_reduce_job: MapReduceJob[int, np.ndarray] = MapReduceJob(
@@ -65,6 +67,7 @@ class MapReduceJob(Generic[T, R]):
         ... )
         >>> map_reduce_job()
         10
+        ```
     """
 
     def __init__(

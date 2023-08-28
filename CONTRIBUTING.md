@@ -120,7 +120,7 @@ python setup.py sdist bdist_wheel
 ## Notebooks
 
 We use notebooks both as documentation (copied over to `docs/examples`) and as
-integration tests. All notebooks in the `notebooks` directory are be executed
+integration tests. All notebooks in the `notebooks` directory are executed
 during the test run. Because run times are typically too long for large
 datasets, you must check for the `CI` environment variable to work
 with smaller ones. For example, you can select a subset of the data:
@@ -179,27 +179,37 @@ Examples for hidden imports and plots are available in the notebooks, e.g. in
 ## Documentation
 
 API documentation and examples from notebooks are built with
-[mkdocs](https://www.mkdocs.org/) by tox.
+[mkdocs](https://www.mkdocs.org/).
 
 Notebooks are an integral part of the documentation as well, please read
 [the section on notebooks](#notebooks) above.
 
-Use the **docs** tox environment to build the documentation the same way it is
+Use the following command to build the documentation the same way it is
 done in CI:
 
 ```bash
-tox -e docs
+mkdocs build
 ```
 
-Locally, you can use the **docs-dev** tox environment to continuously rebuild
-documentation on changes to the `docs` folder:
+Locally, you can use this command instead to continuously rebuild
+documentation on changes to the `docs` and `src` folder:
 
 ```bash
-tox -e docs-dev
+mkdocs serve
 ```
 
 This will rebuild the documentation on changes to `.md` files inside `docs`,
 notebooks and python files.
+
+
+### Adding new pages
+
+Navigation is configured in `mkdocs.yaml` using the nav section. We use the
+plugin [mkdoc-literate-nav](https://oprypin.github.io/mkdocs-literate-nav/)
+which allows fine-grained control of the navigation structure. However, most
+pages are explicitly listed and manually arranged in the `nav` section of the
+configuration.
+
 
 ### Using bibliography
 
@@ -471,10 +481,10 @@ a GitHub release.
 #### Publish to TestPyPI
 
 We use [bump2version](https://pypi.org/project/bump2version/) to bump
-the build part of the version number and publish a package to TestPyPI from CI.
+the build part of the version number without commiting or tagging the change
+and then publish a package to TestPyPI from CI using Twine. The version
+has the github run number appended. 
 
-To do that, we use 2 different tox environments:
-
-- **bump-dev-version**: Uses bump2version to bump the dev version,
-  without committing the new version or creating a corresponding git tag.
-- **publish-test-package**: Builds and publishes a package to TestPyPI
+For more details refer to the
+[.github/workflows/publish.yaml](.github/workflows/publish.yaml) and
+[.github/workflows/tox.yaml](.github/workflows/tox.yaml) files.
