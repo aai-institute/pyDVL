@@ -118,12 +118,11 @@ class RelativeTruncation(TruncationPolicy):
     def _check(self, idx: int, score: float) -> bool:
         return np.allclose(score, self.total_utility, rtol=self.rtol)
 
-    def reset(self, u: Optional[Utility] = None) -> float:
+    def reset(self, u: Optional[Utility] = None):
         if u is None:
             u = self._u
 
         self.total_utility = u(u.data.indices)
-        return self.total_utility
 
 
 class BootstrapTruncation(TruncationPolicy):
