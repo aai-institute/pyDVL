@@ -222,10 +222,6 @@ class Dataset:
         """
         return self._indices
 
-    @indices.setter
-    def indices(self, indices: np.ndarray):
-        self._indices = indices
-
     @property
     def data_names(self):
         """Names of each individual datapoint.

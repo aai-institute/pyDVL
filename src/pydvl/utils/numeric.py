@@ -189,7 +189,7 @@ def random_powerset_group_conditional(
             rng.shuffle(subset)
             yield subset
         else:
-            yield np.array([])
+            yield np.array([], dtype=int)
 
 
 def random_subset_of_size(s: NDArray[T], size: int) -> NDArray[T]:

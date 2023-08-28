@@ -41,7 +41,7 @@ import numpy as np
 from numpy.typing import NDArray
 from tqdm import tqdm
 
-from pydvl.utils import Utility, random_powerset_group_conditional
+from pydvl.utils import Dataset, Utility, random_powerset_group_conditional
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import MapReduceJob
@@ -261,14 +261,21 @@ def _permutation_montecarlo_shapley_rollout(
         else u(additional_indices)
     )
 
-    # hack to calculate the correct value in reset.
+    truncation_u = u
     if additional_indices is not None:
-        old_indices = u.data.indices
-        u.data.indices = np.sort(np.concatenate((permutation, additional_indices)))
-        truncation.reset(u)
-        u.data.indices = old_indices
-    else:
-        truncation.reset(u)
+        # hack to calculate the correct value in reset.
+        truncation_indices = np.sort(np.concatenate((permutation, additional_indices)))
+        truncation_u = Utility(
+            u.model,
+            Dataset(
+                u.data.x_train[truncation_indices],
+                u.data.y_train[truncation_indices],
+                u.data.x_test,
+                u.data.y_test,
+            ),
+            u.scorer,
+        )
+    truncation.reset(truncation_u)
 
     is_terminated = False
     for i, idx in enumerate(permutation):
