@@ -172,7 +172,7 @@ def _classwise_shapley_one_step(
 
     for label in unique_labels:
         u.scorer.label = label
-        result += permutation_montecarlo_classwise_shapley(
+        result += _permutation_montecarlo_classwise_shapley(
             u,
             label,
             done=MaxChecks(n_resample_complement_sets),
@@ -389,7 +389,7 @@ class ClasswiseScorer(Scorer):
         return in_cls_score, out_of_cls_score
 
 
-def permutation_montecarlo_classwise_shapley(
+def _permutation_montecarlo_classwise_shapley(
     u: Utility,
     label: int,
     *,
