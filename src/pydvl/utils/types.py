@@ -5,8 +5,9 @@ from __future__ import annotations
 
 import inspect
 from abc import ABCMeta
-from typing import Any, Callable, Protocol, TypeVar
+from typing import Any, Callable, Optional, Protocol, TypeVar, Union
 
+from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
 
 __all__ = ["SupervisedModel", "MapFunction", "ReduceFunction", "NoPublicConstructor"]
@@ -92,3 +93,6 @@ class NoPublicConstructor(ABCMeta):
 
     def create(cls, *args: Any, **kwargs: Any):
         return super().__call__(*args, **kwargs)
+
+
+Seed = Union[int, Generator]
