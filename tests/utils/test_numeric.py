@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from numpy._typing import NDArray
 
 from pydvl.utils.numeric import (
     powerset,
@@ -7,6 +8,7 @@ from pydvl.utils.numeric import (
     random_powerset,
     random_subset_of_size,
     running_moments,
+    sets_are_equal,
 )
 
 
@@ -68,6 +70,37 @@ def test_random_powerset(n, max_subsets):
     )
 
 
+@pytest.mark.parametrize("n, max_subsets", [(10, 2**10)])
+def test_random_powerset_reproducible(n, max_subsets, seed):
+    """
+    Test that the same seeds produce the same results, and different seeds produce
+    different results for method :func:`random_powerset`.
+    """
+    s = np.arange(n)
+    parallel_subset_generators = zip(
+        random_powerset(s, n_samples=max_subsets, seed=seed),
+        random_powerset(s, n_samples=max_subsets, seed=seed),
+    )
+
+    n_collisions = sum(map(lambda t: sets_are_equal(*t), parallel_subset_generators))
+    assert n_collisions == max_subsets
+
+
+@pytest.mark.parametrize("n, max_subsets", [(10, 2**10)])
+def test_random_powerset_stochastic(n, max_subsets, seed, seed_alt, collision_tol):
+    """
+    Test that the same seeds produce the same results, and different seeds produce
+    different results for method :func:`random_powerset`.
+    """
+    s = np.arange(n)
+    parallel_subset_generators = zip(
+        random_powerset(s, n_samples=max_subsets, seed=seed),
+        random_powerset(s, n_samples=max_subsets, seed=seed_alt),
+    )
+    n_collisions = sum(map(lambda t: sets_are_equal(*t), parallel_subset_generators))
+    assert n_collisions / max_subsets < collision_tol
+
+
 @pytest.mark.parametrize(
     "n, size, exception",
     [(0, 0, None), (0, 1, ValueError), (10, 0, None), (10, 3, None), (1000, 40, None)],
@@ -81,6 +114,36 @@ def test_random_subset_of_size(n, size, exception):
         ss = random_subset_of_size(s, size=size)
         assert len(ss) == size
         assert np.all([x in s for x in ss])
+
+
+@pytest.mark.parametrize(
+    "n, size",
+    [(10, 3), (1000, 40)],
+)
+def test_random_subset_of_size_stochastic(n, size, seed, seed_alt):
+    """
+    Test that the same seeds produce the same results, and different seeds produce
+    different results for method :func:`random_subset_of_size`.
+    """
+    s = np.arange(n)
+    subset_1 = random_subset_of_size(s, size=size, seed=seed)
+    subset_2 = random_subset_of_size(s, size=size, seed=seed_alt)
+    assert not sets_are_equal(subset_1, subset_2)
+
+
+@pytest.mark.parametrize(
+    "n, size",
+    [(10, 3), (1000, 40)],
+)
+def test_random_subset_of_size_stochastic(n, size, seed):
+    """
+    Test that the same seeds produce the same results, and different seeds produce
+    different results for method :func:`random_subset_of_size`.
+    """
+    s = np.arange(n)
+    subset_1 = random_subset_of_size(s, size=size, seed=seed)
+    subset_2 = random_subset_of_size(s, size=size, seed=seed)
+    assert sets_are_equal(subset_1, subset_2)
 
 
 @pytest.mark.parametrize(
