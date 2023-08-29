@@ -3,6 +3,7 @@ transformations. Some of it probably belongs elsewhere.
 """
 from __future__ import annotations
 
+import functools
 import inspect
 from abc import ABCMeta
 from typing import Any, Callable, Optional, Protocol, TypeVar, Union
@@ -60,6 +61,7 @@ def maybe_add_argument(fun: Callable, new_arg: str):
     if new_arg in params.keys():
         return fun
 
+    @functools.wraps(fun)
     def wrapper(*args, **kwargs):
         try:
             del kwargs[new_arg]
@@ -96,3 +98,23 @@ class NoPublicConstructor(ABCMeta):
 
 
 Seed = Union[int, Generator]
+
+
+def ensure_seed_sequence(
+    seed: Optional[Union[Seed, SeedSequence]] = None
+) -> SeedSequence:
+    """
+    If the passed seed is a SeedSequence object then it is returned as is. If it is
+    a Generator the internal protected seed sequence from the generator gets extracted.
+    Otherwise, a new SeedSequence object is created from the passed (optional) seed.
+
+    :param seed: Either an int, a Generator object a SeedSequence object or None.
+
+    :returns: A SeedSequence object.
+    """
+    if isinstance(seed, SeedSequence):
+        return seed
+    elif isinstance(seed, Generator):
+        return seed.bit_generator._seed_seq  # noqa
+    else:
+        return SeedSequence(seed)

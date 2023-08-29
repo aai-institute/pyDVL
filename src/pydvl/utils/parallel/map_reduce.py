@@ -1,12 +1,21 @@
 from itertools import accumulate, repeat
 from typing import Any, Collection, Dict, Generic, List, Optional, TypeVar, Union
 
+import numpy as np
 from joblib import Parallel, delayed
+from numpy.random import SeedSequence
 from numpy.typing import NDArray
 
 from ..config import ParallelConfig
-from ..types import MapFunction, ReduceFunction, maybe_add_argument
+from ..types import (
+    MapFunction,
+    ReduceFunction,
+    Seed,
+    ensure_seed_sequence,
+    maybe_add_argument,
+)
 from .backend import init_parallel_backend
+from .check import check_fn_accepts_parameter
 
 __all__ = ["MapReduceJob"]
 
@@ -98,19 +107,41 @@ class MapReduceJob(Generic[T, R]):
 
     def __call__(
         self,
+        seed: Optional[Seed] = None,
     ) -> R:
+        """
+        Runs the map-reduce job.
+
+        :param seed: Either an instance of a numpy random number generator or a seed
+            for it.
+
+        :return: The result of the reduce function.
+        """
         if self.config.backend == "joblib":
             backend = "loky"
         else:
             backend = self.config.backend
+
         # In joblib the levels are reversed.
         # 0 means no logging and 50 means log everything to stdout
         verbose = 50 - self.config.logging_level
+        seed_seq = ensure_seed_sequence(seed)
         with Parallel(backend=backend, n_jobs=self.n_jobs, verbose=verbose) as parallel:
             chunks = self._chunkify(self.inputs_, n_chunks=self.n_jobs)
+
+            # Allow functions which don't accept or need a seed parameter.
+            lst_add_kwargs: List[Dict[str, Union[int, SeedSequence]]] = [
+                {"job_id": j} for j in range(len(chunks))
+            ]
+            if check_fn_accepts_parameter(self._map_func, "seed"):
+                lst_add_kwargs = [
+                    {**d, **{"seed": seed.entropy}}
+                    for d, seed in zip(lst_add_kwargs, seed_seq.spawn(len(chunks)))
+                ]
+
             map_results: List[R] = parallel(
-                delayed(self._map_func)(next_chunk, job_id=j, **self.map_kwargs)
-                for j, next_chunk in enumerate(chunks)
+                delayed(self._map_func)(next_chunk, **add_kwargs, **self.map_kwargs)
+                for next_chunk, add_kwargs in zip(chunks, lst_add_kwargs)
             )
         reduce_results: R = self._reduce_func(map_results, **self.reduce_kwargs)
         return reduce_results
