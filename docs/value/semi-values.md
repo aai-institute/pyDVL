@@ -54,10 +54,11 @@ some applications. See however the [Banzhaf indices][banzhaf-indices] section
 for an alternative choice of weights which is reported to work better.
 
 ```python
-from pydvl.value import compute_semivalues
+from pydvl.value import *
 
-values = compute_semivalues(
-   u=utility, mode="beta_shapley", done=MaxUpdates(500), alpha=1, beta=16
+utility = Utility(model, data)
+values = compute_beta_shapley_semivalues(
+    u=utility, done=AbsoluteStandardError(threshold=1e-4), alpha=1, beta=16
 )
 ```
 
@@ -84,7 +85,54 @@ The authors of [@wang_data_2022] show that Banzhaf indices are more
 robust to variance in the utility function than Shapley and Beta Shapley values.
 
 ```python
-from pydvl.value import compute_semivalues, MaxUpdates
+from pydvl.value import *
 
-values = compute_semivalues( u=utility, mode="banzhaf", done=MaxUpdates(500))
+utility = Utility(model, data)
+values = compute_banzhaf_semivalues(
+    u=utility, done=AbsoluteStandardError(threshold=1e-4), alpha=1, beta=16
+)
 ```
+
+## General semi-values
+
+As explained above, both Beta Shapley and Banzhaf indices are special cases of
+semi-values. In pyDVL we provide a general method for computing these with any
+combination of the three ingredients that define a semi-value:
+
+- A utility function $u$.
+- A sampling method
+- A weighting scheme $w$.
+
+The utility function is the same as for Shapley values, and the sampling method
+can be any of the types defined in [the samplers module][pydvl.value.sampler].
+For instance, the following snippet is equivalent to the above:
+
+```python
+from pydvl.value import *
+
+data = Dataset(...)
+utility = Utility(model, data)
+values = semivalues(
+    sampler=PermutationSampler(data.indices),
+    u=utility,
+    coefficient=beta_coefficient(alpha=1, beta=16),
+    done=AbsoluteStandardError(threshold=1e-4),
+  )
+```
+
+!!! warning "Careful with permutation sampling"
+    This generic implementation of semi-values allowing for any combination of
+    sampling and weighting schemes is very flexible and, in principle, it
+    recovers the original Shapley value, so that 
+    [compute_shapley_values][pydvl.value.shapley.common.compute_shapley_values]
+    is no longer necessary. However, it loses the optimization in permutation
+    sampling that reuses the utility computation from the last iteration when
+    iterating over a permutation. This doubles the computation requirements (and
+    slightly increases variance) when using permutation sampling, unless [the
+    cache](getting-started/installation.md#setting-up-the-cache) is enabled.
+    In addition,
+    [truncation policies][pydvl.value.shapley.truncated.TruncationPolicy] are
+    not supported for in this generic implementation (as of v0.7.0). For these
+    reasons it is preferable to use
+    [compute_shapley_values][pydvl.value.shapley.common.compute_shapley_values]
+    whenever not computing other semi-values.
