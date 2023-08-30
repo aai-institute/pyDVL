@@ -36,7 +36,17 @@ import abc
 import math
 from enum import Enum
 from itertools import permutations
-from typing import Generic, Iterable, Iterator, Sequence, Tuple, TypeVar, overload
+from typing import (
+    Generic,
+    Iterable,
+    Iterator,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    overload,
+)
 
 import numpy as np
 from deprecate import deprecated, void
@@ -211,18 +221,7 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
 class StochasticSamplerMixin:
     """Mixin class for samplers which use a random number generator."""
 
-    _rng = np.random.default_rng()
-
-    @property
-    def seed(self) -> int:
-        return ensure_seed_sequence(self._rng).entropy
-
-    @seed.setter
-    def seed(self, seed: Seed):
-        """
-        :param seed: Either an instance of a numpy random number generator or a seed
-            for it.
-        """
+    def __init__(self, seed: Optional[Seed] = None):
         self._rng = np.random.default_rng(seed)
 
 
@@ -287,6 +286,10 @@ class UniformSampler(PowersetSampler[T], StochasticSamplerMixin):
 
     """
 
+    def __init__(self, *args, seed: Optional[Seed] = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        StochasticSamplerMixin.__init__(self, seed=seed)
+
     def __iter__(self) -> Iterator[SampleT]:
         while True:
             for idx in self.iterindices():
@@ -321,6 +324,10 @@ class AntitheticSampler(PowersetSampler[T], StochasticSamplerMixin):
     the set $S$, including the index $i$ itself.
     """
 
+    def __init__(self, *args, seed: Optional[Seed] = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        StochasticSamplerMixin.__init__(self, seed=seed)
+
     def __iter__(self) -> Iterator[SampleT]:
         while True:
             for idx in self.iterindices():
@@ -353,6 +360,10 @@ class PermutationSampler(PowersetSampler[T], StochasticSamplerMixin):
        This sampler requires caching to be enabled or computation
        will be doubled wrt. a "direct" implementation of permutation MC
     """
+
+    def __init__(self, *args, seed: Optional[Seed] = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        StochasticSamplerMixin.__init__(self, seed=seed)
 
     def __iter__(self) -> Iterator[SampleT]:
         while True:
@@ -404,6 +415,10 @@ class RandomHierarchicalSampler(PowersetSampler[T], StochasticSamplerMixin):
        This is unnecessary, but a step towards proper stratified sampling.
     """
 
+    def __init__(self, *args, seed: Optional[Seed] = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        StochasticSamplerMixin.__init__(self, seed=seed)
+
     def __iter__(self) -> Iterator[SampleT]:
         while True:
             for idx in self.iterindices():
@@ -419,3 +434,8 @@ class RandomHierarchicalSampler(PowersetSampler[T], StochasticSamplerMixin):
     @classmethod
     def weight(cls, n: int, subset_len: int) -> float:
         return float(2 ** (n - 1)) if n > 0 else 1.0
+
+
+StochasticSampler = Union[
+    UniformSampler, PermutationSampler, RandomHierarchicalSampler, AntitheticSampler
+]

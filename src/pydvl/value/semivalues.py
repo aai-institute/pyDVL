@@ -64,7 +64,12 @@ from tqdm import tqdm
 from pydvl.utils import ParallelConfig, Utility
 from pydvl.utils.types import Seed, ensure_seed_sequence
 from pydvl.value import ValuationResult
-from pydvl.value.sampler import PermutationSampler, PowersetSampler, SampleT
+from pydvl.value.sampler import (
+    PermutationSampler,
+    PowersetSampler,
+    SampleT,
+    StochasticSampler,
+)
 from pydvl.value.stopping import MaxUpdates, StoppingCriterion
 
 __all__ = [
@@ -187,9 +192,8 @@ def semivalues(
                     return result
 
             # Ensure that we always have n_submitted_jobs running
-            n_remaining_slots = n_submitted_jobs - len(pending)
             try:
-                for i in range(n_remaining_slots):
+                for _ in range(n_submitted_jobs - len(pending)):
                     pending.add(
                         executor.submit(
                             _marginal,
@@ -236,7 +240,7 @@ def compute_shapley_semivalues(
     u: Utility,
     *,
     done: StoppingCriterion = MaxUpdates(100),
-    sampler_t: Type[PowersetSampler] = PermutationSampler,
+    sampler_t: Type[StochasticSampler] = PermutationSampler,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -261,10 +265,8 @@ def compute_shapley_semivalues(
 
     :return: Object with the results.
     """
-    sampler_instance = sampler_t(u.data.indices)
-    sampler_instance.seed = seed
     return semivalues(
-        sampler_instance,
+        sampler_t(u.data.indices, seed=seed),
         u,
         shapley_coefficient,
         done,
@@ -278,7 +280,7 @@ def compute_banzhaf_semivalues(
     u: Utility,
     *,
     done: StoppingCriterion = MaxUpdates(100),
-    sampler_t: Type[PowersetSampler] = PermutationSampler,
+    sampler_t: Type[StochasticSampler] = PermutationSampler,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -301,10 +303,8 @@ def compute_banzhaf_semivalues(
 
     :return: Object with the results.
     """
-    sampler_instance = sampler_t(u.data.indices)
-    sampler_instance.seed = seed
     return semivalues(
-        sampler_instance,
+        sampler_t(u.data.indices, seed=seed),
         u,
         banzhaf_coefficient,
         done,
@@ -320,7 +320,7 @@ def compute_beta_shapley_semivalues(
     alpha: float = 1,
     beta: float = 1,
     done: StoppingCriterion = MaxUpdates(100),
-    sampler_t: Type[PowersetSampler] = PermutationSampler,
+    sampler_t: Type[StochasticSampler] = PermutationSampler,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -345,10 +345,8 @@ def compute_beta_shapley_semivalues(
 
     :return: Object with the results.
     """
-    sampler_instance = sampler_t(u.data.indices)
-    sampler_instance.seed = seed
     return semivalues(
-        sampler_instance,
+        sampler_t(u.data.indices, seed=seed),
         u,
         beta_coefficient(alpha, beta),
         done,
@@ -375,7 +373,7 @@ def compute_semivalues(
     *,
     done: StoppingCriterion = MaxUpdates(100),
     mode: SemiValueMode = SemiValueMode.Shapley,
-    sampler_t: Type[PowersetSampler] = PermutationSampler,
+    sampler_t: Type[StochasticSampler] = PermutationSampler,
     n_jobs: int = 1,
     seed: Optional[Seed] = None,
     **kwargs,
@@ -414,8 +412,6 @@ def compute_semivalues(
 
     :return: Object with the results.
     """
-    sampler_instance = sampler_t(u.data.indices)
-    sampler_instance.seed = seed
     if mode == SemiValueMode.Shapley:
         coefficient = shapley_coefficient
     elif mode == SemiValueMode.BetaShapley:
@@ -427,4 +423,11 @@ def compute_semivalues(
     else:
         raise ValueError(f"Unknown mode {mode}")
     coefficient = cast(SVCoefficient, coefficient)
-    return semivalues(sampler_instance, u, coefficient, done, n_jobs=n_jobs, **kwargs)
+    return semivalues(
+        sampler_t(u.data.indices, seed=seed),
+        u,
+        coefficient,
+        done,
+        n_jobs=n_jobs,
+        **kwargs,
+    )

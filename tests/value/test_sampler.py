@@ -1,5 +1,5 @@
 from itertools import takewhile
-from typing import Iterator, List, Type
+from typing import Iterator, List, Type, Union
 
 import numpy as np
 import pytest
@@ -13,6 +13,7 @@ from pydvl.value.sampler import (
     PermutationSampler,
     PowersetSampler,
     RandomHierarchicalSampler,
+    StochasticSampler,
     UniformSampler,
 )
 
@@ -115,12 +116,11 @@ def test_chunkify_permutation(sampler_class):
 
 
 def _create_seeded_sample_iter(
-    sampler_class: Type[PowersetSampler],
+    sampler_class: Type[StochasticSampler],
     indices: List,
     seed: Seed,
 ) -> Iterator:
     max_iterations = len(indices)
-    sampler = sampler_class(np.array(indices))
-    sampler.seed = seed
+    sampler = sampler_class(np.array(indices), seed=seed)
     sample_stream = takewhile(lambda _: sampler.n_samples < max_iterations, sampler)
     return sample_stream
