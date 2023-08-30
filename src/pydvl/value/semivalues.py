@@ -54,7 +54,7 @@ from __future__ import annotations
 import logging
 import math
 from enum import Enum
-from typing import Protocol, Tuple, Type, TypeVar, cast
+from typing import Optional, Protocol, Tuple, Type, TypeVar, cast
 
 import numpy as np
 import scipy as sp
@@ -62,6 +62,7 @@ from deprecate import deprecated
 from tqdm import tqdm
 
 from pydvl.utils import ParallelConfig, Utility
+from pydvl.utils.types import Seed, ensure_seed_seq
 from pydvl.value import ValuationResult
 from pydvl.value.sampler import PermutationSampler, PowersetSampler, SampleT
 from pydvl.value.stopping import MaxUpdates, StoppingCriterion
@@ -186,8 +187,9 @@ def semivalues(
                     return result
 
             # Ensure that we always have n_submitted_jobs running
+            n_remaining_slots = n_submitted_jobs - len(pending)
             try:
-                for _ in range(n_submitted_jobs - len(pending)):
+                for i in range(n_remaining_slots):
                     pending.add(
                         executor.submit(
                             _marginal,
@@ -197,8 +199,7 @@ def semivalues(
                         )
                     )
             except StopIteration:
-                if len(pending) == 0:
-                    return result
+                return result
 
 
 def shapley_coefficient(n: int, k: int) -> float:
@@ -239,6 +240,7 @@ def compute_shapley_semivalues(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     """Computes Shapley values for a given utility function.
 
@@ -252,14 +254,17 @@ def compute_shapley_semivalues(
     :param sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
         for a list.
     :param n_jobs: Number of parallel jobs to use.
+    :param seed: Either an instance of a numpy random number generator or a seed for it.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param progress: Whether to display a progress bar.
 
     :return: Object with the results.
     """
+    sampler_instance = sampler_t(u.data.indices)
+    sampler_instance.seed = seed
     return semivalues(
-        sampler_t(u.data.indices),
+        sampler_instance,
         u,
         shapley_coefficient,
         done,
@@ -277,6 +282,7 @@ def compute_banzhaf_semivalues(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     """Computes Banzhaf values for a given utility function.
 
@@ -288,14 +294,17 @@ def compute_banzhaf_semivalues(
     :param sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
         for a list.
     :param n_jobs: Number of parallel jobs to use.
+    :param seed: Either an instance of a numpy random number generator or a seed for it.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param progress: Whether to display a progress bar.
 
     :return: Object with the results.
     """
+    sampler_instance = sampler_t(u.data.indices)
+    sampler_instance.seed = seed
     return semivalues(
-        sampler_t(u.data.indices),
+        sampler_instance,
         u,
         banzhaf_coefficient,
         done,
@@ -315,6 +324,7 @@ def compute_beta_shapley_semivalues(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     """Computes Beta Shapley values for a given utility function.
 
@@ -328,14 +338,17 @@ def compute_beta_shapley_semivalues(
     :param sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
         for a list.
     :param n_jobs: Number of parallel jobs to use.
+    :param seed: Either an instance of a numpy random number generator or a seed for it.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param progress: Whether to display a progress bar.
 
     :return: Object with the results.
     """
+    sampler_instance = sampler_t(u.data.indices)
+    sampler_instance.seed = seed
     return semivalues(
-        sampler_t(u.data.indices),
+        sampler_instance,
         u,
         beta_coefficient(alpha, beta),
         done,
@@ -364,6 +377,7 @@ def compute_semivalues(
     mode: SemiValueMode = SemiValueMode.Shapley,
     sampler_t: Type[PowersetSampler] = PermutationSampler,
     n_jobs: int = 1,
+    seed: Optional[Seed] = None,
     **kwargs,
 ) -> ValuationResult:
     """Convenience entry point for most common semi-value computations.
@@ -394,12 +408,14 @@ def compute_semivalues(
     :param sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
         for a list.
     :param n_jobs: Number of parallel jobs to use.
+    :param seed: Either an instance of a numpy random number generator or a seed for it.
     :param kwargs: Additional keyword arguments passed to
         :func:`~pydvl.value.semivalues.semivalues`.
 
     :return: Object with the results.
     """
     sampler_instance = sampler_t(u.data.indices)
+    sampler_instance.seed = seed
     if mode == SemiValueMode.Shapley:
         coefficient = shapley_coefficient
     elif mode == SemiValueMode.BetaShapley:
