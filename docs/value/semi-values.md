@@ -120,6 +120,12 @@ values = semivalues(
   )
 ```
 
+Allowing any coefficient can help when experimenting with models which are more
+sensitive to changes in training set size. However, Data Banzhaf indices are
+proven to be the most robust to variance in the utility function, in the sense
+of rank stability, across a range of models and datasets [@wang_data_2022]. 
+
+
 !!! warning "Careful with permutation sampling"
     This generic implementation of semi-values allowing for any combination of
     sampling and weighting schemes is very flexible and, in principle, it
