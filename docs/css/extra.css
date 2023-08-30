@@ -111,11 +111,6 @@ body[data-md-color-scheme="slate"] .invertible img {
 }
 
 /* Rendered dataframe from jupyter */
-div.rendered_html {
-    width: 100% !important;
-    overflow-x: scroll;
-}
-
 table.dataframe {
     display: block;
     max-width: -moz-fit-content;
