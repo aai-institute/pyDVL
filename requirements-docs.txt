@@ -8,10 +8,12 @@ mkdocs-bibtex
 mkdocs-gen-files
 mkdocs-git-revision-date-localized-plugin
 mkdocs-glightbox
-mkdocs-jupyter
+mknotebooks>=0.8.0
+pygments
 mkdocs-literate-nav
 mkdocs-material
 mkdocs-section-index
 mkdocs-macros-plugin
 neoteroi-mkdocs  # Needed for card grid on home page
 pypandoc_binary
+GitPython
