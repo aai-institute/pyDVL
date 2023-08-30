@@ -386,7 +386,7 @@ class _WorkItemManagerThread(threading.Thread):
                 # We cancel the future's object references
                 # We cannot cancel a running future object.
                 for future in self.submitted_futures:
-                    ray.cancel(future.object_ref)
+                    ray.cancel(future.object_ref)  # type: ignore
                 # Make sure we do this only once to not waste time looping
                 # on running processes over and over.
                 executor._cancel_futures &= ~CancellationPolicy.RUNNING
