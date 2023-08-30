@@ -8,8 +8,8 @@ from pydvl.utils.numeric import (
     random_powerset,
     random_subset_of_size,
     running_moments,
-    sets_are_equal,
 )
+from pydvl.utils.types import Seed
 
 
 def test_powerset():
@@ -76,13 +76,9 @@ def test_random_powerset_reproducible(n, max_subsets, seed):
     Test that the same seeds produce the same results, and different seeds produce
     different results for method :func:`random_powerset`.
     """
-    s = np.arange(n)
-    parallel_subset_generators = zip(
-        random_powerset(s, n_samples=max_subsets, seed=seed),
-        random_powerset(s, n_samples=max_subsets, seed=seed),
+    n_collisions = _count_random_powerset_generator_collisions(
+        n, max_subsets, seed, seed
     )
-
-    n_collisions = sum(map(lambda t: sets_are_equal(*t), parallel_subset_generators))
     assert n_collisions == max_subsets
 
 
@@ -92,13 +88,35 @@ def test_random_powerset_stochastic(n, max_subsets, seed, seed_alt, collision_to
     Test that the same seeds produce the same results, and different seeds produce
     different results for method :func:`random_powerset`.
     """
+    n_collisions = _count_random_powerset_generator_collisions(
+        n, max_subsets, seed, seed_alt
+    )
+    assert n_collisions / max_subsets < collision_tol
+
+
+def _count_random_powerset_generator_collisions(
+    n: int, max_subsets: int, seed: Seed, seed_alt: Seed
+):
+    """
+    Count the number of collisions between two generators of random subsets of a set
+    with `n` elements, each generating `max_subsets` subsets, using two different seeds.
+
+    :param n: number of elements in the set.
+    :param max_subsets: number of subsets to generate.
+    :param seed: Seed for the first generator.
+    :param seed_alt: Seed for the second generator.
+
+    :return: Number of collisions between the two generators.
+    """
     s = np.arange(n)
     parallel_subset_generators = zip(
         random_powerset(s, n_samples=max_subsets, seed=seed),
         random_powerset(s, n_samples=max_subsets, seed=seed_alt),
     )
-    n_collisions = sum(map(lambda t: sets_are_equal(*t), parallel_subset_generators))
-    assert n_collisions / max_subsets < collision_tol
+    n_collisions = sum(
+        map(lambda t: set(t[0]) == set(t[1]), parallel_subset_generators)
+    )
+    return n_collisions
 
 
 @pytest.mark.parametrize(
@@ -128,7 +146,7 @@ def test_random_subset_of_size_stochastic(n, size, seed, seed_alt):
     s = np.arange(n)
     subset_1 = random_subset_of_size(s, size=size, seed=seed)
     subset_2 = random_subset_of_size(s, size=size, seed=seed_alt)
-    assert not sets_are_equal(subset_1, subset_2)
+    assert set(subset_1) != set(subset_2)
 
 
 @pytest.mark.parametrize(
@@ -143,7 +161,7 @@ def test_random_subset_of_size_stochastic(n, size, seed):
     s = np.arange(n)
     subset_1 = random_subset_of_size(s, size=size, seed=seed)
     subset_2 = random_subset_of_size(s, size=size, seed=seed)
-    assert sets_are_equal(subset_1, subset_2)
+    assert set(subset_1) == set(subset_2)
 
 
 @pytest.mark.parametrize(

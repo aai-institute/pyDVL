@@ -3,9 +3,8 @@ from typing import Iterator, List, Type
 
 import numpy as np
 import pytest
-from numpy._typing import NDArray
 
-from pydvl.utils import powerset, sets_are_equal
+from pydvl.utils import powerset
 from pydvl.utils.types import Seed
 from pydvl.value.sampler import (
     AntitheticSampler,
@@ -56,7 +55,7 @@ def test_proper_reproducible(sampler_class, indices, seed):
     samples_2 = _create_seeded_sample_iter(sampler_class, indices, seed)
 
     for (_, subset_1), (_, subset_2) in zip(samples_1, samples_2):
-        assert sets_are_equal(subset_1, subset_2)
+        assert set(subset_1) == set(subset_2)
 
 
 @pytest.mark.parametrize(
@@ -75,7 +74,7 @@ def test_proper_stochastic(sampler_class, indices, seed, seed_alt):
     samples_2 = _create_seeded_sample_iter(sampler_class, indices, seed_alt)
 
     for (_, subset_1), (_, subset_2) in zip(samples_1, samples_2):
-        assert not sets_are_equal(subset_1, subset_2)
+        assert set(subset_1) != set(subset_2)
 
 
 @pytest.mark.parametrize(

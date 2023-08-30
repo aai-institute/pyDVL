@@ -21,7 +21,6 @@ __all__ = [
     "random_powerset",
     "random_subset_of_size",
     "top_k_value_accuracy",
-    "sets_are_equal",
 ]
 
 T = TypeVar("T", bound=np.generic)
@@ -249,7 +248,3 @@ def top_k_value_accuracy(
     top_k_pred_values = np.argsort(y_pred)[-k:]
     top_k_accuracy = len(np.intersect1d(top_k_exact_values, top_k_pred_values)) / k
     return top_k_accuracy
-
-
-def sets_are_equal(subset_1: NDArray[np.int_], subset_2: NDArray[np.int_]):
-    return list(subset_1) == list(subset_2)
