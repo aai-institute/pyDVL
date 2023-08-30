@@ -237,7 +237,8 @@ class DeterministicUniformSampler(PowersetSampler[T]):
 
     def __iter__(self) -> Iterator[SampleT]:
         for idx in self.iterindices():
-            for subset in powerset(self.complement([idx])):
+            # FIXME: type ignore just necessary for CI ??
+            for subset in powerset(self.complement([idx])):  # type: ignore
                 yield idx, np.array(subset)
                 self._n_samples += 1
 
