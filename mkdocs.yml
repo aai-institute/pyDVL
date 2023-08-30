@@ -1,6 +1,7 @@
 site_name: "pyDVL"
 site_dir: "docs_build"
 site_url: "https://appliedai-initiative.github.io/pyDVL/"
+repo_name: "appliedAI-Initiative/pyDVL"
 repo_url: "https://github.com/appliedAI-Initiative/pyDVL"
 copyright: "Copyright &copy; AppliedAI Institute gGmbH"
 
@@ -11,6 +12,7 @@ watch:
 hooks:
   - build_scripts/copy_notebooks.py
   - build_scripts/copy_changelog.py
+  - build_scripts/modify_binder_link.py
 
 plugins:
   - autorefs
@@ -41,13 +43,17 @@ plugins:
       nav_file: SUMMARY.md
       implicit_index: false
       tab_length: 2
-  - mkdocs-jupyter:
-      include: ["docs/examples/*.ipynb"]
-      remove_tag_config:
+  - mknotebooks:
+      execute: false
+      enable_default_jupyter_cell_styling: false
+      tag_remove_configs:
         remove_cell_tags:
           - hide
         remove_input_tags:
           - hide-input
+      binder: true
+      binder_service_name: "gh"
+      binder_branch: "develop"
   - mkdocstrings:
       enable_inventory: true
       handlers:
@@ -151,6 +157,7 @@ markdown_extensions:
   - markdown_captions
   - md_in_html
   - neoteroi.cards
+  - codehilite
   - toc:
       permalink: True
       toc_depth: 3
