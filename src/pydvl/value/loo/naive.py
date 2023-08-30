@@ -16,4 +16,4 @@ __all__ = ["naive_loo"]
 )
 def naive_loo(u: Utility, *, progress: bool = True, **kwargs) -> ValuationResult:
     """Deprecated. Use [compute_loo][pydvl.value.loo.compute_loo] instead."""
-    pass
+    pass  # type: ignore
