@@ -26,14 +26,17 @@ permutations of $D$. The former conform to the above definition of semi-values,
 while the latter reformulates it as:
 
 $$
-v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
-\tilde{w}( | \sigma_{:i} | )[u(\sigma_{:i} \cup \{i\}) − u(\sigma_{:i})],
+v(i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
+\tilde{w}( | \sigma_{:i} | )[U(\sigma_{:i} \cup \{i\}) − U(\sigma_{:i})],
 $$
 
 where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
-position where $i$ appears (see [Data valuation][computing-data-values] for details), and
-$\tilde{w}(k) = n \choose{n-1}{k} w(k)$ is the weight correction due to the
-reformulation.
+position where $i$ appears (see [Data valuation][computing-data-values] for
+details), and
+
+$$ \tilde{w} (k) = n \binom{n - 1}{k} w (k) $$
+
+is the weight correction due to the reformulation.
 
 !!! Warning
     Both [PermutationSampler][pydvl.value.sampler.PermutationSampler] and
@@ -364,6 +367,13 @@ def compute_beta_shapley_semivalues(
     remove_in="0.8.0",
 )
 class SemiValueMode(str, Enum):
+    """Enumeration of semi-value modes.
+
+    !!! warning "Deprecation notice"
+        This enum and the associated methods are deprecated and will be removed
+        in 0.8.0.
+    """
+
     Shapley = "shapley"
     BetaShapley = "beta_shapley"
     Banzhaf = "banzhaf"
@@ -381,31 +391,30 @@ def compute_semivalues(
 ) -> ValuationResult:
     """Convenience entry point for most common semi-value computations.
 
-    !!! Warning
-       This method is deprecated and will be replaced in 0.8.0 by the more
-       general implementation of
-       [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
-       Use
-       [compute_shapley_semivalues][pydvl.value.semivalues.compute_shapley_semivalues],
-       [compute_banzhaf_semivalues][pydvl.value.semivalues.compute_banzhaf_semivalues], or
-       [compute_beta_shapley_semivalues][pydvl.value.semivalues.compute_beta_shapley_semivalues]
-       instead.
+    !!! warning "Deprecation warning"
+        This method is deprecated and will be replaced in 0.8.0 by the more
+        general implementation of
+        [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
+        Use
+        [compute_shapley_semivalues][pydvl.value.semivalues.compute_shapley_semivalues],
+        [compute_banzhaf_semivalues][pydvl.value.semivalues.compute_banzhaf_semivalues],
+        or
+        [compute_beta_shapley_semivalues][pydvl.value.semivalues.compute_beta_shapley_semivalues]
+        instead.
 
     The modes supported with this interface are the following. For greater
     flexibility use
     [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues]
     directly.
 
-    - [SemiValueMode.Shapley][pydvl.value.semivalues.SemiValueMode.Shapley]:
+    - [SemiValueMode.Shapley][pydvl.value.semivalues.SemiValueMode]:
       Shapley values.
-    - [SemiValueMode.BetaShapley][pydvl.value.semivalues.SemiValueMode.BetaShapley]:
+    - [SemiValueMode.BetaShapley][pydvl.value.semivalues.SemiValueMode]:
       Implements the Beta Shapley semi-value as introduced in [@kwon_beta_2022].
       Pass additional keyword arguments `alpha` and `beta` to set the
       parameters of the Beta distribution (both default to 1).
-    - [SemiValueMode.Banzhaf][SemiValueMode.Banzhaf]: Implements the Banzhaf
-      semi-value as introduced in [@wang_data_2022].
-
-    See [[data-valuation]] for an overview of valuation.
+    - [SemiValueMode.Banzhaf][pydvl.value.semivalues.SemiValueMode]: Implements
+      the Banzhaf semi-value as introduced in [@wang_data_2022].
 
     Args:
         u: Utility object with model, data, and scoring function.
