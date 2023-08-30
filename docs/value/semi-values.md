@@ -4,9 +4,9 @@ title: Semi-values
 
 # Semi-values
 
-SV is a particular case of a more general concept called semi-value,
-which is a generalization to different weighting schemes. A **semi-value** is
-any valuation function with the form:
+SV is a particular case of a more general concept called semi-value, which is a
+generalization to different weighting schemes. A **semi-value** is any valuation
+function with the form:
 
 $$
 v_\text{semi}(i) = \sum_{i=1}^n w(k)
@@ -27,7 +27,7 @@ rank stability in certain situations.
 
 !!! Note
     Shapley values are a particular case of semi-values and can therefore also
-    be computed with the methods described here. However, as of version 0.6.0,
+    be computed with the methods described here. However, as of version 0.7.0,
     we recommend using
     [compute_shapley_values][pydvl.value.shapley.compute_shapley_values]
     instead, in particular because it implements truncation policies for TMCS.
@@ -64,12 +64,12 @@ values = compute_beta_shapley_semivalues(
 
 ## Banzhaf indices
 
-As noted in the section [Problems of Data Values][problems-of-data-values],
-the Shapley value can be very sensitive to variance in the utility function.
-For machine learning applications, where the utility is typically the performance
-when trained on a set $S \subset D$, this variance is often largest
-for smaller subsets $S$. It is therefore reasonable to try reducing
-the relative contribution of these subsets with adequate weights.
+As noted in the section [Problems of Data Values][problems-of-data-values], the
+Shapley value can be very sensitive to variance in the utility function. For
+machine learning applications, where the utility is typically the performance
+when trained on a set $S \subset D$, this variance is often largest for smaller
+subsets $S$. It is therefore reasonable to try reducing the relative
+contribution of these subsets with adequate weights.
 
 One such choice of weights is the Banzhaf index, which is defined as the
 constant:
@@ -130,9 +130,9 @@ values = semivalues(
     iterating over a permutation. This doubles the computation requirements (and
     slightly increases variance) when using permutation sampling, unless [the
     cache](getting-started/installation.md#setting-up-the-cache) is enabled.
-    In addition,
+    In addition, as mentioned above,
     [truncation policies][pydvl.value.shapley.truncated.TruncationPolicy] are
-    not supported for in this generic implementation (as of v0.7.0). For these
+    not supported by this generic implementation (as of v0.7.0). For these
     reasons it is preferable to use
     [compute_shapley_values][pydvl.value.shapley.common.compute_shapley_values]
     whenever not computing other semi-values.
