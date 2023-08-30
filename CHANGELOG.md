@@ -29,7 +29,7 @@
   [PR #365](https://github.com/appliedAI-Initiative/pyDVL/pull/365)
 - **Breaking Changes**:
   - Renamed `semivalues` to `compute_generic_semivalues`
-    [PR #...]()
+    [PR #413](https://github.com/appliedAI-Initiative/pyDVL/pull/413)
   - Add new joblib backend and set it as default
     instead of the ray backend. Simplify the MapReduceJob class.
     [PR #355](https://github.com/appliedAI-Initiative/pyDVL/pull/355)
