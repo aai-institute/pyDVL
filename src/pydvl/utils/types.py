@@ -4,14 +4,16 @@ transformations. Some of it probably belongs elsewhere.
 from __future__ import annotations
 
 import functools
-import inspect
 from abc import ABCMeta
 from typing import Any, Callable, Optional, Protocol, TypeVar, Union
 
 from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
 
+from pydvl.utils.functional import fn_accepts_param_name
+
 __all__ = ["SupervisedModel", "MapFunction", "ReduceFunction", "NoPublicConstructor"]
+
 
 R = TypeVar("R", covariant=True)
 
@@ -57,8 +59,7 @@ def maybe_add_argument(fun: Callable, new_arg: str):
         (and ignore).
     :return: A new function accepting one more keyword argument.
     """
-    params = inspect.signature(fun).parameters
-    if new_arg in params.keys():
+    if fn_accepts_param_name(fun, new_arg):
         return fun
 
     @functools.wraps(fun)
@@ -100,9 +101,7 @@ class NoPublicConstructor(ABCMeta):
 Seed = Union[int, Generator]
 
 
-def ensure_seed_sequence(
-    seed: Optional[Union[Seed, SeedSequence]] = None
-) -> SeedSequence:
+def ensure_seed_seq(seed: Optional[Union[Seed, SeedSequence]] = None) -> SeedSequence:
     """
     If the passed seed is a SeedSequence object then it is returned as is. If it is
     a Generator the internal protected seed sequence from the generator gets extracted.
