@@ -12,7 +12,7 @@ from ..types import (
     MapFunction,
     ReduceFunction,
     Seed,
-    ensure_seed_seq,
+    ensure_seed_sequence,
     maybe_add_argument,
 )
 from .backend import init_parallel_backend
@@ -125,7 +125,7 @@ class MapReduceJob(Generic[T, R]):
         # In joblib the levels are reversed.
         # 0 means no logging and 50 means log everything to stdout
         verbose = 50 - self.config.logging_level
-        seed_seq = ensure_seed_seq(seed)
+        seed_seq = ensure_seed_sequence(seed)
         with Parallel(backend=backend, n_jobs=self.n_jobs, verbose=verbose) as parallel:
             chunks = self._chunkify(self.inputs_, n_chunks=self.n_jobs)
             map_results: List[R] = parallel(

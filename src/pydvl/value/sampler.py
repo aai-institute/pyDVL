@@ -54,7 +54,7 @@ __all__ = [
     "UniformSampler",
 ]
 
-from pydvl.utils.types import Seed, ensure_seed_seq
+from pydvl.utils.types import Seed, ensure_seed_sequence
 
 T = TypeVar("T", bound=np.generic)
 SampleT = Tuple[T, NDArray[T]]
@@ -207,7 +207,7 @@ class StochasticSampler(PowersetSampler[T], abc.ABC):
 
     @property
     def seed(self) -> int:
-        return ensure_seed_seq(self._rng).entropy
+        return ensure_seed_sequence(self._rng).entropy
 
     @seed.setter
     def seed(self, seed: Seed):

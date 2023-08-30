@@ -101,7 +101,9 @@ class NoPublicConstructor(ABCMeta):
 Seed = Union[int, Generator]
 
 
-def ensure_seed_seq(seed: Optional[Union[Seed, SeedSequence]] = None) -> SeedSequence:
+def ensure_seed_sequence(
+    seed: Optional[Union[Seed, SeedSequence]] = None
+) -> SeedSequence:
     """
     If the passed seed is a SeedSequence object then it is returned as is. If it is
     a Generator the internal protected seed sequence from the generator gets extracted.

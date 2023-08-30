@@ -62,7 +62,7 @@ from deprecate import deprecated
 from tqdm import tqdm
 
 from pydvl.utils import ParallelConfig, Utility
-from pydvl.utils.types import Seed, ensure_seed_seq
+from pydvl.utils.types import Seed, ensure_seed_sequence
 from pydvl.value import ValuationResult
 from pydvl.value.sampler import PermutationSampler, PowersetSampler, SampleT
 from pydvl.value.stopping import MaxUpdates, StoppingCriterion
