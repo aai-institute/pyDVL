@@ -102,10 +102,10 @@ def plot_shapley(
     df: pd.DataFrame,
     *,
     level: float = 0.05,
-    ax: plt.Axes = None,
-    title: str = None,
-    xlabel: str = None,
-    ylabel: str = None,
+    ax: Optional[plt.Axes] = None,
+    title: Optional[str] = None,
+    xlabel: Optional[str] = None,
+    ylabel: Optional[str] = None,
 ) -> plt.Axes:
     """Plots the shapley values, as returned from
     [compute_shapley_values()][pydvl.value.shapley.common.compute_shapley_values], with error bars

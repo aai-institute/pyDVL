@@ -110,7 +110,7 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
         self,
         indices: NDArray[T],
         index_iteration: IndexIteration = IndexIteration.Sequential,
-        outer_indices: NDArray[T] = None,
+        outer_indices: NDArray[T] | None = None,
     ):
         """
         Args:

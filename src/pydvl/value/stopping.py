@@ -31,6 +31,8 @@ truth tables of [Status][pydvl.utils.status.Status]. The unary operator `~`
 these operations affect the behavior of the stopping criteria.
 """
 
+from __future__ import annotations
+
 import abc
 import logging
 from time import time
@@ -195,9 +197,9 @@ class StoppingCriterion(abc.ABC):
 
 def make_criterion(
     fun: StoppingCriterionCallable,
-    converged: Callable[[], NDArray[np.bool_]] = None,
-    completion: Callable[[], float] = None,
-    name: str = None,
+    converged: Callable[[], NDArray[np.bool_]] | None = None,
+    completion: Callable[[], float] | None = None,
+    name: str | None = None,
 ) -> Type[StoppingCriterion]:
     """Create a new [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] from a function.
     Use this to enable simpler functions to be composed with bitwise operators
