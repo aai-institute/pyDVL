@@ -53,7 +53,9 @@ jobs:
       with:
         python_version: 3.8
     - name: Install Pandoc
-      run: sudo apt-get update && sudo apt-get install --no-install-recommends --yes pandoc-citeproc pandoc
+      run: |
+        wget https://github.com/jgm/pandoc/releases/download/3.1.6.2/pandoc-3.1.6.2-1-amd64.deb -O pandoc.deb
+        sudo dpkg -i pandoc.deb
     - name: Build Docs
       run: mkdocs build
   base-tests:
