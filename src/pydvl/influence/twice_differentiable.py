@@ -23,8 +23,13 @@ __all__ = [
 ]
 
 TensorType = TypeVar("TensorType", bound=Sequence)
+"""Type variable for tensors, i.e. sequences of numbers"""
+
 ModelType = TypeVar("ModelType", bound="TwiceDifferentiable")
+"""Type variable for twice differentiable models"""
+
 DataLoaderType = TypeVar("DataLoaderType", bound=Iterable)
+"""Type variable for data loaders"""
 
 
 @dataclass(frozen=True)
@@ -94,7 +99,7 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
 
         Returns:
             A tensor representing the Hessian of the model, i.e. the second derivative
-            with respect to the model parameters.
+                with respect to the model parameters.
         """
 
         pass
@@ -123,7 +128,7 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
 
         Returns:
             A matrix representing the implicit matrix-vector product of the model along the given directions.
-            Output shape is [DxM], where \(M\) is the number of elements of `backprop_on`.
+                Output shape is [DxM], where \(M\) is the number of elements of `backprop_on`.
         """
 
 
@@ -159,7 +164,7 @@ class TensorUtilities(Generic[TensorType, ModelType], ABC):
     @staticmethod
     @abstractmethod
     def einsum(equation, *operands) -> TensorType:
-        """Sums the product of the elements of the input :attr:`operands` along dimensions specified using a notation
+        """Sums the product of the elements of the input `operands` along dimensions specified using a notation
         based on the Einstein summation convention.
         """
 
