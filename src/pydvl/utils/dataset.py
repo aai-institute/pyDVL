@@ -256,8 +256,8 @@ class Dataset:
         **kwargs,
     ) -> "Dataset":
         """Constructs a [Dataset][pydvl.utils.Dataset] object from a
-        [sklearn.utils.Bunch][], as returned by the `load_*` functions in
-        [sklearn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html).
+        [sklearn.utils.Bunch][sklearn.utils.Bunch], as returned by the `load_*`
+        functions in [sklearn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html).
 
         Args:
             data: sklearn dataset. The following attributes are supported
@@ -454,9 +454,9 @@ class GroupedDataset(Dataset):
         data_groups: Optional[Sequence] = None,
         **kwargs,
     ) -> "GroupedDataset":
-        """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from a scikit-learn bunch
-        as returned by the `load_*` functions in `sklearn toy datasets
-        <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_ and groups
+        """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from a
+        [sklearn.utils.Bunch][sklearn.utils.Bunch] as returned by the `load_*` functions in
+        [sklearn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html) and groups
         it.
 
         Args:
@@ -511,8 +511,8 @@ class GroupedDataset(Dataset):
         **kwargs,
     ) -> "Dataset":
         """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from X and y numpy arrays
-        as returned by the `make_*` functions in `sklearn generated datasets
-        <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
+        as returned by the `make_*` functions in
+        [sklearn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
 
         Args:
             X: array of shape (n_samples, n_features)

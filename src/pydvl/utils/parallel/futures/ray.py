@@ -28,6 +28,7 @@ class RayExecutor(Executor):
     It shouldn't be initialized directly. You should instead call
     [init_executor()][pydvl.utils.parallel.futures.init_executor].
 
+    Args:
         max_workers: Maximum number of concurrent tasks. Each task can request
             itself any number of vCPUs. You must ensure the product of this
             value and the n_cpus_per_job parameter passed to submit() does not

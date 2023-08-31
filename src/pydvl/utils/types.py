@@ -50,6 +50,7 @@ def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
     returned as is. Otherwise, a wrapper is returned which merely ignores the
     argument.
 
+    Args:
         fun: The function to wrap
         new_arg: The name of the argument that the new function will accept
             (and ignore).
@@ -83,7 +84,7 @@ class NoPublicConstructor(ABCMeta):
     a `TypeError` will be thrown.
 
     Taken almost verbatim from:
-    https://stackoverflow.com/a/64682734
+    [https://stackoverflow.com/a/64682734](https://stackoverflow.com/a/64682734)
     """
 
     def __call__(cls, *args, **kwargs):

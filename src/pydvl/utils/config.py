@@ -12,6 +12,7 @@ __all__ = ["ParallelConfig", "MemcachedClientConfig", "MemcachedConfig"]
 @dataclass
 class ParallelConfig:
     """Configuration for parallel computation backend.
+
     Args:
         backend: Type of backend to use. Defaults to 'joblib'
         address: Address of existing remote or local cluster to use.

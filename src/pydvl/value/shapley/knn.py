@@ -3,6 +3,14 @@ This module contains Shapley computations for K-Nearest Neighbours.
 
 !!! Todo
     Implement approximate KNN computation for sublinear complexity)
+
+
+# References:
+
+[^Y]: <a name="jia_efficient_2019a"></a>Jia, R. et al., 2019.
+    [Efficient Task-Specific Data Valuation for Nearest Neighbor Algorithms](https://doi.org/10.14778/3342263.3342637).
+    In: Proceedings of the VLDB Endowment, Vol. 12, No. 11, pp. 1610–1623.
+
 """
 
 from typing import Dict, Union
@@ -21,15 +29,15 @@ __all__ = ["knn_shapley"]
 def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     """Computes exact Shapley values for a KNN classifier.
 
-    This implements the method described in [@jia_efficient_2019a].
+    This implements the method described in (Jia, R. et al., 2019)<sup><a href="#jia_efficient_2019a">1</a></sup>.
     It exploits the local structure of K-Nearest Neighbours to reduce the number
     of calls to the utility function to a constant number per index, thus
     reducing computation time to $O(n)$.
 
     Args:
         u: Utility with a KNN model to extract parameters from. The object
-            will not be modified nor used other than to call `get_params()
-            <https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params>`_
+            will not be modified nor used other than to call [get_params()](
+            <https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params>)
         progress: Whether to display a progress bar.
 
     Returns:

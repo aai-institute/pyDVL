@@ -32,7 +32,7 @@ arise when using the IF.
 
 # The Influence Function
 
-First introduced in the context of robust statistics in [@hampel1974influence],
+First introduced in the context of robust statistics in [@hampel_influence_1974],
 the IF was popularized in the context of machine learning in
 [@koh_understanding_2017].
 
@@ -69,17 +69,10 @@ approximation of $\hat{\theta}$. This can be done through single backpropagation
 and without re-training the full model.
 
 
-
-There are two ways to compute influences. For linear regression, the influences
-can be computed analytically. For more general models or loss functions, one can
-implement the [TwiceDifferentiable][pydvl.influence.frameworks.torch_differentiable.TwiceDifferentiable]
-protocol, which provides the required  methods for computing the influences.
-
 pyDVL supports two ways of computing the empirical influence function, namely
-up-weighting of samples and perturbation influences. The choice is done by a
-parameter in the call to the main entry points,
-[compute_linear_influences][pydvl.influence.linear.compute_linear_influences]
-and [compute_influences][pydvl.influence.compute_influences].
+up-weighting of samples and perturbation influences. The choice is done by the
+parameter `influence_type` in the main entry point 
+[compute_influences][pydvl.influence.general.compute_influences].
 
 ## Approximating the influence of a point
 
@@ -192,7 +185,7 @@ as done in [@koh_understanding_2017].
 The main entry point of the library for influence calculation is
 [compute_influences][pydvl.influence.general.compute_influences].
 Given a pre-trained pytorch model with a loss, first an instance of
-[TorchTwiceDifferentiable][pydvl.influence.general.TorchTwiceDifferentiable]
+[TorchTwiceDifferentiable][pydvl.influence.torch.torch_differentiable.TorchTwiceDifferentiable]
 needs to be created:
 
 ```python
@@ -343,7 +336,7 @@ influence_factors = compute_influence_factors(
 ```
 
 The result is an object of type 
-[InverseHvpResult][pydvl.influence.framework.InverseHvpResult],
+[InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult],
 which holds the calculated influence factors (`influence_factors.x`) and a
 dictionary with the info on the inversion process (`influence_factors.info`).
 
@@ -383,7 +376,7 @@ solve_hvp(
 ```
 
 The result, an object of type 
-[InverseHvpResult][pydvl.influence.framework.InverseHvpResult],
+[InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult],
 which holds two objects: `influence_factors.x` and `influence_factors.info`.
 The first one is the inverse Hessian vector product, while the second one is a
 dictionary with the info on the inversion process. For this method, the info
@@ -418,11 +411,11 @@ solve_hvp(
 ```
 
 The additional optional parameters `x0`, `rtol`, `atol`, and `maxiter` are passed
-to the [solve_batch_cg][pydvl.influence.frameworks.torch_differentiable.solve_batch_cg]
+to the [solve_batch_cg][pydvl.influence.torch.torch_differentiable.solve_batch_cg]
 function, and are respecively the initial guess for the solution, the relative
 tolerance, the absolute tolerance, and the maximum number of iterations.
 
-The resulting [InverseHvpResult][pydvl.influence.framework.InverseHvpResult]
+The resulting [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult]
 holds the solution of the iHVP, `influence_factors.x`, and some info on the
 inversion process `influence_factors.info`. More specifically, for each batch
 the infos will report the number of iterations, a boolean indicating if the
@@ -443,7 +436,7 @@ $$H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s},$$
 where $d$ and $s$ are a dampening and a scaling factor, which are essential
 for the convergence of the method and they need to be chosen carefully, and I 
 is the identity matrix. More info on the theory of LiSSA can be found in the 
-original paper [@agarwal_2017_second].
+original paper [@agarwal_secondorder_2017].
 
 In pyDVL, you can select LiSSA with `inversion_method = "lissa"`, like this:
 
@@ -464,18 +457,45 @@ solve_hvp(
 
 with the additional optional parameters `maxiter`, `dampen`, `scale`, `h0`, and
 `rtol`, which are passed to the
-[solve_lissa][pydvl.influence.frameworks.torch_differentiable.solve_lissa] function,
+[solve_lissa][pydvl.influence.torch.torch_differentiable.solve_lissa] function,
 being the maximum number of iterations, the dampening factor, the scaling
 factor, the initial guess for the solution and the relative tolerance,
 respectively.
 
-The resulting [InverseHvpResult][pydvl.influence.framework.InverseHvpResult]
+The resulting [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult]
 holds the solution of the iHVP, `influence_factors.x`, and,
 within `influence_factors.info`, the maximum percentage error
 and the mean percentage error of the approximation.
 
 ## Arnoldi solver
 
-The Arnoldi method is a Krylov subspace method for approximating the action of a
-matrix on a vector. It is a generalization of the power method for finding
-eigenvectors of a matrix.
+The [Arnoldi method](https://en.wikipedia.org/wiki/Arnoldi_iteration) 
+is a Krylov subspace method for approximating dominating eigenvalues and eigenvectors. Under a low rank
+assumption on the Hessian at a minimizer (which is typically observed for deep neural networks), this approximation
+captures the essential action of the Hessian. More concrete, for $Hx=b$ the solution is approximated by
+
+\[x \approx V D^{-1} V^T b\]
+
+where \(D\) is a diagonal matrix with the top (in absolute value) eigenvalues of the Hessian
+and \(V\) contains the corresponding eigenvectors, see also [@schioppa_scaling_2021].
+
+
+In pyDVL, you can select Arnoldi with `inversion_method = "arnoldi"`, like this:
+
+```python
+from pydvl.influence.inversion import solve_hvp
+solve_hvp(
+    "arnoldi",
+    wrapped_model,
+    training_data_loader,
+    b,
+    hessian_perturbation=0.0,
+    rank_estimate=10,
+    tol=1e-6,
+    eigen_computation_on_gpu=False 
+)
+```
+For the parameters, check [solve_arnoldi][pydvl.influence.torch.torch_differentiable.solve_arnoldi].
+The resulting [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult]
+holds the solution of the iHVP, `influence_factors.x`, and,
+within `influence_factors.info`, the computed eigenvalues and eigenvectors.

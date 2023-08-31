@@ -22,28 +22,34 @@ def hvp(
     vec: TorchTensorContainerType,
     reverse_only: bool = True,
 ) -> TorchTensorContainerType:
+    r"""
+    Computes the Hessian-vector product (HVP) for a given function at given parameters, i.e.
+
+    \[\nabla_{\theta} \nabla_{\theta} f (\theta)\cdot v\]
+
+    This function can operate in two modes, either reverse-mode autodiff only or both
+    forward- and reverse-mode autodiff.
+
+    Args:
+        func: The scalar-valued function for which the HVP is computed.
+        params: The parameters at which the HVP is computed.
+        vec: The vector with which the Hessian is multiplied.
+        reverse_only: Whether to use only reverse-mode autodiff
+            (True, default) or both forward- and reverse-mode autodiff (False).
+
+    Returns:
+       The HVP of the function at the given parameters with the given vector.
+
+    Example:
+    ```python
+    >>> def f(z): return torch.sum(z**2)
+    >>> u = torch.ones(10, requires_grad=True)
+    >>> v = torch.ones(10)
+    >>> hvp_vec = hvp(f, u, v)
+    >>> assert torch.allclose(hvp_vec, torch.full((10, ), 2.0))
+    ```
     """
-     Computes the Hessian-vector product (HVP) for a given function at given parameters.
-     This function can operate in two modes, either reverse-mode autodiff only or both
-     forward- and reverse-mode autodiff.
 
-
-    :param func: The scalar-valued function for which the HVP is computed.
-    :param params: The parameters at which the HVP is computed.
-    :param vec: The vector with which the Hessian is multiplied.
-    :param reverse_only: Whether to use only reverse-mode autodiff
-             (True, default) or both forward- and reverse-mode autodiff (False).
-
-     :return: Input_type: The HVP of the function at the given parameters with the given vector.
-
-     :Example:
-
-      >>> def f(z): return torch.sum(z**2)
-      >>> u = torch.ones(10, requires_grad=True)
-      >>> v = torch.ones(10)
-      >>> hvp_vec = hvp(f, u, v)
-      >>> assert torch.allclose(hvp_vec, torch.full((10, ), 2.0))
-    """
     output: TorchTensorContainerType
 
     if reverse_only:
@@ -61,18 +67,26 @@ def batch_hvp_gen(
     data_loader: DataLoader,
     reverse_only: bool = True,
 ) -> Generator[Callable[[torch.Tensor], torch.Tensor], None, None]:
-    """
+    r"""
     Generates a sequence of batch Hessian-vector product (HVP) computations for the provided model, loss function,
-    and data loader.
+    and data loader. If \(f_i\) is the model's loss on the \(i\)-th batch and \(\theta\) the model parameters,
+    this is the sequence of the callable matrix vector products for the matrices
 
-    The generator iterates over the data_loader, creating partial function calls for calculating HVPs.
+    \[\nabla_{\theta}\nabla_{\theta}f_i(\theta), \quad i=1,\dots, \text{num_batches} \]
 
-    :param model: The PyTorch model for which the HVP is calculated.
-    :param loss: The loss function used to calculate the gradient and HVP.
-    :param data_loader: PyTorch DataLoader object containing the dataset for which the HVP is calculated.
-    :param reverse_only:
-    :yield: A partial function H(vec)=hvp(model, loss, inputs, targets, vec) that when called,
-            will compute the Hessian-vector product H(vec) for the given model, loss, inputs and targets.
+    i.e. iterating over the data_loader, yielding partial function calls for calculating HVPs.
+
+    Args:
+        model: The PyTorch model for which the HVP is calculated.
+        loss: The loss function used to calculate the gradient and HVP.
+        data_loader: PyTorch DataLoader object containing the dataset for which the HVP is calculated.
+        reverse_only: Whether to use only reverse-mode autodiff
+            (True, default) or both forward- and reverse-mode autodiff (False).
+
+    Yields:
+        Partial functions `H_{batch}(vec)=hvp(model, loss, inputs, targets, vec)` that when called,
+            will compute the Hessian-vector product H(vec) for the given model and loss in a batch-wise manner, where
+            (inputs, targets) coming from one batch.
     """
 
     for inputs, targets in iter(data_loader):
@@ -97,20 +111,19 @@ def empirical_loss_function(
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     data_loader: DataLoader,
 ) -> Callable[[Dict[str, torch.Tensor]], torch.Tensor]:
-    """
+    r"""
     Creates a function to compute the empirical loss of a given model on a given dataset.
-    If we denote the model parameters with $\theta$, the resulting function approximates
+    If we denote the model parameters with \( \theta \), the resulting function approximates:
 
-    .. math::
+    \[f(\theta) = \frac{1}{N}\sum_{i=1}^N \operatorname{loss}(y_i, \operatorname{model}(\theta, x_i))\]
 
-        f(\theta) = \frac{1}{N}\sum_{i=1}^N \operatorname{loss}(y_i, \operatorname{model}(\theta, x_i)))
+    Args:
+    - model: The model for which the loss should be computed.
+    - loss: The loss function to be used.
+    - data_loader: The data loader for iterating over the dataset.
 
-    :param model: The model for which the loss should be computed.
-    :param loss: The loss function to be used.
-    :param data_loader: The data loader for iterating over the dataset.
-
-    :return: A function that computes the empirical loss
-                  of the model on the dataset for given model parameters.
+    Returns:
+        A function that computes the empirical loss of the model on the dataset for given model parameters.
 
     """
 
@@ -137,16 +150,19 @@ def batch_loss_function(
     x: torch.Tensor,
     y: torch.Tensor,
 ) -> Callable[[Dict[str, torch.Tensor]], torch.Tensor]:
-    """
-     Creates a function to compute the loss of a given model on a given batch of data.
+    r"""
+    Creates a function to compute the loss of a given model on a given batch of data, i.e. for the $i$-th batch $B_i$
 
-    :param model: The model for which the loss should be computed.
-    :param loss: The loss function to be used.
-    :param x: The input data for the batch.
-    :param y: The true labels for the batch.
+    \[\frac{1}{|B_i|}\sum_{x,y \in B_i} \operatorname{loss}(y, \operatorname{model}(\theta, x))\]
 
-    :return: A function that computes the loss
-                   of the model on the batch for given model parameters.
+    Args:
+        model: The model for which the loss should be computed.
+        loss: The loss function to be used.
+        x: The input data for the batch.
+        y: The true labels for the batch.
+
+    Returns:
+        A function that computes the loss of the model on the batch for given model parameters.
     """
 
     def batch_loss(params: Dict[str, torch.Tensor]):
@@ -168,26 +184,28 @@ def get_hvp_function(
 ) -> Callable[[torch.Tensor], torch.Tensor]:
     """
     Returns a function that calculates the approximate Hessian-vector product for a given vector. If you want to
-    compute the exact hessian, i.e. pulling all data into memory and compute a full gradient computation, use
-    the function :func:`hvp`.
+    compute the exact hessian, i.e., pulling all data into memory and compute a full gradient computation, use
+    the function `hvp`.
 
-    :param model: A PyTorch module representing the model whose loss function's Hessian is to be computed.
-    :param loss: A callable that takes the model's output and target as input and returns the scalar loss.
-    :param data_loader: A DataLoader instance that provides batches of data for calculating the Hessian-vector product.
-                        Each batch from the DataLoader is assumed to return a tuple where the first element
-                        is the model's input and the second element is the target output.
-    :param use_hessian_avg: If True, it will use batch-wise Hessian computation. If False, the function averages
-                            the batch gradients and perform backpropagation on the full (averaged) gradient,
-                            which is more accurate than averaging the batch hessians,
-                            but probably has a way higher memory usage.
-    :param reverse_only: Whether to use only reverse-mode autodiff
-            (True, default) or both forward- and reverse-mode autodiff (False)
-    :param track_gradients: Whether to track gradients for the resulting tensor of the hessian vector products are
-            (False, default).
+    Args:
+        model: A PyTorch module representing the model whose loss function's Hessian is to be computed.
+        loss: A callable that takes the model's output and target as input and returns the scalar loss.
+        data_loader: A DataLoader instance that provides batches of data for calculating the Hessian-vector product.
+            Each batch from the DataLoader is assumed to return a tuple where the first element
+            is the model's input and the second element is the target output.
+        use_hessian_avg: If True, the returned function uses batch-wise Hessian computation via
+            [batch_loss_function][pydvl.influence.torch.functional.batch_loss_function] and averages the results.
+            If False, the function uses backpropagation on the full
+            [empirical_loss_function][pydvl.influence.torch.functional.empirical_loss_function],
+            which is more accurate than averaging the batch hessians, but probably has a way higher memory usage.
+        reverse_only: Whether to use only reverse-mode autodiff (True, default) or
+            both forward- and reverse-mode autodiff (False).
+        track_gradients: Whether to track gradients for the resulting tensor of the hessian vector
+            products are (False, default).
 
-    :return: A function that takes a single argument, a vector, and returns the product of the Hessian of the
-             `loss` function with respect to the `model`'s parameters and the input vector.
-
+    Returns:
+        A function that takes a single argument, a vector, and returns the product of the Hessian of the `loss`
+            function with respect to the `model`'s parameters and the input vector.
     """
 
     params = {

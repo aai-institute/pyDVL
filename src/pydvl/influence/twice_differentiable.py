@@ -13,6 +13,15 @@ from typing import (
     TypeVar,
 )
 
+__all__ = [
+    "DataLoaderType",
+    "ModelType",
+    "TensorType",
+    "InverseHvpResult",
+    "TwiceDifferentiable",
+    "TensorUtilities",
+]
+
 TensorType = TypeVar("TensorType", bound=Sequence)
 ModelType = TypeVar("ModelType", bound="TwiceDifferentiable")
 DataLoaderType = TypeVar("DataLoaderType", bound=Iterable)
@@ -20,6 +29,13 @@ DataLoaderType = TypeVar("DataLoaderType", bound=Iterable)
 
 @dataclass(frozen=True)
 class InverseHvpResult(Generic[TensorType]):
+    r"""
+    Container class for results of solving a problem \(Ax=b\)
+
+    Args:
+        x: solution of a problem \(Ax=b\)
+        info: additional information, to couple with the solution itself
+    """
     x: TensorType
     info: Dict[str, Any]
 
@@ -29,8 +45,9 @@ class InverseHvpResult(Generic[TensorType]):
 
 class TwiceDifferentiable(ABC, Generic[TensorType]):
     """
-    Wraps a differentiable model and loss and provides methods to compute gradients and
-    second derivative of the loss wrt. the model parameters
+    Abstract base class for wrappers of differentiable models and losses. Meant to be subclassed for each
+    supported framework.
+    Provides methods to compute gradients and second derivative of the loss wrt. the model parameters
     """
 
     @classmethod
@@ -53,30 +70,33 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
     def grad(
         self, x: TensorType, y: TensorType, create_graph: bool = False
     ) -> TensorType:
-        """
-        Calculates gradient of model parameters wrt. the model parameters.
+        r"""
+        Calculates gradient of model parameters with respect to the model parameters.
 
-        :param x: A matrix representing the features $x_i$.
-        :param y: A matrix representing the target values $y_i$.
-            gradients. This is important for further differentiation on input
-            parameters.
-        :param create_graph:
-        :return: A tuple where: the first element is an array with the
-            gradients of the model, and the second element is the input to the
-            model as a grad parameters. This can be used for further
-            differentiation.
+        Args:
+            x: A matrix representing the features \(x_i\).
+            y: A matrix representing the target values \(y_i\).
+            create_graph: Used for further differentiation on input parameters.
+
+        Returns:
+            An array with the gradients of the model.
         """
+
         pass
 
     def hessian(self, x: TensorType, y: TensorType) -> TensorType:
-        """Calculates the full Hessian of $L(f(x),y)$ with respect to the model
-        parameters given data ($x$ and $y$).
+        r"""
+        Calculates the full Hessian of \(L(f(x),y)\) with respect to the model parameters given data \(x\) and \(y\).
 
-        :param x: An array representing the features $x_i$.
-        :param y: An array representing the target values $y_i$.
-        :return: The hessian of the model, i.e. the second derivative wrt. the
-            model parameters.
+        Args:
+            x: An array representing the features \(x_i\).
+            y: An array representing the target values \(y_i\).
+
+        Returns:
+            A tensor representing the Hessian of the model, i.e. the second derivative
+            with respect to the model parameters.
         """
+
         pass
 
     @staticmethod
@@ -88,23 +108,22 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
         *,
         progress: bool = False,
     ) -> TensorType:
-        """
-        Calculates second order derivative of the model along directions v.
-        This second order derivative can be selected through the backprop_on argument.
+        r"""
+        Calculates the second order derivative of the model along directions \(v\).
+        The second order derivative can be selected through the `backprop_on` argument.
 
-        :param grad_xy: an array [P] holding the gradients of the model
-            parameters wrt input $x$ and labels $y$, where P is the number of
-            parameters of the model. It is typically obtained through
-            self.grad.
-        :param v: An array ([DxP] or even one dimensional [D]) which
-            multiplies the matrix, where D is the number of directions.
-        :param progress: True, iff progress shall be printed.
-        :param backprop_on: tensor used in the second backpropagation (the first
-            one is along $x$ and $y$ as defined via grad_xy).
-        :returns: A matrix representing the implicit matrix vector product
-            of the model along the given directions. Output shape is [DxP] if
-            backprop_on is None, otherwise [DxM], with M the number of elements
-            of backprop_on.
+        Args:
+            grad_xy: An array [P] holding the gradients of the model parameters with respect to input \(x\) and
+                labels \(y\). \(P\) is the number of parameters of the model. Typically obtained through `self.grad`.
+            v: An array ([DxP] or even one-dimensional [D]) which multiplies the matrix.
+                \(D\) is the number of directions.
+            progress: If `True`, progress is displayed.
+            backprop_on: Tensor used in the second backpropagation. The first one is along \(x\) and \(y\)
+                as defined via `grad_xy`.
+
+        Returns:
+            A matrix representing the implicit matrix-vector product of the model along the given directions.
+            Output shape is [DxM], where \(M\) is the number of elements of `backprop_on`.
         """
 
 
@@ -116,13 +135,16 @@ class TensorUtilities(Generic[TensorType, ModelType], ABC):
         """
         Automatically registers non-abstract subclasses in the registry.
 
-        Checks if `twice_differentiable_type` is defined in the subclass and
-        is of correct type. Raises `TypeError` if either attribute is missing or incorrect.
+        This method checks if `twice_differentiable_type` is defined in the subclass and if it is of the correct type.
+        If either attribute is missing or incorrect, a `TypeError` is raised.
 
-        :param kwargs: Additional keyword arguments.
-        :raise TypeError: If the subclass does not define `twice_differentiable_type`,
-        or if it is not of correct type.
+        Args:
+            kwargs: Additional keyword arguments.
+
+        Raises:
+            TypeError: If the subclass does not define `twice_differentiable_type`, or if it is not of the correct type.
         """
+
         if not hasattr(cls, "twice_differentiable_type") or not isinstance(
             cls.twice_differentiable_type, type
         ):
@@ -193,13 +215,26 @@ class TensorUtilities(Generic[TensorType, ModelType], ABC):
         twice_diff: TwiceDifferentiable,
     ) -> Type["TensorUtilities"]:
         """
-        Factory method to create an instance of `TensorUtilities` from an instance of `TwiceDifferentiable`.
+        Factory method to create an instance of a subclass
+        [TensorUtilities][pydvl.influence.twice_differentiable.TensorUtilities] from an instance of a subclass of
+        [TwiceDifferentiable][pydvl.influence.twice_differentiable.TwiceDifferentiable].
 
-        :param twice_diff: An instance of `TwiceDifferentiable`
-            for which a corresponding `TensorUtilities` object is required.
-        :return: An instance of `TensorUtilities` corresponding to the provided `TwiceDifferentiable` object.
-        :raises KeyError: If there's no registered `TensorUtilities` for the provided `TwiceDifferentiable` type.
+        Args:
+            twice_diff: An instance of a subclass of
+                [TwiceDifferentiable][pydvl.influence.twice_differentiable.TwiceDifferentiable]
+                for which a corresponding [TensorUtilities][pydvl.influence.twice_differentiable.TensorUtilities]
+                object is required.
+
+        Returns:
+            An subclass of [TensorUtilities][pydvl.influence.twice_differentiable.TensorUtilities]
+                registered to the provided subclass instance of
+                [TwiceDifferentiable][pydvl.influence.twice_differentiable.TwiceDifferentiable] object.
+
+        Raises:
+            KeyError: If there's no registered [TensorUtilities][pydvl.influence.twice_differentiable.TensorUtilities]
+                for the provided [TwiceDifferentiable][pydvl.influence.twice_differentiable.TwiceDifferentiable] type.
         """
+
         tu = cls.registry.get(type(twice_diff), None)
 
         if tu is None:

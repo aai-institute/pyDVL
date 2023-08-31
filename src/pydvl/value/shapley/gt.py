@@ -1,6 +1,6 @@
 """
 This module implements Group Testing for the approximation of Shapley values, as
-introduced in [@jia_efficient_2019]. The sampling of index subsets is
+introduced in (Jia, R. et al., 2019)[^1]. The sampling of index subsets is
 done in such a way that an approximation to the true Shapley values can be
 computed with guarantees.
 
@@ -14,6 +14,11 @@ You can read more [in the documentation][computing-data-values].
 
 !!! tip "New in version 0.4.0"
 
+# References:
+
+[^1]: <a name="jia_efficient_2019"></a>Jia, R. et al., 2019.
+    [Towards Efficient Data Valuation Based on the Shapley Value](http://proceedings.mlr.press/v89/jia19a.html).
+    In: Proceedings of the 22nd International Conference on Artificial Intelligence and Statistics, pp. 1167–1176. PMLR.
 """
 import logging
 from collections import namedtuple
@@ -94,7 +99,7 @@ def _constants(
 def num_samples_eps_delta(
     eps: float, delta: float, n: int, utility_range: float
 ) -> int:
-    r"""Implements the formula in Theorem 3 of [@jia_efficient_2019]
+    r"""Implements the formula in Theorem 3 of (Jia, R. et al., 2019)<sup><a href="#jia_efficient_2019">1</a></sup>
     which gives a lower bound on the number of samples required to obtain an
     (ε/√n,δ/(N(N-1))-approximation to all pair-wise differences of Shapley
     values, wrt. $\ell_2$ norm.
@@ -162,7 +167,7 @@ def group_testing_shapley(
     **options,
 ) -> ValuationResult:
     """Implements group testing for approximation of Shapley values as described
-    in [@jia_efficient_2019].
+    in (Jia, R. et al., 2019)<sup><a href="#jia_efficient_2019">1</a></sup>.
 
     !!! Warning
         This method is very inefficient. It requires several orders of magnitude

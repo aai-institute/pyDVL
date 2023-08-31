@@ -3,23 +3,24 @@
 pyDVL uses [memcached](https://memcached.org) to cache utility values, through
 [pymemcache](https://pypi.org/project/pymemcache). This allows sharing
 evaluations across processes and nodes in a cluster. You can run memcached as a
-service, locally or remotely, see :ref:`caching setup`.
+service, locally or remotely, see [Setting up the cache](#setting-up-the-cache)
 
 !!! Warning
     Function evaluations are cached with a key based on the function's signature
-    and code. This can lead to undesired cache hits, see :ref:`cache reuse`.
+    and code. This can lead to undesired cache hits, see [Cache reuse](#cache-reuse).
 
     Remember **not to reuse utility objects for different datasets**.
 
 # Configuration
 
-Memoization is disabled by default but can be enabled easily, see :ref:`caching setup`.
+Memoization is disabled by default but can be enabled easily,
+see [Setting up the cache](#setting-up-the-cache).
 When enabled, it will be added to any callable used to construct a
 [Utility][pydvl.utils.utility.Utility] (done with the decorator [@memcached][pydvl.utils.caching.memcached]).
 Depending on the nature of the utility you might want to
 enable the computation of a running average of function values, see
-:ref:`caching stochastic functions`. You can see all configuration options under
-[MemcachedConfig][pydvl.utils.config.MemcachedConfig].
+[Usage with stochastic functions](#usaage-with-stochastic-functions).
+You can see all configuration options under [MemcachedConfig][pydvl.utils.config.MemcachedConfig].
 
 ## Default configuration
 
@@ -153,14 +154,14 @@ def memcached(
     If the function is deterministic, i.e. same input corresponds to the same
     exact output, set `allow_repeated_evaluations` to `False`. If instead the
     function is stochastic (like the training of a model depending on random
-    initializations), memcached allows to set a minimum number of evaluations
+    initializations), memcached() allows to set a minimum number of evaluations
     to compute a running average, and a tolerance after which the function will
     not be called anymore. In other words, the function will be recomputed
     until the value has stabilized with a standard error smaller than
     `rtol_stderr * running average`.
 
     !!! Warning
-        Do not cache functions with state! See :ref:`cache reuse`
+        Do not cache functions with state! See [Cache reuse](cache-reuse)
 
     ??? Example
         ```python

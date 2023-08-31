@@ -4,8 +4,7 @@ valuation algorithms.
 
 The most important class is [ValuationResult][pydvl.value.result.ValuationResult], which provides access
 to raw values, as well as convenient behaviour as a `Sequence` with extended
-indexing and updating abilities, and conversion to `pandas DataFrames
-<https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
+indexing and updating abilities, and conversion to [pandas DataFrames][pandas.DataFrame].
 
 # Operating on results
 
@@ -148,7 +147,8 @@ class ValuationResult(
     ## Indexing
 
     Indexing can be position-based, when accessing any of the attributes
-    [values][pydvl.value.result.ValuationResult.values], [variances][pydvl.value.result.ValuationResult.variances], [counts][pydvl.value.result.ValuationResult.counts] and [indices][pydvl.value.result.ValuationResult.indices], as
+    [values][pydvl.value.result.ValuationResult.values], [variances][pydvl.value.result.ValuationResult.variances],
+    [counts][pydvl.value.result.ValuationResult.counts] and [indices][pydvl.value.result.ValuationResult.indices], as
     well as when iterating over the object, or using the item access operator,
     both getter and setter. The "position" is either the original sequence in
     which the data was passed to the constructor, or the sequence in which the

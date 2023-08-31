@@ -15,5 +15,5 @@ mkdocs-material
 mkdocs-section-index
 mkdocs-macros-plugin
 neoteroi-mkdocs  # Needed for card grid on home page
-pypandoc_binary
+pypandoc
 GitPython

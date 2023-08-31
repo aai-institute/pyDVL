@@ -45,13 +45,28 @@ is the weight correction due to the reformulation.
     implementation of permutation MC.
 
 There are several pre-defined coefficients, including the Shapley value of
-[@ghorbani_data_2019], the Banzhaf index of [@wang_data_2022], and the Beta
-coefficient of [@kwon_beta_2022]. For each of these methods, there is a
+(Ghorbani and Zou, 2019)[^1], the Banzhaf index of (Wang and Jia)[^3], and the Beta
+coefficient of (Kwon and Zou, 2022)[^2]. For each of these methods, there is a
 convenience wrapper function. Respectively, these are:
 [compute_shapley_semivalues][pydvl.value.semivalues.compute_shapley_semivalues],
 [compute_banzhaf_semivalues][pydvl.value.semivalues.compute_banzhaf_semivalues],
 and [compute_beta_shapley_semivalues][pydvl.value.semivalues.compute_beta_shapley_semivalues].
 instead.
+
+
+# References:
+
+[^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
+    [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).
+    In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
+
+[^2]: <a name="kwon_beta_2022"></a>Kwon, Y. and Zou, J., 2022.
+    [Beta Shapley: A Unified and Noise-reduced Data Valuation Framework for Machine Learning](http://arxiv.org/abs/2110.14049).
+    In: Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022, Vol. 151. PMLR, Valencia, Spain.
+
+[^3]: <a name="wang_data_2022"></a>Wang, J.T. and Jia, R., 2022.
+    [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](http://arxiv.org/abs/2205.15466).
+    ArXiv preprint arXiv:2205.15466.
 """
 from __future__ import annotations
 
@@ -409,10 +424,15 @@ def compute_semivalues(
 
     - [SemiValueMode.Shapley][pydvl.value.semivalues.SemiValueMode]:
       Shapley values.
-    - [SemiValueMode.BetaShapley][pydvl.value.semivalues.SemiValueMode]:
-      Implements the Beta Shapley semi-value as introduced in [@kwon_beta_2022].
+    - [SemiValueMode.BetaShapley][pydvl.value.semivalues.SemiValueMode.BetaShapley]:
+      Implements the Beta Shapley semi-value as introduced in
+      (Kwon and Zou, 2022)<sup><a href="#kwon_beta_2022">1</a></sup>.
       Pass additional keyword arguments `alpha` and `beta` to set the
       parameters of the Beta distribution (both default to 1).
+    - [SemiValueMode.Banzhaf][SemiValueMode.Banzhaf]: Implements the Banzhaf
+      semi-value as introduced in (Wang and Jia, 2022)<sup><a href="#wang_data_2022">1</a></sup>.
+
+    See [[data-valuation]] for an overview of valuation.
     - [SemiValueMode.Banzhaf][pydvl.value.semivalues.SemiValueMode]: Implements
       the Banzhaf semi-value as introduced in [@wang_data_2022].
 
