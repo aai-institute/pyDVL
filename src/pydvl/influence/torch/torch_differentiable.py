@@ -205,11 +205,12 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
 @dataclass
 class LowRankProductRepresentation:
     r"""
-    Representation of a low rank product of the form \(H = V D V^T\), where D is a diagonal matrix and V is orthogonal.
+    Representation of a low rank product of the form \(H = V D V^T\),
+    where D is a diagonal matrix and V is orthogonal.
 
     Args:
-        eigen_vals (tensor or array): Diagonal of D.
-        projections (tensor or matrix): The matrix V.
+        eigen_vals: Diagonal of D.
+        projections: The matrix V.
     """
 
     eigen_vals: torch.Tensor
@@ -276,7 +277,7 @@ def lanzcos_low_rank_hessian_approx(
             not provided, it defaults to \( 10 \cdot \text{model.num_parameters}\).
         device: The device to use for executing the hessian vector product.
         eigen_computation_on_gpu: If True, tries to execute the eigen pair
-            approximation on the provided device via `cupy <https://cupy.dev/>`_
+            approximation on the provided device via [cupy](https://cupy.dev/)
             implementation. Ensure that either your model is small enough, or you
             use a small rank_estimate to fit your device's memory. If False, the
             eigen pair approximation is executed on the CPU with scipy's wrapper to
@@ -608,7 +609,8 @@ def solve_cg(
         maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
 
     Returns:
-        Instance of [InverseHvpResult], with a vector x, solution of \(Ax=b\), and a dictionary containing
+        Instance of [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult],
+            with a vector x, solution of \(Ax=b\), and a dictionary containing
             information about the convergence of CG.
     """
 
