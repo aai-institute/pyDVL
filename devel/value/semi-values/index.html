@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../assets/signet.svg">
-      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.2.5">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.2.6">
     
     
       
@@ -2465,11 +2465,11 @@ For instance, the following snippet is equivalent to the above:</p>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">values</span> <span class="o">=</span> <span class="n">semivalues</span><span class="p">(</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">sampler</span><span class="o">=</span><span class="n">PermutationSampler</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">indices</span><span class="p">),</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">coefficient</span><span class="o">=</span><span class="n">beta_coefficient</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">16</span><span class="p">),</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">done</span><span class="o">=</span><span class="n">AbsoluteStandardError</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">),</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">values</span> <span class="o">=</span> <span class="n">compute_generic_semivalues</span><span class="p">(</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  <span class="n">sampler</span><span class="o">=</span><span class="n">PermutationSampler</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">indices</span><span class="p">),</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>  <span class="n">coefficient</span><span class="o">=</span><span class="n">beta_coefficient</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">16</span><span class="p">),</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>  <span class="n">done</span><span class="o">=</span><span class="n">AbsoluteStandardError</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">),</span>
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>  <span class="p">)</span>
 </span></code></pre></div>
 <p>Allowing any coefficient can help when experimenting with models which are more
