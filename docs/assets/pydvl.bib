@@ -1,3 +1,18 @@
+@article{agarwal_secondorder_2017,
+  title = {Second-{{Order Stochastic Optimization}} for {{Machine Learning}} in {{Linear Time}}},
+  author = {Agarwal, Naman and Bullins, Brian and Hazan, Elad},
+  date = {2017},
+  journaltitle = {Journal of Machine Learning Research},
+  shortjournal = {JMLR},
+  volume = {18},
+  eprint = {1602.03943},
+  eprinttype = {arxiv},
+  pages = {1--40},
+  url = {https://www.jmlr.org/papers/v18/16-491.html},
+  abstract = {First-order stochastic methods are the state-of-the-art in large-scale machine learning optimization owing to efficient per-iteration complexity. Second-order methods, while able to provide faster convergence, have been much less explored due to the high cost of computing the second-order information. In this paper we develop second-order stochastic methods for optimization problems in machine learning that match the per-iteration cost of gradient based methods, and in certain settings improve upon the overall running time over popular first-order methods. Furthermore, our algorithm has the desirable property of being implementable in time linear in the sparsity of the input data.},
+  langid = {english}
+}
+
 @article{benmerzoug_re_2023,
   title = {[{{Re}}] {{If}} You like {{Shapley}}, Then You'll Love the Core},
   author = {Benmerzoug, Anes and Delgado, Miguel de Benito},
@@ -185,6 +200,22 @@
   abstract = {Shapley values are great analytical tools in game theory to measure the importance of a player in a game. Due to their axiomatic and desirable properties such as efficiency, they have become popular for feature importance analysis in data science and machine learning. However, the time complexity to compute Shapley values based on the original formula is exponential, and as the number of features increases, this becomes infeasible. Castro et al. [1] developed a sampling algorithm, to estimate Shapley values. In this work, we propose a new sampling method based on a multilinear extension technique as applied in game theory. The aim is to provide a more efficient (sampling) method for estimating Shapley values. Our method is applicable to any machine learning model, in particular for either multiclass classifications or regression problems. We apply the method to estimate Shapley values for multilayer perceptrons (MLPs) and through experimentation on two datasets, we demonstrate that our method provides more accurate estimations of the Shapley values by reducing the variance of the sampling statistics.},
   eventtitle = {2020 25th {{International Conference}} on {{Pattern Recognition}} ({{ICPR}})},
   langid = {english},
+  keywords = {notion}
+}
+
+@inproceedings{schioppa_scaling_2021,
+  title = {Scaling {{Up Influence Functions}}},
+  author = {Schioppa, Andrea and Zablotskaia, Polina and Vilar, David and Sokolov, Artem},
+  date = {2021-12-06},
+  eprint = {2112.03052},
+  eprinttype = {arxiv},
+  eprintclass = {cs},
+  publisher = {{arXiv}},
+  doi = {10.48550/arXiv.2112.03052},
+  url = {http://arxiv.org/abs/2112.03052},
+  urldate = {2023-03-10},
+  abstract = {We address efficient calculation of influence functions for tracking predictions back to the training data. We propose and analyze a new approach to speeding up the inverse Hessian calculation based on Arnoldi iteration. With this improvement, we achieve, to the best of our knowledge, the first successful implementation of influence functions that scales to full-size (language and vision) Transformer models with several hundreds of millions of parameters. We evaluate our approach on image classification and sequence-to-sequence tasks with tens to a hundred of millions of training examples. Our code will be available at https://github.com/google-research/jax-influence.},
+  eventtitle = {{{AAAI-22}}},
   keywords = {notion}
 }
 
