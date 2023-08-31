@@ -2,8 +2,9 @@
 Stopping criteria for value computations.
 
 This module provides a basic set of stopping criteria, like [MaxUpdates][pydvl.value.stopping.MaxUpdates],
-[MaxTime][pydvl.value.stopping.MaxTime], or [HistoryDeviation][pydvl.value.stopping.HistoryDeviation] among others. These can behave in
-different ways depending on the context. For example, [MaxUpdates][pydvl.value.stopping.MaxUpdates] limits
+[MaxTime][pydvl.value.stopping.MaxTime], or [HistoryDeviation][pydvl.value.stopping.HistoryDeviation] among others.
+These can behave in different ways depending on the context.
+For example, [MaxUpdates][pydvl.value.stopping.MaxUpdates] limits
 the number of updates to values, which depending on the algorithm may mean a
 different number of utility evaluations or imply other computations like solving
 a linear or quadratic program.
@@ -29,6 +30,12 @@ truth tables of [Status][pydvl.utils.status.Status]. The unary operator `~`
 (*not*) is also supported. See
 [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] for details on how
 these operations affect the behavior of the stopping criteria.
+
+# References:
+
+[^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
+    [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).
+    In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
 """
 
 from __future__ import annotations
@@ -445,7 +452,7 @@ class HistoryDeviation(StoppingCriterion):
     r"""A simple check for relative distance to a previous step in the
     computation.
 
-    The method used by [@ghorbani_data_2019] computes the relative
+    The method used by (Ghorbani and Zou, 2019)<sup><a href="#ghorbani_data_2019">1</a></sup> computes the relative
     distances between the current values $v_i^t$ and the values at the previous
     checkpoint $v_i^{t-\tau}$. If the sum is below a given threshold, the
     computation is terminated.

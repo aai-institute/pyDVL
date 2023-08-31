@@ -32,6 +32,13 @@ or using an early stopping strategy to reduce computation
    implemented in [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]: any of
    the algorithms mentioned above, including Group Testing, can work to valuate
    groups of samples as units.
+
+# References:
+
+[^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
+    [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).
+    In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
+
 """
 from __future__ import annotations
 
@@ -136,7 +143,7 @@ def permutation_montecarlo_shapley(
     where $\sigma_{:i}$ denotes the set of indices in permutation sigma before
     the position where $i$ appears (see [[data-valuation]] for details).
 
-    This implements the method described in [@ghorbani_data_2019]
+    This implements the method described in (Ghorbani and Zou, 2019)<sup><a href="#ghorbani_data_2019">1</a></sup>
     with a double stopping criterion.
 
     .. todo::
@@ -147,7 +154,8 @@ def permutation_montecarlo_shapley(
     to coalitions from a permutation and incrementally compute marginal utilities.
     We stop computing marginals for a given permutation based on a
     [TruncationPolicy][pydvl.value.shapley.truncated.TruncationPolicy].
-    [@ghorbani_data_2019] mention two policies: one that stops after a certain
+    (Ghorbani and Zou, 2019)<sup><a href="#ghorbani_data_2019">1</a></sup>
+    mention two policies: one that stops after a certain
     fraction of marginals are computed, implemented in
     [FixedTruncation][pydvl.value.shapley.truncated.FixedTruncation],
     and one that stops if the last computed utility ("score") is close to the

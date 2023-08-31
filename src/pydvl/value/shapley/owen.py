@@ -1,3 +1,11 @@
+"""
+# References:
+
+[^1]: <a name="okhrati_multilinear_2021"></a>Okhrati, R., Lipani, A., 2021.
+    [A Multilinear Sampling Algorithm to Estimate Shapley Values](https://ieeexplore.ieee.org/abstract/document/9412511).
+    In: 2020 25th International Conference on Pattern Recognition (ICPR), pp. 7992–7999. IEEE.
+"""
+
 import operator
 from enum import Enum
 from functools import reduce
@@ -99,7 +107,7 @@ def owen_sampling_shapley(
     progress: bool = False,
 ) -> ValuationResult:
     r"""Owen sampling of Shapley values as described in
-    [@okhrati_multilinear_2021].
+    (Okhrati and Lipani, 2021)<sup><a href="#okhrati_multilinear_2021">1</a></sup>.
 
     This function computes a Monte Carlo approximation to
 
