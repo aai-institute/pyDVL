@@ -46,6 +46,7 @@ def check_values(
     atol: float = 1e-5,
     *,
     extra_values_names: Sequence[str] = tuple(),
+    equal: bool = True,
 ):
     """Compares values in dictionaries.
 
@@ -65,13 +66,17 @@ def check_values(
         have |value - exact_value| < 0.1 for every value.
     :param extra_values_names: Sequence of names of extra values that should
         also be compared.
+    :param equal: True, if it should be checked that the values are equal, False if it
+        should be checked that they are not equal.
     """
     values.sort()
     exact_values.sort()
 
-    assert np.allclose(values.values, exact_values.values, rtol=rtol, atol=atol)
+    assert (not equal) ^ np.allclose(
+        values.values, exact_values.values, rtol=rtol, atol=atol
+    )
     for name in extra_values_names:
-        assert np.isclose(
+        assert (not equal) ^ np.isclose(
             getattr(values, name), getattr(exact_values, name), rtol=rtol, atol=atol
         )
 

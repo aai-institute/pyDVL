@@ -1,4 +1,7 @@
+from typing import Optional
+
 from pydvl.utils import Utility
+from pydvl.utils.types import Seed
 from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.gt import group_testing_shapley
 from pydvl.value.shapley.knn import knn_shapley
@@ -24,6 +27,7 @@ def compute_shapley_values(
     done: StoppingCriterion = MaxUpdates(100),
     mode: ShapleyMode = ShapleyMode.TruncatedMontecarlo,
     n_jobs: int = 1,
+    seed: Optional[Seed] = None,
     **kwargs,
 ) -> ValuationResult:
     """Umbrella method to compute Shapley values with any of the available
@@ -83,6 +87,8 @@ def compute_shapley_values(
         using boolean operators. Some methods ignore this argument, others
         require specific subtypes.
     :param n_jobs: Number of parallel jobs (available only to some methods)
+    :param seed: Either an instance of a numpy random number generator or a seed
+        for it.
     :param mode: Choose which shapley algorithm to use. See
         :class:`~pydvl.value.shapley.ShapleyMode` for a list of allowed value.
 
@@ -102,11 +108,11 @@ def compute_shapley_values(
     ):
         truncation = kwargs.pop("truncation", NoTruncation())
         return permutation_montecarlo_shapley(  # type: ignore
-            u=u, done=done, truncation=truncation, n_jobs=n_jobs, **kwargs
+            u=u, done=done, truncation=truncation, n_jobs=n_jobs, seed=seed, **kwargs
         )
     elif mode == ShapleyMode.CombinatorialMontecarlo:
         return combinatorial_montecarlo_shapley(
-            u, done=done, n_jobs=n_jobs, progress=progress
+            u, done=done, n_jobs=n_jobs, seed=seed, progress=progress
         )
     elif mode == ShapleyMode.CombinatorialExact:
         return combinatorial_exact_shapley(u, n_jobs=n_jobs, progress=progress)
@@ -129,6 +135,7 @@ def compute_shapley_values(
             max_q=int(kwargs.get("max_q", -1)),
             method=method,
             n_jobs=n_jobs,
+            seed=seed,
         )
     elif mode == ShapleyMode.KNN:
         return knn_shapley(u, progress=progress)
@@ -147,6 +154,7 @@ def compute_shapley_values(
             n_samples=n_samples,
             n_jobs=n_jobs,
             progress=progress,
+            seed=seed,
             **kwargs,
         )
     else:

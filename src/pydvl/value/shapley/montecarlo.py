@@ -38,7 +38,7 @@ import operator
 from concurrent.futures import FIRST_COMPLETED, Future, wait
 from functools import reduce
 from itertools import cycle, takewhile
-from typing import Sequence
+from typing import Optional, Sequence
 
 import numpy as np
 from deprecate import deprecated
@@ -49,6 +49,7 @@ from pydvl.utils import effective_n_jobs, init_executor, init_parallel_backend
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import CancellationPolicy, MapReduceJob
+from pydvl.utils.types import Seed, ensure_seed_sequence
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.truncated import NoTruncation, TruncationPolicy
@@ -60,7 +61,10 @@ __all__ = ["permutation_montecarlo_shapley", "combinatorial_montecarlo_shapley"]
 
 
 def _permutation_montecarlo_one_step(
-    u: Utility, truncation: TruncationPolicy, algorithm_name: str
+    u: Utility,
+    truncation: TruncationPolicy,
+    algorithm_name: str,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     """Helper function for :func:`permutation_montecarlo_shapley`.
 
@@ -73,16 +77,16 @@ def _permutation_montecarlo_one_step(
         processing a permutation and set all subsequent marginals to zero.
     :param algorithm_name: For the results object. Used internally by different
         variants of Shapley using this subroutine
-
+    :param seed: Either an instance of a numpy random number generator or a seed
+        for it.
     :return: An object with the results
     """
 
     result = ValuationResult.zeros(
         algorithm=algorithm_name, indices=u.data.indices, data_names=u.data.data_names
     )
-
     prev_score = 0.0
-    permutation = np.random.permutation(u.data.indices)
+    permutation = np.random.default_rng(seed).permutation(u.data.indices)
     permutation_done = False
     truncation.reset()
     for i, idx in enumerate(permutation):
@@ -121,6 +125,7 @@ def permutation_montecarlo_shapley(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
+    seed: Seed = None,
 ) -> ValuationResult:
     r"""Computes an approximate Shapley value by sampling independent
     permutations of the index set, approximating the sum:
@@ -159,6 +164,8 @@ def permutation_montecarlo_shapley(
         interrupt processing a permutation and set all subsequent marginals to
         zero. Typically used to stop computation when the marginal is small.
     :param n_jobs: number of jobs across which to distribute the computation.
+    :param seed: Either an instance of a numpy random number generator or a seed
+        for it.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param progress: Whether to display progress bars for each job.
@@ -171,6 +178,7 @@ def permutation_montecarlo_shapley(
     max_workers = effective_n_jobs(n_jobs, config)
     n_submitted_jobs = 2 * max_workers  # number of jobs in the executor's queue
 
+    seed_sequence = ensure_seed_sequence(seed)
     result = ValuationResult.zeros(algorithm=algorithm)
 
     pbar = tqdm(disable=not progress, total=100, unit="%")
@@ -195,9 +203,15 @@ def permutation_montecarlo_shapley(
                     return result
 
             # Ensure that we always have n_submitted_jobs in the queue or running
-            for _ in range(n_submitted_jobs - len(pending)):
+            n_remaining_slots = n_submitted_jobs - len(pending)
+            seeds = seed_sequence.spawn(n_remaining_slots)
+            for i in range(n_remaining_slots):
                 future = executor.submit(
-                    _permutation_montecarlo_one_step, u, truncation, algorithm
+                    _permutation_montecarlo_one_step,
+                    u,
+                    truncation,
+                    algorithm,
+                    seed=seeds[i].entropy,
                 )
                 pending.add(future)
 
@@ -209,6 +223,7 @@ def _combinatorial_montecarlo_shapley(
     *,
     progress: bool = False,
     job_id: int = 1,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     """Helper function for :func:`combinatorial_montecarlo_shapley`.
 
@@ -221,6 +236,8 @@ def _combinatorial_montecarlo_shapley(
         subsets for an index.
     :param progress: Whether to display progress bars for each job.
     :param job_id: id to use for reporting progress
+    :param seed: Either an instance of a numpy random number generator or a seed
+        for it.
     :return: A tuple of ndarrays with estimated values and standard errors
     """
     n = len(u.data)
@@ -236,6 +253,7 @@ def _combinatorial_montecarlo_shapley(
         data_names=[u.data.data_names[i] for i in indices],
     )
 
+    rng = np.random.default_rng(seed)
     repeat_indices = takewhile(lambda _: not done(result), cycle(indices))
     pbar = tqdm(disable=not progress, position=job_id, total=100, unit="%")
     for idx in repeat_indices:
@@ -243,7 +261,7 @@ def _combinatorial_montecarlo_shapley(
         pbar.refresh()
         # Randomly sample subsets of full dataset without idx
         subset = np.setxor1d(u.data.indices, [idx], assume_unique=True)
-        s = next(random_powerset(subset, n_samples=1))
+        s = next(random_powerset(subset, n_samples=1, seed=rng))
         marginal = (u({idx}.union(s)) - u(s)) / math.comb(n - 1, len(s))
         result.update(idx, correction * marginal)
 
@@ -257,6 +275,7 @@ def combinatorial_montecarlo_shapley(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     r"""Computes an approximate Shapley value using the combinatorial
     definition:
@@ -281,6 +300,8 @@ def combinatorial_montecarlo_shapley(
     :param n_jobs: number of parallel jobs across which to distribute the
         computation. Each worker receives a chunk of
         :attr:`~pydvl.utils.dataset.Dataset.indices`
+    :param seed: Either an instance of a numpy random number generator or a seed
+        for it.
     :param config: Object configuring parallel computation, with cluster
         address, number of cpus, etc.
     :param progress: Whether to display progress bars for each job.
@@ -295,4 +316,4 @@ def combinatorial_montecarlo_shapley(
         n_jobs=n_jobs,
         config=config,
     )
-    return map_reduce_job()
+    return map_reduce_job(seed=seed)

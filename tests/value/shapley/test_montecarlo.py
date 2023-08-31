@@ -7,6 +7,7 @@ from sklearn.linear_model import LinearRegression
 from pydvl.utils import GroupedDataset, MemcachedConfig, Status, Utility
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.score import Scorer, squashed_r2
+from pydvl.utils.types import Seed
 from pydvl.value import compute_shapley_values
 from pydvl.value.shapley import ShapleyMode
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
@@ -60,6 +61,93 @@ def test_analytic_montecarlo_shapley(
     )
 
     check_values(values, exact_values, rtol=rtol, atol=atol)
+
+
+test_cases_montecarlo_shapley_reproducible_stochastic = [
+    (12, ShapleyMode.PermutationMontecarlo, {"done": MaxUpdates(10)}),
+    # FIXME! it should be enough with 2**(len(data)-1) samples
+    (
+        8,
+        ShapleyMode.CombinatorialMontecarlo,
+        {"done": MaxUpdates(2**10)},
+    ),
+    (12, ShapleyMode.Owen, dict(n_samples=4, max_q=200)),
+    (12, ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=200)),
+    (
+        4,
+        ShapleyMode.GroupTesting,
+        dict(n_samples=int(21), epsilon=0.2, delta=0.01),
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "num_samples, fun, kwargs", test_cases_montecarlo_shapley_reproducible_stochastic
+)
+def test_analytical_montecarlo_shapley_reproducible(
+    num_samples,
+    analytic_shapley,
+    parallel_config,
+    n_jobs,
+    fun: ShapleyMode,
+    kwargs: dict,
+    seed: Seed,
+):
+    u, _ = analytic_shapley
+    values_1 = compute_shapley_values(
+        u,
+        mode=fun,
+        n_jobs=n_jobs,
+        config=parallel_config,
+        progress=False,
+        seed=seed,
+        **kwargs
+    )
+    values_2 = compute_shapley_values(
+        u,
+        mode=fun,
+        n_jobs=n_jobs,
+        config=parallel_config,
+        progress=False,
+        seed=seed,
+        **kwargs
+    )
+    check_values(values_1, values_2, rtol=0.0, atol=0.0)
+
+
+@pytest.mark.parametrize(
+    "num_samples, fun, kwargs", test_cases_montecarlo_shapley_reproducible_stochastic
+)
+def test_analytical_montecarlo_shapley_stochastic(
+    num_samples,
+    analytic_shapley,
+    parallel_config,
+    n_jobs,
+    fun: ShapleyMode,
+    kwargs: dict,
+    seed: Seed,
+    seed_alt: Seed,
+):
+    u, exact_values = analytic_shapley
+    values_1 = compute_shapley_values(
+        u,
+        mode=fun,
+        n_jobs=n_jobs,
+        config=parallel_config,
+        progress=False,
+        seed=seed,
+        **kwargs
+    )
+    values_2 = compute_shapley_values(
+        u,
+        mode=fun,
+        n_jobs=n_jobs,
+        config=parallel_config,
+        progress=False,
+        seed=seed_alt,
+        **kwargs
+    )
+    check_values(values_1, values_2, rtol=0.0, atol=0.0, equal=False)
 
 
 @pytest.mark.parametrize("num_samples, delta, eps", [(8, 0.1, 0.1)])
