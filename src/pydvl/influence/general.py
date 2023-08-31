@@ -1,6 +1,12 @@
 """
-This module contains parallelized influence calculation functions for general
-models, as introduced in [@koh_understanding_2017].
+This module contains influence calculation functions for general
+models, as introduced in (Koh and Liang, 2017)[^1].
+
+## References:
+
+[^1]: <a name="koh_liang_2017"></a>Koh, P.W., Liang, P., 2017.
+    [Understanding Black-box Predictions via Influence Functions](https://proceedings.mlr.press/v70/koh17a.html).
+    In: Proceedings of the 34th International Conference on Machine Learning, pp. 1885–1894. PMLR.
 """
 import logging
 from copy import deepcopy
@@ -27,8 +33,10 @@ class InfluenceType(str, Enum):
     Enum representation for the types of influence.
 
     Attributes:
-    - Up: Up-weighting a training point, see section 2.1 of [@koh_understanding_2017]
-    - Perturbation: Perturb a training point, see section 2.2 of [@koh_understanding_2017]
+        Up: Up-weighting a training point, see section 2.1 of
+            (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>
+        Perturbation: Perturb a training point, see section 2.2 of
+            (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>
 
     """
 
@@ -60,7 +68,7 @@ def compute_influence_factors(
     They are used for efficient influence calculation. This method first (implicitly) calculates
     the Hessian and then (explicitly) finds the influence factors for the model using the given
     inversion method. The parameter `hessian_perturbation` is used to regularize the inversion of
-    the Hessian. For more info, refer to [@koh_understanding_2017], paragraph 3.
+    the Hessian. For more info, refer to (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>, paragraph 3.
 
     Args:
         model: A model wrapped in the TwiceDifferentiable interface.
@@ -135,7 +143,7 @@ def compute_influences_up(
        parameters of the model).
     2. Multiplying each gradient with the influence factors.
 
-    For a detailed description of the methodology, see section 2.1 of [@koh_understanding_2017].
+    For a detailed description of the methodology, see section 2.1 of (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>.
 
     Args:
         model: A model that implements the TwiceDifferentiable interface.
@@ -159,7 +167,7 @@ def compute_influences_up(
 
     def train_grads() -> Generator[TensorType, None, None]:
         for x, y in maybe_progress(
-            input_data, progress, desc="Batch Split Input Gradients"
+                input_data, progress, desc="Batch Split Input Gradients"
         ):
             yield stack(
                 [model.grad(inpt, target) for inpt, target in zip(unsqueeze(x, 1), y)]
@@ -195,10 +203,11 @@ def compute_influences_pert(
     1. Calculating the gradient of the model with respect to each training sample
        (\(\operatorname{grad}_{\theta} L\), where \(L\) is the loss of the model for a single data point and \(\theta\)
        are the parameters of the model).
-    2. Using the method `TwiceDifferentiable.mvp` to efficiently compute the product of the
+    2. Using the method [TwiceDifferentiable.mvp][pydvl.influence.twice_differentiable.TwiceDifferentiable.mvp]
+       to efficiently compute the product of the
        influence factors and \(\operatorname{grad}_x \operatorname{grad}_{\theta} L\).
 
-    For a detailed methodology, see section 2.2 of [@koh_understanding_2017].
+    For a detailed methodology, see section 2.2 of (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>.
 
     Args:
         model: A model that implements the TwiceDifferentiable interface.
@@ -280,7 +289,7 @@ def compute_influences(
         progress: A boolean indicating whether progress bars should be displayed during computation.
         influence_type: Determines the methodology for computing influences.
             Valid choices include 'up' (for up-weighting) and 'perturbation'.
-            For an in-depth understanding, see [@koh_understanding_2017].
+            For an in-depth understanding, see (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>.
         hessian_regularization: A lambda value used in Hessian regularization. The regularized Hessian, \( H_{reg} \),
             is computed as \( H + \lambda \times I \), where \( I \) is the identity matrix and \( H \)
             is the simple, unmodified Hessian. This regularization is typically utilized for more
@@ -313,3 +322,4 @@ def compute_influences(
         influence_factors,
         progress=progress,
     )
+

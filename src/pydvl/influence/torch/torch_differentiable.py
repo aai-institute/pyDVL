@@ -3,6 +3,15 @@ Contains methods for differentiating  a pyTorch model. Most of the methods focus
 on ways to calculate matrix vector products. Moreover, it contains several
 methods to invert the Hessian vector product. These are used to calculate the
 influence of a training point on the model.
+
+## References:
+
+[^1]: <a name="koh_liang_2017"></a>Koh, P.W., Liang, P., 2017.
+    [Understanding Black-box Predictions via Influence Functions](https://proceedings.mlr.press/v70/koh17a.html).
+    In: Proceedings of the 34th International Conference on Machine Learning, pp. 1885–1894. PMLR.
+[^2]: <a name="agarwal_secondorder_2017"></a>Agarwal, N., Bullins, B., Hazan, E., 2017.
+    [Second-Order Stochastic Optimization for Machine Learning in Linear Time](https://www.jmlr.org/papers/v18/16-491.html).
+    In: Journal of Machine Learning Research, Vol. 18, pp. 1–40. JMLR.
 """
 import logging
 from dataclasses import dataclass
@@ -42,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
     r"""
-    Wraps a [torch.nn.Module](https://pytorch.org/docs/stable/generated/torch.nn.Module.html)
+    Wraps a [torch.nn.Module][torch.nn.Module]
     and a loss function and provides methods to compute gradients and
     second derivative of the loss wrt. the model parameters
 
@@ -503,8 +512,9 @@ def solve_linear(
         hessian_perturbation: Regularization of the hessian.
 
     Returns:
-        Instance of [InverseHvpResult], having an array that solves the inverse problem,
-        i.e. it returns \(x\) such that \(Hx = b\), and a dictionary containing information about the solution.
+        Instance of [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult],
+            having an array that solves the inverse problem, i.e. it returns \(x\) such that \(Hx = b\),
+            and a dictionary containing information about the solution.
     """
 
     all_x, all_y = [], []
@@ -550,9 +560,10 @@ def solve_batch_cg(
         progress: If True, display progress bars.
 
     Returns:
-        Instance of [InverseHvpResult], having a matrix of shape [NxP] with each line being a solution of \(Ax=b\),
-        and a dictionary containing information about the convergence of CG,
-        one entry for each line of the matrix.
+        Instance of [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult],
+            having a matrix of shape [NxP] with each line being a solution of \(Ax=b\),
+            and a dictionary containing information about the convergence of CG,
+            one entry for each line of the matrix.
     """
 
     total_grad_xy = 0
@@ -598,7 +609,7 @@ def solve_cg(
 
     Returns:
         Instance of [InverseHvpResult], with a vector x, solution of \(Ax=b\), and a dictionary containing
-        information about the convergence of CG.
+            information about the convergence of CG.
     """
 
     if x0 is None:
@@ -655,7 +666,8 @@ def solve_lissa(
 
     where \(I\) is the identity matrix, \(d\) is a dampening term and \(s\) a scaling
     factor that are applied to help convergence. For details, see
-    [@koh_understanding_2017] and the original paper [@agarwal_2017_second].
+    (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup> and the original paper
+    (Agarwal et. al.)<sup><a href="#agarwal_secondorder_2017">2</a></sup>.
 
     Args:
         model: A model wrapped in the TwiceDifferentiable interface.
@@ -670,8 +682,8 @@ def solve_lissa(
         progress: If True, display progress bars.
 
     Returns:
-        Instance of [InverseHvpResult], with a matrix of shape [NxP] with each line being a solution of \(Ax=b\),
-        and a dictionary containing information about the accuracy of the solution.
+        Instance of [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult], with a matrix of shape [NxP] with each line being a solution of \(Ax=b\),
+            and a dictionary containing information about the accuracy of the solution.
     """
 
     if h0 is None:
