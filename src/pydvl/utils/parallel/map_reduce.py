@@ -1,3 +1,11 @@
+"""
+This module contains a wrapper around joblib's `Parallel()` class that makes it
+easy to run map-reduce jobs.
+
+!!! Deprecation notice
+    This interface might be deprecated or changed in a future release before 1.0
+
+"""
 from itertools import accumulate, repeat
 from typing import Any, Collection, Dict, Generic, List, Optional, TypeVar, Union
 

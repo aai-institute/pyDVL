@@ -26,14 +26,17 @@ permutations of $D$. The former conform to the above definition of semi-values,
 while the latter reformulates it as:
 
 $$
-v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
-\tilde{w}( | \sigma_{:i} | )[u(\sigma_{:i} \cup \{i\}) − u(\sigma_{:i})],
+v(i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
+\tilde{w}( | \sigma_{:i} | )[U(\sigma_{:i} \cup \{i\}) − U(\sigma_{:i})],
 $$
 
 where $\sigma_{:i}$ denotes the set of indices in permutation sigma before the
-position where $i$ appears (see [Data valuation][computing-data-values] for details), and
-$\tilde{w}(k) = n \choose{n-1}{k} w(k)$ is the weight correction due to the
-reformulation.
+position where $i$ appears (see [Data valuation][computing-data-values] for
+details), and
+
+$$ \tilde{w} (k) = n \binom{n - 1}{k} w (k) $$
+
+is the weight correction due to the reformulation.
 
 !!! Warning
     Both [PermutationSampler][pydvl.value.sampler.PermutationSampler] and
@@ -74,7 +77,7 @@ __all__ = [
     "beta_coefficient",
     "banzhaf_coefficient",
     "shapley_coefficient",
-    "semivalues",
+    "compute_generic_semivalues",
     "compute_semivalues",
     "SemiValueMode",
 ]
@@ -101,7 +104,7 @@ MarginalT = Tuple[IndexT, float]
 
 def _marginal(u: Utility, coefficient: SVCoefficient, sample: SampleT) -> MarginalT:
     """Computation of marginal utility. This is a helper function for
-    [semivalues()][pydvl.value.semivalues.semivalues].
+    [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
 
     Args:
         u: Utility object with model, data, and scoring function.
@@ -123,7 +126,7 @@ def _marginal(u: Utility, coefficient: SVCoefficient, sample: SampleT) -> Margin
 #     deprecated_in="0.8.0",
 #     remove_in="0.9.0",
 # )
-def semivalues(
+def compute_generic_semivalues(
     sampler: PowersetSampler,
     u: Utility,
     coefficient: SVCoefficient,
@@ -248,10 +251,11 @@ def compute_shapley_semivalues(
 ) -> ValuationResult:
     """Computes Shapley values for a given utility function.
 
-    This is a convenience wrapper for :func:`semivalues` with the Shapley
-    coefficient. Use :func:`~pydvl.value.shapley.common.compute_shapley_values`
-    for a more flexible interface and additional methods, including Truncated
-    Monte Carlo.
+    This is a convenience wrapper for
+    [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues]
+    with the Shapley coefficient. Use
+    [compute_shapley_values][pydvl.value.shapley.common.compute_shapley_values]
+    for a more flexible interface and additional methods, including TMCS.
 
     Args:
         u: Utility object with model, data, and scoring function.
@@ -266,7 +270,7 @@ def compute_shapley_semivalues(
     Returns:
         Object with the results.
     """
-    return semivalues(
+    return compute_generic_semivalues(
         sampler_t(u.data.indices),
         u,
         shapley_coefficient,
@@ -288,8 +292,9 @@ def compute_banzhaf_semivalues(
 ) -> ValuationResult:
     """Computes Banzhaf values for a given utility function.
 
-    This is a convenience wrapper for :func:`semivalues` with the Banzhaf
-    coefficient.
+    This is a convenience wrapper for
+    [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues]
+    with the Banzhaf coefficient.
 
     Args:
         u: Utility object with model, data, and scoring function.
@@ -304,7 +309,7 @@ def compute_banzhaf_semivalues(
     Returns:
         Object with the results.
     """
-    return semivalues(
+    return compute_generic_semivalues(
         sampler_t(u.data.indices),
         u,
         banzhaf_coefficient,
@@ -328,8 +333,9 @@ def compute_beta_shapley_semivalues(
 ) -> ValuationResult:
     """Computes Beta Shapley values for a given utility function.
 
-    This is a convenience wrapper for :func:`semivalues` with the Beta Shapley
-    coefficient.
+    This is a convenience wrapper for
+    [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues]
+    with the Beta Shapley coefficient.
 
     Args:
         u: Utility object with model, data, and scoring function.
@@ -344,7 +350,7 @@ def compute_beta_shapley_semivalues(
     Returns:
         Object with the results.
     """
-    return semivalues(
+    return compute_generic_semivalues(
         sampler_t(u.data.indices),
         u,
         beta_coefficient(alpha, beta),
@@ -361,6 +367,13 @@ def compute_beta_shapley_semivalues(
     remove_in="0.8.0",
 )
 class SemiValueMode(str, Enum):
+    """Enumeration of semi-value modes.
+
+    !!! warning "Deprecation notice"
+        This enum and the associated methods are deprecated and will be removed
+        in 0.8.0.
+    """
+
     Shapley = "shapley"
     BetaShapley = "beta_shapley"
     Banzhaf = "banzhaf"
@@ -378,28 +391,30 @@ def compute_semivalues(
 ) -> ValuationResult:
     """Convenience entry point for most common semi-value computations.
 
-    !!! Warning
-       This method is deprecated and will be replaced in 0.8.0 by the more
-       general implementation of [semivalues][pydvl.value.semivalues.semivalues].
-       Use
-       [compute_shapley_semivalues][pydvl.value.semivalues.compute_shapley_semivalues],
-       [compute_banzhaf_semivalues][pydvl.value.semivalues.compute_banzhaf_semivalues], or
-       [compute_beta_shapley_semivalues][pydvl.value.semivalues.compute_beta_shapley_semivalues]
-       instead.
+    !!! warning "Deprecation warning"
+        This method is deprecated and will be replaced in 0.8.0 by the more
+        general implementation of
+        [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
+        Use
+        [compute_shapley_semivalues][pydvl.value.semivalues.compute_shapley_semivalues],
+        [compute_banzhaf_semivalues][pydvl.value.semivalues.compute_banzhaf_semivalues],
+        or
+        [compute_beta_shapley_semivalues][pydvl.value.semivalues.compute_beta_shapley_semivalues]
+        instead.
 
     The modes supported with this interface are the following. For greater
-    flexibility use [semivalues][pydvl.value.semivalues.semivalues] directly.
+    flexibility use
+    [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues]
+    directly.
 
-    - [SemiValueMode.Shapley][pydvl.value.semivalues.SemiValueMode.Shapley]:
+    - [SemiValueMode.Shapley][pydvl.value.semivalues.SemiValueMode]:
       Shapley values.
-    - [SemiValueMode.BetaShapley][pydvl.value.semivalues.SemiValueMode.BetaShapley]:
+    - [SemiValueMode.BetaShapley][pydvl.value.semivalues.SemiValueMode]:
       Implements the Beta Shapley semi-value as introduced in [@kwon_beta_2022].
       Pass additional keyword arguments `alpha` and `beta` to set the
       parameters of the Beta distribution (both default to 1).
-    - [SemiValueMode.Banzhaf][SemiValueMode.Banzhaf]: Implements the Banzhaf
-      semi-value as introduced in [@wang_data_2022].
-
-    See [[data-valuation]] for an overview of valuation.
+    - [SemiValueMode.Banzhaf][pydvl.value.semivalues.SemiValueMode]: Implements
+      the Banzhaf semi-value as introduced in [@wang_data_2022].
 
     Args:
         u: Utility object with model, data, and scoring function.
@@ -410,7 +425,7 @@ def compute_semivalues(
             for a list.
         n_jobs: Number of parallel jobs to use.
         kwargs: Additional keyword arguments passed to
-            [semivalues()][pydvl.value.semivalues.semivalues].
+            [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
 
     Returns:
         Object with the results.
@@ -427,4 +442,6 @@ def compute_semivalues(
     else:
         raise ValueError(f"Unknown mode {mode}")
     coefficient = cast(SVCoefficient, coefficient)
-    return semivalues(sampler_instance, u, coefficient, done, n_jobs=n_jobs, **kwargs)
+    return compute_generic_semivalues(
+        sampler_instance, u, coefficient, done, n_jobs=n_jobs, **kwargs
+    )

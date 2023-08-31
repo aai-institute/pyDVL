@@ -109,3 +109,13 @@ body[data-md-color-scheme="default"] .invertible img {
 body[data-md-color-scheme="slate"] .invertible img {
     filter: invert(100%) hue-rotate(180deg);
 }
+
+/* Rendered dataframe from jupyter */
+table.dataframe {
+    display: block;
+    max-width: -moz-fit-content;
+    max-width: fit-content;
+    margin: 0 auto;
+    overflow-x: auto;
+    white-space: nowrap;
+}

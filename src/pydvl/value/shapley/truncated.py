@@ -128,7 +128,8 @@ class RelativeTruncation(TruncationPolicy):
         self.total_utility = u(u.data.indices)
 
     def _check(self, idx: int, score: float) -> bool:
-        return np.allclose(score, self.total_utility, rtol=self.rtol)
+        # Explicit cast for the benefit of mypy 🤷
+        return bool(np.allclose(score, self.total_utility, rtol=self.rtol))
 
     def reset(self):
         pass

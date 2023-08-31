@@ -110,7 +110,7 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
         self,
         indices: NDArray[T],
         index_iteration: IndexIteration = IndexIteration.Sequential,
-        outer_indices: NDArray[T] = None,
+        outer_indices: NDArray[T] | None = None,
     ):
         """
         Args:
@@ -237,7 +237,8 @@ class DeterministicUniformSampler(PowersetSampler[T]):
 
     def __iter__(self) -> Iterator[SampleT]:
         for idx in self.iterindices():
-            for subset in powerset(self.complement([idx])):
+            # FIXME: type ignore just necessary for CI ??
+            for subset in powerset(self.complement([idx])):  # type: ignore
                 yield idx, np.array(subset)
                 self._n_samples += 1
 
