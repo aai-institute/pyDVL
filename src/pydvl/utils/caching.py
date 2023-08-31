@@ -34,7 +34,6 @@ default_config = dict(
    serde=serde.PickleSerde(pickle_version=PICKLE_VERSION)
 )
 ```
-.. _caching stochastic functions:
 
 # Usage with stochastic functions
 
@@ -129,7 +128,13 @@ class CacheStats:
 
 
 def serialize(x: Any) -> bytes:
-    """Serialize an object to bytes."""
+    """Serialize an object to bytes.
+    Args:
+        x: object to serialize.
+
+    Returns:
+        serialized object.
+    """
     pickled_output = BytesIO()
     pickler = Pickler(pickled_output, PICKLE_VERSION)
     pickler.dump(x)
@@ -169,8 +174,8 @@ def memcached(
         ```
 
     Args:
-        client_config: configuration for `pymemcache's Client()
-            <https://pymemcache.readthedocs.io/en/stable/apidoc/pymemcache.client.base.html>`_.
+        client_config: configuration for pymemcache's
+            [Client][pymemcache.client.base.Client].
             Will be merged on top of the default configuration (see below).
         time_threshold: computations taking less time than this many seconds are
             not cached.
@@ -188,7 +193,7 @@ def memcached(
         ignore_args: Do not take these keyword arguments into account when
             hashing the wrapped function for usage as key in memcached. This allows
             sharing the cache among different jobs for the same experiment run if
-            the callable happens to have "nuisance" parameters like "job_id" which
+            the callable happens to have "nuisance" parameters like `job_id` which
             do not affect the result of the computation.
 
     Returns:
