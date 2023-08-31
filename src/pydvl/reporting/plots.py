@@ -107,8 +107,8 @@ def plot_shapley(
     xlabel: Optional[str] = None,
     ylabel: Optional[str] = None,
 ) -> plt.Axes:
-    """Plots the shapley values, as returned from
-    [compute_shapley_values()][pydvl.value.shapley.common.compute_shapley_values], with error bars
+    r"""Plots the shapley values, as returned from
+    [compute_shapley_values][pydvl.value.shapley.common.compute_shapley_values], with error bars
     corresponding to an $\alpha$-level confidence interval.
 
     Args:
@@ -141,6 +141,7 @@ def plot_influence_distribution_by_label(
     """Plots the histogram of the influence that all samples in the training set
     have over a single sample index, separated by labels.
 
+    Args:
        influences: array of influences (training samples x test samples)
        labels: labels for the training set.
        title_extra:

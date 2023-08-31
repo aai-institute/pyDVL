@@ -90,12 +90,12 @@ def random_powerset(
     """Samples subsets from the power set of the argument, without
     pre-generating all subsets and in no order.
 
-    See `powerset()` if you wish to deterministically generate all subsets.
+    See [powerset][pydvl.utils.numeric.powerset] if you wish to deterministically generate all subsets.
 
     To generate subsets, `len(s)` Bernoulli draws with probability `q` are
     drawn. The default value of `q = 0.5` provides a uniform distribution over
     the power set of `s`. Other choices can be used e.g. to implement
-    :func:`Owen sampling <pydvl.value.shapley.owen.owen_sampling_shapley>`.
+    [owen_sampling_shapley][pydvl.value.shapley.owen.owen_sampling_shapley].
 
     Args:
         s: set to sample from
@@ -107,7 +107,8 @@ def random_powerset(
     Returns:
         Samples from the power set of `s`.
 
-    :raises: ValueError: if the element sampling probability is not in [0,1]
+    Raises:
+        ValueError: if the element sampling probability is not in [0,1]
 
     """
     if q < 0 or q > 1:
@@ -132,7 +133,8 @@ def random_subset_of_size(s: NDArray[T], size: int) -> NDArray[T]:
     Returns:
         The subset
 
-    :raises ValueError: If size > len(s)
+    Raises
+        ValueError: If size > len(s)
     """
     if size > len(s):
         raise ValueError("Cannot sample subset larger than set")
@@ -144,10 +146,12 @@ def random_matrix_with_condition_number(n: int, condition_number: float) -> NDAr
     """Constructs a square matrix with a given condition number.
 
     Taken from:
-    https://gist.github.com/bstellato/23322fe5d87bb71da922fbc41d658079#file-random_mat_condition_number-py
+    [https://gist.github.com/bstellato/23322fe5d87bb71da922fbc41d658079#file-random_mat_condition_number-py](
+    https://gist.github.com/bstellato/23322fe5d87bb71da922fbc41d658079#file-random_mat_condition_number-py)
 
     Also see:
-    https://math.stackexchange.com/questions/1351616/condition-number-of-ata.
+    [https://math.stackexchange.com/questions/1351616/condition-number-of-ata](
+    https://math.stackexchange.com/questions/1351616/condition-number-of-ata).
 
     Args:
         n: size of the matrix
@@ -207,11 +211,11 @@ def running_moments(
     See [Welford's algorithm in wikipedia](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm)
 
     !!! Warning
-       This is not really using Welford's correction for numerical stability
-       for the variance. (FIXME)
+        This is not really using Welford's correction for numerical stability
+        for the variance. (FIXME)
 
     !!! Todo
-       This could be generalised to arbitrary moments. See [this paper](https://www.osti.gov/biblio/1028931)
+        This could be generalised to arbitrary moments. See [this paper](https://www.osti.gov/biblio/1028931)
 
     Args:
         previous_avg: average value at previous step
