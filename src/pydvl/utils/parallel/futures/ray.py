@@ -114,7 +114,8 @@ class RayExecutor(Executor):
         Returns:
             A Future representing the given call.
 
-        :raises RuntimeError: If a task is submitted after the executor has been shut down.
+        Raises:
+            RuntimeError: If a task is submitted after the executor has been shut down.
         """
         with self._shutdown_lock:
             logger.debug("executor acquired shutdown lock")
@@ -141,16 +142,18 @@ class RayExecutor(Executor):
     ) -> None:
         """Clean up the resources associated with the Executor.
 
-        This method tries to mimic the behaviour of :meth:`Executor.shutdown`
+        This method tries to mimic the behaviour of
+        [Executor.shutdown][concurrent.futures.Executor.shutdown]
         while allowing one more value for ``cancel_futures`` which instructs it
-        to use the :class:`CancellationPolicy` defined upon construction.
+        to use the [CancellationPolicy][pydvl.utils.parallel.backend.CancellationPolicy]
+        defined upon construction.
 
-        :param wait: Whether to wait for pending futures to finish.
-        :param cancel_futures: Overrides the executor's default policy for
-            cancelling futures on exit. If ``True``, all pending futures are
-            cancelled, and if ``False``, no futures are cancelled. If ``None``
-            (default), the executor's policy set at initialization is used.
-        :return:
+        Args:
+            wait: Whether to wait for pending futures to finish.
+            cancel_futures: Overrides the executor's default policy for
+                cancelling futures on exit. If ``True``, all pending futures are
+                cancelled, and if ``False``, no futures are cancelled. If ``None``
+                (default), the executor's policy set at initialization is used.
         """
         logger.debug("executor shutting down")
         with self._shutdown_lock:
@@ -198,7 +201,7 @@ class RayExecutor(Executor):
 
 
 class _WorkItem:
-    """Inspired by code from: concurrent.futures.thread"""
+    """Inspired by code from: [concurrent.futures.thread][]"""
 
     def __init__(
         self,
