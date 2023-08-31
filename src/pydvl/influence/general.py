@@ -167,7 +167,7 @@ def compute_influences_up(
 
     def train_grads() -> Generator[TensorType, None, None]:
         for x, y in maybe_progress(
-                input_data, progress, desc="Batch Split Input Gradients"
+            input_data, progress, desc="Batch Split Input Gradients"
         ):
             yield stack(
                 [model.grad(inpt, target) for inpt, target in zip(unsqueeze(x, 1), y)]
@@ -322,4 +322,3 @@ def compute_influences(
         influence_factors,
         progress=progress,
     )
-
