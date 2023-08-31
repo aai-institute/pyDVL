@@ -257,15 +257,23 @@ class Dataset:
     ) -> "Dataset":
         """Constructs a [Dataset][pydvl.utils.Dataset] object from a
         [sklearn.utils.Bunch][sklearn.utils.Bunch], as returned by the `load_*`
-        functions in [sklearn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html).
+        functions in [scikit-learn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html).
+
+        ??? Example
+            ```pycon
+            >>> from pydvl.utils import Dataset
+            >>> from sklearn.datasets import load_boston
+            >>> dataset = Dataset.from_sklearn(load_boston())
+            ```
 
         Args:
-            data: sklearn dataset. The following attributes are supported
-                - `data`: covariates [required]
-                - `target`: target variables (labels) [required]
-                - `feature_names`: the feature names
-                - `target_names`: the target names
-                - `DESCR`: a description
+            data: scikit-learn Bunch object. The following attributes are supported:
+
+                - `data`: covariates.
+                - `target`: target variables (labels).
+                - `feature_names` (**optional**): the feature names.
+                - `target_names` (**optional**): the target names.
+                - `DESCR` (**optional**): a description.
             train_size: size of the training dataset. Used in `train_test_split`
             random_state: seed for train / test split
             stratify_by_target: If `True`, data is split in a stratified
@@ -310,6 +318,14 @@ class Dataset:
     ) -> "Dataset":
         """Constructs a [Dataset][pydvl.utils.Dataset] object from X and y numpy arrays  as
         returned by the `make_*` functions in [sklearn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
+
+        ??? Example
+            ```pycon
+            >>> from pydvl.utils import Dataset
+            >>> from sklearn.datasets import make_regression
+            >>> X, y = make_regression()
+            >>> dataset = Dataset.from_arrays(X, y)
+            ```
 
         Args:
             X: numpy array of shape (n_samples, n_features)
@@ -456,16 +472,26 @@ class GroupedDataset(Dataset):
     ) -> "GroupedDataset":
         """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from a
         [sklearn.utils.Bunch][sklearn.utils.Bunch] as returned by the `load_*` functions in
-        [sklearn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html) and groups
+        [scikit-learn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html) and groups
         it.
 
+        ??? Example
+            ```pycon
+            >>> from sklearn.datasets import load_iris
+            >>> from pydvl.utils import GroupedDataset
+            >>> iris = load_iris()
+            >>> data_groups = iris.data[:, 0] // 0.5
+            >>> dataset = GroupedDataset.from_sklearn(iris, data_groups=data_groups)
+            ```
+
         Args:
-            data: sklearn dataset. The following attributes are supported
-                - `data`: covariates [required]
-                - `target`: target variables (labels) [required]
-                - `feature_names`: the feature names
-                - `target_names`: the target names
-                - `DESCR`: a description
+            data: scikit-learn Bunch object. The following attributes are supported:
+
+                - `data`: covariates.
+                - `target`: target variables (labels).
+                - `feature_names` (**optional**): the feature names.
+                - `target_names` (**optional**): the target names.
+                - `DESCR` (**optional**): a description.
             train_size: size of the training dataset. Used in `train_test_split`.
             random_state: seed for train / test split.
             stratify_by_target: If `True`, data is split in a stratified
@@ -512,7 +538,23 @@ class GroupedDataset(Dataset):
     ) -> "Dataset":
         """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from X and y numpy arrays
         as returned by the `make_*` functions in
-        [sklearn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
+        [scikit-learn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
+
+        ??? Example
+            ```pycon
+            >>> from sklearn.datasets import make_classification
+            >>> from pydvl.utils import GroupedDataset
+            >>> X, y = make_classification(
+            ...     n_samples=100,
+            ...     n_features=4,
+            ...     n_informative=2,
+            ...     n_redundant=0,
+            ...     random_state=0,
+            ...     shuffle=False
+            ... )
+            >>> data_groups = X[:, 0] // 0.5
+            >>> dataset = GroupedDataset.from_arrays(X, y, data_groups=data_groups)
+            ```
 
         Args:
             X: array of shape (n_samples, n_features)
@@ -560,6 +602,17 @@ class GroupedDataset(Dataset):
     ) -> "GroupedDataset":
         """Creates a [GroupedDataset][pydvl.utils.GroupedDataset] object from the data a
         [Dataset][pydvl.utils.Dataset] object and a mapping of data groups.
+
+        ??? Example
+            ```pycon
+            >>> import numpy as np
+            >>> from pydvl.utils import Dataset, GroupedDataset
+            >>> dataset = Dataset.from_arrays(
+            ...     X=np.asarray([[1, 2], [3, 4], [5, 6], [7, 8]]),
+            ...     y=np.asarray([0, 1, 0, 1]),
+            ... )
+            >>> dataset = GroupedDataset.from_dataset(dataset, data_groups=[0, 0, 1, 1])
+            ```
 
         Args:
             dataset: The original data.

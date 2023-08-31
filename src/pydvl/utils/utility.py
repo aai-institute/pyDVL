@@ -15,6 +15,12 @@ of the model to compute the score.
 This module also contains Utility classes for toy games that are used
 for testing and for demonstration purposes.
 
+## References:
+
+[^1]: <a name="wang_improving_2022"></a>Wang, T., Yang, Y. and Jia, R., 2021.
+    [Improving cooperative game theory-based data valuation via data utility learning](https://arxiv.org/abs/2107.06336).
+    arXiv preprint arXiv:2107.06336.
+
 """
 import logging
 import warnings
@@ -74,9 +80,10 @@ class Utility:
             ranges.
 
     Args:
-        model: Any supervised model. Typical choices can be found at
-                https://scikit-learn.org/stable/supervised_learning.html
-        data: Dataset or GroupedDataset instance.
+        model: Any supervised model. Typical choices can be found in the
+            [sci-kit learn documentation][https://scikit-learn.org/stable/supervised_learning.html].
+        data: [Dataset][pydvl.utils.dataset.Dataset]
+            or [GroupedDataset][pydvl.utils.dataset.GroupedDataset] instance.
         scorer: A scoring object. If None, the `score()` method of the model
             will be used. See [score][pydvl.utils.score] for ways to create
             and compose scorers, in particular how to set default values and ranges.
@@ -266,7 +273,8 @@ class Utility:
 
 
 class DataUtilityLearning:
-    """Implementation of Data Utility Learning [@wang_improving_2022].
+    """Implementation of Data Utility Learning
+    (Wang et al., 2022)<sup><a href="#wang_improving_2022">1</a></sup>.
 
     This object wraps a [Utility][pydvl.utils.utility.Utility] and delegates
     calls to it, up until a given budget (number of iterations). Every tuple

@@ -6,10 +6,26 @@ import torch
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "to_model_device",
+    "flatten_tensors_to_vector",
+    "reshape_vector_to_tensors",
+    "TorchTensorContainerType",
+    "align_structure",
+    "as_tensor",
+]
+
 
 def to_model_device(x: torch.Tensor, model: torch.nn.Module) -> torch.Tensor:
     """
     Returns the tensor `x` moved to the device of the `model`, if device of model is set
+
+    Args:
+        x: The tensor to be moved to the device of the model.
+        model: The model whose device will be used to move the tensor.
+
+    Returns:
+        The tensor `x` moved to the device of the `model`, if device of model is set.
     """
     if hasattr(model, "device"):
         return x.to(model.device)
@@ -81,6 +97,7 @@ TorchTensorContainerType = TypeVar(
     Tuple[torch.Tensor, ...],
     Dict[str, torch.Tensor],
 )
+"""Type variable for a PyTorch tensor or a container thereof."""
 
 
 def align_structure(
