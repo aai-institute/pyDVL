@@ -198,15 +198,24 @@ def test_random_matrix_with_condition_number(n, cond, exception):
         (10, 2),
     ],
 )
+def test_random_matrix_with_condition_number_reproducible(n, cond, seed):
+    mat_1 = random_matrix_with_condition_number(n, cond, seed=seed)
+    mat_2 = random_matrix_with_condition_number(n, cond, seed=seed)
+    assert np.all(mat_1 == mat_2)
+
+
 @pytest.mark.parametrize(
-    "seed,seed_alt",
-    [(24, 42), (24, 24)],
-    ids=["different", "same"],
+    "n, cond",
+    [
+        (2, 10),
+        (7, 23),
+        (10, 2),
+    ],
 )
-def test_random_matrix_with_condition_number_reproducible(n, cond, seed, seed_alt):
+def test_random_matrix_with_condition_number_stochastic(n, cond, seed, seed_alt):
     mat_1 = random_matrix_with_condition_number(n, cond, seed=seed)
     mat_2 = random_matrix_with_condition_number(n, cond, seed=seed_alt)
-    assert (seed != seed_alt) ^ bool(np.sum(mat_1 != mat_2) == 0)
+    assert np.any(mat_1 != mat_2)
 
 
 def test_running_moments():
