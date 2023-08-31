@@ -64,6 +64,7 @@ plugins:
             - https://pandas.pydata.org/docs/objects.inv
             - https://scikit-learn.org/stable/objects.inv
             - https://pytorch.org/docs/stable/objects.inv
+            - https://pymemcache.readthedocs.io/en/latest/objects.inv
           paths: [ src ]  # search packages in the src folder
           options:
             docstring_style: google
