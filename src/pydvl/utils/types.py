@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import functools
 from abc import ABCMeta
-from typing import Any, Callable, Optional, Protocol, TypeVar, Union
+from typing import Any, Callable, Optional, Protocol, TypeVar, Union, cast
 
 from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
@@ -116,6 +116,6 @@ def ensure_seed_sequence(
     if isinstance(seed, SeedSequence):
         return seed
     elif isinstance(seed, Generator):
-        return seed.bit_generator._seed_seq  # noqa
+        return cast(SeedSequence, seed.bit_generator.seed_seq)  # type: ignore
     else:
         return SeedSequence(seed)

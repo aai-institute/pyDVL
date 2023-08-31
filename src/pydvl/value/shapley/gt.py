@@ -240,7 +240,7 @@ def group_testing_shapley(
         config=config,
         n_jobs=n_jobs,
     )
-    uu, betas = map_reduce_job(seed=map_reduce_seed_sequence.entropy)
+    uu, betas = map_reduce_job(seed=cast(int, map_reduce_seed_sequence.entropy))
 
     # Matrix of estimated differences. See Eqs. (3) and (4) in the paper.
     C = np.zeros(shape=(n, n))

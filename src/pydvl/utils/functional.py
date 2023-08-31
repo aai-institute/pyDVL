@@ -44,7 +44,7 @@ def _unroll_partial_fn(fn: Callable) -> Tuple[Callable, Set[str]]:
     :return: A tuple of the unrolled function and a set of the parameters that were set
         by functools.partial.
     """
-    args_set_by_partial = set()
+    args_set_by_partial: Set[str] = set()
 
     def _rec_unroll_partial_function(g: Callable):
         nonlocal args_set_by_partial

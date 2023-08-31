@@ -38,7 +38,7 @@ import operator
 from concurrent.futures import FIRST_COMPLETED, Future, wait
 from functools import reduce
 from itertools import cycle, takewhile
-from typing import Optional, Sequence
+from typing import Optional, Sequence, cast
 
 import numpy as np
 from deprecate import deprecated
@@ -211,7 +211,7 @@ def permutation_montecarlo_shapley(
                     u,
                     truncation,
                     algorithm,
-                    seed=seeds[i].entropy,
+                    seed=cast(int, seeds[i].entropy),
                 )
                 pending.add(future)
 
