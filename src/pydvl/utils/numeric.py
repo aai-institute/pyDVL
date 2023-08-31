@@ -143,9 +143,7 @@ def random_subset_of_size(
 
 
 def random_matrix_with_condition_number(
-    n: int,
-    condition_number: float,
-    # TODO Add seed parameter
+    n: int, condition_number: float, seed: Optional[Seed] = None
 ) -> NDArray:
     """Constructs a square matrix with a given condition number.
 
@@ -157,6 +155,7 @@ def random_matrix_with_condition_number(
 
     :param n: size of the matrix
     :param condition_number: duh
+    :param seed: Either an instance of a numpy random number generator or a seed for it.
     :return: An (n,n) matrix with the requested condition number.
     """
     if n < 2:
@@ -165,6 +164,7 @@ def random_matrix_with_condition_number(
     if condition_number <= 1:
         raise ValueError("Condition number must be greater than 1")
 
+    rng = np.random.default_rng(seed)
     log_condition_number = np.log(condition_number)
     exp_vec = np.arange(
         -log_condition_number / 4.0,
@@ -174,8 +174,8 @@ def random_matrix_with_condition_number(
     exp_vec = exp_vec[:n]
     s: np.ndarray = np.exp(exp_vec)
     S = np.diag(s)
-    U, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
-    V, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
+    U, _ = np.linalg.qr((rng.uniform(size=(n, n)) - 5.0) * 200)
+    V, _ = np.linalg.qr((rng.uniform(size=(n, n)) - 5.0) * 200)
     P: np.ndarray = U.dot(S).dot(V.T)
     P = P.dot(P.T)
     return P

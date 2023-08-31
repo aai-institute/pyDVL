@@ -190,6 +190,25 @@ def test_random_matrix_with_condition_number(n, cond, exception):
             pytest.fail("Matrix is not positive definite")
 
 
+@pytest.mark.parametrize(
+    "n, cond",
+    [
+        (2, 10),
+        (7, 23),
+        (10, 2),
+    ],
+)
+@pytest.mark.parametrize(
+    "seed,seed_alt",
+    [(24, 42), (24, 24)],
+    ids=["different", "same"],
+)
+def test_random_matrix_with_condition_number_reproducible(n, cond, seed, seed_alt):
+    mat_1 = random_matrix_with_condition_number(n, cond, seed=seed)
+    mat_2 = random_matrix_with_condition_number(n, cond, seed=seed_alt)
+    assert (seed != seed_alt) ^ bool(np.sum(mat_1 != mat_2) == 0)
+
+
 def test_running_moments():
     """Test that running moments are correct."""
     n_samples, n_values = 15, 1000
