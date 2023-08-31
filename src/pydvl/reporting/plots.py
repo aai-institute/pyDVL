@@ -21,12 +21,12 @@ def shaded_mean_std(
     ax: Optional[Axes] = None,
     **kwargs,
 ) -> Axes:
-    """The usual mean +- std deviation plot to aggregate runs of experiments.
+    """The usual mean \(\pm\) std deviation plot to aggregate runs of experiments.
 
     Args:
         data: axis 0 is to be aggregated on (e.g. runs) and axis 1 is the
             data for each run.
-        abscissa: values for the x axis. Leave empty to use increasing integers.
+        abscissa: values for the x-axis. Leave empty to use increasing integers.
         num_std: number of standard deviations to shade around the mean.
         mean_color: color for the mean
         shade_color: color for the shaded region
