@@ -1,6 +1,9 @@
 """
 This module provides a common interface to parallelization backends. The list of
-supported backends is [here][pydvl.utils.parallel.backends].
+supported backends is [here][pydvl.utils.parallel.backends]. Backends can be
+selected with the `backend` argument of an instance of
+[ParallelConfig][pydvl.utils.config.ParallelConfig], as seen in the examples
+below.
 
 We use [executors][concurrent.futures.Executor] to submit tasks in parallel. The
 basic high-level pattern is
@@ -23,7 +26,7 @@ from pydvl.utils.parallel import init_executor
 from pydvl.utils.config import ParallelConfig
 
 config = ParallelConfig(backend="joblib")
-with init_executor() as executor:
+with init_executor(config=config) as executor:
     results = list(executor.map(lambda x: x + 1, range(5)))
 assert results == [1, 2, 3, 4, 5]
 ```

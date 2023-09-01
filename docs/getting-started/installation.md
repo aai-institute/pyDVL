@@ -55,7 +55,9 @@ Additionally, the [Influence functions][pydvl.influence] module requires PyTorch
 
 ray is used to distribute workloads across nodes in a cluster (it can be used
 locally as well, but for this we recommend joblib instead). Please follow the
-instructions in their documentation to set up the cluster.
+instructions in their documentation to set up the cluster. Once you have a
+running cluster, you can use it by passing the address of the head node to
+parallel methods via [ParallelConfig][pydvl.utils.parallel].
 
 ## Setting up the cache
 
