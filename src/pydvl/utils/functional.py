@@ -21,16 +21,10 @@ def fn_accepts_param_name(fn: Callable, param_name: str) -> bool:
     sig = inspect.signature(wrapped_fn)
     params = sig.parameters
 
-    # Check if the parameter was set by functools.partial
     if param_name in args_set_by_partial:
         return False
 
-    # Check if the function accepts the specific parameter
     if param_name in params:
-        return True
-
-    # Check if the function accepts **kwargs
-    if any(p.kind == p.VAR_KEYWORD for p in params.values()):
         return True
 
     return False
