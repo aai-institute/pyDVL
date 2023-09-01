@@ -1,6 +1,0 @@
-montecarlo
-==========
-
-.. automodule:: pydvl.shapley.montecarlo
-   :members:
-   :undoc-members:
