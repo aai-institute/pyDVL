@@ -120,6 +120,7 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
         indices: NDArray[T],
         index_iteration: IndexIteration = IndexIteration.Sequential,
         outer_indices: NDArray[T] = None,
+        **kwargs,
     ):
         """
         :param indices: The set of items (indices) to sample from.
@@ -221,7 +222,8 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
 class StochasticSamplerMixin:
     """Mixin class for samplers which use a random number generator."""
 
-    def __init__(self, seed: Optional[Seed] = None):
+    def __init__(self, *args, seed: Optional[Seed] = None, **kwargs):
+        super().__init__(*args, **kwargs)
         self._rng = np.random.default_rng(seed)
 
 
@@ -264,7 +266,7 @@ class DeterministicUniformSampler(PowersetSampler[T]):
         return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
-class UniformSampler(PowersetSampler[T], StochasticSamplerMixin):
+class UniformSampler(StochasticSamplerMixin, PowersetSampler[T]):
     """An iterator to perform uniform random sampling of subsets.
 
     Iterating over every index $i$, either in sequence or at random depending on
@@ -285,10 +287,6 @@ class UniformSampler(PowersetSampler[T], StochasticSamplerMixin):
         (...)
 
     """
-
-    def __init__(self, *args, seed: Optional[Seed] = None, **kwargs):
-        super().__init__(*args, **kwargs)
-        StochasticSamplerMixin.__init__(self, seed=seed)
 
     def __iter__(self) -> Iterator[SampleT]:
         while True:
@@ -315,7 +313,7 @@ class DeterministicCombinatorialSampler(DeterministicUniformSampler[T]):
         void(indices, args, kwargs)
 
 
-class AntitheticSampler(PowersetSampler[T], StochasticSamplerMixin):
+class AntitheticSampler(StochasticSamplerMixin, PowersetSampler[T]):
     """An iterator to perform uniform random sampling of subsets, and their
     complements.
 
@@ -323,10 +321,6 @@ class AntitheticSampler(PowersetSampler[T], StochasticSamplerMixin):
     $(i,S)$, it subsequently returns $(i,S^c)$, where $S^c$ is the complement of
     the set $S$, including the index $i$ itself.
     """
-
-    def __init__(self, *args, seed: Optional[Seed] = None, **kwargs):
-        super().__init__(*args, **kwargs)
-        StochasticSamplerMixin.__init__(self, seed=seed)
 
     def __iter__(self) -> Iterator[SampleT]:
         while True:
@@ -344,7 +338,7 @@ class AntitheticSampler(PowersetSampler[T], StochasticSamplerMixin):
         return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
-class PermutationSampler(PowersetSampler[T], StochasticSamplerMixin):
+class PermutationSampler(StochasticSamplerMixin, PowersetSampler[T]):
     """Sample permutations of indices and iterate through each returning
     increasing subsets, as required for the permutation definition of
     semi-values.
@@ -360,10 +354,6 @@ class PermutationSampler(PowersetSampler[T], StochasticSamplerMixin):
        This sampler requires caching to be enabled or computation
        will be doubled wrt. a "direct" implementation of permutation MC
     """
-
-    def __init__(self, *args, seed: Optional[Seed] = None, **kwargs):
-        super().__init__(*args, **kwargs)
-        StochasticSamplerMixin.__init__(self, seed=seed)
 
     def __iter__(self) -> Iterator[SampleT]:
         while True:
@@ -408,16 +398,12 @@ class DeterministicPermutationSampler(PermutationSampler[T]):
                 self._n_samples += 1
 
 
-class RandomHierarchicalSampler(PowersetSampler[T], StochasticSamplerMixin):
+class RandomHierarchicalSampler(StochasticSamplerMixin, PowersetSampler[T]):
     """For every index, sample a set size, then a set of that size.
 
     .. todo::
        This is unnecessary, but a step towards proper stratified sampling.
     """
-
-    def __init__(self, *args, seed: Optional[Seed] = None, **kwargs):
-        super().__init__(*args, **kwargs)
-        StochasticSamplerMixin.__init__(self, seed=seed)
 
     def __iter__(self) -> Iterator[SampleT]:
         while True:
@@ -436,6 +422,8 @@ class RandomHierarchicalSampler(PowersetSampler[T], StochasticSamplerMixin):
         return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
+# TODO Replace by Intersection[StochasticSamplerMixin, PowersetSampler[T]]
+# See https://github.com/python/typing/issues/213
 StochasticSampler = Union[
-    UniformSampler, PermutationSampler, RandomHierarchicalSampler, AntitheticSampler
+    UniformSampler, PermutationSampler, AntitheticSampler, RandomHierarchicalSampler
 ]

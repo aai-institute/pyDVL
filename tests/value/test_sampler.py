@@ -116,11 +116,11 @@ def test_chunkify_permutation(sampler_class):
 
 
 def _create_seeded_sample_iter(
-    sampler_class: Type[StochasticSampler],
+    sampler_t: Type[StochasticSampler],
     indices: List,
     seed: Seed,
 ) -> Iterator:
     max_iterations = len(indices)
-    sampler = sampler_class(np.array(indices), seed=seed)
+    sampler = sampler_t(indices=np.array(indices), seed=seed)
     sample_stream = takewhile(lambda _: sampler.n_samples < max_iterations, sampler)
     return sample_stream
