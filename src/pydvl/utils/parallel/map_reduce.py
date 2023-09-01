@@ -147,6 +147,7 @@ class MapReduceJob(Generic[T, R]):
                     zip(chunks, seed_seq.spawn(len(chunks)))
                 )
             )
+
         reduce_results: R = self._reduce_func(map_results, **self.reduce_kwargs)
         return reduce_results
 

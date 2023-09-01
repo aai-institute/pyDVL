@@ -11,7 +11,7 @@ from typing import Any, Callable, Optional, Protocol, Tuple, TypeVar, Union, cas
 from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
 
-from pydvl.utils.functional import fn_accepts_param_name
+from pydvl.utils.functional import unroll_partial_fn_args
 
 __all__ = ["SupervisedModel", "MapFunction", "ReduceFunction", "NoPublicConstructor"]
 
@@ -83,7 +83,7 @@ def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
     Returns:
         A new function accepting one more keyword argument.
     """
-    if fn_accepts_param_name(fun, new_arg):
+    if new_arg in unroll_partial_fn_args(fun):
         return fun
 
     return functools.partial(call_fun_remove_arg, fun=fun, arg=new_arg)

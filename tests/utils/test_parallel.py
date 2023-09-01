@@ -147,7 +147,7 @@ def test_map_reduce_job_partial_map_and_reduce_func(parallel_config):
     assert result == 150
 
 
-def test_map_reduce_reproducible(parallel_config, seed, seed_alt):
+def test_map_reduce_reproducible(parallel_config, seed):
     """
     Test that the same result is obtained when using the same seed. And that different
     results are obtained when using different seeds.
