@@ -44,8 +44,8 @@ setup(
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
     ],
     project_urls={
-        "Source": "https://github.com/appliedAI-Initiative/pydvl",
-        "Documentation": "https://appliedai-initiative.github.io/pyDVL",
+        "Source": "https://github.com/aai-institute/pydvl",
+        "Documentation": "https://aai-institute.github.io/pyDVL",
         "TransferLab": "https://transferlab.appliedai.de",
     },
     zip_safe=False,  # Needed for mypy to find py.typed

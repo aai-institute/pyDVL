@@ -9,7 +9,7 @@ PICKLE_VERSION = 5  # python >= 3.8
 __all__ = ["ParallelConfig", "MemcachedClientConfig", "MemcachedConfig"]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ParallelConfig:
     """Configuration for parallel computation backend.
 
@@ -34,7 +34,7 @@ class ParallelConfig:
             raise ValueError("When `address` is set, `n_cpus_local` should be None.")
 
 
-@dataclass
+@dataclass(frozen=True)
 class MemcachedClientConfig:
     """Configuration of the memcached client.
 

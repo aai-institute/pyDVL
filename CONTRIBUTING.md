@@ -11,7 +11,7 @@ improvements to the currently implemented methods and other ideas. Please open a
 ticket with yours.
 
 If you are interested in setting up a similar project, consider the template 
-[pymetrius](https://github.com/appliedAI-Initiative/pymetrius).
+[pymetrius](https://github.com/aai-institute/pymetrius).
 
 ## Local development
 
@@ -139,7 +139,7 @@ as possible in the notebooks themselves.
 Because we want documentation to include the full dataset, we commit notebooks
 with their outputs running with full datasets to the repo. The notebooks are
 then added by CI to the section
-[Examples](https://appliedAI-Initiative.github.io/pyDVL/examples.html) of the
+[Examples](https://aai-institute.github.io/pyDVL/examples.html) of the
 documentation.
 
 ### Hiding cells in notebooks
@@ -173,7 +173,7 @@ To only hide the input
 
 It is important to leave a warning at the top of the document to avoid confusion.
 Examples for hidden imports and plots are available in the notebooks, e.g. in
-[Shapley for data valuation](https://appliedai-initiative.github.io/pyDVL/examples/shapley_basic_spotify.ipynb).
+[Shapley for data valuation](https://aai-institute.github.io/pyDVL/examples/shapley_basic_spotify.ipynb).
 
 
 ## Documentation
@@ -258,7 +258,7 @@ We use workflows to:
 * Publish documentation.
 * Publish packages to testpypi / pypi.
 * Mark issues as stale after 30 days. We do this only for issues with the label
-  [`awaiting-reply`](https://github.com/appliedAI-Initiative/pyDVL/labels/awaiting-reply)
+  [`awaiting-reply`](https://github.com/aai-institute/pyDVL/labels/awaiting-reply)
   which indicates that we have answered a question / feature request / PR and
   are waiting for the OP to reply / update his work.
 

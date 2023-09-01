@@ -1,7 +1,7 @@
 <!--
 Thanks for making a contribution! 
 Please make sure you have read the contributing guide: 
-https://github.com/appliedAI-Initiative/pyDVL/blob/develop/CONTRIBUTING.md
+https://github.com/aai-institute/pyDVL/blob/develop/CONTRIBUTING.md
 -->
 
 ### Description

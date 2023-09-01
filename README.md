@@ -1,5 +1,5 @@
 <p align="center" style="text-align:center;">
-    <img alt="pyDVL Logo" src="https://raw.githubusercontent.com/appliedAI-Initiative/pyDVL/develop/logo.svg" width="200"/>
+    <img alt="pyDVL Logo" src="https://raw.githubusercontent.com/aai-institute/pyDVL/develop/logo.svg" width="200"/>
 </p>
 
 <p align="center" style="text-align:center;">
@@ -7,8 +7,8 @@
 </p>
 
 <p align="center" style="text-align:center;">
-    <a href="https://github.com/appliedAI-Initiative/pyDVL/actions/workflows/tox.yaml">
-        <img src="https://github.com/appliedAI-Initiative/pyDVL/actions/workflows/tox.yaml/badge.svg" alt="Build Status"/>
+    <a href="https://github.com/aai-institute/pyDVL/actions/workflows/tox.yaml">
+        <img src="https://github.com/aai-institute/pyDVL/actions/workflows/tox.yaml/badge.svg" alt="Build Status"/>
     </a>
     <br>
     <a href="https://pypi.org/project/pydvl/">
@@ -22,7 +22,7 @@
 
 <p align="center" style="text-align:center;">
     <strong>
-    <a href="https://appliedAI-Initiative.github.io/pyDVL">Docs</a>
+    <a href="https://aai-institute.github.io/pyDVL">Docs</a>
     </strong>
 </p>
 
@@ -94,7 +94,7 @@ pip install pyDVL --index-url https://test.pypi.org/simple/
 ```
 
 For more instructions and information refer to [Installing pyDVL
-](https://appliedAI-Initiative.github.io/pyDVL/20-install.html) in the
+](https://aai-institute.github.io/pyDVL/20-install.html) in the
 documentation.
 
 # Usage
@@ -176,9 +176,9 @@ values = compute_shapley_values(
 ```
 
 For more instructions and information refer to [Getting
-Started](https://appliedAI-Initiative.github.io/pyDVL/10-getting-started.html) in
+Started](https://aai-institute.github.io/pyDVL/10-getting-started.html) in
 the documentation. We provide several
-[examples](https://appliedAI-Initiative.github.io/pyDVL/examples/index.html)
+[examples](https://aai-institute.github.io/pyDVL/examples/index.html)
 with details on the algorithms and their applications.
 
 ## Caching
@@ -194,7 +194,7 @@ docker container run --rm -p 11211:11211 --name pydvl-cache -d memcached:latest
 ```
 
 You can read more in the
-[documentation](https://appliedAI-Initiative.github.io/pyDVL/getting-started/first-steps/#caching).
+[documentation](https://aai-institute.github.io/pyDVL/getting-started/first-steps/#caching).
 
 # Contributing
 
