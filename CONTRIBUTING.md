@@ -250,6 +250,16 @@ def f(x: float) -> float:
     return 1/(x*x)
 ```
 
+### Abbreviations
+
+We keep the abbreviations used in the documentation inside the
+[docs_include/abbreviations.md](docs_includes%2Fabbreviations.md) file.
+
+The syntax for abbreviations is:
+
+```markdown
+*[ABBR]: Abbreviation
+```
 
 ## CI
 
