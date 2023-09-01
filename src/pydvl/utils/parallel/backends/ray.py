@@ -20,10 +20,11 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     """Class used to wrap ray to make it transparent to algorithms.
 
     It shouldn't be initialized directly. You should instead call
-    :func:`~pydvl.utils.parallel.backend.init_parallel_backend`.
+    [init_parallel_backend()][pydvl.utils.parallel.backend.init_parallel_backend].
 
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
-        cluster address, number of cpus, etc.
+    Args:
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+            with cluster address, number of cpus, etc.
     """
 
     def __init__(self, config: ParallelConfig):
@@ -64,10 +65,12 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     def wrap(self, fun: Callable, **kwargs) -> Callable:
         """Wraps a function as a ray remote.
 
-        :param fun: the function to wrap
-        :param kwargs: keyword arguments to pass to @ray.remote
+        Args:
+            fun: the function to wrap
+            kwargs: keyword arguments to pass to @ray.remote
 
-        :return: The `.remote` method of the ray `RemoteFunction`.
+        Returns:
+            The `.remote` method of the ray `RemoteFunction`.
         """
         if len(kwargs) > 0:
             return ray.remote(**kwargs)(fun).remote  # type: ignore

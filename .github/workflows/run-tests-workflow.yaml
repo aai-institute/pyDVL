@@ -22,13 +22,10 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: Set up Python ${{ inputs.python_version }}
-      uses: actions/setup-python@v4
+    - name: Setup Python ${{ inputs.python_version }}
+      uses: ./.github/actions/python
       with:
-        python-version: ${{ inputs.python_version }}
-        cache: 'pip'
-    - name: Install Dev Requirements
-      run: pip install -r requirements-dev.txt
+        python_version: ${{ inputs.python_version }}
     - name: Cache Tox Directory for Tests
       uses: actions/cache@v3
       with:

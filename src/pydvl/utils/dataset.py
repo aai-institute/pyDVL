@@ -5,28 +5,25 @@ Shapley and Least Core value computations require evaluation of a scoring functi
 (the *utility*). This is typically the performance of the model on a test set
 (as an approximation to its true expected performance). It is therefore convenient
 to keep both the training data and the test data together to be passed around to
-methods in :mod:`~pydvl.value.shapley` and :mod:`~pydvl.value.least_core`.
-This is done with :class:`~pydvl.utils.dataset.Dataset`.
+methods in [shapley][pydvl.value.shapley] and [least_core][pydvl.value.least_core].
+This is done with [Dataset][pydvl.utils.dataset.Dataset].
 
 This abstraction layer also seamlessly grouping data points together if one is
 interested in computing their value as a group, see
-:class:`~pydvl.utils.dataset.GroupedDataset`.
+[GroupedDataset][pydvl.utils.dataset.GroupedDataset].
 
-Objects of both types are used to construct a :class:`~pydvl.utils.utility.Utility`
+Objects of both types are used to construct a [Utility][pydvl.utils.utility.Utility]
 object.
 
 """
 import logging
 from collections import OrderedDict
-from pathlib import Path
-from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
-from sklearn.datasets import load_wine
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import Bunch, check_X_y
 
 __all__ = ["Dataset", "GroupedDataset"]
@@ -56,19 +53,20 @@ class Dataset:
     ):
         """Constructs a Dataset from data and labels.
 
-        :param x_train: training data
-        :param y_train: labels for training data
-        :param x_test: test data
-        :param y_test: labels for test data
-        :param feature_names: name of the features of input data
-        :param target_names: names of the features of target data
-        :param data_names: names assigned to data points.
-            For example, if the dataset is a time series, each entry can be a
-            timestamp which can be referenced directly instead of using a row
-            number.
-        :param description: A textual description of the dataset.
-        :param is_multi_output: set to ``False`` if labels are scalars, or to
-            ``True`` if they are vectors of dimension > 1.
+        Args:
+            x_train: training data
+            y_train: labels for training data
+            x_test: test data
+            y_test: labels for test data
+            feature_names: name of the features of input data
+            target_names: names of the features of target data
+            data_names: names assigned to data points.
+                For example, if the dataset is a time series, each entry can be a
+                timestamp which can be referenced directly instead of using a row
+                number.
+            description: A textual description of the dataset.
+            is_multi_output: set to `False` if labels are scalars, or to
+                `True` if they are vectors of dimension > 1.
         """
         self.x_train, self.y_train = check_X_y(
             x_train, y_train, multi_output=is_multi_output
@@ -144,15 +142,18 @@ class Dataset:
         """Given a set of indices, returns the training data that refer to those
         indices.
 
-        This is used mainly by :class:`~pydvl.utils.utility.Utility` to retrieve
+        This is used mainly by [Utility][pydvl.utils.utility.Utility] to retrieve
         subsets of the data from indices. It is typically **not needed in
         algorithms**.
 
-        :param indices: Optional indices that will be used to select points
-            from the training data. If ``None``, the entire training data will
-            be returned.
-        :return: If ``indices`` is not ``None``, the selected x and y arrays
-            from the training data. Otherwise, the entire dataset.
+        Args:
+            indices: Optional indices that will be used to select points from
+                the training data. If `None`, the entire training data will be
+                returned.
+
+        Returns:
+            If `indices` is not `None`, the selected x and y arrays from the
+                training data. Otherwise, the entire dataset.
         """
         if indices is None:
             return self.x_train, self.y_train
@@ -169,19 +170,20 @@ class Dataset:
         we generally want to score the trained model on the entire test data.
 
         Additionally, the way this method is used in the
-        :class:`~pydvl.utils.utility.Utility` class, the passed indices will
+        [Utility][pydvl.utils.utility.Utility] class, the passed indices will
         be those of the training data and would not work on the test data.
 
         There may be cases where it is desired to use parts of the test data.
-        In those cases, it is recommended to inherit from the :class:`Dataset`
-        class and to override the :meth:`~Dataset.get_test_data` method.
+        In those cases, it is recommended to inherit from
+        [Dataset][pydvl.utils.dataset.Dataset] and override
+        [get_test_data()][pydvl.utils.dataset.Dataset.get_test_data].
 
         For example, the following snippet shows how one could go about
         mapping the training data indices into test data indices
-        inside :meth:`~Dataset.get_test_data`:
+        inside [get_test_data()][pydvl.utils.dataset.Dataset.get_test_data]:
 
-        :Example:
-
+        ??? Example
+            ```pycon
             >>> from pydvl.utils import Dataset
             >>> import numpy as np
             >>> class DatasetWithTestDataIndices(Dataset):
@@ -199,12 +201,15 @@ class Dataset:
             >>> indices = np.random.choice(dataset.indices, 30, replace=False)
             >>> _ = dataset.get_training_data(indices)
             >>> _ = dataset.get_test_data(indices)
+            ```
 
+        Args:
+            indices: Optional indices into the test data. This argument is
+                unused left for compatibility with
+                [get_training_data()][pydvl.utils.dataset.Dataset.get_training_data].
 
-        :param indices: Optional indices into the test data. This argument
-            is unused and is left as is to keep the same interface as
-            :meth:`Dataset.get_training_data`.
-        :return: The entire test data.
+        Returns:
+            The entire test data.
         """
         return self.x_test, self.y_test
 
@@ -250,31 +255,38 @@ class Dataset:
         stratify_by_target: bool = False,
         **kwargs,
     ) -> "Dataset":
-        """Constructs a :class:`Dataset` object from an
-        :class:`sklearn.utils.Bunch`, as returned by the `load_*` functions in
-        `sklearn toy datasets
-        <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_.
+        """Constructs a [Dataset][pydvl.utils.Dataset] object from a
+        [sklearn.utils.Bunch][sklearn.utils.Bunch], as returned by the `load_*`
+        functions in [scikit-learn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html).
 
-        :param data: sklearn dataset. The following attributes are supported
-            - ``data``: covariates [required]
-            - ``target``: target variables (labels) [required]
-            - ``feature_names``: the feature names
-            - ``target_names``: the target names
-            - ``DESCR``: a description
-        :param train_size: size of the training dataset. Used in
-            `train_test_split`
-        :param random_state: seed for train / test split
-        :param stratify_by_target: If `True`, data is split in a stratified
-            fashion, using the target variable as labels. Read more in
-            `scikit-learn's user guide
-            <https://scikit-learn.org/stable/modules/cross_validation.html
-            #stratification>`.
-        :param kwargs: Additional keyword arguments to pass to the
-            :class:`Dataset` constructor. Use this to pass e.g. ``is_multi_output``.
-        :return: Object with the sklearn dataset
+        ??? Example
+            ```pycon
+            >>> from pydvl.utils import Dataset
+            >>> from sklearn.datasets import load_boston
+            >>> dataset = Dataset.from_sklearn(load_boston())
+            ```
 
-        .. versionchanged:: 0.6.0
-           Added kwargs to pass to the :class:`Dataset` constructor.
+        Args:
+            data: scikit-learn Bunch object. The following attributes are supported:
+
+                - `data`: covariates.
+                - `target`: target variables (labels).
+                - `feature_names` (**optional**): the feature names.
+                - `target_names` (**optional**): the target names.
+                - `DESCR` (**optional**): a description.
+            train_size: size of the training dataset. Used in `train_test_split`
+            random_state: seed for train / test split
+            stratify_by_target: If `True`, data is split in a stratified
+                fashion, using the target variable as labels. Read more in
+                [scikit-learn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
+            kwargs: Additional keyword arguments to pass to the
+                [Dataset][pydvl.utils.Dataset] constructor. Use this to pass e.g. `is_multi_output`.
+
+        Returns:
+            Object with the sklearn dataset
+
+        !!! tip "Changed in version 0.6.0"
+            Added kwargs to pass to the [Dataset][pydvl.utils.Dataset] constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
             data.data,
@@ -304,30 +316,36 @@ class Dataset:
         stratify_by_target: bool = False,
         **kwargs,
     ) -> "Dataset":
-        """Constructs a :class:`Dataset` object from X and y numpy arrays  as
-        returned by the `make_*` functions in `sklearn generated datasets
-        <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
+        """Constructs a [Dataset][pydvl.utils.Dataset] object from X and y numpy arrays  as
+        returned by the `make_*` functions in [sklearn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
 
-        :param X: numpy array of shape (n_samples, n_features)
-        :param y: numpy array of shape (n_samples,)
-        :param train_size: size of the training dataset. Used in
-            `train_test_split`
-        :param random_state: seed for train / test split
-        :param stratify_by_target: If `True`, data is split in a stratified
-            fashion, using the y variable as labels. Read more in
-            `sklearn's user guide
-            <https://scikit-learn.org/stable/modules/cross_validation.html
-            #stratification>`.
-        :param kwargs: Additional keyword arguments to pass to the
-            :class:`Dataset` constructor. Use this to pass e.g. ``feature_names``
-            or ``target_names``.
-        :return: Object with the passed X and y arrays split across training
-            and test sets.
+        ??? Example
+            ```pycon
+            >>> from pydvl.utils import Dataset
+            >>> from sklearn.datasets import make_regression
+            >>> X, y = make_regression()
+            >>> dataset = Dataset.from_arrays(X, y)
+            ```
 
-        .. versionadded:: 0.4.0
+        Args:
+            X: numpy array of shape (n_samples, n_features)
+            y: numpy array of shape (n_samples,)
+            train_size: size of the training dataset. Used in `train_test_split`
+            random_state: seed for train / test split
+            stratify_by_target: If `True`, data is split in a stratified fashion,
+                using the y variable as labels. Read more in [sklearn's user
+                guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
+            kwargs: Additional keyword arguments to pass to the
+                [Dataset][pydvl.utils.Dataset] constructor. Use this to pass e.g. `feature_names`
+                or `target_names`.
 
-        .. versionchanged:: 0.6.0
-           Added kwargs to pass to the :class:`Dataset` constructor.
+        Returns:
+            Object with the passed X and y arrays split across training and test sets.
+
+        !!! tip "New in version 0.4.0"
+
+        !!! tip "Changed in version 0.6.0"
+            Added kwargs to pass to the [Dataset][pydvl.utils.Dataset] constructor.
         """
         x_train, x_test, y_train, y_test = train_test_split(
             X,
@@ -359,25 +377,26 @@ class GroupedDataset(Dataset):
         as logical units. For instance, one can group by value of a categorical
         feature, by bin into which a continuous feature falls, or by label.
 
-        :param x_train: training data
-        :param y_train: labels of training data
-        :param x_test: test data
-        :param y_test: labels of test data
-        :param data_groups: Iterable of the same length as ``x_train`` containing
-            a group label for each training data point. The label can be of any
-            type, e.g. ``str`` or ``int``. Data points with the same label will
-            then be grouped by this object and considered as one for effects of
-            valuation.
-        :param feature_names: names of the covariates' features.
-        :param target_names: names of the labels or targets y
-        :param group_names: names of the groups. If not provided, the labels
-            from ``data_groups`` will be used.
-        :param description: A textual description of the dataset
-        :param kwargs: Additional keyword arguments to pass to the
-            :class:`Dataset` constructor.
+        Args:
+            x_train: training data
+            y_train: labels of training data
+            x_test: test data
+            y_test: labels of test data
+            data_groups: Iterable of the same length as `x_train` containing
+                a group label for each training data point. The label can be of any
+                type, e.g. `str` or `int`. Data points with the same label will
+                then be grouped by this object and considered as one for effects of
+                valuation.
+            feature_names: names of the covariates' features.
+            target_names: names of the labels or targets y
+            group_names: names of the groups. If not provided, the labels
+                from `data_groups` will be used.
+            description: A textual description of the dataset
+            kwargs: Additional keyword arguments to pass to the
+                [Dataset][pydvl.utils.Dataset] constructor.
 
-        .. versionchanged:: 0.6.0
-           Added ``group_names`` and forwarding of ``kwargs``
+        !!! tip "Changed in version 0.6.0"
+        Added `group_names` and forwarding of `kwargs`
         """
         super().__init__(
             x_train=x_train,
@@ -422,9 +441,12 @@ class GroupedDataset(Dataset):
     ) -> Tuple[NDArray, NDArray]:
         """Returns the data and labels of all samples in the given groups.
 
-        :param indices: group indices whose elements to return. If ``None``,
-            all data from all groups are returned.
-        :return: Tuple of training data x and labels y.
+        Args:
+            indices: group indices whose elements to return. If `None`,
+                all data from all groups are returned.
+
+        Returns:
+            Tuple of training data x and labels y.
         """
         if indices is None:
             indices = self.indices
@@ -443,31 +465,41 @@ class GroupedDataset(Dataset):
         data_groups: Optional[Sequence] = None,
         **kwargs,
     ) -> "GroupedDataset":
-        """Constructs a :class:`GroupedDataset` object from a scikit-learn bunch
-        as returned by the `load_*` functions in `sklearn toy datasets
-        <https://scikit-learn.org/stable/datasets/toy_dataset.html>`_ and groups
+        """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from a
+        [sklearn.utils.Bunch][sklearn.utils.Bunch] as returned by the `load_*` functions in
+        [scikit-learn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html) and groups
         it.
 
-        :param data: sklearn dataset. The following attributes are supported
-            - ``data``: covariates [required]
-            - ``target``: target variables (labels) [required]
-            - ``feature_names``: the feature names
-            - ``target_names``: the target names
-            - ``DESCR``: a description
-        :param train_size: size of the training dataset. Used in
-            `train_test_split`.
-        :param random_state: seed for train / test split.
-        :param stratify_by_target: If ``True``, data is split in a stratified
-            fashion, using the target variable as labels. Read more in
-            `sklearn's user guide
-            <https://scikit-learn.org/stable/modules/cross_validation.html
-            #stratification>`.
-        :param data_groups: an array holding the group index or name for each
-            data point. The length of this array must be equal to the number of
-            data points in the dataset.
-        :param kwargs: Additional keyword arguments to pass to the
-            :class:`Dataset` constructor.
-        :return: Dataset with the selected sklearn data
+        ??? Example
+            ```pycon
+            >>> from sklearn.datasets import load_iris
+            >>> from pydvl.utils import GroupedDataset
+            >>> iris = load_iris()
+            >>> data_groups = iris.data[:, 0] // 0.5
+            >>> dataset = GroupedDataset.from_sklearn(iris, data_groups=data_groups)
+            ```
+
+        Args:
+            data: scikit-learn Bunch object. The following attributes are supported:
+
+                - `data`: covariates.
+                - `target`: target variables (labels).
+                - `feature_names` (**optional**): the feature names.
+                - `target_names` (**optional**): the target names.
+                - `DESCR` (**optional**): a description.
+            train_size: size of the training dataset. Used in `train_test_split`.
+            random_state: seed for train / test split.
+            stratify_by_target: If `True`, data is split in a stratified
+                fashion, using the target variable as labels. Read more in
+                [sklearn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
+            data_groups: an array holding the group index or name for each
+                data point. The length of this array must be equal to the number of
+                data points in the dataset.
+            kwargs: Additional keyword arguments to pass to the
+                [Dataset][pydvl.utils.Dataset] constructor.
+
+        Returns:
+            Dataset with the selected sklearn data
         """
         if data_groups is None:
             raise ValueError(
@@ -499,33 +531,48 @@ class GroupedDataset(Dataset):
         data_groups: Optional[Sequence] = None,
         **kwargs,
     ) -> "Dataset":
-        """Constructs a :class:`GroupedDataset` object from X and y numpy arrays
-        as returned by the `make_*` functions in `sklearn generated datasets
-        <https://scikit-learn.org/stable/datasets/sample_generators.html>`_.
+        """Constructs a [GroupedDataset][pydvl.utils.GroupedDataset] object from X and y numpy arrays
+        as returned by the `make_*` functions in
+        [scikit-learn generated datasets](https://scikit-learn.org/stable/datasets/sample_generators.html).
 
-        :param X: array of shape (n_samples, n_features)
-        :param y: array of shape (n_samples,)
-        :param train_size: size of the training dataset. Used in
-            ``train_test_split``.
-        :param random_state: seed for train / test split.
-        :param stratify_by_target: If ``True``, data is split in a stratified
-            fashion, using the y variable as labels. Read more in
-            `sklearn's user guide
-            <https://scikit-learn.org/stable/modules/cross_validation.html
-            #stratification>`.
-        :param data_groups: an array holding the group index or name for each
-            data point. The length of this array must be equal to the number of
-            data points in the dataset.
-        :param kwargs: Additional keyword arguments that will be passed
-            to the :class:`~pydvl.utils.dataset.Dataset` constructor.
+        ??? Example
+            ```pycon
+            >>> from sklearn.datasets import make_classification
+            >>> from pydvl.utils import GroupedDataset
+            >>> X, y = make_classification(
+            ...     n_samples=100,
+            ...     n_features=4,
+            ...     n_informative=2,
+            ...     n_redundant=0,
+            ...     random_state=0,
+            ...     shuffle=False
+            ... )
+            >>> data_groups = X[:, 0] // 0.5
+            >>> dataset = GroupedDataset.from_arrays(X, y, data_groups=data_groups)
+            ```
 
-        :return: Dataset with the passed X and y arrays split across training
-            and test sets.
+        Args:
+            X: array of shape (n_samples, n_features)
+            y: array of shape (n_samples,)
+            train_size: size of the training dataset. Used in `train_test_split`.
+            random_state: seed for train / test split.
+            stratify_by_target: If `True`, data is split in a stratified
+                fashion, using the y variable as labels. Read more in
+                [sklearn's user guide](https://scikit-learn.org/stable/modules/cross_validation.html#stratification).
+            data_groups: an array holding the group index or name for each data
+                point. The length of this array must be equal to the number of
+                data points in the dataset.
+            kwargs: Additional keyword arguments that will be passed to the
+                [Dataset][pydvl.utils.Dataset] constructor.
 
-        .. versionadded:: 0.4.0
+        Returns:
+            Dataset with the passed X and y arrays split across training and
+                test sets.
 
-        .. versionchanged:: 0.6.0
-           Added kwargs to pass to the :class:`Dataset` constructor.
+        !!! tip "New in version 0.4.0"
+
+        !!! tip "Changed in version 0.6.0"
+            Added kwargs to pass to the [Dataset][pydvl.utils.Dataset] constructor.
         """
         if data_groups is None:
             raise ValueError(
@@ -548,15 +595,29 @@ class GroupedDataset(Dataset):
     def from_dataset(
         cls, dataset: Dataset, data_groups: Sequence[Any]
     ) -> "GroupedDataset":
-        """Creates a :class:`GroupedDataset` object from the data a
-        :class:`Dataset` object and a mapping of data groups.
+        """Creates a [GroupedDataset][pydvl.utils.GroupedDataset] object from the data a
+        [Dataset][pydvl.utils.Dataset] object and a mapping of data groups.
 
-        :param dataset: The original data.
-        :param data_groups: An array holding the group index or name for each
-            data point. The length of this array must be equal to the number of
-            data points in the dataset.
-        :return: A :class:`GroupedDataset` with the initial :class:`Dataset`
-            grouped by data_groups.
+        ??? Example
+            ```pycon
+            >>> import numpy as np
+            >>> from pydvl.utils import Dataset, GroupedDataset
+            >>> dataset = Dataset.from_arrays(
+            ...     X=np.asarray([[1, 2], [3, 4], [5, 6], [7, 8]]),
+            ...     y=np.asarray([0, 1, 0, 1]),
+            ... )
+            >>> dataset = GroupedDataset.from_dataset(dataset, data_groups=[0, 0, 1, 1])
+            ```
+
+        Args:
+            dataset: The original data.
+            data_groups: An array holding the group index or name for each data
+                point. The length of this array must be equal to the number of
+                data points in the dataset.
+
+        Returns:
+            A [GroupedDataset][pydvl.utils.GroupedDataset] with the initial
+                [Dataset][pydvl.utils.Dataset] grouped by data_groups.
         """
         return cls(
             x_train=dataset.x_train,

@@ -1,3 +1,11 @@
+"""
+This module contains a wrapper around joblib's `Parallel()` class that makes it
+easy to run map-reduce jobs.
+
+!!! Deprecation notice
+    This interface might be deprecated or changed in a future release before 1.0
+
+"""
 from itertools import accumulate, repeat
 from typing import Any, Collection, Dict, Generic, List, Optional, TypeVar, Union
 
@@ -19,52 +27,55 @@ def identity(x: Any, *args: Any, **kwargs: Any) -> Any:
 
 
 class MapReduceJob(Generic[T, R]):
-    """Takes an embarrassingly parallel fun and runs it in ``n_jobs`` parallel
+    """Takes an embarrassingly parallel fun and runs it in `n_jobs` parallel
     jobs, splitting the data evenly into a number of chunks equal to the number of jobs.
 
     Typing information for objects of this class requires the type of the inputs
-    that are split for ``map_func`` and the type of its output.
+    that are split for `map_func` and the type of its output.
 
-    :param inputs: The input that will be split and passed to `map_func`.
-        if it's not a sequence object. It will be repeat ``n_jobs`` number of times.
-    :param map_func: Function that will be applied to the input chunks in each job.
-    :param reduce_func: Function that will be applied to the results of
-        ``map_func`` to reduce them.
-    :param map_kwargs: Keyword arguments that will be passed to ``map_func`` in
-        each job. Alternatively, one can use ``itertools.partial``.
-    :param reduce_kwargs: Keyword arguments that will be passed to ``reduce_func``
-        in each job. Alternatively, one can use :func:`itertools.partial`.
-    :param config: Instance of :class:`~pydvl.utils.config.ParallelConfig`
-        with cluster address, number of cpus, etc.
-    :param n_jobs: Number of parallel jobs to run. Does not accept 0
+    Args:
+        inputs: The input that will be split and passed to `map_func`.
+            if it's not a sequence object. It will be repeat `n_jobs` number of times.
+        map_func: Function that will be applied to the input chunks in each job.
+        reduce_func: Function that will be applied to the results of
+            `map_func` to reduce them.
+        map_kwargs: Keyword arguments that will be passed to `map_func` in
+            each job. Alternatively, one can use [functools.partial][].
+        reduce_kwargs: Keyword arguments that will be passed to `reduce_func`
+            in each job. Alternatively, one can use [functools.partial][].
+        config: Instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+            with cluster address, number of cpus, etc.
+        n_jobs: Number of parallel jobs to run. Does not accept 0
 
-    :Examples:
+    ??? Example
+        A simple usage example with 2 jobs:
 
-    A simple usage example with 2 jobs:
+        ``` pycon
+        >>> from pydvl.utils.parallel import MapReduceJob
+        >>> import numpy as np
+        >>> map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
+        ...     np.arange(5),
+        ...     map_func=np.sum,
+        ...     reduce_func=np.sum,
+        ...     n_jobs=2,
+        ... )
+        >>> map_reduce_job()
+        10
+        ```
 
-    >>> from pydvl.utils.parallel import MapReduceJob
-    >>> import numpy as np
-    >>> map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
-    ...     np.arange(5),
-    ...     map_func=np.sum,
-    ...     reduce_func=np.sum,
-    ...     n_jobs=2,
-    ... )
-    >>> map_reduce_job()
-    10
-
-    When passed a single object as input, it will be repeated for each job:
-
-    >>> from pydvl.utils.parallel import MapReduceJob
-    >>> import numpy as np
-    >>> map_reduce_job: MapReduceJob[int, np.ndarray] = MapReduceJob(
-    ...     5,
-    ...     map_func=lambda x: np.array([x]),
-    ...     reduce_func=np.sum,
-    ...     n_jobs=2,
-    ... )
-    >>> map_reduce_job()
-    10
+        When passed a single object as input, it will be repeated for each job:
+        ``` pycon
+        >>> from pydvl.utils.parallel import MapReduceJob
+        >>> import numpy as np
+        >>> map_reduce_job: MapReduceJob[int, np.ndarray] = MapReduceJob(
+        ...     5,
+        ...     map_func=lambda x: np.array([x]),
+        ...     reduce_func=np.sum,
+        ...     n_jobs=2,
+        ... )
+        >>> map_reduce_job()
+        10
+        ```
     """
 
     def __init__(

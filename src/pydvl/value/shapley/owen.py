@@ -1,3 +1,11 @@
+"""
+# References:
+
+[^1]: <a name="okhrati_multilinear_2021"></a>Okhrati, R., Lipani, A., 2021.
+    [A Multilinear Sampling Algorithm to Estimate Shapley Values](https://ieeexplore.ieee.org/abstract/document/9412511).
+    In: 2020 25th International Conference on Pattern Recognition (ICPR), pp. 7992–7999. IEEE.
+"""
+
 import operator
 from enum import Enum
 from functools import reduce
@@ -35,19 +43,23 @@ def _owen_sampling_shapley(
     of the integrand. For the integrand (the expected marginal utility over the
     power set), use Monte Carlo.
 
-    .. todo::
+    !!! Todo
         We might want to try better quadrature rules like Gauss or Rombert or
         use Monte Carlo for the double integral.
 
-    :param indices: Indices to compute the value for
-    :param u: Utility object with model, data, and scoring function
-    :param method: Either :attr:`~OwenAlgorithm.Full` for $q \in [0,1]$ or
-        :attr:`~OwenAlgorithm.Halved` for $q \in [0,0.5]$ and correlated samples
-    :param n_samples: Number of subsets to sample to estimate the integrand
-    :param max_q: number of subdivisions for the integration over $q$
-    :param progress: Whether to display progress bars for each job
-    :param job_id: For positioning of the progress bar
-    :return: Object with the data values, errors.
+    Args:
+        indices: Indices to compute the value for
+        u: Utility object with model, data, and scoring function
+        method: Either [OwenAlgorithm.Full][pydvl.value.shapley.owen.OwenAlgorithm]
+            for q ∈ [0, 1] or [OwenAlgorithm.Halved][pydvl.value.shapley.owen.OwenAlgorithm]
+            for q ∈ [0, 0.5] and correlated samples
+        n_samples: Number of subsets to sample to estimate the integrand
+        max_q: number of subdivisions for the integration over $q$
+        progress: Whether to display progress bars for each job
+        job_id: For positioning of the progress bar
+
+    Returns:
+        Object with the data values, errors.
     """
     q_stop = {OwenAlgorithm.Standard: 1.0, OwenAlgorithm.Antithetic: 0.5}
     q_steps = np.linspace(start=0, stop=q_stop[method], num=max_q)
@@ -95,7 +107,7 @@ def owen_sampling_shapley(
     progress: bool = False,
 ) -> ValuationResult:
     r"""Owen sampling of Shapley values as described in
-    :footcite:t:`okhrati_multilinear_2021`.
+    (Okhrati and Lipani, 2021)<sup><a href="#okhrati_multilinear_2021">1</a></sup>.
 
     This function computes a Monte Carlo approximation to
 
@@ -122,28 +134,33 @@ def owen_sampling_shapley(
     where now $q_j = \frac{j}{2Q} \in [0,\frac{1}{2}]$, and $S^c$ is the
     complement of $S$.
 
-    .. note::
-       The outer integration could be done instead with a quadrature rule.
+    !!! Note
+        The outer integration could be done instead with a quadrature rule.
 
-    :param u: :class:`~pydvl.utils.utility.Utility` object holding data, model
-        and scoring function.
-    :param n_samples: Numer of sets to sample for each value of q
-    :param max_q: Number of subdivisions for q ∈ [0,1] (the element sampling
-        probability) used to approximate the outer integral.
-    :param method: Selects the algorithm to use, see the description. Either
-        :attr:`~OwenAlgorithm.Full` for $q \in [0,1]$ or
-        :attr:`~OwenAlgorithm.Halved` for $q \in [0,0.5]$ and correlated samples
-    :param n_jobs: Number of parallel jobs to use. Each worker receives a chunk
-        of the total of `max_q` values for q.
-    :param config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
-    :param progress: Whether to display progress bars for each job.
-    :return: Object with the data values.
+    Args:
+        u: [Utility][pydvl.utils.utility.Utility] object holding data, model
+            and scoring function.
+        n_samples: Numer of sets to sample for each value of q
+        max_q: Number of subdivisions for q ∈ [0,1] (the element sampling
+            probability) used to approximate the outer integral.
+        method: Selects the algorithm to use, see the description. Either
+            [OwenAlgorithm.Full][pydvl.value.shapley.owen.OwenAlgorithm] for
+            $q \in [0,1]$ or
+            [OwenAlgorithm.Halved][pydvl.value.shapley.owen.OwenAlgorithm] for
+            $q \in [0,0.5]$ and correlated samples
+        n_jobs: Number of parallel jobs to use. Each worker receives a chunk
+            of the total of `max_q` values for q.
+        config: Object configuring parallel computation, with cluster address,
+            number of cpus, etc.
+        progress: Whether to display progress bars for each job.
 
-    .. versionadded:: 0.3.0
+    Returns:
+        Object with the data values.
 
-    .. versionchanged:: 0.5.0
-       Support for parallel computation and enable antithetic sampling.
+    !!! tip "New in version 0.3.0"
+
+    !!! tip "Changed in version 0.5.0"
+        Support for parallel computation and enable antithetic sampling.
 
     """
     map_reduce_job: MapReduceJob[NDArray, ValuationResult] = MapReduceJob(

@@ -1,19 +1,24 @@
 """
 This module implements Group Testing for the approximation of Shapley values, as
-introduced in :footcite:t:`jia_efficient_2019`. The sampling of index subsets is
+introduced in (Jia, R. et al., 2019)[^1]. The sampling of index subsets is
 done in such a way that an approximation to the true Shapley values can be
 computed with guarantees.
 
-.. warning::
-   This method is very inefficient. Potential improvements to the
-   implementation notwithstanding, convergence seems to be very slow (in terms
-   of evaluations of the utility required). We recommend other Monte Carlo
-   methods instead.
+!!! Warning
+    This method is very inefficient. Potential improvements to the
+    implementation notwithstanding, convergence seems to be very slow (in terms
+    of evaluations of the utility required). We recommend other Monte Carlo
+    methods instead.
 
-You can read more :ref:`in the documentation<data valuation>`.
+You can read more [in the documentation][computing-data-values].
 
-.. versionadded:: 0.4.0
+!!! tip "New in version 0.4.0"
 
+# References:
+
+[^1]: <a name="jia_efficient_2019"></a>Jia, R. et al., 2019.
+    [Towards Efficient Data Valuation Based on the Shapley Value](http://proceedings.mlr.press/v89/jia19a.html).
+    In: Proceedings of the 22nd International Conference on Artificial Intelligence and Statistics, pp. 1167–1176. PMLR.
 """
 import logging
 from collections import namedtuple
@@ -43,20 +48,21 @@ def _constants(
     """A helper function returning the constants for the algorithm. Pretty ugly,
     yes.
 
-    :param n: The number of data points.
-    :param epsilon: The error tolerance.
-    :param delta: The confidence level.
-    :param utility_range: The range of the utility function.
+    Args:
+        n: The number of data points.
+        epsilon: The error tolerance.
+        delta: The confidence level.
+        utility_range: The range of the utility function.
 
-    :return: A namedtuple with the constants. The fields are the same as in the
-        paper:
-        - kk: the sample sizes (i.e. an array of 1, 2, ..., n - 1)
-        - Z: the normalization constant
-        - q: the probability of drawing a sample of size k
-        - q_tot: another normalization constant
-        - T: the number of iterations. This will be -1 if the utility_range is
-            infinite. E.g. because the :class:`~pydvl.utils.score.Scorer` does
-            not define a range.
+    Returns:
+        A namedtuple with the constants. The fields are the same as in the paper:
+            - kk: the sample sizes (i.e. an array of 1, 2, ..., n - 1)
+            - Z: the normalization constant
+            - q: the probability of drawing a sample of size k
+            - q_tot: another normalization constant
+            - T: the number of iterations. This will be -1 if the utility_range is
+                infinite. E.g. because the [Scorer][pydvl.utils.score.Scorer] does
+                not define a range.
     """
     r = utility_range
 
@@ -93,20 +99,21 @@ def _constants(
 def num_samples_eps_delta(
     eps: float, delta: float, n: int, utility_range: float
 ) -> int:
-    r"""Implements the formula in Theorem 3 of :footcite:t:`jia_efficient_2019`
+    r"""Implements the formula in Theorem 3 of (Jia, R. et al., 2019)<sup><a href="#jia_efficient_2019">1</a></sup>
     which gives a lower bound on the number of samples required to obtain an
     (ε/√n,δ/(N(N-1))-approximation to all pair-wise differences of Shapley
     values, wrt. $\ell_2$ norm.
 
-    :param eps: ε
-    :param delta: δ
-    :param n: Number of data points
-    :param utility_range: Range of the :class:`~pydvl.utils.utility.Utility`
-        function
-    :return: Number of samples from $2^{[n]}$ guaranteeing ε/√n-correct Shapley
-        pair-wise differences of values with probability 1-δ/(N(N-1)).
+    Args:
+        eps: ε
+        delta: δ
+        n: Number of data points
+        utility_range: Range of the [Utility][pydvl.utils.utility.Utility] function
+    Returns:
+        Number of samples from $2^{[n]}$ guaranteeing ε/√n-correct Shapley
+            pair-wise differences of values with probability 1-δ/(N(N-1)).
 
-    .. versionadded:: 0.4.0
+    !!! tip "New in version 0.4.0"
 
     """
     constants = _constants(n=n, epsilon=eps, delta=delta, utility_range=utility_range)
@@ -116,16 +123,20 @@ def num_samples_eps_delta(
 def _group_testing_shapley(
     u: Utility, n_samples: int, progress: bool = False, job_id: int = 1
 ):
-    """Helper function for :func:`group_testing_shapley`.
+    """Helper function for
+    [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley].
 
     Computes utilities of sets sampled using the strategy for estimating the
     differences in Shapley values.
 
-    :param u: Utility object with model, data, and scoring function.
-    :param n_samples: total number of samples (subsets) to use.
-    :param progress: Whether to display progress bars for each job.
-    :param job_id: id to use for reporting progress (e.g. to place progres bars)
-    :return:
+    Args:
+        u: Utility object with model, data, and scoring function.
+        n_samples: total number of samples (subsets) to use.
+        progress: Whether to display progress bars for each job.
+        job_id: id to use for reporting progress (e.g. to place progres bars)
+
+    Returns:
+
     """
     rng = np.random.default_rng()
     n = len(u.data.indices)
@@ -156,43 +167,46 @@ def group_testing_shapley(
     **options,
 ) -> ValuationResult:
     """Implements group testing for approximation of Shapley values as described
-    in :footcite:t:`jia_efficient_2019`.
+    in (Jia, R. et al., 2019)<sup><a href="#jia_efficient_2019">1</a></sup>.
 
-    .. warning::
-       This method is very inefficient. It requires several orders of magnitude
-       more evaluations of the utility than others in
-       :mod:`~pydvl.value.shapley.montecarlo`. It also uses several intermediate
-       objects like the results from the runners and the constraint matrices
-       which can become rather large.
+    !!! Warning
+        This method is very inefficient. It requires several orders of magnitude
+        more evaluations of the utility than others in
+        [montecarlo][pydvl.value.shapley.montecarlo]. It also uses several intermediate
+        objects like the results from the runners and the constraint matrices
+        which can become rather large.
 
     By picking a specific distribution over subsets, the differences in Shapley
     values can be approximated with a Monte Carlo sum. These are then used to
     solve for the individual values in a feasibility problem.
 
-    :param u: Utility object with model, data, and scoring function
-    :param n_samples: Number of tests to perform. Use
-        :func:`num_samples_eps_delta` to estimate this.
-    :param epsilon: From the (ε,δ) sample bound. Use the same as for the
-        estimation of ``n_iterations``.
-    :param delta: From the (ε,δ) sample bound. Use the same as for the
-        estimation of ``n_iterations``.
-    :param n_jobs: Number of parallel jobs to use. Each worker performs a chunk
-        of all tests (i.e. utility evaluations).
-    :param config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
-    :param progress: Whether to display progress bars for each job.
-    :param options: Additional options to pass to `cvxpy.Problem.solve()
-        <https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options>`_.
-        E.g. to change the solver (which defaults to `cvxpy.SCS`) pass
-        `solver=cvxpy.CVXOPT`.
+    Args:
+        u: Utility object with model, data, and scoring function
+        n_samples: Number of tests to perform. Use
+            [num_samples_eps_delta][pydvl.value.shapley.gt.num_samples_eps_delta]
+            to estimate this.
+        epsilon: From the (ε,δ) sample bound. Use the same as for the
+            estimation of `n_iterations`.
+        delta: From the (ε,δ) sample bound. Use the same as for the
+            estimation of `n_iterations`.
+        n_jobs: Number of parallel jobs to use. Each worker performs a chunk
+            of all tests (i.e. utility evaluations).
+        config: Object configuring parallel computation, with cluster
+            address, number of cpus, etc.
+        progress: Whether to display progress bars for each job.
+        options: Additional options to pass to
+            [cvxpy.Problem.solve()](https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options).
+            E.g. to change the solver (which defaults to `cvxpy.SCS`) pass
+            `solver=cvxpy.CVXOPT`.
 
-    :return: Object with the data values.
+    Returns:
+        Object with the data values.
 
-    .. versionadded:: 0.4.0
+    !!! tip "New in version 0.4.0"
 
-    .. versionchanged:: 0.5.0
-       Changed the solver to cvxpy instead of scipy's linprog. Added the ability
-       to pass arbitrary options to it.
+    !!! tip "Changed in version 0.5.0"
+        Changed the solver to cvxpy instead of scipy's linprog. Added the ability
+        to pass arbitrary options to it.
     """
 
     n = len(u.data.indices)

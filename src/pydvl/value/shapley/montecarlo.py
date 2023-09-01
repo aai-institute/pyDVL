@@ -1,34 +1,44 @@
 r"""
 Monte Carlo approximations to Shapley Data values.
 
-.. warning::
-   You probably want to use the common interface provided by
-   :func:`~pydvl.value.shapley.compute_shapley_values` instead of directly using
-   the functions in this module.
+!!! Warning
+    You probably want to use the common interface provided by
+    [compute_shapley_values()][pydvl.value.shapley.compute_shapley_values] instead of directly using
+    the functions in this module.
 
 Because exact computation of Shapley values requires $\mathcal{O}(2^n)$
-re-trainings of the model, several Monte Carlo approximations are available.
-The first two sample from the powerset of the training data directly:
-:func:`combinatorial_montecarlo_shapley` and :func:`owen_sampling_shapley`. The
-latter uses a reformulation in terms of a continuous extension of the utility.
+re-trainings of the model, several Monte Carlo approximations are available. The
+first two sample from the powerset of the training data directly:
+[combinatorial_montecarlo_shapley()][pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley]
+and [owen_sampling_shapley()][pydvl.value.shapley.owen.owen_sampling_shapley].
+The latter uses a reformulation in terms of a continuous extension of the
+utility.
 
 Alternatively, employing another reformulation of the expression above as a sum
 over permutations, one has the implementation in
-:func:`permutation_montecarlo_shapley`, or using an early stopping strategy to
-reduce computation :func:`truncated_montecarlo_shapley`.
+[permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley],
+or using an early stopping strategy to reduce computation
+[truncated_montecarlo_shapley()][pydvl.value.shapley.truncated.truncated_montecarlo_shapley].
 
-.. seealso::
-   It is also possible to use :func:`~pydvl.value.shapley.gt.group_testing_shapley`
+!!! info "Also see"
+   It is also possible to use [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]
    to reduce the number of evaluations of the utility. The method is however
    typically outperformed by others in this module.
 
-.. seealso::
+!!! info "Also see"
    Additionally, you can consider grouping your data points using
-   :class:`~pydvl.utils.dataset.GroupedDataset` and computing the values of the
+   [GroupedDataset][pydvl.utils.dataset.GroupedDataset] and computing the values of the
    groups instead. This is not to be confused with "group testing" as
-   implemented in :func:`~pydvl.value.shapley.gt.group_testing_shapley`: any of
+   implemented in [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]: any of
    the algorithms mentioned above, including Group Testing, can work to valuate
    groups of samples as units.
+
+# References:
+
+[^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
+    [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).
+    In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
+
 """
 from __future__ import annotations
 
@@ -76,15 +86,19 @@ def permutation_montecarlo_shapley_rollout(
     values. It generates a permutation p[i] of the class label indices and iterates over
     all subsets starting from the empty set to the full set of indices.
 
-    :param u: Utility object containing model, data, and scoring function.
-    :param permutation: Permutation of indices to be considered.
-    :param truncation: Callable which decides whether to interrupt processing a
-        permutation and set all subsequent marginals to zero.
-    :param additional_indices: Set of additional indices for data points which should be
-        always considered.
-    :param use_default_scorer_value: Use default scorer value even if additional_indices
-        is not None.
-    :return: ValuationResult object containing computed data values.
+    Args:
+        u: Utility object containing model, data, and scoring function.
+        permutation: Permutation of indices to be considered.
+        truncation: Callable which decides whether to interrupt processing a
+            permutation and set all subsequent marginals to zero.
+        algorithm_name: For the results object. Used internally by different
+            variants of Shapley using this subroutine
+        additional_indices: Set of additional indices for data points which should be
+            always considered.
+        use_default_scorer_value: Use default scorer value even if additional_indices
+            is not None.
+    Returns:
+         ValuationResult object containing computed data values.
     """
     if (
         additional_indices is not None
@@ -171,9 +185,9 @@ def permutation_montecarlo_shapley(
     $$
 
     where $\sigma_{:i}$ denotes the set of indices in permutation sigma before
-    the position where $i$ appears (see :ref:`data valuation` for details).
+    the position where $i$ appears (see [[data-valuation]] for details).
 
-    This implements the method described in :footcite:t:`ghorbani_data_2019`
+    This implements the method described in (Ghorbani and Zou, 2019)<sup><a href="#ghorbani_data_2019">1</a></sup>
     with a double stopping criterion.
 
     .. todo::
@@ -183,26 +197,33 @@ def permutation_montecarlo_shapley(
     Instead of naively implementing the expectation, we sequentially add points
     to coalitions from a permutation and incrementally compute marginal utilities.
     We stop computing marginals for a given permutation based on a
-    :class:`TruncationPolicy`. :footcite:t:`ghorbani_data_2019` mention two
-    policies: one that stops after a certain fraction of marginals are computed,
-    implemented in :class:`FixedTruncation`, and one that stops if the last
-    computed utility ("score") is close to the total utility using the standard
-    deviation of the utility as a measure of proximity, implemented in
-    :class:`BootstrapTruncation`.
+    [TruncationPolicy][pydvl.value.shapley.truncated.TruncationPolicy].
+    (Ghorbani and Zou, 2019)<sup><a href="#ghorbani_data_2019">1</a></sup>
+    mention two policies: one that stops after a certain
+    fraction of marginals are computed, implemented in
+    [FixedTruncation][pydvl.value.shapley.truncated.FixedTruncation],
+    and one that stops if the last computed utility ("score") is close to the
+    total utility using the standard deviation of the utility as a measure of
+    proximity, implemented in
+    [BootstrapTruncation][pydvl.value.shapley.truncated.BootstrapTruncation].
 
     We keep sampling permutations and updating all shapley values
-    until the :class:`StoppingCriterion` returns ``True``.
+    until the [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] returns
+    `True`.
 
-    :param u: Utility object with model, data, and scoring function.
-    :param done: function checking whether computation must stop.
-    :param truncation: An optional callable which decides whether to
-        interrupt processing a permutation and set all subsequent marginals to
-        zero. Typically used to stop computation when the marginal is small.
-    :param n_jobs: number of jobs across which to distribute the computation.
-    :param config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
-    :param progress: Whether to display progress bars for each job.
-    :return: Object with the data values.
+    Args:
+        u: Utility object with model, data, and scoring function.
+        done: function checking whether computation must stop.
+        truncation: An optional callable which decides whether to interrupt
+            processing a permutation and set all subsequent marginals to
+            zero. Typically used to stop computation when the marginal is small.
+        n_jobs: number of jobs across which to distribute the computation.
+        config: Object configuring parallel computation, with cluster address,
+            number of cpus, etc.
+        progress: Whether to display a progress bar.
+
+    Returns:
+        Object with the data values.
     """
     algorithm = "permutation_montecarlo_shapley"
 
@@ -251,18 +272,21 @@ def _combinatorial_montecarlo_shapley(
     progress: bool = False,
     job_id: int = 1,
 ) -> ValuationResult:
-    """Helper function for :func:`combinatorial_montecarlo_shapley`.
+    """Helper function for [combinatorial_montecarlo_shapley()][pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley].
 
     This is the code that is sent to workers to compute values using the
     combinatorial definition.
 
-    :param indices: Indices of the samples to compute values for.
-    :param u: Utility object with model, data, and scoring function
-    :param done: Check on the results which decides when to stop sampling
-        subsets for an index.
-    :param progress: Whether to display progress bars for each job.
-    :param job_id: id to use for reporting progress
-    :return: A tuple of ndarrays with estimated values and standard errors
+    Args:
+        indices: Indices of the samples to compute values for.
+        u: Utility object with model, data, and scoring function
+        done: Check on the results which decides when to stop sampling
+            subsets for an index.
+        progress: Whether to display progress bars for each job.
+        job_id: id to use for reporting progress
+
+    Returns:
+        The results for the indices.
     """
     n = len(u.data)
 
@@ -306,26 +330,29 @@ def combinatorial_montecarlo_shapley(
     \binom{n-1}{ | S | }^{-1} [u(S \cup \{i\}) − u(S)]$$
 
     This consists of randomly sampling subsets of the power set of the training
-    indices in :attr:`~pydvl.utils.utility.Utility.data`, and computing their
-    marginal utilities. See :ref:`data valuation` for details.
+    indices in [u.data][pydvl.utils.utility.Utility], and computing their
+    marginal utilities. See [Data valuation][computing-data-values] for details.
 
     Note that because sampling is done with replacement, the approximation is
     poor even for $2^{m}$ subsets with $m>n$, even though there are $2^{n-1}$
     subsets for each $i$. Prefer
-    :func:`~pydvl.shapley.montecarlo.permutation_montecarlo_shapley`.
+    [permutation_montecarlo_shapley()][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley].
 
     Parallelization is done by splitting the set of indices across processes and
     computing the sum over subsets $S \subseteq N \setminus \{i\}$ separately.
 
-    :param u: Utility object with model, data, and scoring function
-    :param done: Stopping criterion for the computation.
-    :param n_jobs: number of parallel jobs across which to distribute the
-        computation. Each worker receives a chunk of
-        :attr:`~pydvl.utils.dataset.Dataset.indices`
-    :param config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
-    :param progress: Whether to display progress bars for each job.
-    :return: Object with the data values.
+    Args:
+        u: Utility object with model, data, and scoring function
+        done: Stopping criterion for the computation.
+        n_jobs: number of parallel jobs across which to distribute the
+            computation. Each worker receives a chunk of
+            [indices][pydvl.utils.dataset.Dataset.indices]
+        config: Object configuring parallel computation, with cluster address,
+            number of cpus, etc.
+        progress: Whether to display progress bars for each job.
+
+    Returns:
+        Object with the data values.
     """
 
     map_reduce_job: MapReduceJob[NDArray, ValuationResult] = MapReduceJob(
