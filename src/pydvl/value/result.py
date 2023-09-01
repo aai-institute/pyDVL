@@ -71,7 +71,6 @@ from numpy.typing import NDArray
 from pydvl.utils.dataset import Dataset
 from pydvl.utils.numeric import running_moments
 from pydvl.utils.status import Status
-from pydvl.utils.util import arr_or_writeable_copy
 
 try:
     import pandas  # Try to import here for the benefit of mypy
@@ -244,12 +243,8 @@ class ValuationResult(
 
         self._algorithm = algorithm
         self._status = Status(status)  # Just in case we are given a string
-        self._values = arr_or_writeable_copy(values)
-        self._variances = (
-            np.zeros_like(values)
-            if variances is None
-            else arr_or_writeable_copy(variances)
-        )
+        self._values = values
+        self._variances = np.zeros_like(values) if variances is None else variances
         self._counts = np.ones_like(values) if counts is None else counts
         self._sort_order = None
         self._extra_values = extra_values or {}

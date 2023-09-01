@@ -429,6 +429,11 @@ class GroupedDataset(Dataset):
     def __len__(self):
         return len(self.groups)
 
+    @property
+    def indices(self):
+        """Indices of the groups."""
+        return self._indices
+
     # FIXME this is a misnomer, should be `names` in `Dataset` so that here it
     #  makes sense
     @property
