@@ -24,7 +24,7 @@ from pydvl.utils import (
 from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.montecarlo import permutation_montecarlo_shapley_rollout
 from pydvl.value.shapley.truncated import TruncationPolicy
-from pydvl.value.stopping import MaxChecks, StoppingCriterion
+from pydvl.value.stopping import MaxChecks, MaxUpdates, StoppingCriterion
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,8 @@ def compute_classwise_shapley_values(
     *,
     done: StoppingCriterion,
     truncation: TruncationPolicy,
+    done_sample_complements: Optional[StoppingCriterion] = None,
     normalize_values: bool = True,
-    n_resample_complement_sets: int = 1,
     use_default_scorer_value: bool = True,
     min_elements_per_label: int = 1,
     n_jobs: int = 1,
@@ -49,23 +49,32 @@ def compute_classwise_shapley_values(
     footcite:t:`schoch_csshapley_2022`. The values can be optionally normalized,
     depending on ``normalize_values``.
 
-    :param u: Utility object containing model, data, and scoring function. The scoring
-        function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
-    :param done: Function that checks whether the computation needs to stop.
-    :param truncation: Callable function that decides whether to interrupt processing a
-        permutation and set subsequent marginals to zero.
-    :param normalize_values: Indicates whether to normalize the values by the variation
-        in each class times their in-class accuracy.
-    :param n_resample_complement_sets: Number of times to resample the complement set
-        for each permutation.
-    :param use_default_scorer_value: Use default scorer value even if additional_indices
-        is not None.
-    :param min_elements_per_label: The minimum number of elements for each opposite
-        label.
-    :param n_jobs: Number of parallel jobs to run.
-    :param config: Parallel configuration.
-    :param progress: Whether to display a progress bar.
-    :return: ValuationResult object containing computed data values.
+    Args:
+        u: Utility object containing model, data, and scoring function. The scoring
+            function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
+        done: Function that checks whether the computation needs to stop.
+        truncation: Callable function that decides whether to interrupt processing a
+            permutation and set subsequent marginals to zero.
+        done_sample_complements: Function checking whether computation needs to stop.
+            Otherwise, it will resample conditional sets until the stopping criterion is
+            met.
+        normalize_values: Indicates whether to normalize the values by the variation
+            in each class times their in-class accuracy.
+        done_sample_complements: Number of times to resample the complement set
+            for each permutation.
+        use_default_scorer_value: The first set of indices is the sampled complement
+            set. Unless not otherwise specified, the default scorer value is used for
+            this. If it is set to false, the base score is calculated from the utility.
+        min_elements_per_label: The minimum number of elements for each opposite
+            label.
+        n_jobs: Number of parallel jobs to run.
+        config: Parallel configuration.
+        progress: Whether to display a progress bar.
+
+    Returns:
+        ValuationResult object containing computed data values.
+
+    !!! tip "New in version 0.7.0"
     """
 
     _check_classwise_shapley_utility(u)
@@ -104,7 +113,7 @@ def compute_classwise_shapley_values(
                     _permutation_montecarlo_classwise_shapley,
                     u_ref,
                     truncation=truncation,
-                    n_resample_complement_sets=n_resample_complement_sets,
+                    done_sample_complements=done_sample_complements,
                     use_default_scorer_value=use_default_scorer_value,
                     min_elements_per_label=min_elements_per_label,
                 )
@@ -120,26 +129,34 @@ def compute_classwise_shapley_values(
 def _permutation_montecarlo_classwise_shapley(
     u: Utility,
     *,
+    done_sample_complements: StoppingCriterion = None,
     truncation: TruncationPolicy,
-    n_resample_complement_sets: int = 1,
     use_default_scorer_value: bool = True,
     min_elements_per_label: int = 1,
 ) -> ValuationResult:
     """Computes classwise Shapley value using truncated Monte Carlo permutation
     sampling for the subsets.
 
-    :param u: Utility object containing model, data, and scoring function. The scoring
-        function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
-    :param truncation: Callable function that decides whether to interrupt processing a
-        permutation and set subsequent marginals to zero.
-    :param n_resample_complement_sets: Number of times to resample the complement set
-        for each permutation.
-    :param use_default_scorer_value: Use default scorer value even if additional_indices
-        is not None.
-     :param min_elements_per_label: The minimum number of elements for each opposite
-        label.
-    :return: ValuationResult object containing computed data values.
+    Args:
+        u: Utility object containing model, data, and scoring function. The scoring
+            function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
+        done_sample_complements: Function checking whether computation needs to stop.
+            Otherwise, it will resample conditional sets until the stopping criterion is
+            met.
+        truncation: Callable function that decides whether to interrupt processing a
+            permutation and set subsequent marginals to zero.
+        use_default_scorer_value: The first set of indices is the sampled complement
+            set. Unless not otherwise specified, the default scorer value is used for
+            this. If it is set to false, the base score is calculated from the utility.
+        min_elements_per_label: The minimum number of elements for each opposite
+            label.
+
+    Returns:
+        ValuationResult object containing computed data values.
     """
+    if done_sample_complements is None:
+        done_sample_complements = MaxChecks(1)
+
     result = ValuationResult.zeros(
         algorithm="classwise_shapley",
         indices=u.data.indices,
@@ -155,7 +172,7 @@ def _permutation_montecarlo_classwise_shapley(
         result += _permutation_montecarlo_classwise_shapley_for_label(
             u,
             label,
-            done=MaxChecks(n_resample_complement_sets),
+            done=done_sample_complements,
             truncation=truncation,
             use_default_scorer_value=use_default_scorer_value,
             min_elements_per_label=min_elements_per_label,
@@ -208,9 +225,13 @@ def _normalize_classwise_shapley_values(
     belonging to the currently viewed class. See footcite:t:`schoch_csshapley_2022` for
     more details.
 
-    :param result: ValuationResult object to be normalized.
-    :param u: Utility object containing model, data, and scoring function. The scoring
-        function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
+    Args:
+        result: ValuationResult object to be normalized.
+        u: Utility object containing model, data, and scoring function. The scoring
+            function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
+
+    Returns:
+        Normalized ValuationResult object.
     """
     y_train = u.data.y_train
     unique_labels = np.unique(np.concatenate((y_train, u.data.y_test)))
@@ -252,23 +273,24 @@ class ClasswiseScorer(Scorer):
     in order to produce meaningful results. For further reference see also section four
     of :footcite:t:`schoch_csshapley_2022`.
 
-    :param default: Score used when a model cannot be fit, e.g. when too little data is
-        passed, or errors arise.
-    :param range: Numerical range of the score function. Some Monte Carlo methods can
-        use this to estimate the number of samples required for a certain quality of
-        approximation. If not provided, it can be read from the ``scoring`` object if it
-        provides it, for instance if it was constructed with
-        :func:`~pydvl.utils.types.compose_score`.
-    :param in_class_discount_fn: Continuous, monotonic increasing function used to
-        discount the in-class score.
-    :param out_of_class_discount_fn: Continuous, monotonic increasing function used to
-        discount the out-of-class score.
-    :param initial_label: Set initial label (Doesn't require to set parameter ``label``
-        on ``ClassWiseDiscountedScorer`` in first iteration)
-    :param name: Name of the scorer. If not provided, the name of the passed
-        function will be prefixed by 'classwise '.
+    Args:
+        default: Score used when a model cannot be fit, e.g. when too little data is
+            passed, or errors arise.
+        range: Numerical range of the score function. Some Monte Carlo methods can
+            use this to estimate the number of samples required for a certain quality of
+            approximation. If not provided, it can be read from the ``scoring`` object
+            if it provides it, for instance if it was constructed with
+            :func:`~pydvl.utils.types.compose_score`.
+        in_class_discount_fn: Continuous, monotonic increasing function used to
+            discount the in-class score.
+        out_of_class_discount_fn: Continuous, monotonic increasing function used to
+            discount the out-of-class score.
+        initial_label: Set initial label (Doesn't require to set parameter ``label``
+            on ``ClassWiseDiscountedScorer`` in first iteration)
+        name: Name of the scorer. If not provided, the name of the passed
+            function will be prefixed by 'classwise '.
 
-    .. versionadded:: 0.7.0
+    !!! tip "New in version 0.7.0"
     """
 
     def __init__(
@@ -387,7 +409,8 @@ def _permutation_montecarlo_classwise_shapley_for_label(
 
     :param u: Utility object containing model, data, and scoring function. The scoring
         function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
-    :param done: Function checking whether computation needs to stop.
+    :param done: Function checking whether computation needs to stop. Otherwise, it will
+        resample conditional sets until the stopping criterion is met.
     :param label: The label for which to sample the complement (e.g. all other labels)
     :param truncation: Callable which decides whether to interrupt processing a
         permutation and set all subsequent marginals to zero.

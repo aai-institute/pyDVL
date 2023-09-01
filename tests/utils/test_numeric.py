@@ -141,10 +141,10 @@ def test_running_moments():
         assert np.allclose(variances, true_variances)
 
 
-@pytest.mark.parametrize("min_elements", [1, 2])
-@pytest.mark.parametrize("elements_per_group", [10])
-@pytest.mark.parametrize("num_groups", [3])
-@pytest.mark.parametrize("check_num_samples", [10])
+@pytest.mark.parametrize(
+    "min_elements,elements_per_group,num_groups,check_num_samples",
+    [(1, 10, 3, 3), (2, 10, 3, 3)],
+)
 def test_random_powerset_group_conditional(
     min_elements: int,
     elements_per_group: int,

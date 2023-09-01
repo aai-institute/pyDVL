@@ -781,7 +781,7 @@ def test_classwise_shapley(
         linear_classifier_cs_scorer,
         done=MaxChecks(n_samples),
         truncation=NoTruncation(),
-        n_resample_complement_sets=n_resample_complement_sets,
+        done_sample_complements=MaxChecks(n_resample_complement_sets),
         **args,
         progress=True,
     )
@@ -789,11 +789,7 @@ def test_classwise_shapley(
     assert np.all(values.counts == n_samples * n_resample_complement_sets)
 
 
-@pytest.mark.parametrize(
-    "dataset_alt_seq_simple",
-    [((101, 0.3, 0.4))],
-    indirect=True,
-)
+@pytest.mark.parametrize("n_element, left_margin, right_margin", [(101, 0.3, 0.4)])
 def test_cs_scorer_on_dataset_alt_seq_simple(dataset_alt_seq_simple):
     """
     Tests the class wise scorer.
@@ -958,7 +954,7 @@ def dataset_alt_seq_full() -> Dataset:
 
 @pytest.fixture(scope="function")
 def dataset_alt_seq_simple(
-    request,
+    n_element: int, left_margin: float, right_margin: float
 ) -> Tuple[NDArray[np.float_], NDArray[np.int_], Dict[str, float]]:
     """
     The label set is represented as 0000011100011111, with adjustable left and right
@@ -966,7 +962,6 @@ def dataset_alt_seq_simple(
     right margin denotes the percentage of ones at the end. Accuracy can be efficiently
     calculated using a closed-form solution.
     """
-    n_element, left_margin, right_margin = request.param
     x = np.linspace(0, 1, n_element)
     y = ((left_margin <= x) & (x < 0.5)) | ((1 - right_margin) <= x)
     y = y.astype(int)
