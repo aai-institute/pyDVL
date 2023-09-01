@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Replaced sphinx with mkdocs for documentation. Major overhaul of documentation
+  [PR #352](https://github.com/aai-institute/pyDVL/pull/352)
 - Made ray an optional dependency, relying on joblib as default parallel backend
   [PR #408](https://github.com/aai-institute/pyDVL/pull/408)
 - Enabled parallel computation for Leave-One-Out values
@@ -28,6 +30,8 @@
   approximation
   [PR #365](https://github.com/aai-institute/pyDVL/pull/365)
 - **Breaking Changes**:
+  - Renamed `semivalues` to `compute_generic_semivalues`
+    [PR #413](https://github.com/appliedAI-Initiative/pyDVL/pull/413)
   - Add new joblib backend and set it as default
     instead of the ray backend. Simplify the MapReduceJob class.
     [PR #355](https://github.com/aai-institute/pyDVL/pull/355)
@@ -38,7 +42,7 @@
 - Decouple ray.init from ParallelConfig 
   [PR #373](https://github.com/aai-institute/pyDVL/pull/383)
 
-## 0.6.1 - 🏗 Bug fixes and small improvement
+## 0.6.1 - 🏗 Bug fixes and small improvements
 
 - Fix parsing keyword arguments of `compute_semivalues` dispatch function
   [PR #333](https://github.com/aai-institute/pyDVL/pull/333)

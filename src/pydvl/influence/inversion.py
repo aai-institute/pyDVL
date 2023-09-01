@@ -11,7 +11,6 @@ __all__ = [
     "solve_hvp",
     "InversionMethod",
     "InversionRegistry",
-    "InverseHvpResult",
 ]
 
 from .twice_differentiable import (
@@ -44,25 +43,27 @@ def solve_hvp(
     hessian_perturbation: float = 0.0,
     **kwargs: Any,
 ) -> InverseHvpResult:
-    """
-    Finds $x$ such that $Ax = b$, where $A$ is the hessian of model,
-    and $b$ a vector.
-    Depending on the inversion method, the hessian is either calculated directly
-    and then inverted, or implicitly and then inverted through matrix vector
-    product. The method also allows to add a small regularization term (hessian_perturbation)
-    to facilitate inversion of non fully trained models.
+    r"""
+    Finds \( x \) such that \( Ax = b \), where \( A \) is the hessian of the model,
+    and \( b \) a vector. Depending on the inversion method, the hessian is either
+    calculated directly and then inverted, or implicitly and then inverted through
+    matrix vector product. The method also allows to add a small regularization term
+    (hessian_perturbation) to facilitate inversion of non fully trained models.
 
-    :param inversion_method:
-    :param model: A model wrapped in the TwiceDifferentiable interface.
-    :param training_data:
-    :param b: Array as the right hand side of the equation $Ax = b$
-    :param hessian_perturbation: regularization of the hessian
-    :param kwargs: kwargs to pass to the inversion method
+    Args:
+        inversion_method:
+        model: A model wrapped in the TwiceDifferentiable interface.
+        training_data:
+        b: Array as the right hand side of the equation \( Ax = b \)
+        hessian_perturbation: regularization of the hessian.
+        kwargs: kwargs to pass to the inversion method.
 
-    :return: An object that contains an array that solves the inverse problem,
-        i.e. it returns $x$ such that $Ax = b$, and a dictionary containing
-        information about the inversion process.
+    Returns:
+        Instance of [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult], with
+            an array that solves the inverse problem, i.e., it returns \( x \) such that \( Ax = b \)
+            and a dictionary containing information about the inversion process.
     """
+
     return InversionRegistry.call(
         inversion_method,
         model,
@@ -94,17 +95,21 @@ class InversionRegistry:
         `(model: TwiceDifferentiable, training_data: DataLoaderType, b: TensorType,
         hessian_perturbation: float = 0.0, ...)`.
 
-        :param model_type: The type of the model the function should be registered for.
-        :param inversion_method: The inversion method the function should be
-            registered for.
-        :param overwrite: If ``True``, allows overwriting of an existing registered
-            function for the same model type and inversion method. If ``False``,
-            logs a warning when attempting to register a function for an already
-            registered model type and inversion method.
+        Args:
+            model_type: The type of the model the function should be registered for.
+            inversion_method: The inversion method the function should be
+                registered for.
+            overwrite: If ``True``, allows overwriting of an existing registered
+                function for the same model type and inversion method. If ``False``,
+                logs a warning when attempting to register a function for an already
+                registered model type and inversion method.
 
-        :raises TypeError: If the provided model_type or inversion_method are of the wrong type.
-        :raises ValueError: If the function to be registered does not match the required signature.
-        :return: A decorator for registering a function.
+        Raises:
+            TypeError: If the provided model_type or inversion_method are of the wrong type.
+            ValueError: If the function to be registered does not match the required signature.
+
+        Returns:
+            A decorator for registering a function.
         """
 
         if not isinstance(model_type, type):
@@ -177,19 +182,22 @@ class InversionRegistry:
         hessian_perturbation,
         **kwargs,
     ) -> InverseHvpResult:
-        """
-         Call a registered function with the provided parameters.
+        r"""
+        Call a registered function with the provided parameters.
 
-        :param inversion_method: The inversion method to use.
-        :param model: A model wrapped in the TwiceDifferentiable interface.
-        :param training_data: The training data to use.
-        :param b: Array as the right hand side of the equation $Ax = b$.
-        :param hessian_perturbation: Regularization of the hessian.
-        :param kwargs: Additional keyword arguments to pass to the inversion method.
+        Args:
+            inversion_method: The inversion method to use.
+            model: A model wrapped in the TwiceDifferentiable interface.
+            training_data: The training data to use.
+            b: Array as the right hand side of the equation \(Ax = b\).
+            hessian_perturbation: Regularization of the hessian.
+            kwargs: Additional keyword arguments to pass to the inversion method.
 
-        :return: An object that contains an array that solves the inverse problem,
-            i.e. it returns $x$ such that $Ax = b$, and a dictionary containing
-            information about the inversion process.
+        Returns:
+            An instance of [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult],
+                that contains an array, which solves the inverse problem,
+                i.e. it returns \(x\) such that \(Ax = b\), and a dictionary containing information
+                about the inversion process.
         """
 
         return cls.get(type(model), inversion_method)(

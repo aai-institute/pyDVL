@@ -193,8 +193,8 @@ You can run it either locally or, using
 docker container run --rm -p 11211:11211 --name pydvl-cache -d memcached:latest
 ```
 
-You can read more in the [caching module's
-documentation](https://aai-institute.github.io/pyDVL/pydvl/utils/caching.html).
+You can read more in the
+[documentation](https://aai-institute.github.io/pyDVL/getting-started/first-steps/#caching).
 
 # Contributing
 

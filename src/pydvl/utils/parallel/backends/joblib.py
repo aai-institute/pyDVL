@@ -19,10 +19,11 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
     """Class used to wrap joblib to make it transparent to algorithms.
 
     It shouldn't be initialized directly. You should instead call
-    :func:`~pydvl.utils.parallel.backend.init_parallel_backend`.
+    [init_parallel_backend()][pydvl.utils.parallel.backend.init_parallel_backend].
 
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
-        cluster address, number of cpus, etc.
+    Args:
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+            with cluster address, number of cpus, etc.
     """
 
     def __init__(self, config: ParallelConfig):
@@ -53,9 +54,11 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
     def wrap(self, fun: Callable, **kwargs) -> Callable:
         """Wraps a function as a joblib delayed.
 
-        :param fun: the function to wrap
+        Args:
+            fun: the function to wrap
 
-        :return: The delayed function.
+        Returns:
+            The delayed function.
         """
         return delayed(fun)  # type: ignore
 

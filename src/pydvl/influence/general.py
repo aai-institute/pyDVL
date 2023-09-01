@@ -1,6 +1,12 @@
 """
-This module contains parallelized influence calculation functions for general
-models, as introduced in :footcite:t:`koh_understanding_2017`.
+This module contains influence calculation functions for general
+models, as introduced in (Koh and Liang, 2017)[^1].
+
+## References:
+
+[^1]: <a name="koh_liang_2017"></a>Koh, P.W., Liang, P., 2017.
+    [Understanding Black-box Predictions via Influence Functions](https://proceedings.mlr.press/v70/koh17a.html).
+    In: Proceedings of the 34th International Conference on Machine Learning, pp. 1885–1894. PMLR.
 """
 import logging
 from copy import deepcopy
@@ -8,9 +14,10 @@ from enum import Enum
 from typing import Any, Callable, Dict, Generator, Optional, Type
 
 from ..utils import maybe_progress
-from .inversion import InverseHvpResult, InversionMethod, solve_hvp
+from .inversion import InversionMethod, solve_hvp
 from .twice_differentiable import (
     DataLoaderType,
+    InverseHvpResult,
     TensorType,
     TensorUtilities,
     TwiceDifferentiable,
@@ -22,8 +29,15 @@ logger = logging.getLogger(__name__)
 
 
 class InfluenceType(str, Enum):
-    """
-    Different influence types.
+    r"""
+    Enum representation for the types of influence.
+
+    Attributes:
+        Up: Up-weighting a training point, see section 2.1 of
+            (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>
+        Perturbation: Perturb a training point, see section 2.2 of
+            (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>
+
     """
 
     Up = "up"
@@ -41,28 +55,34 @@ def compute_influence_factors(
     **kwargs: Any,
 ) -> InverseHvpResult:
     r"""
-    Calculates influence factors of a model for training and test
-    data. Given a test point $z_test = (x_{test}, y_{test})$, a loss
-    $L(z_{test}, \theta)$ ($\theta$ being the parameters of the model) and the
-    Hessian of the model $H_{\theta}$, influence factors are defined as
-    $$s_{test} = H_{\theta}^{-1} \grad_{\theta} L(z_{test}, \theta).$$. They are
-    used for efficient influence calculation. This method first
-    (implicitly) calculates the Hessian and then (explicitly) finds the
-    influence factors for the model using the given inversion method. The
-    parameter ``hessian_perturbation`` is used to regularize the inversion of
-    the Hessian. For more info, refer to :footcite:t:`koh_understanding_2017`,
-    paragraph 3.
+    Calculates influence factors of a model for training and test data.
 
-    :param model: A model wrapped in the TwiceDifferentiable interface.
-    :param training_data: A DataLoader containing the training data.
-    :param test_data: A DataLoader containing the test data.
-    :param inversion_method: name of method for computing inverse hessian vector
-        products.
-    :param hessian_perturbation: regularization of the hessian
-    :param progress: If True, display progress bars.
-    :returns: An array of size (N, D) containing the influence factors for each
-        dimension (D) and test sample (N).
+    Given a test point \(z_{test} = (x_{test}, y_{test})\), a loss \(L(z_{test}, \theta)\)
+    (\(\theta\) being the parameters of the model) and the Hessian of the model \(H_{\theta}\),
+    influence factors are defined as:
+
+    \[
+    s_{test} = H_{\theta}^{-1} \operatorname{grad}_{\theta} L(z_{test}, \theta).
+    \]
+
+    They are used for efficient influence calculation. This method first (implicitly) calculates
+    the Hessian and then (explicitly) finds the influence factors for the model using the given
+    inversion method. The parameter `hessian_perturbation` is used to regularize the inversion of
+    the Hessian. For more info, refer to (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>, paragraph 3.
+
+    Args:
+        model: A model wrapped in the TwiceDifferentiable interface.
+        training_data: DataLoader containing the training data.
+        test_data: DataLoader containing the test data.
+        inversion_method: Name of method for computing inverse hessian vector products.
+        hessian_perturbation: Regularization of the hessian.
+        progress: If True, display progress bars.
+
+    Returns:
+        array: An array of size (N, D) containing the influence factors for each dimension (D) and test sample (N).
+
     """
+
     tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
         model
     )
@@ -114,21 +134,25 @@ def compute_influences_up(
     progress: bool = False,
 ) -> TensorType:
     r"""
-    Given the model, the training points and the influence factors, calculates the
-    influences using the upweighting method. More precisely, first it calculates
-    the gradients of the model wrt. each training sample ($\grad_{\theta} L$,
-    with $L$ the loss of a single point and $\theta$ the parameters of the
-    model) and then multiplies each with the influence factors. For more
-    details, refer to section 2.1 of :footcite:t:`koh_understanding_2017`.
+    Given the model, the training points, and the influence factors, this function calculates the
+    influences using the up-weighting method.
 
-    :param model: A model which has to implement the TwiceDifferentiable
-        interface.
-    :param input_data: Data loader containing the samples to calculate the
-        influence of.
-    :param influence_factors: array containing influence factors
-    :param progress: If True, display progress bars.
-    :returns: An array of size [NxM], where N is number of influence factors, M
-        number of input points.
+    The procedure involves two main steps:
+    1. Calculating the gradients of the model with respect to each training sample
+       (\(\operatorname{grad}_{\theta} L\), where \(L\) is the loss of a single point and \(\theta\) are the
+       parameters of the model).
+    2. Multiplying each gradient with the influence factors.
+
+    For a detailed description of the methodology, see section 2.1 of (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>.
+
+    Args:
+        model: A model that implements the TwiceDifferentiable interface.
+        input_data: DataLoader containing the samples for which the influence will be calculated.
+        influence_factors: Array containing pre-computed influence factors.
+        progress: If set to True, progress bars will be displayed during computation.
+
+    Returns:
+        An array of shape [NxM], where N is the number of influence factors, and M is the number of input samples.
     """
 
     tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
@@ -173,21 +197,27 @@ def compute_influences_pert(
     progress: bool = False,
 ) -> TensorType:
     r"""
-    Calculates the influence values from the influence factors and the training
-    points using the perturbation method. More precisely, for each training sample it
-    calculates $\grad_{\theta} L$ (with L the loss of the model over the single
-    point and $\theta$ the parameters of the model) and then uses the method
-    TwiceDifferentiable.mvp to efficiently calculate the product of the
-    influence factors and $\grad_x \grad_{\theta} L$. For more details, refer
-    to section 2.2 of :footcite:t:`koh_understanding_2017`.
+    Calculates the influence values based on the influence factors and training samples using the perturbation method.
 
-    :param model: A model which has to implement the TwiceDifferentiable interface.
-    :param input_data: Data loader containing the samples to calculate the
-        influence of.
-    :param influence_factors: array containing influence factors
-    :param progress: If True, display progress bars.
-    :returns: An array of size [NxMxP], where N is the number of influence factors, M
-        the number of input data, and P the number of features.
+    The process involves two main steps:
+    1. Calculating the gradient of the model with respect to each training sample
+       (\(\operatorname{grad}_{\theta} L\), where \(L\) is the loss of the model for a single data point and \(\theta\)
+       are the parameters of the model).
+    2. Using the method [TwiceDifferentiable.mvp][pydvl.influence.twice_differentiable.TwiceDifferentiable.mvp]
+       to efficiently compute the product of the
+       influence factors and \(\operatorname{grad}_x \operatorname{grad}_{\theta} L\).
+
+    For a detailed methodology, see section 2.2 of (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>.
+
+    Args:
+        model: A model that implements the TwiceDifferentiable interface.
+        input_data: DataLoader containing the samples for which the influence will be calculated.
+        influence_factors: Array containing pre-computed influence factors.
+        progress: If set to True, progress bars will be displayed during computation.
+
+    Returns:
+        A 3D array with shape [NxMxP], where N is the number of influence factors,
+            M is the number of input samples, and P is the number of features.
     """
 
     tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
@@ -239,31 +269,38 @@ def compute_influences(
     **kwargs: Any,
 ) -> TensorType:  # type: ignore # ToDO fix typing
     r"""
-    Calculates the influence of the input_data point j on the test points i.
-    First it calculates the influence factors of all test points with respect
-    to the model and the training points, and then uses them to get the
-    influences over the complete input_data set.
+    Calculates the influence of each input data point on the specified test points.
 
-    :param differentiable_model: A model wrapped with its loss in TwiceDifferentiable.
-    :param training_data: data loader with the training data, used to calculate
-        the hessian of the model loss.
-    :param test_data: data loader with the test samples. If None, the samples in
-        training_data are used.
-    :param input_data: data loader with the samples to calculate the influences
-        of. If None, the samples in training_data are used.
-    :param progress: whether to display progress bars.
-    :param influence_type: Which algorithm to use to calculate influences.
-        Currently supported options: 'up' or 'perturbation'. For details refer
-        to :footcite:t:`koh_understanding_2017`
-    :param hessian_regularization: lambda to use in Hessian regularization, i.e.
-        H_reg = H + lambda * 1, with 1 the identity matrix and H the (simple and
-        regularized) Hessian. Typically used with more complex models to make
-        sure the Hessian is positive definite.
-    :returns: An array specifying the influences. Shape is [NxM] if
-        influence_type is'up', where N is number of test points and M number of
-        train points. If instead influence_type is 'perturbation', output shape
-        is [NxMxP], with P the number of input features.
+    This method operates in two primary stages:
+    1. Computes the influence factors for all test points concerning the model and its training data.
+    2. Uses these factors to derive the influences over the complete set of input data.
+
+    The influence calculation relies on the twice-differentiable nature of the provided model.
+
+    Args:
+        differentiable_model: A model bundled with its corresponding loss in the `TwiceDifferentiable` wrapper.
+        training_data: DataLoader instance supplying the training data. This data is pivotal in computing the
+                       Hessian matrix for the model's loss.
+        test_data: DataLoader instance with the test samples. Defaults to `training_data` if None.
+        input_data: DataLoader instance holding samples whose influences need to be computed. Defaults to
+                    `training_data` if None.
+        inversion_method: An enumeration value determining the approach for inverting matrices
+            or computing inverse operations, see [.inversion.InversionMethod]
+        progress: A boolean indicating whether progress bars should be displayed during computation.
+        influence_type: Determines the methodology for computing influences.
+            Valid choices include 'up' (for up-weighting) and 'perturbation'.
+            For an in-depth understanding, see (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>.
+        hessian_regularization: A lambda value used in Hessian regularization. The regularized Hessian, \( H_{reg} \),
+            is computed as \( H + \lambda \times I \), where \( I \) is the identity matrix and \( H \)
+            is the simple, unmodified Hessian. This regularization is typically utilized for more
+            sophisticated models to ensure that the Hessian remains positive definite.
+
+    Returns:
+        The shape of this array varies based on the `influence_type`. If 'up', the shape is [NxM], where
+            N denotes the number of test points and M denotes the number of training points. Conversely, if the
+            influence_type is 'perturbation', the shape is [NxMxP], with P representing the number of input features.
     """
+
     if input_data is None:
         input_data = deepcopy(training_data)
     if test_data is None:

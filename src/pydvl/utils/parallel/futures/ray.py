@@ -26,21 +26,22 @@ class RayExecutor(Executor):
     """Asynchronous executor using Ray that implements the concurrent.futures API.
 
     It shouldn't be initialized directly. You should instead call
-    :func:`~pydvl.utils.parallel.futures.init_executor`.
+    [init_executor()][pydvl.utils.parallel.futures.init_executor].
 
-    :param max_workers: Maximum number of concurrent tasks. Each task can
-        request itself any number of vCPUs. You must ensure the product
-        of this value and the n_cpus_per_job parameter passed to submit()
-        does not exceed available cluster resources.
-        If set to None, it will default to the total number of vCPUs
-        in the ray cluster.
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig`
-        with cluster address, number of cpus, etc.
-    :param cancel_futures: Select which futures will be cancelled
-        when exiting this context manager. Pending is the default, which
-        will cancel all pending futures, but not running ones, as done by
-        :class:`concurrent.futures.ProcessPoolExecutor`. Additionally, `All`
-        cancels all pending and running futures, and `None` doesn't cancel any.
+    Args:
+        max_workers: Maximum number of concurrent tasks. Each task can request
+            itself any number of vCPUs. You must ensure the product of this
+            value and the n_cpus_per_job parameter passed to submit() does not
+            exceed available cluster resources. If set to `None`, it will
+            default to the total number of vCPUs in the ray cluster.
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+            with cluster address, number of cpus, etc.
+        cancel_futures: Select which futures will be cancelled when exiting this
+            context manager. `Pending` is the default, which will cancel all
+            pending futures, but not running ones, as done by
+            [concurrent.futures.ProcessPoolExecutor][]. Additionally, `All`
+            cancels all pending and running futures, and `None` doesn't cancel
+            any. See [CancellationPolicy][pydvl.utils.parallel.backend.CancellationPolicy]
     """
 
     @deprecated(
@@ -104,13 +105,17 @@ class RayExecutor(Executor):
         Schedules the callable to be executed as fn(\*args, \**kwargs)
         and returns a Future instance representing the execution of the callable.
 
-        :param fn: Callable.
-        :param args: Positional arguments that will be passed to ``fn``.
-        :param kwargs: Keyword arguments that will be passed to ``fn``.
-            It can also optionally contain options for the ray remote function
-            as a dictionary as the keyword argument `remote_function_options`.
-        :return: A Future representing the given call.
-        :raises RuntimeError: If a task is submitted after the executor has been shut down.
+        Args:
+            fn: Callable.
+            args: Positional arguments that will be passed to `fn`.
+            kwargs: Keyword arguments that will be passed to `fn`.
+                It can also optionally contain options for the ray remote function
+                as a dictionary as the keyword argument `remote_function_options`.
+        Returns:
+            A Future representing the given call.
+
+        Raises:
+            RuntimeError: If a task is submitted after the executor has been shut down.
         """
         with self._shutdown_lock:
             logger.debug("executor acquired shutdown lock")
@@ -137,16 +142,18 @@ class RayExecutor(Executor):
     ) -> None:
         """Clean up the resources associated with the Executor.
 
-        This method tries to mimic the behaviour of :meth:`Executor.shutdown`
+        This method tries to mimic the behaviour of
+        [Executor.shutdown][concurrent.futures.Executor.shutdown]
         while allowing one more value for ``cancel_futures`` which instructs it
-        to use the :class:`CancellationPolicy` defined upon construction.
+        to use the [CancellationPolicy][pydvl.utils.parallel.backend.CancellationPolicy]
+        defined upon construction.
 
-        :param wait: Whether to wait for pending futures to finish.
-        :param cancel_futures: Overrides the executor's default policy for
-            cancelling futures on exit. If ``True``, all pending futures are
-            cancelled, and if ``False``, no futures are cancelled. If ``None``
-            (default), the executor's policy set at initialization is used.
-        :return:
+        Args:
+            wait: Whether to wait for pending futures to finish.
+            cancel_futures: Overrides the executor's default policy for
+                cancelling futures on exit. If ``True``, all pending futures are
+                cancelled, and if ``False``, no futures are cancelled. If ``None``
+                (default), the executor's policy set at initialization is used.
         """
         logger.debug("executor shutting down")
         with self._shutdown_lock:
@@ -194,7 +201,7 @@ class RayExecutor(Executor):
 
 
 class _WorkItem:
-    """Inspired by code from: concurrent.futures.thread"""
+    """Inspired by code from: [concurrent.futures.thread][]"""
 
     def __init__(
         self,
@@ -242,8 +249,8 @@ class _WorkItemManagerThread(threading.Thread):
     """Manages submitting the work items and throttling.
 
     It runs in a local thread.
-
-    :param executor: An instance of RayExecutor that owns
+    Args:
+        executor: An instance of RayExecutor that owns
         this thread. A weakref will be owned by the manager as well as
         references to internal objects used to introspect the state of
         the executor.
@@ -383,7 +390,7 @@ class _WorkItemManagerThread(threading.Thread):
                 # We cancel the future's object references
                 # We cannot cancel a running future object.
                 for future in self.submitted_futures:
-                    ray.cancel(future.object_ref)
+                    ray.cancel(future.object_ref)  # type: ignore
                 # Make sure we do this only once to not waste time looping
                 # on running processes over and over.
                 executor._cancel_futures &= ~CancellationPolicy.RUNNING
