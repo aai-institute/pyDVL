@@ -1,10 +1,5 @@
 # Changelog
 
-## Unreleased
-
-- Added more abbreviations to documentation
-  [PR #415](https://github.com/aai-institute/pyDVL/pull/415)
-
 ## 0.7.0 - 📚 Documentation overhaul, new methods and bug fixes 💥
 
 This is our first β release! We have worked hard to deliver improvements across
@@ -16,6 +11,8 @@ the board, with a focus on documentation and usability.
   [PR #365](https://github.com/aai-institute/pyDVL/pull/365)
 - Enabled parallel computation for Leave-One-Out values
   [PR #406](https://github.com/aai-institute/pyDVL/pull/406)
+- Added more abbreviations to documentation
+  [PR #415](https://github.com/aai-institute/pyDVL/pull/415)
 
 ### Changed
 - Replaced sphinx with mkdocs for documentation. Major overhaul of documentation
