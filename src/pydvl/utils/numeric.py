@@ -17,6 +17,7 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
+    Union,
     cast,
     overload,
 )
@@ -151,14 +152,18 @@ def random_powerset_group_conditional(
     that in each sampled set, each unique group is represented at least ``min_elements``
     times. The groups are specified as integers for all elements of the set separately.
 
-    :param s: Vector of size N representing the set to sample elements from.
-    :param groups: Vector of size N containing the group as an integer for each element.
-    :param min_elements_per_group: The minimum number of elements for each group.
+    Args:
+        s: Vector of size N representing the set to sample elements from.
+        groups: Vector of size N containing the group as an integer for each element.
+        min_elements_per_group: The minimum number of elements for each group.
 
-    :return: Generated draw from the power set of s with ``min_elements`` of each group.
-    :raises: TypeError: If the data ``s`` or ``groups`` is not a NumPy array.
-    :raises: ValueError: If the length of ``s``and ``groups`` different or
-        ``min_elements`` is smaller than 0.
+    Returns:
+        Generated draw from the power set of s with ``min_elements`` of each group.
+
+    Raises:
+        TypeError: If the data ``s`` or ``groups`` is not a NumPy array.
+        ValueError: If the length of ``s``and ``groups`` different or ``min_elements``
+            is smaller than 0.
     """
     if not isinstance(s, np.ndarray):
         raise TypeError("Set must be an NDArray")

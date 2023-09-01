@@ -635,8 +635,10 @@ class ValuationResult(
     def scale(self, coefficient: float, indices: Optional[NDArray[IndexT]] = None):
         """
         Scales the values and variances of the result by a coefficient.
-        :param coefficient: Coefficient to scale by.
-        :param indices: Indices to scale. If None, all values are scaled.
+
+        Args:
+            coefficient: Coefficient to scale by.
+            indices: Indices to scale. If None, all values are scaled.
         """
         self._values[self._sort_positions[indices]] *= coefficient
         self._variances[self._sort_positions[indices]] *= coefficient**2

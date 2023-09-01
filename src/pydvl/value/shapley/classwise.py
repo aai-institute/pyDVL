@@ -168,11 +168,14 @@ def _check_classwise_shapley_utility(u: Utility):
     """
     Verifies if the provided utility object supports classwise Shapley values.
 
-    :param u: Utility object containing model, data, and scoring function. The scoring
-        function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
-    :raises: ValueError: If ``u.data`` is not a classification problem.
-    :raises: ValueError: If ``u.scorer`` is not an instance of
-        :class:`~pydvl.utils.score.ClassWiseScorer`
+    Args:
+        u: Utility object containing model, data, and scoring function. The scoring
+            function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
+
+    Raises:
+        ValueError: If ``u.data`` is not a classification problem.
+        ValueError: If ``u.scorer`` is not an instance of
+            :class:`~pydvl.utils.score.ClassWiseScorer`
     """
 
     dim_correct = u.data.y_train.ndim == 1 and u.data.y_test.ndim == 1
