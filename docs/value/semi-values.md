@@ -117,7 +117,7 @@ values = compute_generic_semivalues(
   u=utility,
   coefficient=beta_coefficient(alpha=1, beta=16),
   done=AbsoluteStandardError(threshold=1e-4),
-  )
+)
 ```
 
 Allowing any coefficient can help when experimenting with models which are more
