@@ -10,7 +10,7 @@ from typing import Any, Callable, Optional, Protocol, TypeVar, Union, cast
 from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
 
-from pydvl.utils.functional import get_free_args_fn
+from pydvl.utils.functional import fn_accept_additional_argument, get_free_args_fn
 
 __all__ = ["SupervisedModel", "MapFunction", "ReduceFunction", "NoPublicConstructor"]
 
@@ -45,28 +45,6 @@ class SupervisedModel(Protocol):
         pass
 
 
-def call_fun_remove_arg(*args, fn: Callable, arg: str, **kwargs):
-    """
-    Calls the given function with the given arguments. In the process it removes the
-    specified keyword argument from the keyword arguments.
-
-    Args:
-        args: Positional arguments to pass to the function.
-        fn: The function to call.
-        arg: The name of the argument to remove.
-        kwargs: Keyword arguments to pass to the function.
-
-    Returns:
-        The return value of the function.
-    """
-    try:
-        del kwargs[arg]
-    except KeyError:
-        pass
-
-    return fn(*args, **kwargs)
-
-
 def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
     """Wraps a function to accept the given keyword parameter if it doesn't
     already.
@@ -86,7 +64,7 @@ def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
     if new_arg in get_free_args_fn(fun):
         return fun
 
-    return functools.partial(call_fun_remove_arg, fn=fun, arg=new_arg)
+    return functools.partial(fn_accept_additional_argument, fn=fun, arg=new_arg)
 
 
 class NoPublicConstructor(ABCMeta):
