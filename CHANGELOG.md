@@ -1,46 +1,54 @@
 # Changelog
 
-## Unreleased
+## 0.7.0 - 📚 Documentation overhaul, new methods and bug fixes 💥
 
+This is our first β release! We have worked hard to deliver improvements across
+the board, with a focus on documentation and usability. 
+
+### Added
+
+- Implemented solving the Hessian equation via spectral low-rank approximation
+  [PR #365](https://github.com/aai-institute/pyDVL/pull/365)
+- Enabled parallel computation for Leave-One-Out values
+  [PR #406](https://github.com/aai-institute/pyDVL/pull/406)
+
+### Changed
 - Replaced sphinx with mkdocs for documentation. Major overhaul of documentation
   [PR #352](https://github.com/aai-institute/pyDVL/pull/352)
 - Made ray an optional dependency, relying on joblib as default parallel backend
   [PR #408](https://github.com/aai-institute/pyDVL/pull/408)
-- Enabled parallel computation for Leave-One-Out values
-  [PR #406](https://github.com/aai-institute/pyDVL/pull/406)
+- Decoupled `ray.init` from `ParallelConfig` 
+  [PR #373](https://github.com/aai-institute/pyDVL/pull/383)
+- **Breaking Changes**
+  - Signature change: return information about Hessian inversion from
+    `compute_influence_factors`
+    [PR #375](https://github.com/aai-institute/pyDVL/pull/376)
+  - Major changes to IF interface and functionality. Foundation for a framework
+    abstraction for IF computation.
+    [PR #278](https://github.com/aai-institute/pyDVL/pull/278)
+    [PR #394](https://github.com/aai-institute/pyDVL/pull/394)
+  - Renamed `semivalues` to `compute_generic_semivalues`
+    [PR #413](https://github.com/appliedAI-Initiative/pyDVL/pull/413)
+  - New `joblib` backend as default instead of ray. Simplify MapReduceJob.
+    [PR #355](https://github.com/aai-institute/pyDVL/pull/355)
+  - Bump torch dependency for influence package to 2.0
+    [PR #365](https://github.com/aai-institute/pyDVL/pull/365)
+
+### Fixed
+
 - Fixes to parallel computation of generic semi-values: properly handle all
-  samplers and stopping criteria, irrespective of parallel backend
+  samplers and stopping criteria, irrespective of parallel backend.
   [PR #372](https://github.com/aai-institute/pyDVL/pull/372)
 - Optimises memory usage in IF calculation
-  [PR #375](https://github.com/aai-institute/pyDVL/pull/376)
-- **Breaking Changes**
-  Return information about hessian inversion from compute_influence_factors,
-  thus changing signature
   [PR #375](https://github.com/aai-institute/pyDVL/pull/376)
 - Fix adding valuation results with overlapping indices and different lengths
   [PR #370](https://github.com/aai-institute/pyDVL/pull/370)
 - Fixed bugs in conjugate gradient and `linear_solve`
   [PR #358](https://github.com/aai-institute/pyDVL/pull/358)
+- Fix installation of dev requirements for Python3.10
+  [PR #382](https://github.com/aai-institute/pyDVL/pull/382)
 - Improvements to IF documentation
   [PR #371](https://github.com/aai-institute/pyDVL/pull/371)
-- Major changes to IF interface and functionality
-  [PR #278](https://github.com/aai-institute/pyDVL/pull/278)
-  [PR #394](https://github.com/aai-institute/pyDVL/pull/394)
-- **New Method**: Implements solving the hessian equation via spectral low-rank
-  approximation
-  [PR #365](https://github.com/aai-institute/pyDVL/pull/365)
-- **Breaking Changes**:
-  - Renamed `semivalues` to `compute_generic_semivalues`
-    [PR #413](https://github.com/appliedAI-Initiative/pyDVL/pull/413)
-  - Add new joblib backend and set it as default
-    instead of the ray backend. Simplify the MapReduceJob class.
-    [PR #355](https://github.com/aai-institute/pyDVL/pull/355)
-  - Bump torch dependency for influence package to 2.0
-    [PR #365](https://github.com/aai-institute/pyDVL/pull/365)
-- **Bug fix** Fix installation of dev requirements for Python3.10
-  [PR #382](https://github.com/aai-institute/pyDVL/pull/382)
-- Decouple ray.init from ParallelConfig 
-  [PR #373](https://github.com/aai-institute/pyDVL/pull/383)
 
 ## 0.6.1 - 🏗 Bug fixes and small improvements
 
