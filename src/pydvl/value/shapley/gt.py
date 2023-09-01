@@ -140,8 +140,7 @@ def _group_testing_shapley(
         n_samples: total number of samples (subsets) to use.
         progress: Whether to display progress bars for each job.
         job_id: id to use for reporting progress (e.g. to place progres bars)
-        seed: Either an instance of a numpy random number generator or a seed
-            for it.
+        seed: Either an instance of a numpy random number generator or a seed for it.
     Returns:
 
     """
@@ -202,8 +201,7 @@ def group_testing_shapley(
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
         progress: Whether to display progress bars for each job.
-        seed: Either an instance of a numpy random number generator or a seed
-            for it.
+        seed: Either an instance of a numpy random number generator or a seed for it.
         options: Additional options to pass to
             [cvxpy.Problem.solve()](https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options).
             E.g. to change the solver (which defaults to `cvxpy.SCS`) pass

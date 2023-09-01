@@ -323,7 +323,7 @@ def combinatorial_montecarlo_shapley(
             number of cpus, etc.
         progress: Whether to display progress bars for each job.
         seed: Either an instance of a numpy random number generator or a seed for it.
-        f
+
     Returns:
         Object with the data values.
     """

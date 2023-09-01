@@ -371,7 +371,8 @@ def compute_beta_shapley_semivalues(
         sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler` for a list.
         n_jobs: Number of parallel jobs to use.
         seed: Either an instance of a numpy random number generator or a seed for it.
-        config: Object configuring parallel computation, with cluster address, number of cpus, etc.
+        config: Object configuring parallel computation, with cluster address, number of
+            cpus, etc.
         progress: Whether to display a progress bar.
 
     Returns:

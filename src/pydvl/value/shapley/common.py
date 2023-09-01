@@ -89,8 +89,7 @@ def compute_shapley_values(
             criteria using boolean operators. Some methods ignore this argument,
             others require specific subtypes.
         n_jobs: Number of parallel jobs (available only to some methods)
-        seed: Either an instance of a numpy random number generator or a seed
-            for it.
+        seed: Either an instance of a numpy random number generator or a seed for it.
         mode: Choose which shapley algorithm to use. See
             [ShapleyMode][pydvl.value.shapley.ShapleyMode] for a list of allowed value.
 
