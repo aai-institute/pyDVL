@@ -13,20 +13,22 @@ If you're a first time user of pyDVL, we recommend you to go through the
 
 ::cards:: cols=2
 
-- title: To the installation guide
-  image: ./assets/material-toolbox.svg
+- title: Installation
+  content: Steps to install and requirements
   url: getting-started/installation.md
 
 - title: Data valuation
-  image: ./assets/material-code.svg
+  content: >
+    Basics of data valuation and description of the main algorithms
   url: value/
+
 - title: Influence Function
-  image: ./assets/material-computer.svg
+  content: >
+    An introduction to the influence function and its computation with pyDVL
   url: influence/
 
 - title: Browse the API
-  image: ./assets/material-description.svg
+  content: Full documentation of the API
   url: api/pydvl/
-
 
 ::/cards::
