@@ -75,19 +75,14 @@ def test_analytic_montecarlo_shapley(
 test_cases_montecarlo_shapley_reproducible_stochastic = [
     # TODO Add once issue #416 is closed.
     # (12, ShapleyMode.PermutationMontecarlo, {"done": MaxChecks(1)}),
-    # # FIXME! it should be enough with 2**(len(data)-1) samples
-    # (
-    #     8,
-    #     ShapleyMode.CombinatorialMontecarlo,
-    #     {"done": MaxChecks(1)},
-    # ),
+    (
+        12,
+        ShapleyMode.CombinatorialMontecarlo,
+        {"done": MaxChecks(4)},
+    ),
     (12, ShapleyMode.Owen, dict(n_samples=4, max_q=200)),
     (12, ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=200)),
-    (
-        4,
-        ShapleyMode.GroupTesting,
-        dict(n_samples=int(21), epsilon=0.2, delta=0.01),
-    ),
+    (4, ShapleyMode.GroupTesting, dict(n_samples=int(21), epsilon=0.2, delta=0.01)),
 ]
 
 
