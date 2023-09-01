@@ -59,10 +59,11 @@ from pydvl.utils import effective_n_jobs, init_executor, init_parallel_backend
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import CancellationPolicy, MapReduceJob
+from pydvl.utils.parallel.backlog import Backlog
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.truncated import NoTruncation, TruncationPolicy
-from pydvl.value.stopping import MaxChecks, StoppingCriterion
+from pydvl.value.stopping import StoppingCriterion
 
 logger = logging.getLogger(__name__)
 
@@ -191,6 +192,7 @@ def permutation_montecarlo_shapley(
     result = ValuationResult.zeros(algorithm=algorithm)
 
     pbar = tqdm(disable=not progress, total=100, unit="%")
+    backlog = Backlog[ValuationResult]()
 
     with init_executor(
         max_workers=max_workers, config=config, cancel_futures=CancellationPolicy.ALL
@@ -203,9 +205,12 @@ def permutation_montecarlo_shapley(
             completed, pending = wait(
                 pending, timeout=config.wait_timeout, return_when=FIRST_COMPLETED
             )
-
             for future in completed:
-                result += future.result()
+                backlog.add(future.result())
+
+            for future_result in backlog.get():
+                result += future_result
+
                 # we could check outside the loop, but that means more
                 # submissions if the stopping criterion is unstable
                 if done(result):
@@ -214,7 +219,10 @@ def permutation_montecarlo_shapley(
             # Ensure that we always have n_submitted_jobs in the queue or running
             for _ in range(n_submitted_jobs - len(pending)):
                 future = executor.submit(
-                    _permutation_montecarlo_one_step, u, truncation, algorithm
+                    backlog.wrap(_permutation_montecarlo_one_step),
+                    u,
+                    truncation,
+                    algorithm,
                 )
                 pending.add(future)
 
