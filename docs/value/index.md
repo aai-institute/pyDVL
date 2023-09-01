@@ -76,7 +76,7 @@ there are additional desiderata, like having a value function that does not
 increase with repeated samples. Game-theoretic methods are all rooted in axioms
 that by construction ensure different desiderata, but despite their practical
 usefulness, none of them are either necessary or sufficient for all
-applications. For instance, *[SV]s try to equitably distribute all value
+applications. For instance, SV methods try to equitably distribute all value
 among all samples, failing to identify repeated ones as unnecessary, with e.g. a
 zero value.
 
@@ -332,8 +332,7 @@ nature of every (non-trivial) ML problem can have an effect:
   [@wang_data_2022] prove that by relaxing one of the Shapley axioms
   and considering the general class of semi-values, of which Shapley is an
   instance, one can prove that a choice of constant weights is the best one can
-  do in a utility-agnostic setting. So-called *Data Banzhaf* is on our to-do
-  list!
+  do in a utility-agnostic setting. So-called *Data Banzhaf*.
 
 * **Data set size**: Computing exact Shapley values is NP-hard, and Monte Carlo
   approximations can converge slowly. Massive datasets are thus impractical, at
