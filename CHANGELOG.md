@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Replaced sphinx with mkdocs for documentation. Major overhaul of documentation
+  [PR #352](https://github.com/aai-institute/pyDVL/pull/352)
 - Made ray an optional dependency, relying on joblib as default parallel backend
   [PR #408](https://github.com/aai-institute/pyDVL/pull/408)
 - Enabled parallel computation for Leave-One-Out values
