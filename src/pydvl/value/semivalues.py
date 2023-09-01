@@ -81,7 +81,6 @@ from deprecate import deprecated
 from tqdm import tqdm
 
 from pydvl.utils import ParallelConfig, Utility
-from pydvl.utils.parallel.backlog import Backlog
 from pydvl.utils.types import Seed
 from pydvl.value import ValuationResult
 from pydvl.value.sampler import (
@@ -200,7 +199,6 @@ def compute_generic_semivalues(
 
     sampler_it = iter(sampler)
     pbar = tqdm(disable=not progress, total=100, unit="%")
-    backlog = Backlog[Tuple[int, float]]()
 
     with init_executor(
         max_workers=max_workers, config=config, cancel_futures=True
@@ -212,9 +210,7 @@ def compute_generic_semivalues(
 
             completed, pending = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
             for future in completed:
-                backlog.add(future.result())
-
-            for idx, marginal in backlog.get():
+                idx, marginal = future.result()
                 result.update(idx, marginal)
                 if done(result):
                     return result
@@ -224,14 +220,15 @@ def compute_generic_semivalues(
                 for _ in range(n_submitted_jobs - len(pending)):
                     pending.add(
                         executor.submit(
-                            backlog.wrap(_marginal),
+                            _marginal,
                             u=u,
                             coefficient=correction,
                             sample=next(sampler_it),
                         )
                     )
             except StopIteration:
-                return result
+                if len(pending) == 0:
+                    return result
 
 
 def shapley_coefficient(n: int, k: int) -> float:

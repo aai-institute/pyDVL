@@ -60,7 +60,6 @@ from pydvl.utils import effective_n_jobs, init_executor, init_parallel_backend
 from pydvl.utils.config import ParallelConfig
 from pydvl.utils.numeric import random_powerset
 from pydvl.utils.parallel import CancellationPolicy, MapReduceJob
-from pydvl.utils.parallel.backlog import Backlog
 from pydvl.utils.types import Seed, ensure_seed_sequence
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult
@@ -200,8 +199,6 @@ def permutation_montecarlo_shapley(
     result = ValuationResult.zeros(algorithm=algorithm)
 
     pbar = tqdm(disable=not progress, total=100, unit="%")
-    n_submitted = 0
-    backlog = Backlog[ValuationResult]()
 
     with init_executor(
         max_workers=max_workers, config=config, cancel_futures=CancellationPolicy.ALL
@@ -215,11 +212,7 @@ def permutation_montecarlo_shapley(
                 pending, timeout=config.wait_timeout, return_when=FIRST_COMPLETED
             )
             for future in completed:
-                backlog.add(future.result())
-
-            for future_result in backlog.get():
-                result += future_result
-
+                result += future.result()
                 # we could check outside the loop, but that means more
                 # submissions if the stopping criterion is unstable
                 if done(result):
@@ -230,13 +223,12 @@ def permutation_montecarlo_shapley(
             seeds = seed_sequence.spawn(n_remaining_slots)
             for i in range(n_remaining_slots):
                 future = executor.submit(
-                    backlog.wrap(_permutation_montecarlo_one_step),
+                    _permutation_montecarlo_one_step,
                     u,
                     truncation,
                     algorithm,
                     seed=seeds[i],
                 )
-                n_submitted += 1
                 pending.add(future)
 
 
