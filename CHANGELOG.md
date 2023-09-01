@@ -11,6 +11,8 @@ the board, with a focus on documentation and usability.
   [PR #365](https://github.com/aai-institute/pyDVL/pull/365)
 - Enabled parallel computation for Leave-One-Out values
   [PR #406](https://github.com/aai-institute/pyDVL/pull/406)
+- Added more abbreviations to documentation
+  [PR #415](https://github.com/aai-institute/pyDVL/pull/415)
 - Added seed to functions from `pydvl.utils.numeric`, `pydvl.value.shapley` and
   `pydvl.value.semivalues`. Introduced new type `Seed` and conversion function 
   `ensure_seed_sequence`.

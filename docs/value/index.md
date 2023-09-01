@@ -76,7 +76,7 @@ there are additional desiderata, like having a value function that does not
 increase with repeated samples. Game-theoretic methods are all rooted in axioms
 that by construction ensure different desiderata, but despite their practical
 usefulness, none of them are either necessary or sufficient for all
-applications. For instance, *[SV]s try to equitably distribute all value
+applications. For instance, SV methods try to equitably distribute all value
 among all samples, failing to identify repeated ones as unnecessary, with e.g. a
 zero value.
 
@@ -89,10 +89,24 @@ performance metric used. For instance, accuracy is a poor metric for imbalanced
 sets and this has a stark effect on data values. Some models exhibit great
 variance in some regimes and this again has a detrimental effect on values.
 
-Nevertheless, some of the most promising applications are: Cleaning of corrupted
-data, pruning unnecessary or irrelevant data, repairing mislabeled data, guiding
-data acquisition and annotation (active learning), anomaly detection and model
-debugging and interpretation.
+Nevertheless, some of the most promising applications are:
+
+* Cleaning of corrupted data.
+* Pruning unnecessary or irrelevant data.
+* Repairing mislabeled data.
+* Guiding data acquisition and annotation (active learning).
+* Anomaly detection and model debugging and interpretation.
+
+Additionally, one of the motivating applications for the whole field is that of
+data markets: a marketplace where data owners can sell their data to interested
+parties. In this setting, data valuation can be key component to determine the
+price of data. Algorithm-agnostic methods like LAVA [@just_lava_2023] are
+particularly well suited for this, as they use the Wasserstein distance between
+a vendor's data and the buyer's to determine the value of the former. 
+
+However, this is a complex problem which can face practical banal problems like
+the fact that data owners may not wish to disclose their data for valuation.
+
 
 ## Computing data values
 
@@ -299,26 +313,26 @@ nature of every (non-trivial) ML problem can have an effect:
   that matters, and this tends to be accurate (wrt. to the true ranking) despite
   inaccurate values.
 
-  pyDVL offers a dedicated [function composition][pydvl.utils.score.compose_score]
-  for scorer functions which can be used to squash a score.
-  The following is defined in module [score][pydvl.utils.score]:
-
-  ```python
-  import numpy as np
-  from pydvl.utils import compose_score
-  
-  def sigmoid(x: float) -> float:
-    return float(1 / (1 + np.exp(-x)))
-  
-  squashed_r2 = compose_score("r2", sigmoid, "squashed r2")
-  
-  squashed_variance = compose_score(
-    "explained_variance", sigmoid, "squashed explained variance"
-  )
-  ```
-
-  These squashed scores can prove useful in regression problems, but they can
-  also introduce issues in the low-value regime.
+    ??? tip "Squashing scores" 
+        pyDVL offers a dedicated [function
+        composition][pydvl.utils.score.compose_score] for scorer functions which
+        can be used to squash a score. The following is defined in module
+        [score][pydvl.utils.score]:
+        ```python
+        import numpy as np
+        from pydvl.utils import compose_score
+        
+        def sigmoid(x: float) -> float:
+          return float(1 / (1 + np.exp(-x)))
+        
+        squashed_r2 = compose_score("r2", sigmoid, "squashed r2")
+        
+        squashed_variance = compose_score(
+          "explained_variance", sigmoid, "squashed explained variance"
+        )
+        ```
+        These squashed scores can prove useful in regression problems, but they
+        can also introduce issues in the low-value regime.
 
 * **High variance utility**: Classical applications of game theoretic value
   concepts operate with deterministic utilities, but in ML we use an evaluation
@@ -328,28 +342,27 @@ nature of every (non-trivial) ML problem can have an effect:
   configure the caching system to allow multiple evaluations of the utility for
   every index set. A moving average is computed and returned once the standard
   error is small, see [MemcachedConfig][pydvl.utils.config.MemcachedConfig].
-
   [@wang_data_2022] prove that by relaxing one of the Shapley axioms
   and considering the general class of semi-values, of which Shapley is an
   instance, one can prove that a choice of constant weights is the best one can
-  do in a utility-agnostic setting. So-called *Data Banzhaf* is on our to-do
-  list!
+  do in a utility-agnostic setting. This method, dubbed *Data Banzhaf*, is
+  available in pyDVL as
+  [compute_banzhaf_semivalues][pydvl.value.semivalues.compute_banzhaf_semivalues].
 
 * **Data set size**: Computing exact Shapley values is NP-hard, and Monte Carlo
   approximations can converge slowly. Massive datasets are thus impractical, at
-  least with current techniques. A workaround is to group samples and investigate
-  their value together. In pyDVL you can do this using
-  [GroupedDataset][pydvl.utils.dataset.GroupedDataset]. 
-  There is a fully worked-out [example here](../examples/shapley_basic_spotify).
-  Some algorithms also provide different sampling strategies to reduce 
-  the variance, but due to a no-free-lunch-type theorem,
-  no single strategy can be optimal for all utilities.
+  least with [game-theoretical methods][game-theoretical-methods]. A workaround
+  is to group samples and investigate their value together. You can do this using
+  [GroupedDataset][pydvl.utils.dataset.GroupedDataset]. There is a fully
+  worked-out [example here](../examples/shapley_basic_spotify). Some algorithms
+  also provide different sampling strategies to reduce the variance, but due to a
+  no-free-lunch-type theorem, no single strategy can be optimal for all utilities.
 
 * **Model size**: Since every evaluation of the utility entails retraining the
   whole model on a subset of the data, large models require great amounts of
   computation. But also, they will effortlessly interpolate small to medium
   datasets, leading to great variance in the evaluation of performance on the
   dedicated validation set. One mitigation for this problem is cross-validation,
-  but this would incur massive computational cost. As of v.0.3.0 there are no
+  but this would incur massive computational cost. As of v.0.7.0 there are no
   facilities in pyDVL for cross-validating the utility (note that this would
   require cross-validating the whole value computation).
