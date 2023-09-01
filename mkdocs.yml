@@ -4,6 +4,7 @@ site_url: "https://appliedai-initiative.github.io/pyDVL/"
 repo_name: "appliedAI-Initiative/pyDVL"
 repo_url: "https://github.com/appliedAI-Initiative/pyDVL"
 copyright: "Copyright &copy; AppliedAI Institute gGmbH"
+remote_branch: gh-pages
 
 watch:
   - src/pydvl
@@ -30,7 +31,8 @@ plugins:
       auto_caption: true
       caption_position: bottom
   - macros
-  - mike
+  - mike:
+      canonical_version: stable
   - search
   - section-index
   - alias:

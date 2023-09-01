@@ -112,8 +112,8 @@ jobs:
         uses: ./.github/actions/deploy-docs
         with:
           version: devel
-          alias: latest
-          title: Latest
+          alias: develop
+          title: Development
           email: ${{ env.GITHUB_BOT_EMAIL }}
           username: ${{ env.GITHUB_BOT_USERNAME }}
       - name: Build and publish to TestPyPI
