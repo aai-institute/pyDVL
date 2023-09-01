@@ -1,342 +1,342 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/CHANGELOG/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/CHANGELOG/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/influence/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/influence/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/influence/general/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/influence/general/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/influence/inversion/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/influence/inversion/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/influence/twice_differentiable/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/influence/twice_differentiable/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/influence/torch/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/influence/torch/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/influence/torch/functional/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/influence/torch/functional/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/influence/torch/torch_differentiable/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/influence/torch/torch_differentiable/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/influence/torch/util/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/influence/torch/util/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/reporting/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/reporting/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/reporting/plots/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/reporting/plots/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/reporting/scores/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/reporting/scores/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/caching/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/caching/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/config/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/config/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/dataset/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/dataset/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/numeric/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/numeric/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/progress/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/progress/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/score/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/score/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/status/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/status/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/types/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/types/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/utility/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/utility/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/parallel/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/parallel/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/parallel/backend/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/parallel/backend/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/parallel/map_reduce/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/parallel/map_reduce/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/parallel/backends/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/parallel/backends/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/parallel/backends/joblib/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/parallel/backends/joblib/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/parallel/backends/ray/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/parallel/backends/ray/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/parallel/futures/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/parallel/futures/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/utils/parallel/futures/ray/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/utils/parallel/futures/ray/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/result/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/result/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/sampler/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/sampler/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/semivalues/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/semivalues/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/stopping/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/stopping/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/least_core/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/least_core/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/least_core/common/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/least_core/common/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/least_core/montecarlo/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/least_core/montecarlo/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/least_core/naive/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/least_core/naive/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/loo/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/loo/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/loo/loo/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/loo/loo/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/loo/naive/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/loo/naive/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/shapley/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/shapley/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/shapley/common/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/shapley/common/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/shapley/gt/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/shapley/gt/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/shapley/knn/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/shapley/knn/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/shapley/montecarlo/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/shapley/montecarlo/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/shapley/naive/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/shapley/naive/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/shapley/owen/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/shapley/owen/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/shapley/truncated/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/shapley/truncated/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/api/pydvl/value/shapley/types/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/shapley/types/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/examples/influence_imagenet/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/examples/influence_imagenet/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/examples/influence_synthetic/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/examples/influence_synthetic/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/examples/influence_wine/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/examples/influence_wine/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/examples/least_core_basic/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/examples/least_core_basic/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/examples/shapley_basic_spotify/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/examples/shapley_basic_spotify/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/examples/shapley_knn_flowers/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/examples/shapley_knn_flowers/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/examples/shapley_utility_learning/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/examples/shapley_utility_learning/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/getting-started/first-steps/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/getting-started/first-steps/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/getting-started/installation/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/getting-started/installation/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/influence/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/influence/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/value/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/value/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/value/notation/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/value/notation/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/value/semi-values/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/value/semi-values/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/value/shapley/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/value/shapley/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://appliedai-initiative.github.io/pyDVL/devel/value/the-core/</loc>
+         <loc>https://aai-institute.github.io/pyDVL/stable/value/the-core/</loc>
          <lastmod>2023-09-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
