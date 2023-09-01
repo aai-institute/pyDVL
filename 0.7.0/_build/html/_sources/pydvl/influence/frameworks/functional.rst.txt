@@ -1,0 +1,11 @@
+functional
+==========
+
+.. automodule:: pydvl.influence.frameworks.functional
+   :members:
+   :undoc-members:
+   
+   ----
+ 
+.. footbibliography::
+

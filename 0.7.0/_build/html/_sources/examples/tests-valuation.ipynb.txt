@@ -1,0 +1,435 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "source": [
+    "# Some tests, do not commit"
+   ],
+   "metadata": {
+    "collapsed": false
+   }
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "d022bf40",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%load_ext autoreload"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "4e8bc3b5",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%autoreload\n",
+    "import numpy as np\n",
+    "from pydvl.shapley import permutation_montecarlo_shapley, truncated_montecarlo_shapley, \\\n",
+    "    serial_truncated_montecarlo_shapley, combinatorial_montecarlo_shapley, \\\n",
+    "    permutation_exact_shapley, combinatorial_exact_shapley\n",
+    "from pydvl.utils import map_reduce\n",
+    "from pydvl.utils.numeric import lower_bound_hoeffding\n",
+    "from pydvl.utils.parallel import available_cpus\n",
+    "from sklearn.linear_model import LinearRegression\n",
+    "from functools import lru_cache, partial\n",
+    "from typing import Generator\n",
+    "import matplotlib.pyplot as plt"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "a477c432",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "ModuleNotFoundError",
+     "evalue": "No module named 'tests.conftest'",
+     "output_type": "error",
+     "traceback": [
+      "\u001B[0;31m---------------------------------------------------------------------------\u001B[0m",
+      "\u001B[0;31mModuleNotFoundError\u001B[0m                       Traceback (most recent call last)",
+      "\u001B[0;32m<ipython-input-5-1a906ac9fab1>\u001B[0m in \u001B[0;36m<module>\u001B[0;34m\u001B[0m\n\u001B[0;32m----> 1\u001B[0;31m \u001B[0;32mfrom\u001B[0m \u001B[0mtests\u001B[0m\u001B[0;34m.\u001B[0m\u001B[0mconftest\u001B[0m \u001B[0;32mimport\u001B[0m \u001B[0mcheck_exact\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mcheck_rank_correlation\u001B[0m\u001B[0;34m,\u001B[0m\u001B[0;31m \u001B[0m\u001B[0;31m\\\u001B[0m\u001B[0;34m\u001B[0m\u001B[0;34m\u001B[0m\u001B[0m\n\u001B[0m\u001B[1;32m      2\u001B[0m     \u001B[0mlinear_dataset\u001B[0m\u001B[0;34m\u001B[0m\u001B[0;34m\u001B[0m\u001B[0m\n",
+      "\u001B[0;31mModuleNotFoundError\u001B[0m: No module named 'tests.conftest'"
+     ]
+    }
+   ],
+   "source": [
+    "from tests.conftest import check_exact, check_rank_correlation, \\\n",
+    "    linear_dataset"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "90e73dbb",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "data = linear_dataset()\n",
+    "model = LinearRegression()\n",
+    "scoring = 'neg_mean_squared_error'"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "12ad0153",
+   "metadata": {},
+   "source": [
+    "## Exact computations\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "4dc30df8",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'combinatorial_exact_shapley' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001B[0;31m---------------------------------------------------------------------------\u001B[0m",
+      "\u001B[0;31mNameError\u001B[0m                                 Traceback (most recent call last)",
+      "\u001B[0;32m<ipython-input-2-01ffd30b821f>\u001B[0m in \u001B[0;36m<module>\u001B[0;34m\u001B[0m\n\u001B[0;32m----> 1\u001B[0;31m \u001B[0mvalues_c\u001B[0m \u001B[0;34m=\u001B[0m \u001B[0mcombinatorial_exact_shapley\u001B[0m\u001B[0;34m(\u001B[0m\u001B[0mmodel\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mdata\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mscoring\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mprogress\u001B[0m\u001B[0;34m=\u001B[0m\u001B[0;32mFalse\u001B[0m\u001B[0;34m)\u001B[0m\u001B[0;34m\u001B[0m\u001B[0;34m\u001B[0m\u001B[0m\n\u001B[0m\u001B[1;32m      2\u001B[0m \u001B[0mvalues_p\u001B[0m \u001B[0;34m=\u001B[0m \u001B[0mpermutation_exact_shapley\u001B[0m\u001B[0;34m(\u001B[0m\u001B[0mmodel\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mdata\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mscoring\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mprogress\u001B[0m\u001B[0;34m=\u001B[0m\u001B[0;32mFalse\u001B[0m\u001B[0;34m)\u001B[0m\u001B[0;34m\u001B[0m\u001B[0;34m\u001B[0m\u001B[0m\n\u001B[1;32m      3\u001B[0m \u001B[0mcheck_exact\u001B[0m\u001B[0;34m(\u001B[0m\u001B[0mvalues_c\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mvalues_p\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0meps\u001B[0m\u001B[0;34m=\u001B[0m\u001B[0;36m0.01\u001B[0m\u001B[0;34m)\u001B[0m\u001B[0;34m\u001B[0m\u001B[0;34m\u001B[0m\u001B[0m\n",
+      "\u001B[0;31mNameError\u001B[0m: name 'combinatorial_exact_shapley' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "values_c = combinatorial_exact_shapley(model, data, scoring, progress=False)\n",
+    "values_p = permutation_exact_shapley(model, data, scoring, progress=False)\n",
+    "check_exact(values_c, values_p, eps=0.01)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1f3087a4",
+   "metadata": {},
+   "source": [
+    "## Montecarlo"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "22966608",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'available_cpus' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001B[0;31m---------------------------------------------------------------------------\u001B[0m",
+      "\u001B[0;31mNameError\u001B[0m                                 Traceback (most recent call last)",
+      "\u001B[0;32m<ipython-input-3-04ab1a8df9d0>\u001B[0m in \u001B[0;36m<module>\u001B[0;34m\u001B[0m\n\u001B[0;32m----> 1\u001B[0;31m \u001B[0mnum_cpus\u001B[0m \u001B[0;34m=\u001B[0m \u001B[0mmin\u001B[0m\u001B[0;34m(\u001B[0m\u001B[0mavailable_cpus\u001B[0m\u001B[0;34m(\u001B[0m\u001B[0;34m)\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mlen\u001B[0m\u001B[0;34m(\u001B[0m\u001B[0mdata\u001B[0m\u001B[0;34m)\u001B[0m\u001B[0;34m)\u001B[0m\u001B[0;34m\u001B[0m\u001B[0;34m\u001B[0m\u001B[0m\n\u001B[0m\u001B[1;32m      2\u001B[0m \u001B[0mnum_runs\u001B[0m \u001B[0;34m=\u001B[0m \u001B[0;36m3\u001B[0m\u001B[0;34m\u001B[0m\u001B[0;34m\u001B[0m\u001B[0m\n\u001B[1;32m      3\u001B[0m \u001B[0mdelta\u001B[0m \u001B[0;34m=\u001B[0m \u001B[0;36m0.01\u001B[0m\u001B[0;34m\u001B[0m\u001B[0;34m\u001B[0m\u001B[0m\n\u001B[1;32m      4\u001B[0m \u001B[0meps\u001B[0m \u001B[0;34m=\u001B[0m \u001B[0;36m0.04\u001B[0m\u001B[0;34m\u001B[0m\u001B[0;34m\u001B[0m\u001B[0m\n\u001B[1;32m      5\u001B[0m \u001B[0mscore_range\u001B[0m \u001B[0;34m=\u001B[0m \u001B[0;36m2\u001B[0m\u001B[0;34m\u001B[0m\u001B[0;34m\u001B[0m\u001B[0m\n",
+      "\u001B[0;31mNameError\u001B[0m: name 'available_cpus' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "num_cpus = min(available_cpus(), len(data))\n",
+    "num_runs = 3\n",
+    "delta = 0.01\n",
+    "eps = 0.04\n",
+    "score_range = 2\n",
+    "max_iterations = lower_bound_hoeffding(delta, eps, score_range)\n",
+    "max_iterations"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6bde708f",
+   "metadata": {},
+   "source": [
+    "### Serial Monte Carlo shapley"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "89afcaff",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'serial_truncated_montecarlo_shapley' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001B[0;31m---------------------------------------------------------------------------\u001B[0m",
+      "\u001B[0;31mNameError\u001B[0m                                 Traceback (most recent call last)",
+      "\u001B[0;32m<ipython-input-4-efb93e4272c9>\u001B[0m in \u001B[0;36m<module>\u001B[0;34m\u001B[0m\n\u001B[0;32m----> 1\u001B[0;31m vv, hh = serial_truncated_montecarlo_shapley(\n\u001B[0m\u001B[1;32m      2\u001B[0m     \u001B[0mmodel\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mdata\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mscoring\u001B[0m\u001B[0;34m=\u001B[0m\u001B[0mscoring\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mbootstrap_iterations\u001B[0m\u001B[0;34m=\u001B[0m\u001B[0;36m20\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mscore_tolerance\u001B[0m\u001B[0;34m=\u001B[0m\u001B[0;36m0.1\u001B[0m\u001B[0;34m,\u001B[0m \u001B[0mmin_steps\u001B[0m\u001B[0;34m=\u001B[0m\u001B[0;36m7\u001B[0m\u001B[0;34m,\u001B[0m\u001B[0;34m\u001B[0m\u001B[0;34m\u001B[0m\u001B[0m\n\u001B[1;32m      3\u001B[0m     value_tolerance=1e-3, max_iterations=max_iterations, progress=True)\n",
+      "\u001B[0;31mNameError\u001B[0m: name 'serial_truncated_montecarlo_shapley' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "vv, hh = serial_truncated_montecarlo_shapley(\n",
+    "    model, data, scoring=scoring, bootstrap_iterations=20, score_tolerance=0.1, min_steps=7,\n",
+    "    value_tolerance=1e-3, max_iterations=max_iterations, progress=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a52703d8",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "check_rank_correlation(vv, values_c, threshold=0.9)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "49c17bbc",
+   "metadata": {},
+   "source": [
+    "### Permutation MC Shapley"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "20dfbeb3",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "_fun = partial(permutation_montecarlo_shapley,\n",
+    "               model=model,scoring=scoring,\n",
+    "               max_iterations=max_iterations, progress=True)\n",
+    "results = map_reduce(_fun, num_jobs=num_cpus, num_runs=num_runs)\n",
+    "\n",
+    "for vv, _ in results:\n",
+    "    print(f\"Total:{sum(vv.values())}\")\n",
+    "    check_rank_correlation(vv, values_c, threshold=0.9)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ad30030a",
+   "metadata": {},
+   "source": [
+    "### Combinatorial MC Shapley"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "82423e06",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "_fun = partial(combinatorial_montecarlo_shapley,\n",
+    "               model=model, scoring=scoring,\n",
+    "               max_iterations=max_iterations, progress=True)\n",
+    "results = map_reduce(_fun, num_jobs=num_cpus, num_runs=num_runs)\n",
+    "for vv, _ in results:\n",
+    "    print(f\"Total:{sum(vv.values())}\")\n",
+    "    check_rank_correlation(vv, values_c, threshold=0.9)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1f1ab087",
+   "metadata": {},
+   "source": [
+    "### Truncated MC Shapley"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "df4f2c57",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from tqdm.auto import trange\n",
+    "fun = partial(truncated_montecarlo_shapley, model=model, data=data,\n",
+    "              scoring=scoring, bootstrap_iterations=10, min_scores=5,\n",
+    "              score_tolerance=0.1, min_values=10, value_tolerance=eps,\n",
+    "              max_iterations=100, num_workers=num_cpus, progress=True)\n",
+    "results = []\n",
+    "for i in trange(num_runs):\n",
+    "    results.append(fun(run_id=i))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "00b282e5",
+   "metadata": {},
+   "source": [
+    "## Generating random sets"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "02370c12",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from pydvl.utils.parallel import MapReduceJob\n",
+    "\n",
+    "\n",
+    "@lru_cache\n",
+    "def subset_probabilities(n: int, num_jobs: int=1):\n",
+    "    \"\"\" Returns the normalized set of probabilities of sampling a subset of\n",
+    "    size k for k=0,...n, uniformly from the powerset 2**n \"\"\"\n",
+    "\n",
+    "    def sub(sizes: np.ndarray) -> np.ndarray:\n",
+    "        # print(f\"Doing stuff for {len(sizes)} items\")\n",
+    "        # FIXME: is the normalization ok?\n",
+    "        return np.fromiter((np.math.comb(n, j)/2**n for j in sizes),\n",
+    "                           dtype=float, count=len(sizes))\n",
+    "\n",
+    "    if num_jobs is None or num_jobs < 2:\n",
+    "        return sub(np.arange(n+1))\n",
+    "    fun = MapReduceJob.from_fun(sub, reducer=np.concatenate)\n",
+    "    p = map_reduce(fun, np.arange(n + 1), num_jobs=num_jobs)[0]\n",
+    "    return p"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "96dfc809",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def random_powerset(s: np.ndarray, max_subsets: int = None,\n",
+    "                    num_jobs: int = 1) \\\n",
+    "        -> Generator[np.ndarray, None, None]:\n",
+    "    \"\"\" Uniformly samples a subset from the power set of the argument, without\n",
+    "    pre-generating all subsets and in no order.\n",
+    "\n",
+    "    See `powerset()` if you wish to deterministically generate all subsets.\n",
+    "\n",
+    "    :param s: set to sample from\n",
+    "    :param max_subsets: if set, stop the generator after this many steps.\n",
+    "    :param num_jobs: This function accepts arbitrarily large values for n.\n",
+    "      However, when n is in the tens of thousands, it can take very long to\n",
+    "      compute the sampling probabilities for the set sizes. For this reason, it\n",
+    "      is possible to run this step in parallel with num_jobs. These\n",
+    "      probabilities will be cached for successive invocations.\n",
+    "\n",
+    "    \"\"\"\n",
+    "    if not isinstance(s, np.ndarray):\n",
+    "        raise TypeError\n",
+    "\n",
+    "    n = len(s)\n",
+    "    total = 1\n",
+    "    if max_subsets is None:\n",
+    "        max_subsets = np.inf\n",
+    "\n",
+    "    p = subset_probabilities(n, num_jobs)\n",
+    "    while total <= max_subsets:\n",
+    "        k = np.random.choice(np.arange(n + 1), p=p)\n",
+    "        subset = np.random.randint(n, size=k)\n",
+    "        yield s[subset]\n",
+    "        total += 1"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "4f04d9ce",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "s = np.arange(0, 60000)\n",
+    "ss = []\n",
+    "for x in random_powerset(s, max_subsets=10000, num_jobs=12):\n",
+    "    ss.append(len(x))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "b845ef49",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "plt.hist(ss, density=True);"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "90dafa3d",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "CacheInfo(hits=1, misses=3, maxsize=128, currsize=3)"
+      ]
+     },
+     "execution_count": 21,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "subset_probabilities.cache_info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b51d6d34",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "len(ss)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "5b59e993",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

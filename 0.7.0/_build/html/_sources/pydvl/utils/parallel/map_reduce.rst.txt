@@ -1,0 +1,11 @@
+map\_reduce
+===========
+
+.. automodule:: pydvl.utils.parallel.map_reduce
+   :members:
+   :undoc-members:
+   
+   ----
+ 
+.. footbibliography::
+
