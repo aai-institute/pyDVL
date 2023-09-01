@@ -1,0 +1,14 @@
+results
+=======
+
+.. automodule:: pydvl.value.results
+   :members:
+   :undoc-members:
+   
+   ----
+   
+   Module members
+   ==============
+ 
+.. footbibliography::
+

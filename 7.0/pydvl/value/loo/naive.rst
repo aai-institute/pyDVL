@@ -1,0 +1,11 @@
+naive
+=====
+
+.. automodule:: pydvl.value.loo.naive
+   :members:
+   :undoc-members:
+   
+   ----
+ 
+.. footbibliography::
+

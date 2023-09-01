@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Computing data values &mdash; pyDVL 0.1.1.dev1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/design-tabs.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Computing influence values" href="influence.html" />
+    <link rel="prev" title="Getting started" href="20-getting-started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html">
+            <img src="_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="10-install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="20-getting-started.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Computing data values</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-dataset">Creating a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-utility">Creating a Utility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#computing-leave-one-out-values">Computing Leave-One-Out values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#computing-shapley-values">Computing Shapley values</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="influence.html">Computing influence values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pydvl/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyDVL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Computing data values</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/data-valuation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="computing-data-values">
+<span id="data-values"></span><h1>Computing data values<a class="headerlink" href="#computing-data-values" title="Permalink to this heading"></a></h1>
+<p>Data value is a</p>
+<p>For data valuation, one uses the functions in modules
+<a class="reference internal" href="pydvl/shapley.html#module-pydvl.shapley" title="pydvl.shapley"><code class="xref py py-mod docutils literal notranslate"><span class="pre">shapley</span></code></a> and <a class="reference internal" href="pydvl/loo.html#module-pydvl.loo" title="pydvl.loo"><code class="xref py py-mod docutils literal notranslate"><span class="pre">loo</span></code></a>, supported by
+<a class="reference internal" href="pydvl/utils/dataset.html#module-pydvl.utils.dataset" title="pydvl.utils.dataset"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.utils.dataset</span></code></a> and <a class="reference internal" href="pydvl/utils/utility.html#module-pydvl.utils.utility" title="pydvl.utils.utility"><code class="xref py py-mod docutils literal notranslate"><span class="pre">utility</span></code></a>, as detailed below.</p>
+<section id="creating-a-dataset">
+<h2>Creating a Dataset<a class="headerlink" href="#creating-a-dataset" title="Permalink to this heading"></a></h2>
+<p>The class <a class="reference internal" href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a> is a simple convenience wrapper
+for the train and test splits that is used throughout pyDVL. It can be used as
+follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">50</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">16</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It is also possible to construct Datasets from sklearn datasets for illustrative
+purposes using <a class="reference internal" href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset.from_sklearn" title="pydvl.utils.dataset.Dataset.from_sklearn"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_sklearn()</span></code></a>.</p>
+</section>
+<section id="creating-a-utility">
+<h2>Creating a Utility<a class="headerlink" href="#creating-a-utility" title="Permalink to this heading"></a></h2>
+<p>The <a class="reference internal" href="pydvl/utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> class is a convenient wrapper for the
+dataset, model and scoring function which is used for valuation methods like
+<a class="reference internal" href="pydvl/loo.html#module-pydvl.loo" title="pydvl.loo"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Leave-One-Out</span></code></a> and <a class="reference internal" href="pydvl/shapley.html#module-pydvl.shapley" title="pydvl.shapley"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Shapley</span></code></a>.</p>
+<p>It can be used as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="computing-leave-one-out-values">
+<h2>Computing Leave-One-Out values<a class="headerlink" href="#computing-leave-one-out-values" title="Permalink to this heading"></a></h2>
+<p>The Leave-One-Out method is a naive approach that should only be used for testing purposes.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.loo.naive</span> <span class="kn">import</span> <span class="n">naive_loo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="n">naive_loo</span><span class="p">(</span><span class="n">utility</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="computing-shapley-values">
+<h2>Computing Shapley values<a class="headerlink" href="#computing-shapley-values" title="Permalink to this heading"></a></h2>
+<p>The Shapley method is a game-theoretic approach to compute data values.
+Here we use Truncated Montecarlo Shapley because it is the most efficient.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Utility</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.shapley.montecarlo</span> <span class="kn">import</span> <span class="n">truncated_montecarlo_shapley</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydvl.reporting.plots</span> <span class="kn">import</span> <span class="n">shapley_results</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">values</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="n">truncated_montecarlo_shapley</span><span class="p">(</span><span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scores</span> <span class="o">=</span> <span class="n">compute_fb_scores</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">utility</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">utility</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shapley_results</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="20-getting-started.html" class="btn btn-neutral float-left" title="Getting started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="influence.html" class="btn btn-neutral float-right" title="Computing influence values" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

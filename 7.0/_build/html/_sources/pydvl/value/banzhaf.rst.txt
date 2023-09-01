@@ -1,0 +1,14 @@
+banzhaf
+=======
+
+.. automodule:: pydvl.value.banzhaf
+   :members:
+   :undoc-members:
+
+.. rubric:: Modules in this package
+
+.. toctree::
+   :glob:
+
+   banzhaf/*
+

@@ -1,0 +1,6 @@
+knn
+===
+
+.. automodule:: pydvl.shapley.knn
+   :members:
+   :undoc-members:

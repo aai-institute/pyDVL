@@ -1,0 +1,11 @@
+twice\_differentiable
+=====================
+
+.. automodule:: pydvl.influence.frameworks.twice_differentiable
+   :members:
+   :undoc-members:
+   
+   ----
+ 
+.. footbibliography::
+

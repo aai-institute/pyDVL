@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shapley for data valuation &mdash; pyDVL 0.1.1.dev1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/design-tabs.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="KNN Shapley" href="shapley_knn_flowers.html" />
+    <link rel="prev" title="Shapley for data valuation" href="shapley_basic_spotify.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html">
+            <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../10-getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../20-install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../30-data-valuation.html">Computing data values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../40-influence.html">Computing influence values</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="shapley_basic_spotify.html">Shapley for data valuation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Shapley for data valuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_knn_flowers.html">KNN Shapley</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_spotify.html">Shapley for data valuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_tests.html">Some tests, do not commit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_utility_learning.html">Data Utility Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Influence functions and neural networks</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../pydvl/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyDVL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Examples</a> &raquo;</li>
+      <li>Shapley for data valuation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/shapley_basics_spotify.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="admonition note">
+    This page was generated from
+    <a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/notebooks/shapley_basics_spotify.ipynb">notebooks/shapley_basics_spotify.ipynb</a>
+    <br>
+    Interactive online version:
+    <span style="white-space: nowrap;">
+        <a href="https://mybinder.org/v2/gh/appliedAI-Initiative/pyDVL/develop?filepath=notebooks/shapley_basics_spotify.ipynb">
+            <img alt="Binder badge" src="https://mybinder.org/badge_logo.svg" style="vertical-align:text-bottom">
+        </a>
+    </span>
+</div>
+
+<style>
+    .nbinput .prompt,
+    .nboutput .prompt {
+        display: none;
+    }
+</style><section id="Shapley-for-data-valuation">
+<h1>Shapley for data valuation<a class="headerlink" href="#Shapley-for-data-valuation" title="Permalink to this heading"></a></h1>
+<p>This notebook introduces Shapley methods for the computation of data value using pyDVL.</p>
+<p>In order to illustrate the practical advantages, we will predict the popularity of songs in the dataset <a class="reference external" href="https://www.kaggle.com/datasets/paradisejoy/top-hits-spotify-from-20002019">Top Hits Spotify from 2000-2019</a>, and highlight how data valuation can help investigate and boost the performance of the models. In doing so, we will describe the basic usage patterns of pyDVL.</p>
+<p>Recall that data value is a function of three things:</p>
+<ol class="arabic simple">
+<li><p>The dataset.</p></li>
+<li><p>The model.</p></li>
+<li><p>The performance metric or scoring function.</p></li>
+</ol>
+<p>Below we will describe how to instantiate each one of these objects and how to use them for data valuation. Please also see the <a class="reference internal" href="../30-data-valuation.html"><span class="doc">documentation on data valuation</span></a>.</p>
+<section id="Setup">
+<h2>Setup<a class="headerlink" href="#Setup" title="Permalink to this heading"></a></h2>
+<p>We begin by importing the main libraries and setting some defaults.</p>
+<div class="admonition note">
+<p>If you are reading this in the documentation, some boilerplate has been omitted for convenience.</p>
+</div>
+<p>We will be using the following functions from pyDVL. The main entry point is the function <a class="reference internal" href="../pydvl/shapley.html#pydvl.shapley.compute_shapley_values"><span class="std std-ref">compute_shapley_values()</span></a>, which provides a facade to all Shapley methods. In order to use it we need the classes <a class="reference internal" href="../pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset"><span class="std std-ref">Dataset</span></a> and <a class="reference internal" href="../pydvl/utils/utility.html#pydvl.utils.utility.Utility"><span class="std std-ref">Utility</span></a>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">available_cpus</span><span class="p">,</span>
+    <span class="n">load_spotify_dataset</span><span class="p">,</span>
+    <span class="n">Dataset</span><span class="p">,</span>
+    <span class="n">GroupedDataset</span><span class="p">,</span>
+    <span class="n">Utility</span><span class="p">,</span>
+    <span class="n">plot_shapley</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pydvl.shapley</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Loading-and-grouping-the-dataset">
+<h2>Loading and grouping the dataset<a class="headerlink" href="#Loading-and-grouping-the-dataset" title="Permalink to this heading"></a></h2>
+<p>pyDVL provides a convenience function <a class="reference internal" href="../pydvl/utils/dataset.html#pydvl.utils.dataset.load_spotify_dataset"><span class="std std-ref">load_spotify_dataset()</span></a> which downloads data on songs published after 2014, and splits 30% of data for testing, and 30% of the remaining data for validation. The return value is a triple of training, validation and test data as lists of the form <code class="docutils literal notranslate"><span class="pre">[X_input,</span> <span class="pre">Y_label]</span></code>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">training_data</span><span class="p">,</span> <span class="n">val_data</span><span class="p">,</span> <span class="n">test_data</span> <span class="o">=</span> <span class="n">load_spotify_dataset</span><span class="p">(</span>
+    <span class="n">val_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">target_column</span><span class="o">=</span><span class="s2">&quot;popularity&quot;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">training_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>artist</th>
+      <th>song</th>
+      <th>duration_ms</th>
+      <th>explicit</th>
+      <th>year</th>
+      <th>danceability</th>
+      <th>energy</th>
+      <th>key</th>
+      <th>loudness</th>
+      <th>mode</th>
+      <th>speechiness</th>
+      <th>acousticness</th>
+      <th>instrumentalness</th>
+      <th>liveness</th>
+      <th>valence</th>
+      <th>tempo</th>
+      <th>genre</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1561</th>
+      <td>Fetty Wap</td>
+      <td>679 (feat. Remy Boyz)</td>
+      <td>196693</td>
+      <td>True</td>
+      <td>2015</td>
+      <td>0.618</td>
+      <td>0.717</td>
+      <td>7</td>
+      <td>-5.738</td>
+      <td>1</td>
+      <td>0.3180</td>
+      <td>0.00256</td>
+      <td>0.000000</td>
+      <td>0.6250</td>
+      <td>0.603</td>
+      <td>190.050</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>1410</th>
+      <td>Meghan Trainor</td>
+      <td>All About That Bass</td>
+      <td>187920</td>
+      <td>True</td>
+      <td>2015</td>
+      <td>0.807</td>
+      <td>0.887</td>
+      <td>9</td>
+      <td>-3.726</td>
+      <td>1</td>
+      <td>0.0503</td>
+      <td>0.05730</td>
+      <td>0.000003</td>
+      <td>0.1240</td>
+      <td>0.961</td>
+      <td>134.052</td>
+      <td>14</td>
+    </tr>
+    <tr>
+      <th>1772</th>
+      <td>Katy Perry</td>
+      <td>Chained To The Rhythm</td>
+      <td>237733</td>
+      <td>False</td>
+      <td>2017</td>
+      <td>0.562</td>
+      <td>0.800</td>
+      <td>0</td>
+      <td>-5.404</td>
+      <td>1</td>
+      <td>0.1120</td>
+      <td>0.08140</td>
+      <td>0.000000</td>
+      <td>0.1990</td>
+      <td>0.471</td>
+      <td>95.029</td>
+      <td>14</td>
+    </tr>
+    <tr>
+      <th>1670</th>
+      <td>Sigala</td>
+      <td>Sweet Lovin' - Radio Edit</td>
+      <td>202149</td>
+      <td>False</td>
+      <td>2015</td>
+      <td>0.683</td>
+      <td>0.910</td>
+      <td>10</td>
+      <td>-1.231</td>
+      <td>1</td>
+      <td>0.0515</td>
+      <td>0.05530</td>
+      <td>0.000005</td>
+      <td>0.3360</td>
+      <td>0.674</td>
+      <td>124.977</td>
+      <td>15</td>
+    </tr>
+    <tr>
+      <th>1780</th>
+      <td>Liam Payne</td>
+      <td>Strip That Down</td>
+      <td>204502</td>
+      <td>False</td>
+      <td>2017</td>
+      <td>0.869</td>
+      <td>0.485</td>
+      <td>6</td>
+      <td>-5.595</td>
+      <td>1</td>
+      <td>0.0545</td>
+      <td>0.24600</td>
+      <td>0.000000</td>
+      <td>0.0765</td>
+      <td>0.527</td>
+      <td>106.028</td>
+      <td>14</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<p>The dataset has many high-level features, some quite intuitive (‘duration_ms’ or ‘tempo’), while others are a bit more cryptic (‘valence’?). For information on each feature, please consult <a class="reference external" href="https://www.kaggle.com/datasets/paradisejoy/top-hits-spotify-from-20002019">the dataset’s website</a>.</p>
+<p>In our analysis, we will use all the columns, except for ‘artist’ and ‘song’, to predict the ‘popularity’ of each song. We will nonetheless keep the information on song and artist in a separate object for future reference.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">song_name</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;song&quot;</span><span class="p">]</span>
+<span class="n">artist</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;artist&quot;</span><span class="p">]</span>
+<span class="n">training_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">&quot;song&quot;</span><span class="p">,</span> <span class="s2">&quot;artist&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">test_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">&quot;song&quot;</span><span class="p">,</span> <span class="s2">&quot;artist&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">val_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">val_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">&quot;song&quot;</span><span class="p">,</span> <span class="s2">&quot;artist&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Input and label data are then used to instantiate a <a class="reference internal" href="../pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset"><span class="std std-ref">Dataset</span></a> object:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">*</span><span class="n">training_data</span><span class="p">,</span> <span class="o">*</span><span class="n">val_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The calculation of exact Shapley values is computationally very expensive (exponentially so!) because it requires training the model on every possible subset of the training set. For this reason, PyDVL implements techniques to speed up the calculation, such as Monte Carlo approximations, surrogate models or caching of intermediate results and grouping of data to calculate group Shapley values instead of single data points.</p>
+<p>In our case, we will group songs by artist and calculate the Shapley value for the artists. Given the <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html">pandas Series</a> for ‘artist’, to group the dataset by it, one does the following:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">grouped_dataset</span> <span class="o">=</span> <span class="n">GroupedDataset</span><span class="o">.</span><span class="n">from_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">data_groups</span><span class="o">=</span><span class="n">artist</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Creating-the-utility-and-computing-values">
+<h2>Creating the utility and computing values<a class="headerlink" href="#Creating-the-utility-and-computing-values" title="Permalink to this heading"></a></h2>
+<p>Now we can calculate the contribution of each group to the model performance.</p>
+<p>As a model, we use scikit-learn’s <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html">GradientBoostingRegressor</a>, but pyDVL can work with any model from sklearn, xgboost or lightgbm. More precisely, any model that implements the protocol <a class="reference internal" href="../pydvl/utils/types.html#pydvl.utils.types.SupervisedModel"><span class="std std-ref">pydvl.utils.types.SupervisedModel</span></a>, which is just the standard sklearn interface of <code class="docutils literal notranslate"><span class="pre">fit()</span></code>,<code class="docutils literal notranslate"><span class="pre">predict()</span></code> and <code class="docutils literal notranslate"><span class="pre">score()</span></code> can be used to
+construct the utility.</p>
+<p>The third and final component is the scoring function. It can be anything like accuracy or <span class="math notranslate nohighlight">\(R^2\)</span>, and is set with a string from the <a class="reference external" href="https://scikit-learn.org/stable/modules/model_evaluation.html">standard sklearn scoring methods</a>. Please refer to that documentation on information on how to define your own scoring function.</p>
+<p>We group dataset, model and scoring function into an instance of <a class="reference internal" href="../pydvl/utils/utility.html#pydvl.utils.utility.Utility"><span class="std std-ref">Utility</span></a>.</p>
+<div class="admonition note">
+<p>If you plan to use the cache (<code class="docutils literal notranslate"><span class="pre">enable_cache</span> <span class="pre">=</span> <span class="pre">True</span></code>), make sure to restart (or simply start if it is not already running) the caching server. See our <a class="reference internal" href="../20-install.html"><span class="doc">documentation</span></a> for details.</p>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">GradientBoostingRegressor</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">grouped_dataset</span><span class="p">,</span>
+    <span class="n">scoring</span><span class="o">=</span><span class="s2">&quot;neg_mean_absolute_error&quot;</span><span class="p">,</span>
+    <span class="n">enable_cache</span><span class="o">=</span><span class="n">enable_cache</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">dvl_df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
+    <span class="n">utility</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">available_cpus</span><span class="p">(),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;truncated_montecarlo&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2022-10-17 22:23:36,071 INFO worker.py:1509 -- Started a local Ray instance. View the dashboard at <span class="ansi-green-intense-fg ansi-bold">http://127.0.0.1:8265 </span>
+</pre></div></div>
+</div>
+<p>The function <a class="reference internal" href="../pydvl/shapley.html#pydvl.shapley.compute_shapley_values"><span class="std std-ref">compute_shapley_values()</span></a> serves as a common access point to all Shapley methods.</p>
+<p>Let’s take a look at the returned dataframe:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dvl_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>data_value</th>
+      <th>data_value_std</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>BLACKPINK</th>
+      <td>-1.935576</td>
+      <td>0.515664</td>
+    </tr>
+    <tr>
+      <th>Silentó</th>
+      <td>-1.474437</td>
+      <td>0.490660</td>
+    </tr>
+    <tr>
+      <th>Fedde Le Grand</th>
+      <td>-1.233131</td>
+      <td>0.415117</td>
+    </tr>
+    <tr>
+      <th>Flume</th>
+      <td>-1.133487</td>
+      <td>0.548779</td>
+    </tr>
+    <tr>
+      <th>Zedd</th>
+      <td>-1.121159</td>
+      <td>0.402022</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<p>The first thing to notice is that the results are sorted in ascending order of Shapley values. The index holds the labels for each data group: in this case, artist names. The column <code class="docutils literal notranslate"><span class="pre">data_value</span></code> is just that: the Shapley Data value, and <code class="docutils literal notranslate"><span class="pre">data_value_std</span></code> is its estimated standard error because we are using a Monte Carlo approximation.</p>
+<p>Let us plot the results. In the next cell we will take the 30 artists with the lowest score and plot their values with (approximate) error bars. Keep in mind that Monte Carlo Shapley is typically very noisy, so it may take several steps to arrive at a clean estimate.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">plot_shapley</span><span class="p">(</span>
+    <span class="n">low_dvl</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Artists with low values&quot;</span><span class="p">,</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Artist&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Shapley value&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_shapley_basics_spotify_24_0.png" src="../_images/examples_shapley_basics_spotify_24_0.png" />
+</div>
+</div>
+<p>We can immediately see that many artists (groups of samples) have very low, even negative value, which means that they tend to decrease the total score of the model when present in the training set! What happens if we remove them?</p>
+<p>In the next cell we create a new training set excluding the artists with the lowest scores:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl_artists</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+<span class="n">artist_filter</span> <span class="o">=</span> <span class="o">~</span><span class="n">artist</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">low_dvl_artists</span><span class="p">)</span>
+<span class="n">X_train_good_dvl</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">artist_filter</span><span class="p">]</span>
+<span class="n">y_train_good_dvl</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">artist_filter</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<p>Now we will use this “cleaned” dataset to retrain the same model and compare its mean absolute error to the one trained on the full dataset. Notice that the score now is calculated using the test set, while in the calculation of the Shapley values we were using the validation set.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_good_data</span> <span class="o">=</span> <span class="n">GradientBoostingRegressor</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">X_train_good_dvl</span><span class="p">,</span> <span class="n">y_train_good_dvl</span>
+<span class="p">)</span>
+<span class="n">error_good_data</span> <span class="o">=</span> <span class="n">mean_absolute_error</span><span class="p">(</span>
+    <span class="n">model_good_data</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">test_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">model_all_data</span> <span class="o">=</span> <span class="n">GradientBoostingRegressor</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">training_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">training_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">error_all_data</span> <span class="o">=</span> <span class="n">mean_absolute_error</span><span class="p">(</span><span class="n">model_all_data</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">test_data</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Improvement: </span><span class="si">{</span><span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="n">error_all_data</span> <span class="o">-</span> <span class="n">error_good_data</span><span class="p">)</span><span class="o">/</span><span class="n">error_all_data</span><span class="si">:</span><span class="s2">02f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Improvement: 12.787817%
+</pre></div></div>
+</div>
+<p>The score has improved by around 15%! This is quite an important result, as it shows a self-consistent process to improve the performance of a model by excluding data points from its training set.</p>
+<div class="admonition warning">
+<p>One must however proceed with caution instead of simply throwing away data. For one, <code class="docutils literal notranslate"><span class="pre">mean_absolute_error</span></code> is an estimate of generalization error on unseen data, so the improvement we see on the test set might not be as large upon deployment. It would be advisable to cross-validate this whole process to obtain more conservative estimates. It is also advisable to manually inspect the artists with low value and to try to understand the reason why the model behaves like it does. Finally, remember
+that <strong>the value depends on the model chosen</strong>! Artists that are detrimental to the Gradient Boosting Regressor might be informative for a different model (although it is likely that the worst ones share some characteristic making them “bad” for other regressors).</p>
+</div>
+</section>
+<section id="Evaluation-on-anomalous-data">
+<h2>Evaluation on anomalous data<a class="headerlink" href="#Evaluation-on-anomalous-data" title="Permalink to this heading"></a></h2>
+<p>One interesting test is to corrupt some data and to monitor how their value changes. To do this, we will take one of the artists with the highest value and set the popularity of all their songs to 0.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">high_dvl</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">30</span><span class="p">:]</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">plot_shapley</span><span class="p">(</span>
+    <span class="n">high_dvl</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Artists with high values&quot;</span><span class="p">,</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Artist&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Shapley value&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">()[</span><span class="n">high_dvl</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="s2">&quot;Rihanna&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_shapley_basics_spotify_32_0.png" src="../_images/examples_shapley_basics_spotify_32_0.png" />
+</div>
+</div>
+<p>Let us take all the songs by Rihanna, set their score to 0 and re-calculate the Shapley values.</p>
+<div class="admonition warning">
+<p>Notice that we use a new name for the <code class="docutils literal notranslate"><span class="pre">Dataset</span></code>, in order to trigger usage of a different cache. Reusing the old one would be a mistake because modifying even just one label changes all the Shapley values, which means that we cannot reuse any utility computations.</p>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">y_train_anomalous</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">y_train_anomalous</span><span class="p">[</span><span class="n">artist</span> <span class="o">==</span> <span class="s2">&quot;Rihanna&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">anomalous_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span>
+    <span class="n">x_train</span><span class="o">=</span><span class="n">training_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">y_train</span><span class="o">=</span><span class="n">y_train_anomalous</span><span class="p">,</span>
+    <span class="n">x_test</span><span class="o">=</span><span class="n">val_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">y_test</span><span class="o">=</span><span class="n">val_data</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="n">grouped_anomalous_dataset</span> <span class="o">=</span> <span class="n">GroupedDataset</span><span class="o">.</span><span class="n">from_dataset</span><span class="p">(</span><span class="n">anomalous_dataset</span><span class="p">,</span> <span class="n">artist</span><span class="p">)</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">GradientBoostingRegressor</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">grouped_anomalous_dataset</span><span class="p">,</span>
+    <span class="n">scoring</span><span class="o">=</span><span class="s2">&quot;neg_mean_absolute_error&quot;</span><span class="p">,</span>
+    <span class="n">enable_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">dvl_df</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
+    <span class="n">utility</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">available_cpus</span><span class="p">(),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;truncated_montecarlo&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Let us now consider the low-value artists (at least for predictive purposes, no claims are made about their artistic value!) and plot the results</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">low_dvl</span> <span class="o">=</span> <span class="n">dvl_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_shapley</span><span class="p">(</span>
+    <span class="n">low_dvl</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Artists with low data valuation scores&quot;</span><span class="p">,</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Artist&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Shapley Value&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">()[</span><span class="n">low_dvl</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="s2">&quot;Rihanna&quot;</span><span class="p">)]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_shapley_basics_spotify_37_0.png" src="../_images/examples_shapley_basics_spotify_37_0.png" />
+</div>
+</div>
+<p>And Rihanna (our anomalous data group) has moved from top contributor to having negative impact on the performance of the model, as expected!</p>
+<p>What is going on? A popularity of 0 for Rihanna’s songs is inconsistent with listening patterns for other artists. In artificially setting this, we degrade the predictive power of the model.</p>
+<p>By dropping low-value groups or samples, one can often increase model performance, but by <em>inspecting</em> them, it is possible to identify bogus data sources or acquisition methods.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="shapley_basic_spotify.html" class="btn btn-neutral float-left" title="Shapley for data valuation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="shapley_knn_flowers.html" class="btn btn-neutral float-right" title="KNN Shapley" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022 AppliedAI Institute gGmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

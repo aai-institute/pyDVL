@@ -1,0 +1,1126 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Computing influence values" href="40-influence.html" /><link rel="prev" title="Installing pyDVL" href="20-install.html" />
+
+    <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
+        <title>Computing data values - pyDVL 0.6.2.dev0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
+    <link rel="stylesheet" type="text/css" href="_static/css/tooltipster.custom.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/tooltipster.bundle.min.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/tooltipster-sideTip-shadow.min.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/tooltipster-sideTip-punk.min.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/tooltipster-sideTip-noir.min.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/tooltipster-sideTip-light.min.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/tooltipster-sideTip-borderless.min.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/micromodal.css" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     pyDVL is in an early stage of development. Expect changes to functionality and the API until version 1.0.0. 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">pyDVL 0.6.2.dev0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/logo.svg" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="10-getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="20-install.html">Installing pyDVL</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Computing data values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="40-influence.html">Computing influence values</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/shapley_basic_spotify.html">Shapley for data valuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/shapley_knn_flowers.html">KNN Shapley</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/shapley_utility_learning.html">Data Utility Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/least_core_basic.html">Least Core for Data Valuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/influence_imagenet.html">Influence functions for image classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/influence_synthetic.html">Influence functions for data mislabeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/influence_wine.html">Influence functions for outlier detection</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pydvl/index.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="pydvl/influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/influence/general.html">general</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/influence/inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/influence/torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/influence/twice_differentiable.html">twice_differentiable</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="pydvl/reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/reporting/plots.html">plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/reporting/scores.html">scores</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="pydvl/utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/utils/caching.html">caching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/utils/config.html">config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/utils/dataset.html">dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/utils/numeric.html">numeric</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/utils/parallel.html">parallel</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/utils/parallel/backend.html">backend</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="pydvl/utils/parallel/backends.html">backends</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="pydvl/utils/parallel/backends/joblib.html">joblib</a></li>
+<li class="toctree-l5"><a class="reference internal" href="pydvl/utils/parallel/backends/ray.html">ray</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="pydvl/utils/parallel/futures.html">futures</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="pydvl/utils/parallel/futures/ray.html">ray</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/utils/parallel/map_reduce.html">map_reduce</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/utils/progress.html">progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/utils/score.html">score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/utils/status.html">status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/utils/types.html">types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/utils/utility.html">utility</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="pydvl/value.html">value</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/least_core/common.html">common</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/least_core/montecarlo.html">montecarlo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/least_core/naive.html">naive</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/loo/naive.html">naive</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/value/result.html">result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/value/sampler.html">sampler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/value/semivalues.html">semivalues</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/common.html">common</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/gt.html">gt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/knn.html">knn</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/naive.html">naive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/owen.html">owen</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/truncated.html">truncated</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pydvl/value/shapley/types.html">types</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pydvl/value/stopping.html">stopping</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="computing-data-values">
+<span id="data-valuation"></span><h1>Computing data values<a class="headerlink" href="#computing-data-values" title="Permalink to this heading">#</a></h1>
+<p><strong>Data valuation</strong> is the task of assigning a number to each element of a
+training set which reflects its contribution to the final performance of a
+model trained on it. This value is not an intrinsic property of the element of
+interest, but a function of three factors:</p>
+<ol class="arabic simple">
+<li><p>The dataset <span class="math notranslate nohighlight">\(D\)</span>, or more generally, the distribution it was sampled
+from (with this we mean that <em>value</em> would ideally be the (expected)
+contribution of a data point to any random set <span class="math notranslate nohighlight">\(D\)</span> sampled from the same
+distribution).</p></li>
+<li><p>The algorithm <span class="math notranslate nohighlight">\(\mathcal{A}\)</span> mapping the data <span class="math notranslate nohighlight">\(D\)</span> to some estimator <span class="math notranslate nohighlight">\(f\)</span>
+in a model class <span class="math notranslate nohighlight">\(\mathcal{F}\)</span>. E.g. MSE minimization to find the parameters
+of a linear model.</p></li>
+<li><p>The performance metric of interest <span class="math notranslate nohighlight">\(u\)</span> for the problem. E.g. the <span class="math notranslate nohighlight">\(R^2\)</span>
+score or the negative MSE over a test set.</p></li>
+</ol>
+<p>pyDVL collects algorithms for the computation of data values in this sense,
+mostly those derived from cooperative game theory. The methods can be found in
+the package <a class="reference internal" href="pydvl/value.html#module-pydvl.value" title="pydvl.value"><code class="xref py py-mod docutils literal notranslate"><span class="pre">value</span></code></a>, with support from modules
+<a class="reference internal" href="pydvl/utils/dataset.html#module-pydvl.utils.dataset" title="pydvl.utils.dataset"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.utils.dataset</span></code></a> and <a class="reference internal" href="pydvl/utils/utility.html#module-pydvl.utils.utility" title="pydvl.utils.utility"><code class="xref py py-mod docutils literal notranslate"><span class="pre">utility</span></code></a>, as detailed below.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Be sure to read the section on
+<a class="reference internal" href="#problems-of-data-values"><span class="std std-ref">the difficulties using data values</span></a>.</p>
+</div>
+<section id="creating-a-dataset">
+<h2>Creating a Dataset<a class="headerlink" href="#creating-a-dataset" title="Permalink to this heading">#</a></h2>
+<p>The first item in the tuple <span class="math notranslate nohighlight">\((D, \mathcal{A}, u)\)</span> characterising data value is
+the dataset. The class <a class="reference internal" href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset" title="pydvl.utils.dataset.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a> is a simple
+convenience wrapper for the train and test splits that is used throughout pyDVL.
+The test set will be used to evaluate a scoring function for the model.</p>
+<p>It can be used as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">50</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">16</span>
+<span class="p">)</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It is also possible to construct Datasets from sklearn toy datasets for
+illustrative purposes using <a class="reference internal" href="pydvl/utils/dataset.html#pydvl.utils.dataset.Dataset.from_sklearn" title="pydvl.utils.dataset.Dataset.from_sklearn"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_sklearn()</span></code></a>.</p>
+<section id="grouping-data">
+<h3>Grouping data<a class="headerlink" href="#grouping-data" title="Permalink to this heading">#</a></h3>
+<p>Be it because data valuation methods are computationally very expensive, or
+because we are interested in the groups themselves, it can be often useful or
+necessary to group samples so as to valuate them together.
+<a class="reference internal" href="pydvl/utils/dataset.html#pydvl.utils.dataset.GroupedDataset" title="pydvl.utils.dataset.GroupedDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedDataset</span></code></a> provides an alternative to
+<cite>Dataset</cite> with the same interface which allows this.</p>
+<p>You can see an example in action in the
+<a class="reference internal" href="examples/shapley_basic_spotify.html"><span class="doc">Spotify notebook</span></a>, but here’s a simple
+example grouping a pre-existing <cite>Dataset</cite>. First we construct an array mapping
+each index in the dataset to a group, then use
+<a class="reference internal" href="pydvl/utils/dataset.html#pydvl.utils.dataset.GroupedDataset.from_dataset" title="pydvl.utils.dataset.GroupedDataset.from_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_dataset()</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Randomly assign elements to any one of num_groups:</span>
+<span class="n">data_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_groups</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">))</span>
+<span class="n">grouped_dataset</span> <span class="o">=</span> <span class="n">GroupedDataset</span><span class="o">.</span><span class="n">from_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">data_groups</span><span class="p">)</span>
+<span class="n">grouped_utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">grouped_dataset</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="creating-a-utility">
+<h2>Creating a Utility<a class="headerlink" href="#creating-a-utility" title="Permalink to this heading">#</a></h2>
+<p>In pyDVL we have slightly overloaded the name “utility” and use it to refer to
+an object that keeps track of all three items in <span class="math notranslate nohighlight">\((D, \mathcal{A}, u)\)</span>. This
+will be an instance of <a class="reference internal" href="pydvl/utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> which, as mentioned,
+is a convenient wrapper for the dataset, model and scoring function used for
+valuation methods.</p>
+<p>Here’s a minimal example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="kn">import</span> <span class="nn">sklearn</span> <span class="k">as</span> <span class="nn">sk</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">from_sklearn</span><span class="p">(</span><span class="n">sk</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">load_iris</span><span class="p">())</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">svm</span><span class="o">.</span><span class="n">SVC</span><span class="p">()</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The object <cite>utility</cite> is a callable that data valuation methods will execute
+with different subsets of training data. Each call will retrain the model on a
+subset and evaluate it on the test data using a scoring function. By default,
+<a class="reference internal" href="pydvl/utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> will use <cite>model.score()</cite>, but it is
+possible to use any scoring function (greater values must be better). In
+particular, the constructor accepts the same types as argument as sklearn’s
+<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html">cross_validate()</a>:
+a string, a scorer callable or <cite>None</cite> for the default.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="s2">&quot;explained_variance&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><cite>Utility</cite> will wrap the <cite>fit()</cite> method of the model to cache its results. This
+greatly reduces computation times of Monte Carlo methods. Because of how caching
+is implemented, it is important not to reuse <cite>Utility</cite> objects for different
+datasets. You can read more about <a class="reference internal" href="20-install.html#caching-setup"><span class="std std-ref">Setting up the cache</span></a> in the installation guide
+and the documentation of the <a class="reference internal" href="pydvl/utils/caching.html#module-pydvl.utils.caching" title="pydvl.utils.caching"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.utils.caching</span></code></a> module.</p>
+<section id="using-custom-scorers">
+<h3>Using custom scorers<a class="headerlink" href="#using-custom-scorers" title="Permalink to this heading">#</a></h3>
+<p>The <cite>scoring</cite> argument of <a class="reference internal" href="pydvl/utils/utility.html#pydvl.utils.utility.Utility" title="pydvl.utils.utility.Utility"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utility</span></code></a> can be used to
+specify a custom <code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code> object. This is a simple
+wrapper for a callable that takes a model, and test data and returns a score.</p>
+<p>More importantly, the object provides information about the range of the score,
+which is used by some methods by estimate the number of samples necessary, and
+about what default value to use when the model fails to train.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The most important property of a <cite>Scorer</cite> is its default value. Because many
+models will fail to fit on small subsets of the data, it is important to
+provide a sensible default value for the score.</p>
+</div>
+<p>It is possible to skip the construction of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Scorer</span></code>
+when constructing the <cite>Utility</cite> object. The two following calls are equivalent:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="s2">&quot;explained_variance&quot;</span><span class="p">,</span> <span class="n">score_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">default_score</span><span class="o">=</span><span class="mf">0.0</span>
+<span class="p">)</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">Scorer</span><span class="p">(</span><span class="s2">&quot;explained_variance&quot;</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="learning-the-utility">
+<h3>Learning the utility<a class="headerlink" href="#learning-the-utility" title="Permalink to this heading">#</a></h3>
+<p>Because each evaluation of the utility entails a full retrain of the model with
+a new subset of the training set, it is natural to try to learn this mapping
+from subsets to scores. This is the idea behind <strong>Data Utility Learning (DUL)</strong>
+(Wang <em>et al.</em><a class="footnote-reference brackets" href="#footcite-wang-improving-2022" id="id1">1</a>) and in pyDVL it’s as simple as wrapping the
+<cite>Utility</cite> inside <a class="reference internal" href="pydvl/utils/utility.html#pydvl.utils.utility.DataUtilityLearning" title="pydvl.utils.utility.DataUtilityLearning"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataUtilityLearning</span></code></a>:</p>
+<p>As you can see, all that is required is a model to learn the utility itself and
+the fitting and using of the learned model happens behind the scenes.</p>
+<p>There is a longer example with an investigation of the results achieved by DUL
+in <a class="reference internal" href="examples/shapley_utility_learning.html"><span class="doc">a dedicated notebook</span></a>.</p>
+</section>
+</section>
+<section id="leave-one-out-values">
+<span id="loo"></span><h2>Leave-One-Out values<a class="headerlink" href="#leave-one-out-values" title="Permalink to this heading">#</a></h2>
+<p>The Leave-One-Out method is a simple approach that assigns each sample its
+<em>marginal utility</em> as value:</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[v_u(x_i) = u(D) − u(D \setminus \{x_i\}).\]</div>
+</div>
+</p>
+<p>For the purposes of data valuation, this is rarely useful beyond serving as a
+baseline for benchmarking. One particular weakness is that it does not
+necessarily correlate with an intrinsic value of a sample: since it is a
+marginal utility, it is affected by the “law” of diminishing returns. Often, the
+training set is large enough for a single sample not to have any significant
+effect on training performance, despite any qualities it may possess. Whether
+this is indicative of low value or not depends on each one’s goals and
+definitions, but other methods are typically preferable.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.value.loo.naive</span> <span class="kn">import</span> <span class="n">naive_loo</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">naive_loo</span><span class="p">(</span><span class="n">utility</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The return value of all valuation functions is an object of type
+<a class="reference internal" href="pydvl/value/result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValuationResult</span></code></a>. This can be iterated over,
+indexed with integers, slices and Iterables, as well as converted to a
+<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html">pandas DataFrame</a>.</p>
+</section>
+<section id="shapley-values">
+<span id="shapley"></span><h2>Shapley values<a class="headerlink" href="#shapley-values" title="Permalink to this heading">#</a></h2>
+<p>The Shapley method is an approach to compute data values originating in
+cooperative game theory. Shapley values are a common way of assigning payoffs to
+each participant in a cooperative game (i.e. one in which players can form
+coalitions) in a way that ensures that certain axioms are fulfilled.</p>
+<p>pyDVL implements several methods for the computation and approximation of
+Shapley values. They can all be accessed via the facade function
+<code class="xref py py-func docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code>. The supported methods are
+enumerated in <code class="xref py py-class docutils literal notranslate"><span class="pre">ShapleyMode</span></code>.</p>
+<section id="combinatorial-shapley">
+<h3>Combinatorial Shapley<a class="headerlink" href="#combinatorial-shapley" title="Permalink to this heading">#</a></h3>
+<p>The first algorithm is just a verbatim implementation of the definition. As such
+it returns as exact a value as the utility function allows (see what this means
+in <a class="reference internal" href="#problems-of-data-values"><span class="std std-ref">Problems of data values</span></a>).</p>
+<p>The value <span class="math notranslate nohighlight">\(v\)</span> of the <span class="math notranslate nohighlight">\(i\)</span>-th sample in dataset <span class="math notranslate nohighlight">\(D\)</span> wrt. utility <span class="math notranslate nohighlight">\(u\)</span> is computed
+as a weighted sum of its marginal utility wrt. every possible coalition of
+training samples within the training set:</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+v_u(x_i) = \frac{1}{n} \sum_{S \subseteq D \setminus \{x_i\}}
+\binom{n-1}{ | S | }^{-1} [u(S \cup \{x_i\}) − u(S)]
+,\]</div>
+</div>
+</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_shapley_value</span>
+
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;combinatorial_exact&quot;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can convert the return value to a
+<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html">pandas DataFrame</a>
+and name the column with the results as <cite>value</cite>. Please refer to the
+documentation in <a class="reference internal" href="pydvl/value/shapley.html#module-pydvl.value.shapley" title="pydvl.value.shapley"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pydvl.value.shapley</span></code></a> and
+<a class="reference internal" href="pydvl/value/result.html#pydvl.value.result.ValuationResult" title="pydvl.value.result.ValuationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValuationResult</span></code></a> for more information.</p>
+</section>
+<section id="monte-carlo-combinatorial-shapley">
+<h3>Monte Carlo Combinatorial Shapley<a class="headerlink" href="#monte-carlo-combinatorial-shapley" title="Permalink to this heading">#</a></h3>
+<p>Because the number of subsets <span class="math notranslate nohighlight">\(S \subseteq D \setminus \{x_i\}\)</span> is
+<span class="math notranslate nohighlight">\(2^{ | D | - 1 }\)</span>, one typically must resort to approximations. The simplest
+one is done via Monte Carlo sampling of the powerset <span class="math notranslate nohighlight">\(\mathcal{P}(D)\)</span>. In pyDVL
+this simple technique is called “Monte Carlo Combinatorial”. The method has very
+poor converge rate and others are preferred, but if desired, usage follows the
+same pattern:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
+    <span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;combinatorial_montecarlo&quot;</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s1">&#39;cmc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The DataFrames returned by most Monte Carlo methods will contain approximate
+standard errors as an additional column, in this case named <cite>cmc_stderr</cite>.</p>
+<p>Note the usage of the object <a class="reference internal" href="pydvl/value/stopping.html#pydvl.value.stopping.MaxUpdates" title="pydvl.value.stopping.MaxUpdates"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxUpdates</span></code></a> as the
+stop condition. This is an instance of a
+<a class="reference internal" href="pydvl/value/stopping.html#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code></a>. Other examples are
+<a class="reference internal" href="pydvl/value/stopping.html#pydvl.value.stopping.MaxTime" title="pydvl.value.stopping.MaxTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxTime</span></code></a> and <a class="reference internal" href="pydvl/value/stopping.html#pydvl.value.stopping.StandardError" title="pydvl.value.stopping.StandardError"><code class="xref py py-class docutils literal notranslate"><span class="pre">StandardError</span></code></a>.</p>
+</section>
+<section id="owen-sampling">
+<h3>Owen sampling<a class="headerlink" href="#owen-sampling" title="Permalink to this heading">#</a></h3>
+<p><strong>Owen Sampling</strong> (Okhrati and Lipani<a class="footnote-reference brackets" href="#footcite-okhrati-multilinear-2021" id="id3">2</a>) is a practical
+algorithm based on the combinatorial definition. It uses a continuous extension
+of the utility from <span class="math notranslate nohighlight">\(\{0,1\}^n\)</span>, where a 1 in position <span class="math notranslate nohighlight">\(i\)</span> means that sample
+<span class="math notranslate nohighlight">\(x_i\)</span> is used to train the model, to <span class="math notranslate nohighlight">\([0,1]^n\)</span>. The ensuing expression for
+Shapley value uses integration instead of discrete weights:</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+v_u(i) = \int_0^1 \mathbb{E}_{S \sim P_q(D_{\backslash \{ i \}})}
+[u(S \cup {i}) - u(S)]
+.\]</div>
+</div>
+</p>
+<p>Using Owen sampling follows the same pattern as every other method for Shapley
+values in pyDVL. First construct the dataset and utility, then call
+<a class="reference internal" href="pydvl/value/shapley/common.html#pydvl.value.shapley.common.compute_shapley_values" title="pydvl.value.shapley.common.compute_shapley_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
+    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;owen&quot;</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">max_q</span><span class="o">=</span><span class="mi">200</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>There are more details on Owen sampling, and its variant <em>Antithetic Owen
+Sampling</em> in the documentation for the function doing the work behind the scenes:
+<code class="xref py py-func docutils literal notranslate"><span class="pre">owen_sampling_shapley()</span></code>.</p>
+<p>Note that in this case we do not pass a
+<a class="reference internal" href="pydvl/value/stopping.html#pydvl.value.stopping.StoppingCriterion" title="pydvl.value.stopping.StoppingCriterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoppingCriterion</span></code></a> to the function, but instead
+the number of iterations and the maximum number of samples to use in the
+integration.</p>
+</section>
+<section id="permutation-shapley">
+<h3>Permutation Shapley<a class="headerlink" href="#permutation-shapley" title="Permalink to this heading">#</a></h3>
+<p>An equivalent way of computing Shapley values (<strong>ApproShapley</strong>) appeared in
+Castro <em>et al.</em><a class="footnote-reference brackets" href="#footcite-castro-polynomial-2009" id="id4">3</a> and is the basis for the method most often
+used in practice. It uses permutations over indices instead of subsets:</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+v_u(x_i) = \frac{1}{n!} \sum_{\sigma \in \Pi(n)}
+[u(\sigma_{:i} \cup \{i\}) − u(\sigma_{:i})]
+,\]</div>
+</div>
+</p>
+<p>where <span class="math notranslate nohighlight">\(\sigma_{:i}\)</span> denotes the set of indices in permutation sigma before the
+position where <span class="math notranslate nohighlight">\(i\)</span> appears. To approximate this sum (which has <span class="math notranslate nohighlight">\(\mathcal{O}(n!)\)</span>
+terms!) one uses Monte Carlo sampling of permutations, something which has
+surprisingly low sample complexity. One notable difference wrt. the
+combinatorial approach above is that the approximations always fulfill the
+efficiency axiom of Shapley, namely <span class="math notranslate nohighlight">\(\sum_{i=1}^n \hat{v}_i = u(D)\)</span> (see
+Castro <em>et al.</em><a class="footnote-reference brackets" href="#footcite-castro-polynomial-2009" id="id5">3</a>, Proposition 3.2).</p>
+<p>By adding early stopping within single permutations, the result is the so-called
+<strong>Truncated Monte Carlo Shapley</strong> (Ghorbani and Zou<a class="footnote-reference brackets" href="#footcite-ghorbani-data-2019" id="id6">4</a>), which is
+efficient enough to be useful in applications.</p>
+<p>The method names <code class="docutils literal notranslate"><span class="pre">appro_shapley</span></code>, <code class="docutils literal notranslate"><span class="pre">permutation_montecarlo</span></code> and
+<code class="docutils literal notranslate"><span class="pre">truncated_montecarlo</span></code> are all synonyms. The
+<a class="reference internal" href="pydvl/value/shapley/truncated.html#pydvl.value.shapley.truncated.TruncationPolicy" title="pydvl.value.shapley.truncated.TruncationPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">TruncationPolicy</span></code></a> for the iteration over
+a single permutation is configured with the argument <code class="docutils literal notranslate"><span class="pre">truncation</span></code> of
+<a class="reference internal" href="pydvl/value/shapley/common.html#pydvl.value.shapley.common.compute_shapley_values" title="pydvl.value.shapley.common.compute_shapley_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code></a>. The implementation
+of the methods described in the original paper are in
+<a class="reference internal" href="pydvl/value/shapley/truncated.html#pydvl.value.shapley.truncated.RelativeTruncation" title="pydvl.value.shapley.truncated.RelativeTruncation"><code class="xref py py-class docutils literal notranslate"><span class="pre">RelativeTruncation</span></code></a> and
+<code class="xref py py-class docutils literal notranslate"></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<span class="c1"># Truncated Monte Carlo Shapley, configured as in the paper</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
+    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;permutation_montecarlo&quot;</span><span class="p">,</span>
+    <span class="n">done</span><span class="o">=</span><span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> <span class="o">|</span> <span class="n">HistoryDeviation</span><span class="p">(</span><span class="n">n_steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.05</span><span class="p">),</span>
+    <span class="n">truncation</span><span class="o">=</span><span class="n">RelativeTruncation</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="exact-shapley-for-knn">
+<h3>Exact Shapley for KNN<a class="headerlink" href="#exact-shapley-for-knn" title="Permalink to this heading">#</a></h3>
+<p>It is possible to exploit the local structure of K-Nearest Neighbours to reduce
+the amount of subsets to consider: because no sample besides the K closest
+affects the score, most are irrelevant and it is possible to compute a value in
+linear time. This method was introduced by Jia <em>et al.</em><a class="footnote-reference brackets" href="#footcite-jia-efficient-2019a" id="id7">5</a>,
+and can be used in pyDVL with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
+<span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">KNeighborsClassifier</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;knn&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="group-testing">
+<h3>Group testing<a class="headerlink" href="#group-testing" title="Permalink to this heading">#</a></h3>
+<p>An alternative approach introduced in Jia <em>et al.</em><a class="footnote-reference brackets" href="#footcite-jia-efficient-2019a" id="id8">5</a>
+first approximates the differences of values with a Monte Carlo sum. With</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\hat{\Delta}_{i j} \approx v_i - v_j,\]</div>
+</div>
+</p>
+<p>one then solves the following linear constraint satisfaction problem (CSP) to
+infer the final values:</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{array}{lll}
+\sum_{i = 1}^N v_i &amp; = &amp; U (D)\\
+| v_i - v_j - \hat{\Delta}_{i j} | &amp; \leqslant &amp;
+\frac{\varepsilon}{2 \sqrt{N}}
+\end{array}
+\end{split}\]</div>
+</div>
+</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>We have reproduced this method in pyDVL for completeness and benchmarking,
+but we don’t advocate its use because of the speed and memory cost. Despite
+our best efforts, the number of samples required in practice for convergence
+can be several orders of magnitude worse than with e.g. Truncated Monte Carlo.
+Additionally, the CSP can sometimes turn out to be infeasible.</p>
+</div>
+<p>Usage follows the same pattern as every other Shapley method, but with the
+addition of an <code class="docutils literal notranslate"><span class="pre">epsilon</span></code> parameter required for the solution of the CSP. It
+should be the same value used to compute the minimum number of samples required.
+This can be done with <a class="reference internal" href="pydvl/value/shapley/gt.html#pydvl.value.shapley.gt.num_samples_eps_delta" title="pydvl.value.shapley.gt.num_samples_eps_delta"><code class="xref py py-func docutils literal notranslate"><span class="pre">num_samples_eps_delta()</span></code></a>, but
+note that the number returned will be huge! In practice, fewer samples can be
+enough, but the actual number will strongly depend on the utility, in particular
+its variance.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_shapley_values</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">score_range</span><span class="o">=</span><span class="p">(</span><span class="n">_min</span><span class="p">,</span> <span class="n">_max</span><span class="p">))</span>
+<span class="n">min_iterations</span> <span class="o">=</span> <span class="n">num_samples_eps_delta</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">utility</span><span class="o">.</span><span class="n">score_range</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span>
+    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;group_testing&quot;</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="n">min_iterations</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="n">eps</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="core-values">
+<span id="least-core"></span><h2>Core values<a class="headerlink" href="#core-values" title="Permalink to this heading">#</a></h2>
+<p>The Shapley values define a fair way to distribute payoffs amongst all
+participants when they form a grand coalition. But they do not consider
+the question of stability: under which conditions do all participants
+form the grand coalition? Would the participants be willing to form
+the grand coalition given how the payoffs are assigned,
+or would some of them prefer to form smaller coalitions?</p>
+<p>The Core is another approach to computing data values originating
+in cooperative game theory that attempts to ensure this stability.
+It is the set of feasible payoffs that cannot be improved upon
+by a coalition of the participants.</p>
+<p>It satisfies the following 2 properties:</p>
+<ul class="simple">
+<li><p><strong>Efficiency</strong>:
+The payoffs are distributed such that it is not possible
+to make any participant better off
+without making another one worse off.
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\sum_{x_i\in D} v_u(x_i) = u(D)\,\]</div>
+</div>
+</p></li>
+<li><p><strong>Coalitional rationality</strong>:
+The sum of payoffs to the agents in any coalition S is at
+least as large as the amount that these agents could earn by
+forming a coalition on their own.
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\sum_{x_i\in S} v_u(x_i) \geq u(S), \forall S \subset D\,\]</div>
+</div>
+</p></li>
+</ul>
+<p>The second property states that the sum of payoffs to the agents
+in any subcoalition <span class="math notranslate nohighlight">\(S\)</span> is at least as large as the amount that
+these agents could earn by forming a coalition on their own.</p>
+<section id="least-core-values">
+<h3>Least Core values<a class="headerlink" href="#least-core-values" title="Permalink to this heading">#</a></h3>
+<p>Unfortunately, for many cooperative games the Core may be empty.
+By relaxing the coalitional rationality property by a subsidy <span class="math notranslate nohighlight">\(e \gt 0\)</span>,
+we are then able to find approximate payoffs:</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+\sum_{x_i\in S} v_u(x_i) + e \geq u(S), \forall S \subset D, S \neq \emptyset \
+,\]</div>
+</div>
+</p>
+<p>The least core value <span class="math notranslate nohighlight">\(v\)</span> of the <span class="math notranslate nohighlight">\(i\)</span>-th sample in dataset <span class="math notranslate nohighlight">\(D\)</span> wrt.
+utility <span class="math notranslate nohighlight">\(u\)</span> is computed by solving the following Linear Program:</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{array}{lll}
+\text{minimize} &amp; e &amp; \\
+\text{subject to} &amp; \sum_{x_i\in D} v_u(x_i) = u(D) &amp; \\
+&amp; \sum_{x_i\in S} v_u(x_i) + e \geq u(S) &amp;, \forall S \subset D, S \neq \emptyset  \\
+\end{array}
+\end{split}\]</div>
+</div>
+</p>
+<section id="exact-least-core">
+<h4>Exact Least Core<a class="headerlink" href="#exact-least-core" title="Permalink to this heading">#</a></h4>
+<p>This first algorithm is just a verbatim implementation of the definition.
+As such it returns as exact a value as the utility function allows
+(see what this means in <a class="reference internal" href="#problems-of-data-values"><span class="std std-ref">Problems of data values</span></a>).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_least_core_values</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;exact&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="monte-carlo-least-core">
+<h4>Monte Carlo Least Core<a class="headerlink" href="#monte-carlo-least-core" title="Permalink to this heading">#</a></h4>
+<p>Because the number of subsets <span class="math notranslate nohighlight">\(S \subseteq D \setminus \{x_i\}\)</span> is
+<span class="math notranslate nohighlight">\(2^{ | D | - 1 }\)</span>, one typically must resort to approximations.</p>
+<p>The simplest approximation consists in using a fraction of all subsets for the
+constraints. Yan and Procaccia<a class="footnote-reference brackets" href="#footcite-yan-if-2021" id="id9">6</a> show that a quantity of order
+<span class="math notranslate nohighlight">\(\mathcal{O}((n - \log \Delta ) / \delta^2)\)</span> is enough to obtain a so-called
+<span class="math notranslate nohighlight">\(\delta\)</span>-<em>approximate least core</em> with high probability. I.e. the following
+property holds with probability <span class="math notranslate nohighlight">\(1-\Delta\)</span> over the choice of subsets:</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+\mathbb{P}_{S\sim D}\left[\sum_{x_i\in S} v_u(x_i) + e^{*} \geq u(S)\right]
+\geq 1 - \delta,
+\]</div>
+</div>
+</p>
+<p>where <span class="math notranslate nohighlight">\(e^{*}\)</span> is the optimal least core subsidy.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_least_core_values</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">n_iterations</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span>
+    <span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;montecarlo&quot;</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="n">n_iterations</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although any number is supported, it is best to choose <code class="docutils literal notranslate"><span class="pre">n_iterations</span></code> to be
+at least equal to the number of data points.</p>
+</div>
+<p>Because computing the Least Core values requires the solution of a linear and a
+quadratic problem <em>after</em> computing all the utility values, we offer the
+possibility of splitting the latter from the former. This is useful when running
+multiple experiments: use
+<a class="reference internal" href="pydvl/value/least_core/montecarlo.html#pydvl.value.least_core.montecarlo.mclc_prepare_problem" title="pydvl.value.least_core.montecarlo.mclc_prepare_problem"><code class="xref py py-func docutils literal notranslate"><span class="pre">mclc_prepare_problem()</span></code></a> to prepare a
+list of problems to solve, then solve them in parallel with
+<a class="reference internal" href="pydvl/value/least_core/common.html#pydvl.value.least_core.common.lc_solve_problems" title="pydvl.value.least_core.common.lc_solve_problems"><code class="xref py py-func docutils literal notranslate"><span class="pre">lc_solve_problems()</span></code></a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="kn">from</span> <span class="nn">pydvl.value.least_core</span> <span class="kn">import</span> <span class="n">mclc_prepare_problem</span><span class="p">,</span> <span class="n">lc_solve_problems</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">n_iterations</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+<span class="n">n_experiments</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">problems</span> <span class="o">=</span> <span class="p">[</span><span class="n">mclc_prepare_problem</span><span class="p">(</span><span class="n">utility</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="n">n_iterations</span><span class="p">)</span>
+     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_experiments</span><span class="p">)]</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">lc_solve_problems</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="semi-values">
+<h2>Semi-values<a class="headerlink" href="#semi-values" title="Permalink to this heading">#</a></h2>
+<p>Shapley values are a particular case of a more general concept called semi-value,
+which is a generalization to different weighting schemes. A <strong>semi-value</strong> is
+any valuation function with the form:</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+v\_\text{semi}(i) = \sum_{i=1}^n w(k)
+\sum_{S \subset D\_{-i}^{(k)}} [U(S\_{+i})-U(S)],
+\]</div>
+</div>
+</p>
+<p>where the coefficients <span class="math notranslate nohighlight">\(w(k)\)</span> satisfy the property:</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\sum_{k=1}^n w(k) = 1.\]</div>
+</div>
+</p>
+<p>Two instances of this are <strong>Banzhaf indices</strong> (Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id10">7</a>),
+and <strong>Beta Shapley</strong> (Kwon and Zou<a class="footnote-reference brackets" href="#footcite-kwon-beta-2022" id="id11">8</a>), with better numerical and
+rank stability in certain situations.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Shapley values are a particular case of semi-values and can therefore also be
+computed with the methods described here. However, as of version 0.6.0, we
+recommend using <code class="xref py py-func docutils literal notranslate"><span class="pre">compute_shapley_values()</span></code> instead,
+in particular because it implements truncated Monte Carlo sampling for faster
+computation.</p>
+</div>
+<section id="beta-shapley">
+<h3>Beta Shapley<a class="headerlink" href="#beta-shapley" title="Permalink to this heading">#</a></h3>
+<p>For some machine learning applications, where the utility is typically the
+performance when trained on a set <span class="math notranslate nohighlight">\(S \subset D\)</span>, diminishing returns are often
+observed when computing the marginal utility of adding a new data point.</p>
+<p>Beta Shapley is a weighting scheme that uses the Beta function to place more
+weight on subsets deemed to be more informative. The weights are defined as:</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+w(k) := \frac{B(k+\beta, n-k+1+\alpha)}{B(\alpha, \beta)},
+\]</div>
+</div>
+</p>
+<p>where <span class="math notranslate nohighlight">\(B\)</span> is the <a class="reference external" href="https://en.wikipedia.org/wiki/Beta_function">Beta function</a>,
+and <span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span> are parameters that control the weighting of the
+subsets. Setting both to 1 recovers Shapley values, and setting <span class="math notranslate nohighlight">\(\alpha = 1\)</span>, and
+<span class="math notranslate nohighlight">\(\beta = 16\)</span> is reported in Kwon and Zou<a class="footnote-reference brackets" href="#footcite-kwon-beta-2022" id="id12">8</a> to be a good choice for
+some applications. See however <a class="reference internal" href="#banzhaf-indices"><span class="std std-ref">Banzhaf indices</span></a> for an alternative choice
+of weights which is reported to work better.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_beta_shapley_semivalues</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_beta_shapley_semivalues</span><span class="p">(</span>
+    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="banzhaf-indices">
+<span id="id13"></span><h3>Banzhaf indices<a class="headerlink" href="#banzhaf-indices" title="Permalink to this heading">#</a></h3>
+<p>As noted below in <a class="reference internal" href="#problems-of-data-values"><span class="std std-ref">Problems of data values</span></a>, the Shapley value can be very
+sensitive to variance in the utility function. For machine learning applications,
+where the utility is typically the performance when trained on a set <span class="math notranslate nohighlight">\(S \subset
+D\)</span>, this variance is often largest for smaller subsets <span class="math notranslate nohighlight">\(S\)</span>. It is therefore
+reasonable to try reducing the relative contribution of these subsets with
+adequate weights.</p>
+<p>One such choice of weights is the Banzhaf index, which is defined as the
+constant:</p>
+<p><div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[w(k) := 2^{n-1},\]</div>
+</div>
+</p>
+<p>for all set sizes <span class="math notranslate nohighlight">\(k\)</span>. The intuition for picking a constant weight is that for
+any choice of weight function <span class="math notranslate nohighlight">\(w\)</span>, one can always construct a utility with
+higher variance where <span class="math notranslate nohighlight">\(w\)</span> is greater. Therefore, in a worst-case sense, the best
+one can do is to pick a constant weight.</p>
+<p>The authors of Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id14">7</a> show that Banzhaf indices are more
+robust to variance in the utility function than Shapley and Beta Shapley values.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Utility</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_banzhaf_semivalues</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<span class="n">values</span> <span class="o">=</span> <span class="n">compute_banzhaf_semivalues</span><span class="p">(</span><span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">500</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="problems-of-data-values">
+<span id="id15"></span><h2>Problems of data values<a class="headerlink" href="#problems-of-data-values" title="Permalink to this heading">#</a></h2>
+<p>There are a number of factors that affect how useful values can be for your
+project. In particular, regression can be especially tricky, but the particular
+nature of every (non-trivial) ML problem can have an effect:</p>
+<ul>
+<li><p><strong>Unbounded utility</strong>: Choosing a scorer for a classifier is simple: accuracy
+or some F-score provides a bounded number with a clear interpretation. However,
+in regression problems most scores, like <span class="math notranslate nohighlight">\(R^2\)</span>, are not bounded because
+regressors can be arbitrarily bad. This leads to great variability in the
+utility for low sample sizes, and hence unreliable Monte Carlo approximations
+to the values. Nevertheless, in practice it is only the ranking of samples
+that matters, and this tends to be accurate (wrt. to the true ranking) despite
+inaccurate values.</p>
+<p>pyDVL offers a dedicated <a class="reference internal" href="pydvl/utils/score.html#pydvl.utils.score.compose_score" title="pydvl.utils.score.compose_score"><code class="xref py py-func docutils literal notranslate"><span class="pre">function</span> <span class="pre">composition</span></code></a> for scorer functions which can be used to
+squash a score. The following is defined in module <a class="reference internal" href="pydvl/utils/score.html#module-pydvl.utils.score" title="pydvl.utils.score"><code class="xref py py-mod docutils literal notranslate"><span class="pre">score</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">sigmoid</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)))</span>
+
+<span class="n">squashed_r2</span> <span class="o">=</span> <span class="n">compose_score</span><span class="p">(</span><span class="s2">&quot;r2&quot;</span><span class="p">,</span> <span class="n">sigmoid</span><span class="p">,</span> <span class="s2">&quot;squashed r2&quot;</span><span class="p">)</span>
+
+<span class="n">squashed_variance</span> <span class="o">=</span> <span class="n">compose_score</span><span class="p">(</span>
+    <span class="s2">&quot;explained_variance&quot;</span><span class="p">,</span> <span class="n">sigmoid</span><span class="p">,</span> <span class="s2">&quot;squashed explained variance&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>These squashed scores can prove useful in regression problems, but they can
+also introduce issues in the low-value regime.</p>
+</li>
+<li><p><strong>High variance utility</strong>: Classical applications of game theoretic value
+concepts operate with deterministic utilities, but in ML we use an evaluation
+of the model on a validation set as a proxy for the true risk. Even if the
+utility <em>is</em> bounded, if it has high variance then values will also have high
+variance, as will their Monte Carlo estimates. One workaround in pyDVL is to
+configure the caching system to allow multiple evaluations of the utility for
+every index set. A moving average is computed and returned once the standard
+error is small, see <a class="reference internal" href="pydvl/utils/config.html#pydvl.utils.config.MemcachedConfig" title="pydvl.utils.config.MemcachedConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">MemcachedConfig</span></code></a>.</p>
+<p>Wang and Jia<a class="footnote-reference brackets" href="#footcite-wang-data-2022" id="id16">7</a> prove that by relaxing one of the Shapley axioms
+and considering the general class of semi-values, of which Shapley is an
+instance, one can prove that a choice of constant weights is the best one can
+do in a utility-agnostic setting. So-called <em>Data Banzhaf</em> is on our to-do
+list!</p>
+</li>
+<li><p><strong>Data set size</strong>: Computing exact Shapley values is NP-hard, and Monte Carlo
+approximations can converge slowly. Massive datasets are thus impractical, at
+least with current techniques. A workaround is to group samples and investigate
+their value together. In pyDVL you can do this using
+<a class="reference internal" href="pydvl/utils/dataset.html#pydvl.utils.dataset.GroupedDataset" title="pydvl.utils.dataset.GroupedDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupedDataset</span></code></a>. There is a fully worked-out
+<a class="reference internal" href="examples/shapley_basic_spotify.html"><span class="doc">example here</span></a>. Some algorithms also
+provide different sampling strategies to reduce the variance, but due to a
+no-free-lunch-type theorem, no single strategy can be optimal for all
+utilities.</p></li>
+<li><p><strong>Model size</strong>: Since every evaluation of the utility entails retraining the
+whole model on a subset of the data, large models require great amounts of
+computation. But also, they will effortlessly interpolate small to medium
+datasets, leading to great variance in the evaluation of performance on the
+dedicated validation set. One mitigation for this problem is cross-validation,
+but this would incur massive computational cost. As of v.0.3.0 there are no
+facilities in pyDVL for cross-validating the utility (note that this would
+require cross-validating the whole value computation).</p></li>
+</ul>
+<div class="docutils container" id="id17">
+<section id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h3>
+</section>
+<dl class="footnote brackets">
+<dt class="label" id="footcite-wang-improving-2022"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Tianhao Wang, Yu Yang, and Ruoxi Jia. Improving Cooperative Game Theory-based Data Valuation via Data Utility Learning. In <em>International Conference on Learning Representations (ICLR 2022). Workshop on Socially Responsible Machine Learning</em>. arXiv, April 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2107.06336v2">http://arxiv.org/abs/2107.06336v2</a> (visited on 2022-05-19), <a class="reference external" href="https://arxiv.org/abs/2107.06336v2">arXiv:2107.06336v2</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2107.06336">doi:10.48550/arXiv.2107.06336</a>.</p>
+</dd>
+<dt class="label" id="footcite-okhrati-multilinear-2021"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
+<dd><p>Ramin Okhrati and Aldo Lipani. A Multilinear Sampling Algorithm to Estimate Shapley Values. In <em>2020 25th International Conference on Pattern Recognition (ICPR)</em>, 7992–7999. IEEE, January 2021. URL: <a class="reference external" href="https://ieeexplore.ieee.org/abstract/document/9412511">https://ieeexplore.ieee.org/abstract/document/9412511</a>, <a class="reference external" href="https://arxiv.org/abs/2010.12082">arXiv:2010.12082</a>, <a class="reference external" href="https://doi.org/10.1109/ICPR48806.2021.9412511">doi:10.1109/ICPR48806.2021.9412511</a>.</p>
+</dd>
+<dt class="label" id="footcite-castro-polynomial-2009"><span class="brackets">3</span><span class="fn-backref">(<a href="#id4">1</a>,<a href="#id5">2</a>)</span></dt>
+<dd><p>Javier Castro, Daniel Gómez, and Juan Tejada. Polynomial calculation of the Shapley value based on sampling. <em>Computers &amp; Operations Research</em>, 36(5):1726–1730, May 2009. URL: <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0305054808000804">http://www.sciencedirect.com/science/article/pii/S0305054808000804</a> (visited on 2020-11-21), <a class="reference external" href="https://doi.org/10.1016/j.cor.2008.04.004">doi:10.1016/j.cor.2008.04.004</a>.</p>
+</dd>
+<dt class="label" id="footcite-ghorbani-data-2019"><span class="brackets"><a class="fn-backref" href="#id6">4</a></span></dt>
+<dd><p>Amirata Ghorbani and James Zou. Data Shapley: Equitable Valuation of Data for Machine Learning. In <em>Proceedings of the 36th International Conference on Machine Learning, PMLR</em>, 2242–2251. PMLR, May 2019. URL: <a class="reference external" href="http://proceedings.mlr.press/v97/ghorbani19c.html">http://proceedings.mlr.press/v97/ghorbani19c.html</a> (visited on 2020-11-01), <a class="reference external" href="https://arxiv.org/abs/1904.02868">arXiv:1904.02868</a>.</p>
+</dd>
+<dt class="label" id="footcite-jia-efficient-2019a"><span class="brackets">5</span><span class="fn-backref">(<a href="#id7">1</a>,<a href="#id8">2</a>)</span></dt>
+<dd><p>Ruoxi Jia, David Dao, Boxin Wang, Frances Ann Hubis, Nezihe Merve Gurel, Bo Li, Ce Zhang, Costas Spanos, and Dawn Song. Efficient task-specific data valuation for nearest neighbor algorithms. <em>Proceedings of the VLDB Endowment</em>, 12(11):1610–1623, July 2019. URL: <a class="reference external" href="https://doi.org/10.14778/3342263.3342637">https://doi.org/10.14778/3342263.3342637</a> (visited on 2021-02-12), <a class="reference external" href="https://doi.org/10.14778/3342263.3342637">doi:10.14778/3342263.3342637</a>.</p>
+</dd>
+<dt class="label" id="footcite-yan-if-2021"><span class="brackets"><a class="fn-backref" href="#id9">6</a></span></dt>
+<dd><p>Tom Yan and Ariel D. Procaccia. If You Like Shapley Then You’ll Love the Core. In <em>Proceedings of the 35th AAAI Conference on Artificial Intelligence, 2021</em>, volume 6, 5751–5759. Virtual conference, May 2021. Association for the Advancement of Artificial Intelligence. URL: <a class="reference external" href="https://ojs.aaai.org/index.php/AAAI/article/view/16721">https://ojs.aaai.org/index.php/AAAI/article/view/16721</a> (visited on 2021-04-23), <a class="reference external" href="https://doi.org/10.1609/aaai.v35i6.16721">doi:10.1609/aaai.v35i6.16721</a>.</p>
+</dd>
+<dt class="label" id="footcite-wang-data-2022"><span class="brackets">7</span><span class="fn-backref">(<a href="#id10">1</a>,<a href="#id14">2</a>,<a href="#id16">3</a>)</span></dt>
+<dd><p>Jiachen T. Wang and Ruoxi Jia. Data Banzhaf: A Robust Data Valuation Framework for Machine Learning. October 2022. URL: <a class="reference external" href="http://arxiv.org/abs/2205.15466">http://arxiv.org/abs/2205.15466</a> (visited on 2022-10-28), <a class="reference external" href="https://arxiv.org/abs/arXiv:2205.15466">arXiv:arXiv:2205.15466</a>, <a class="reference external" href="https://doi.org/10.48550/arXiv.2205.15466">doi:10.48550/arXiv.2205.15466</a>.</p>
+</dd>
+<dt class="label" id="footcite-kwon-beta-2022"><span class="brackets">8</span><span class="fn-backref">(<a href="#id11">1</a>,<a href="#id12">2</a>)</span></dt>
+<dd><p>Yongchan Kwon and James Zou. Beta Shapley: a Unified and Noise-reduced Data Valuation Framework for Machine Learning. In <em>Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022,</em>, volume 151. Valencia, Spain, January 2022. PMLR. URL: <a class="reference external" href="http://arxiv.org/abs/2110.14049">http://arxiv.org/abs/2110.14049</a> (visited on 2022-04-06), <a class="reference external" href="https://arxiv.org/abs/2110.14049">arXiv:2110.14049</a>.</p>
+</dd>
+</dl>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="40-influence.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Computing influence values</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="20-install.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Installing pyDVL</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; AppliedAI Institute gGmbH
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link " href="https://github.com/appliedAI-Initiative/pyDVL" aria-label="GitHub">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Computing data values</a><ul>
+<li><a class="reference internal" href="#creating-a-dataset">Creating a Dataset</a><ul>
+<li><a class="reference internal" href="#grouping-data">Grouping data</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#creating-a-utility">Creating a Utility</a><ul>
+<li><a class="reference internal" href="#using-custom-scorers">Using custom scorers</a></li>
+<li><a class="reference internal" href="#learning-the-utility">Learning the utility</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#leave-one-out-values">Leave-One-Out values</a></li>
+<li><a class="reference internal" href="#shapley-values">Shapley values</a><ul>
+<li><a class="reference internal" href="#combinatorial-shapley">Combinatorial Shapley</a></li>
+<li><a class="reference internal" href="#monte-carlo-combinatorial-shapley">Monte Carlo Combinatorial Shapley</a></li>
+<li><a class="reference internal" href="#owen-sampling">Owen sampling</a></li>
+<li><a class="reference internal" href="#permutation-shapley">Permutation Shapley</a></li>
+<li><a class="reference internal" href="#exact-shapley-for-knn">Exact Shapley for KNN</a></li>
+<li><a class="reference internal" href="#group-testing">Group testing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#core-values">Core values</a><ul>
+<li><a class="reference internal" href="#least-core-values">Least Core values</a><ul>
+<li><a class="reference internal" href="#exact-least-core">Exact Least Core</a></li>
+<li><a class="reference internal" href="#monte-carlo-least-core">Monte Carlo Least Core</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#semi-values">Semi-values</a><ul>
+<li><a class="reference internal" href="#beta-shapley">Beta Shapley</a></li>
+<li><a class="reference internal" href="#banzhaf-indices">Banzhaf indices</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#problems-of-data-values">Problems of data values</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/scripts/furo.js"></script>
+    <script src="_static/js/hoverxref.js"></script>
+    <script src="_static/js/tooltipster.bundle.min.js"></script>
+    <script src="_static/js/micromodal.min.js"></script>
+    <script src="_static/design-tabs.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    </body>
+</html>

@@ -1,0 +1,6 @@
+powerset
+========
+
+.. automodule:: pydvl.utils.powerset
+   :members:
+   :undoc-members:

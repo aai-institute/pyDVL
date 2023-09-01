@@ -1,0 +1,11 @@
+torch\_wrappers
+===============
+
+.. automodule:: pydvl.influence.model_wrappers.torch_wrappers
+   :members:
+   :undoc-members:
+   
+   ----
+ 
+.. footbibliography::
+

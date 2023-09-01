@@ -1,0 +1,807 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Influence functions for image classification" href="influence_imagenet.html" /><link rel="prev" title="Data Utility Learning" href="shapley_utility_learning.html" />
+
+    <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
+        <title>Least Core for Data Valuation - pyDVL 0.6.2.dev0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster.custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster.bundle.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster-sideTip-shadow.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster-sideTip-punk.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster-sideTip-noir.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster-sideTip-light.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tooltipster-sideTip-borderless.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/micromodal.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     pyDVL is in an early stage of development. Expect changes to functionality and the API until version 1.0.0. 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">pyDVL 0.6.2.dev0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/logo.svg" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../10-getting-started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../20-install.html">Installing pyDVL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../30-data-valuation.html">Computing data values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../40-influence.html">Computing influence values</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Examples</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="shapley_basic_spotify.html">Shapley for data valuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_knn_flowers.html">KNN Shapley</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_utility_learning.html">Data Utility Learning</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Least Core for Data Valuation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_imagenet.html">Influence functions for image classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_synthetic.html">Influence functions for data mislabeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="influence_wine.html">Influence functions for outlier detection</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../pydvl/index.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../pydvl/influence.html">influence</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/influence/general.html">general</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/influence/inversion.html">inversion</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/influence/torch.html">torch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/influence/torch/functional.html">functional</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/influence/torch/torch_differentiable.html">torch_differentiable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/influence/torch/util.html">util</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/influence/twice_differentiable.html">twice_differentiable</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../pydvl/reporting.html">reporting</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/reporting/plots.html">plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/reporting/scores.html">scores</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../pydvl/utils.html">utils</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/utils/caching.html">caching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/utils/config.html">config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/utils/dataset.html">dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/utils/numeric.html">numeric</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/utils/parallel.html">parallel</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/utils/parallel/backend.html">backend</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../pydvl/utils/parallel/backends.html">backends</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../pydvl/utils/parallel/backends/joblib.html">joblib</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../pydvl/utils/parallel/backends/ray.html">ray</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../pydvl/utils/parallel/futures.html">futures</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../pydvl/utils/parallel/futures/ray.html">ray</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/utils/parallel/map_reduce.html">map_reduce</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/utils/progress.html">progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/utils/score.html">score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/utils/status.html">status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/utils/types.html">types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/utils/utility.html">utility</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../pydvl/value.html">value</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/least_core.html">least_core</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/least_core/common.html">common</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/least_core/montecarlo.html">montecarlo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/least_core/naive.html">naive</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/loo.html">loo</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/loo/naive.html">naive</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/value/result.html">result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/value/sampler.html">sampler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/value/semivalues.html">semivalues</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../pydvl/value/shapley.html">shapley</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/common.html">common</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/gt.html">gt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/knn.html">knn</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/montecarlo.html">montecarlo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/naive.html">naive</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/owen.html">owen</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/truncated.html">truncated</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pydvl/value/shapley/types.html">types</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../pydvl/value/stopping.html">stopping</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <div class="admonition note">
+    This page was generated from
+    <a class="reference external" href="https://github.com/appliedAI-Initiative/pyDVL/blob/develop/notebooks/least_core_basic.ipynb">notebooks/least_core_basic.ipynb</a>
+    <br>
+    Interactive online version:
+    <span style="white-space: nowrap;">
+        <a href="https://mybinder.org/v2/gh/appliedAI-Initiative/pyDVL/develop?filepath=notebooks/least_core_basic.ipynb">
+            <img alt="Binder badge" src="https://mybinder.org/badge_logo.svg" style="vertical-align:text-bottom">
+        </a>
+    </span>
+</div>
+
+<style>
+    .nbinput .prompt,
+    .nboutput .prompt {
+        display: none;
+    }
+    @media not print {
+        [data-theme='dark'] .output_area img {
+            filter: invert(0.9);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .output_area img {
+                filter: invert(0.9);
+            }
+        }
+    }
+</style><section id="Least-Core-for-Data-Valuation">
+<h1>Least Core for Data Valuation<a class="headerlink" href="#Least-Core-for-Data-Valuation" title="Permalink to this heading">#</a></h1>
+<p>This notebook introduces Least Core methods for the computation of data values using pyDVL.</p>
+<p>Shapley values define a fair way of distributing the worth of the whole training set when every data point is part of it. But they do not consider the question of stability of subsets: Could some data points obtain a higher payoff if they formed smaller subsets? It is argued that this might be relevant if data providers are paid based on data value, since Shapley values can incentivise them not to contribute their data to the “grand coalition”, but instead try to form smaller ones. Whether this
+is of actual practical relevance is debatable, but in any case, the least core is an alternative tool available for any task of Data Valuation</p>
+<p>The Core is another approach to compute data values originating in cooperative game theory that attempts to answer those questions. It is the set of feasible payoffs that cannot be improved upon by a coalition of the participants.</p>
+<p>Its use for Data Valuation was first described in the paper <a class="reference external" href="https://ojs.aaai.org/index.php/AAAI/article/view/16721">If You Like Shapley Then You’ll Love the Core</a> by Tom Yan and Ariel D. Procaccia.</p>
+<p>The Least Core value <span class="math notranslate nohighlight">\(v\)</span> of the <span class="math notranslate nohighlight">\(i\)</span>-th sample in dataset <span class="math notranslate nohighlight">\(D\)</span> wrt. utility <span class="math notranslate nohighlight">\(u\)</span> is computed by solving the following Linear Program:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{array}{lll}
+\text{minimize} &amp; \displaystyle{e} &amp; \\
+\text{subject to} &amp; \displaystyle\sum_{x_i\in D} v_u(x_i) = u(D) &amp; \\
+&amp; \displaystyle\sum_{x_i\in S} v_u(x_i) + e \geq u(S) &amp;, \forall S \subset D, S \neq \emptyset \\
+\end{array}\end{split}\]</div>
+</div>
+<p>To illustrate this method we will use a synthetic dataset. We will first use a subset of 10 data point to compute the exact values and use them to assess the Monte Carlo approximation. Afterwards, we will conduct the data removal experiments as described by Ghorbani and Zou in their paper <a class="reference external" href="https://arxiv.org/abs/1904.02868v1">Data Shapley: Equitable Valuation of Data for Machine Learning</a>: We compute the data valuation given different computation budgets and incrementally remove a percentage
+of the best, respectively worst, data points and observe how that affects the utility.</p>
+<section id="Setup">
+<h2>Setup<a class="headerlink" href="#Setup" title="Permalink to this heading">#</a></h2>
+<p>We begin by importing the main libraries and setting some defaults.</p>
+<div class="admonition note">
+<p>If you are reading this in the documentation, some boilerplate has been omitted for convenience.</p>
+</div>
+<p>We will be using the following functions and classes from pyDVL.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">autoreload</span>
+<span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Dataset</span><span class="p">,</span>
+    <span class="n">Utility</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="n">compute_least_core_values</span><span class="p">,</span> <span class="n">LeastCoreMode</span><span class="p">,</span> <span class="n">ValuationResult</span>
+<span class="kn">from</span> <span class="nn">pydvl.reporting.plots</span> <span class="kn">import</span> <span class="n">shaded_mean_std</span>
+<span class="kn">from</span> <span class="nn">pydvl.reporting.scores</span> <span class="kn">import</span> <span class="n">compute_removal_score</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Dataset">
+<h2>Dataset<a class="headerlink" href="#Dataset" title="Permalink to this heading">#</a></h2>
+<p>We generate a synthetic dataset using the <code class="docutils literal notranslate"><span class="pre">`make_classification</span></code> &lt;<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.make_classification.html">https://scikit-learn.org/stable/modules/generated/sklearn.datasets.make_classification.html</a>&gt;`__ function from scikit-learn.</p>
+<p>We sample 200 data points from a 50-dimensional Gaussian distribution with 25 informative features and 25 non-informative features (generated as random linear combinations of the informative features).</p>
+<p>The 200 samples are uniformly distributed across 3 classes with a small percentage of noise added to the labels to make the task a bit more difficult.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">(</span>
+    <span class="n">n_samples</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">n_features</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">n_informative</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
+    <span class="n">n_classes</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">full_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">stratify_by_target</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+<span class="p">)</span>
+<span class="n">small_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">,</span>
+    <span class="n">stratify_by_target</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">train_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s2">&quot;liblinear&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">full_dataset</span><span class="o">.</span><span class="n">x_train</span><span class="p">,</span> <span class="n">full_dataset</span><span class="o">.</span><span class="n">y_train</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;Training accuracy: </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">full_dataset</span><span class="o">.</span><span class="n">x_train</span><span class="p">,</span><span class="w"> </span><span class="n">full_dataset</span><span class="o">.</span><span class="n">y_train</span><span class="p">)</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2">%&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;Testing accuracy: </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">full_dataset</span><span class="o">.</span><span class="n">x_test</span><span class="p">,</span><span class="w"> </span><span class="n">full_dataset</span><span class="o">.</span><span class="n">y_test</span><span class="p">)</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2">%&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Training accuracy: 86.25%
+Testing accuracy: 70.00%
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">small_dataset</span><span class="o">.</span><span class="n">x_train</span><span class="p">,</span> <span class="n">small_dataset</span><span class="o">.</span><span class="n">y_train</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;Training accuracy: </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">small_dataset</span><span class="o">.</span><span class="n">x_train</span><span class="p">,</span><span class="w"> </span><span class="n">small_dataset</span><span class="o">.</span><span class="n">y_train</span><span class="p">)</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2">%&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;Testing accuracy: </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">small_dataset</span><span class="o">.</span><span class="n">x_test</span><span class="p">,</span><span class="w"> </span><span class="n">small_dataset</span><span class="o">.</span><span class="n">y_test</span><span class="p">)</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2">%&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Training accuracy: 100.00%
+Testing accuracy: 47.89%
+</pre></div></div>
+</div>
+</section>
+<section id="Estimating-Least-Core-Values">
+<h2>Estimating Least Core Values<a class="headerlink" href="#Estimating-Least-Core-Values" title="Permalink to this heading">#</a></h2>
+<p>In this first section we will use a smaller subset of the dataset containing 10 samples in order to be able to compute exact values in a reasonable amount of time. Afterwards, we will use the Monte Carlo method with a limited budget (maximum number of subsets) to approximate these values.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">small_dataset</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">exact_values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span>
+    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="n">LeastCoreMode</span><span class="o">.</span><span class="n">Exact</span><span class="p">,</span>
+    <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "e791c3afe5a94daabd8d65be58e3ed94", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">exact_values_df</span> <span class="o">=</span> <span class="n">exact_values</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;exact_value&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+<span class="n">exact_values_df</span> <span class="o">=</span> <span class="n">exact_values_df</span><span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">exact_values_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">budget_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="nb">len</span><span class="p">(</span><span class="n">small_dataset</span><span class="p">),</span> <span class="n">num</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+<span class="n">all_estimated_values_df</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">all_errors</span> <span class="o">=</span> <span class="p">{</span><span class="n">budget</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">budget</span> <span class="ow">in</span> <span class="n">budget_array</span><span class="p">}</span>
+
+<span class="k">for</span> <span class="n">budget</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">budget_array</span><span class="p">):</span>
+    <span class="n">dfs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">column_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;estimated_value_</span><span class="si">{</span><span class="n">budget</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span>
+            <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="n">LeastCoreMode</span><span class="o">.</span><span class="n">MonteCarlo</span><span class="p">,</span>
+            <span class="n">n_iterations</span><span class="o">=</span><span class="n">budget</span><span class="p">,</span>
+            <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">values</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="n">column_name</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s2">_stderr&quot;</span><span class="p">])</span>
+            <span class="o">.</span><span class="n">T</span>
+        <span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)]</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">mean_squared_error</span><span class="p">(</span>
+            <span class="n">exact_values_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s2">&quot;exact_value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="n">all_errors</span><span class="p">[</span><span class="n">budget</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;budget&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">budget</span>
+        <span class="n">dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+    <span class="n">estimated_values_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dfs</span><span class="p">)</span>
+    <span class="n">all_estimated_values_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">estimated_values_df</span><span class="p">)</span>
+
+<span class="n">values_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">all_estimated_values_df</span><span class="p">)</span>
+<span class="n">errors_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">all_errors</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "4e124fe5b1a14e8cbdcd2054b2ea7519", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_least_core_basic_18_0.png" src="../_images/examples_least_core_basic_18_0.png" />
+</div>
+</div>
+<p>We can see that the approximation error decreases, on average, as the we increase the budget.</p>
+<p>Still, the decrease may not always necessarily happen when we increase the number of iterations because of the fact that we sample the subsets with replacement in the Monte Carlo method i.e there may be repeated subsets.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_least_core_basic_21_0.png" src="../_images/examples_least_core_basic_21_0.png" />
+</div>
+</div>
+</section>
+<section id="Data-Removal">
+<h2>Data Removal<a class="headerlink" href="#Data-Removal" title="Permalink to this heading">#</a></h2>
+<p>We now move on to the data removal experiments using the full dataset.</p>
+<p>In these experiments, we first rank the data points from most valuable to least valuable using the values estimated by the Monte Carlo Least Core method. Then, we gradually remove from 5 to 40 percent, by increments of 5 percentage points, of the most valuable/least valuable ones, train the model on this subset and compute its accuracy.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">full_dataset</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">method_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Random&quot;</span><span class="p">,</span> <span class="s2">&quot;Least Core&quot;</span><span class="p">]</span>
+<span class="n">removal_percentages</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.41</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<section id="Remove-Best">
+<h3>Remove Best<a class="headerlink" href="#Remove-Best" title="Permalink to this heading">#</a></h3>
+<p>We start by removing the best data points and seeing how the model’s accuracy evolves.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">all_scores</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">trange</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">method_name</span> <span class="ow">in</span> <span class="n">method_names</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">method_name</span> <span class="o">==</span> <span class="s2">&quot;Random&quot;</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">ValuationResult</span><span class="o">.</span><span class="n">from_random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">utility</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span>
+                <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="n">LeastCoreMode</span><span class="o">.</span><span class="n">MonteCarlo</span><span class="p">,</span>
+                <span class="n">n_iterations</span><span class="o">=</span><span class="mi">25000</span><span class="p">,</span>
+                <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">compute_removal_score</span><span class="p">(</span>
+            <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">,</span>
+            <span class="n">percentages</span><span class="o">=</span><span class="n">removal_percentages</span><span class="p">,</span>
+            <span class="n">remove_best</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">scores</span><span class="p">[</span><span class="s2">&quot;method_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method_name</span>
+        <span class="n">all_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+
+<span class="n">scores_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "7feee65d856d427f8d45ac223b27e536", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_least_core_basic_28_0.png" src="../_images/examples_least_core_basic_28_0.png" />
+</div>
+</div>
+<p>We can clearly see that removing the most valuable data points, as given by the Least Core method, leads to, on average, a decrease in the model’s performance and that the method outperforms random removal of data points.</p>
+</section>
+<section id="Remove-Worst">
+<h3>Remove Worst<a class="headerlink" href="#Remove-Worst" title="Permalink to this heading">#</a></h3>
+<p>We then proceed to removing the worst data points and seeing how the model’s accuracy evolves.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">all_scores</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">trange</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">method_name</span> <span class="ow">in</span> <span class="n">method_names</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">method_name</span> <span class="o">==</span> <span class="s2">&quot;Random&quot;</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">ValuationResult</span><span class="o">.</span><span class="n">from_random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">utility</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">compute_least_core_values</span><span class="p">(</span>
+                <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="n">LeastCoreMode</span><span class="o">.</span><span class="n">MonteCarlo</span><span class="p">,</span>
+                <span class="n">n_iterations</span><span class="o">=</span><span class="mi">25000</span><span class="p">,</span>
+                <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">compute_removal_score</span><span class="p">(</span>
+            <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">,</span>
+            <span class="n">percentages</span><span class="o">=</span><span class="n">removal_percentages</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">scores</span><span class="p">[</span><span class="s2">&quot;method_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method_name</span>
+        <span class="n">all_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+
+<span class="n">scores_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "8909d638b4ba48d09074a9993c3c5861", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_least_core_basic_33_0.png" src="../_images/examples_least_core_basic_33_0.png" />
+</div>
+</div>
+<p>We can clearly see that removing the least valuable data points, as given by the Least Core method, leads to, on average, an increase in the model’s performance and that the method outperforms the random removal of data points.</p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="influence_imagenet.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Influence functions for image classification</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="shapley_utility_learning.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Data Utility Learning</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; AppliedAI Institute gGmbH
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link " href="https://github.com/appliedAI-Initiative/pyDVL" aria-label="GitHub">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Least Core for Data Valuation</a><ul>
+<li><a class="reference internal" href="#Setup">Setup</a></li>
+<li><a class="reference internal" href="#Dataset">Dataset</a></li>
+<li><a class="reference internal" href="#Estimating-Least-Core-Values">Estimating Least Core Values</a></li>
+<li><a class="reference internal" href="#Data-Removal">Data Removal</a><ul>
+<li><a class="reference internal" href="#Remove-Best">Remove Best</a></li>
+<li><a class="reference internal" href="#Remove-Worst">Remove Worst</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/scripts/furo.js"></script>
+    <script src="../_static/js/hoverxref.js"></script>
+    <script src="../_static/js/tooltipster.bundle.min.js"></script>
+    <script src="../_static/js/micromodal.min.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["\\(", "\\)"]], "processEscapes": true, "displayMath": [["\\[", "\\]"]]}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    </body>
+</html>
