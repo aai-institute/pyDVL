@@ -2306,10 +2306,10 @@
 <p>The code in the package <a class="autorefs autorefs-internal" href="../api/pydvl/influence/#pydvl.influence">pydvl.influence</a> is experimental.
 Package structure and basic API are bound to change before v1.0.0</p>
 </div>
-<p>The influence function (IF) is a method to quantify the effect (influence) that
+<p>The influence function (<abbr title="Influence Function">IF</abbr>) is a method to quantify the effect (influence) that
 each training point has on the parameters of a model, and by extension on any
 function thereof. In particular, it allows to estimate how much each training
-sample affects the error on a test point, making the IF useful for understanding
+sample affects the error on a test point, making the <abbr title="Influence Function">IF</abbr> useful for understanding
 and debugging models.</p>
 <p>Alas, the influence function relies on some assumptions that can make their
 application difficult. Yet another drawback is that they require the computation
@@ -2319,12 +2319,12 @@ research tackles this issue using approximations, like a Neuman series
  (Agarwal et al., 2017)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>, with the most successful solution using a low-rank
 approximation that iteratively finds increasing eigenspaces of the Hessian
  (Schioppa et al., 2021)<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup>.</p>
-<p>pyDVL implements several methods for the efficient computation of the IF for
+<p>pyDVL implements several methods for the efficient computation of the <abbr title="Influence Function">IF</abbr> for
 machine learning. In the examples we document some of the difficulties that can
-arise when using the IF.</p>
+arise when using the <abbr title="Influence Function">IF</abbr>.</p>
 <h1 id="the-influence-function_1">The Influence Function<a class="headerlink" href="#the-influence-function_1" title="Permanent link">&para;</a></h1>
 <p>First introduced in the context of robust statistics in (Hampel, 1974)<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup>,
-the IF was popularized in the context of machine learning in
+the <abbr title="Influence Function">IF</abbr> was popularized in the context of machine learning in
  (Koh and Liang, 2017)<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup>.</p>
 <p>Following their formulation, consider an input space <span class="arithmatex">\(\mathcal{X}\)</span> (e.g. images)
 and an output space <span class="arithmatex">\(\mathcal{Y}\)</span> (e.g. labels). Let's take <span class="arithmatex">\(z_i = (x_i, y_i)\)</span>,
@@ -2562,7 +2562,7 @@ which holds the calculated influence factors (<code>influence_factors.x</code>) 
 dictionary with the info on the inversion process (<code>influence_factors.info</code>).</p>
 <h1 id="methods-for-inverse-hvp-calculation">Methods for inverse HVP calculation<a class="headerlink" href="#methods-for-inverse-hvp-calculation" title="Permanent link">&para;</a></h1>
 <p>In order to calculate influence values, pydvl implements several methods for the
-calculation of the inverse Hessian vector product (iHVP). More precisely, given
+calculation of the inverse Hessian vector product (<abbr title="inverse Hessian-vector product">iHVP</abbr>). More precisely, given
 a model, training data and a tensor <span class="arithmatex">\(b\)</span>, the function
 <a class="autorefs autorefs-internal" href="../api/pydvl/influence/inversion/#pydvl.influence.inversion.solve_hvp">solve_hvp</a>
 will find <span class="arithmatex">\(x\)</span> such that <span class="arithmatex">\(H x = b\)</span>,
@@ -2621,23 +2621,23 @@ to the <a class="autorefs autorefs-internal" href="../api/pydvl/influence/torch/
 function, and are respecively the initial guess for the solution, the relative
 tolerance, the absolute tolerance, and the maximum number of iterations.</p>
 <p>The resulting <a class="autorefs autorefs-internal" href="../api/pydvl/influence/twice_differentiable/#pydvl.influence.twice_differentiable.InverseHvpResult">InverseHvpResult</a>
-holds the solution of the iHVP, <code>influence_factors.x</code>, and some info on the
+holds the solution of the <abbr title="inverse Hessian-vector product">iHVP</abbr>, <code>influence_factors.x</code>, and some info on the
 inversion process <code>influence_factors.info</code>. More specifically, for each batch
 the infos will report the number of iterations, a boolean indicating if the
 inversion converged, and the residual of the inversion.</p>
-<h2 id="linear-time-stochastic-second-order-approximation-lissa">Linear time Stochastic Second-Order Approximation (LiSSA)<a class="headerlink" href="#linear-time-stochastic-second-order-approximation-lissa" title="Permanent link">&para;</a></h2>
-<p>The LiSSA method is a stochastic approximation of the inverse Hessian vector
+<h2 id="linear-time-stochastic-second-order-approximation-lissa">Linear time Stochastic Second-Order Approximation (<abbr title="Linear-time Stochastic Second-order Algorithm">LiSSA</abbr>)<a class="headerlink" href="#linear-time-stochastic-second-order-approximation-lissa" title="Permanent link">&para;</a></h2>
+<p>The <abbr title="Linear-time Stochastic Second-order Algorithm">LiSSA</abbr> method is a stochastic approximation of the inverse Hessian vector
 product. Compared to <a href="#conjugate-gradient">conjugate gradient</a>
 it is faster but less accurate and typically suffers from 
 instability.</p>
-<p>In order to find the solution of the HVP, LiSSA iteratively approximates the
+<p>In order to find the solution of the HVP, <abbr title="Linear-time Stochastic Second-order Algorithm">LiSSA</abbr> iteratively approximates the
 inverse of the Hessian matrix with the following update:</p>
 <div class="arithmatex">\[H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s},\]</div>
 <p>where <span class="arithmatex">\(d\)</span> and <span class="arithmatex">\(s\)</span> are a dampening and a scaling factor, which are essential
 for the convergence of the method and they need to be chosen carefully, and I 
-is the identity matrix. More info on the theory of LiSSA can be found in the 
+is the identity matrix. More info on the theory of <abbr title="Linear-time Stochastic Second-order Algorithm">LiSSA</abbr> can be found in the 
 original paper (Agarwal et al., 2017)<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>
-<p>In pyDVL, you can select LiSSA with <code>inversion_method = "lissa"</code>, like this:</p>
+<p>In pyDVL, you can select <abbr title="Linear-time Stochastic Second-order Algorithm">LiSSA</abbr> with <code>inversion_method = "lissa"</code>, like this:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span> <span class="nn">pydvl.influence.inversion</span> <span class="kn">import</span> <span class="n">solve_hvp</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">solve_hvp</span><span class="p">(</span>
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>   <span class="s2">&quot;lissa&quot;</span><span class="p">,</span>
@@ -2658,7 +2658,7 @@ being the maximum number of iterations, the dampening factor, the scaling
 factor, the initial guess for the solution and the relative tolerance,
 respectively.</p>
 <p>The resulting <a class="autorefs autorefs-internal" href="../api/pydvl/influence/twice_differentiable/#pydvl.influence.twice_differentiable.InverseHvpResult">InverseHvpResult</a>
-holds the solution of the iHVP, <code>influence_factors.x</code>, and,
+holds the solution of the <abbr title="inverse Hessian-vector product">iHVP</abbr>, <code>influence_factors.x</code>, and,
 within <code>influence_factors.info</code>, the maximum percentage error
 and the mean percentage error of the approximation.</p>
 <h2 id="arnoldi-solver">Arnoldi solver<a class="headerlink" href="#arnoldi-solver" title="Permanent link">&para;</a></h2>
@@ -2684,7 +2684,7 @@ and <span class="arithmatex">\(V\)</span> contains the corresponding eigenvector
 </span></code></pre></div>
 For the parameters, check <a class="autorefs autorefs-internal" href="../api/pydvl/influence/torch/torch_differentiable/#pydvl.influence.torch.torch_differentiable.solve_arnoldi">solve_arnoldi</a>.
 The resulting <a class="autorefs autorefs-internal" href="../api/pydvl/influence/twice_differentiable/#pydvl.influence.twice_differentiable.InverseHvpResult">InverseHvpResult</a>
-holds the solution of the iHVP, <code>influence_factors.x</code>, and,
+holds the solution of the <abbr title="inverse Hessian-vector product">iHVP</abbr>, <code>influence_factors.x</code>, and,
 within <code>influence_factors.info</code>, the computed eigenvalues and eigenvectors.</p>
 <div class="footnote">
 <hr />

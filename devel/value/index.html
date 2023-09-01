@@ -2519,7 +2519,7 @@ there are additional desiderata, like having a value function that does not
 increase with repeated samples. Game-theoretic methods are all rooted in axioms
 that by construction ensure different desiderata, but despite their practical
 usefulness, none of them are either necessary or sufficient for all
-applications. For instance, *[<abbr title="Shapley Value">SV</abbr>]s try to equitably distribute all value
+applications. For instance, <abbr title="Shapley Value">SV</abbr> methods try to equitably distribute all value
 among all samples, failing to identify repeated ones as unnecessary, with e.g. a
 zero value.</p>
 <h2 id="applications-of-data-valuation">Applications of data valuation<a class="headerlink" href="#applications-of-data-valuation" title="Permanent link">&para;</a></h2>
@@ -2634,7 +2634,7 @@ when constructing the <code>Utility</code> object. The two following calls are e
 <h4 id="learning-the-utility">Learning the utility<a class="headerlink" href="#learning-the-utility" title="Permanent link">&para;</a></h4>
 <p>Because each evaluation of the utility entails a full retrain of the model with
 a new subset of the training set, it is natural to try to learn this mapping
-from subsets to scores. This is the idea behind <strong>Data Utility Learning (DUL)</strong>
+from subsets to scores. This is the idea behind <strong>Data Utility Learning (<abbr title="Data Utility Learning">DUL</abbr>)</strong>
  (Wang et al., 2022)<sup id="fnref2:7"><a class="footnote-ref" href="#fn:7">7</a></sup> and in pyDVL it's as simple as wrapping the
 <code>Utility</code> inside <a class="autorefs autorefs-internal" href="../api/pydvl/utils/utility/#pydvl.utils.utility.DataUtilityLearning">DataUtilityLearning</a>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">Utility</span><span class="p">,</span> <span class="n">DataUtilityLearning</span><span class="p">,</span> <span class="n">Dataset</span>
@@ -2654,7 +2654,7 @@ from subsets to scores. This is the idea behind <strong>Data Utility Learning (D
 </span></code></pre></div>
 <p>As you can see, all that is required is a model to learn the utility itself and
 the fitting and using of the learned model happens behind the scenes.</p>
-<p>There is a longer example with an investigation of the results achieved by DUL
+<p>There is a longer example with an investigation of the results achieved by <abbr title="Data Utility Learning">DUL</abbr>
 in <a href="../examples/shapley_utility_learning">a dedicated notebook</a>.</p>
 <h3 id="leave-one-out-values">Leave-One-Out values<a class="headerlink" href="#leave-one-out-values" title="Permanent link">&para;</a></h3>
 <p><abbr title="Leave-One-Out">LOO</abbr> is the simplest approach to valuation. It assigns to each sample its
@@ -2725,8 +2725,7 @@ nature of every (non-trivial) <abbr title="Machine Learning">ML</abbr> problem c
 <p>(Wang and Jia, 2022)<sup id="fnref2:5"><a class="footnote-ref" href="#fn:5">5</a></sup> prove that by relaxing one of the Shapley axioms
   and considering the general class of semi-values, of which Shapley is an
   instance, one can prove that a choice of constant weights is the best one can
-  do in a utility-agnostic setting. So-called <em>Data Banzhaf</em> is on our to-do
-  list!</p>
+  do in a utility-agnostic setting. So-called <em>Data Banzhaf</em>.</p>
 <ul>
 <li>
 <p><strong>Data set size</strong>: Computing exact Shapley values is NP-hard, and Monte Carlo
@@ -2785,7 +2784,7 @@ nature of every (non-trivial) <abbr title="Machine Learning">ML</abbr> problem c
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-08-27</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-09-01</span>
       
         <br>
         Created:
