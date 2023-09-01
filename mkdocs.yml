@@ -1,8 +1,8 @@
 site_name: "pyDVL"
 site_dir: "docs_build"
-site_url: "https://appliedai-initiative.github.io/pyDVL/"
-repo_name: "appliedAI-Initiative/pyDVL"
-repo_url: "https://github.com/appliedAI-Initiative/pyDVL"
+site_url: "https://aai-institute.github.io/pyDVL/"
+repo_name: "aai-institute/pyDVL"
+repo_url: "https://github.com/aai-institute/pyDVL"
 copyright: "Copyright &copy; AppliedAI Institute gGmbH"
 remote_branch: gh-pages
 

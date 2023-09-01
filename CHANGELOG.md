@@ -28,7 +28,7 @@ the board, with a focus on documentation and usability.
     [PR #278](https://github.com/aai-institute/pyDVL/pull/278)
     [PR #394](https://github.com/aai-institute/pyDVL/pull/394)
   - Renamed `semivalues` to `compute_generic_semivalues`
-    [PR #413](https://github.com/appliedAI-Initiative/pyDVL/pull/413)
+    [PR #413](https://github.com/aai-institute/pyDVL/pull/413)
   - New `joblib` backend as default instead of ray. Simplify MapReduceJob.
     [PR #355](https://github.com/aai-institute/pyDVL/pull/355)
   - Bump torch dependency for influence package to 2.0
