@@ -36,7 +36,7 @@ If you're a first time user of pyDVL, we recommend you to go through the
 
         :material-regular:`code;12em`
 
-        .. button-link:: https://github.com/appliedAI-Initiative/pyDVL
+        .. button-link:: https://github.com/aai-institute/pyDVL
             :expand:
             :color: primary
             :outline:
