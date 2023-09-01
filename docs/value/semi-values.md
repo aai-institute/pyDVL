@@ -48,10 +48,10 @@ $$
 
 where $B$ is the [Beta function](https://en.wikipedia.org/wiki/Beta_function),
 and $\alpha$ and $\beta$ are parameters that control the weighting of the
-subsets. Setting both to 1 recovers Shapley values, and setting $\alpha = 1$, and
-$\beta = 16$ is reported in [@kwon_beta_2022] to be a good choice for
-some applications. See however the [Banzhaf indices][banzhaf-indices] section 
-for an alternative choice of weights which is reported to work better.
+subsets. Setting both to 1 recovers Shapley values, and setting $\alpha = 1$,
+and $\beta = 16$ is reported in [@kwon_beta_2022] to be a good choice for some
+applications. Beta Shapley values are available in pyDVL through
+[compute_beta_shapley_semivalues][pydvl.value.semivalues.compute_beta_shapley_semivalues]:
 
 ```python
 from pydvl.value import *
@@ -61,6 +61,9 @@ values = compute_beta_shapley_semivalues(
     u=utility, done=AbsoluteStandardError(threshold=1e-4), alpha=1, beta=16
 )
 ```
+
+See however the [Banzhaf indices][banzhaf-indices] section 
+for an alternative choice of weights which is reported to work better.
 
 ## Banzhaf indices
 
@@ -81,8 +84,10 @@ any choice of weight function $w$, one can always construct a utility with
 higher variance where $w$ is greater. Therefore, in a worst-case sense, the best
 one can do is to pick a constant weight.
 
-The authors of [@wang_data_2022] show that Banzhaf indices are more
-robust to variance in the utility function than Shapley and Beta Shapley values.
+The authors of [@wang_data_2022] show that Banzhaf indices are more robust to
+variance in the utility function than Shapley and Beta Shapley values. They are
+available in pyDVL through
+[compute_banzhaf_semivalues][pydvl.value.semivalues.compute_banzhaf_semivalues]:
 
 ```python
 from pydvl.value import *
@@ -103,6 +108,8 @@ combination of the three ingredients that define a semi-value:
 - A sampling method
 - A weighting scheme $w$.
 
+You can construct any combination of these three ingredients with
+[compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
 The utility function is the same as for Shapley values, and the sampling method
 can be any of the types defined in [the samplers module][pydvl.value.sampler].
 For instance, the following snippet is equivalent to the above:
@@ -117,14 +124,13 @@ values = compute_generic_semivalues(
   u=utility,
   coefficient=beta_coefficient(alpha=1, beta=16),
   done=AbsoluteStandardError(threshold=1e-4),
-  )
+)
 ```
 
 Allowing any coefficient can help when experimenting with models which are more
 sensitive to changes in training set size. However, Data Banzhaf indices are
 proven to be the most robust to variance in the utility function, in the sense
 of rank stability, across a range of models and datasets [@wang_data_2022]. 
-
 
 !!! warning "Careful with permutation sampling"
     This generic implementation of semi-values allowing for any combination of

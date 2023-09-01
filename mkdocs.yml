@@ -145,7 +145,7 @@ extra:
     default: stable
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/appliedAI-Initiative/pyDVL
+      link: https://github.com/aai-institute/pyDVL
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/pyDVL/
     - icon: fontawesome/brands/twitter
