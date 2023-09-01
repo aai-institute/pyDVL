@@ -25,13 +25,14 @@ log = logging.getLogger(__name__)
 class CancellationPolicy(Flag):
     """Policy to use when cancelling futures after exiting an Executor.
 
-    .. note:
-       Not all backends support all policies.
+    !!! Note
+        Not all backends support all policies.
 
-    :cvar NONE: Do not cancel any futures.
-    :cvar PENDING: Cancel all pending futures, but not running ones.
-    :cvar RUNNING: Cancel all running futures, but not pending ones.
-    :cvar ALL: Cancel all pending and running futures.
+    Attributes:
+        NONE: Do not cancel any futures.
+        PENDING: Cancel all pending futures, but not running ones.
+        RUNNING: Cancel all running futures, but not pending ones.
+        ALL: Cancel all pending and running futures.
     """
 
     NONE = 0
@@ -94,27 +95,29 @@ class BaseParallelBackend(metaclass=NoPublicConstructor):
 def init_parallel_backend(config: ParallelConfig) -> BaseParallelBackend:
     """Initializes the parallel backend and returns an instance of it.
 
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig`
-        with cluster address, number of cpus, etc.
+    The following example creates a parallel backend instance with the default
+    configuration, which is a local joblib backend.
 
-    :Example:
-
-    ``` python
-    config = ParallelConfig()
-    parallel_backend = init_parallel_backend(config)
-    ```
-
-    Creates a parallel backend instance with the default configuration, which
-    is a local joblib backend.
+    ??? Example
+        ``` python
+        config = ParallelConfig()
+        parallel_backend = init_parallel_backend(config)
+        ```
 
     To create a parallel backend instance with a different backend, e.g. ray,
     you can pass the backend name as a string to the constructor of
-    :class:`~pydvl.utils.config.ParallelConfig`:
+    [ParallelConfig][pydvl.utils.config.ParallelConfig].
 
-    .. code-block:: python
+    ??? Example
+        ```python
+        config = ParallelConfig(backend="ray")
+        parallel_backend = init_parallel_backend(config)
+        ```
 
-       config = ParallelConfig(backend="ray")
-       parallel_backend = init_parallel_backend(config)
+    Args:
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
+            with cluster address, number of cpus, etc.
+
 
     """
     try:
@@ -128,7 +131,9 @@ def available_cpus() -> int:
     """Platform-independent count of available cores.
 
     FIXME: do we really need this or is `os.cpu_count` enough? Is this portable?
-    :return: Number of cores, or 1 if it is not possible to determine.
+
+    Returns:
+        Number of cores, or 1 if it is not possible to determine.
     """
     from platform import system
 
@@ -143,13 +148,18 @@ def effective_n_jobs(n_jobs: int, config: ParallelConfig = ParallelConfig()) -> 
     This number may vary depending on the parallel backend and the resources
     available.
 
-    :param n_jobs: the number of jobs requested. If -1, the number of available
-        CPUs is returned.
-    :param config: instance of :class:`~pydvl.utils.config.ParallelConfig` with
-        cluster address, number of cpus, etc.
-    :return: the effective number of jobs, guaranteed to be >= 1.
-    :raises RuntimeError: if the effective number of jobs returned by the backend
-        is < 1.
+    Args:
+        n_jobs: the number of jobs requested. If -1, the number of available
+            CPUs is returned.
+        config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig] with
+            cluster address, number of cpus, etc.
+
+    Returns:
+        The effective number of jobs, guaranteed to be >= 1.
+
+    Raises:
+        RuntimeError: if the effective number of jobs returned by the backend
+            is < 1.
     """
     parallel_backend = init_parallel_backend(config)
     if (eff_n_jobs := parallel_backend.effective_n_jobs(n_jobs)) < 1:

@@ -20,7 +20,7 @@ from pydvl.value.semivalues import (
     SVCoefficient,
     banzhaf_coefficient,
     beta_coefficient,
-    semivalues,
+    compute_generic_semivalues,
     shapley_coefficient,
 )
 from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates, StoppingCriterion
@@ -50,7 +50,7 @@ def test_shapley(
 ):
     u, exact_values = analytic_shapley
     criterion = AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2 ** (num_samples * 2))
-    values = semivalues(
+    values = compute_generic_semivalues(
         sampler(u.data.indices),
         u,
         coefficient,
@@ -158,7 +158,7 @@ def test_banzhaf(
     parallel_config: ParallelConfig,
 ):
     u, exact_values = analytic_banzhaf
-    values = semivalues(
+    values = compute_generic_semivalues(
         sampler(u.data.indices),
         u,
         banzhaf_coefficient,

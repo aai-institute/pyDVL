@@ -15,7 +15,6 @@ from pydvl.utils.functional import fn_accepts_param_name
 
 __all__ = ["SupervisedModel", "MapFunction", "ReduceFunction", "NoPublicConstructor"]
 
-
 R = TypeVar("R", covariant=True)
 
 
@@ -51,11 +50,14 @@ def call_fun_remove_arg(*args, fun: Callable, arg: str, **kwargs):
     """
     Calls the given function with the given arguments, but removes the given argument.
 
-    :param args: Positional arguments to pass to the function.
-    :param fun: The function to call.
-    :param arg: The name of the argument to remove.
-    :param kwargs: Keyword arguments to pass to the function.
-    :return: The return value of the function.
+    Args:
+        args: Positional arguments to pass to the function.
+        fun: The function to call.
+        arg: The name of the argument to remove.
+        kwargs: Keyword arguments to pass to the function.
+
+    Returns:
+        The return value of the function.
     """
     try:
         del kwargs[arg]
@@ -65,7 +67,7 @@ def call_fun_remove_arg(*args, fun: Callable, arg: str, **kwargs):
     return fun(*args, **kwargs)
 
 
-def maybe_add_argument(fun: Callable, new_arg: str):
+def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
     """Wraps a function to accept the given keyword parameter if it doesn't
     already.
 
@@ -73,10 +75,13 @@ def maybe_add_argument(fun: Callable, new_arg: str):
     returned as is. Otherwise, a wrapper is returned which merely ignores the
     argument.
 
-    :param fun: The function to wrap
-    :param new_arg: The name of the argument that the new function will accept
-        (and ignore).
-    :return: A new function accepting one more keyword argument.
+    Args:
+        fun: The function to wrap
+        new_arg: The name of the argument that the new function will accept
+            (and ignore).
+
+    Returns:
+        A new function accepting one more keyword argument.
     """
     if fn_accepts_param_name(fun, new_arg):
         return fun
@@ -96,7 +101,7 @@ class NoPublicConstructor(ABCMeta):
     a `TypeError` will be thrown.
 
     Taken almost verbatim from:
-    https://stackoverflow.com/a/64682734
+    [https://stackoverflow.com/a/64682734](https://stackoverflow.com/a/64682734)
     """
 
     def __call__(cls, *args, **kwargs):
@@ -120,9 +125,11 @@ def ensure_seed_sequence(
     a Generator the internal protected seed sequence from the generator gets extracted.
     Otherwise, a new SeedSequence object is created from the passed (optional) seed.
 
-    :param seed: Either an int, a Generator object a SeedSequence object or None.
+    Args:
+        seed: Either an int, a Generator object a SeedSequence object or None.
 
-    :returns: A SeedSequence object.
+    Returns:
+        A SeedSequence object.
     """
     if isinstance(seed, SeedSequence):
         return seed
@@ -139,10 +146,13 @@ def call_fn_multiple_seeds(
     Execute a function multiple times with different seeds. It copies the arguments
     and keyword arguments before passing them to the function.
 
-    :param fn: The function to execute.
-    :param args: The arguments to pass to the function.
-    :param seeds: The seeds to use.
-    :param kwargs: The keyword arguments to pass to the function.
-    :return: A tuple of the results of the function.
+    Args:
+        fn: The function to execute.
+        args: The arguments to pass to the function.
+        seeds: The seeds to use.
+        kwargs: The keyword arguments to pass to the function.
+
+    Returns:
+        A tuple of the results of the function.
     """
     return tuple(fn(*deepcopy(args), **deepcopy(kwargs), seed=seed) for seed in seeds)

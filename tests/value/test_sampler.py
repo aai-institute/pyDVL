@@ -1,5 +1,5 @@
 from itertools import takewhile
-from typing import Iterator, List, Type, Union
+from typing import Iterator, List, Type
 
 import numpy as np
 import pytest
@@ -11,7 +11,6 @@ from pydvl.value.sampler import (
     DeterministicPermutationSampler,
     DeterministicUniformSampler,
     PermutationSampler,
-    PowersetSampler,
     RandomHierarchicalSampler,
     StochasticSampler,
     UniformSampler,
@@ -75,7 +74,7 @@ def test_proper_stochastic(sampler_class, indices, seed, seed_alt):
     samples_2 = _create_seeded_sample_iter(sampler_class, indices, seed_alt)
 
     for (_, subset_1), (_, subset_2) in zip(samples_1, samples_2):
-        assert set(subset_1) != set(subset_2)
+        assert len(subset_1) == 0 or set(subset_1) != set(subset_2)
 
 
 @pytest.mark.parametrize(

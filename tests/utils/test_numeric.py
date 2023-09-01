@@ -101,12 +101,14 @@ def _count_random_powerset_generator_collisions(
     Count the number of collisions between two generators of random subsets of a set
     with `n` elements, each generating `max_subsets` subsets, using two different seeds.
 
-    :param n: number of elements in the set.
-    :param max_subsets: number of subsets to generate.
-    :param seed: Seed for the first generator.
-    :param seed_alt: Seed for the second generator.
+    Args:
+        n: number of elements in the set.
+        max_subsets: number of subsets to generate.
+        seed: Seed for the first generator.
+        seed_alt: Seed for the second generator.
 
-    :return: Number of collisions between the two generators.
+    Returns:
+        Number of collisions between the two generators.
     """
     s = np.arange(n)
     parallel_subset_generators = zip(

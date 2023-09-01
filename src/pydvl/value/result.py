@@ -2,37 +2,42 @@
 This module collects types and methods for the inspection of the results of
 valuation algorithms.
 
-The most important class is :class:`ValuationResult`, which provides access
-to raw values, as well as convenient behaviour as a ``Sequence`` with extended
-indexing and updating abilities, and conversion to `pandas DataFrames
-<https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
+The most important class is [ValuationResult][pydvl.value.result.ValuationResult], which provides access
+to raw values, as well as convenient behaviour as a `Sequence` with extended
+indexing and updating abilities, and conversion to [pandas DataFrames][pandas.DataFrame].
 
-.. rubric:: Operating on results
+# Operating on results
 
-Results can be added together with the standard ``+`` operator. Because values
+Results can be added together with the standard `+` operator. Because values
 are typically running averages of iterative algorithms, addition behaves like a
 weighted average of the two results, with the weights being the number of
 updates in each result: adding two results is the same as generating one result
 with the mean of the values of the two results as values. The variances are
-updated accordingly. See :class:`ValuationResult` for details.
+updated accordingly. See [ValuationResult][pydvl.value.result.ValuationResult] for details.
 
 Results can also be sorted by value, variance or number of updates, see
-:meth:`ValuationResult.sort`. The arrays of :attr:`ValuationResult.values`,
-:attr:`ValuationResult.variances`, :attr:`ValuationResult.counts`,
-:attr:`ValuationResult.indices` and :attr:`ValuationResult.names` are sorted in
+[sort()][pydvl.value.result.ValuationResult.sort]. The arrays of
+[ValuationResult.values][pydvl.value.result.ValuationResult.values],
+[ValuationResult.variances][pydvl.value.result.ValuationResult.variances],
+[ValuationResult.counts][pydvl.value.result.ValuationResult.counts],
+[ValuationResult.indices][pydvl.value.result.ValuationResult.indices],
+[ValuationResult.names][pydvl.value.result.ValuationResult.names] are sorted in
 the same way.
 
-Indexing and slicing of results is supported and :class:`ValueItem` objects are
-returned. These objects can be compared with the usual operators, which take
-only the :attr:`ValueItem.value` into account.
+Indexing and slicing of results is supported and
+[ValueItem][pydvl.value.result.ValueItem] objects are returned. These objects
+can be compared with the usual operators, which take only the
+[ValueItem.value][pydvl.value.result.ValueItem] into account.
 
-.. rubric:: Creating result objects
+# Creating result objects
 
-The most commonly used factory method is :meth:`ValuationResult.zeros`, which
+The most commonly used factory method is
+[ValuationResult.zeros()][pydvl.value.result.ValuationResult.zeros], which
 creates a result object with all values, variances and counts set to zero.
-:meth:`ValuationResult.empty` creates an empty result object, which can be used
-as a starting point for adding results together. Empty results are discarded
-when added to other results. Finally, :meth:`ValuationResult.from_random`
+[ValuationResult.empty()][pydvl.value.result.ValuationResult.empty] creates an
+empty result object, which can be used as a starting point for adding results
+together. Empty results are discarded when added to other results. Finally,
+[ValuationResult.from_random()][pydvl.value.result.ValuationResult.from_random]
 samples random values uniformly.
 
 """
@@ -87,24 +92,27 @@ NameT = TypeVar("NameT", bound=Any)
 class ValueItem(Generic[IndexT, NameT]):
     """The result of a value computation for one datum.
 
-    ``ValueItems`` can be compared with the usual operators, forming a total
-    order. Comparisons take only the :attr:`value` into account.
+    `ValueItems` can be compared with the usual operators, forming a total
+    order. Comparisons take only the `value` into account.
 
-    .. todo::
-       Maybe have a mode of comparing similar to `np.isclose`, or taking the
-       :attr:`variance` into account.
+    !!! todo
+        Maybe have a mode of comparing similar to `np.isclose`, or taking the
+        `variance` into account.
+
+    Attributes:
+        index: Index of the sample with this value in the original
+            [Dataset][pydvl.utils.dataset.Dataset]
+        name: Name of the sample if it was provided. Otherwise, `str(index)`
+        value: The value
+        variance: Variance of the value if it was computed with an approximate
+            method
+        count: Number of updates for this value
     """
 
-    #: Index of the sample with this value in the original
-    #  :class:`~pydvl.utils.dataset.Dataset`
     index: IndexT
-    #: Name of the sample if it was provided. Otherwise, `str(index)`
     name: NameT
-    #: The value
     value: float
-    #: Variance of the value if it was computed with an approximate method
     variance: Optional[float]
-    #: Number of updates for this value
     count: Optional[int]
 
     def __lt__(self, other):
@@ -129,74 +137,75 @@ class ValuationResult(
 ):
     """Objects of this class hold the results of valuation algorithms.
 
-    These include indices in the original :class:`Dataset`, any data names (e.g.
-    group names in :class:`GroupedDataset`), the values themselves, and variance
-    of the computation in the case of Monte Carlo methods. ``ValuationResults``
-    can be iterated over like any ``Sequence``: ``iter(valuation_result)``
-    returns a generator of :class:`ValueItem` in the order in which the object
+    These include indices in the original [Dataset][pydvl.utils.dataset.Dataset],
+    any data names (e.g. group names in [GroupedDataset][pydvl.utils.dataset.GroupedDataset]),
+    the values themselves, and variance of the computation in the case of Monte
+    Carlo methods. `ValuationResults` can be iterated over like any `Sequence`:
+    `iter(valuation_result)` returns a generator of
+    [ValueItem][pydvl.value.result.ValueItem] in the order in which the object
     is sorted.
 
-    .. rubric:: Indexing
+    ## Indexing
 
     Indexing can be position-based, when accessing any of the attributes
-    :attr:`values`, :attr:`variances`, :attr:`counts` and :attr:`indices`, as
+    [values][pydvl.value.result.ValuationResult.values], [variances][pydvl.value.result.ValuationResult.variances],
+    [counts][pydvl.value.result.ValuationResult.counts] and [indices][pydvl.value.result.ValuationResult.indices], as
     well as when iterating over the object, or using the item access operator,
     both getter and setter. The "position" is either the original sequence in
     which the data was passed to the constructor, or the sequence in which the
     object is sorted, see below.
 
     Alternatively, indexing can be data-based, i.e. using the indices in the
-    original dataset. This is the case for the methods :meth:`get` and
-    :meth:`update`.
+    original dataset. This is the case for the methods [get()][pydvl.value.result.ValuationResult.get] and
+    [update()][pydvl.value.result.ValuationResult.update].
 
-    .. rubric:: Sorting
+    ## Sorting
 
-    Results can be sorted in-place with :meth:`sort`, or alternatively using
-    python's standard ``sorted()`` and ``reversed()`` Note that sorting values
-    affects how iterators and the object itself as ``Sequence`` behave:
-    ``values[0]`` returns a :class:`ValueItem` with the highest or lowest
+    Results can be sorted in-place with [sort()][pydvl.value.result.ValuationResult.sort], or alternatively using
+    python's standard `sorted()` and `reversed()` Note that sorting values
+    affects how iterators and the object itself as `Sequence` behave:
+    `values[0]` returns a [ValueItem][pydvl.value.result.ValueItem] with the highest or lowest
     ranking point if this object is sorted by descending or ascending value,
-    respectively. If unsorted, ``values[0]`` returns the ``ValueItem`` at
-    position 0, which has data index ``indices[0]`` in the
-    :class:`~pydvl.utils.dataset.Dataset`.
+    respectively. If unsorted, `values[0]` returns the `ValueItem` at
+    position 0, which has data index `indices[0]` in the
+    [Dataset][pydvl.utils.dataset.Dataset].
 
-    The same applies to direct indexing of the ``ValuationResult``: the index
+    The same applies to direct indexing of the `ValuationResult`: the index
     is positional, according to the sorting. It does not refer to the "data
-    index". To sort according to data index, use :meth:`sort` with
-    ``key="index"``.
+    index". To sort according to data index, use [sort()][pydvl.value.result.ValuationResult.sort] with
+    `key="index"`.
 
-    In order to access :class:`ValueItem` objects by their data index, use
-    :meth:`get`.
+    In order to access [ValueItem][pydvl.value.result.ValueItem] objects by their data index, use
+    [get()][pydvl.value.result.ValuationResult.get].
 
-    .. rubric:: Operating on results
+    ## Operating on results
 
-    Results can be added to each other with the ``+`` operator. Means and
-    variances are correctly updated, using the ``counts`` attribute.
+    Results can be added to each other with the `+` operator. Means and
+    variances are correctly updated, using the `counts` attribute.
 
-    Results can also be updated with new values using :meth:`update`. Means and
+    Results can also be updated with new values using [update()][pydvl.value.result.ValuationResult.update]. Means and
     variances are updated accordingly using the Welford algorithm.
 
-    Empty objects behave in a special way, see :meth:`empty`.
+    Empty objects behave in a special way, see [empty()][pydvl.value.result.ValuationResult.empty].
 
-    :param values: An array of values. If omitted, defaults to an empty array
-        or to an array of zeros if ``indices`` are given.
-    :param indices: An optional array of indices in the original dataset. If
-        omitted, defaults to ``np.arange(len(values))``. **Warning:** It is
-        common to pass the indices of a :class:`Dataset` here. Attention must be
-        paid in a parallel context to copy them to the local process. Just do
-        ``indices=np.copy(data.indices)``.
-    :param variance: An optional array of variances in the computation of each
-        value.
-    :param counts: An optional array with the number of updates for each value.
-        Defaults to an array of ones.
-    :param data_names: Names for the data points. Defaults to index numbers
-        if not set.
-    :param algorithm: The method used.
-    :param status: The end status of the algorithm.
-    :param sort: Whether to sort the indices by ascending value. See above how
-        this affects usage as an iterable or sequence.
-    :param extra_values: Additional values that can be passed as keyword arguments.
-        This can contain, for example, the least core value.
+    Args:
+        values: An array of values. If omitted, defaults to an empty array
+            or to an array of zeros if `indices` are given.
+        indices: An optional array of indices in the original dataset. If
+            omitted, defaults to `np.arange(len(values))`. **Warning:** It is
+            common to pass the indices of a [Dataset][pydvl.utils.dataset.Dataset]
+            here. Attention must be paid in a parallel context to copy them to
+            the local process. Just do `indices=np.copy(data.indices)`.
+        variances: An optional array of variances in the computation of each value.
+        counts: An optional array with the number of updates for each value.
+            Defaults to an array of ones.
+        data_names: Names for the data points. Defaults to index numbers if not set.
+        algorithm: The method used.
+        status: The end status of the algorithm.
+        sort: Whether to sort the indices by ascending value. See above how
+            this affects usage as an iterable or sequence.
+        extra_values: Additional values that can be passed as keyword arguments.
+            This can contain, for example, the least core value.
 
     :raise ValueError: If input arrays have mismatching lengths.
     """
@@ -271,16 +280,21 @@ class ValuationResult(
         # Need a "Comparable" type here
         key: Literal["value", "variance", "index", "name"] = "value",
     ) -> None:
-        """Sorts the indices in place by ``key``.
+        """Sorts the indices in place by `key`.
 
         Once sorted, iteration over the results, and indexing of all the
-        properties :attr:`ValuationResult.values`,
-        :attr:`ValuationResult.variances`, :attr:`ValuationResult.counts`,
-        :attr:`ValuationResult.indices` and :attr:`ValuationResult.names` will
-        follow the same order.
+        properties
+        [ValuationResult.values][pydvl.value.result.ValuationResult.values],
+        [ValuationResult.variances][pydvl.value.result.ValuationResult.variances],
+        [ValuationResult.counts][pydvl.value.result.ValuationResult.counts],
+        [ValuationResult.indices][pydvl.value.result.ValuationResult.indices]
+        and [ValuationResult.names][pydvl.value.result.ValuationResult.names]
+        will follow the same order.
 
-        :param reverse: Whether to sort in descending order by value.
-        :param key: The key to sort by. Defaults to :attr:`ValueItem.value`.
+        Args:
+            reverse: Whether to sort in descending order by value.
+            key: The key to sort by. Defaults to
+                [ValueItem.value][pydvl.value.result.ValueItem].
         """
         keymap = {
             "index": "_indices",
@@ -320,7 +334,7 @@ class ValuationResult(
         """The indices for the values, possibly sorted.
 
         If the object is unsorted, then these are the same as declared at
-        construction or ``np.arange(len(values))`` if none were passed.
+        construction or `np.arange(len(values))` if none were passed.
         """
         return self._indices[self._sort_positions]
 
@@ -328,7 +342,7 @@ class ValuationResult(
     def names(self) -> NDArray[NameT]:
         """The names for the values, possibly sorted.
         If the object is unsorted, then these are the same as declared at
-        construction or ``np.arange(len(values))`` if none were passed.
+        construction or `np.arange(len(values))` if none were passed.
         """
         return self._names[self._sort_positions]
 
@@ -423,8 +437,8 @@ class ValuationResult(
             raise TypeError("Indices must be integers, iterable or slices")
 
     def __iter__(self) -> Iterator[ValueItem[IndexT, NameT]]:
-        """Iterate over the results returning :class:`ValueItem` objects.
-        To sort in place before iteration, use :meth:`sort`.
+        """Iterate over the results returning [ValueItem][pydvl.value.result.ValueItem] objects.
+        To sort in place before iteration, use [sort()][pydvl.value.result.ValuationResult.sort].
         """
         for pos in self._sort_positions:
             yield ValueItem(
@@ -484,21 +498,21 @@ class ValuationResult(
         to this is if one argument has empty values, in which case the other
         argument is returned.
 
-        .. warning::
-           Abusing this will introduce numerical errors.
+        !!! Warning
+            Abusing this will introduce numerical errors.
 
         Means and standard errors are correctly handled. Statuses are added with
-        bit-wise ``&``, see :class:`~pydvl.value.result.Status`.
-        ``data_names`` are taken from the left summand, or if unavailable from
-        the right one. The ``algorithm`` string is carried over if both terms
+        bit-wise `&`, see [Status][pydvl.value.result.Status].
+        `data_names` are taken from the left summand, or if unavailable from
+        the right one. The `algorithm` string is carried over if both terms
         have the same one or concatenated.
 
         It is possible to add ValuationResults of different lengths, and with
         different or overlapping indices. The result will have the union of
         indices, and the values.
 
-        .. warning::
-           FIXME: Arbitrary ``extra_values`` aren't handled.
+        !!! Warning
+            FIXME: Arbitrary `extra_values` aren't handled.
 
         """
         # empty results
@@ -590,9 +604,13 @@ class ValuationResult(
         """Updates the result in place with a new value, using running mean
         and variance.
 
-        :param idx: Data index of the value to update.
-        :param new_value: New value to add to the result.
-        :return: A reference to the same, modified result.
+        Args:
+            idx: Data index of the value to update.
+            new_value: New value to add to the result.
+
+        Returns:
+            A reference to the same, modified result.
+
         :raises IndexError: If the index is not found.
         """
         try:
@@ -634,13 +652,16 @@ class ValuationResult(
     ) -> pandas.DataFrame:
         """Returns values as a dataframe.
 
-        :param column: Name for the column holding the data value. Defaults to
-            the name of the algorithm used.
-        :param use_names: Whether to use data names instead of indices for the
-            DataFrame's index.
-        :return: A dataframe with two columns, one for the values, with name
-            given as explained in `column`, and another with standard errors for
-            approximate algorithms. The latter will be named `column+'_stderr'`.
+        Args:
+            column: Name for the column holding the data value. Defaults to
+                the name of the algorithm used.
+            use_names: Whether to use data names instead of indices for the
+                DataFrame's index.
+
+        Returns:
+            A dataframe with two columns, one for the values, with name
+                given as explained in `column`, and another with standard errors for
+                approximate algorithms. The latter will be named `column+'_stderr'`.
         :raise ImportError: If pandas is not installed
         """
         if not pandas:
@@ -664,24 +685,26 @@ class ValuationResult(
         seed: Optional[Seed] = None,
         **kwargs,
     ) -> "ValuationResult":
-        """Creates a :class:`ValuationResult` object and fills it with an array
+        """Creates a [ValuationResult][pydvl.value.result.ValuationResult] object and fills it with an array
         of random values from a uniform distribution in [-1,1]. The values can
         be made to sum up to a given total number (doing so will change their range).
 
-        :param size: Number of values to generate
-        :param total: If set, the values are normalized to sum to this number
-            ("efficiency" property of Shapley values).
-        :param kwargs: Additional options to pass to the constructor of
-            :class:`ValuationResult`. Use to override status, names, etc.
-        :param seed: Either an instance of a numpy random number generator or a seed for
+        Args:
+            size: Number of values to generate
+            total: If set, the values are normalized to sum to this number
+                ("efficiency" property of Shapley values).
+            kwargs: Additional options to pass to the constructor of
+                [ValuationResult][pydvl.value.result.ValuationResult]. Use to override status, names, etc.
+            seed: ither an instance of a numpy random number generator or a seed for
             it.
+        Returns:
+            A valuation result with its status set to
+            [Status.Converged][pydvl.utils.status.Status] by default.
 
-        :return: A valuation result with its status set to
-            :attr:`Status.Converged` by default.
-        :raises ValueError: If ``size`` is less than 1.
+        :raises ValueError: If `size` is less than 1.
 
-        .. versionchanged:: 0.6.0
-            Added parameter ``total``. Check for zero size
+        !!! tip "Changed in version 0.6.0"
+            Added parameter `total`. Check for zero size
         """
         if size < 1:
             raise ValueError("Size must be a positive integer")
@@ -711,13 +734,16 @@ class ValuationResult(
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         n_samples: int = 0,
     ) -> "ValuationResult":
-        """Creates an empty :class:`ValuationResult` object.
+        """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
 
         Empty results are characterised by having an empty array of values. When
         another result is added to an empty one, the empty one is discarded.
 
-        :param algorithm: Name of the algorithm used to compute the values
-        :return: An instance of :class:`ValuationResult`
+        Args:
+            algorithm: Name of the algorithm used to compute the values
+
+        Returns:
+            Object with the results.
         """
         if indices is not None or data_names is not None or n_samples != 0:
             return cls.zeros(
@@ -736,19 +762,22 @@ class ValuationResult(
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         n_samples: int = 0,
     ) -> "ValuationResult":
-        """Creates an empty :class:`ValuationResult` object.
+        """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
 
         Empty results are characterised by having an empty array of values. When
         another result is added to an empty one, the empty one is ignored.
 
-        :param algorithm: Name of the algorithm used to compute the values
-        :param indices: Data indices to use. A copy will be made. If not given,
-            the indices will be set to the range ``[0, n_samples)``.
-        :param data_names: Data names to use. A copy will be made. If not given,
-            the names will be set to the string representation of the indices.
-        :param n_samples: Number of data points whose values are computed. If
-            not given, the length of ``indices`` will be used.
-        :return: An instance of :class:`ValuationResult`
+        Args:
+            algorithm: Name of the algorithm used to compute the values
+            indices: Data indices to use. A copy will be made. If not given,
+                the indices will be set to the range `[0, n_samples)`.
+            data_names: Data names to use. A copy will be made. If not given,
+                the names will be set to the string representation of the indices.
+            n_samples: Number of data points whose values are computed. If
+                not given, the length of `indices` will be used.
+
+        Returns:
+            Object with the results.
         """
         if indices is None:
             indices = np.arange(n_samples, dtype=np.int_)

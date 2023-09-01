@@ -11,9 +11,12 @@ def fn_accepts_param_name(fn: Callable, param_name: str) -> bool:
     """
     Checks if a function accepts a given parameter, even if it is set by partial.
 
-    :param fn: The function to check.
-    :param param_name: The name of the parameter to check.
-    :return: True if the function accepts the parameter, False otherwise.
+    Args:
+        fn: The function to check.
+        param_name: The name of the parameter to check.
+
+    Returns:
+        True if the function accepts the parameter, False otherwise.
     """
 
     wrapped_fn, args_set_by_partial = _unroll_partial_fn(fn)
