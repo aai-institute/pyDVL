@@ -17,10 +17,11 @@ You can read more :ref:`in the documentation<data valuation>`.
 """
 import logging
 from collections import namedtuple
-from typing import Iterable, Optional, Tuple, TypeVar, cast
+from typing import Iterable, Optional, Tuple, TypeVar, Union, cast
 
 import cvxpy as cp
 import numpy as np
+from numpy.random import SeedSequence
 from numpy.typing import NDArray
 
 from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress
@@ -119,7 +120,7 @@ def _group_testing_shapley(
     n_samples: int,
     progress: bool = False,
     job_id: int = 1,
-    seed: Optional[Seed] = None,
+    seed: Optional[Union[Seed, SeedSequence]] = None,
 ):
     """Helper function for :func:`group_testing_shapley`.
 
@@ -240,7 +241,7 @@ def group_testing_shapley(
         config=config,
         n_jobs=n_jobs,
     )
-    uu, betas = map_reduce_job(seed=cast(int, map_reduce_seed_sequence.entropy))
+    uu, betas = map_reduce_job(seed=map_reduce_seed_sequence)
 
     # Matrix of estimated differences. See Eqs. (3) and (4) in the paper.
     C = np.zeros(shape=(n, n))

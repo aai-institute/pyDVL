@@ -53,7 +53,7 @@ from deprecate import deprecated, void
 from numpy.typing import NDArray
 
 from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
-from pydvl.utils.types import Seed, ensure_seed_sequence
+from pydvl.utils.types import Seed
 
 __all__ = [
     "AntitheticSampler",

@@ -1,3 +1,4 @@
+import pickle
 from functools import reduce
 from itertools import accumulate, repeat
 from typing import Any, Collection, Dict, Generic, List, Optional, TypeVar, Union
@@ -107,7 +108,7 @@ class MapReduceJob(Generic[T, R]):
 
     def __call__(
         self,
-        seed: Optional[Seed] = None,
+        seed: Optional[Union[Seed, SeedSequence]] = None,
     ) -> R:
         """
         Runs the map-reduce job.
@@ -130,7 +131,7 @@ class MapReduceJob(Generic[T, R]):
             chunks = self._chunkify(self.inputs_, n_chunks=self.n_jobs)
             map_results: List[R] = parallel(
                 delayed(self._map_func)(
-                    next_chunk, job_id=j, seed=seed.entropy, **self.map_kwargs
+                    next_chunk, job_id=j, seed=seed, **self.map_kwargs
                 )
                 for j, (next_chunk, seed) in enumerate(
                     zip(chunks, seed_seq.spawn(len(chunks)))

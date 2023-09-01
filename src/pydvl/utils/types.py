@@ -5,7 +5,8 @@ from __future__ import annotations
 
 import functools
 from abc import ABCMeta
-from typing import Any, Callable, Optional, Protocol, TypeVar, Union, cast
+from copy import deepcopy
+from typing import Any, Callable, Optional, Protocol, Tuple, TypeVar, Union, cast
 
 from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
@@ -46,6 +47,24 @@ class SupervisedModel(Protocol):
         pass
 
 
+def call_fun_remove_arg(*args, fun: Callable, arg: str, **kwargs):
+    """
+    Calls the given function with the given arguments, but removes the given argument.
+
+    :param args: Positional arguments to pass to the function.
+    :param fun: The function to call.
+    :param arg: The name of the argument to remove.
+    :param kwargs: Keyword arguments to pass to the function.
+    :return: The return value of the function.
+    """
+    try:
+        del kwargs[arg]
+    except KeyError:
+        pass
+
+    return fun(*args, **kwargs)
+
+
 def maybe_add_argument(fun: Callable, new_arg: str):
     """Wraps a function to accept the given keyword parameter if it doesn't
     already.
@@ -62,15 +81,7 @@ def maybe_add_argument(fun: Callable, new_arg: str):
     if fn_accepts_param_name(fun, new_arg):
         return fun
 
-    @functools.wraps(fun)
-    def wrapper(*args, **kwargs):
-        try:
-            del kwargs[new_arg]
-        except KeyError:
-            pass
-        return fun(*args, **kwargs)
-
-    return wrapper
+    return functools.partial(call_fun_remove_arg, fun=fun, arg=new_arg)
 
 
 class NoPublicConstructor(ABCMeta):
@@ -119,3 +130,19 @@ def ensure_seed_sequence(
         return cast(SeedSequence, seed.bit_generator.seed_seq)  # type: ignore
     else:
         return SeedSequence(seed)
+
+
+def call_fn_multiple_seeds(
+    fn: Callable, *args, seeds: Tuple[Seed, ...], **kwargs
+) -> Tuple:
+    """
+    Execute a function multiple times with different seeds. It copies the arguments
+    and keyword arguments before passing them to the function.
+
+    :param fn: The function to execute.
+    :param args: The arguments to pass to the function.
+    :param seeds: The seeds to use.
+    :param kwargs: The keyword arguments to pass to the function.
+    :return: A tuple of the results of the function.
+    """
+    return tuple(fn(*deepcopy(args), **deepcopy(kwargs), seed=seed) for seed in seeds)
