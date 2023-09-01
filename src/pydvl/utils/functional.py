@@ -32,12 +32,34 @@ def fn_accept_additional_argument(*args, fn: Callable, arg: str, **kwargs):
 
 def get_free_args_fn(fun: Union[Callable, partial]) -> Set[str]:
     """
-    Accept a function or partial definition and return the set of arguments that are
-    free. An argument is free if it is not set by the partial and is a parameter of the
-    function.
+    Accept a function or a partial definition and return the set of arguments that are
+    free. An argument is considered free if it is not set by the partial and is a
+    parameter of the function. Formally, this can be described as follows:
+
+    Let phi be the function that returns the set of arguments that are set by a given
+    function. For functions f and g, one can extend the function phi recursively to psi
+    as follows:
+
+        a) If `f = partial(g, **kwargs)`, two cases arise:
+            a) If `g = fn_accept_additional_argument`, then
+                `psi(f) = psi(kwargs.fn) + {kwargs.arg}`
+            b) Else, `psi(f) = psi(g) - kwargs.keys()`
+        b) Else,`psi(g) = phi(g)` (Note that this is the base case.)
+
+    Transforming `fn_accept_additional_argument` into a partial function is done by:
+    `f(fn, arg) = partial(fn_accept_additional_argument, **{fn: fn, arg: arg})`
+    This function is the inverse (with respect to phi) to the function
+    `g(fn, arg, val) = partial(g, {arg: val})` in the sense that
+    `phi(fn) = phi(f(g(fn, arg, val), arg))`
+
+    Together, these components form an algebraic system for reasoning about function
+    arguments. Each operation (phi, psi, f, g) transforms a function into a new
+    function in a way that changes the set of arguments that have been applied, and we
+    have precise rules for understanding those transformations.
 
     Args:
-        fun: A partial or a function to unroll.
+        fun: A function composed of raw functions `f` or partial functions as
+            constructed in the description.
 
     Returns:
         A set of arguments that were set by the partial.
