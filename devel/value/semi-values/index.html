@@ -2415,10 +2415,10 @@ w(k) := \frac{B(k+\beta, n-k+1+\alpha)}{B(\alpha, \beta)},
 \]</div>
 <p>where <span class="arithmatex">\(B\)</span> is the <a href="https://en.wikipedia.org/wiki/Beta_function">Beta function</a>,
 and <span class="arithmatex">\(\alpha\)</span> and <span class="arithmatex">\(\beta\)</span> are parameters that control the weighting of the
-subsets. Setting both to 1 recovers Shapley values, and setting <span class="arithmatex">\(\alpha = 1\)</span>, and
-<span class="arithmatex">\(\beta = 16\)</span> is reported in (Kwon and Zou, 2022)<sup id="fnref2:2"><a class="footnote-ref" href="#fn:2">2</a></sup> to be a good choice for
-some applications. See however the <a class="autorefs autorefs-internal" href="#banzhaf-indices">Banzhaf indices</a> section 
-for an alternative choice of weights which is reported to work better.</p>
+subsets. Setting both to 1 recovers Shapley values, and setting <span class="arithmatex">\(\alpha = 1\)</span>,
+and <span class="arithmatex">\(\beta = 16\)</span> is reported in (Kwon and Zou, 2022)<sup id="fnref2:2"><a class="footnote-ref" href="#fn:2">2</a></sup> to be a good choice for some
+applications. Beta Shapley values are available in pyDVL through
+<a class="autorefs autorefs-internal" href="../../api/pydvl/value/semivalues/#pydvl.value.semivalues.compute_beta_shapley_semivalues">compute_beta_shapley_semivalues</a>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="o">*</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
@@ -2426,6 +2426,8 @@ for an alternative choice of weights which is reported to work better.</p>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="n">AbsoluteStandardError</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">),</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">16</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span>
 </span></code></pre></div>
+<p>See however the <a class="autorefs autorefs-internal" href="#banzhaf-indices">Banzhaf indices</a> section 
+for an alternative choice of weights which is reported to work better.</p>
 <h2 id="banzhaf-indices">Banzhaf indices<a class="headerlink" href="#banzhaf-indices" title="Permanent link">&para;</a></h2>
 <p>As noted in the section <a class="autorefs autorefs-internal" href="../#problems-of-data-values">Problems of Data Values</a>, the
 Shapley value can be very sensitive to variance in the utility function. For
@@ -2440,8 +2442,10 @@ constant:</p>
 any choice of weight function <span class="arithmatex">\(w\)</span>, one can always construct a utility with
 higher variance where <span class="arithmatex">\(w\)</span> is greater. Therefore, in a worst-case sense, the best
 one can do is to pick a constant weight.</p>
-<p>The authors of (Wang and Jia, 2022)<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup> show that Banzhaf indices are more
-robust to variance in the utility function than Shapley and Beta Shapley values.</p>
+<p>The authors of (Wang and Jia, 2022)<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup> show that Banzhaf indices are more robust to
+variance in the utility function than Shapley and Beta Shapley values. They are
+available in pyDVL through
+<a class="autorefs autorefs-internal" href="../../api/pydvl/value/semivalues/#pydvl.value.semivalues.compute_banzhaf_semivalues">compute_banzhaf_semivalues</a>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="o">*</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">utility</span> <span class="o">=</span> <span class="n">Utility</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
@@ -2458,7 +2462,9 @@ combination of the three ingredients that define a semi-value:</p>
 <li>A sampling method</li>
 <li>A weighting scheme <span class="arithmatex">\(w\)</span>.</li>
 </ul>
-<p>The utility function is the same as for Shapley values, and the sampling method
+<p>You can construct any combination of these three ingredients with
+<a class="autorefs autorefs-internal" href="../../api/pydvl/value/semivalues/#pydvl.value.semivalues.compute_generic_semivalues">compute_generic_semivalues</a>.
+The utility function is the same as for Shapley values, and the sampling method
 can be any of the types defined in <a class="autorefs autorefs-internal" href="../../api/pydvl/value/sampler/#pydvl.value.sampler">the samplers module</a>.
 For instance, the following snippet is equivalent to the above:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">pydvl.value</span> <span class="kn">import</span> <span class="o">*</span>
@@ -2611,7 +2617,7 @@ whenever not computing other semi-values.</p>
       
       
     
-    <a href="https://github.com/appliedAI-Initiative/pyDVL" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+    <a href="https://github.com/aai-institute/pyDVL" target="_blank" rel="noopener" title="github.com" class="md-social__link">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
     </a>
   

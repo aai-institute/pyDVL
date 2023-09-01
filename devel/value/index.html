@@ -2528,10 +2528,22 @@ inconsistent. Values have a strong dependency on the training procedure and the
 performance metric used. For instance, accuracy is a poor metric for imbalanced
 sets and this has a stark effect on data values. Some models exhibit great
 variance in some regimes and this again has a detrimental effect on values.</p>
-<p>Nevertheless, some of the most promising applications are: Cleaning of corrupted
-data, pruning unnecessary or irrelevant data, repairing mislabeled data, guiding
-data acquisition and annotation (active learning), anomaly detection and model
-debugging and interpretation.</p>
+<p>Nevertheless, some of the most promising applications are:</p>
+<ul>
+<li>Cleaning of corrupted data.</li>
+<li>Pruning unnecessary or irrelevant data.</li>
+<li>Repairing mislabeled data.</li>
+<li>Guiding data acquisition and annotation (active learning).</li>
+<li>Anomaly detection and model debugging and interpretation.</li>
+</ul>
+<p>Additionally, one of the motivating applications for the whole field is that of
+data markets: a marketplace where data owners can sell their data to interested
+parties. In this setting, data valuation can be key component to determine the
+price of data. Algorithm-agnostic methods like LAVA (Just et al., 2023)<sup id="fnref:9"><a class="footnote-ref" href="#fn:9">9</a></sup> are
+particularly well suited for this, as they use the Wasserstein distance between
+a vendor's data and the buyer's to determine the value of the former. </p>
+<p>However, this is a complex problem which can face practical banal problems like
+the fact that data owners may not wish to disclose their data for valuation.</p>
 <h2 id="computing-data-values">Computing data values<a class="headerlink" href="#computing-data-values" title="Permanent link">&para;</a></h2>
 <p>Using pyDVL to compute data values is a simple process that can be broken down
 into three steps:</p>
@@ -2686,18 +2698,21 @@ indexed with integers, slices and Iterables, as well as converted to a
 project. In particular, regression can be especially tricky, but the particular
 nature of every (non-trivial) <abbr title="Machine Learning">ML</abbr> problem can have an effect:</p>
 <ul>
-<li><strong>Unbounded utility</strong>: Choosing a scorer for a classifier is simple: accuracy
+<li>
+<p><strong>Unbounded utility</strong>: Choosing a scorer for a classifier is simple: accuracy
   or some F-score provides a bounded number with a clear interpretation. However,
   in regression problems most scores, like <span class="arithmatex">\(R^2\)</span>, are not bounded because
   regressors can be arbitrarily bad. This leads to great variability in the
   utility for low sample sizes, and hence unreliable Monte Carlo approximations
   to the values. Nevertheless, in practice it is only the ranking of samples
   that matters, and this tends to be accurate (wrt. to the true ranking) despite
-  inaccurate values.</li>
-</ul>
-<p>pyDVL offers a dedicated <a class="autorefs autorefs-internal" href="../api/pydvl/utils/score/#pydvl.utils.score.compose_score">function composition</a>
-  for scorer functions which can be used to squash a score.
-  The following is defined in module <a class="autorefs autorefs-internal" href="../api/pydvl/utils/score/#pydvl.utils.score">score</a>:</p>
+  inaccurate values.</p>
+<details class="tip">
+<summary>Squashing scores</summary>
+<p>pyDVL offers a dedicated <span data-autorefs-identifier="pydvl.utils.score.compose_score">function
+composition</span> for scorer functions which
+can be used to squash a score. The following is defined in module
+<a class="autorefs autorefs-internal" href="../api/pydvl/utils/score/#pydvl.utils.score">score</a>:
 <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kn">from</span> <span class="nn">pydvl.utils</span> <span class="kn">import</span> <span class="n">compose_score</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
@@ -2710,33 +2725,35 @@ nature of every (non-trivial) <abbr title="Machine Learning">ML</abbr> problem c
 </span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>  <span class="s2">&quot;explained_variance&quot;</span><span class="p">,</span> <span class="n">sigmoid</span><span class="p">,</span> <span class="s2">&quot;squashed explained variance&quot;</span>
 </span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="p">)</span>
 </span></code></pre></div>
-<p>These squashed scores can prove useful in regression problems, but they can
-  also introduce issues in the low-value regime.</p>
-<ul>
-<li><strong>High variance utility</strong>: Classical applications of game theoretic value
+These squashed scores can prove useful in regression problems, but they
+can also introduce issues in the low-value regime.</p>
+</details>
+</li>
+<li>
+<p><strong>High variance utility</strong>: Classical applications of game theoretic value
   concepts operate with deterministic utilities, but in <abbr title="Machine Learning">ML</abbr> we use an evaluation
   of the model on a validation set as a proxy for the true risk. Even if the
   utility <em>is</em> bounded, if it has high variance then values will also have high
   variance, as will their Monte Carlo estimates. One workaround in pyDVL is to
   configure the caching system to allow multiple evaluations of the utility for
   every index set. A moving average is computed and returned once the standard
-  error is small, see <a class="autorefs autorefs-internal" href="../api/pydvl/utils/config/#pydvl.utils.config.MemcachedConfig">MemcachedConfig</a>.</li>
-</ul>
-<p>(Wang and Jia, 2022)<sup id="fnref2:5"><a class="footnote-ref" href="#fn:5">5</a></sup> prove that by relaxing one of the Shapley axioms
+  error is small, see <a class="autorefs autorefs-internal" href="../api/pydvl/utils/config/#pydvl.utils.config.MemcachedConfig">MemcachedConfig</a>.
+  (Wang and Jia, 2022)<sup id="fnref2:5"><a class="footnote-ref" href="#fn:5">5</a></sup> prove that by relaxing one of the Shapley axioms
   and considering the general class of semi-values, of which Shapley is an
   instance, one can prove that a choice of constant weights is the best one can
-  do in a utility-agnostic setting. So-called <em>Data Banzhaf</em>.</p>
-<ul>
+  do in a utility-agnostic setting. This method, dubbed <em>Data Banzhaf</em>, is
+  available in pyDVL as
+  <a class="autorefs autorefs-internal" href="../api/pydvl/value/semivalues/#pydvl.value.semivalues.compute_banzhaf_semivalues">compute_banzhaf_semivalues</a>.</p>
+</li>
 <li>
 <p><strong>Data set size</strong>: Computing exact Shapley values is NP-hard, and Monte Carlo
   approximations can converge slowly. Massive datasets are thus impractical, at
-  least with current techniques. A workaround is to group samples and investigate
-  their value together. In pyDVL you can do this using
-  <a class="autorefs autorefs-internal" href="../api/pydvl/utils/dataset/#pydvl.utils.dataset.GroupedDataset">GroupedDataset</a>. 
-  There is a fully worked-out <a href="../examples/shapley_basic_spotify">example here</a>.
-  Some algorithms also provide different sampling strategies to reduce 
-  the variance, but due to a no-free-lunch-type theorem,
-  no single strategy can be optimal for all utilities.</p>
+  least with <a class="autorefs autorefs-internal" href="#game-theoretical-methods">game-theoretical methods</a>. A workaround
+  is to group samples and investigate their value together. You can do this using
+  <a class="autorefs autorefs-internal" href="../api/pydvl/utils/dataset/#pydvl.utils.dataset.GroupedDataset">GroupedDataset</a>. There is a fully
+  worked-out <a href="../examples/shapley_basic_spotify">example here</a>. Some algorithms
+  also provide different sampling strategies to reduce the variance, but due to a
+  no-free-lunch-type theorem, no single strategy can be optimal for all utilities.</p>
 </li>
 <li>
 <p><strong>Model size</strong>: Since every evaluation of the utility entails retraining the
@@ -2744,7 +2761,7 @@ nature of every (non-trivial) <abbr title="Machine Learning">ML</abbr> problem c
   computation. But also, they will effortlessly interpolate small to medium
   datasets, leading to great variance in the evaluation of performance on the
   dedicated validation set. One mitigation for this problem is cross-validation,
-  but this would incur massive computational cost. As of v.0.3.0 there are no
+  but this would incur massive computational cost. As of v.0.7.0 there are no
   facilities in pyDVL for cross-validating the utility (note that this would
   require cross-validating the whole value computation).</p>
 </li>
@@ -2775,6 +2792,9 @@ nature of every (non-trivial) <abbr title="Machine Learning">ML</abbr> problem c
 </li>
 <li id="fn:8">
 <p>Wu, Z., Shu, Y., Low, B.K.H., 2022. <a href="https://proceedings.mlr.press/v162/wu22j.html">DAVINZ: Data Valuation using Deep Neural Networks at Initialization</a>, in: Proceedings of the 39th International Conference on Machine Learning. Presented at the International Conference on Machine Learning, PMLR, pp. 24150–24176.&#160;<a class="footnote-backref" href="#fnref:8" title="Jump back to footnote 8 in the text">&#8617;</a></p>
+</li>
+<li id="fn:9">
+<p>Just, H.A., Kang, F., Wang, T., Zeng, Y., Ko, M., Jin, M., Jia, R., 2023. <a href="https://openreview.net/forum?id=JJuP86nBl4q">LAVA: Data Valuation without Pre-Specified Learning Algorithms</a>. Presented at the The Eleventh International Conference on Learning Representations (ICLR 2023).&#160;<a class="footnote-backref" href="#fnref:9" title="Jump back to footnote 9 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
@@ -2884,7 +2904,7 @@ nature of every (non-trivial) <abbr title="Machine Learning">ML</abbr> problem c
       
       
     
-    <a href="https://github.com/appliedAI-Initiative/pyDVL" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+    <a href="https://github.com/aai-institute/pyDVL" target="_blank" rel="noopener" title="github.com" class="md-social__link">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
     </a>
   
