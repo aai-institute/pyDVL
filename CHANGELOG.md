@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added more abbreviations to documentation
+  [PR #415](https://github.com/aai-institute/pyDVL/pull/415)
+
 ## 0.7.0 - 📚 Documentation overhaul, new methods and bug fixes 💥
 
 This is our first β release! We have worked hard to deliver improvements across
