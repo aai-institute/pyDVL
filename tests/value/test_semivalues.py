@@ -1,10 +1,13 @@
 import math
-from typing import Dict, Type
+from typing import Type
 
 import numpy as np
 import pytest
+from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import ParallelConfig, Utility
+from pydvl.utils import Dataset, ParallelConfig, Utility
+from pydvl.utils.types import Seed, call_fn_multiple_seeds
+from pydvl.value import ValuationResult
 from pydvl.value.sampler import (
     AntitheticSampler,
     DeterministicPermutationSampler,
@@ -20,7 +23,7 @@ from pydvl.value.semivalues import (
     compute_generic_semivalues,
     shapley_coefficient,
 )
-from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates
+from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates, StoppingCriterion
 
 from . import check_values
 
@@ -56,6 +59,84 @@ def test_shapley(
         config=parallel_config,
     )
     check_values(values, exact_values, rtol=0.2)
+
+
+def semivalues_seed_wrapper(
+    sampler_t: Type[PowersetSampler], u: Utility, *args, seed: Seed, **kwargs
+) -> ValuationResult:
+    """
+    Wrapper for semivalues that takes a seed as an argument to be used with
+    call_fn_multiple_seeds.
+    """
+    sampler = sampler_t(u.data.indices, seed=seed)
+    return semivalues(sampler, u, *args, **kwargs)
+
+
+@pytest.mark.parametrize("num_samples", [5])
+@pytest.mark.parametrize(
+    "sampler_t",
+    [
+        UniformSampler,
+        PermutationSampler,
+        AntitheticSampler,
+    ],
+)
+@pytest.mark.parametrize("coefficient", [shapley_coefficient, beta_coefficient(1, 1)])
+@pytest.mark.parametrize("num_points, num_features", [(12, 3)])
+def test_semivalues_shapley_reproducible(
+    num_samples: int,
+    housing_dataset: Dataset,
+    sampler_t: Type[PowersetSampler],
+    coefficient: SVCoefficient,
+    n_jobs: int,
+    parallel_config: ParallelConfig,
+    seed: Seed,
+):
+    values_1, values_2 = call_fn_multiple_seeds(
+        semivalues_seed_wrapper,
+        sampler_t,
+        Utility(LinearRegression(), data=housing_dataset, scorer="r2"),
+        coefficient,
+        AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2 ** (num_samples * 2)),
+        n_jobs=n_jobs,
+        config=parallel_config,
+        seeds=(seed, seed),
+    )
+    assert np.all(values_1.values == values_2.values)
+
+
+@pytest.mark.parametrize("num_samples", [5])
+@pytest.mark.parametrize(
+    "sampler_t",
+    [
+        UniformSampler,
+        PermutationSampler,
+        AntitheticSampler,
+    ],
+)
+@pytest.mark.parametrize("coefficient", [shapley_coefficient, beta_coefficient(1, 1)])
+@pytest.mark.parametrize("num_points, num_features", [(12, 3)])
+def test_semivalues_shapley_stochastic(
+    num_samples: int,
+    housing_dataset: Dataset,
+    sampler_t: Type[PowersetSampler],
+    coefficient: SVCoefficient,
+    n_jobs: int,
+    parallel_config: ParallelConfig,
+    seed: Seed,
+    seed_alt: Seed,
+):
+    values_1, values_2 = call_fn_multiple_seeds(
+        semivalues_seed_wrapper,
+        sampler_t,
+        Utility(LinearRegression(), data=housing_dataset, scorer="r2"),
+        coefficient,
+        AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2 ** (num_samples * 2)),
+        n_jobs=n_jobs,
+        config=parallel_config,
+        seeds=(seed, seed_alt),
+    )
+    assert np.any(values_1.values != values_2.values)
 
 
 @pytest.mark.parametrize("num_samples", [5])
