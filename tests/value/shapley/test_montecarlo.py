@@ -15,7 +15,7 @@ from pydvl.utils import (
 )
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.score import Scorer, squashed_r2
-from pydvl.utils.types import Seed, call_fn_multiple_seeds
+from pydvl.utils.types import Seed
 from pydvl.value import compute_shapley_values
 from pydvl.value.shapley import ShapleyMode
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
@@ -23,6 +23,7 @@ from pydvl.value.stopping import MaxChecks, MaxUpdates
 
 from .. import check_rank_correlation, check_total_value, check_values
 from ..conftest import polynomial_dataset
+from ..utils import call_fn_multiple_seeds
 
 log = logging.getLogger(__name__)
 

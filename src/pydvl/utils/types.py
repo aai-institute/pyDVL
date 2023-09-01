@@ -5,13 +5,12 @@ from __future__ import annotations
 
 import functools
 from abc import ABCMeta
-from copy import deepcopy
-from typing import Any, Callable, Optional, Protocol, Tuple, TypeVar, Union, cast
+from typing import Any, Callable, Optional, Protocol, TypeVar, Union, cast
 
 from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
 
-from pydvl.utils.functional import unroll_partial_fn_args
+from pydvl.utils.functional import get_free_args_fn
 
 __all__ = ["SupervisedModel", "MapFunction", "ReduceFunction", "NoPublicConstructor"]
 
@@ -46,13 +45,14 @@ class SupervisedModel(Protocol):
         pass
 
 
-def call_fun_remove_arg(*args, fun: Callable, arg: str, **kwargs):
+def call_fun_remove_arg(*args, fn: Callable, arg: str, **kwargs):
     """
-    Calls the given function with the given arguments, but removes the given argument.
+    Calls the given function with the given arguments. In the process it removes the
+    specified keyword argument from the keyword arguments.
 
     Args:
         args: Positional arguments to pass to the function.
-        fun: The function to call.
+        fn: The function to call.
         arg: The name of the argument to remove.
         kwargs: Keyword arguments to pass to the function.
 
@@ -64,7 +64,7 @@ def call_fun_remove_arg(*args, fun: Callable, arg: str, **kwargs):
     except KeyError:
         pass
 
-    return fun(*args, **kwargs)
+    return fn(*args, **kwargs)
 
 
 def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
@@ -83,10 +83,10 @@ def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
     Returns:
         A new function accepting one more keyword argument.
     """
-    if new_arg in unroll_partial_fn_args(fun):
+    if new_arg in get_free_args_fn(fun):
         return fun
 
-    return functools.partial(call_fun_remove_arg, fun=fun, arg=new_arg)
+    return functools.partial(call_fun_remove_arg, fn=fun, arg=new_arg)
 
 
 class NoPublicConstructor(ABCMeta):
@@ -137,22 +137,3 @@ def ensure_seed_sequence(
         return cast(SeedSequence, seed.bit_generator.seed_seq)  # type: ignore
     else:
         return SeedSequence(seed)
-
-
-def call_fn_multiple_seeds(
-    fn: Callable, *args, seeds: Tuple[Seed, ...], **kwargs
-) -> Tuple:
-    """
-    Execute a function multiple times with different seeds. It copies the arguments
-    and keyword arguments before passing them to the function.
-
-    Args:
-        fn: The function to execute.
-        args: The arguments to pass to the function.
-        seeds: The seeds to use.
-        kwargs: The keyword arguments to pass to the function.
-
-    Returns:
-        A tuple of the results of the function.
-    """
-    return tuple(fn(*deepcopy(args), **deepcopy(kwargs), seed=seed) for seed in seeds)

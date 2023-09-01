@@ -695,8 +695,7 @@ class ValuationResult(
                 ("efficiency" property of Shapley values).
             kwargs: Additional options to pass to the constructor of
                 [ValuationResult][pydvl.value.result.ValuationResult]. Use to override status, names, etc.
-            seed: ither an instance of a numpy random number generator or a seed for
-            it.
+
         Returns:
             A valuation result with its status set to
             [Status.Converged][pydvl.utils.status.Status] by default.

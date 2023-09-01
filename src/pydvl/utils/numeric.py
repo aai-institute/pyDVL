@@ -122,8 +122,6 @@ def random_powerset(
         ValueError: if the element sampling probability is not in [0,1]
 
     """
-    if not isinstance(s, np.ndarray):
-        raise TypeError("Set must be an NDArray")
     if q < 0 or q > 1:
         raise ValueError("Element sampling probability must be in [0,1]")
 

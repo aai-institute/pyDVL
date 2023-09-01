@@ -90,7 +90,7 @@ def compute_shapley_values(
             others require specific subtypes.
         n_jobs: Number of parallel jobs (available only to some methods)
         seed: Either an instance of a numpy random number generator or a seed
-        for it.
+            for it.
         mode: Choose which shapley algorithm to use. See
             [ShapleyMode][pydvl.value.shapley.ShapleyMode] for a list of allowed value.
 
