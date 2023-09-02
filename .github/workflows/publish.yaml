@@ -72,8 +72,8 @@ jobs:
         uses: ./.github/actions/deploy-docs
         with:
           version: ${{ env.CURRENT_VERSION }}
-          alias: latest
-          title: Latest
+          alias: stable
+          title: ${{ env.CURRENT_VERSION }}
           email: ${{ env.GITHUB_BOT_EMAIL }}
           username: ${{ env.GITHUB_BOT_USERNAME }}
           set-default: 'true'
