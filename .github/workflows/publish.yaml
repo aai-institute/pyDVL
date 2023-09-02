@@ -48,7 +48,7 @@ jobs:
           echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
         shell: bash
       - name: Fail if tag is not on 'master' branch
-        if: ${{ steps.get_branch_name_tag.outputs.branch_name != 'master' && steps.get_branch_name_input.outputs.branch_name != 'master' }}
+        if: ${{ steps.get_branch_name_tag.outputs.branch_name != 'master' || steps.get_branch_name_input.outputs.branch_name != 'master' }}
         run: |
           echo "Tag is on branch ${{ steps.get_branch_name.outputs.branch_name }}"
           echo "Should be on Master branch instead"
