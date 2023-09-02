@@ -271,7 +271,7 @@ def test_future_cancellation(parallel_config):
 # :func:`test_map_reduce_stochastic`.
 def _sum_of_random_integers(x: None, seed: Optional[Seed] = None):
     rng = np.random.default_rng(seed)
-    values = rng.integers(0, rng.integers(100), 10)
+    values = rng.integers(0, rng.integers(10, 100), 10)
     return np.sum(values)
 
 
