@@ -1,95 +1,154 @@
 # Changelog
 
-## 0.6.1 - 🏗 Bug fixes and small improvement
+## 0.7.0 - 📚🆕 Documentation and IF overhaul, new methods and bug fixes 💥🐞
+
+This is our first β release! We have worked hard to deliver improvements across
+the board, with a focus on documentation and usability. We have also reworked
+the internals of the `influence` module, improved parallelism and handling of
+randomness.
+
+### Added
+
+- Implemented solving the Hessian equation via spectral low-rank approximation
+  [PR #365](https://github.com/aai-institute/pyDVL/pull/365)
+- Enabled parallel computation for Leave-One-Out values
+  [PR #406](https://github.com/aai-institute/pyDVL/pull/406)
+- Added more abbreviations to documentation
+  [PR #415](https://github.com/aai-institute/pyDVL/pull/415)
+- Added seed to functions from `pydvl.utils.numeric`, `pydvl.value.shapley` and
+  `pydvl.value.semivalues`. Introduced new type `Seed` and conversion function 
+  `ensure_seed_sequence`.
+  [PR #396](https://github.com/aai-institute/pyDVL/pull/396)
+
+### Changed
+
+- Replaced sphinx with mkdocs for documentation. Major overhaul of documentation
+  [PR #352](https://github.com/aai-institute/pyDVL/pull/352)
+- Made ray an optional dependency, relying on joblib as default parallel backend
+  [PR #408](https://github.com/aai-institute/pyDVL/pull/408)
+- Decoupled `ray.init` from `ParallelConfig` 
+  [PR #373](https://github.com/aai-institute/pyDVL/pull/383)
+- **Breaking Changes**
+  - Signature change: return information about Hessian inversion from
+    `compute_influence_factors`
+    [PR #375](https://github.com/aai-institute/pyDVL/pull/376)
+  - Major changes to IF interface and functionality. Foundation for a framework
+    abstraction for IF computation.
+    [PR #278](https://github.com/aai-institute/pyDVL/pull/278)
+    [PR #394](https://github.com/aai-institute/pyDVL/pull/394)
+  - Renamed `semivalues` to `compute_generic_semivalues`
+    [PR #413](https://github.com/aai-institute/pyDVL/pull/413)
+  - New `joblib` backend as default instead of ray. Simplify MapReduceJob.
+    [PR #355](https://github.com/aai-institute/pyDVL/pull/355)
+  - Bump torch dependency for influence package to 2.0
+    [PR #365](https://github.com/aai-institute/pyDVL/pull/365)
+
+### Fixed
+
+- Fixes to parallel computation of generic semi-values: properly handle all
+  samplers and stopping criteria, irrespective of parallel backend.
+  [PR #372](https://github.com/aai-institute/pyDVL/pull/372)
+- Optimises memory usage in IF calculation
+  [PR #375](https://github.com/aai-institute/pyDVL/pull/376)
+- Fix adding valuation results with overlapping indices and different lengths
+  [PR #370](https://github.com/aai-institute/pyDVL/pull/370)
+- Fixed bugs in conjugate gradient and `linear_solve`
+  [PR #358](https://github.com/aai-institute/pyDVL/pull/358)
+- Fix installation of dev requirements for Python3.10
+  [PR #382](https://github.com/aai-institute/pyDVL/pull/382)
+- Improvements to IF documentation
+  [PR #371](https://github.com/aai-institute/pyDVL/pull/371)
+
+## 0.6.1 - 🏗 Bug fixes and small improvements
 
 - Fix parsing keyword arguments of `compute_semivalues` dispatch function
-  [PR #333](https://github.com/appliedAI-Initiative/pyDVL/pull/333)
+  [PR #333](https://github.com/aai-institute/pyDVL/pull/333)
 - Create new `RayExecutor` class based on the concurrent.futures API,
   use the new class to fix an issue with Truncated Monte Carlo Shapley
   (TMCS) starting too many processes and dying, plus other small changes
-  [PR #329](https://github.com/appliedAI-Initiative/pyDVL/pull/329)
+  [PR #329](https://github.com/aai-institute/pyDVL/pull/329)
 - Fix creation of GroupedDataset objects using the `from_arrays`
   and `from_sklearn` class methods 
-  [PR #324](https://github.com/appliedAI-Initiative/pyDVL/pull/334)
+  [PR #324](https://github.com/aai-institute/pyDVL/pull/334)
 - Fix release job not triggering on CI when a new tag is pushed
-  [PR #331](https://github.com/appliedAI-Initiative/pyDVL/pull/331)
+  [PR #331](https://github.com/aai-institute/pyDVL/pull/331)
 - Added alias `ApproShapley` from Castro et al. 2009 for permutation Shapley
-  [PR #332](https://github.com/appliedAI-Initiative/pyDVL/pull/332)
+  [PR #332](https://github.com/aai-institute/pyDVL/pull/332)
 
 ## 0.6.0 - 🆕 New algorithms, cleanup and bug fixes 🏗
 
 - Fixes in `ValuationResult`: bugs around data names, semantics of
   `empty()`, new method `zeros()` and normalised random values
-  [PR #327](https://github.com/appliedAI-Initiative/pyDVL/pull/327)
+  [PR #327](https://github.com/aai-institute/pyDVL/pull/327)
 - **New method**: Implements generalised semi-values for data valuation,
   including Data Banzhaf and Beta Shapley, with configurable sampling strategies
-  [PR #319](https://github.com/appliedAI-Initiative/pyDVL/pull/319)
+  [PR #319](https://github.com/aai-institute/pyDVL/pull/319)
 - Adds kwargs parameter to `from_array` and `from_sklearn` Dataset and
   GroupedDataset class methods
-  [PR #316](https://github.com/appliedAI-Initiative/pyDVL/pull/316)
+  [PR #316](https://github.com/aai-institute/pyDVL/pull/316)
 - PEP-561 conformance: added `py.typed`
-  [PR #307](https://github.com/appliedAI-Initiative/pyDVL/pull/307)
+  [PR #307](https://github.com/aai-institute/pyDVL/pull/307)
 - Removed default non-negativity constraint on least core subsidy
   and added instead a `non_negative_subsidy` boolean flag.
   Renamed `options` to `solver_options` and pass it as dict.
   Change default least-core solver to SCS with 10000 max_iters.
-  [PR #304](https://github.com/appliedAI-Initiative/pyDVL/pull/304)
+  [PR #304](https://github.com/aai-institute/pyDVL/pull/304)
 - Cleanup: removed unnecessary decorator `@unpackable`
-  [PR #233](https://github.com/appliedAI-Initiative/pyDVL/pull/233)
+  [PR #233](https://github.com/aai-institute/pyDVL/pull/233)
 - Stopping criteria: fixed problem with `StandardError` and enable proper
   composition of index convergence statuses. Fixed a bug with `n_jobs` in
   `truncated_montecarlo_shapley`.
-  [PR #300](https://github.com/appliedAI-Initiative/pyDVL/pull/300) and
-  [PR #305](https://github.com/appliedAI-Initiative/pyDVL/pull/305)
+  [PR #300](https://github.com/aai-institute/pyDVL/pull/300) and
+  [PR #305](https://github.com/aai-institute/pyDVL/pull/305)
 - Shuffling code around to allow for simpler user imports, some cleanup and
   documentation fixes.
-  [PR #284](https://github.com/appliedAI-Initiative/pyDVL/pull/284)
+  [PR #284](https://github.com/aai-institute/pyDVL/pull/284)
 - **Bug fix**: Warn instead of raising an error when `n_iterations`
   is less than the size of the dataset in Monte Carlo Least Core
-  [PR #281](https://github.com/appliedAI-Initiative/pyDVL/pull/281)
+  [PR #281](https://github.com/aai-institute/pyDVL/pull/281)
 
 ## 0.5.0 - 💥 Fixes, nicer interfaces and... more breaking changes 😒
 
 - Fixed parallel and antithetic Owen sampling for Shapley values. Simplified
   and extended tests.
-  [PR #267](https://github.com/appliedAI-Initiative/pyDVL/pull/267)
+  [PR #267](https://github.com/aai-institute/pyDVL/pull/267)
 - Added `Scorer` class for a cleaner interface. Fixed minor bugs around
   Group-Testing Shapley, added more tests and switched to cvxpy for the solver.
-  [PR #264](https://github.com/appliedAI-Initiative/pyDVL/pull/264)
+  [PR #264](https://github.com/aai-institute/pyDVL/pull/264)
 - Generalised stopping criteria for valuation algorithms. Improved classes
   `ValuationResult` and `Status` with more operations. Some minor issues fixed.
-  [PR #252](https://github.com/appliedAI-Initiative/pyDVL/pull/250)
+  [PR #252](https://github.com/aai-institute/pyDVL/pull/250)
 - Fixed a bug whereby `compute_shapley_values` would only spawn one process when
   using `n_jobs=-1` and Monte Carlo methods.
-  [PR #270](https://github.com/appliedAI-Initiative/pyDVL/pull/270)
+  [PR #270](https://github.com/aai-institute/pyDVL/pull/270)
 - Bugfix in `RayParallelBackend`: wrong semantics for `kwargs`.
-  [PR #268](https://github.com/appliedAI-Initiative/pyDVL/pull/268)
+  [PR #268](https://github.com/aai-institute/pyDVL/pull/268)
 - Splitting of problem preparation and solution in Least-Core computation.
   Umbrella function for LC methods.
-  [PR #257](https://github.com/appliedAI-Initiative/pyDVL/pull/257) 
+  [PR #257](https://github.com/aai-institute/pyDVL/pull/257) 
 - Operations on `ValuationResult` and `Status` and some cleanup
-  [PR #248](https://github.com/appliedAI-Initiative/pyDVL/pull/248)
+  [PR #248](https://github.com/aai-institute/pyDVL/pull/248)
 - **Bug fix and minor improvements**: Fixes bug in TMCS with remote Ray cluster,
   raises an error for dummy sequential parallel backend with TMCS, clones model
   inside `Utility` before fitting by default, with flag `clone_before_fit` 
   to disable it, catches all warnings in `Utility` when `show_warnings` is 
   `False`. Adds Miner and Gloves toy games utilities
-  [PR #247](https://github.com/appliedAI-Initiative/pyDVL/pull/247)
+  [PR #247](https://github.com/aai-institute/pyDVL/pull/247)
 
 ## 0.4.0 - 🏭💥 New algorithms and more breaking changes
 
 - GH action to mark issues as stale
-  [PR #201](https://github.com/appliedAI-Initiative/pyDVL/pull/201)
+  [PR #201](https://github.com/aai-institute/pyDVL/pull/201)
 - Disabled caching of Utility values as well as repeated evaluations by default
-  [PR #211](https://github.com/appliedAI-Initiative/pyDVL/pull/211)
+  [PR #211](https://github.com/aai-institute/pyDVL/pull/211)
 - Test and officially support Python version 3.9 and 3.10 
-  [PR #208](https://github.com/appliedAI-Initiative/pyDVL/pull/208)
+  [PR #208](https://github.com/aai-institute/pyDVL/pull/208)
 - **Breaking change:** Introduces a class ValuationResult to gather and inspect
   results from all valuation algorithms
-  [PR #214](https://github.com/appliedAI-Initiative/pyDVL/pull/214)
+  [PR #214](https://github.com/aai-institute/pyDVL/pull/214)
 - Fixes bug in Influence calculation with multidimensional input and adds new
   example notebook
-  [PR #195](https://github.com/appliedAI-Initiative/pyDVL/pull/195)
+  [PR #195](https://github.com/aai-institute/pyDVL/pull/195)
 - **Breaking change**: Passes the input to `MapReduceJob` at initialization,
   removes `chunkify_inputs` argument from `MapReduceJob`, removes `n_runs`
   argument from `MapReduceJob`, calls the parallel backend's `put()` method for
@@ -97,38 +156,38 @@
   attribute to `n_local_workers`, fixes a bug in `MapReduceJob`'s chunkification
   when `n_runs` >= `n_jobs`, and defines a sequential parallel backend to run
   all jobs in the current thread
-  [PR #232](https://github.com/appliedAI-Initiative/pyDVL/pull/232)
+  [PR #232](https://github.com/aai-institute/pyDVL/pull/232)
 - **New method**: Implements exact and monte carlo Least Core for data valuation,
   adds `from_arrays()` class method to the `Dataset` and `GroupedDataset`
   classes, adds `extra_values` argument to `ValuationResult`, adds
   `compute_removal_score()` and `compute_random_removal_score()` helper functions
-  [PR #237](https://github.com/appliedAI-Initiative/pyDVL/pull/237)
+  [PR #237](https://github.com/aai-institute/pyDVL/pull/237)
 - **New method**: Group Testing Shapley for valuation, from _Jia et al. 2019_
-  [PR #240](https://github.com/appliedAI-Initiative/pyDVL/pull/240)
+  [PR #240](https://github.com/aai-institute/pyDVL/pull/240)
 - Fixes bug in ray initialization in `RayParallelBackend` class
-  [PR #239](https://github.com/appliedAI-Initiative/pyDVL/pull/239)
+  [PR #239](https://github.com/aai-institute/pyDVL/pull/239)
 - Implements "Egalitarian Least Core", adds [cvxpy](https://www.cvxpy.org/) as a
   dependency and uses it instead of scipy as optimizer
-  [PR #243](https://github.com/appliedAI-Initiative/pyDVL/pull/243)
+  [PR #243](https://github.com/aai-institute/pyDVL/pull/243)
 
 ## 0.3.0 - 💥 Breaking changes
 
 - Simplified and fixed powerset sampling and testing
-  [PR #181](https://github.com/appliedAI-Initiative/pyDVL/pull/181)
+  [PR #181](https://github.com/aai-institute/pyDVL/pull/181)
 - Simplified and fixed publishing to PyPI from CI
-  [PR #183](https://github.com/appliedAI-Initiative/pyDVL/pull/183)
+  [PR #183](https://github.com/aai-institute/pyDVL/pull/183)
 - Fixed bug in release script and updated contributing docs.
-  [PR #184](https://github.com/appliedAI-Initiative/pyDVL/pull/184)
+  [PR #184](https://github.com/aai-institute/pyDVL/pull/184)
 - Added Pull Request template
-  [PR #185](https://github.com/appliedAI-Initiative/pyDVL/pull/185)
+  [PR #185](https://github.com/aai-institute/pyDVL/pull/185)
 - Modified Pull Request template to automatically link PR to issue
-  [PR ##186](https://github.com/appliedAI-Initiative/pyDVL/pull/186)
+  [PR ##186](https://github.com/aai-institute/pyDVL/pull/186)
 - First implementation of Owen Sampling, squashed scores, better testing
-  [PR #194](https://github.com/appliedAI-Initiative/pyDVL/pull/194)
+  [PR #194](https://github.com/aai-institute/pyDVL/pull/194)
 - Improved documentation on caching, Shapley, caveats of values, bibtex
-  [PR #194](https://github.com/appliedAI-Initiative/pyDVL/pull/194)
+  [PR #194](https://github.com/aai-institute/pyDVL/pull/194)
 - **Breaking change:** Rearranging of modules to accommodate for new methods
-  [PR #194](https://github.com/appliedAI-Initiative/pyDVL/pull/194)
+  [PR #194](https://github.com/aai-institute/pyDVL/pull/194)
 
 
 ## 0.2.0 - 📚 Better docs
@@ -137,7 +196,7 @@ Mostly API documentation and notebooks, plus some bugfixes.
 
 ### Added
 
-In [PR #161](https://github.com/appliedAI-Initiative/pyDVL/pull/161):
+In [PR #161](https://github.com/aai-institute/pyDVL/pull/161):
 - Support for $$ math in sphinx docs.
 - Usage of sphinx extension for external links (introducing new directives like
   `:gh:`, `:issue:` and `:tfl:` to construct standardised links to external
@@ -149,7 +208,7 @@ In [PR #161](https://github.com/appliedAI-Initiative/pyDVL/pull/161):
 
 ### Changed
 
-In [PR #161](https://github.com/appliedAI-Initiative/pyDVL/pull/161):
+In [PR #161](https://github.com/aai-institute/pyDVL/pull/161):
 - Improved main docs and Shapley notebooks. Added or fixed many docstrings,
   readme and documentation for contributors. Typos, grammar and style in code,
   documentation and notebooks.
@@ -158,9 +217,9 @@ In [PR #161](https://github.com/appliedAI-Initiative/pyDVL/pull/161):
 ### Fixed
 
 - Bug in random matrix generation
-  [PR #161](https://github.com/appliedAI-Initiative/pyDVL/pull/161).
+  [PR #161](https://github.com/aai-institute/pyDVL/pull/161).
 - Bugs in MapReduceJob's `_chunkify` and `_backpressure` methods
-  [PR #176](https://github.com/appliedAI-Initiative/pyDVL/pull/176).
+  [PR #176](https://github.com/aai-institute/pyDVL/pull/176).
 
 
 ## 0.1.0 - 🎉 first release

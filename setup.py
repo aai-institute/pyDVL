@@ -12,7 +12,7 @@ setup(
     package_data={"pydvl": ["py.typed"]},
     packages=find_packages(where="src"),
     include_package_data=True,
-    version="0.6.1",
+    version="0.7.0",
     description="The Python Data Valuation Library",
     install_requires=[
         line
@@ -21,7 +21,11 @@ setup(
     ],
     setup_requires=["wheel"],
     tests_require=["pytest"],
-    extras_require={"influence": ["torch"]},
+    extras_require={
+        "cupy": ["cupy-cuda11x>=12.1.0"],
+        "influence": ["torch>=2.0.0"],
+        "ray": ["ray>=0.8"],
+    },
     author="appliedAI Institute gGmbH",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -40,8 +44,8 @@ setup(
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
     ],
     project_urls={
-        "Source": "https://github.com/appliedAI-Initiative/pydvl",
-        "Documentation": "https://appliedai-initiative.github.io/pyDVL",
+        "Source": "https://github.com/aai-institute/pydvl",
+        "Documentation": "https://aai-institute.github.io/pyDVL",
         "TransferLab": "https://transferlab.appliedai.de",
     },
     zip_safe=False,  # Needed for mypy to find py.typed

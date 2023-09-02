@@ -1,13 +1,23 @@
 """
 This module contains Shapley computations for K-Nearest Neighbours.
 
-.. todo::
-   Implement approximate KNN computation for sublinear complexity)
+!!! Todo
+    Implement approximate KNN computation for sublinear complexity
+
+
+## References
+
+[^1]: <a name="jia_efficient_2019a"></a>Jia, R. et al., 2019. [Efficient
+    Task-Specific Data Valuation for Nearest Neighbor
+    Algorithms](https://doi.org/10.14778/3342263.3342637). In: Proceedings of
+    the VLDB Endowment, Vol. 12, No. 11, pp. 1610–1623.
+
 """
 
 from typing import Dict, Union
 
 import numpy as np
+from numpy.typing import NDArray
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
 from pydvl.utils import Utility, maybe_progress
@@ -20,20 +30,25 @@ __all__ = ["knn_shapley"]
 def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     """Computes exact Shapley values for a KNN classifier.
 
-    This implements the method described in :footcite:t:`jia_efficient_2019a`.
+    This implements the method described in (Jia, R. et al., 2019)<sup><a href="#jia_efficient_2019a">1</a></sup>.
     It exploits the local structure of K-Nearest Neighbours to reduce the number
     of calls to the utility function to a constant number per index, thus
     reducing computation time to $O(n)$.
 
-    :param u: Utility with a KNN model to extract parameters from. The object
-        will not be modified nor used other than to call `get_params()
-        <https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params>`_
-    :param progress: Whether to display a progress bar.
-    :return: Object with the data values.
-    :raises TypeError: If the model in the utility is not a `KNeighborsClassifier
-        <https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html>`_
+    Args:
+        u: Utility with a KNN model to extract parameters from. The object
+            will not be modified nor used other than to call [get_params()](
+            <https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html#sklearn.base.BaseEstimator.get_params>)
+        progress: Whether to display a progress bar.
 
-    .. versionadded:: 0.1.0
+    Returns:
+        Object with the data values.
+
+    Raises:
+        TypeError: If the model in the utility is not a
+            [sklearn.neighbors.KNeighborsClassifier][].
+
+    !!! tip "New in version 0.1.0"
 
     """
     if not isinstance(u.model, KNeighborsClassifier):
@@ -57,7 +72,7 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     # closest to farthest
     _, indices = nns.kneighbors(u.data.x_test)
 
-    values = np.zeros_like(u.data.indices, dtype=np.float_)
+    values: NDArray[np.float_] = np.zeros_like(u.data.indices, dtype=np.float_)
     n = len(u.data)
     yt = u.data.y_train
     iterator = enumerate(zip(u.data.y_test, indices), start=1)

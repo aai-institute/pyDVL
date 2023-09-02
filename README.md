@@ -1,5 +1,5 @@
 <p align="center" style="text-align:center;">
-    <img alt="pyDVL Logo" src="https://raw.githubusercontent.com/appliedAI-Initiative/pyDVL/develop/logo.svg" width="200"/>
+    <img alt="pyDVL Logo" src="https://raw.githubusercontent.com/aai-institute/pyDVL/develop/logo.svg" width="200"/>
 </p>
 
 <p align="center" style="text-align:center;">
@@ -7,8 +7,8 @@
 </p>
 
 <p align="center" style="text-align:center;">
-    <a href="https://github.com/appliedAI-Initiative/pyDVL/actions/workflows/tox.yaml">
-        <img src="https://github.com/appliedAI-Initiative/pyDVL/actions/workflows/tox.yaml/badge.svg" alt="Build Status"/>
+    <a href="https://github.com/aai-institute/pyDVL/actions/workflows/tox.yaml">
+        <img src="https://github.com/aai-institute/pyDVL/actions/workflows/tox.yaml/badge.svg" alt="Build Status"/>
     </a>
     <br>
     <a href="https://pypi.org/project/pydvl/">
@@ -22,7 +22,7 @@
 
 <p align="center" style="text-align:center;">
     <strong>
-    <a href="https://appliedAI-Initiative.github.io/pyDVL">Docs</a>
+    <a href="https://aai-institute.github.io/pyDVL">Docs</a>
     </strong>
 </p>
 
@@ -74,6 +74,9 @@ model. We implement methods from the following papers:
   Influence Functions](http://proceedings.mlr.press/v70/koh17a.html). In
   Proceedings of the 34th International Conference on Machine Learning,
   70:1885–94. Sydney, Australia: PMLR, 2017.
+- Naman Agarwal, Brian Bullins, and Elad Hazan, [Second-Order Stochastic Optimization
+  for Machine Learning in Linear Time](https://www.jmlr.org/papers/v18/16-491.html),
+  Journal of Machine Learning Research 18 (2017): 1-40.
 
 # Installation
 
@@ -91,11 +94,59 @@ pip install pyDVL --index-url https://test.pypi.org/simple/
 ```
 
 For more instructions and information refer to [Installing pyDVL
-](https://appliedAI-Initiative.github.io/pyDVL/20-install.html) in the
+](https://aai-institute.github.io/pyDVL/20-install.html) in the
 documentation.
 
 # Usage
 
+### Influence Functions
+
+For influence computation, follow these steps:
+
+1. Wrap your model and loss in a `TorchTwiceDifferential` object
+2. Compute influence factors by providing training data and inversion method
+
+Using the conjugate gradient algorithm, this would look like:
+```python
+import torch
+from torch import nn
+from torch.utils.data import DataLoader, TensorDataset
+
+from pydvl.influence import TorchTwiceDifferentiable, compute_influences, InversionMethod
+
+nn_architecture = nn.Sequential(
+    nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
+    nn.Flatten(),
+    nn.Linear(27, 3),
+)
+loss = nn.MSELoss()
+model = TorchTwiceDifferentiable(nn_architecture, loss)
+
+input_dim = (5, 5, 5)
+output_dim = 3
+
+train_data_loader = DataLoader(
+    TensorDataset(torch.rand((10, *input_dim)), torch.rand((10, output_dim))),
+    batch_size=2,
+)
+test_data_loader = DataLoader(
+    TensorDataset(torch.rand((5, *input_dim)), torch.rand((5, output_dim))),
+    batch_size=1,
+)
+
+influences = compute_influences(
+    model,
+    training_data=train_data_loader,
+    test_data=test_data_loader,
+    progress=True,
+    inversion_method=InversionMethod.Cg,
+    hessian_regularization=1e-1,
+    maxiter=200,
+)
+```
+
+
+### Shapley Values
 The steps required to compute values for your samples are:
 
 1. Create a `Dataset` object with your train and test splits.
@@ -125,9 +176,9 @@ values = compute_shapley_values(
 ```
 
 For more instructions and information refer to [Getting
-Started](https://appliedAI-Initiative.github.io/pyDVL/10-getting-started.html) in
+Started](https://aai-institute.github.io/pyDVL/10-getting-started.html) in
 the documentation. We provide several
-[examples](https://appliedAI-Initiative.github.io/pyDVL/examples/index.html)
+[examples](https://aai-institute.github.io/pyDVL/examples/index.html)
 with details on the algorithms and their applications.
 
 ## Caching
@@ -142,8 +193,8 @@ You can run it either locally or, using
 docker container run --rm -p 11211:11211 --name pydvl-cache -d memcached:latest
 ```
 
-You can read more in the [caching module's
-documentation](https://appliedAI-Initiative.github.io/pyDVL/pydvl/utils/caching.html).
+You can read more in the
+[documentation](https://aai-institute.github.io/pyDVL/getting-started/first-steps/#caching).
 
 # Contributing
 

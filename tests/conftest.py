@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
 
 import numpy as np
 import pytest
-import ray
 from pymemcache.client import Client
 from sklearn import datasets
 from sklearn.utils import Bunch
@@ -21,14 +20,7 @@ if TYPE_CHECKING:
 EXCEPTIONS_TYPE = Optional[Sequence[Type[BaseException]]]
 
 
-@pytest.fixture(scope="session", autouse=True)
-def ray_shutdown():
-    yield
-    ray.shutdown()
-
-
 def is_memcache_responsive(hostname, port):
-
     try:
         client = Client(server=(hostname, port))
         client.flush_all()
@@ -67,12 +59,24 @@ def seed(request):
         return 24
 
 
+@pytest.fixture()
+def seed_alt(request):
+    return 42
+
+
+@pytest.fixture()
+def collision_tol(request):
+    return 0.01
+
+
 @pytest.fixture(autouse=True)
 def pytorch_seed(seed):
     try:
         import torch
 
         torch.manual_seed(seed)
+        # TODO if necessary extract this into a separate fixture
+        torch.use_deterministic_algorithms(True, warn_only=True)
     except ImportError:
         pass
 
@@ -84,6 +88,7 @@ def do_not_start_memcache(request):
 
 @pytest.fixture(scope="session")
 def docker_services(
+    docker_compose_command,
     docker_compose_file,
     docker_compose_project_name,
     docker_setup,
@@ -98,6 +103,7 @@ def docker_services(
         yield
     else:
         with get_docker_services(
+            docker_compose_command,
             docker_compose_file,
             docker_compose_project_name,
             docker_setup,
@@ -129,7 +135,6 @@ def memcached_service(docker_ip, docker_services, do_not_start_memcache):
 
 @pytest.fixture(scope="function")
 def memcache_client_config(memcached_service) -> MemcachedClientConfig:
-
     client_config = MemcachedClientConfig(
         server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
     )
@@ -196,8 +201,8 @@ def num_workers():
     # Run with 2 CPUs inside GitHub actions
     if os.getenv("CI"):
         return 2
-    # And a maximum of 8 CPUs locally (most tests don't really benefit from more)
-    return max(1, min(available_cpus() - 1, 8))
+    # And a maximum of 4 CPUs locally (most tests don't really benefit from more)
+    return max(1, min(available_cpus() - 1, 4))
 
 
 @pytest.fixture

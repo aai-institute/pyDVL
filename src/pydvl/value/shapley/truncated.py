@@ -1,15 +1,21 @@
+"""
+## References
+
+[^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
+    [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).
+    In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
+
+"""
 import abc
 import logging
-from concurrent.futures import FIRST_COMPLETED, wait
+from typing import cast
 
 import numpy as np
 from deprecate import deprecated
 
 from pydvl.utils import ParallelConfig, Utility, running_moments
-from pydvl.utils.parallel.backend import effective_n_jobs, init_parallel_backend
-from pydvl.utils.parallel.futures import init_executor
 from pydvl.value import ValuationResult
-from pydvl.value.stopping import MaxChecks, StoppingCriterion
+from pydvl.value.stopping import StoppingCriterion
 
 __all__ = [
     "TruncationPolicy",
@@ -28,14 +34,17 @@ class TruncationPolicy(abc.ABC):
     """A policy for deciding whether to stop computing marginals in a
     permutation.
 
-    Statistics are kept on the number of calls and truncations as :attr:`n_calls`
-    and :attr:`n_truncations` respectively.
+    Statistics are kept on the number of calls and truncations as `n_calls` and
+    `n_truncations` respectively.
 
-    .. todo::
-       Because the policy objects are copied to the workers, the statistics
-       are not accessible from the
-       :class:`~pydvl.value.shapley.actor.ShapleyCoordinator`. We need to add
-       methods for this.
+    Attributes:
+        n_calls: Number of calls to the policy.
+        n_truncations: Number of truncations made by the policy.
+
+    !!! Todo
+        Because the policy objects are copied to the workers, the statistics
+        are not accessible from the coordinating process. We need to add methods
+        for this.
     """
 
     def __init__(self):
@@ -55,9 +64,12 @@ class TruncationPolicy(abc.ABC):
     def __call__(self, idx: int, score: float) -> bool:
         """Check whether the computation should be interrupted.
 
-        :param idx: Position in the permutation currently being computed.
-        :param score: Last utility computed.
-        :return: ``True`` if the computation should be interrupted.
+        Args:
+            idx: Position in the permutation currently being computed.
+            score: Last utility computed.
+
+        Returns:
+            `True` if the computation should be interrupted.
         """
         ret = self._check(idx, score)
         self.n_calls += 1
@@ -78,9 +90,17 @@ class NoTruncation(TruncationPolicy):
 class FixedTruncation(TruncationPolicy):
     """Break a permutation after computing a fixed number of marginals.
 
-    :param u: Utility object with model, data, and scoring function
-    :param fraction: Fraction of marginals in a permutation to compute before
-        stopping (e.g. 0.5 to compute half of the marginals).
+    The experiments in Appendix B of (Ghorbani and Zou, 2019)<sup><a href="#ghorbani_data_2019">1</a></sup>
+    show that when the training set size is large enough, one can simply truncate the iteration
+    over permutations after a fixed number of steps. This happens because beyond
+    a certain number of samples in a training set, the model becomes insensitive
+    to new ones. Alas, this strongly depends on the data distribution and the
+    model and there is no automatic way of estimating this number.
+
+    Args:
+        u: Utility object with model, data, and scoring function
+        fraction: Fraction of marginals in a permutation to compute before
+            stopping (e.g. 0.5 to compute half of the marginals).
     """
 
     def __init__(self, u: Utility, fraction: float):
@@ -101,11 +121,12 @@ class FixedTruncation(TruncationPolicy):
 class RelativeTruncation(TruncationPolicy):
     """Break a permutation if the marginal utility is too low.
 
-    This is called "performance tolerance" in :footcite:t:`ghorbani_data_2019`.
+    This is called "performance tolerance" in (Ghorbani and Zou, 2019)<sup><a href="#ghorbani_data_2019">1</a></sup>.
 
-    :param u: Utility object with model, data, and scoring function
-    :param rtol: Relative tolerance. The permutation is broken if the
-        last computed utility is less than ``total_utility * rtol``.
+    Args:
+        u: Utility object with model, data, and scoring function
+        rtol: Relative tolerance. The permutation is broken if the
+            last computed utility is less than `total_utility * rtol`.
     """
 
     def __init__(self, u: Utility, rtol: float):
@@ -115,7 +136,8 @@ class RelativeTruncation(TruncationPolicy):
         self.total_utility = u(u.data.indices)
 
     def _check(self, idx: int, score: float) -> bool:
-        return np.allclose(score, self.total_utility, rtol=self.rtol)
+        # Explicit cast for the benefit of mypy 🤷
+        return bool(np.allclose(score, self.total_utility, rtol=self.rtol))
 
     def reset(self):
         pass
@@ -125,10 +147,11 @@ class BootstrapTruncation(TruncationPolicy):
     """Break a permutation if the last computed utility is close to the total
     utility, measured as a multiple of the standard deviation of the utilities.
 
-    :param u: Utility object with model, data, and scoring function
-    :param n_samples: Number of bootstrap samples to use to compute the variance
-        of the utilities.
-    :param sigmas: Number of standard deviations to use as a threshold.
+    Args:
+        u: Utility object with model, data, and scoring function
+        n_samples: Number of bootstrap samples to use to compute the variance
+            of the utilities.
+        sigmas: Number of standard deviations to use as a threshold.
     """
 
     def __init__(self, u: Utility, n_samples: int, sigmas: float = 1):
@@ -160,34 +183,10 @@ class BootstrapTruncation(TruncationPolicy):
         self.variance = self.mean = 0
 
 
-def _permutation_montecarlo_one_step(
-    u: Utility,
-    truncation: TruncationPolicy,
-    algorithm: str,
-) -> ValuationResult:
-    # Avoid circular imports
-    from .montecarlo import _permutation_montecarlo_shapley
-
-    result = _permutation_montecarlo_shapley(
-        u,
-        done=MaxChecks(1),
-        truncation=truncation,
-        algorithm_name=algorithm,
-    )
-    nans = np.isnan(result.values).sum()
-    if nans > 0:
-        logger.warning(
-            f"{nans} NaN values in current permutation, ignoring. "
-            "Consider setting a default value for the Scorer"
-        )
-        result = ValuationResult.empty(algorithm="truncated_montecarlo_shapley")
-    return result
-
-
 @deprecated(
     target=True,
-    deprecated_in="0.6.1",
-    remove_in="0.7.0",
+    deprecated_in="0.7.0",
+    remove_in="0.8.0",
     args_mapping=dict(coordinator_update_period=None, worker_update_period=None),
 )
 def truncated_montecarlo_shapley(
@@ -200,89 +199,32 @@ def truncated_montecarlo_shapley(
     coordinator_update_period: int = 10,
     worker_update_period: int = 5,
 ) -> ValuationResult:
-    """Monte Carlo approximation to the Shapley value of data points.
-
-    This implements the permutation-based method described in
-    :footcite:t:`ghorbani_data_2019`. It is a Monte Carlo estimate of the sum
-    over all possible permutations of the index set, with a double stopping
-    criterion.
-
-    .. todo::
-       Think of how to add Robin-Gelman or some other more principled stopping
-       criterion.
-
-    Instead of naively implementing the expectation, we sequentially add points
-    to a dataset from a permutation and incrementally compute marginal utilities.
-    We stop computing marginals for a given permutation based on a
-    :class:`TruncationPolicy`. :footcite:t:`ghorbani_data_2019` mention two
-    policies: one that stops after a certain fraction of marginals are computed,
-    implemented in :class:`FixedTruncation`, and one that stops if the last
-    computed utility ("score") is close to the total utility using the standard
-    deviation of the utility as a measure of proximity, implemented in
-    :class:`BootstrapTruncation`.
-
-    We keep sampling permutations and updating all shapley values
-    until the :class:`StoppingCriterion` returns ``True``.
-
-    :param u: Utility object with model, data, and scoring function
-    :param done: Check on the results which decides when to stop
-        sampling permutations.
-    :param truncation: callable that decides whether to stop computing
-        marginals for a given permutation.
-    :param config: Object configuring parallel computation, with cluster
-        address, number of cpus, etc.
-    :param n_jobs: Number of permutation monte carlo jobs
-        to run concurrently.
-    :param coordinator_update_period: in seconds. How often to check the
-        accumulated results from the workers for convergence.
-    :param worker_update_period: interval in seconds between different
-        updates to and from the coordinator
-    :return: Object with the data values.
-
     """
-    algorithm = "truncated_montecarlo_shapley"
+    !!! Warning
+        This method is deprecated and only a wrapper for
+        [permutation_montecarlo_shapley][pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley].
 
-    parallel_backend = init_parallel_backend(config)
-    u = parallel_backend.put(u)
-    # This represents the number of jobs that are running
-    n_jobs = effective_n_jobs(n_jobs, config)
-    # This determines the total number of submitted jobs
-    # including the ones that are running
-    n_submitted_jobs = 2 * n_jobs
+    !!! Todo
+        Think of how to add Robin-Gelman or some other more principled stopping
+        criterion.
 
-    accumulated_result = ValuationResult.zeros(algorithm=algorithm)
+    Args:
+        u: Utility object with model, data, and scoring function
+        done: Check on the results which decides when to stop sampling
+            permutations.
+        truncation: callable that decides whether to stop computing marginals
+            for a given permutation.
+        config: Object configuring parallel computation, with cluster address,
+            number of cpus, etc.
+        n_jobs: Number of permutation monte carlo jobs to run concurrently.
+    Returns:
+        Object with the data values.
+    """
+    from pydvl.value.shapley.montecarlo import permutation_montecarlo_shapley
 
-    with init_executor(max_workers=n_jobs, config=config) as executor:
-        futures = set()
-        # Initial batch of computations
-        for _ in range(n_submitted_jobs):
-            future = executor.submit(
-                _permutation_montecarlo_one_step,
-                u,
-                truncation,
-                algorithm,
-            )
-            futures.add(future)
-        while futures:
-            # Wait for the next futures to complete.
-            completed_futures, futures = wait(
-                futures, timeout=60, return_when=FIRST_COMPLETED
-            )
-            for future in completed_futures:
-                accumulated_result += future.result()
-                if done(accumulated_result):
-                    break
-            if done(accumulated_result):
-                break
-            # Submit more computations
-            # The goal is to always have `n_jobs`
-            # computations running
-            for _ in range(n_submitted_jobs - len(futures)):
-                future = executor.submit(
-                    _permutation_montecarlo_one_step,
-                    u,
-                    truncation,
-                    algorithm,
-                )
-                futures.add(future)
-    return accumulated_result
+    return cast(
+        ValuationResult,
+        permutation_montecarlo_shapley(
+            u, done=done, truncation=truncation, config=config, n_jobs=n_jobs
+        ),
+    )

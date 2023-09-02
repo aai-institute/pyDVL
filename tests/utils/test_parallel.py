@@ -2,29 +2,25 @@ import operator
 import os
 import time
 from functools import partial, reduce
+from typing import List, Optional
 
 import numpy as np
 import pytest
 
 from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
-from pydvl.utils.parallel.backend import available_cpus, effective_n_jobs
+from pydvl.utils.parallel.backend import effective_n_jobs
 from pydvl.utils.parallel.futures import init_executor
-from pydvl.utils.parallel.map_reduce import _get_value
+from pydvl.utils.types import Seed
 
 
 def test_effective_n_jobs(parallel_config, num_workers):
     parallel_backend = init_parallel_backend(parallel_config)
-    if parallel_config.backend == "sequential":
-        assert parallel_backend.effective_n_jobs(1) == 1
-        assert parallel_backend.effective_n_jobs(4) == 1
-        assert parallel_backend.effective_n_jobs(-1) == 1
+    assert parallel_backend.effective_n_jobs(1) == 1
+    assert parallel_backend.effective_n_jobs(4) == min(4, num_workers)
+    if parallel_config.address is None:
+        assert parallel_backend.effective_n_jobs(-1) == num_workers
     else:
-        assert parallel_backend.effective_n_jobs(1) == 1
-        assert parallel_backend.effective_n_jobs(4) == 4
-        if parallel_config.address is None:
-            assert parallel_backend.effective_n_jobs(-1) == num_workers
-        else:
-            assert parallel_backend.effective_n_jobs(-1) == num_workers
+        assert parallel_backend.effective_n_jobs(-1) == num_workers
 
     for n_jobs in [-1, 1, 2]:
         assert parallel_backend.effective_n_jobs(n_jobs) == effective_n_jobs(
@@ -121,50 +117,14 @@ def test_map_reduce_job(map_reduce_job_and_parameters, indices, expected):
         (np.arange(10), 4, np.array_split(np.arange(10), 4)),
     ],
 )
-def test_chunkification(data, n_chunks, expected_chunks):
-    map_reduce_job = MapReduceJob([], map_func=lambda x: x)
+def test_chunkification(parallel_config, data, n_chunks, expected_chunks):
+    map_reduce_job = MapReduceJob([], map_func=lambda x: x, config=parallel_config)
     chunks = list(map_reduce_job._chunkify(data, n_chunks))
-    chunks = map_reduce_job.parallel_backend.get(chunks)
     for x, y in zip(chunks, expected_chunks):
         if not isinstance(x, np.ndarray):
             assert x == y
         else:
             assert (x == y).all()
-
-
-@pytest.mark.parametrize(
-    "max_parallel_tasks, n_finished, n_dispatched, expected_n_finished",
-    [
-        (1, 3, 6, 5),
-        (3, 3, 3, 3),
-        (10, 1, 15, 5),
-        (20, 1, 3, 1),
-    ],
-)
-def test_backpressure(
-    max_parallel_tasks, n_finished, n_dispatched, expected_n_finished
-):
-    def map_func(x):
-        import time
-
-        time.sleep(1)
-        return x
-
-    inputs_ = list(range(n_dispatched))
-
-    map_reduce_job = MapReduceJob(
-        inputs_,
-        map_func=map_func,
-        max_parallel_tasks=max_parallel_tasks,
-        timeout=10,
-    )
-
-    map_func = map_reduce_job._wrap_function(map_func)
-    jobs = [map_func(x) for x in inputs_]
-    n_finished = map_reduce_job._backpressure(
-        jobs, n_finished=n_finished, n_dispatched=n_dispatched
-    )
-    assert n_finished == expected_n_finished
 
 
 def test_map_reduce_job_partial_map_and_reduce_func(parallel_config):
@@ -188,21 +148,34 @@ def test_map_reduce_job_partial_map_and_reduce_func(parallel_config):
 
 
 @pytest.mark.parametrize(
-    "x, expected_x",
+    "seed_1, seed_2, op",
     [
-        (None, None),
-        ([0, 1], [0, 1]),
-        (np.arange(3), np.arange(3)),
+        (None, None, operator.ne),
+        (None, 42, operator.ne),
+        (42, None, operator.ne),
+        (42, 42, operator.eq),
     ],
 )
-def test_map_reduce_get_value(x, expected_x, parallel_config):
-    assert np.all(_get_value(x) == expected_x)
-    parallel_backend = init_parallel_backend(parallel_config)
-    x_id = parallel_backend.put(x)
-    assert np.all(_get_value(x_id) == expected_x)
+def test_map_reduce_seeding(parallel_config, seed_1, seed_2, op):
+    """Test that the same result is obtained when using the same seed. And that
+    different results are obtained when using different seeds.
+    """
+
+    map_reduce_job = MapReduceJob(
+        None,
+        map_func=_sum_of_random_integers,
+        reduce_func=np.mean,
+        config=parallel_config,
+    )
+    result_1 = map_reduce_job(seed=seed_1)
+    result_2 = map_reduce_job(seed=seed_2)
+    assert op(result_1, result_2)
 
 
 def test_wrap_function(parallel_config, num_workers):
+    if parallel_config.backend != "ray":
+        pytest.skip("Only makes sense for ray")
+
     def fun(x, **kwargs):
         return dict(x=x * x, **kwargs)
 
@@ -215,15 +188,14 @@ def test_wrap_function(parallel_config, num_workers):
     assert ret["x"] == 4
     assert len(ret) == 1  # Ensure that kwargs are not passed to the function
 
-    if parallel_config.backend != "sequential":
-        # Test that the function is executed in different processes
-        def get_pid():
-            time.sleep(2)  # FIXME: waiting less means fewer processes are used?!
-            return os.getpid()
+    # Test that the function is executed in different processes
+    def get_pid():
+        time.sleep(2)  # FIXME: waiting less means fewer processes are used?!
+        return os.getpid()
 
-        wrapped_func = parallel_backend.wrap(get_pid, num_cpus=1)
-        pids = parallel_backend.get([wrapped_func() for _ in range(num_workers)])
-        assert len(set(pids)) == num_workers
+    wrapped_func = parallel_backend.wrap(get_pid, num_cpus=1)
+    pids = parallel_backend.get([wrapped_func() for _ in range(num_workers)])
+    assert len(set(pids)) == num_workers
 
 
 def test_futures_executor_submit(parallel_config):
@@ -255,3 +227,40 @@ def test_futures_executor_map_with_max_workers(parallel_config, num_workers):
     total_time = end_time - start_time
     # We expect the time difference to be > 3 / num_workers, but has to be at least 1
     assert total_time > max(1.0, 3 / num_workers)
+
+
+def test_future_cancellation(parallel_config):
+    if parallel_config.backend != "ray":
+        pytest.skip("Currently this test only works with Ray")
+
+    from pydvl.utils.parallel import CancellationPolicy
+
+    with init_executor(
+        config=parallel_config, cancel_futures=CancellationPolicy.NONE
+    ) as executor:
+        future = executor.submit(lambda x: x + 1, 1)
+
+    assert future.result() == 2
+
+    from ray.exceptions import TaskCancelledError
+
+    with init_executor(
+        config=parallel_config, cancel_futures=CancellationPolicy.ALL
+    ) as executor:
+        start = time.monotonic()
+        future = executor.submit(lambda t: time.sleep(t), 5)
+
+    assert future._state == "FINISHED"
+
+    with pytest.raises(TaskCancelledError):
+        future.result()
+
+    assert time.monotonic() - start < 1
+
+
+# Helper functions for tests :func:`test_map_reduce_reproducible` and
+# :func:`test_map_reduce_stochastic`.
+def _sum_of_random_integers(x: None, seed: Optional[Seed] = None):
+    rng = np.random.default_rng(seed)
+    values = rng.integers(0, rng.integers(10, 100), 10)
+    return np.sum(values)

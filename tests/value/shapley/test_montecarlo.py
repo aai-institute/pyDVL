@@ -1,18 +1,29 @@
 import logging
+from copy import copy, deepcopy
 
 import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import GroupedDataset, MemcachedConfig, Status, Utility
+from pydvl.utils import (
+    Dataset,
+    GroupedDataset,
+    MemcachedConfig,
+    ParallelConfig,
+    Status,
+    Utility,
+)
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.score import Scorer, squashed_r2
+from pydvl.utils.types import Seed
 from pydvl.value import compute_shapley_values
 from pydvl.value.shapley import ShapleyMode
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
 from pydvl.value.stopping import MaxChecks, MaxUpdates
 
 from .. import check_rank_correlation, check_total_value, check_values
+from ..conftest import polynomial_dataset
+from ..utils import call_fn_multiple_seeds
 
 log = logging.getLogger(__name__)
 
@@ -60,6 +71,74 @@ def test_analytic_montecarlo_shapley(
     )
 
     check_values(values, exact_values, rtol=rtol, atol=atol)
+
+
+test_cases_montecarlo_shapley_reproducible_stochastic = [
+    # TODO Add once issue #416 is closed.
+    # (12, ShapleyMode.PermutationMontecarlo, {"done": MaxChecks(1)}),
+    (
+        12,
+        ShapleyMode.CombinatorialMontecarlo,
+        {"done": MaxChecks(4)},
+    ),
+    (12, ShapleyMode.Owen, dict(n_samples=4, max_q=200)),
+    (12, ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=200)),
+    (4, ShapleyMode.GroupTesting, dict(n_samples=21, epsilon=0.2, delta=0.01)),
+]
+
+
+@pytest.mark.parametrize(
+    "num_samples, fun, kwargs", test_cases_montecarlo_shapley_reproducible_stochastic
+)
+@pytest.mark.parametrize("num_points, num_features", [(12, 3)])
+def test_montecarlo_shapley_housing_dataset_reproducible(
+    num_samples: int,
+    housing_dataset: Dataset,
+    parallel_config: ParallelConfig,
+    n_jobs: int,
+    fun: ShapleyMode,
+    kwargs: dict,
+    seed: Seed,
+):
+    values_1, values_2 = call_fn_multiple_seeds(
+        compute_shapley_values,
+        Utility(LinearRegression(), data=housing_dataset, scorer="r2"),
+        mode=fun,
+        n_jobs=n_jobs,
+        config=parallel_config,
+        progress=False,
+        seeds=(seed, seed),
+        **deepcopy(kwargs)
+    )
+    np.testing.assert_equal(values_1.values, values_2.values)
+
+
+@pytest.mark.parametrize(
+    "num_samples, fun, kwargs", test_cases_montecarlo_shapley_reproducible_stochastic
+)
+@pytest.mark.parametrize("num_points, num_features", [(12, 4)])
+def test_montecarlo_shapley_housing_dataset_stochastic(
+    num_samples: int,
+    housing_dataset: Dataset,
+    parallel_config: ParallelConfig,
+    n_jobs: int,
+    fun: ShapleyMode,
+    kwargs: dict,
+    seed: Seed,
+    seed_alt: Seed,
+):
+    values_1, values_2 = call_fn_multiple_seeds(
+        compute_shapley_values,
+        Utility(LinearRegression(), data=housing_dataset, scorer="r2"),
+        mode=fun,
+        n_jobs=n_jobs,
+        config=parallel_config,
+        progress=False,
+        seeds=(seed, seed_alt),
+        **deepcopy(kwargs)
+    )
+    with pytest.raises(AssertionError):
+        np.testing.assert_equal(values_1.values, values_2.values)
 
 
 @pytest.mark.parametrize("num_samples, delta, eps", [(8, 0.1, 0.1)])

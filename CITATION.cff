@@ -1,0 +1,31 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: pyDVL
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: TransferLab team
+    email: info+pydvl@appliedai.de
+    affiliation: appliedAI Institute gGmbH
+repository-code: 'https://github.com/aai-institute/pyDVL'
+abstract: >-
+  pyDVL is a library of stable implementations of algorithms
+  for data valuation and influence function computation
+keywords:
+  - machine learning
+  - data-centric AI
+  - data valuation
+  - influence function
+  - Shapley value
+  - data quality
+  - Least core
+  - Semi-values
+  - Banzhaf index
+license: LGPL-3.0
+commit: 0e929ae121820b0014bf245da1b21032186768cb
+version: v0.6.1
+date-released: '2023-04-13'

@@ -4,8 +4,8 @@ from enum import Enum
 class ShapleyMode(str, Enum):
     """Supported algorithms for the computation of Shapley values.
 
-    .. todo::
-       Make algorithms register themselves here.
+    !!! Todo
+        Make algorithms register themselves here.
     """
 
     ApproShapley = "appro_shapley"  # Alias for PermutationMontecarlo
@@ -17,4 +17,4 @@ class ShapleyMode(str, Enum):
     OwenAntithetic = "owen_antithetic"
     PermutationExact = "permutation_exact"
     PermutationMontecarlo = "permutation_montecarlo"
-    TruncatedMontecarlo = "truncated_montecarlo"
+    TruncatedMontecarlo = "truncated_montecarlo"  # Alias for PermutationMontecarlo
