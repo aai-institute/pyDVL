@@ -1,21 +1,23 @@
+"""
+Supporting utilities for manipulating arguments of functions.
+"""
+
 from __future__ import annotations
 
 import inspect
 from functools import partial
-from typing import Callable, Set, Tuple, Union
+from typing import Callable, Set, Union
 
 __all__ = ["maybe_add_argument"]
 
 
-def fn_accept_additional_argument(*args, fn: Callable, arg: str, **kwargs):
-    """
-    Calls the given function with the given arguments. In the process of calling the
-    wrapped function, it removes the specified keyword argument from the passed keyword
-    arguments. This function can be pickled by `pickle` as it is on the .
+def _accept_additional_argument(*args, fun: Callable, arg: str, **kwargs):
+    """Calls the given function with the given positional and keyword arguments,
+    removing `arg` from the keyword arguments.
 
     Args:
         args: Positional arguments to pass to the function.
-        fn: The function to call.
+        fun: The function to call.
         arg: The name of the argument to remove.
         kwargs: Keyword arguments to pass to the function.
 
@@ -27,50 +29,30 @@ def fn_accept_additional_argument(*args, fn: Callable, arg: str, **kwargs):
     except KeyError:
         pass
 
-    return fn(*args, **kwargs)
+    return fun(*args, **kwargs)
 
 
-def get_free_args_fn(fun: Union[Callable, partial]) -> Set[str]:
-    """
-    Accept a function or a partial definition and return the set of arguments that are
-    free. An argument is considered free if it is not set by the partial and is a
-    parameter of the function. Formally, this can be described as follows:
+def free_arguments(fun: Union[Callable, partial]) -> Set[str]:
+    """Computes the set of free arguments for a function or [partial object][].
 
-    Let phi be the function that returns the set of arguments that are set by a given
-    function. For functions f and g, one can extend the function phi recursively to psi
-    as follows:
-
-        a) If `f = partial(g, **kwargs)`, two cases arise:
-            a) If `g = fn_accept_additional_argument`, then
-                `psi(f) = psi(kwargs.fn) + {kwargs.arg}`
-            b) Else, `psi(f) = psi(g) - kwargs.keys()`
-        b) Else,`psi(g) = phi(g)` (Note that this is the base case.)
-
-    Transforming `fn_accept_additional_argument` into a partial function is done by:
-    `f(fn, arg) = partial(fn_accept_additional_argument, **{fn: fn, arg: arg})`
-    This function is the inverse (with respect to phi) to the function
-    `g(fn, arg, val) = partial(g, {arg: val})` in the sense that
-    `phi(fn) = phi(f(g(fn, arg, val), arg))`
-
-    Together, these components form an algebraic system for reasoning about function
-    arguments. Each operation (phi, psi, f, g) transforms a function into a new
-    function in a way that changes the set of arguments that have been applied, and we
-    have precise rules for understanding those transformations.
+    All arguments of a function are considered free unless they are set by a
+    partial. For example, if `f = partial(g, a=1)`, then `a` is not a free
+    argument of `f`.
 
     Args:
-        fun: A function composed of raw functions `f` or partial functions as
-            constructed in the description.
+        fun: A callable or a [partial object][].
 
     Returns:
-        A set of arguments that were set by the partial.
+        The set of free arguments of `fun`.
     """
     args_set_by_partial: Set[str] = set()
 
     def _rec_unroll_partial_function_args(g: Union[Callable, partial]) -> Callable:
-        """
-        Store arguments and recursively call itself if the function is a partial. In the
-        end, return the initial wrapped function. Besides partial functions it also
-        supports `partial(fn_accept_additional_argument, *args, **kwargs)` constructs.
+        """Stores arguments and recursively call itself if `g` is a partial. In
+        the end, returns the initially wrapped function.
+
+        This handles the construct `partial(_accept_additional_argument, *args,
+        **kwargs)` that is used by `maybe_add_argument`.
 
         Args:
             g: A partial or a function to unroll.
@@ -80,11 +62,11 @@ def get_free_args_fn(fun: Union[Callable, partial]) -> Set[str]:
         """
         nonlocal args_set_by_partial
 
-        if isinstance(g, partial) and g.func == fn_accept_additional_argument:
+        if isinstance(g, partial) and g.func == _accept_additional_argument:
             arg = g.keywords["arg"]
             if arg in args_set_by_partial:
                 args_set_by_partial.remove(arg)
-            return _rec_unroll_partial_function_args(g.keywords["fn"])
+            return _rec_unroll_partial_function_args(g.keywords["fun"])
         elif isinstance(g, partial):
             args_set_by_partial.update(g.keywords.keys())
             args_set_by_partial.update(g.args)
@@ -116,4 +98,4 @@ def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
     if new_arg in free_arguments(fun):
         return fun
 
-    return functools.partial(_accept_additional_argument, fun=fun, arg=new_arg)
+    return partial(_accept_additional_argument, fun=fun, arg=new_arg)
