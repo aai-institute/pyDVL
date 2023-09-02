@@ -1,0 +1,11 @@
+knn
+===
+
+.. automodule:: pydvl.value.shapley.knn
+   :members:
+   :undoc-members:
+   
+   ----
+ 
+.. footbibliography::
+
