@@ -1,9 +1,11 @@
 # Changelog
 
-## 0.7.0 - 📚 Documentation overhaul, new methods and bug fixes 💥
+## 0.7.0 - 📚🆕 Documentation and IF overhaul, new methods and bug fixes 💥🐞
 
 This is our first β release! We have worked hard to deliver improvements across
-the board, with a focus on documentation and usability. 
+the board, with a focus on documentation and usability. We have also reworked
+the internals of the `influence` module, improved parallelism and handling of
+randomness.
 
 ### Added
 
@@ -13,8 +15,13 @@ the board, with a focus on documentation and usability.
   [PR #406](https://github.com/aai-institute/pyDVL/pull/406)
 - Added more abbreviations to documentation
   [PR #415](https://github.com/aai-institute/pyDVL/pull/415)
+- Added seed to functions from `pydvl.utils.numeric`, `pydvl.value.shapley` and
+  `pydvl.value.semivalues`. Introduced new type `Seed` and conversion function 
+  `ensure_seed_sequence`.
+  [PR #396](https://github.com/aai-institute/pyDVL/pull/396)
 
 ### Changed
+
 - Replaced sphinx with mkdocs for documentation. Major overhaul of documentation
   [PR #352](https://github.com/aai-institute/pyDVL/pull/352)
 - Made ray an optional dependency, relying on joblib as default parallel backend

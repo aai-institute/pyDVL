@@ -1,10 +1,10 @@
 import math
-from typing import Dict, Type
+from typing import Type
 
 import numpy as np
 import pytest
 
-from pydvl.utils import ParallelConfig, Utility
+from pydvl.utils import ParallelConfig
 from pydvl.value.sampler import (
     AntitheticSampler,
     DeterministicPermutationSampler,

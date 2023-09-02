@@ -71,6 +71,7 @@ from numpy.typing import NDArray
 from pydvl.utils.dataset import Dataset
 from pydvl.utils.numeric import running_moments
 from pydvl.utils.status import Status
+from pydvl.utils.types import Seed
 
 try:
     import pandas  # Try to import here for the benefit of mypy
@@ -693,7 +694,11 @@ class ValuationResult(
 
     @classmethod
     def from_random(
-        cls, size: int, total: Optional[float] = None, **kwargs
+        cls,
+        size: int,
+        total: Optional[float] = None,
+        seed: Optional[Seed] = None,
+        **kwargs,
     ) -> "ValuationResult":
         """Creates a [ValuationResult][pydvl.value.result.ValuationResult] object and fills it with an array
         of random values from a uniform distribution in [-1,1]. The values can
@@ -718,7 +723,8 @@ class ValuationResult(
         if size < 1:
             raise ValueError("Size must be a positive integer")
 
-        values = np.random.uniform(low=-1, high=1, size=size)
+        rng = np.random.default_rng(seed)
+        values = rng.uniform(low=-1, high=1, size=size)
         if total is not None:
             values *= total / np.sum(values)
 

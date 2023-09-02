@@ -73,7 +73,7 @@ from __future__ import annotations
 import logging
 import math
 from enum import Enum
-from typing import Protocol, Tuple, Type, TypeVar, cast
+from typing import Optional, Protocol, Tuple, Type, TypeVar, cast
 
 import numpy as np
 import scipy as sp
@@ -81,8 +81,14 @@ from deprecate import deprecated
 from tqdm import tqdm
 
 from pydvl.utils import ParallelConfig, Utility
+from pydvl.utils.types import Seed
 from pydvl.value import ValuationResult
-from pydvl.value.sampler import PermutationSampler, PowersetSampler, SampleT
+from pydvl.value.sampler import (
+    PermutationSampler,
+    PowersetSampler,
+    SampleT,
+    StochasticSampler,
+)
 from pydvl.value.stopping import MaxUpdates, StoppingCriterion
 
 __all__ = [
@@ -259,10 +265,11 @@ def compute_shapley_semivalues(
     u: Utility,
     *,
     done: StoppingCriterion = MaxUpdates(100),
-    sampler_t: Type[PowersetSampler] = PermutationSampler,
+    sampler_t: Type[StochasticSampler] = PermutationSampler,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     """Computes Shapley values for a given utility function.
 
@@ -280,13 +287,14 @@ def compute_shapley_semivalues(
         n_jobs: Number of parallel jobs to use.
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
+        seed: Either an instance of a numpy random number generator or a seed for it.
         progress: Whether to display a progress bar.
 
     Returns:
         Object with the results.
     """
     return compute_generic_semivalues(
-        sampler_t(u.data.indices),
+        sampler_t(u.data.indices, seed=seed),
         u,
         shapley_coefficient,
         done,
@@ -300,10 +308,11 @@ def compute_banzhaf_semivalues(
     u: Utility,
     *,
     done: StoppingCriterion = MaxUpdates(100),
-    sampler_t: Type[PowersetSampler] = PermutationSampler,
+    sampler_t: Type[StochasticSampler] = PermutationSampler,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     """Computes Banzhaf values for a given utility function.
 
@@ -317,6 +326,7 @@ def compute_banzhaf_semivalues(
         sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler` for a
             list.
         n_jobs: Number of parallel jobs to use.
+        seed: Either an instance of a numpy random number generator or a seed for it.
         config: Object configuring parallel computation, with cluster address,
             number of cpus, etc.
         progress: Whether to display a progress bar.
@@ -325,7 +335,7 @@ def compute_banzhaf_semivalues(
         Object with the results.
     """
     return compute_generic_semivalues(
-        sampler_t(u.data.indices),
+        sampler_t(u.data.indices, seed=seed),
         u,
         banzhaf_coefficient,
         done,
@@ -341,10 +351,11 @@ def compute_beta_shapley_semivalues(
     alpha: float = 1,
     beta: float = 1,
     done: StoppingCriterion = MaxUpdates(100),
-    sampler_t: Type[PowersetSampler] = PermutationSampler,
+    sampler_t: Type[StochasticSampler] = PermutationSampler,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     """Computes Beta Shapley values for a given utility function.
 
@@ -359,14 +370,16 @@ def compute_beta_shapley_semivalues(
         done: Stopping criterion.
         sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler` for a list.
         n_jobs: Number of parallel jobs to use.
-        config: Object configuring parallel computation, with cluster address, number of cpus, etc.
+        seed: Either an instance of a numpy random number generator or a seed for it.
+        config: Object configuring parallel computation, with cluster address, number of
+            cpus, etc.
         progress: Whether to display a progress bar.
 
     Returns:
         Object with the results.
     """
     return compute_generic_semivalues(
-        sampler_t(u.data.indices),
+        sampler_t(u.data.indices, seed=seed),
         u,
         beta_coefficient(alpha, beta),
         done,
@@ -400,8 +413,9 @@ def compute_semivalues(
     *,
     done: StoppingCriterion = MaxUpdates(100),
     mode: SemiValueMode = SemiValueMode.Shapley,
-    sampler_t: Type[PowersetSampler] = PermutationSampler,
+    sampler_t: Type[StochasticSampler] = PermutationSampler,
     n_jobs: int = 1,
+    seed: Optional[Seed] = None,
     **kwargs,
 ) -> ValuationResult:
     """Convenience entry point for most common semi-value computations.
@@ -444,13 +458,13 @@ def compute_semivalues(
         sampler_t: The sampler type to use. See [sampler][pydvl.value.sampler]
             for a list.
         n_jobs: Number of parallel jobs to use.
+        seed: Either an instance of a numpy random number generator or a seed for it.
         kwargs: Additional keyword arguments passed to
             [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
 
     Returns:
         Object with the results.
     """
-    sampler_instance = sampler_t(u.data.indices)
     if mode == SemiValueMode.Shapley:
         coefficient = shapley_coefficient
     elif mode == SemiValueMode.BetaShapley:
@@ -463,5 +477,10 @@ def compute_semivalues(
         raise ValueError(f"Unknown mode {mode}")
     coefficient = cast(SVCoefficient, coefficient)
     return compute_generic_semivalues(
-        sampler_instance, u, coefficient, done, n_jobs=n_jobs, **kwargs
+        sampler_t(u.data.indices, seed=seed),
+        u,
+        coefficient,
+        done,
+        n_jobs=n_jobs,
+        **kwargs,
     )

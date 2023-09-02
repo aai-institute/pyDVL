@@ -44,13 +44,24 @@ import abc
 import math
 from enum import Enum
 from itertools import permutations
-from typing import Generic, Iterable, Iterator, Sequence, Tuple, TypeVar, overload
+from typing import (
+    Generic,
+    Iterable,
+    Iterator,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    overload,
+)
 
 import numpy as np
 from deprecate import deprecated, void
 from numpy.typing import NDArray
 
 from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
+from pydvl.utils.types import Seed
 
 __all__ = [
     "AntitheticSampler",
@@ -60,7 +71,9 @@ __all__ = [
     "PowersetSampler",
     "RandomHierarchicalSampler",
     "UniformSampler",
+    "StochasticSamplerMixin",
 ]
+
 
 T = TypeVar("T", bound=np.generic)
 SampleT = Tuple[T, NDArray[T]]
@@ -210,6 +223,14 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
         ...
 
 
+class StochasticSamplerMixin:
+    """Mixin class for samplers which use a random number generator."""
+
+    def __init__(self, *args, seed: Optional[Seed] = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._rng = np.random.default_rng(seed)
+
+
 class DeterministicUniformSampler(PowersetSampler[T]):
     def __init__(self, indices: NDArray[T], *args, **kwargs):
         """An iterator to perform uniform deterministic sampling of subsets.
@@ -247,7 +268,7 @@ class DeterministicUniformSampler(PowersetSampler[T]):
         return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
-class UniformSampler(PowersetSampler[T]):
+class UniformSampler(StochasticSamplerMixin, PowersetSampler[T]):
     """An iterator to perform uniform random sampling of subsets.
 
     Iterating over every index $i$, either in sequence or at random depending on
@@ -271,7 +292,7 @@ class UniformSampler(PowersetSampler[T]):
     def __iter__(self) -> Iterator[SampleT]:
         while True:
             for idx in self.iterindices():
-                subset = random_subset(self.complement([idx]))
+                subset = random_subset(self.complement([idx]), seed=self._rng)
                 yield idx, subset
                 self._n_samples += 1
             if self._n_samples == 0:  # Empty index set
@@ -293,7 +314,7 @@ class DeterministicCombinatorialSampler(DeterministicUniformSampler[T]):
         void(indices, args, kwargs)
 
 
-class AntitheticSampler(PowersetSampler[T]):
+class AntitheticSampler(StochasticSamplerMixin, PowersetSampler[T]):
     """An iterator to perform uniform random sampling of subsets, and their
     complements.
 
@@ -305,7 +326,7 @@ class AntitheticSampler(PowersetSampler[T]):
     def __iter__(self) -> Iterator[SampleT]:
         while True:
             for idx in self.iterindices():
-                subset = random_subset(self.complement([idx]))
+                subset = random_subset(self.complement([idx]), seed=self._rng)
                 yield idx, subset
                 self._n_samples += 1
                 yield idx, self.complement(np.concatenate((subset, np.array([idx]))))
@@ -318,7 +339,7 @@ class AntitheticSampler(PowersetSampler[T]):
         return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
-class PermutationSampler(PowersetSampler[T]):
+class PermutationSampler(StochasticSamplerMixin, PowersetSampler[T]):
     """Sample permutations of indices and iterate through each returning
     increasing subsets, as required for the permutation definition of
     semi-values.
@@ -336,9 +357,8 @@ class PermutationSampler(PowersetSampler[T]):
     """
 
     def __iter__(self) -> Iterator[SampleT]:
-        rng = np.random.default_rng()  # FIXME: waiting for better rng handling
         while True:
-            permutation = rng.permutation(self._indices)
+            permutation = self._rng.permutation(self._indices)
             for i, idx in enumerate(permutation):
                 yield idx, permutation[:i]
                 self._n_samples += 1
@@ -377,7 +397,7 @@ class DeterministicPermutationSampler(PermutationSampler[T]):
                 self._n_samples += 1
 
 
-class RandomHierarchicalSampler(PowersetSampler[T]):
+class RandomHierarchicalSampler(StochasticSamplerMixin, PowersetSampler[T]):
     """For every index, sample a set size, then a set of that size.
 
     !!! Todo
@@ -387,8 +407,10 @@ class RandomHierarchicalSampler(PowersetSampler[T]):
     def __iter__(self) -> Iterator[SampleT]:
         while True:
             for idx in self.iterindices():
-                k = np.random.choice(np.arange(len(self._indices)), size=1).item()
-                subset = random_subset_of_size(self.complement([idx]), size=k)
+                k = self._rng.choice(np.arange(len(self._indices)), size=1).item()
+                subset = random_subset_of_size(
+                    self.complement([idx]), size=k, seed=self._rng
+                )
                 yield idx, subset
                 self._n_samples += 1
             if self._n_samples == 0:  # Empty index set
@@ -397,3 +419,10 @@ class RandomHierarchicalSampler(PowersetSampler[T]):
     @classmethod
     def weight(cls, n: int, subset_len: int) -> float:
         return float(2 ** (n - 1)) if n > 0 else 1.0
+
+
+# TODO Replace by Intersection[StochasticSamplerMixin, PowersetSampler[T]]
+# See https://github.com/python/typing/issues/213
+StochasticSampler = Union[
+    UniformSampler, PermutationSampler, AntitheticSampler, RandomHierarchicalSampler
+]

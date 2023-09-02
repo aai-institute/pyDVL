@@ -1,15 +1,18 @@
 from itertools import takewhile
+from typing import Iterator, List, Type
 
 import numpy as np
 import pytest
 
 from pydvl.utils import powerset
+from pydvl.utils.types import Seed
 from pydvl.value.sampler import (
     AntitheticSampler,
     DeterministicPermutationSampler,
     DeterministicUniformSampler,
     PermutationSampler,
     RandomHierarchicalSampler,
+    StochasticSampler,
     UniformSampler,
 )
 
@@ -19,6 +22,7 @@ from pydvl.value.sampler import (
     [
         DeterministicUniformSampler,
         UniformSampler,
+        DeterministicPermutationSampler,
         PermutationSampler,
         AntitheticSampler,
         RandomHierarchicalSampler,
@@ -33,6 +37,44 @@ def test_proper(sampler_class, indices):
     for idx, subset in samples:
         subsets = [set(s) for s in powerset(np.setxor1d(indices, [idx]))]
         assert set(subset) in subsets
+
+
+@pytest.mark.parametrize(
+    "sampler_class",
+    [
+        UniformSampler,
+        PermutationSampler,
+        AntitheticSampler,
+        RandomHierarchicalSampler,
+    ],
+)
+@pytest.mark.parametrize("indices", [(), (list(range(100)))])
+def test_proper_reproducible(sampler_class, indices, seed):
+    """Test that the sampler is reproducible."""
+    samples_1 = _create_seeded_sample_iter(sampler_class, indices, seed)
+    samples_2 = _create_seeded_sample_iter(sampler_class, indices, seed)
+
+    for (_, subset_1), (_, subset_2) in zip(samples_1, samples_2):
+        assert set(subset_1) == set(subset_2)
+
+
+@pytest.mark.parametrize(
+    "sampler_class",
+    [
+        UniformSampler,
+        PermutationSampler,
+        AntitheticSampler,
+        RandomHierarchicalSampler,
+    ],
+)
+@pytest.mark.parametrize("indices", [(), (list(range(100)))])
+def test_proper_stochastic(sampler_class, indices, seed, seed_alt):
+    """Test that the sampler is reproducible."""
+    samples_1 = _create_seeded_sample_iter(sampler_class, indices, seed)
+    samples_2 = _create_seeded_sample_iter(sampler_class, indices, seed_alt)
+
+    for (_, subset_1), (_, subset_2) in zip(samples_1, samples_2):
+        assert len(subset_1) == 0 or set(subset_1) != set(subset_2)
 
 
 @pytest.mark.parametrize(
@@ -70,3 +112,14 @@ def test_chunkify_permutation(sampler_class):
 
 # Missing tests for:
 #  - Correct distribution of subsets for random samplers
+
+
+def _create_seeded_sample_iter(
+    sampler_t: Type[StochasticSampler],
+    indices: List,
+    seed: Seed,
+) -> Iterator:
+    max_iterations = len(indices)
+    sampler = sampler_t(indices=np.array(indices), seed=seed)
+    sample_stream = takewhile(lambda _: sampler.n_samples < max_iterations, sampler)
+    return sample_stream

@@ -2,6 +2,7 @@ import operator
 import os
 import time
 from functools import partial, reduce
+from typing import List, Optional
 
 import numpy as np
 import pytest
@@ -9,6 +10,7 @@ import pytest
 from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
 from pydvl.utils.parallel.backend import effective_n_jobs
 from pydvl.utils.parallel.futures import init_executor
+from pydvl.utils.types import Seed
 
 
 def test_effective_n_jobs(parallel_config, num_workers):
@@ -145,6 +147,31 @@ def test_map_reduce_job_partial_map_and_reduce_func(parallel_config):
     assert result == 150
 
 
+@pytest.mark.parametrize(
+    "seed_1, seed_2, op",
+    [
+        (None, None, operator.ne),
+        (None, 42, operator.ne),
+        (42, None, operator.ne),
+        (42, 42, operator.eq),
+    ],
+)
+def test_map_reduce_seeding(parallel_config, seed_1, seed_2, op):
+    """Test that the same result is obtained when using the same seed. And that
+    different results are obtained when using different seeds.
+    """
+
+    map_reduce_job = MapReduceJob(
+        None,
+        map_func=_sum_of_random_integers,
+        reduce_func=np.mean,
+        config=parallel_config,
+    )
+    result_1 = map_reduce_job(seed=seed_1)
+    result_2 = map_reduce_job(seed=seed_2)
+    assert op(result_1, result_2)
+
+
 def test_wrap_function(parallel_config, num_workers):
     if parallel_config.backend != "ray":
         pytest.skip("Only makes sense for ray")
@@ -229,3 +256,11 @@ def test_future_cancellation(parallel_config):
         future.result()
 
     assert time.monotonic() - start < 1
+
+
+# Helper functions for tests :func:`test_map_reduce_reproducible` and
+# :func:`test_map_reduce_stochastic`.
+def _sum_of_random_integers(x: None, seed: Optional[Seed] = None):
+    rng = np.random.default_rng(seed)
+    values = rng.integers(0, rng.integers(10, 100), 10)
+    return np.sum(values)

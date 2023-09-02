@@ -25,6 +25,8 @@ from typing import (
 import numpy as np
 from numpy.typing import NDArray
 
+from pydvl.utils.types import Seed
+
 __all__ = [
     "running_moments",
     "num_samples_permutation_hoeffding",
@@ -88,24 +90,33 @@ def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) 
     return int(np.ceil(np.log(2 / delta) * 2 * u_range**2 / eps**2))
 
 
-def random_subset(s: NDArray[T], q: float = 0.5) -> NDArray[T]:
-    """Returns one subset at random from `s`.
+def random_subset(
+    s: NDArray[T],
+    q: float = 0.5,
+    seed: Optional[Seed] = None,
+) -> NDArray[T]:
+    """Returns one subset at random from ``s``.
 
     Args:
         s: set to sample from
         q: Sampling probability for elements. The default 0.5 yields a
             uniform distribution over the power set of s.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
 
     Returns:
         The subset
     """
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(seed)
     selection = rng.uniform(size=len(s)) > q
     return s[selection]
 
 
 def random_powerset(
-    s: NDArray[T], n_samples: Optional[int] = None, q: float = 0.5
+    s: NDArray[T],
+    n_samples: Optional[int] = None,
+    q: float = 0.5,
+    seed: Optional[Seed] = None,
 ) -> Generator[NDArray[T], None, None]:
     """Samples subsets from the power set of the argument, without
     pre-generating all subsets and in no order.
@@ -123,6 +134,8 @@ def random_powerset(
             Defaults to `np.iinfo(np.int32).max`
         q: Sampling probability for elements. The default 0.5 yields a
             uniform distribution over the power set of s.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
 
     Returns:
         Samples from the power set of `s`.
@@ -134,11 +147,12 @@ def random_powerset(
     if q < 0 or q > 1:
         raise ValueError("Element sampling probability must be in [0,1]")
 
+    rng = np.random.default_rng(seed)
     total = 1
     if n_samples is None:
         n_samples = np.iinfo(np.int32).max
     while total <= n_samples:
-        yield random_subset(s, q)
+        yield random_subset(s, q, seed=rng)
         total += 1
 
 
@@ -146,31 +160,29 @@ def random_powerset_group_conditional(
     s: NDArray[T],
     groups: NDArray[np.int_],
     min_elements_per_group: int = 1,
+    seed: Optional[Seed] = None
 ) -> Generator[NDArray[T], None, None]:
-    """
-    Draw infinite random group-conditional subsets from the passed set s. It is ensured
-    that in each sampled set, each unique group is represented at least ``min_elements``
-    times. The groups are specified as integers for all elements of the set separately.
+    """ Draws random group-conditional subsets from `s`.
+
+    It is ensured that in each sampled set, each unique group is represented at
+    least `min_elements` times. The groups are specified as integers for all
+    elements of the set separately.
 
     Args:
         s: Vector of size N representing the set to sample elements from.
-        groups: Vector of size N containing the group as an integer for each element.
+        groups: Vector of size N containing the group as an integer for each
+            element.
         min_elements_per_group: The minimum number of elements for each group.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
 
     Returns:
-        Generated draw from the power set of s with ``min_elements`` of each group.
+        Generated draw from the powerset of s with `min_elements` of each group.
 
     Raises:
-        TypeError: If the data ``s`` or ``groups`` is not a NumPy array.
-        ValueError: If the length of ``s``and ``groups`` different or ``min_elements``
-            is smaller than 0.
+        ValueError: If `s` and `groups` are of different length or
+            `min_elements` is smaller than 0.
     """
-    if not isinstance(s, np.ndarray):
-        raise TypeError("Set must be an NDArray")
-
-    if not isinstance(groups, np.ndarray):
-        raise TypeError("Labels must be an NDArray")
-
     if len(groups) != len(s):
         raise ValueError("Set and labels have to be of same size.")
 
@@ -185,7 +197,7 @@ def random_powerset_group_conditional(
             " contained in the sampled and yielded set."
         )
 
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(seed)
     unique_labels = np.unique(groups)
 
     while True:
@@ -209,13 +221,18 @@ def random_powerset_group_conditional(
             yield np.array([], dtype=int)
 
 
-def random_subset_of_size(s: NDArray[T], size: int) -> NDArray[T]:
+def random_subset_of_size(
+    s: NDArray[T],
+    size: int,
+    seed: Optional[Seed] = None,
+) -> NDArray[T]:
     """Samples a random subset of given size uniformly from the powerset
     of `s`.
 
     Args:
         s: Set to sample from
         size: Size of the subset to generate
+        seed: Either an instance of a numpy random number generator or a seed for it.
 
     Returns:
         The subset
@@ -225,11 +242,13 @@ def random_subset_of_size(s: NDArray[T], size: int) -> NDArray[T]:
     """
     if size > len(s):
         raise ValueError("Cannot sample subset larger than set")
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(seed)
     return rng.choice(s, size=size, replace=False)
 
 
-def random_matrix_with_condition_number(n: int, condition_number: float) -> NDArray:
+def random_matrix_with_condition_number(
+    n: int, condition_number: float, seed: Optional[Seed] = None
+) -> NDArray:
     """Constructs a square matrix with a given condition number.
 
     Taken from:
@@ -243,6 +262,7 @@ def random_matrix_with_condition_number(n: int, condition_number: float) -> NDAr
     Args:
         n: size of the matrix
         condition_number: duh
+        seed: Either an instance of a numpy random number generator or a seed for it.
 
     Returns:
         An (n,n) matrix with the requested condition number.
@@ -253,6 +273,7 @@ def random_matrix_with_condition_number(n: int, condition_number: float) -> NDAr
     if condition_number <= 1:
         raise ValueError("Condition number must be greater than 1")
 
+    rng = np.random.default_rng(seed)
     log_condition_number = np.log(condition_number)
     exp_vec = np.arange(
         -log_condition_number / 4.0,
@@ -262,8 +283,8 @@ def random_matrix_with_condition_number(n: int, condition_number: float) -> NDAr
     exp_vec = exp_vec[:n]
     s: np.ndarray = np.exp(exp_vec)
     S = np.diag(s)
-    U, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
-    V, _ = np.linalg.qr((np.random.rand(n, n) - 5.0) * 200)
+    U, _ = np.linalg.qr((rng.uniform(size=(n, n)) - 5.0) * 200)
+    V, _ = np.linalg.qr((rng.uniform(size=(n, n)) - 5.0) * 200)
     P: np.ndarray = U.dot(S).dot(V.T)
     P = P.dot(P.T)
     return P

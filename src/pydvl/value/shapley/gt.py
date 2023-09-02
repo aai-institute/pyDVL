@@ -22,16 +22,18 @@ You can read more [in the documentation][computing-data-values].
 """
 import logging
 from collections import namedtuple
-from typing import Iterable, Tuple, TypeVar, cast
+from typing import Iterable, Optional, Tuple, TypeVar, Union, cast
 
 import cvxpy as cp
 import numpy as np
+from numpy.random import SeedSequence
 from numpy.typing import NDArray
 
 from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress
 from pydvl.utils.numeric import random_subset_of_size
 from pydvl.utils.parallel.backend import effective_n_jobs
 from pydvl.utils.status import Status
+from pydvl.utils.types import Seed, ensure_seed_sequence
 from pydvl.value import ValuationResult
 
 __all__ = ["group_testing_shapley", "num_samples_eps_delta"]
@@ -121,7 +123,11 @@ def num_samples_eps_delta(
 
 
 def _group_testing_shapley(
-    u: Utility, n_samples: int, progress: bool = False, job_id: int = 1
+    u: Utility,
+    n_samples: int,
+    progress: bool = False,
+    job_id: int = 1,
+    seed: Optional[Union[Seed, SeedSequence]] = None,
 ):
     """Helper function for
     [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley].
@@ -134,11 +140,11 @@ def _group_testing_shapley(
         n_samples: total number of samples (subsets) to use.
         progress: Whether to display progress bars for each job.
         job_id: id to use for reporting progress (e.g. to place progres bars)
-
+        seed: Either an instance of a numpy random number generator or a seed for it.
     Returns:
 
     """
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(seed)
     n = len(u.data.indices)
     const = _constants(n, 1, 1, 1)  # don't care about eps,delta,range
 
@@ -149,7 +155,7 @@ def _group_testing_shapley(
 
     for t in maybe_progress(n_samples, progress=progress, position=job_id):
         k = rng.choice(const.kk, size=1, p=const.q).item()
-        s = random_subset_of_size(u.data.indices, k)
+        s = random_subset_of_size(u.data.indices, k, seed=rng)
         uu[t] = u(s)
         betas[t, s] = 1
     return uu, betas
@@ -164,6 +170,7 @@ def group_testing_shapley(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
+    seed: Optional[Seed] = None,
     **options,
 ) -> ValuationResult:
     """Implements group testing for approximation of Shapley values as described
@@ -194,6 +201,7 @@ def group_testing_shapley(
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
         progress: Whether to display progress bars for each job.
+        seed: Either an instance of a numpy random number generator or a seed for it.
         options: Additional options to pass to
             [cvxpy.Problem.solve()](https://www.cvxpy.org/tutorial/advanced/index.html#solve-method-options).
             E.g. to change the solver (which defaults to `cvxpy.SCS`) pass
@@ -233,6 +241,9 @@ def group_testing_shapley(
             np.float_
         ), np.concatenate(list(x[1] for x in results_it)).astype(np.int_)
 
+    seed_sequence = ensure_seed_sequence(seed)
+    map_reduce_seed_sequence, cvxpy_seed = tuple(seed_sequence.spawn(2))
+
     map_reduce_job: MapReduceJob[Utility, Tuple[NDArray, NDArray]] = MapReduceJob(
         u,
         map_func=_group_testing_shapley,
@@ -241,7 +252,7 @@ def group_testing_shapley(
         config=config,
         n_jobs=n_jobs,
     )
-    uu, betas = map_reduce_job()
+    uu, betas = map_reduce_job(seed=map_reduce_seed_sequence)
 
     # Matrix of estimated differences. See Eqs. (3) and (4) in the paper.
     C = np.zeros(shape=(n, n))

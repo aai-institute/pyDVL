@@ -32,7 +32,7 @@ def compute_loo(
     Returns:
         Object with the data values.
 
-    !!! tip "New in version 0.8.0"
+    !!! tip "New in version 0.7.0"
         Renamed from `naive_loo` and added parallel computation.
     """
 
