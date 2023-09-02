@@ -77,6 +77,12 @@ a.autorefs-external:hover::after {
     user-select: none;
 }
 
+/* Nicer style of headers in generated API */
+h2 code {
+    font-size: large!important;
+    background-color: inherit!important;
+}
+
 /* Remove cell input and output prompt */
 .jp-InputArea-prompt, .jp-OutputArea-prompt {
     display: none !important;
