@@ -83,7 +83,7 @@ test_cases_montecarlo_shapley_reproducible_stochastic = [
     ),
     (12, ShapleyMode.Owen, dict(n_samples=4, max_q=200)),
     (12, ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=200)),
-    (4, ShapleyMode.GroupTesting, dict(n_samples=int(21), epsilon=0.2, delta=0.01)),
+    (4, ShapleyMode.GroupTesting, dict(n_samples=21, epsilon=0.2, delta=0.01)),
 ]
 
 

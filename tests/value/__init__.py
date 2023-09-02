@@ -65,8 +65,6 @@ def check_values(
         have |value - exact_value| < 0.1 for every value.
     :param extra_values_names: Sequence of names of extra values that should
         also be compared.
-    :param equal: True, if it should be checked that the values are equal, False if it
-        should be checked that they are not equal.
     """
     values.sort()
     exact_values.sort()
