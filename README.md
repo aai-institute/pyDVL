@@ -17,12 +17,17 @@
     <a href="https://pypi.org/project/pydvl/">
         <img src="https://img.shields.io/pypi/pyversions/pydvl.svg"/>
     </a>
-    <img alt="PyPI - License" src="https://img.shields.io/pypi/l/pydvl"/>
+    <a href="https://raw.githubusercontent.com/aai-institute/pyDVL/master/LICENSE">
+        <img alt="License" src="https://img.shields.io/pypi/l/pydvl"/>
+    </a>
+    <a href="https://zenodo.org/badge/latestdoi/354117916">
+        <img src="https://zenodo.org/badge/354117916.svg" alt="DOI">
+    </a>
 </p>
 
 <p align="center" style="text-align:center;">
     <strong>
-    <a href="https://aai-institute.github.io/pyDVL">Docs</a>
+    <a href="https://aai-institute.github.io/pyDVL">Documentation</a>
     </strong>
 </p>
 
