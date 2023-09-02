@@ -21,19 +21,19 @@ or using an early stopping strategy to reduce computation
 [truncated_montecarlo_shapley()][pydvl.value.shapley.truncated.truncated_montecarlo_shapley].
 
 !!! info "Also see"
-   It is also possible to use [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]
-   to reduce the number of evaluations of the utility. The method is however
-   typically outperformed by others in this module.
+    It is also possible to use [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]
+    to reduce the number of evaluations of the utility. The method is however
+    typically outperformed by others in this module.
 
 !!! info "Also see"
-   Additionally, you can consider grouping your data points using
-   [GroupedDataset][pydvl.utils.dataset.GroupedDataset] and computing the values of the
-   groups instead. This is not to be confused with "group testing" as
-   implemented in [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]: any of
-   the algorithms mentioned above, including Group Testing, can work to valuate
-   groups of samples as units.
+    Additionally, you can consider grouping your data points using
+    [GroupedDataset][pydvl.utils.dataset.GroupedDataset] and computing the values
+    of the groups instead. This is not to be confused with "group testing" as
+    implemented in [group_testing_shapley()][pydvl.value.shapley.gt.group_testing_shapley]: any of
+    the algorithms mentioned above, including Group Testing, can work to valuate
+    groups of samples as units.
 
-# References:
+## References
 
 [^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
     [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).

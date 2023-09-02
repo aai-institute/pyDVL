@@ -82,19 +82,20 @@ def compute_shapley_values(
     Args:
         u: [Utility][pydvl.utils.utility.Utility] object with model, data, and
             scoring function.
-        done: [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] object, used to
-            determine when to stop the computation for Monte Carlo methods. The
-            default is to stop after 100 iterations. See the available criteria
-            in [stopping][pydvl.value.stopping]. It is possible to combine several
-            criteria using boolean operators. Some methods ignore this argument,
-            others require specific subtypes.
+        done: Object used to determine when to stop the computation for Monte
+            Carlo methods. The default is to stop after 100 iterations. See the
+            available criteria in [stopping][pydvl.value.stopping]. It is
+            possible to combine several of them using boolean operators. Some
+            methods ignore this argument, others require specific subtypes.
         n_jobs: Number of parallel jobs (available only to some methods)
-        seed: Either an instance of a numpy random number generator or a seed for it.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
         mode: Choose which shapley algorithm to use. See
-            [ShapleyMode][pydvl.value.shapley.ShapleyMode] for a list of allowed value.
+            [ShapleyMode][pydvl.value.shapley.ShapleyMode] for a list of allowed
+            value.
 
     Returns:
-        A [ValuationResult][pydvl.value.result.ValuationResult] object with the results.
+        Object with the results.
 
     """
     progress: bool = kwargs.pop("progress", False)

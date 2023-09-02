@@ -2,7 +2,7 @@
 This module contains influence calculation functions for general
 models, as introduced in (Koh and Liang, 2017)[^1].
 
-## References:
+## References
 
 [^1]: <a name="koh_liang_2017"></a>Koh, P.W., Liang, P., 2017.
     [Understanding Black-box Predictions via Influence Functions](https://proceedings.mlr.press/v70/koh17a.html).
