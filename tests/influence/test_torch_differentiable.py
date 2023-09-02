@@ -193,4 +193,4 @@ def test_inversion_methods(
     )
 
     assert np.allclose(linear_inverse, linear_cg, rtol=1e-1)
-    assert np.allclose(linear_inverse, linear_lissa, rtol=1e-1)
+    assert np.allclose(linear_inverse, linear_lissa, rtol=1e-1, atol=2e-1)

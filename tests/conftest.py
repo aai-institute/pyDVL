@@ -59,6 +59,16 @@ def seed(request):
         return 24
 
 
+@pytest.fixture()
+def seed_alt(request):
+    return 42
+
+
+@pytest.fixture()
+def collision_tol(request):
+    return 0.01
+
+
 @pytest.fixture(autouse=True)
 def pytorch_seed(seed):
     try:
