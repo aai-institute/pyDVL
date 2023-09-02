@@ -33,7 +33,8 @@ def _accept_additional_argument(*args, fun: Callable, arg: str, **kwargs):
 
 
 def free_arguments(fun: Union[Callable, partial]) -> Set[str]:
-    """Computes the set of free arguments for a function or [partial object][].
+    """Computes the set of free arguments for a function or
+    [functools.partial][] object.
 
     All arguments of a function are considered free unless they are set by a
     partial. For example, if `f = partial(g, a=1)`, then `a` is not a free
@@ -44,12 +45,15 @@ def free_arguments(fun: Union[Callable, partial]) -> Set[str]:
 
     Returns:
         The set of free arguments of `fun`.
+
+    !!! tip "New in version 0.7.0"
     """
     args_set_by_partial: Set[str] = set()
 
     def _rec_unroll_partial_function_args(g: Union[Callable, partial]) -> Callable:
-        """Stores arguments and recursively call itself if `g` is a partial. In
-        the end, returns the initially wrapped function.
+        """Stores arguments and recursively call itself if `g` is a
+        [functools.partial][] object. In the end, returns the initially wrapped
+        function.
 
         This handles the construct `partial(_accept_additional_argument, *args,
         **kwargs)` that is used by `maybe_add_argument`.
@@ -94,6 +98,9 @@ def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
 
     Returns:
         A new function accepting one more keyword argument.
+
+    !!! tip "Changed in version 0.7.0"
+        Ability to work with partials.
     """
     if new_arg in free_arguments(fun):
         return fun

@@ -9,7 +9,14 @@ from typing import Any, Optional, Protocol, TypeVar, Union, cast
 from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
 
-__all__ = ["SupervisedModel", "MapFunction", "ReduceFunction", "NoPublicConstructor"]
+__all__ = [
+    "ensure_seed_sequence",
+    "MapFunction",
+    "NoPublicConstructor",
+    "ReduceFunction",
+    "Seed",
+    "SupervisedModel",
+]
 
 R = TypeVar("R", covariant=True)
 
@@ -83,6 +90,8 @@ def ensure_seed_sequence(
 
     Returns:
         A SeedSequence object.
+
+    !!! tip "New in version 0.7.0"
     """
     if isinstance(seed, SeedSequence):
         return seed

@@ -15,13 +15,8 @@ from numpy.random import SeedSequence
 from numpy.typing import NDArray
 
 from ..config import ParallelConfig
-from ..types import (
-    MapFunction,
-    ReduceFunction,
-    Seed,
-    ensure_seed_sequence,
-)
 from ..functional import maybe_add_argument
+from ..types import MapFunction, ReduceFunction, Seed, ensure_seed_sequence
 from .backend import init_parallel_backend
 
 __all__ = ["MapReduceJob"]

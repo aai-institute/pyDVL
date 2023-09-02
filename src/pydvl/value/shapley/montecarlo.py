@@ -241,7 +241,8 @@ def _combinatorial_montecarlo_shapley(
     job_id: int = 1,
     seed: Optional[Seed] = None,
 ) -> ValuationResult:
-    """Helper function for [combinatorial_montecarlo_shapley()][pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley].
+    """Helper function for
+    [combinatorial_montecarlo_shapley][pydvl.value.shapley.montecarlo.combinatorial_montecarlo_shapley].
 
     This is the code that is sent to workers to compute values using the
     combinatorial definition.
@@ -252,7 +253,8 @@ def _combinatorial_montecarlo_shapley(
         done: Check on the results which decides when to stop sampling
             subsets for an index.
         progress: Whether to display progress bars for each job.
-        seed: Either an instance of a numpy random number generator or a seed for it.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
         job_id: id to use for reporting progress
 
     Returns:
