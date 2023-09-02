@@ -123,6 +123,6 @@ jobs:
         run: |
           set -x
           export BUILD_NUMBER=$GITHUB_RUN_NUMBER
-          bump2version --no-tag --no-commit --verbose --serialize '\{major\}.\{minor\}.\{patch\}.\{release\}\{$BUILD_NUMBER\}' boguspart
+          bump2version --no-tag --no-commit --verbose --serialize '{major}.{minor}.{patch}.{release}{$BUILD_NUMBER}' boguspart
           python setup.py sdist bdist_wheel
           twine upload -r testpypi --verbose --non-interactive dist/*
