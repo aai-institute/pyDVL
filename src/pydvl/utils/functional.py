@@ -4,7 +4,7 @@ import inspect
 from functools import partial
 from typing import Callable, Set, Tuple, Union
 
-__all__ = ["get_free_args_fn", "fn_accept_additional_argument"]
+__all__ = ["maybe_add_argument"]
 
 
 def fn_accept_additional_argument(*args, fn: Callable, arg: str, **kwargs):
@@ -95,3 +95,25 @@ def get_free_args_fn(fun: Union[Callable, partial]) -> Set[str]:
     wrapped_fn = _rec_unroll_partial_function_args(fun)
     sig = inspect.signature(wrapped_fn)
     return args_set_by_partial | set(sig.parameters.keys())
+
+
+def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
+    """Wraps a function to accept the given keyword parameter if it doesn't
+    already.
+
+    If `fun` already takes a keyword parameter of name `new_arg`, then it is
+    returned as is. Otherwise, a wrapper is returned which merely ignores the
+    argument.
+
+    Args:
+        fun: The function to wrap
+        new_arg: The name of the argument that the new function will accept
+            (and ignore).
+
+    Returns:
+        A new function accepting one more keyword argument.
+    """
+    if new_arg in free_arguments(fun):
+        return fun
+
+    return functools.partial(_accept_additional_argument, fun=fun, arg=new_arg)

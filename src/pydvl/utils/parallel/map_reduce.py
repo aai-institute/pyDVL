@@ -20,8 +20,8 @@ from ..types import (
     ReduceFunction,
     Seed,
     ensure_seed_sequence,
-    maybe_add_argument,
 )
+from ..functional import maybe_add_argument
 from .backend import init_parallel_backend
 
 __all__ = ["MapReduceJob"]

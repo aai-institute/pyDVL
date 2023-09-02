@@ -3,14 +3,11 @@ transformations. Some of it probably belongs elsewhere.
 """
 from __future__ import annotations
 
-import functools
 from abc import ABCMeta
-from typing import Any, Callable, Optional, Protocol, TypeVar, Union, cast
+from typing import Any, Optional, Protocol, TypeVar, Union, cast
 
 from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
-
-from pydvl.utils.functional import fn_accept_additional_argument, get_free_args_fn
 
 __all__ = ["SupervisedModel", "MapFunction", "ReduceFunction", "NoPublicConstructor"]
 
@@ -43,28 +40,6 @@ class SupervisedModel(Protocol):
 
     def score(self, x: NDArray, y: NDArray) -> float:
         pass
-
-
-def maybe_add_argument(fun: Callable, new_arg: str) -> Callable:
-    """Wraps a function to accept the given keyword parameter if it doesn't
-    already.
-
-    If `fun` already takes a keyword parameter of name `new_arg`, then it is
-    returned as is. Otherwise, a wrapper is returned which merely ignores the
-    argument.
-
-    Args:
-        fun: The function to wrap
-        new_arg: The name of the argument that the new function will accept
-            (and ignore).
-
-    Returns:
-        A new function accepting one more keyword argument.
-    """
-    if new_arg in get_free_args_fn(fun):
-        return fun
-
-    return functools.partial(fn_accept_additional_argument, fn=fun, arg=new_arg)
 
 
 class NoPublicConstructor(ABCMeta):
