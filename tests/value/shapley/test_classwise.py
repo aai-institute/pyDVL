@@ -6,7 +6,7 @@ from typing import Dict, Tuple, cast
 import numpy as np
 import pandas as pd
 import pytest
-from numpy._typing import NDArray
+from numpy.typing import NDArray
 
 from pydvl.utils import Dataset, Utility, powerset
 from pydvl.value import MaxChecks, ValuationResult

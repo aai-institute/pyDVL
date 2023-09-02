@@ -1,5 +1,15 @@
 """
-Implementation of Class-wise Shapley, introduced in [@schoch_csshapley_2022].
+Implementation of Class-wise Shapley, introduced in (Schoch, Haifeng and Ji,
+2022)[^1].
+
+# References
+
+[^1]: <a name="schoch_csshapley_2022"></a>Schoch, Stephanie, Haifeng Xu, and
+    Yangfeng Ji. [CS-Shapley: Class-Wise Shapley Values for Data Valuation in
+    Classification](https://openreview.net/forum?id=KTOcrOR5mQ9). In Proc. of
+    the Thirty-Sixth Conference on Neural Information Processing Systems
+    (NeurIPS). New Orleans, Louisiana, USA, 2022.
+
 """
 import logging
 import numbers
@@ -45,13 +55,14 @@ def compute_classwise_shapley_values(
     progress: bool = False,
 ) -> ValuationResult:
     """
-    Computes the classwise Shapley values as described in
-    footcite:t:`schoch_csshapley_2022`. The values can be optionally normalized,
-    depending on ``normalize_values``.
+    Computes the class-wise Shapley values as described in (Schoch, Haifeng and
+    Ji, 2022)<sup><a href="#schoch_csshapley_2022">1</a></sup>.
+    The values can be optionally normalized, depending on `normalize_values`.
 
     Args:
-        u: Utility object containing model, data, and scoring function. The scoring
-            function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
+        u: Utility object containing model, data, and scoring function. The
+            scorer must be of type
+            [ClassWiseScorer][pydvl.value.shapley.classwise.ClasswiseScorer].
         done: Function that checks whether the computation needs to stop.
         truncation: Callable function that decides whether to interrupt processing a
             permutation and set subsequent marginals to zero.
