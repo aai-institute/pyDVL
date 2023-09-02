@@ -160,9 +160,9 @@ def random_powerset_group_conditional(
     s: NDArray[T],
     groups: NDArray[np.int_],
     min_elements_per_group: int = 1,
-    seed: Optional[Seed] = None
+    seed: Optional[Seed] = None,
 ) -> Generator[NDArray[T], None, None]:
-    """ Draws random group-conditional subsets from `s`.
+    """Draws random group-conditional subsets from `s`.
 
     It is ensured that in each sampled set, each unique group is represented at
     least `min_elements` times. The groups are specified as integers for all

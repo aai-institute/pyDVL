@@ -1,5 +1,5 @@
 """
-Implementation of the algorithm footcite:t:`schoch_csshapley_2022`.
+Implementation of Class-wise Shapley, introduced in [@schoch_csshapley_2022].
 """
 import logging
 import numbers
@@ -12,6 +12,7 @@ from numpy.typing import NDArray
 from tqdm import tqdm
 
 from pydvl.utils import (
+    Dataset,
     ParallelConfig,
     Scorer,
     SupervisedModel,
@@ -22,9 +23,8 @@ from pydvl.utils import (
     random_powerset_group_conditional,
 )
 from pydvl.value.result import ValuationResult
-from pydvl.value.shapley.montecarlo import permutation_montecarlo_shapley_rollout
 from pydvl.value.shapley.truncated import TruncationPolicy
-from pydvl.value.stopping import MaxChecks, MaxUpdates, StoppingCriterion
+from pydvl.value.stopping import MaxChecks, StoppingCriterion
 
 logger = logging.getLogger(__name__)
 
@@ -444,7 +444,7 @@ def _permutation_montecarlo_classwise_shapley_for_label(
             min_elements_per_group=min_elements_per_label,
         )
     ):
-        result += permutation_montecarlo_shapley_rollout(
+        result += _permutation_montecarlo_shapley_rollout(
             u,
             indices_permutation,
             additional_indices=subset_complement,
@@ -454,6 +454,92 @@ def _permutation_montecarlo_classwise_shapley_for_label(
         )
         if done(result):
             break
+
+    return result
+
+
+def _permutation_montecarlo_shapley_rollout(
+    u: Utility,
+    permutation: NDArray[np.int_],
+    truncation: TruncationPolicy,
+    algorithm_name: str,
+    additional_indices: Optional[NDArray[np.int_]] = None,
+    use_default_scorer_value: bool = True,
+) -> ValuationResult:
+    """
+    A truncated version of a permutation-based MC estimator.
+    values. It generates a permutation p[i] of the class label indices and iterates over
+    all subsets starting from the empty set to the full set of indices.
+
+    Args:
+        u: Utility object containing model, data, and scoring function.
+        permutation: Permutation of indices to be considered.
+        truncation: Callable which decides whether to interrupt processing a
+            permutation and set all subsequent marginals to zero.
+        algorithm_name: For the results object. Used internally by different
+            variants of Shapley using this subroutine
+        additional_indices: Set of additional indices for data points which should be
+            always considered.
+        use_default_scorer_value: Use default scorer value even if additional_indices
+            is not None.
+    Returns:
+         ValuationResult object containing computed data values.
+    """
+    if (
+        additional_indices is not None
+        and len(np.intersect1d(permutation, additional_indices)) > 0
+    ):
+        raise ValueError(
+            "The class label set and the complement set have to be disjoint."
+        )
+
+    result = ValuationResult.zeros(
+        algorithm=algorithm_name,
+        indices=u.data.indices,
+        data_names=u.data.data_names,
+    )
+
+    prev_score = (
+        u.default_score
+        if (
+            use_default_scorer_value
+            or additional_indices is None
+            or additional_indices is not None
+            and len(additional_indices) == 0
+        )
+        else u(additional_indices)
+    )
+
+    truncation_u = u
+    if additional_indices is not None:
+        # hack to calculate the correct value in reset.
+        truncation_indices = np.sort(np.concatenate((permutation, additional_indices)))
+        truncation_u = Utility(
+            u.model,
+            Dataset(
+                u.data.x_train[truncation_indices],
+                u.data.y_train[truncation_indices],
+                u.data.x_test,
+                u.data.y_test,
+            ),
+            u.scorer,
+        )
+    truncation.reset(truncation_u)
+
+    is_terminated = False
+    for i, idx in enumerate(permutation):
+        if is_terminated or (is_terminated := truncation(i, prev_score)):
+            score = prev_score
+        else:
+            score = u(
+                np.concatenate((permutation[: i + 1], additional_indices))
+                if additional_indices is not None and len(additional_indices) > 0
+                else permutation[: i + 1]
+            )
+
+        marginal = score - prev_score
+        result.update(idx, marginal)
+        prev_score = score
 
     return result
 
