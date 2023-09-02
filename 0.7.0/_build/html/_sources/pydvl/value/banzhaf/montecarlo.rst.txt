@@ -1,6 +1,0 @@
-montecarlo
-==========
-
-.. automodule:: pydvl.value.banzhaf.montecarlo
-   :members:
-   :undoc-members:
