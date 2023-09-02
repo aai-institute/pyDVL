@@ -147,38 +147,29 @@ def test_map_reduce_job_partial_map_and_reduce_func(parallel_config):
     assert result == 150
 
 
-def test_map_reduce_reproducible(parallel_config, seed):
-    """
-    Test that the same result is obtained when using the same seed. And that different
-    results are obtained when using different seeds.
-    """
-
-    map_reduce_job = MapReduceJob(
-        None,
-        map_func=_sum_of_random_integers,
-        reduce_func=_mean_func,
-        config=parallel_config,
-    )
-    result_1 = map_reduce_job(seed=seed)
-    result_2 = map_reduce_job(seed=seed)
-    assert result_1 == result_2
-
-
-def test_map_reduce_stochastic(parallel_config, seed, seed_alt):
-    """
-    Test that the same result is obtained when using the same seed. And that different
-    results are obtained when using different seeds.
+@pytest.mark.parametrize(
+    "seed_1, seed_2, op",
+    [
+        (None, None, operator.ne),
+        (None, 42, operator.ne),
+        (42, None, operator.ne),
+        (42, 42, operator.eq),
+    ],
+)
+def test_map_reduce_seeding(parallel_config, seed_1, seed_2, op):
+    """Test that the same result is obtained when using the same seed. And that
+    different results are obtained when using different seeds.
     """
 
     map_reduce_job = MapReduceJob(
         None,
         map_func=_sum_of_random_integers,
-        reduce_func=_mean_func,
+        reduce_func=np.mean,
         config=parallel_config,
     )
-    result_1 = map_reduce_job(seed=seed)
-    result_2 = map_reduce_job(seed=seed_alt)
-    assert result_1 != result_2
+    result_1 = map_reduce_job(seed=seed_1)
+    result_2 = map_reduce_job(seed=seed_2)
+    assert op(result_1, result_2)
 
 
 def test_wrap_function(parallel_config, num_workers):
@@ -273,7 +264,3 @@ def _sum_of_random_integers(x: None, seed: Optional[Seed] = None):
     rng = np.random.default_rng(seed)
     values = rng.integers(0, rng.integers(10, 100), 10)
     return np.sum(values)
-
-
-def _mean_func(means):
-    return np.mean(means)
