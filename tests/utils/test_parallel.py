@@ -118,10 +118,7 @@ def test_chunkification(parallel_config, data, n_chunks, expected_chunks):
     map_reduce_job = MapReduceJob([], map_func=lambda x: x, config=parallel_config)
     chunks = list(map_reduce_job._chunkify(data, n_chunks))
     for x, y in zip(chunks, expected_chunks):
-        if not isinstance(x, np.ndarray):
-            assert x == y
-        else:
-            assert (x == y).all()
+        assert np.all(x == y)
 
 
 def test_map_reduce_job_partial_map_and_reduce_func(parallel_config):
