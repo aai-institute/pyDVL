@@ -14,7 +14,7 @@ from pydvl.value.shapley.naive import (
     permutation_exact_shapley,
 )
 from pydvl.value.shapley.owen import OwenAlgorithm, owen_sampling_shapley
-from pydvl.value.shapley.truncated import NoTruncation, truncated_montecarlo_shapley
+from pydvl.value.shapley.truncated import NoTruncation
 from pydvl.value.shapley.types import ShapleyMode
 from pydvl.value.stopping import MaxUpdates, StoppingCriterion
 
