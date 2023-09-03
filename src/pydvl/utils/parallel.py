@@ -15,6 +15,8 @@ from ..parallel.map_reduce import *
 
 log = logging.getLogger(__name__)
 
+# This string for the benefit of deprecation searches:
+# remove_in="0.9.0"
 log.warning(
     "Importing parallel tools from pydvl.utils is deprecated. "
     "Please import directly from pydvl.parallel. "
