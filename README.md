@@ -7,8 +7,8 @@
 </p>
 
 <p align="center" style="text-align:center;">
-    <a href="https://github.com/aai-institute/pyDVL/actions/workflows/tox.yaml">
-        <img src="https://github.com/aai-institute/pyDVL/actions/workflows/tox.yaml/badge.svg" alt="Build Status"/>
+    <a href="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml">
+        <img src="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml/badge.svg" alt="Build Status"/>
     </a>
     <br>
     <a href="https://pypi.org/project/pydvl/">
