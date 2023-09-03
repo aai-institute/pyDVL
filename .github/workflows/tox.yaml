@@ -25,8 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
     - name: Setup Python 3.8
       uses: ./.github/actions/python
       with:
@@ -98,8 +96,6 @@ jobs:
       group: publish
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - name: Setup Python 3.8
         uses: ./.github/actions/python
         with:
