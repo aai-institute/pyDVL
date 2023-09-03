@@ -25,8 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
     - name: Setup Python 3.8
       uses: ./.github/actions/python
       with:
@@ -98,8 +96,6 @@ jobs:
       group: publish
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - name: Setup Python 3.8
         uses: ./.github/actions/python
         with:
@@ -123,6 +119,6 @@ jobs:
         run: |
           set -x
           export BUILD_NUMBER=$GITHUB_RUN_NUMBER
-          bump2version --no-tag --no-commit --verbose --serialize '\{major\}.\{minor\}.\{patch\}.\{release\}\{$BUILD_NUMBER\}' boguspart
+          bump2version --no-tag --no-commit --verbose --serialize '{major}.{minor}.{patch}.{release}{$BUILD_NUMBER}' boguspart
           python setup.py sdist bdist_wheel
           twine upload -r testpypi --verbose --non-interactive dist/*

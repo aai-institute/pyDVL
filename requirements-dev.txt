@@ -9,7 +9,7 @@ anybadge
 mypy == 0.982
 types-tqdm
 pandas-stubs
-bump2version
+bump2version==1.0.1
 jupyter
 nbconvert>=7.2.9
 nbstripout == 0.6.1
@@ -21,4 +21,3 @@ pytest-timeout
 pytest-lazy-fixture
 wheel
 twine==4.0.2
-bump2version
