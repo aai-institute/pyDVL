@@ -207,7 +207,8 @@ class ValuationResult(
         extra_values: Additional values that can be passed as keyword arguments.
             This can contain, for example, the least core value.
 
-    :raise ValueError: If input arrays have mismatching lengths.
+    Raises:
+         ValueError: If input arrays have mismatching lengths.
     """
 
     _indices: NDArray[IndexT]
@@ -615,7 +616,8 @@ class ValuationResult(
         Returns:
             A reference to the same, modified result.
 
-        :raises IndexError: If the index is not found.
+        Raises:
+            IndexError: If the index is not found.
         """
         try:
             pos = self._positions[idx]
@@ -647,7 +649,9 @@ class ValuationResult(
     def get(self, idx: Integral) -> ValueItem:
         """Retrieves a ValueItem by data index, as opposed to sort index, like
         the indexing operator.
-        :raises IndexError: If the index is not found.
+
+        Raises:
+             IndexError: If the index is not found.
         """
         try:
             pos = self._positions[idx]
@@ -677,7 +681,8 @@ class ValuationResult(
             A dataframe with two columns, one for the values, with name
                 given as explained in `column`, and another with standard errors for
                 approximate algorithms. The latter will be named `column+'_stderr'`.
-        :raise ImportError: If pandas is not installed
+        Raises:
+             ImportError: If pandas is not installed
         """
         if not pandas:
             raise ImportError("Pandas required for DataFrame export")
@@ -715,7 +720,8 @@ class ValuationResult(
             A valuation result with its status set to
             [Status.Converged][pydvl.utils.status.Status] by default.
 
-        :raises ValueError: If `size` is less than 1.
+        Raises:
+             ValueError: If `size` is less than 1.
 
         !!! tip "Changed in version 0.6.0"
             Added parameter `total`. Check for zero size

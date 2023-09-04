@@ -54,7 +54,7 @@ and [compute_beta_shapley_semivalues][pydvl.value.semivalues.compute_beta_shaple
 instead.
 
 
-# References:
+## References
 
 [^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
     [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).

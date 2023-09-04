@@ -15,7 +15,7 @@ of the model to compute the score.
 This module also contains Utility classes for toy games that are used
 for testing and for demonstration purposes.
 
-## References:
+## References
 
 [^1]: <a name="wang_improving_2022"></a>Wang, T., Yang, Y. and Jia, R., 2021.
     [Improving cooperative game theory-based data valuation via data utility learning](https://arxiv.org/abs/2107.06336).

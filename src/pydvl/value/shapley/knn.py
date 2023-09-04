@@ -2,14 +2,15 @@
 This module contains Shapley computations for K-Nearest Neighbours.
 
 !!! Todo
-    Implement approximate KNN computation for sublinear complexity)
+    Implement approximate KNN computation for sublinear complexity
 
 
-# References:
+## References
 
-[^Y]: <a name="jia_efficient_2019a"></a>Jia, R. et al., 2019.
-    [Efficient Task-Specific Data Valuation for Nearest Neighbor Algorithms](https://doi.org/10.14778/3342263.3342637).
-    In: Proceedings of the VLDB Endowment, Vol. 12, No. 11, pp. 1610–1623.
+[^1]: <a name="jia_efficient_2019a"></a>Jia, R. et al., 2019. [Efficient
+    Task-Specific Data Valuation for Nearest Neighbor
+    Algorithms](https://doi.org/10.14778/3342263.3342637). In: Proceedings of
+    the VLDB Endowment, Vol. 12, No. 11, pp. 1610–1623.
 
 """
 
@@ -43,7 +44,9 @@ def knn_shapley(u: Utility, *, progress: bool = True) -> ValuationResult:
     Returns:
         Object with the data values.
 
-    :raises TypeError: If the model in the utility is not a [KNeighborsClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html)
+    Raises:
+        TypeError: If the model in the utility is not a
+            [sklearn.neighbors.KNeighborsClassifier][].
 
     !!! tip "New in version 0.1.0"
 

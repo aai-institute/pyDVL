@@ -4,7 +4,7 @@ on ways to calculate matrix vector products. Moreover, it contains several
 methods to invert the Hessian vector product. These are used to calculate the
 influence of a training point on the model.
 
-## References:
+## References
 
 [^1]: <a name="koh_liang_2017"></a>Koh, P.W., Liang, P., 2017.
     [Understanding Black-box Predictions via Influence Functions](https://proceedings.mlr.press/v70/koh17a.html).

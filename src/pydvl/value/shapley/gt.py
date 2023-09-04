@@ -14,7 +14,7 @@ You can read more [in the documentation][computing-data-values].
 
 !!! tip "New in version 0.4.0"
 
-# References:
+## References
 
 [^1]: <a name="jia_efficient_2019"></a>Jia, R. et al., 2019.
     [Towards Efficient Data Valuation Based on the Shapley Value](http://proceedings.mlr.press/v89/jia19a.html).

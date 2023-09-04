@@ -344,38 +344,43 @@ act -v
 
 #### Example
 
-To run the `publish` job (the toughest one to test) with tag 'v0.6.0' 
+To run the `publish` job (the most difficult one to test)
 you would simply use:
 
-```shell
-act push -j publish --eventpath events.json
-```
+- When triggered by a release:
 
-With `events.json` containing:
+  ```shell
+  act release -j publish --eventpath events.json
+  ```
 
-```json
-{
-  "ref": "refs/tags/v0.6.0"
-}
-```
+  With `events.json` containing:
 
-To instead run it as if it had been manually triggered (i.e. `workflow_dispatch`)
-
-you would instead use:
-
-```shell
-act workflow_dispatch -j publish --eventpath events.json
-```
-
-With `events.json` containing:
-
-```json
-{
-  "inputs": {
-    "tag": "v0.6.0"
+  ```json
+  {
+    "act": true
   }
-}
-```
+  ```
+  
+  This will use your current branch. If you want to test a specific branch
+  you have to use the `workflow_dispatch` event (see below).
+
+- To instead run it as if it had been manually triggered (i.e. `workflow_dispatch`)
+  you would instead use:
+
+  ```shell
+  act workflow_dispatch -j publish --eventpath events.json
+  ```
+
+  With `events.json` containing:
+
+  ```json
+  {
+    "act": true,
+    "inputs": {
+      "tag_name": "v0.6.0"
+    }
+  }
+  ```
 
 ### Skipping CI runs
 
