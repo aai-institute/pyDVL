@@ -25,9 +25,11 @@ from pydvl.utils import (
     Dataset,
     ParallelConfig,
     Scorer,
+    Seed,
     SupervisedModel,
     Utility,
     effective_n_jobs,
+    ensure_seed_sequence,
     init_executor,
     init_parallel_backend,
     random_powerset_group_conditional,
@@ -53,6 +55,7 @@ def compute_classwise_shapley_values(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     """
     Computes the class-wise Shapley values as described in (Schoch, Haifeng and
@@ -81,6 +84,7 @@ def compute_classwise_shapley_values(
         n_jobs: Number of parallel jobs to run.
         config: Parallel configuration.
         progress: Whether to display a progress bar.
+        seed: Either an instance of a numpy random number generator or a seed for it.
 
     Returns:
         ValuationResult object containing computed data values.
@@ -102,11 +106,13 @@ def compute_classwise_shapley_values(
         data_names=u.data.data_names,
     )
     terminate_exec = False
+    seed_sequence = ensure_seed_sequence(seed)
+
     with init_executor(max_workers=n_jobs, config=config) as executor:
-        futures: Set[Future] = set()
+        pending: Set[Future] = set()
         while True:
-            completed_futures, futures = wait(
-                futures, timeout=60, return_when=FIRST_COMPLETED
+            completed_futures, pending = wait(
+                pending, timeout=60, return_when=FIRST_COMPLETED
             )
             for future in completed_futures:
                 accumulated_result += future.result()
@@ -119,7 +125,9 @@ def compute_classwise_shapley_values(
             if terminate_exec:
                 break
 
-            for _ in range(n_submitted_jobs - len(futures)):
+            n_remaining_slots = n_submitted_jobs - len(pending)
+            seeds = seed_sequence.spawn(n_remaining_slots)
+            for i in range(n_remaining_slots):
                 future = executor.submit(
                     _permutation_montecarlo_classwise_shapley,
                     u_ref,
@@ -127,8 +135,9 @@ def compute_classwise_shapley_values(
                     done_sample_complements=done_sample_complements,
                     use_default_scorer_value=use_default_scorer_value,
                     min_elements_per_label=min_elements_per_label,
+                    seed=seeds[i],
                 )
-                futures.add(future)
+                pending.add(future)
 
     result = accumulated_result
     if normalize_values:
@@ -144,6 +153,7 @@ def _permutation_montecarlo_classwise_shapley(
     truncation: TruncationPolicy,
     use_default_scorer_value: bool = True,
     min_elements_per_label: int = 1,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     """Computes classwise Shapley value using truncated Monte Carlo permutation
     sampling for the subsets.
@@ -161,6 +171,7 @@ def _permutation_montecarlo_classwise_shapley(
             this. If it is set to false, the base score is calculated from the utility.
         min_elements_per_label: The minimum number of elements for each opposite
             label.
+        seed: Either an instance of a numpy random number generator or a seed for it.
 
     Returns:
         ValuationResult object containing computed data values.
@@ -173,6 +184,7 @@ def _permutation_montecarlo_classwise_shapley(
         indices=u.data.indices,
         data_names=u.data.data_names,
     )
+    rng = np.random.default_rng(seed)
     x_train, y_train = u.data.get_training_data(u.data.indices)
     unique_labels = np.unique(y_train)
     scorer = cast(ClasswiseScorer, copy(u.scorer))
@@ -187,6 +199,7 @@ def _permutation_montecarlo_classwise_shapley(
             truncation=truncation,
             use_default_scorer_value=use_default_scorer_value,
             min_elements_per_label=min_elements_per_label,
+            seed=rng,
         )
 
     return result
@@ -337,10 +350,13 @@ class ClasswiseScorer(Scorer):
         y_test: NDArray[np.int_],
     ) -> float:
         """
-        :param model: Model used for computing the score on the validation set.
-        :param x_test: Array containing the features of the classification problem.
-        :param y_test: Array containing the labels of the classification problem.
-        :return: Calculated score.
+        Args:
+            model: Model used for computing the score on the validation set.
+            x_test: Array containing the features of the classification problem.
+            y_test: Array containing the labels of the classification problem.
+
+        Returns:
+            Calculated score.
         """
         in_cls_score, out_of_cls_score = self.estimate_in_cls_and_out_of_cls_score(
             model, x_test, y_test
@@ -413,11 +429,13 @@ def _permutation_montecarlo_classwise_shapley_for_label(
     truncation: TruncationPolicy,
     use_default_scorer_value: bool = True,
     min_elements_per_label: int = 1,
+    seed: Optional[Seed] = None,
 ) -> ValuationResult:
     """
     Samples a random subset of the complement set and computes the truncated Monte Carlo
     estimator.
 
+    Args:
     :param u: Utility object containing model, data, and scoring function. The scoring
         function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
     :param done: Function checking whether computation needs to stop. Otherwise, it will
@@ -429,6 +447,8 @@ def _permutation_montecarlo_classwise_shapley_for_label(
         is not None.
     :param min_elements_per_label: The minimum number of elements for each opposite
         label.
+    :param seed: Either an instance of a numpy random number generator or a seed for it.
+
     :return: ValuationResult object containing computed data values.
     """
 
@@ -439,6 +459,7 @@ def _permutation_montecarlo_classwise_shapley_for_label(
         data_names=u.data.data_names,
     )
 
+    rng = np.random.default_rng(seed)
     _, y_train = u.data.get_training_data(u.data.indices)
     class_indices_set, class_complement_indices_set = split_indices_by_label(
         u.data.indices,
@@ -446,13 +467,14 @@ def _permutation_montecarlo_classwise_shapley_for_label(
         label,
     )
     _, complement_y_train = u.data.get_training_data(class_complement_indices_set)
-    indices_permutation = np.random.permutation(class_indices_set)
+    indices_permutation = rng.permutation(class_indices_set)
 
     for subset_idx, subset_complement in enumerate(
         random_powerset_group_conditional(
             class_complement_indices_set,
             complement_y_train,
             min_elements_per_group=min_elements_per_label,
+            seed=rng,
         )
     ):
         result += _permutation_montecarlo_shapley_rollout(

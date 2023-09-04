@@ -173,8 +173,7 @@ def random_powerset_group_conditional(
         groups: Vector of size N containing the group as an integer for each
             element.
         min_elements_per_group: The minimum number of elements for each group.
-        seed: Either an instance of a numpy random number generator or a seed
-            for it.
+        seed: Either an instance of a numpy random number generator or a seed for it.
 
     Returns:
         Generated draw from the powerset of s with `min_elements` of each group.
@@ -211,7 +210,9 @@ def random_powerset_group_conditional(
                 )
             )
             if subset_length > 0:
-                subsets.append(random_subset_of_size(s[label_indices], subset_length))
+                subsets.append(
+                    random_subset_of_size(s[label_indices], subset_length, seed=rng)
+                )
 
         if len(subsets) > 0:
             subset = np.concatenate(tuple(subsets))
