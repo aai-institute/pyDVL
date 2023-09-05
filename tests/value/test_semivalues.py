@@ -58,6 +58,33 @@ def test_shapley(
     check_values(values, exact_values, rtol=0.2)
 
 
+@pytest.mark.parametrize(
+    "num_samples,sampler,coefficient,batch_size",
+    [(5, PermutationSampler, beta_coefficient(1, 1), 2)],
+)
+def test_shapley_batch_size(
+    num_samples: int,
+    analytic_shapley,
+    sampler: Type[PowersetSampler],
+    coefficient: SVCoefficient,
+    batch_size: int,
+    n_jobs: int,
+    parallel_config: ParallelConfig,
+):
+    u, exact_values = analytic_shapley
+    criterion = AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2 ** (num_samples * 2))
+    values = compute_generic_semivalues(
+        sampler(u.data.indices),
+        u,
+        coefficient,
+        criterion,
+        n_jobs=n_jobs,
+        batch_size=batch_size,
+        config=parallel_config,
+    )
+    check_values(values, exact_values, rtol=0.2)
+
+
 @pytest.mark.parametrize("num_samples", [5])
 @pytest.mark.parametrize(
     "sampler",

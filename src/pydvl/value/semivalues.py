@@ -73,7 +73,8 @@ from __future__ import annotations
 import logging
 import math
 from enum import Enum
-from typing import Optional, Protocol, Tuple, Type, TypeVar, cast
+from itertools import islice
+from typing import Collection, List, Optional, Protocol, Tuple, Type, TypeVar, cast
 
 import numpy as np
 import scipy as sp
@@ -123,23 +124,28 @@ IndexT = TypeVar("IndexT", bound=np.generic)
 MarginalT = Tuple[IndexT, float]
 
 
-def _marginal(u: Utility, coefficient: SVCoefficient, sample: SampleT) -> MarginalT:
+def _marginal(
+    u: Utility, coefficient: SVCoefficient, samples: Collection[SampleT]
+) -> Tuple[MarginalT, ...]:
     """Computation of marginal utility. This is a helper function for
     [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
 
     Args:
         u: Utility object with model, data, and scoring function.
         coefficient: The semivalue coefficient and sampler weight
-        sample: A tuple of index and subset of indices to compute a marginal
-            utility.
+        samples: A collection of samples. Each sample is a tuple of index and subset of
+            indices to compute a marginal utility.
 
     Returns:
-        Tuple with index and its marginal utility.
+        A collection of marginals. Each marginal is a tuple with index and its marginal
+        utility.
     """
     n = len(u.data)
-    idx, s = sample
-    marginal = (u({idx}.union(s)) - u(s)) * coefficient(n, len(s))
-    return idx, marginal
+    marginals: List[MarginalT] = []
+    for idx, s in samples:
+        marginal = (u({idx}.union(s)) - u(s)) * coefficient(n, len(s))
+        marginals.append((idx, marginal))
+    return tuple(marginals)
 
 
 # @deprecated(
@@ -153,6 +159,7 @@ def compute_generic_semivalues(
     coefficient: SVCoefficient,
     done: StoppingCriterion,
     *,
+    batch_size: int = 1,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -164,6 +171,7 @@ def compute_generic_semivalues(
         u: Utility object with model, data, and scoring function.
         coefficient: The semi-value coefficient
         done: Stopping criterion.
+        batch_size: Number of marginal evaluations per (parallelized) task.
         n_jobs: Number of parallel jobs to use.
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
@@ -210,20 +218,24 @@ def compute_generic_semivalues(
 
             completed, pending = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
             for future in completed:
-                idx, marginal = future.result()
-                result.update(idx, marginal)
-                if done(result):
-                    return result
+                for idx, marginal in future.result():
+                    result.update(idx, marginal)
+                    if done(result):
+                        return result
 
             # Ensure that we always have n_submitted_jobs running
             try:
                 for _ in range(n_submitted_jobs - len(pending)):
+                    samples = tuple(islice(sampler_it, batch_size))
+                    if len(samples) == 0:
+                        raise StopIteration
+
                     pending.add(
                         executor.submit(
                             _marginal,
                             u=u,
                             coefficient=correction,
-                            sample=next(sampler_it),
+                            samples=samples,
                         )
                     )
             except StopIteration:
@@ -266,6 +278,7 @@ def compute_shapley_semivalues(
     *,
     done: StoppingCriterion = MaxUpdates(100),
     sampler_t: Type[StochasticSampler] = PermutationSampler,
+    batch_size: int = 1,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -284,6 +297,7 @@ def compute_shapley_semivalues(
         done: Stopping criterion.
         sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
             for a list.
+        batch_size: Number of marginal evaluations per (parallelized) task.
         n_jobs: Number of parallel jobs to use.
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
@@ -298,6 +312,7 @@ def compute_shapley_semivalues(
         u,
         shapley_coefficient,
         done,
+        batch_size=batch_size,
         n_jobs=n_jobs,
         config=config,
         progress=progress,
@@ -309,6 +324,7 @@ def compute_banzhaf_semivalues(
     *,
     done: StoppingCriterion = MaxUpdates(100),
     sampler_t: Type[StochasticSampler] = PermutationSampler,
+    batch_size: int = 1,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -325,6 +341,7 @@ def compute_banzhaf_semivalues(
         done: Stopping criterion.
         sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler` for a
             list.
+        batch_size: Number of marginal evaluations per (parallelized) task.
         n_jobs: Number of parallel jobs to use.
         seed: Either an instance of a numpy random number generator or a seed for it.
         config: Object configuring parallel computation, with cluster address,
@@ -339,6 +356,7 @@ def compute_banzhaf_semivalues(
         u,
         banzhaf_coefficient,
         done,
+        batch_size=batch_size,
         n_jobs=n_jobs,
         config=config,
         progress=progress,
@@ -352,6 +370,7 @@ def compute_beta_shapley_semivalues(
     beta: float = 1,
     done: StoppingCriterion = MaxUpdates(100),
     sampler_t: Type[StochasticSampler] = PermutationSampler,
+    batch_size: int = 1,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -369,6 +388,7 @@ def compute_beta_shapley_semivalues(
         beta: Beta parameter of the Beta distribution.
         done: Stopping criterion.
         sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler` for a list.
+        batch_size: Number of marginal evaluations per (parallelized) task.
         n_jobs: Number of parallel jobs to use.
         seed: Either an instance of a numpy random number generator or a seed for it.
         config: Object configuring parallel computation, with cluster address, number of
@@ -383,6 +403,7 @@ def compute_beta_shapley_semivalues(
         u,
         beta_coefficient(alpha, beta),
         done,
+        batch_size=batch_size,
         n_jobs=n_jobs,
         config=config,
         progress=progress,

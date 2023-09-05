@@ -19,6 +19,10 @@ randomness.
   `pydvl.value.semivalues`. Introduced new type `Seed` and conversion function 
   `ensure_seed_sequence`.
   [PR #396](https://github.com/aai-institute/pyDVL/pull/396)
+- Added `batch_size` parameter to `compute_banzhaf_semivalues`,
+  `compute_beta_shapley_semivalues`, `compute_shapley_semivalues` and
+  `compute_generic_semivalues`.
+  [PR #428](https://github.com/aai-institute/pyDVL/pull/428)
 
 ### Changed
 
@@ -240,3 +244,4 @@ It contains:
 - Parallelization of computations with Ray
 - Documentation
 - Notebooks containing examples of different use cases
+
