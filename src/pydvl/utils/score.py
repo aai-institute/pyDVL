@@ -2,6 +2,10 @@
 This module provides a [Scorer][pydvl.utils.score.Scorer] class that wraps
 scoring functions with additional information.
 
+Scorers are the fundamental building block of many data valuation methods. They
+are typically used by the [Utility][pydvl.utils.utility.Utility] class to
+evaluate the quality of a model when trained on subsets of the training data.
+
 Scorers can be constructed in the same way as in scikit-learn: either from 
 known strings or from a callable. Greater values must be better. If they are not,
 a negated version can be used, see scikit-learn's
