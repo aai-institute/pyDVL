@@ -1,6 +1,6 @@
 import pytest
 
-from pydvl.utils.config import ParallelConfig
+from pydvl.parallel.config import ParallelConfig
 
 
 @pytest.fixture(scope="module", params=["joblib", "ray-local", "ray-external"])

@@ -1,12 +1,13 @@
 import math
 import warnings
 from itertools import permutations
-from typing import Collection, List
+from typing import List
 
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress, powerset
+from pydvl.parallel import MapReduceJob, ParallelConfig
+from pydvl.utils import Utility, maybe_progress, powerset
 from pydvl.utils.status import Status
 from pydvl.value.result import ValuationResult
 

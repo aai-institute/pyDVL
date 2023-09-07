@@ -2,11 +2,11 @@ from concurrent.futures import Executor
 from contextlib import contextmanager
 from typing import Generator, Optional
 
-from pydvl.utils.config import ParallelConfig
-from pydvl.utils.parallel.backend import BaseParallelBackend
+from pydvl.parallel.backend import BaseParallelBackend
+from pydvl.parallel.config import ParallelConfig
 
 try:
-    from pydvl.utils.parallel.futures.ray import RayExecutor
+    from pydvl.parallel.futures.ray import RayExecutor
 except ImportError:
     pass
 
@@ -30,8 +30,8 @@ def init_executor(
 
     ??? Examples
         ``` python
-        from pydvl.utils.parallel.futures import init_executor
-        from pydvl.utils.config import ParallelConfig
+        from pydvl.parallel import init_executor, ParallelConfig
+
         config = ParallelConfig(backend="ray")
         with init_executor(max_workers=1, config=config) as executor:
             future = executor.submit(lambda x: x + 1, 1)
@@ -39,7 +39,7 @@ def init_executor(
         assert result == 2
         ```
         ``` python
-        from pydvl.utils.parallel.futures import init_executor
+        from pydvl.parallel.futures import init_executor
         with init_executor() as executor:
             results = list(executor.map(lambda x: x + 1, range(5)))
         assert results == [1, 2, 3, 4, 5]

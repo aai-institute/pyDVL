@@ -11,11 +11,11 @@ from weakref import WeakSet, ref
 import ray
 from deprecate import deprecated
 
-from pydvl.utils import ParallelConfig
+from pydvl.parallel.config import ParallelConfig
 
 __all__ = ["RayExecutor"]
 
-from pydvl.utils.parallel import CancellationPolicy
+from pydvl.parallel import CancellationPolicy
 
 T = TypeVar("T")
 
@@ -26,7 +26,7 @@ class RayExecutor(Executor):
     """Asynchronous executor using Ray that implements the concurrent.futures API.
 
     It shouldn't be initialized directly. You should instead call
-    [init_executor()][pydvl.utils.parallel.futures.init_executor].
+    [init_executor()][pydvl.parallel.futures.init_executor].
 
     Args:
         max_workers: Maximum number of concurrent tasks. Each task can request
@@ -41,7 +41,7 @@ class RayExecutor(Executor):
             pending futures, but not running ones, as done by
             [concurrent.futures.ProcessPoolExecutor][]. Additionally, `All`
             cancels all pending and running futures, and `None` doesn't cancel
-            any. See [CancellationPolicy][pydvl.utils.parallel.backend.CancellationPolicy]
+            any. See [CancellationPolicy][pydvl.parallel.backend.CancellationPolicy]
     """
 
     @deprecated(
@@ -145,7 +145,7 @@ class RayExecutor(Executor):
         This method tries to mimic the behaviour of
         [Executor.shutdown][concurrent.futures.Executor.shutdown]
         while allowing one more value for ``cancel_futures`` which instructs it
-        to use the [CancellationPolicy][pydvl.utils.parallel.backend.CancellationPolicy]
+        to use the [CancellationPolicy][pydvl.parallel.backend.CancellationPolicy]
         defined upon construction.
 
         Args:

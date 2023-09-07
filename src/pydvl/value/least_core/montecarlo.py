@@ -5,10 +5,8 @@ from typing import Iterable, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils.config import ParallelConfig
+from pydvl.parallel import MapReduceJob, ParallelConfig, effective_n_jobs
 from pydvl.utils.numeric import random_powerset
-from pydvl.utils.parallel import MapReduceJob
-from pydvl.utils.parallel.backend import effective_n_jobs
 from pydvl.utils.progress import maybe_progress
 from pydvl.utils.utility import Utility
 from pydvl.value.least_core.common import LeastCoreProblem, lc_solve_problem
