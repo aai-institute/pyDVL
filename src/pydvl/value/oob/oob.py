@@ -45,22 +45,10 @@ def compute_data_oob(
         oob_idx = np.intersect1d(u.data.indices, np.unique(samples))
         all_counts[oob_idx] += 1
         accuracy = est.predict(u.data.x_train[oob_idx]) == u.data.y_train[oob_idx]
-        for new_value, s in zip(accuracy, oob_idx):
-            count, mean, M2 = all_counts[s], all_means[s], all_M2[s]
-            delta = new_value - mean
-            mean += delta / count
-            delta2 = new_value - mean
-            M2 += delta * delta2
-            all_M2[s] = M2
-            all_means[s] = mean
-
-    variances, sample_variances = all_M2 / all_counts, all_M2 / (all_counts - 1)
-
-    return ValuationResult(
-        algorithm="data_oob",
-        status=Status.Converged,
-        values=all_means,
-        data_names=u.data.data_names,
-        counts=all_counts,
-        variances=variances,
-    )
+        result += ValuationResult(
+            algorithm="data_oob",
+            indices=oob_idx,
+            values=accuracies,
+            counts=np.ones_like(accuracies),
+        )
+    return result
