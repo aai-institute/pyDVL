@@ -40,7 +40,7 @@ def compute_data_oob(
     bag.fit(u.data.x_train, u.data.y_train)
     #    print(bag.score(u.data.x_test, u.data.y_test))
     for est, samples in maybe_progress(
-        zip(bag.estimators_, bag.estimators_samples_), progress
+        zip(bag.estimators_, bag.estimators_samples_), progress, total=n_est
     ):  # The bottleneck is the bag fitting not this part so TQDM is not very useful here
         oob_idx = np.intersect1d(u.data.indices, np.unique(samples))
         all_counts[oob_idx] += 1
