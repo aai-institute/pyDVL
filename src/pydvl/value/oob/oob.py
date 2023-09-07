@@ -8,14 +8,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
+import numpy as np
+from numpy.typing import NDArray
+from sklearn.base import is_classifier, is_regressor
+from sklearn.ensemble import BaggingClassifier, BaggingRegressor
 
 from pydvl.utils import Utility, maybe_progress
-from pydvl.utils.status import Status
 from pydvl.value.result import ValuationResult
-import numpy as np
-from sklearn.ensemble import BaggingClassifier, BaggingRegressor
-from sklearn.base import is_classifier, is_regressor
-
 
 __all__ = ["compute_data_oob"]
 
@@ -25,7 +26,7 @@ def compute_data_oob(
     n_est: int = 10,
     max_samples: float = 0.8,
     n_jobs: int = None,
-    loss: function = None,
+    loss: Callable = None,
     *,
     progress: bool = True,
 ) -> ValuationResult:
@@ -107,7 +108,7 @@ def compute_data_oob(
     return result
 
 
-def point_wise_accuracy(preds: np.array, y: np.array):
+def point_wise_accuracy(preds: NDArray, y: NDArray) -> NDArray:
     r"""Computes point wise accuracy
 
     Args:
@@ -123,7 +124,7 @@ def point_wise_accuracy(preds: np.array, y: np.array):
     )
 
 
-def neg_l2_distance(preds: np.array, y: np.array):
+def neg_l2_distance(preds: NDArray, y: NDArray) -> NDArray[np.float64]:
     r"""Computes negative l2 distance between label and model prediction
 
     Args:
