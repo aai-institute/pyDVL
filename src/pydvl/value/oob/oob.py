@@ -44,7 +44,10 @@ def compute_data_oob(
     ):  # The bottleneck is the bag fitting not this part so TQDM is not very useful here
         oob_idx = np.intersect1d(u.data.indices, np.unique(samples))
         all_counts[oob_idx] += 1
-        accuracy = est.predict(u.data.x_train[oob_idx]) == u.data.y_train[oob_idx]
+        accuracies = np.array(
+            est.predict(u.data.x_train[oob_idx]) == u.data.y_train[oob_idx],
+            dtype=u.data.indices.dtype,
+        )
         result += ValuationResult(
             algorithm="data_oob",
             indices=oob_idx,
