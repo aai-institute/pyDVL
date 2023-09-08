@@ -32,7 +32,7 @@ def compute_data_oob(
     n_jobs: int = None,
     loss: Callable = None,
     *,
-    progress: bool = True,
+    progress: bool = False,
 ) -> ValuationResult:
     r"""Computes Data out of bag values
 
