@@ -64,7 +64,7 @@ def compute_data_oob(
         Object with the data values.
     """
 
-    result = ValuationResult.empty(
+    result: ValuationResult[np.int_, np.float_] = ValuationResult.empty(
         algorithm="data_oob", indices=u.data.indices, data_names=u.data.data_names
     )
     # check model type:
