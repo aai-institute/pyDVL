@@ -67,28 +67,23 @@ def compute_data_oob(
     result: ValuationResult[np.int_, np.float_] = ValuationResult.empty(
         algorithm="data_oob", indices=u.data.indices, data_names=u.data.data_names
     )
-    # check model type:
-    if is_classifier(u.model):
-        model_type = "classifier"
-    elif is_regressor(u.model):
-        model_type = "regressor"
-    else:
-        raise Exception(
-            "Model has to be classifier or a regressor in a sklearn format."
-        )
 
-    if model_type == "classifier":
+    if is_classifier(u.model):
         bag = BaggingClassifier(
             u.model, n_estimators=n_est, max_samples=max_samples, n_jobs=n_jobs
         )
         if loss is None:
             loss = point_wise_accuracy
-    else:
+    elif is_regressor(u.model):
         bag = BaggingRegressor(
             u.model, n_estimators=n_est, max_samples=max_samples, n_jobs=n_jobs
         )
         if loss is None:
             loss = neg_l2_distance
+    else:
+        raise Exception(
+            "Model has to be a classifier or a regressor in sklearn format."
+        )
 
     bag.fit(u.data.x_train, u.data.y_train)
 
