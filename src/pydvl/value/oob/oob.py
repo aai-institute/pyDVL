@@ -9,9 +9,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import TypeVar
 
 import numpy as np
-from numpy.typing import NDArray, TypeVar
+from numpy.typing import NDArray
 from sklearn.base import is_classifier, is_regressor
 from sklearn.ensemble import BaggingClassifier, BaggingRegressor
 
