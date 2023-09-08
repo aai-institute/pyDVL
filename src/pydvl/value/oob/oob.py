@@ -115,10 +115,7 @@ def point_wise_accuracy(preds: NDArray, y: NDArray) -> NDArray:
     Returns:
         Array of point wise accuracy
     """
-    return np.array(
-        preds == y,
-        dtype=bool,
-    )
+    return np.array(preds == y, dtype=np.int_)
 
 
 def neg_l2_distance(preds: NDArray, y: NDArray) -> NDArray[np.float64]:
