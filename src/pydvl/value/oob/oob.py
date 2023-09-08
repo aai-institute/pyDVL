@@ -118,7 +118,7 @@ def point_wise_accuracy(preds: NDArray, y: NDArray) -> NDArray:
     return np.array(preds == y, dtype=np.int_)
 
 
-def neg_l2_distance(preds: NDArray, y: NDArray) -> NDArray[np.float64]:
+def neg_l2_distance(preds: NDArray[T], y: NDArray[T]) -> NDArray[T]:
     r"""Computes negative l2 distance between label and model prediction
 
     Args:
