@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import NDArray, TypeVar
 from sklearn.base import is_classifier, is_regressor
 from sklearn.ensemble import BaggingClassifier, BaggingRegressor
 
@@ -19,6 +19,8 @@ from pydvl.utils import Utility, maybe_progress
 from pydvl.value.result import ValuationResult
 
 __all__ = ["compute_data_oob"]
+
+T = TypeVar("T", bound=np.number)
 
 
 def compute_data_oob(
