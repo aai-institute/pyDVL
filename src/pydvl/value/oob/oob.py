@@ -131,7 +131,7 @@ def neg_l2_distance(preds: NDArray[T], y: NDArray[T]) -> NDArray[T]:
     Returns:
         Array with point wise negative l2 distance between label and model prediction
     """
-    return np.square(
+    return -np.square(
         np.array(
             preds - y,
             dtype=np.float64,
