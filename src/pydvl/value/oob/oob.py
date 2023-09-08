@@ -56,8 +56,10 @@ def compute_data_oob(
         u: Utility object with model, data, and scoring function.
         n_est: Number of estimator used in the bagging procedure.
         max_samples: The fraction of samples to draw to train each base estimator.
-        n_jobs: The number of jobs to run in parallel used in the bagging procedure for both fit and predict.
-        loss: A function taking as parameters model prediction and corresponding data labels(preds, y) and returning an array of point wise errors.
+        n_jobs: The number of jobs to run in parallel used in the bagging
+            procedure for both fit and predict.
+        loss: A function taking as parameters model prediction and corresponding
+            data labels(preds, y) and returning an array of point-wise errors.
         progress: If True, display a progress bar.
 
     Returns:
