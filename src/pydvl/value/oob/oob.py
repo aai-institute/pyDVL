@@ -1,8 +1,9 @@
 """
 ## References
 
-[^1]: <a name="kwon_data_2023"></a>Kwon et al. [Data-OOB: Out-of-bag Estimate as a Simple and Efficient Data Value]
-(https://proceedings.mlr.press/v202/kwon23e.html). In: Published at ICML 2023
+[^1]: <a name="kwon_data_2023"></a>Kwon et al.
+[Data-OOB: Out-of-bag Estimate as a Simple and Efficient Data Value](https://proceedings.mlr.press/v202/kwon23e.html).
+In: Published at ICML 2023
 
 """
 
