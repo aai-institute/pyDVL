@@ -82,6 +82,9 @@ model. We implement methods from the following papers:
 - Naman Agarwal, Brian Bullins, and Elad Hazan, [Second-Order Stochastic Optimization
   for Machine Learning in Linear Time](https://www.jmlr.org/papers/v18/16-491.html),
   Journal of Machine Learning Research 18 (2017): 1-40.
+- Schioppa, Andrea, Polina Zablotskaia, David Vilar, and Artem Sokolov. 
+  [Scaling Up Influence Functions](http://arxiv.org/abs/2112.03052). 
+  In Proceedings of the AAAI-22. arXiv, 2021.
 
 # Installation
 

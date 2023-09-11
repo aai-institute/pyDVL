@@ -2,14 +2,14 @@ import operator
 import os
 import time
 from functools import partial, reduce
-from typing import List, Optional
+from typing import Optional
 
 import numpy as np
 import pytest
 
-from pydvl.utils.parallel import MapReduceJob, init_parallel_backend
-from pydvl.utils.parallel.backend import effective_n_jobs
-from pydvl.utils.parallel.futures import init_executor
+from pydvl.parallel import MapReduceJob, init_parallel_backend
+from pydvl.parallel.backend import effective_n_jobs
+from pydvl.parallel.futures import init_executor
 from pydvl.utils.types import Seed
 
 
@@ -97,10 +97,7 @@ def map_reduce_job_and_parameters(parallel_config, n_jobs, request):
 def test_map_reduce_job(map_reduce_job_and_parameters, indices, expected):
     map_reduce_job, n_jobs = map_reduce_job_and_parameters
     result = map_reduce_job(indices)()
-    if not isinstance(result, np.ndarray):
-        assert result == expected
-    else:
-        assert (result == expected).all()
+    assert np.all(result == expected)
 
 
 @pytest.mark.parametrize(
@@ -233,7 +230,7 @@ def test_future_cancellation(parallel_config):
     if parallel_config.backend != "ray":
         pytest.skip("Currently this test only works with Ray")
 
-    from pydvl.utils.parallel import CancellationPolicy
+    from pydvl.parallel import CancellationPolicy
 
     with init_executor(
         config=parallel_config, cancel_futures=CancellationPolicy.NONE

@@ -5,14 +5,8 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import (
-    Dataset,
-    GroupedDataset,
-    MemcachedConfig,
-    ParallelConfig,
-    Status,
-    Utility,
-)
+from pydvl.parallel.config import ParallelConfig
+from pydvl.utils import Dataset, GroupedDataset, MemcachedConfig, Status, Utility
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.score import Scorer, squashed_r2
 from pydvl.utils.types import Seed

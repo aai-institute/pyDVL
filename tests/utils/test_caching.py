@@ -5,7 +5,8 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from pydvl.utils import MapReduceJob, memcached
+from pydvl.parallel import MapReduceJob
+from pydvl.utils import memcached
 
 logger = logging.getLogger(__name__)
 

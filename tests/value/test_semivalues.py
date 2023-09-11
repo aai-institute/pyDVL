@@ -1,11 +1,11 @@
 import math
-import time
 from typing import Type
 
 import numpy as np
 import pytest
 
-from pydvl.utils import ParallelConfig, Seed
+from pydvl.parallel.config import ParallelConfig
+from pydvl.utils.types import Seed
 from pydvl.value.sampler import (
     AntitheticSampler,
     DeterministicPermutationSampler,

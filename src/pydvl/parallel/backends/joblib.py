@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from concurrent.futures import Executor
 from typing import Callable, TypeVar, cast
 
@@ -7,19 +8,21 @@ import joblib
 from joblib import delayed
 from joblib.externals.loky import get_reusable_executor
 
-from pydvl.utils import ParallelConfig
-from pydvl.utils.parallel.backend import BaseParallelBackend, CancellationPolicy, log
+from pydvl.parallel.backend import BaseParallelBackend, CancellationPolicy
+from pydvl.parallel.config import ParallelConfig
 
 __all__ = ["JoblibParallelBackend"]
 
 T = TypeVar("T")
+
+log = logging.getLogger(__name__)
 
 
 class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
     """Class used to wrap joblib to make it transparent to algorithms.
 
     It shouldn't be initialized directly. You should instead call
-    [init_parallel_backend()][pydvl.utils.parallel.backend.init_parallel_backend].
+    [init_parallel_backend()][pydvl.parallel.backend.init_parallel_backend].
 
     Args:
         config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
