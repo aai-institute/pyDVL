@@ -4,7 +4,7 @@ from typing import Type
 import numpy as np
 import pytest
 
-from pydvl.utils import ParallelConfig
+from pydvl.parallel.config import ParallelConfig
 from pydvl.value.sampler import (
     AntitheticSampler,
     DeterministicPermutationSampler,

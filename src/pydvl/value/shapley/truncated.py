@@ -13,7 +13,8 @@ from typing import Optional, cast
 import numpy as np
 from deprecate import deprecated
 
-from pydvl.utils import ParallelConfig, Utility, running_moments
+from pydvl.parallel.config import ParallelConfig
+from pydvl.utils import Utility, running_moments
 from pydvl.value import ValuationResult
 from pydvl.value.stopping import MaxChecks, StoppingCriterion
 

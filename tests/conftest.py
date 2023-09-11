@@ -10,8 +10,8 @@ from pymemcache.client import Client
 from sklearn import datasets
 from sklearn.utils import Bunch
 
+from pydvl.parallel.backend import available_cpus
 from pydvl.utils import Dataset, MemcachedClientConfig
-from pydvl.utils.parallel.backend import available_cpus
 
 if TYPE_CHECKING:
     from _pytest.config import Config

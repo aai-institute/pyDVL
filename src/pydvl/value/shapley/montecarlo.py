@@ -56,10 +56,15 @@ from numpy.random import SeedSequence
 from numpy.typing import NDArray
 from tqdm import tqdm
 
-from pydvl.utils import effective_n_jobs, init_executor, init_parallel_backend
-from pydvl.utils.config import ParallelConfig
+from pydvl.parallel import (
+    CancellationPolicy,
+    MapReduceJob,
+    ParallelConfig,
+    effective_n_jobs,
+    init_executor,
+    init_parallel_backend,
+)
 from pydvl.utils.numeric import random_powerset
-from pydvl.utils.parallel import CancellationPolicy, MapReduceJob
 from pydvl.utils.types import Seed, ensure_seed_sequence
 from pydvl.utils.utility import Utility
 from pydvl.value.result import ValuationResult

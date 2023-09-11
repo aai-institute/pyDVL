@@ -5,8 +5,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
+from pydvl.parallel.config import ParallelConfig
 from pydvl.utils import Dataset, SupervisedModel, Utility
-from pydvl.utils.config import ParallelConfig
 from pydvl.utils.status import Status
 from pydvl.value import ValuationResult
 
