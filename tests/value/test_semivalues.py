@@ -98,6 +98,8 @@ def test_shapley_batch_size(
     )
     total_seconds_multi_batch = timed_fn.execution_time
     assert total_seconds_multi_batch < total_seconds_single_batch
+
+    # Occasionally, batch_2 arrives before batch_1, so rtol isn't always 0.
     check_values(result_single_batch, result_multi_batch, rtol=1e-4)
 
 
