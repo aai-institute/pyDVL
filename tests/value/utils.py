@@ -4,24 +4,22 @@ import time
 from copy import deepcopy
 from functools import wraps
 from logging import getLogger
-from typing import Callable, Optional, Tuple, TypeVar
+from typing import Callable, Optional, Protocol, Tuple, TypeVar
 
 from pydvl.utils.types import Seed
 
 logger = getLogger(__name__)
 
-ReturnType = TypeVar("ReturnType")
+ReturnT = TypeVar("ReturnT")
 
 
-def call_fn_multiple_seeds(
-    fn: Callable, *args, seeds: Tuple[Seed, ...], **kwargs
-) -> Tuple:
+def call_with_seeds(fun: Callable, *args, seeds: Tuple[Seed, ...], **kwargs) -> Tuple:
     """
     Execute a function multiple times with different seeds. It copies the arguments
     and keyword arguments before passing them to the function.
 
     Args:
-        fn: The function to execute.
+        fun: The function to execute.
         args: The arguments to pass to the function.
         seeds: The seeds to use.
         kwargs: The keyword arguments to pass to the function.
@@ -29,18 +27,25 @@ def call_fn_multiple_seeds(
     Returns:
         A tuple of the results of the function.
     """
-    return tuple(fn(*deepcopy(args), **deepcopy(kwargs), seed=seed) for seed in seeds)
+    return tuple(fun(*deepcopy(args), **deepcopy(kwargs), seed=seed) for seed in seeds)
 
 
-def measure_execution_time(
-    func: Callable[..., ReturnType]
-) -> Callable[..., Tuple[Optional[ReturnType], float]]:
+class TimedCallable(Protocol):
+    """A callable that has an attribute to keep track of execution time."""
+
+    execution_time: float
+
+    def __call__(self, *args, **kwargs) -> ReturnT:
+        ...
+
+
+def timed(fun: Callable[..., ReturnT]) -> TimedCallable:
     """
     Takes a function `func` and returns a function with the same input arguments and
     the original return value along with the execution time.
 
     Args:
-        func: The function to be measured, accepting arbitrary arguments and returning
+        fun: The function to be measured, accepting arbitrary arguments and returning
             any type.
 
     Returns:
@@ -49,18 +54,16 @@ def measure_execution_time(
             will have the same input arguments and return type as the original function.
     """
 
-    @wraps(func)
-    def wrapper(*args, **kwargs) -> Tuple[Optional[ReturnType], float]:
-        result = None
-        start_time = time.time()
-        try:
-            result = func(*args, **kwargs)
-        except Exception as e:
-            logger.error(f"Error in {func.__name__}: {e}")
-        finally:
-            end_time = time.time()
-            execution_time = end_time - start_time
-            logger.info(f"{func.__name__} took {execution_time:.5f} seconds.")
-            return result, execution_time
+    wrapper: TimedCallable
 
+    @wraps(fun)
+    def wrapper(*args, **kwargs) -> ReturnT:
+        start_time = time.time()
+        result = fun(*args, **kwargs)
+        end_time = time.time()
+        wrapper.execution_time = end_time - start_time
+        logger.info(f"{fun.__name__} took {wrapper.execution_time:.5f} seconds.")
+        return result
+
+    wrapper.execution_time = 0.0
     return wrapper

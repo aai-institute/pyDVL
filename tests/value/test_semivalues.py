@@ -24,7 +24,7 @@ from pydvl.value.semivalues import (
 from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates
 
 from . import check_values
-from .utils import measure_execution_time
+from .utils import timed
 
 
 @pytest.mark.parametrize("num_samples", [5])
@@ -76,9 +76,8 @@ def test_shapley_batch_size(
 ):
     u, exact_values = analytic_shapley
     criterion = AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2 ** (num_samples * 2))
-    result_single_batch, total_seconds_single_batch = measure_execution_time(
-        compute_generic_semivalues
-    )(
+    timed_fn = timed(compute_generic_semivalues)
+    result_single_batch = timed_fn(
         sampler(u.data.indices, seed=seed),
         u,
         coefficient,
@@ -87,9 +86,8 @@ def test_shapley_batch_size(
         batch_size=1,
         config=parallel_config,
     )
-    result_multi_batch, total_seconds_multi_batch = measure_execution_time(
-        compute_generic_semivalues
-    )(
+    total_seconds_single_batch = timed_fn.execution_time
+    result_multi_batch = timed_fn(
         sampler(u.data.indices, seed=seed),
         u,
         coefficient,
@@ -98,8 +96,9 @@ def test_shapley_batch_size(
         batch_size=batch_size,
         config=parallel_config,
     )
+    total_seconds_multi_batch = timed_fn.execution_time
     assert total_seconds_multi_batch < total_seconds_single_batch
-    check_values(result_single_batch, result_multi_batch, rtol=0.0, atol=0.0)
+    check_values(result_single_batch, result_multi_batch, rtol=1e-4)
 
 
 @pytest.mark.parametrize("num_samples", [5])

@@ -72,6 +72,7 @@ from __future__ import annotations
 
 import logging
 import math
+import warnings
 from enum import Enum
 from itertools import islice
 from typing import Collection, List, Optional, Protocol, Tuple, Type, TypeVar, cast
@@ -172,7 +173,7 @@ def compute_generic_semivalues(
         u: Utility object with model, data, and scoring function.
         coefficient: The semi-value coefficient
         done: Stopping criterion.
-        batch_size: Number of marginal evaluations per (parallelized) task.
+        batch_size: Number of marginal evaluations per single parallel job.
         n_jobs: Number of parallel jobs to use.
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
@@ -189,6 +190,12 @@ def compute_generic_semivalues(
         log.warning(
             "PermutationSampler requires caching to be enabled or computation "
             "will be doubled wrt. a 'direct' implementation of permutation MC"
+        )
+
+    if batch_size != 1:
+        warnings.warn(
+            "batch_size is deprecated and will be removed in future versions.",
+            DeprecationWarning,
         )
 
     result = ValuationResult.zeros(
@@ -298,7 +305,7 @@ def compute_shapley_semivalues(
         done: Stopping criterion.
         sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
             for a list.
-        batch_size: Number of marginal evaluations per (parallelized) task.
+        batch_size: Number of marginal evaluations per single parallel job.
         n_jobs: Number of parallel jobs to use.
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
@@ -342,7 +349,7 @@ def compute_banzhaf_semivalues(
         done: Stopping criterion.
         sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler` for a
             list.
-        batch_size: Number of marginal evaluations per (parallelized) task.
+        batch_size: Number of marginal evaluations per single parallel job.
         n_jobs: Number of parallel jobs to use.
         seed: Either an instance of a numpy random number generator or a seed for it.
         config: Object configuring parallel computation, with cluster address,
