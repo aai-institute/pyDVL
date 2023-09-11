@@ -181,6 +181,10 @@ def compute_generic_semivalues(
 
     Returns:
         Object with the results.
+
+    !!! warning "Deprecation notice"
+        Parameter `batch_size` is for experimental use and will be removed in future
+        versions.
     """
     from concurrent.futures import FIRST_COMPLETED, Future, wait
 
@@ -194,7 +198,8 @@ def compute_generic_semivalues(
 
     if batch_size != 1:
         warnings.warn(
-            "batch_size is deprecated and will be removed in future versions.",
+            "Parameter `batch_size` is for experimental use and will be removed in "
+            "future versions",
             DeprecationWarning,
         )
 
@@ -314,6 +319,10 @@ def compute_shapley_semivalues(
 
     Returns:
         Object with the results.
+
+    !!! warning "Deprecation notice"
+        Parameter `batch_size` is for experimental use and will be removed in future
+        versions.
     """
     return compute_generic_semivalues(
         sampler_t(u.data.indices, seed=seed),
@@ -358,6 +367,10 @@ def compute_banzhaf_semivalues(
 
     Returns:
         Object with the results.
+
+    !!! warning "Deprecation notice"
+        Parameter `batch_size` is for experimental use and will be removed in future
+        versions.
     """
     return compute_generic_semivalues(
         sampler_t(u.data.indices, seed=seed),
@@ -405,6 +418,10 @@ def compute_beta_shapley_semivalues(
 
     Returns:
         Object with the results.
+
+    !!! warning "Deprecation notice"
+        Parameter `batch_size` is for experimental use and will be removed in future
+        versions.
     """
     return compute_generic_semivalues(
         sampler_t(u.data.indices, seed=seed),
@@ -443,6 +460,7 @@ def compute_semivalues(
     done: StoppingCriterion = MaxUpdates(100),
     mode: SemiValueMode = SemiValueMode.Shapley,
     sampler_t: Type[StochasticSampler] = PermutationSampler,
+    batch_size: int = 1,
     n_jobs: int = 1,
     seed: Optional[Seed] = None,
     **kwargs,
@@ -486,6 +504,7 @@ def compute_semivalues(
             [SemiValueMode][pydvl.value.semivalues.SemiValueMode] for a list.
         sampler_t: The sampler type to use. See [sampler][pydvl.value.sampler]
             for a list.
+        batch_size: Number of marginal evaluations per (parallelized) task.
         n_jobs: Number of parallel jobs to use.
         seed: Either an instance of a numpy random number generator or a seed for it.
         kwargs: Additional keyword arguments passed to
@@ -493,6 +512,10 @@ def compute_semivalues(
 
     Returns:
         Object with the results.
+
+    !!! warning "Deprecation notice"
+        Parameter `batch_size` is for experimental use and will be removed in future
+        versions.
     """
     if mode == SemiValueMode.Shapley:
         coefficient = shapley_coefficient
