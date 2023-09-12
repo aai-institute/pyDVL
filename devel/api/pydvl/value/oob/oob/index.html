@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://aai-institute.github.io/pyDVL/stable/api/pydvl/parallel/backends/ray/">
+        <link rel="canonical" href="https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/oob/oob/">
       
       
-        <link rel="prev" href="../joblib/">
+        <link rel="prev" href="../">
       
       
-        <link rel="next" href="../../futures/">
+        <link rel="next" href="../../shapley/">
       
       
       <link rel="icon" href="../../../../../assets/signet.svg">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Ray - pyDVL</title>
+        <title>Oob - pyDVL</title>
       
     
     
@@ -98,7 +98,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pydvl.parallel.backends.ray" class="md-skip">
+        <a href="#pydvl.value.oob.oob" class="md-skip">
           Skip to content
         </a>
       
@@ -151,7 +151,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Ray
+              Oob
             
           </span>
         </div>
@@ -1155,24 +1155,22 @@
                 
   
   
-    
-  
   
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2" >
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../" class="md-nav__link ">
+            <a href="../../../parallel/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1188,7 +1186,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5_2_2">
             <span class="md-nav__icon md-icon"></span>
             Parallel
@@ -1201,7 +1199,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../backend/" class="md-nav__link">
+      <a href="../../../parallel/backend/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1221,7 +1219,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../config/" class="md-nav__link">
+      <a href="../../../parallel/config/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1241,7 +1239,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map_reduce/" class="md-nav__link">
+      <a href="../../../parallel/map_reduce/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1259,24 +1257,22 @@
                 
   
   
-    
-  
   
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2_4" >
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../../parallel/backends/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1292,7 +1288,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_2_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_2_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5_2_2_4">
             <span class="md-nav__icon md-icon"></span>
             Backends
@@ -1305,7 +1301,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../joblib/" class="md-nav__link">
+      <a href="../../../parallel/backends/joblib/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1323,27 +1319,9 @@
                 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Ray
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../parallel/backends/ray/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1352,51 +1330,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.ray" class="md-nav__link">
-    ray
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.ray.RayParallelBackend" class="md-nav__link">
-    RayParallelBackend
-  </a>
-  
-    <nav class="md-nav" aria-label="RayParallelBackend">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.ray.RayParallelBackend.wrap" class="md-nav__link">
-    wrap()
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1429,7 +1362,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../futures/" class="md-nav__link ">
+            <a href="../../../parallel/futures/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1458,7 +1391,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../futures/ray/" class="md-nav__link">
+      <a href="../../../parallel/futures/ray/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1852,22 +1785,24 @@
                 
   
   
+    
+  
   
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_5" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../value/" class="md-nav__link ">
+            <a href="../../" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1883,7 +1818,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5_2_5">
             <span class="md-nav__icon md-icon"></span>
             Value
@@ -1896,7 +1831,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/result/" class="md-nav__link">
+      <a href="../../result/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1916,7 +1851,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/sampler/" class="md-nav__link">
+      <a href="../../sampler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1936,7 +1871,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/semivalues/" class="md-nav__link">
+      <a href="../../semivalues/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1956,7 +1891,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/stopping/" class="md-nav__link">
+      <a href="../../stopping/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1989,7 +1924,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../value/least_core/" class="md-nav__link ">
+            <a href="../../least_core/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -2018,7 +1953,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/least_core/common/" class="md-nav__link">
+      <a href="../../least_core/common/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2038,7 +1973,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/least_core/montecarlo/" class="md-nav__link">
+      <a href="../../least_core/montecarlo/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2058,7 +1993,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/least_core/naive/" class="md-nav__link">
+      <a href="../../least_core/naive/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2099,7 +2034,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../value/loo/" class="md-nav__link ">
+            <a href="../../loo/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -2128,7 +2063,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/loo/loo/" class="md-nav__link">
+      <a href="../../loo/loo/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2148,7 +2083,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/loo/naive/" class="md-nav__link">
+      <a href="../../loo/naive/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2174,22 +2109,24 @@
                 
   
   
+    
+  
   
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_5_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_5_7" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../value/oob/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -2205,7 +2142,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_5_7_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_5_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5_2_5_7">
             <span class="md-nav__icon md-icon"></span>
             Oob
@@ -2216,9 +2153,27 @@
                 
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../../../value/oob/oob/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Oob
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -2227,6 +2182,65 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pydvl.value.oob.oob" class="md-nav__link">
+    oob
+  </a>
+  
+    <nav class="md-nav" aria-label="oob">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pydvl.value.oob.oob--references" class="md-nav__link">
+    References
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pydvl.value.oob.oob.compute_data_oob" class="md-nav__link">
+    compute_data_oob()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pydvl.value.oob.oob.point_wise_accuracy" class="md-nav__link">
+    point_wise_accuracy()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pydvl.value.oob.oob.neg_l2_distance" class="md-nav__link">
+    neg_l2_distance()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2259,7 +2273,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../value/shapley/" class="md-nav__link ">
+            <a href="../../shapley/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -2288,7 +2302,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/common/" class="md-nav__link">
+      <a href="../../shapley/common/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2308,7 +2322,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/gt/" class="md-nav__link">
+      <a href="../../shapley/gt/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2328,7 +2342,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/knn/" class="md-nav__link">
+      <a href="../../shapley/knn/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2348,7 +2362,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/montecarlo/" class="md-nav__link">
+      <a href="../../shapley/montecarlo/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2368,7 +2382,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/naive/" class="md-nav__link">
+      <a href="../../shapley/naive/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2388,7 +2402,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/owen/" class="md-nav__link">
+      <a href="../../shapley/owen/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2408,7 +2422,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/truncated/" class="md-nav__link">
+      <a href="../../shapley/truncated/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2428,7 +2442,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/types/" class="md-nav__link">
+      <a href="../../shapley/types/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2498,29 +2512,43 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.ray" class="md-nav__link">
-    ray
+  <a href="#pydvl.value.oob.oob" class="md-nav__link">
+    oob
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.ray.RayParallelBackend" class="md-nav__link">
-    RayParallelBackend
-  </a>
-  
-    <nav class="md-nav" aria-label="RayParallelBackend">
+    <nav class="md-nav" aria-label="oob">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.ray.RayParallelBackend.wrap" class="md-nav__link">
-    wrap()
+  <a href="#pydvl.value.oob.oob--references" class="md-nav__link">
+    References
   </a>
   
 </li>
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pydvl.value.oob.oob.compute_data_oob" class="md-nav__link">
+    compute_data_oob()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pydvl.value.oob.oob.point_wise_accuracy" class="md-nav__link">
+    point_wise_accuracy()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pydvl.value.oob.oob.neg_l2_distance" class="md-nav__link">
+    neg_l2_distance()
+  </a>
   
 </li>
       
@@ -2542,93 +2570,26 @@
   
 
 
-  <h1>Ray</h1>
+  <h1>Oob</h1>
 
 <div class="doc doc-object doc-module">
 
 
 
-<a id="pydvl.parallel.backends.ray"></a>
+<a id="pydvl.value.oob.oob"></a>
   <div class="doc doc-contents first">
-
   
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-class">
-
-
-
-
-<h2 id="pydvl.parallel.backends.ray.RayParallelBackend" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">RayParallelBackend</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></code>
-
-<a href="#pydvl.parallel.backends.ray.RayParallelBackend" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-  <div class="doc doc-contents ">
-          <p class="doc doc-class-bases">
-            Bases: <code><a class="autorefs autorefs-internal" title="pydvl.parallel.backend.BaseParallelBackend" href="../../backend/#pydvl.parallel.backend.BaseParallelBackend">BaseParallelBackend</a></code></p>
-
-  
-      <p>Class used to wrap ray to make it transparent to algorithms.</p>
-<p>It shouldn't be initialized directly. You should instead call
-<a class="autorefs autorefs-internal" href="../../backend/#pydvl.parallel.backend.init_parallel_backend">init_parallel_backend()</a>.</p>
-
-
-
-  <table>
-    <thead>
-      <tr>
-        <th><b>PARAMETER</b></th>
-        <th><b> DESCRIPTION</b></th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>config</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>instance of <a class="autorefs autorefs-internal" href="../../../utils/config/#pydvl.utils.config.ParallelConfig">ParallelConfig</a>
-with cluster address, number of cpus, etc.</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-internal" title="pydvl.parallel.config.ParallelConfig" href="../../config/#pydvl.parallel.config.ParallelConfig">ParallelConfig</a></code>
-                </span>
-            </p>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-              <details class="quote">
-                <summary>Source code in <code>src/pydvl/parallel/backends/ray.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-30">30</a></span>
-<span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span>
-<span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ParallelConfig</span><span class="p">):</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">address</span><span class="p">,</span> <span class="s2">&quot;logging_level&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">logging_level</span><span class="p">}</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;address&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;num_cpus&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">n_cpus_local</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">ray</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">():</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a>        <span class="n">ray</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="c1"># Register ray joblib backend</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="n">register_ray</span><span class="p">()</span>
-</span></code></pre></div></td></tr></table></div>
-              </details>
+      <h3 id="pydvl.value.oob.oob--references">References<a class="headerlink" href="#pydvl.value.oob.oob--references" title="Permanent link">&para;</a></h3>
+<div class="footnote">
+<hr />
+<ol>
+<li id="pydvl.value.oob.oob--fn:1">
+<p><a name="kwon_data_2023"></a>Kwon et al.
+<a href="https://proceedings.mlr.press/v202/kwon23e.html">Data-OOB: Out-of-bag Estimate as a Simple and Efficient Data Value</a>.
+In: Published at ICML 2023&#160;<a class="footnote-backref" href="#pydvl.value.oob.oob--fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
 
   
 
@@ -2648,15 +2609,28 @@ with cluster address, number of cpus, etc.</p>
 
 
 
-<h3 id="pydvl.parallel.backends.ray.RayParallelBackend.wrap" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">wrap</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+<h2 id="pydvl.value.oob.oob.compute_data_oob" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">compute_data_oob</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">n_est</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_samples</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
 
-<a href="#pydvl.parallel.backends.ray.RayParallelBackend.wrap" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#pydvl.value.oob.oob.compute_data_oob" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
   <div class="doc doc-contents ">
   
-      <p>Wraps a function as a ray remote.</p>
+      <p>Computes Data out of bag values</p>
+<p>This implements the method described in (Kwon and Zou, 2023) <sup><a href="kwon_data_2023">1</a></sup>.
+It fits several base estimators provided through u.model through a bagging process. The point value corresponds to the average loss of estimators which were not fit on it.</p>
+<p><span class="arithmatex">\(w_{bj}\in Z\)</span> is the number of times the j-th datum <span class="arithmatex">\((x_j, y_j)\)</span> is selected in the b-th bootstrap dataset.</p>
+<div class="arithmatex">\[\psi((x_i,y_i),\Theta_B):=\frac{\sum_{b=1}^{B}\mathbb{1}(w_{bi}=0)T(y_i, \hat{f}_b(x_i))}{\sum_{b=1}^{B}
+\mathbb{1}
+(w_{bi}=0)}\]</div>
+<p>With:</p>
+<div class="arithmatex">\[
+T: Y \times Y
+\rightarrow \mathbb{R}
+\]</div>
+<p>T is a score function that represents the goodness of a weak learner <span class="arithmatex">\(\hat{f}_b\)</span> at the i-th datum <span class="arithmatex">\((x_i, y_i)\)</span>.</p>
+<p>There is a need to tune n_est and max_samples jointly to ensure all samples are at least 1 time oob, otherwise the result could include a nan value for that datum.</p>
 
 
 
@@ -2669,29 +2643,107 @@ with cluster address, number of cpus, etc.</p>
     </thead>
     <tbody>
         <tr>
-          <td><code>fun</code></td>
+          <td><code>u</code></td>
           <td class="doc-param-details">
             <div class="doc-md-description">
-              <p>the function to wrap</p>
+              <p>Utility object with model, data, and scoring function.</p>
             </div>
             <p>
                 <span class="doc-param-annotation">
                   <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-external" title="typing.Callable" href="https://docs.python.org/3/library/typing.html#typing.Callable">Callable</a></code>
+                    <code><a class="autorefs autorefs-internal" title="pydvl.utils.Utility" href="../../../utils/utility/#pydvl.utils.utility.Utility">Utility</a></code>
                 </span>
             </p>
           </td>
         </tr>
         <tr>
-          <td><code>kwargs</code></td>
+          <td><code>n_est</code></td>
           <td class="doc-param-details">
             <div class="doc-md-description">
-              <p>keyword arguments to pass to @ray.remote</p>
+              <p>Number of estimator used in the bagging procedure.</p>
             </div>
             <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>
+                </span>
                 <span class="doc-param-default">
                   <b>DEFAULT:</b> 
-                    <code>{}</code>
+                    <code>10</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>max_samples</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>The fraction of samples to draw to train each base estimator.</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>0.8</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>n_jobs</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>The number of jobs to run in parallel used in the bagging
+procedure for both fit and predict.</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>None</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>loss</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>A function taking as parameters model prediction and corresponding
+data labels(preds, y) and returning an array of point-wise errors.</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" title="collections.abc.Callable" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable">Callable</a></code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>None</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>progress</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>If True, display a progress bar.</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>
+                </span>
+                <span class="doc-param-default">
+                  <b>DEFAULT:</b> 
+                    <code>False</code>
                 </span>
             </p>
           </td>
@@ -2712,12 +2764,12 @@ with cluster address, number of cpus, etc.</p>
         <tr>
           <td>
               <span class="doc-returns-annotation">
-                  <code><a class="autorefs autorefs-external" title="typing.Callable" href="https://docs.python.org/3/library/typing.html#typing.Callable">Callable</a></code>
+                  <code><a class="autorefs autorefs-internal" title="pydvl.value.result.ValuationResult" href="../../result/#pydvl.value.result.ValuationResult">ValuationResult</a></code>
               </span>
           </td>
           <td class="doc-returns-details">
             <div class="doc-md-description">
-              <p>The <code>.remote</code> method of the ray <code>RemoteFunction</code>.</p>
+              <p>Object with the data values.</p>
             </div>
           </td>
         </tr>
@@ -2725,32 +2777,170 @@ with cluster address, number of cpus, etc.</p>
   </table>
 
           <details class="quote">
-            <summary>Source code in <code>src/pydvl/parallel/backends/ray.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-65">65</a></span>
-<span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span>
-<span class="normal"><a href="#__codelineno-0-68">68</a></span>
-<span class="normal"><a href="#__codelineno-0-69">69</a></span>
-<span class="normal"><a href="#__codelineno-0-70">70</a></span>
-<span class="normal"><a href="#__codelineno-0-71">71</a></span>
-<span class="normal"><a href="#__codelineno-0-72">72</a></span>
-<span class="normal"><a href="#__codelineno-0-73">73</a></span>
-<span class="normal"><a href="#__codelineno-0-74">74</a></span>
-<span class="normal"><a href="#__codelineno-0-75">75</a></span>
-<span class="normal"><a href="#__codelineno-0-76">76</a></span>
-<span class="normal"><a href="#__codelineno-0-77">77</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fun</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps a function as a ray remote.</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">        fun: the function to wrap</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">        kwargs: keyword arguments to pass to @ray.remote</span>
-</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">        The `.remote` method of the ray `RemoteFunction`.</span>
-</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="k">return</span> <span class="n">ray</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)(</span><span class="n">fun</span><span class="p">)</span><span class="o">.</span><span class="n">remote</span>  <span class="c1"># type: ignore</span>
-</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="k">return</span> <span class="n">ray</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="n">fun</span><span class="p">)</span><span class="o">.</span><span class="n">remote</span>  <span class="c1"># type: ignore</span>
+            <summary>Source code in <code>src/pydvl/value/oob/oob.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-28"> 28</a></span>
+<span class="normal"><a href="#__codelineno-0-29"> 29</a></span>
+<span class="normal"><a href="#__codelineno-0-30"> 30</a></span>
+<span class="normal"><a href="#__codelineno-0-31"> 31</a></span>
+<span class="normal"><a href="#__codelineno-0-32"> 32</a></span>
+<span class="normal"><a href="#__codelineno-0-33"> 33</a></span>
+<span class="normal"><a href="#__codelineno-0-34"> 34</a></span>
+<span class="normal"><a href="#__codelineno-0-35"> 35</a></span>
+<span class="normal"><a href="#__codelineno-0-36"> 36</a></span>
+<span class="normal"><a href="#__codelineno-0-37"> 37</a></span>
+<span class="normal"><a href="#__codelineno-0-38"> 38</a></span>
+<span class="normal"><a href="#__codelineno-0-39"> 39</a></span>
+<span class="normal"><a href="#__codelineno-0-40"> 40</a></span>
+<span class="normal"><a href="#__codelineno-0-41"> 41</a></span>
+<span class="normal"><a href="#__codelineno-0-42"> 42</a></span>
+<span class="normal"><a href="#__codelineno-0-43"> 43</a></span>
+<span class="normal"><a href="#__codelineno-0-44"> 44</a></span>
+<span class="normal"><a href="#__codelineno-0-45"> 45</a></span>
+<span class="normal"><a href="#__codelineno-0-46"> 46</a></span>
+<span class="normal"><a href="#__codelineno-0-47"> 47</a></span>
+<span class="normal"><a href="#__codelineno-0-48"> 48</a></span>
+<span class="normal"><a href="#__codelineno-0-49"> 49</a></span>
+<span class="normal"><a href="#__codelineno-0-50"> 50</a></span>
+<span class="normal"><a href="#__codelineno-0-51"> 51</a></span>
+<span class="normal"><a href="#__codelineno-0-52"> 52</a></span>
+<span class="normal"><a href="#__codelineno-0-53"> 53</a></span>
+<span class="normal"><a href="#__codelineno-0-54"> 54</a></span>
+<span class="normal"><a href="#__codelineno-0-55"> 55</a></span>
+<span class="normal"><a href="#__codelineno-0-56"> 56</a></span>
+<span class="normal"><a href="#__codelineno-0-57"> 57</a></span>
+<span class="normal"><a href="#__codelineno-0-58"> 58</a></span>
+<span class="normal"><a href="#__codelineno-0-59"> 59</a></span>
+<span class="normal"><a href="#__codelineno-0-60"> 60</a></span>
+<span class="normal"><a href="#__codelineno-0-61"> 61</a></span>
+<span class="normal"><a href="#__codelineno-0-62"> 62</a></span>
+<span class="normal"><a href="#__codelineno-0-63"> 63</a></span>
+<span class="normal"><a href="#__codelineno-0-64"> 64</a></span>
+<span class="normal"><a href="#__codelineno-0-65"> 65</a></span>
+<span class="normal"><a href="#__codelineno-0-66"> 66</a></span>
+<span class="normal"><a href="#__codelineno-0-67"> 67</a></span>
+<span class="normal"><a href="#__codelineno-0-68"> 68</a></span>
+<span class="normal"><a href="#__codelineno-0-69"> 69</a></span>
+<span class="normal"><a href="#__codelineno-0-70"> 70</a></span>
+<span class="normal"><a href="#__codelineno-0-71"> 71</a></span>
+<span class="normal"><a href="#__codelineno-0-72"> 72</a></span>
+<span class="normal"><a href="#__codelineno-0-73"> 73</a></span>
+<span class="normal"><a href="#__codelineno-0-74"> 74</a></span>
+<span class="normal"><a href="#__codelineno-0-75"> 75</a></span>
+<span class="normal"><a href="#__codelineno-0-76"> 76</a></span>
+<span class="normal"><a href="#__codelineno-0-77"> 77</a></span>
+<span class="normal"><a href="#__codelineno-0-78"> 78</a></span>
+<span class="normal"><a href="#__codelineno-0-79"> 79</a></span>
+<span class="normal"><a href="#__codelineno-0-80"> 80</a></span>
+<span class="normal"><a href="#__codelineno-0-81"> 81</a></span>
+<span class="normal"><a href="#__codelineno-0-82"> 82</a></span>
+<span class="normal"><a href="#__codelineno-0-83"> 83</a></span>
+<span class="normal"><a href="#__codelineno-0-84"> 84</a></span>
+<span class="normal"><a href="#__codelineno-0-85"> 85</a></span>
+<span class="normal"><a href="#__codelineno-0-86"> 86</a></span>
+<span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
+<span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
+<span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
+<span class="normal"><a href="#__codelineno-0-90"> 90</a></span>
+<span class="normal"><a href="#__codelineno-0-91"> 91</a></span>
+<span class="normal"><a href="#__codelineno-0-92"> 92</a></span>
+<span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
+<span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
+<span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
+<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
+<span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
+<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
+<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
+<span class="normal"><a href="#__codelineno-0-100">100</a></span>
+<span class="normal"><a href="#__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#__codelineno-0-106">106</a></span>
+<span class="normal"><a href="#__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#__codelineno-0-108">108</a></span>
+<span class="normal"><a href="#__codelineno-0-109">109</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="k">def</span> <span class="nf">compute_data_oob</span><span class="p">(</span>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a>    <span class="n">u</span><span class="p">:</span> <span class="n">Utility</span><span class="p">,</span>
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a>    <span class="n">n_est</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="n">max_samples</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="n">loss</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="n">progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValuationResult</span><span class="p">:</span>
+</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes Data out of bag values</span>
+</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a>
+</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="sd">    This implements the method described in (Kwon and Zou, 2023) &lt;sup&gt;&lt;a href=&quot;kwon_data_2023&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;.</span>
+</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="sd">    It fits several base estimators provided through u.model through a bagging process. The point value corresponds to the average loss of estimators which were not fit on it.</span>
+</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a>
+</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">    $w_{bj}\in Z$ is the number of times the j-th datum $(x_j, y_j)$ is selected in the b-th bootstrap dataset.</span>
+</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a>
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">    $$\psi((x_i,y_i),\Theta_B):=\frac{\sum_{b=1}^{B}\mathbb{1}(w_{bi}=0)T(y_i, \hat{f}_b(x_i))}{\sum_{b=1}^{B}</span>
+</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    \mathbb{1}</span>
+</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">    (w_{bi}=0)}$$</span>
+</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a>
+</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    With:</span>
+</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a>
+</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">    $$</span>
+</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    T: Y \times Y</span>
+</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">    \rightarrow \mathbb{R}</span>
+</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">    $$</span>
+</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a>
+</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">    T is a score function that represents the goodness of a weak learner $\hat{f}_b$ at the i-th datum $(x_i, y_i)$.</span>
+</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a>
+</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">    There is a need to tune n_est and max_samples jointly to ensure all samples are at least 1 time oob, otherwise the result could include a nan value for that datum.</span>
+</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a>
+</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">        u: Utility object with model, data, and scoring function.</span>
+</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">        n_est: Number of estimator used in the bagging procedure.</span>
+</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">        max_samples: The fraction of samples to draw to train each base estimator.</span>
+</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">        n_jobs: The number of jobs to run in parallel used in the bagging</span>
+</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">            procedure for both fit and predict.</span>
+</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        loss: A function taking as parameters model prediction and corresponding</span>
+</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">            data labels(preds, y) and returning an array of point-wise errors.</span>
+</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        progress: If True, display a progress bar.</span>
+</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a>
+</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">        Object with the data values.</span>
+</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>
+</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="n">result</span><span class="p">:</span> <span class="n">ValuationResult</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]</span> <span class="o">=</span> <span class="n">ValuationResult</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;data_oob&quot;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">data_names</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data_names</span>
+</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="p">)</span>
+</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a>
+</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="k">if</span> <span class="n">is_classifier</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">model</span><span class="p">):</span>
+</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="n">bag</span> <span class="o">=</span> <span class="n">BaggingClassifier</span><span class="p">(</span>
+</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a>            <span class="n">u</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">n_estimators</span><span class="o">=</span><span class="n">n_est</span><span class="p">,</span> <span class="n">max_samples</span><span class="o">=</span><span class="n">max_samples</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span>
+</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a>        <span class="p">)</span>
+</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="k">if</span> <span class="n">loss</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a>            <span class="n">loss</span> <span class="o">=</span> <span class="n">point_wise_accuracy</span>
+</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="k">elif</span> <span class="n">is_regressor</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">model</span><span class="p">):</span>
+</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a>        <span class="n">bag</span> <span class="o">=</span> <span class="n">BaggingRegressor</span><span class="p">(</span>
+</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a>            <span class="n">u</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">n_estimators</span><span class="o">=</span><span class="n">n_est</span><span class="p">,</span> <span class="n">max_samples</span><span class="o">=</span><span class="n">max_samples</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span>
+</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>        <span class="p">)</span>
+</span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a>        <span class="k">if</span> <span class="n">loss</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a>            <span class="n">loss</span> <span class="o">=</span> <span class="n">neg_l2_distance</span>
+</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a>        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a>            <span class="s2">&quot;Model has to be a classifier or a regressor in sklearn format.&quot;</span>
+</span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a>        <span class="p">)</span>
+</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>
+</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="n">bag</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">x_train</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">y_train</span><span class="p">)</span>
+</span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a>
+</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a>    <span class="k">for</span> <span class="n">est</span><span class="p">,</span> <span class="n">samples</span> <span class="ow">in</span> <span class="n">maybe_progress</span><span class="p">(</span>
+</span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a>        <span class="nb">zip</span><span class="p">(</span><span class="n">bag</span><span class="o">.</span><span class="n">estimators_</span><span class="p">,</span> <span class="n">bag</span><span class="o">.</span><span class="n">estimators_samples_</span><span class="p">),</span> <span class="n">progress</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">n_est</span>
+</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a>    <span class="p">):</span>  <span class="c1"># The bottleneck is the bag fitting not this part so TQDM is not very useful here</span>
+</span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a>        <span class="n">oob_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">setxor1d</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">samples</span><span class="p">))</span>
+</span><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a>        <span class="n">array_loss</span> <span class="o">=</span> <span class="n">loss</span><span class="p">(</span>
+</span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a>            <span class="n">preds</span><span class="o">=</span><span class="n">est</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">x_train</span><span class="p">[</span><span class="n">oob_idx</span><span class="p">]),</span> <span class="n">y</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">y_train</span><span class="p">[</span><span class="n">oob_idx</span><span class="p">]</span>
+</span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a>        <span class="p">)</span>
+</span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a>        <span class="n">result</span> <span class="o">+=</span> <span class="n">ValuationResult</span><span class="p">(</span>
+</span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a>            <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;data_oob&quot;</span><span class="p">,</span>
+</span><span id="__span-0-105"><a id="__codelineno-0-105" name="__codelineno-0-105"></a>            <span class="n">indices</span><span class="o">=</span><span class="n">oob_idx</span><span class="p">,</span>
+</span><span id="__span-0-106"><a id="__codelineno-0-106" name="__codelineno-0-106"></a>            <span class="n">values</span><span class="o">=</span><span class="n">array_loss</span><span class="p">,</span>
+</span><span id="__span-0-107"><a id="__codelineno-0-107" name="__codelineno-0-107"></a>            <span class="n">counts</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">array_loss</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+</span><span id="__span-0-108"><a id="__codelineno-0-108" name="__codelineno-0-108"></a>        <span class="p">)</span>
+</span><span id="__span-0-109"><a id="__codelineno-0-109" name="__codelineno-0-109"></a>    <span class="k">return</span> <span class="n">result</span>
 </span></code></pre></div></td></tr></table></div>
           </details>
   </div>
@@ -2758,13 +2948,236 @@ with cluster address, number of cpus, etc.</p>
 </div>
 
 
+<div class="doc doc-object doc-function">
 
-  </div>
 
+
+
+<h2 id="pydvl.value.oob.oob.point_wise_accuracy" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">point_wise_accuracy</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></code>
+
+<a href="#pydvl.value.oob.oob.point_wise_accuracy" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Computes point wise accuracy</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b> DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>preds</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Model prediction on</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" title="numpy.typing.NDArray" href="https://numpy.org/doc/stable/reference/typing.html#numpy.typing.NDArray">NDArray</a></code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>y</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>data labels corresponding to the model predictions</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" title="numpy.typing.NDArray" href="https://numpy.org/doc/stable/reference/typing.html#numpy.typing.NDArray">NDArray</a></code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>RETURNS</b></th>
+        <th><b>DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+              <span class="doc-returns-annotation">
+                  <code><a class="autorefs autorefs-external" title="numpy.typing.NDArray" href="https://numpy.org/doc/stable/reference/typing.html#numpy.typing.NDArray">NDArray</a></code>
+              </span>
+          </td>
+          <td class="doc-returns-details">
+            <div class="doc-md-description">
+              <p>Array of point wise accuracy</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>src/pydvl/value/oob/oob.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#__codelineno-0-116">116</a></span>
+<span class="normal"><a href="#__codelineno-0-117">117</a></span>
+<span class="normal"><a href="#__codelineno-0-118">118</a></span>
+<span class="normal"><a href="#__codelineno-0-119">119</a></span>
+<span class="normal"><a href="#__codelineno-0-120">120</a></span>
+<span class="normal"><a href="#__codelineno-0-121">121</a></span>
+<span class="normal"><a href="#__codelineno-0-122">122</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-112"><a id="__codelineno-0-112" name="__codelineno-0-112"></a><span class="k">def</span> <span class="nf">point_wise_accuracy</span><span class="p">(</span><span class="n">preds</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
+</span><span id="__span-0-113"><a id="__codelineno-0-113" name="__codelineno-0-113"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes point wise accuracy</span>
+</span><span id="__span-0-114"><a id="__codelineno-0-114" name="__codelineno-0-114"></a>
+</span><span id="__span-0-115"><a id="__codelineno-0-115" name="__codelineno-0-115"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-116"><a id="__codelineno-0-116" name="__codelineno-0-116"></a><span class="sd">        preds: Model prediction on</span>
+</span><span id="__span-0-117"><a id="__codelineno-0-117" name="__codelineno-0-117"></a><span class="sd">        y:  data labels corresponding to the model predictions</span>
+</span><span id="__span-0-118"><a id="__codelineno-0-118" name="__codelineno-0-118"></a>
+</span><span id="__span-0-119"><a id="__codelineno-0-119" name="__codelineno-0-119"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-120"><a id="__codelineno-0-120" name="__codelineno-0-120"></a><span class="sd">        Array of point wise accuracy</span>
+</span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-122"><a id="__codelineno-0-122" name="__codelineno-0-122"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">preds</span> <span class="o">==</span> <span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int_</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+          </details>
   </div>
 
 </div>
 
+
+<div class="doc doc-object doc-function">
+
+
+
+
+<h2 id="pydvl.value.oob.oob.neg_l2_distance" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">neg_l2_distance</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></code>
+
+<a href="#pydvl.value.oob.oob.neg_l2_distance" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Computes negative l2 distance between label and model prediction</p>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>PARAMETER</b></th>
+        <th><b> DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>preds</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>Model prediction on</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" title="numpy.typing.NDArray" href="https://numpy.org/doc/stable/reference/typing.html#numpy.typing.NDArray">NDArray</a>[<span title="pydvl.value.oob.oob.T">T</span>]</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td><code>y</code></td>
+          <td class="doc-param-details">
+            <div class="doc-md-description">
+              <p>data labels corresponding to the model predictions</p>
+            </div>
+            <p>
+                <span class="doc-param-annotation">
+                  <b>TYPE:</b>
+                    <code><a class="autorefs autorefs-external" title="numpy.typing.NDArray" href="https://numpy.org/doc/stable/reference/typing.html#numpy.typing.NDArray">NDArray</a>[<span title="pydvl.value.oob.oob.T">T</span>]</code>
+                </span>
+            </p>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <table>
+    <thead>
+      <tr>
+        <th><b>RETURNS</b></th>
+        <th><b>DESCRIPTION</b></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+              <span class="doc-returns-annotation">
+                  <code><a class="autorefs autorefs-external" title="numpy.typing.NDArray" href="https://numpy.org/doc/stable/reference/typing.html#numpy.typing.NDArray">NDArray</a>[<span title="pydvl.value.oob.oob.T">T</span>]</code>
+              </span>
+          </td>
+          <td class="doc-returns-details">
+            <div class="doc-md-description">
+              <p>Array with point wise negative l2 distance between label and model prediction</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>src/pydvl/value/oob/oob.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-125">125</a></span>
+<span class="normal"><a href="#__codelineno-0-126">126</a></span>
+<span class="normal"><a href="#__codelineno-0-127">127</a></span>
+<span class="normal"><a href="#__codelineno-0-128">128</a></span>
+<span class="normal"><a href="#__codelineno-0-129">129</a></span>
+<span class="normal"><a href="#__codelineno-0-130">130</a></span>
+<span class="normal"><a href="#__codelineno-0-131">131</a></span>
+<span class="normal"><a href="#__codelineno-0-132">132</a></span>
+<span class="normal"><a href="#__codelineno-0-133">133</a></span>
+<span class="normal"><a href="#__codelineno-0-134">134</a></span>
+<span class="normal"><a href="#__codelineno-0-135">135</a></span>
+<span class="normal"><a href="#__codelineno-0-136">136</a></span>
+<span class="normal"><a href="#__codelineno-0-137">137</a></span>
+<span class="normal"><a href="#__codelineno-0-138">138</a></span>
+<span class="normal"><a href="#__codelineno-0-139">139</a></span>
+<span class="normal"><a href="#__codelineno-0-140">140</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="k">def</span> <span class="nf">neg_l2_distance</span><span class="p">(</span><span class="n">preds</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="n">y</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes negative l2 distance between label and model prediction</span>
+</span><span id="__span-0-127"><a id="__codelineno-0-127" name="__codelineno-0-127"></a>
+</span><span id="__span-0-128"><a id="__codelineno-0-128" name="__codelineno-0-128"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-129"><a id="__codelineno-0-129" name="__codelineno-0-129"></a><span class="sd">        preds: Model prediction on</span>
+</span><span id="__span-0-130"><a id="__codelineno-0-130" name="__codelineno-0-130"></a><span class="sd">        y:  data labels corresponding to the model predictions</span>
+</span><span id="__span-0-131"><a id="__codelineno-0-131" name="__codelineno-0-131"></a>
+</span><span id="__span-0-132"><a id="__codelineno-0-132" name="__codelineno-0-132"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-133"><a id="__codelineno-0-133" name="__codelineno-0-133"></a><span class="sd">        Array with point wise negative l2 distance between label and model prediction</span>
+</span><span id="__span-0-134"><a id="__codelineno-0-134" name="__codelineno-0-134"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-135"><a id="__codelineno-0-135" name="__codelineno-0-135"></a>    <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span>
+</span><span id="__span-0-136"><a id="__codelineno-0-136" name="__codelineno-0-136"></a>        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+</span><span id="__span-0-137"><a id="__codelineno-0-137" name="__codelineno-0-137"></a>            <span class="n">preds</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span>
+</span><span id="__span-0-138"><a id="__codelineno-0-138" name="__codelineno-0-138"></a>            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+</span><span id="__span-0-139"><a id="__codelineno-0-139" name="__codelineno-0-139"></a>        <span class="p">)</span>
+</span><span id="__span-0-140"><a id="__codelineno-0-140" name="__codelineno-0-140"></a>    <span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
 
 
 
@@ -2815,7 +3228,7 @@ with cluster address, number of cpus, etc.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../joblib/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Joblib" rel="prev">
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Oob" rel="prev">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -2825,20 +3238,20 @@ with cluster address, number of cpus, etc.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Joblib
+                Oob
               </div>
             </div>
           </a>
         
         
           
-          <a href="../../futures/" class="md-footer__link md-footer__link--next" aria-label="Next: Futures" rel="next">
+          <a href="../../shapley/" class="md-footer__link md-footer__link--next" aria-label="Next: Shapley" rel="next">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Futures
+                Shapley
               </div>
             </div>
             <div class="md-footer__button md-icon">

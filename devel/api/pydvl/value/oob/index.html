@@ -8,28 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://aai-institute.github.io/pyDVL/stable/api/pydvl/parallel/backends/ray/">
+        <link rel="canonical" href="https://aai-institute.github.io/pyDVL/stable/api/pydvl/value/oob/">
       
       
-        <link rel="prev" href="../joblib/">
+        <link rel="prev" href="../loo/naive/">
       
       
-        <link rel="next" href="../../futures/">
+        <link rel="next" href="oob/">
       
       
-      <link rel="icon" href="../../../../../assets/signet.svg">
+      <link rel="icon" href="../../../../assets/signet.svg">
       <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.3.1">
     
     
       
-        <title>Ray - pyDVL</title>
+        <title>Oob - pyDVL</title>
       
     
     
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.046329b4.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.046329b4.min.css">
       
         
-        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.85d0ee34.min.css">
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.85d0ee34.min.css">
       
       
 
@@ -48,24 +48,24 @@
       
     
     
-      <link rel="stylesheet" href="../../../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../../../../css/extra.css">
+      <link rel="stylesheet" href="../../../../css/extra.css">
     
-      <link rel="stylesheet" href="../../../../../css/neoteroi.css">
+      <link rel="stylesheet" href="../../../../css/neoteroi.css">
     
-      <link rel="stylesheet" href="../../../../../css/ansi-colours.css">
+      <link rel="stylesheet" href="../../../../css/ansi-colours.css">
     
-      <link rel="stylesheet" href="../../../../../css/pandas-dataframe.css">
+      <link rel="stylesheet" href="../../../../css/pandas-dataframe.css">
     
-    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
     
     
     
-   <link href="../../../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+   <link href="../../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
         html.glightbox-open { overflow: initial; height: 100%; }
         .gslide-title { margin-top: 0px; user-select: text; }
         .gslide-desc { color: #666; user-select: text; }
@@ -76,7 +76,7 @@
             body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
             body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
             body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}
-            </style> <script src="../../../../../assets/javascripts/glightbox.min.js"></script></head>
+            </style> <script src="../../../../assets/javascripts/glightbox.min.js"></script></head>
   
   
     
@@ -98,7 +98,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pydvl.parallel.backends.ray" class="md-skip">
+        <a href="#pydvl.value.oob" class="md-skip">
           Skip to content
         </a>
       
@@ -132,9 +132,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../../../.." title="pyDVL" class="md-header__button md-logo" aria-label="pyDVL" data-md-component="logo">
+    <a href="../../../.." title="pyDVL" class="md-header__button md-logo" aria-label="pyDVL" data-md-component="logo">
       
-  <img src="../../../../../assets/signet.svg" alt="logo">
+  <img src="../../../../assets/signet.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -151,7 +151,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Ray
+              Oob
             
           </span>
         </div>
@@ -263,9 +263,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../../../.." title="pyDVL" class="md-nav__button md-logo" aria-label="pyDVL" data-md-component="logo">
+    <a href="../../../.." title="pyDVL" class="md-nav__button md-logo" aria-label="pyDVL" data-md-component="logo">
       
-  <img src="../../../../../assets/signet.svg" alt="logo">
+  <img src="../../../../assets/signet.svg" alt="logo">
 
     </a>
     pyDVL
@@ -291,7 +291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../.." class="md-nav__link">
+      <a href="../../../.." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -344,7 +344,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../getting-started/installation/" class="md-nav__link">
+      <a href="../../../../getting-started/installation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -364,7 +364,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../getting-started/first-steps/" class="md-nav__link">
+      <a href="../../../../getting-started/first-steps/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -425,7 +425,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../value/" class="md-nav__link">
+      <a href="../../../../value/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -445,7 +445,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../value/notation/" class="md-nav__link">
+      <a href="../../../../value/notation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -465,7 +465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../value/shapley/" class="md-nav__link">
+      <a href="../../../../value/shapley/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -485,7 +485,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../value/semi-values/" class="md-nav__link">
+      <a href="../../../../value/semi-values/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -505,7 +505,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../value/the-core/" class="md-nav__link">
+      <a href="../../../../value/the-core/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -559,7 +559,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../examples/shapley_basic_spotify/" class="md-nav__link">
+      <a href="../../../../examples/shapley_basic_spotify/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -579,7 +579,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../examples/shapley_knn_flowers/" class="md-nav__link">
+      <a href="../../../../examples/shapley_knn_flowers/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -599,7 +599,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../examples/shapley_utility_learning/" class="md-nav__link">
+      <a href="../../../../examples/shapley_utility_learning/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -619,7 +619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../examples/least_core_basic/" class="md-nav__link">
+      <a href="../../../../examples/least_core_basic/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -639,7 +639,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../examples/data_oob/" class="md-nav__link">
+      <a href="../../../../examples/data_oob/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -708,7 +708,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../influence/" class="md-nav__link">
+      <a href="../../../../influence/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -762,7 +762,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../examples/influence_imagenet/" class="md-nav__link">
+      <a href="../../../../examples/influence_imagenet/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -782,7 +782,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../examples/influence_synthetic/" class="md-nav__link">
+      <a href="../../../../examples/influence_synthetic/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -802,7 +802,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../examples/influence_wine/" class="md-nav__link">
+      <a href="../../../../examples/influence_wine/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -873,7 +873,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../../CHANGELOG/" class="md-nav__link">
+      <a href="../../../../CHANGELOG/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -908,7 +908,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../" class="md-nav__link ">
+            <a href="../../" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -950,7 +950,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../influence/" class="md-nav__link ">
+            <a href="../../influence/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -979,7 +979,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../influence/general/" class="md-nav__link">
+      <a href="../../influence/general/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -999,7 +999,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../influence/inversion/" class="md-nav__link">
+      <a href="../../influence/inversion/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1019,7 +1019,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../influence/twice_differentiable/" class="md-nav__link">
+      <a href="../../influence/twice_differentiable/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1052,7 +1052,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../influence/torch/" class="md-nav__link ">
+            <a href="../../influence/torch/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1081,7 +1081,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../influence/torch/functional/" class="md-nav__link">
+      <a href="../../influence/torch/functional/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1101,7 +1101,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../influence/torch/torch_differentiable/" class="md-nav__link">
+      <a href="../../influence/torch/torch_differentiable/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1121,7 +1121,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../influence/torch/util/" class="md-nav__link">
+      <a href="../../influence/torch/util/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1155,24 +1155,22 @@
                 
   
   
-    
-  
   
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2" >
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../" class="md-nav__link ">
+            <a href="../../parallel/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1188,7 +1186,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5_2_2">
             <span class="md-nav__icon md-icon"></span>
             Parallel
@@ -1201,7 +1199,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../backend/" class="md-nav__link">
+      <a href="../../parallel/backend/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1221,7 +1219,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../config/" class="md-nav__link">
+      <a href="../../parallel/config/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1241,7 +1239,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map_reduce/" class="md-nav__link">
+      <a href="../../parallel/map_reduce/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1259,24 +1257,22 @@
                 
   
   
-    
-  
   
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2_4" >
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
+            <a href="../../parallel/backends/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1292,7 +1288,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_2_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_2_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5_2_2_4">
             <span class="md-nav__icon md-icon"></span>
             Backends
@@ -1305,7 +1301,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../joblib/" class="md-nav__link">
+      <a href="../../parallel/backends/joblib/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1323,27 +1319,9 @@
                 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Ray
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../parallel/backends/ray/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1352,51 +1330,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.ray" class="md-nav__link">
-    ray
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.ray.RayParallelBackend" class="md-nav__link">
-    RayParallelBackend
-  </a>
-  
-    <nav class="md-nav" aria-label="RayParallelBackend">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.ray.RayParallelBackend.wrap" class="md-nav__link">
-    wrap()
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1429,7 +1362,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../futures/" class="md-nav__link ">
+            <a href="../../parallel/futures/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1458,7 +1391,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../futures/ray/" class="md-nav__link">
+      <a href="../../parallel/futures/ray/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1507,7 +1440,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../reporting/" class="md-nav__link ">
+            <a href="../../reporting/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1536,7 +1469,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../reporting/plots/" class="md-nav__link">
+      <a href="../../reporting/plots/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1556,7 +1489,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../reporting/scores/" class="md-nav__link">
+      <a href="../../reporting/scores/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1597,7 +1530,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../utils/" class="md-nav__link ">
+            <a href="../../utils/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1626,7 +1559,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/caching/" class="md-nav__link">
+      <a href="../../utils/caching/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1646,7 +1579,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/config/" class="md-nav__link">
+      <a href="../../utils/config/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1666,7 +1599,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/dataset/" class="md-nav__link">
+      <a href="../../utils/dataset/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1686,7 +1619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/functional/" class="md-nav__link">
+      <a href="../../utils/functional/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1706,7 +1639,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/numeric/" class="md-nav__link">
+      <a href="../../utils/numeric/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1726,7 +1659,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/parallel/" class="md-nav__link">
+      <a href="../../utils/parallel/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1746,7 +1679,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/progress/" class="md-nav__link">
+      <a href="../../utils/progress/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1766,7 +1699,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/score/" class="md-nav__link">
+      <a href="../../utils/score/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1786,7 +1719,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/status/" class="md-nav__link">
+      <a href="../../utils/status/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1806,7 +1739,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/types/" class="md-nav__link">
+      <a href="../../utils/types/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1826,7 +1759,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../utils/utility/" class="md-nav__link">
+      <a href="../../utils/utility/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1852,22 +1785,24 @@
                 
   
   
+    
+  
   
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_5" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../value/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -1883,7 +1818,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5_2_5">
             <span class="md-nav__icon md-icon"></span>
             Value
@@ -1896,7 +1831,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/result/" class="md-nav__link">
+      <a href="../result/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1916,7 +1851,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/sampler/" class="md-nav__link">
+      <a href="../sampler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1936,7 +1871,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/semivalues/" class="md-nav__link">
+      <a href="../semivalues/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1956,7 +1891,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/stopping/" class="md-nav__link">
+      <a href="../stopping/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1989,7 +1924,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../value/least_core/" class="md-nav__link ">
+            <a href="../least_core/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -2018,7 +1953,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/least_core/common/" class="md-nav__link">
+      <a href="../least_core/common/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2038,7 +1973,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/least_core/montecarlo/" class="md-nav__link">
+      <a href="../least_core/montecarlo/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2058,7 +1993,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/least_core/naive/" class="md-nav__link">
+      <a href="../least_core/naive/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2099,7 +2034,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../value/loo/" class="md-nav__link ">
+            <a href="../loo/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -2128,7 +2063,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/loo/loo/" class="md-nav__link">
+      <a href="../loo/loo/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2148,7 +2083,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/loo/naive/" class="md-nav__link">
+      <a href="../loo/naive/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2174,22 +2109,24 @@
                 
   
   
+    
+  
   
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_5_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_5_7" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../value/oob/" class="md-nav__link ">
+            <a href="./" class="md-nav__link md-nav__link--active">
               
   
   <span class="md-ellipsis">
@@ -2199,13 +2136,13 @@
 
             </a>
             
-              <label class="md-nav__link " for="__nav_5_2_5_7">
+              <label class="md-nav__link md-nav__link--active" for="__nav_5_2_5_7">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_5_7_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_2_5_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5_2_5_7">
             <span class="md-nav__icon md-icon"></span>
             Oob
@@ -2218,7 +2155,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/oob/oob/" class="md-nav__link">
+      <a href="oob/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2259,7 +2196,7 @@
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../value/shapley/" class="md-nav__link ">
+            <a href="../shapley/" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -2288,7 +2225,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/common/" class="md-nav__link">
+      <a href="../shapley/common/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2308,7 +2245,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/gt/" class="md-nav__link">
+      <a href="../shapley/gt/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2328,7 +2265,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/knn/" class="md-nav__link">
+      <a href="../shapley/knn/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2348,7 +2285,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/montecarlo/" class="md-nav__link">
+      <a href="../shapley/montecarlo/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2368,7 +2305,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/naive/" class="md-nav__link">
+      <a href="../shapley/naive/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2388,7 +2325,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/owen/" class="md-nav__link">
+      <a href="../shapley/owen/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2408,7 +2345,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/truncated/" class="md-nav__link">
+      <a href="../shapley/truncated/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2428,7 +2365,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../value/shapley/types/" class="md-nav__link">
+      <a href="../shapley/types/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2498,29 +2435,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.ray" class="md-nav__link">
-    ray
+  <a href="#pydvl.value.oob" class="md-nav__link">
+    oob
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.ray.RayParallelBackend" class="md-nav__link">
-    RayParallelBackend
-  </a>
-  
-    <nav class="md-nav" aria-label="RayParallelBackend">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pydvl.parallel.backends.ray.RayParallelBackend.wrap" class="md-nav__link">
-    wrap()
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -2542,13 +2459,13 @@
   
 
 
-  <h1>Ray</h1>
+  <h1>Oob</h1>
 
 <div class="doc doc-object doc-module">
 
 
 
-<a id="pydvl.parallel.backends.ray"></a>
+<a id="pydvl.value.oob"></a>
   <div class="doc doc-contents first">
 
   
@@ -2561,209 +2478,6 @@
 
 
 
-
-<div class="doc doc-object doc-class">
-
-
-
-
-<h2 id="pydvl.parallel.backends.ray.RayParallelBackend" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">RayParallelBackend</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></code>
-
-<a href="#pydvl.parallel.backends.ray.RayParallelBackend" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-  <div class="doc doc-contents ">
-          <p class="doc doc-class-bases">
-            Bases: <code><a class="autorefs autorefs-internal" title="pydvl.parallel.backend.BaseParallelBackend" href="../../backend/#pydvl.parallel.backend.BaseParallelBackend">BaseParallelBackend</a></code></p>
-
-  
-      <p>Class used to wrap ray to make it transparent to algorithms.</p>
-<p>It shouldn't be initialized directly. You should instead call
-<a class="autorefs autorefs-internal" href="../../backend/#pydvl.parallel.backend.init_parallel_backend">init_parallel_backend()</a>.</p>
-
-
-
-  <table>
-    <thead>
-      <tr>
-        <th><b>PARAMETER</b></th>
-        <th><b> DESCRIPTION</b></th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>config</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>instance of <a class="autorefs autorefs-internal" href="../../../utils/config/#pydvl.utils.config.ParallelConfig">ParallelConfig</a>
-with cluster address, number of cpus, etc.</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-internal" title="pydvl.parallel.config.ParallelConfig" href="../../config/#pydvl.parallel.config.ParallelConfig">ParallelConfig</a></code>
-                </span>
-            </p>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-              <details class="quote">
-                <summary>Source code in <code>src/pydvl/parallel/backends/ray.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-30">30</a></span>
-<span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span>
-<span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ParallelConfig</span><span class="p">):</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">address</span><span class="p">,</span> <span class="s2">&quot;logging_level&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">logging_level</span><span class="p">}</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;address&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;num_cpus&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">n_cpus_local</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">ray</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">():</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a>        <span class="n">ray</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="c1"># Register ray joblib backend</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="n">register_ray</span><span class="p">()</span>
-</span></code></pre></div></td></tr></table></div>
-              </details>
-
-  
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-
-
-<h3 id="pydvl.parallel.backends.ray.RayParallelBackend.wrap" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">wrap</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
-
-<a href="#pydvl.parallel.backends.ray.RayParallelBackend.wrap" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Wraps a function as a ray remote.</p>
-
-
-
-  <table>
-    <thead>
-      <tr>
-        <th><b>PARAMETER</b></th>
-        <th><b> DESCRIPTION</b></th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>fun</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>the function to wrap</p>
-            </div>
-            <p>
-                <span class="doc-param-annotation">
-                  <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-external" title="typing.Callable" href="https://docs.python.org/3/library/typing.html#typing.Callable">Callable</a></code>
-                </span>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td><code>kwargs</code></td>
-          <td class="doc-param-details">
-            <div class="doc-md-description">
-              <p>keyword arguments to pass to @ray.remote</p>
-            </div>
-            <p>
-                <span class="doc-param-default">
-                  <b>DEFAULT:</b> 
-                    <code>{}</code>
-                </span>
-            </p>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-
-  <table>
-    <thead>
-      <tr>
-        <th><b>RETURNS</b></th>
-        <th><b>DESCRIPTION</b></th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-              <span class="doc-returns-annotation">
-                  <code><a class="autorefs autorefs-external" title="typing.Callable" href="https://docs.python.org/3/library/typing.html#typing.Callable">Callable</a></code>
-              </span>
-          </td>
-          <td class="doc-returns-details">
-            <div class="doc-md-description">
-              <p>The <code>.remote</code> method of the ray <code>RemoteFunction</code>.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-          <details class="quote">
-            <summary>Source code in <code>src/pydvl/parallel/backends/ray.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-65">65</a></span>
-<span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span>
-<span class="normal"><a href="#__codelineno-0-68">68</a></span>
-<span class="normal"><a href="#__codelineno-0-69">69</a></span>
-<span class="normal"><a href="#__codelineno-0-70">70</a></span>
-<span class="normal"><a href="#__codelineno-0-71">71</a></span>
-<span class="normal"><a href="#__codelineno-0-72">72</a></span>
-<span class="normal"><a href="#__codelineno-0-73">73</a></span>
-<span class="normal"><a href="#__codelineno-0-74">74</a></span>
-<span class="normal"><a href="#__codelineno-0-75">75</a></span>
-<span class="normal"><a href="#__codelineno-0-76">76</a></span>
-<span class="normal"><a href="#__codelineno-0-77">77</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fun</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps a function as a ray remote.</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">        fun: the function to wrap</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">        kwargs: keyword arguments to pass to @ray.remote</span>
-</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">        The `.remote` method of the ray `RemoteFunction`.</span>
-</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="k">return</span> <span class="n">ray</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)(</span><span class="n">fun</span><span class="p">)</span><span class="o">.</span><span class="n">remote</span>  <span class="c1"># type: ignore</span>
-</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="k">return</span> <span class="n">ray</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="n">fun</span><span class="p">)</span><span class="o">.</span><span class="n">remote</span>  <span class="c1"># type: ignore</span>
-</span></code></pre></div></td></tr></table></div>
-          </details>
-  </div>
-
-</div>
-
-
-
-  </div>
-
-  </div>
-
-</div>
 
 
 
@@ -2815,7 +2529,7 @@ with cluster address, number of cpus, etc.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../joblib/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Joblib" rel="prev">
+          <a href="../loo/naive/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Naive" rel="prev">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -2825,20 +2539,20 @@ with cluster address, number of cpus, etc.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Joblib
+                Naive
               </div>
             </div>
           </a>
         
         
           
-          <a href="../../futures/" class="md-footer__link md-footer__link--next" aria-label="Next: Futures" rel="next">
+          <a href="oob/" class="md-footer__link md-footer__link--next" aria-label="Next: Oob" rel="next">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Futures
+                Oob
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -2927,12 +2641,12 @@ with cluster address, number of cpus, etc.</p>
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../../../../..", "features": ["content.code.annotate", "content.code.copy", "navigation.footer", "navigation.instant", "navigation.path", "navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "toc.follow"], "search": "../../../../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "stable", "provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../../../..", "features": ["content.code.annotate", "content.code.copy", "navigation.footer", "navigation.instant", "navigation.path", "navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "toc.follow"], "search": "../../../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "stable", "provider": "mike"}}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.dff1b7c8.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.dff1b7c8.min.js"></script>
       
-        <script src="../../../../../javascripts/mathjax.js"></script>
+        <script src="../../../../javascripts/mathjax.js"></script>
       
         <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
       
