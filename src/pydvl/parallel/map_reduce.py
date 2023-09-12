@@ -14,10 +14,10 @@ from joblib import Parallel, delayed
 from numpy.random import SeedSequence
 from numpy.typing import NDArray
 
-from ..config import ParallelConfig
-from ..functional import maybe_add_argument
-from ..types import MapFunction, ReduceFunction, Seed, ensure_seed_sequence
+from ..utils.functional import maybe_add_argument
+from ..utils.types import MapFunction, ReduceFunction, Seed, ensure_seed_sequence
 from .backend import init_parallel_backend
+from .config import ParallelConfig
 
 __all__ = ["MapReduceJob"]
 
@@ -54,7 +54,7 @@ class MapReduceJob(Generic[T, R]):
         A simple usage example with 2 jobs:
 
         ``` pycon
-        >>> from pydvl.utils.parallel import MapReduceJob
+        >>> from pydvl.parallel import MapReduceJob
         >>> import numpy as np
         >>> map_reduce_job: MapReduceJob[np.ndarray, np.ndarray] = MapReduceJob(
         ...     np.arange(5),
@@ -68,7 +68,7 @@ class MapReduceJob(Generic[T, R]):
 
         When passed a single object as input, it will be repeated for each job:
         ``` pycon
-        >>> from pydvl.utils.parallel import MapReduceJob
+        >>> from pydvl.parallel import MapReduceJob
         >>> import numpy as np
         >>> map_reduce_job: MapReduceJob[int, np.ndarray] = MapReduceJob(
         ...     5,

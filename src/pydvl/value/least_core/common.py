@@ -7,7 +7,8 @@ import cvxpy as cp
 import numpy as np
 from numpy.typing import NDArray
 
-from pydvl.utils import MapReduceJob, ParallelConfig, Status, Utility
+from pydvl.parallel import MapReduceJob, ParallelConfig
+from pydvl.utils import Status, Utility
 from pydvl.value import ValuationResult
 
 __all__ = [

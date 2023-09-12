@@ -5,10 +5,10 @@ import os
 from abc import abstractmethod
 from concurrent.futures import Executor
 from enum import Flag, auto
-from typing import Any, Callable, Type, TypeVar
+from typing import Any, Callable, Type
 
-from ..config import ParallelConfig
-from ..types import NoPublicConstructor
+from ..utils.types import NoPublicConstructor
+from .config import ParallelConfig
 
 __all__ = [
     "init_parallel_backend",

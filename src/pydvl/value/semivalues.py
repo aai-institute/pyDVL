@@ -80,7 +80,8 @@ import scipy as sp
 from deprecate import deprecated
 from tqdm import tqdm
 
-from pydvl.utils import ParallelConfig, Utility
+from pydvl.parallel.config import ParallelConfig
+from pydvl.utils import Utility
 from pydvl.utils.types import Seed
 from pydvl.value import ValuationResult
 from pydvl.value.sampler import (
