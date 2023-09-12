@@ -91,14 +91,12 @@ class NoTruncation(TruncationPolicy):
 class FixedTruncation(TruncationPolicy):
     """Break a permutation after computing a fixed number of marginals.
 
-    The experiments in Appendix B of
-    (Ghorbani and Zou, 2019)<sup><a href="#ghorbani_data_2019">1</a></sup>
-    show that when the training set size is large enough, one can simply
-    truncate the iteration over permutations after a fixed number of steps. This
-    happens because beyond a certain number of samples in a training set, the
-    model becomes insensitive to new ones. Alas, this strongly depends on the
-    data distribution and the model and there is no automatic way of estimating
-    this number.
+    The experiments in Appendix B of (Ghorbani and Zou, 2019)<sup><a href="#ghorbani_data_2019">1</a></sup>
+    show that when the training set size is large enough, one can simply truncate the iteration
+    over permutations after a fixed number of steps. This happens because beyond
+    a certain number of samples in a training set, the model becomes insensitive
+    to new ones. Alas, this strongly depends on the data distribution and the
+    model and there is no automatic way of estimating this number.
 
     Args:
         u: Utility object with model, data, and scoring function
@@ -135,6 +133,7 @@ class RelativeTruncation(TruncationPolicy):
     def __init__(self, u: Utility, rtol: float):
         super().__init__()
         self.rtol = rtol
+        logger.info("Computing total utility for permutation truncation.")
         self.total_utility = self.reset(u)
         self._u = u
 
@@ -191,8 +190,8 @@ class BootstrapTruncation(TruncationPolicy):
 
 @deprecated(
     target=True,
-    deprecated_in="0.6.1",
-    remove_in="0.7.0",
+    deprecated_in="0.7.0",
+    remove_in="0.8.0",
     args_mapping=dict(coordinator_update_period=None, worker_update_period=None),
 )
 def truncated_montecarlo_shapley(

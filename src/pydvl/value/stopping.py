@@ -147,6 +147,9 @@ class StoppingCriterion(abc.ABC):
             return 0.0
         return float(np.mean(self.converged).item())
 
+    def reset(self):
+        pass
+
     @property
     def converged(self) -> NDArray[np.bool_]:
         """Returns a boolean array indicating whether the values have converged
@@ -333,6 +336,9 @@ class MaxChecks(StoppingCriterion):
             return min(1.0, self._count / self.n_checks)
         return 0.0
 
+    def reset(self):
+        self._count = 0
+
 
 class MaxUpdates(StoppingCriterion):
     """Terminate if any number of value updates exceeds or equals the given
@@ -447,6 +453,9 @@ class MaxTime(StoppingCriterion):
             return 0.0
         return (time() - self.start) / self.max_seconds
 
+    def reset(self):
+        self.start = time()
+
 
 class HistoryDeviation(StoppingCriterion):
     r"""A simple check for relative distance to a previous step in the
@@ -527,3 +536,6 @@ class HistoryDeviation(StoppingCriterion):
                 if np.all(self._converged):
                     return Status.Converged
         return Status.Pending
+
+    def reset(self):
+        self._memory = None  # type: ignore

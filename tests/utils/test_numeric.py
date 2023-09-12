@@ -6,7 +6,7 @@ from pydvl.utils.numeric import (
     powerset,
     random_matrix_with_condition_number,
     random_powerset,
-    random_powerset_group_conditional,
+    random_powerset_label_min,
     random_subset_of_size,
     running_moments,
 )
@@ -253,26 +253,24 @@ def test_running_moments():
 
 
 @pytest.mark.parametrize(
-    "min_elements,elements_per_group,num_groups,check_num_samples",
-    [(1, 10, 3, 3), (2, 10, 3, 3)],
+    "min_elements_per_label,num_elements_per_label,num_labels,check_num_samples",
+    [(0, 10, 3, 1000), (1, 10, 3, 1000), (2, 10, 3, 1000)],
 )
-def test_random_powerset_group_conditional(
-    min_elements: int,
-    elements_per_group: int,
-    num_groups: int,
+def test_random_powerset_label_min(
+    min_elements_per_label: int,
+    num_elements_per_label: int,
+    num_labels: int,
     check_num_samples: int,
 ):
-    s = np.arange(num_groups * elements_per_group)
-    groups = np.arange(num_groups).repeat(elements_per_group)
+    s = np.arange(num_labels * num_elements_per_label)
+    labels = np.arange(num_labels).repeat(num_elements_per_label)
 
     for idx, subset in enumerate(
-        random_powerset_group_conditional(s, groups, min_elements)
+        random_powerset_label_min(s, labels, min_elements_per_label)
     ):
         assert np.all(np.isin(subset, s))
-        assert np.all(np.unique(groups[subset]) == np.unique(groups))
-
-        for group in np.unique(groups):
-            assert np.sum(group == groups[subset]) >= min_elements
+        for group in np.unique(labels):
+            assert np.sum(group == labels[subset]) >= min_elements_per_label
 
         if idx == check_num_samples:
             break

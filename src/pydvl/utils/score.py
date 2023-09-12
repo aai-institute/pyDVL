@@ -2,7 +2,7 @@
 This module provides a [Scorer][pydvl.utils.score.Scorer] class that wraps
 scoring functions with additional information.
 
-Scorers can be constructed in the same way as in scikit-learn: either from
+Scorers can be constructed in the same way as in scikit-learn: either from 
 known strings or from a callable. Greater values must be better. If they are not,
 a negated version can be used, see scikit-learn's
 [make_scorer()](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html).
@@ -22,12 +22,7 @@ from sklearn.metrics import get_scorer
 
 from pydvl.utils.types import SupervisedModel
 
-__all__ = [
-    "Scorer",
-    "compose_score",
-    "squashed_r2",
-    "squashed_variance",
-]
+__all__ = ["Scorer", "compose_score", "squashed_r2", "squashed_variance"]
 
 
 class ScorerCallable(Protocol):
@@ -64,7 +59,7 @@ class Scorer:
     def __init__(
         self,
         scoring: Union[str, ScorerCallable],
-        default: float = 0.0,
+        default: float = np.nan,
         range: Tuple = (-np.inf, np.inf),
         name: Optional[str] = None,
     ):

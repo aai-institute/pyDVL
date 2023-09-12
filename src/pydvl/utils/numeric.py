@@ -34,7 +34,7 @@ __all__ = [
     "random_matrix_with_condition_number",
     "random_subset",
     "random_powerset",
-    "random_powerset_group_conditional",
+    "random_powerset_label_min",
     "random_subset_of_size",
     "top_k_value_accuracy",
 ]
@@ -156,56 +156,49 @@ def random_powerset(
         total += 1
 
 
-def random_powerset_group_conditional(
+def random_powerset_label_min(
     s: NDArray[T],
-    groups: NDArray[np.int_],
-    min_elements_per_group: int = 1,
+    labels: NDArray[np.int_],
+    min_elements_per_label: int = 1,
     seed: Optional[Seed] = None,
 ) -> Generator[NDArray[T], None, None]:
-    """Draws random group-conditional subsets from `s`.
-
-    It is ensured that in each sampled set, each unique group is represented at
-    least `min_elements` times. The groups are specified as integers for all
-    elements of the set separately.
+    """Draws random subsets from `s`, while ensuring that at least
+    `min_elements_per_label` elements per label are included in the draw. It can be used
+    for classification problems to ensure that a set contains information for all labels
+    (or not if `min_elements_per_label=0`).
 
     Args:
-        s: Vector of size N representing the set to sample elements from.
-        groups: Vector of size N containing the group as an integer for each
-            element.
-        min_elements_per_group: The minimum number of elements for each group.
+        s: Set to sample from
+        labels: Labels for the samples
+        min_elements_per_label: Minimum number of elements for each label.
         seed: Either an instance of a numpy random number generator or a seed for it.
 
     Returns:
-        Generated draw from the powerset of s with `min_elements` of each group.
+        Generated draw from the powerset of s with `min_elements_per_label` for each
+        label.
 
     Raises:
-        ValueError: If `s` and `groups` are of different length or
-            `min_elements` is smaller than 0.
+        ValueError: If `s` and `labels` are of different length or
+            `min_elements_per_label` is smaller than 0.
     """
-    if len(groups) != len(s):
+    if len(labels) != len(s):
         raise ValueError("Set and labels have to be of same size.")
 
-    if min_elements_per_group < 0:
+    if min_elements_per_label < 0:
         raise ValueError(
-            f"Parameter min_elements={min_elements_per_group} needs to be bigger or equal to 0."
-        )
-
-    if min_elements_per_group == 0:
-        logger.warning(
-            "It is recommended to ensure at least one element of each group is"
-            " contained in the sampled and yielded set."
+            f"Parameter min_elements={min_elements_per_label} needs to be bigger or equal to 0."
         )
 
     rng = np.random.default_rng(seed)
-    unique_labels = np.unique(groups)
+    unique_labels = np.unique(labels)
 
     while True:
         subsets: List[NDArray[T]] = []
         for label in unique_labels:
-            label_indices = np.asarray(np.where(groups == label)[0])
+            label_indices = np.asarray(np.where(labels == label)[0])
             subset_length = int(
                 rng.integers(
-                    min(min_elements_per_group, len(label_indices)),
+                    min(min_elements_per_label, len(label_indices)),
                     len(label_indices) + 1,
                 )
             )
@@ -219,7 +212,7 @@ def random_powerset_group_conditional(
             rng.shuffle(subset)
             yield subset
         else:
-            yield np.array([], dtype=int)
+            yield np.array([], dtype=s.dtype)
 
 
 def random_subset_of_size(

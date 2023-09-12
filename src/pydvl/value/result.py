@@ -542,7 +542,7 @@ class ValuationResult(
         xm[other_pos] = other._values
         vm[other_pos] = other._variances
 
-        # np.maximum(1, n + m) covers case n = m = 0 with
+        # np.maximum(1, n + m) covers case n = m = 0.
         n_m_sum = np.maximum(1, n + m)
 
         # Sample mean of n+m samples from two means of n and m samples
@@ -635,16 +635,16 @@ class ValuationResult(
         )
         return self
 
-    def scale(self, coefficient: float, indices: Optional[NDArray[IndexT]] = None):
+    def scale(self, factor: float, indices: Optional[NDArray[IndexT]] = None):
         """
         Scales the values and variances of the result by a coefficient.
 
         Args:
-            coefficient: Coefficient to scale by.
+            factor: Factor to scale by.
             indices: Indices to scale. If None, all values are scaled.
         """
-        self._values[self._sort_positions[indices]] *= coefficient
-        self._variances[self._sort_positions[indices]] *= coefficient**2
+        self._values[self._sort_positions[indices]] *= factor
+        self._variances[self._sort_positions[indices]] *= factor**2
 
     def get(self, idx: Integral) -> ValueItem:
         """Retrieves a ValueItem by data index, as opposed to sort index, like

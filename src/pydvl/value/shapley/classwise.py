@@ -1,11 +1,61 @@
-"""
-Implementation of Class-wise Shapley, introduced in (Schoch, Haifeng and Ji,
-2022)[^1].
+r"""
+Implementation of Class-wise Shapley, introduced in (Schoch et al., 2022)[^1].
+
+Class-wise Shapley (Schoch et al., 2022)[^1] offers a distinct Shapley framework tailored
+for classification problems. Let $D$ be the dataset, $D_{y_i}$ be the subset of $D$ with
+labels $y_i$, and $D_{-y_i}$ be the complement of $D_{y_i}$ in $D$. The key idea is that
+a sample $(x_i, y_i)$, might enhance the overall performance on $D$, while being 
+detrimental for the performance on $D_{y_i}$. To address this nuanced behavior, the
+authors introduced the estimator
+
+$$
+v_u(i) = \frac{1}{2^{|D_{-y_i}|}} \sum_{S_{-y_i}} \frac{1}{|D_{y_i}|!}
+\sum_{S_{y_i}} \binom{|D_{y_i}|-1}{|S_{y_i}|}^{-1}
+[u( S_{y_i} \cup \{i\} | S_{-y_i} ) − u( S_{y_i} | S_{-y_i})],
+$$
+
+where $S_{y_i} \subseteq D_{y_i} \setminus \{i\}$ and $S_{-y_i} \subseteq D_{-y_i}$. In
+other words, the summations are over the powerset of $D_{y_i} \setminus \{i\}$ and 
+$D_{-y_i}$ respectively. The estimator employs a specialized utility function
+
+$$
+u(S_{y_i}|S_{-y_i}) = a_S(D_{y_i}) \exp(a_S(D_{-y_i})),
+$$
+
+where $S=S_{y_i} \cup S_{-y_i}$ and $a_S(D)$ is the accuracy of the model trained on $S$
+and evaluated on $D$. 
+
+## Monte Carlo sampling + Permutation Monte Carlo sampling
+
+In practical applications, the evaluation of this estimator leverages both Monte Carlo 
+sampling and permutation Monte Carlo sampling. This results in the estimator
+
+$$
+v_u(i) = \frac{1}{K} \sum_k \frac{1}{L} \sum_l
+[u(\pi^{(l)}_{:i} \cup \{i\} | S^{(k)} ) − u( \pi^{(l)}_{:i} | S^{(k)})],
+$$
+
+with $S^{(1)}, \dots, S^{(K)} \subseteq T_{-y_i}$ and 
+ $\pi^{(1)}, \dots, \pi^{(L)} \in \Pi(T_{y_i}\setminus\{i\})$.
+
+## Derivation of  test case
+
+Let $D=\{(1,0),(2,0),(3,0),(4,1)\}$ be the test set and $T=\{(1,0),(2,0),(3,1),(4,1)\}$
+the train set. This specific dataset is chosen as it allows to solve the model
+
+$$y = \max(0, \min(1, \text{round}(\beta^T x)))$$
+
+in closed form $\beta = \frac{\text{dot}(x, y)}{\text{dot}(x, x)}$. By using the tables
+that represent in-class accuracy $a_S(D_{y_i})$ and out-of-class accuracy 
+$a_S(D_{-y_i})$ the Monte Carlo estimator with $\{S^{(1)}, \dots, S^{(K)}\} 
+= 2^{T_{-y_i}}$ and $\{\pi^{(1)}, \dots, pi^{(L)}\} = \Pi(T_{y_i}\setminus\{i\})$ can be
+evaluated. Note that $2^M$ is the powerset of $M$. The details are left out to the 
+curious reader.
 
 # References
 
 [^1]: <a name="schoch_csshapley_2022"></a>Schoch, Stephanie, Haifeng Xu, and
-    Yangfeng Ji. [CS-Shapley: Class-Wise Shapley Values for Data Valuation in
+    Yangfeng Ji. [CS-Shapley: Class-wise Shapley Values for Data Valuation in
     Classification](https://openreview.net/forum?id=KTOcrOR5mQ9). In Proc. of
     the Thirty-Sixth Conference on Neural Information Processing Systems
     (NeurIPS). New Orleans, Louisiana, USA, 2022.
@@ -14,10 +64,11 @@ Implementation of Class-wise Shapley, introduced in (Schoch, Haifeng and Ji,
 import logging
 import numbers
 from concurrent.futures import FIRST_COMPLETED, Future, wait
-from copy import copy
+from copy import copy, deepcopy
 from typing import Callable, Optional, Set, Tuple, cast
 
 import numpy as np
+from numpy.random import SeedSequence
 from numpy.typing import NDArray
 from tqdm import tqdm
 
@@ -32,7 +83,7 @@ from pydvl.utils import (
     ensure_seed_sequence,
     init_executor,
     init_parallel_backend,
-    random_powerset_group_conditional,
+    random_powerset_label_min,
 )
 from pydvl.value.result import ValuationResult
 from pydvl.value.shapley.truncated import TruncationPolicy
@@ -40,7 +91,145 @@ from pydvl.value.stopping import MaxChecks, StoppingCriterion
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["compute_classwise_shapley_values", "ClasswiseScorer"]
+__all__ = ["ClasswiseScorer", "compute_classwise_shapley_values"]
+
+
+class ClasswiseScorer(Scorer):
+    r"""A Scorer designed for evaluation in classification problems. Its value is
+    derived from both in-class and out-of-class scores (Schoch et al., 2022)
+    <sup><a href="#schoch_csshapley_2022">1</a></sup>. Let $S$ represent the training
+    set and $D$ be the test set. For each label $c$, the test set $D$ is factorized into
+    two disjoint sets: $D_c$ for in-class instances and $D_{-c}$ for out-of-class
+    instances. The score function itself than estimates the in-class metric, adjusted by
+    the discounted out-of-class metric. In essence, the score function for each element
+    of label $c$ is conditioned on the out-of-class instances (or a subset thereof).
+    Both the in-class and out-of-class metrics are determined by an inner score function
+    $a_S$ trained on the train set $S$. The expression for the outer score function is
+
+    $${
+    u(S_{y_i}) = f(a_S(D_{y_i}))) g(a_S(D_{-y_i}))),
+    }$$
+
+    where $f$ and $g$ are continuous, monotonic functions. For a detailed explanation,
+    refer to section four of (Schoch et al., 2022)<sup><a href="#schoch_csshapley_2022">
+    1</a></sup>.
+
+    Args:
+        default: Score used when a model cannot be fit, e.g. when too little data is
+            passed, or errors arise.
+        range: Numerical range of the score function. Some Monte Carlo methods can
+            use this to estimate the number of samples required for a certain quality of
+            approximation. If not provided, it can be read from the `scoring` object
+            if it provides it, for instance if it was constructed with
+            [compose_score][pydvl.utils.score.compose_score].
+        in_class_discount_fn: Continuous, monotonic increasing function used to
+            discount the in-class score.
+        out_of_class_discount_fn: Continuous, monotonic increasing function used to
+            discount the out-of-class score.
+        initial_label: Set initial label (Doesn't require to set parameter `label`
+            on [ClasswiseScorer][pydvl.value.shapley.classwise.ClasswiseScorer] in first
+            iteration)
+        name: Name of the scorer. If not provided, the name of the passed
+            function will be prefixed by 'classwise '.
+
+    !!! tip "New in version 0.7.1"
+    """
+
+    def __init__(
+        self,
+        scoring: str = "accuracy",
+        default: float = 0.0,
+        range: Tuple[float, float] = (0, np.inf),
+        in_class_discount_fn: Callable[[float], float] = lambda x: x,
+        out_of_class_discount_fn: Callable[[float], float] = np.exp,
+        initial_label: Optional[int] = None,
+        name: Optional[str] = None,
+    ):
+        disc_score_in_class = in_class_discount_fn(range[1])
+        disc_score_out_of_class = out_of_class_discount_fn(range[1])
+        transformed_range = (0, disc_score_in_class * disc_score_out_of_class)
+        super().__init__(
+            "accuracy",
+            range=transformed_range,
+            default=default,
+            name=name or f"classwise {scoring}",
+        )
+        self._in_class_discount_fn = in_class_discount_fn
+        self._out_of_class_discount_fn = out_of_class_discount_fn
+        self.label = initial_label
+
+    def __str__(self):
+        return self._name
+
+    def __call__(
+        self: "ClasswiseScorer",
+        model: SupervisedModel,
+        x_test: NDArray[np.float_],
+        y_test: NDArray[np.int_],
+    ) -> float:
+        (
+            in_class_score,
+            out_of_class_score,
+        ) = self.estimate_in_class_and_out_of_class_score(model, x_test, y_test)
+        disc_score_in_class = self._in_class_discount_fn(in_class_score)
+        disc_score_out_of_class = self._out_of_class_discount_fn(out_of_class_score)
+        return disc_score_in_class * disc_score_out_of_class
+
+    def estimate_in_class_and_out_of_class_score(
+        self,
+        model: SupervisedModel,
+        x_test: NDArray[np.float_],
+        y_test: NDArray[np.int_],
+        rescale_scores: bool = True,
+    ) -> Tuple[float, float]:
+        r"""
+        Computes in-class and out-of-class scores using the provided scoring function
+        $s$. The result can be expressed as
+
+        $${
+        a_S(D=\{(x_1, y_1), \dots, (x_K, y_K)\}) = \frac{1}{N} \sum_k s(y(x_k), y_k).
+        }$$
+
+        In this context, for label $c$ calculations are executed twice: once for $D_c$
+        and once for $D_{-c}$ to determine the in-class and out-of-class scores,
+        respectively. By default, the raw scores are multiplied by $\frac{|D_c|}{|D|}$
+        and $\frac{|D_{-c}|}{|D|}$, respectively. This is done to ensure that both
+        scores are of the same order of magnitude. This normalization is particularly
+        useful when the inner score function $a_S$ is calculated by an estimator of the
+        form $\frac{1}{N} \sum_i x_i$, e.g. the accuracy.
+
+        Args:
+            model: Model used for computing the score on the validation set.
+            x_test: Array containing the features of the classification problem.
+            y_test: Array containing the labels of the classification problem.
+            rescale_scores: If set to True, the scores will be denormalized. This is
+                particularly useful when the inner score function $a_S$ is calculated by
+                an estimator of the form $\frac{1}{N} \sum_i x_i$.
+
+        Returns:
+            Tuple containing the in-class and out-of-class scores.
+        """
+        scorer = self._scorer
+        label_set_match = y_test == self.label
+        label_set = np.where(label_set_match)[0]
+        num_classes = len(np.unique(y_test))
+
+        if len(label_set) == 0:
+            return 0, 1 / (num_classes - 1)
+
+        complement_label_set = np.where(~label_set_match)[0]
+        in_class_score = scorer(model, x_test[label_set], y_test[label_set])
+        out_of_class_score = scorer(
+            model, x_test[complement_label_set], y_test[complement_label_set]
+        )
+
+        if rescale_scores:
+            n_in_class = np.count_nonzero(y_test == self.label)
+            n_out_of_class = len(y_test) - n_in_class
+            in_class_score *= n_in_class / (n_in_class + n_out_of_class)
+            out_of_class_score *= n_out_of_class / (n_in_class + n_out_of_class)
+
+        return in_class_score, out_of_class_score
 
 
 def compute_classwise_shapley_values(
@@ -57,15 +246,25 @@ def compute_classwise_shapley_values(
     progress: bool = False,
     seed: Optional[Seed] = None,
 ) -> ValuationResult:
-    """
-    Computes the class-wise Shapley values as described in (Schoch, Haifeng and
-    Ji, 2022)<sup><a href="#schoch_csshapley_2022">1</a></sup>.
-    The values can be optionally normalized, depending on `normalize_values`.
+    r"""
+    Computes an approximate Class-wise Shapley value by sampling independent
+    permutations of the index set for each label and unifying it with index sets sampled
+    from the complement (with respect to the currently evaluated label), approximating
+    the sum:
+
+    $$
+    v_u(i) = \frac{1}{K} \sum_k \frac{1}{L} \sum_l
+    [u(\sigma^{(l)}_{:i} \cup \{i\} | S^{(k)} ) − u( \sigma^{(l)}_{:i} | S^{(k)})],
+    $$
+
+    where $\sigma_{:i}$ denotes the set of indices in permutation sigma before
+    the position where $i$ appears and $S$ is a subset of the index set of all other
+    labels(see [[data-valuation]] for details).
 
     Args:
         u: Utility object containing model, data, and scoring function. The
             scorer must be of type
-            [ClassWiseScorer][pydvl.value.shapley.classwise.ClasswiseScorer].
+            [ClasswiseScorer][pydvl.value.shapley.classwise.ClasswiseScorer].
         done: Function that checks whether the computation needs to stop.
         truncation: Callable function that decides whether to interrupt processing a
             permutation and set subsequent marginals to zero.
@@ -89,10 +288,24 @@ def compute_classwise_shapley_values(
     Returns:
         ValuationResult object containing computed data values.
 
-    !!! tip "New in version 0.7.0"
+    !!! tip "New in version 0.7.1"
     """
+    dim_correct = u.data.y_train.ndim == 1 and u.data.y_test.ndim == 1
+    is_integral = all(
+        map(
+            lambda v: isinstance(v, numbers.Integral), (*u.data.y_train, *u.data.y_test)
+        )
+    )
+    if not dim_correct or not is_integral:
+        raise ValueError(
+            "The supplied dataset has to be a 1-dimensional classification dataset."
+        )
 
-    _check_classwise_shapley_utility(u)
+    if not isinstance(u.scorer, ClasswiseScorer):
+        raise ValueError(
+            "Please set a subclass of ClasswiseScorer object as scorer object of the"
+            " utility. See scoring argument of Utility."
+        )
 
     parallel_backend = init_parallel_backend(config)
     u_ref = parallel_backend.put(u)
@@ -100,8 +313,9 @@ def compute_classwise_shapley_values(
     n_submitted_jobs = 2 * n_jobs
 
     pbar = tqdm(disable=not progress, position=0, total=100, unit="%")
+    algorithm = "classwise_shapley"
     accumulated_result = ValuationResult.zeros(
-        algorithm="classwise_shapley",
+        algorithm=algorithm,
         indices=u.data.indices,
         data_names=u.data.data_names,
     )
@@ -129,12 +343,13 @@ def compute_classwise_shapley_values(
             seeds = seed_sequence.spawn(n_remaining_slots)
             for i in range(n_remaining_slots):
                 future = executor.submit(
-                    _permutation_montecarlo_classwise_shapley,
+                    _permutation_montecarlo_classwise_shapley_one_step,
                     u_ref,
                     truncation=truncation,
                     done_sample_complements=done_sample_complements,
                     use_default_scorer_value=use_default_scorer_value,
                     min_elements_per_label=min_elements_per_label,
+                    algorithm_name=algorithm,
                     seed=seeds[i],
                 )
                 pending.add(future)
@@ -146,21 +361,24 @@ def compute_classwise_shapley_values(
     return result
 
 
-def _permutation_montecarlo_classwise_shapley(
+def _permutation_montecarlo_classwise_shapley_one_step(
     u: Utility,
     *,
     done_sample_complements: StoppingCriterion = None,
     truncation: TruncationPolicy,
     use_default_scorer_value: bool = True,
     min_elements_per_label: int = 1,
-    seed: Optional[Seed] = None,
+    algorithm_name: str = "classwise_shapley",
+    seed: Optional[SeedSequence] = None,
 ) -> ValuationResult:
-    """Computes classwise Shapley value using truncated Monte Carlo permutation
-    sampling for the subsets.
+    """Helper function for [compute_classwise_shapley_values()]
+    [pydvl.value.shapley.classwise.compute_classwise_shapley_values].
+
 
     Args:
-        u: Utility object containing model, data, and scoring function. The scoring
-            function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
+        u: Utility object containing model, data, and scoring function. The
+            scorer must be of type [ClasswiseScorer]
+            [pydvl.value.shapley.classwise.ClasswiseScorer].
         done_sample_complements: Function checking whether computation needs to stop.
             Otherwise, it will resample conditional sets until the stopping criterion is
             met.
@@ -171,6 +389,7 @@ def _permutation_montecarlo_classwise_shapley(
             this. If it is set to false, the base score is calculated from the utility.
         min_elements_per_label: The minimum number of elements for each opposite
             label.
+        algorithm_name: For the results object.
         seed: Either an instance of a numpy random number generator or a seed for it.
 
     Returns:
@@ -180,7 +399,7 @@ def _permutation_montecarlo_classwise_shapley(
         done_sample_complements = MaxChecks(1)
 
     result = ValuationResult.zeros(
-        algorithm="classwise_shapley",
+        algorithm=algorithm_name,
         indices=u.data.indices,
         data_names=u.data.data_names,
     )
@@ -192,67 +411,54 @@ def _permutation_montecarlo_classwise_shapley(
 
     for label in unique_labels:
         u.scorer.label = label
-        result += _permutation_montecarlo_classwise_shapley_for_label(
-            u,
+        class_indices_set, class_complement_indices_set = _split_indices_by_label(
+            u.data.indices,
+            y_train,
             label,
-            done=done_sample_complements,
-            truncation=truncation,
-            use_default_scorer_value=use_default_scorer_value,
-            min_elements_per_label=min_elements_per_label,
-            seed=rng,
         )
+        _, complement_y_train = u.data.get_training_data(class_complement_indices_set)
+        indices_permutation = rng.permutation(class_indices_set)
+        done_sample_complements.reset()
+
+        for subset_idx, subset_complement in enumerate(
+            random_powerset_label_min(
+                class_complement_indices_set,
+                complement_y_train,
+                min_elements_per_label=min_elements_per_label,
+                seed=rng,
+            )
+        ):
+            result += _permutation_montecarlo_shapley_rollout(
+                u,
+                indices_permutation,
+                additional_indices=subset_complement,
+                truncation=truncation,
+                algorithm_name=algorithm_name,
+                use_default_scorer_value=use_default_scorer_value,
+            )
+            if done_sample_complements(result):
+                break
 
     return result
-
-
-def _check_classwise_shapley_utility(u: Utility):
-    """
-    Verifies if the provided utility object supports classwise Shapley values.
-
-    Args:
-        u: Utility object containing model, data, and scoring function. The scoring
-            function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
-
-    Raises:
-        ValueError: If ``u.data`` is not a classification problem.
-        ValueError: If ``u.scorer`` is not an instance of
-            :class:`~pydvl.utils.score.ClassWiseScorer`
-    """
-
-    dim_correct = u.data.y_train.ndim == 1 and u.data.y_test.ndim == 1
-    is_integral = all(
-        map(
-            lambda v: isinstance(v, numbers.Integral), (*u.data.y_train, *u.data.y_test)
-        )
-    )
-    if not dim_correct or not is_integral:
-        raise ValueError(
-            "The supplied dataset has to be a 1-dimensional classification dataset."
-        )
-
-    if not isinstance(u.scorer, ClasswiseScorer):
-        raise ValueError(
-            "Please set a subclass of ClassWiseScorer object as scorer object of the"
-            " utility. See scoring argument of Utility."
-        )
 
 
 def _normalize_classwise_shapley_values(
     result: ValuationResult,
     u: Utility,
 ) -> ValuationResult:
-    """
+    r"""
     Normalize a valuation result specific to classwise Shapley.
 
-    Each value corresponds to a class c and gets normalized by multiplying
-    `in-class-score / sigma`. In this context `sigma` is the magnitude of all values
-    belonging to the currently viewed class. See footcite:t:`schoch_csshapley_2022` for
-    more details.
+    Each value $v_i$ associated with the sample $(x_i, y_i)$ is normalized by
+    multiplying it with $a_S(D_{y_i})$ and dividing by $\sum_{j \in D_{y_i}} v_j$. For
+    more details, see (Schoch et al., 2022) <sup><a href="#schoch_csshapley_2022">1</a>
+    </sup>.
 
     Args:
         result: ValuationResult object to be normalized.
-        u: Utility object containing model, data, and scoring function. The scoring
-            function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
+        u: Utility object containing model, data, and scoring function. The
+            scorer must be of type [ClasswiseScorer]
+            [pydvl.value.shapley.classwise.ClasswiseScorer].
 
     Returns:
         Normalized ValuationResult object.
@@ -269,224 +475,13 @@ def _normalize_classwise_shapley_values(
 
         u.model.fit(u.data.x_train, u.data.y_train)
         scorer.label = label
-        in_cls_acc, _ = scorer.estimate_in_cls_and_out_of_cls_score(
+        in_class_acc, _ = scorer.estimate_in_class_and_out_of_class_score(
             u.model, u.data.x_test, u.data.y_test
         )
 
         sigma = np.sum(result.values[indices_label_set])
         if sigma != 0:
-            result.scale(in_cls_acc / sigma, indices=indices_label_set)
-
-    return result
-
-
-class ClasswiseScorer(Scorer):
-    """A Scorer which is applicable for valuation in classification problems. Its value
-    is based on in-cls and out-of-cls score :footcite:t:`schoch_csshapley_2022`. For
-    each class ``label`` it separates the elements into two groups, namely in-cls
-    instances and out-of-cls instances. The value function itself than estimates the
-    in-cls metric discounted by the out-of-cls metric. In other words the value function
-    for each element of one class is conditioned on the out-of-cls instances (or a
-    subset of it). The form of the value function can be written as
-
-    .. math::
-        v_{y_i}(D) = f(a_S(D_{y_i}))) * g(a_S(D_{-y_i})))
-
-    where f and g are continuous, monotonic functions and D is the test set.
-
-    in order to produce meaningful results. For further reference see also section four
-    of :footcite:t:`schoch_csshapley_2022`.
-
-    Args:
-        default: Score used when a model cannot be fit, e.g. when too little data is
-            passed, or errors arise.
-        range: Numerical range of the score function. Some Monte Carlo methods can
-            use this to estimate the number of samples required for a certain quality of
-            approximation. If not provided, it can be read from the ``scoring`` object
-            if it provides it, for instance if it was constructed with
-            :func:`~pydvl.utils.types.compose_score`.
-        in_class_discount_fn: Continuous, monotonic increasing function used to
-            discount the in-class score.
-        out_of_class_discount_fn: Continuous, monotonic increasing function used to
-            discount the out-of-class score.
-        initial_label: Set initial label (Doesn't require to set parameter ``label``
-            on ``ClassWiseDiscountedScorer`` in first iteration)
-        name: Name of the scorer. If not provided, the name of the passed
-            function will be prefixed by 'classwise '.
-
-    !!! tip "New in version 0.7.0"
-    """
-
-    def __init__(
-        self,
-        scoring: str = "accuracy",
-        default: float = 0.0,
-        range: Tuple[float, float] = (-np.inf, np.inf),
-        in_class_discount_fn: Callable[[float], float] = lambda x: x,
-        out_of_class_discount_fn: Callable[[float], float] = np.exp,
-        initial_label: Optional[int] = None,
-        name: Optional[str] = None,
-    ):
-        disc_score_in_cls = in_class_discount_fn(range[1])
-        disc_score_out_of_cls = out_of_class_discount_fn(range[1])
-        transformed_range = (0, disc_score_in_cls * disc_score_out_of_cls)
-        super().__init__(
-            "accuracy",
-            range=transformed_range,
-            default=default,
-            name=name or f"classwise {scoring}",
-        )
-        self._in_cls_discount_fn = in_class_discount_fn
-        self._out_of_cls_discount_fn = out_of_class_discount_fn
-        self.label = initial_label
-
-    def __str__(self):
-        return self._name
-
-    def __call__(
-        self: "ClasswiseScorer",
-        model: SupervisedModel,
-        x_test: NDArray[np.float_],
-        y_test: NDArray[np.int_],
-    ) -> float:
-        """
-        Args:
-            model: Model used for computing the score on the validation set.
-            x_test: Array containing the features of the classification problem.
-            y_test: Array containing the labels of the classification problem.
-
-        Returns:
-            Calculated score.
-        """
-        in_cls_score, out_of_cls_score = self.estimate_in_cls_and_out_of_cls_score(
-            model, x_test, y_test
-        )
-        disc_score_in_cls = self._in_cls_discount_fn(in_cls_score)
-        disc_score_out_of_cls = self._out_of_cls_discount_fn(out_of_cls_score)
-        return disc_score_in_cls * disc_score_out_of_cls
-
-    def estimate_in_cls_and_out_of_cls_score(
-        self,
-        model: SupervisedModel,
-        x_test: NDArray[np.float_],
-        y_test: NDArray[np.int_],
-        rescale_scores: bool = True,
-    ) -> Tuple[float, float]:
-        r"""
-        Computes in-class and out-of-class scores using the provided scoring function,
-        which can be expressed as:
-
-        .. math::
-            a_S(D=\{(\hat{x}_1, \hat{y}_1), \dots, (\hat{x}_K, \hat{y}_K)\}) &=
-            \frac{1}{N} \sum_k s(y(\hat{x}_k), \hat{y}_k)
-
-        In this context, the computation is performed twice: once on D_i and once on D_o
-        to calculate the in-class and out-of-class scores. Here, D_i contains only
-        samples with the specified 'label' from the validation set, while D_o contains
-        all other samples. By default, the scores are scaled to have the same order of
-        magnitude. In such cases, the raw scores are multiplied by:
-
-        .. math::
-            N_{y_i} = \frac{a_S(D_{y_i})}{a_S(D_{y_i})+a_S(D_{-y_i})} \quad \text{and}
-            \quad N_{-y_i} = \frac{a_S(D_{-y_i})}{a_S(D_{y_i})+a_S(D_{-y_i})}
-
-        :param model: Model used for computing the score on the validation set.
-        :param x_test: Array containing the features of the classification problem.
-        :param y_test: Array containing the labels of the classification problem.
-        :param rescale_scores: If set to True, the scores will be denormalized. This is
-            particularly useful when the inner score is calculated by an estimator of
-            the form 1/N sum_i x_i.
-        :return: Tuple containing the in-class and out-of-class scores.
-        """
-        scorer = self._scorer
-        label_set_match = y_test == self.label
-        label_set = np.where(label_set_match)[0]
-        num_classes = len(np.unique(y_test))
-
-        if len(label_set) == 0:
-            return 0, 1 / (num_classes - 1)
-
-        complement_label_set = np.where(~label_set_match)[0]
-        in_cls_score = scorer(model, x_test[label_set], y_test[label_set])
-        out_of_cls_score = scorer(
-            model, x_test[complement_label_set], y_test[complement_label_set]
-        )
-
-        if rescale_scores:
-            n_in_cls = np.count_nonzero(y_test == self.label)
-            n_out_of_cls = len(y_test) - n_in_cls
-            in_cls_score *= n_in_cls / (n_in_cls + n_out_of_cls)
-            out_of_cls_score *= n_out_of_cls / (n_in_cls + n_out_of_cls)
-
-        return in_cls_score, out_of_cls_score
-
-
-def _permutation_montecarlo_classwise_shapley_for_label(
-    u: Utility,
-    label: int,
-    *,
-    done: StoppingCriterion,
-    truncation: TruncationPolicy,
-    use_default_scorer_value: bool = True,
-    min_elements_per_label: int = 1,
-    seed: Optional[Seed] = None,
-) -> ValuationResult:
-    """
-    Samples a random subset of the complement set and computes the truncated Monte Carlo
-    estimator.
-
-    Args:
-    :param u: Utility object containing model, data, and scoring function. The scoring
-        function should be of type :class:`~pydvl.utils.score.ClassWiseScorer`.
-    :param done: Function checking whether computation needs to stop. Otherwise, it will
-        resample conditional sets until the stopping criterion is met.
-    :param label: The label for which to sample the complement (e.g. all other labels)
-    :param truncation: Callable which decides whether to interrupt processing a
-        permutation and set all subsequent marginals to zero.
-    :param use_default_scorer_value: Use default scorer value even if additional_indices
-        is not None.
-    :param min_elements_per_label: The minimum number of elements for each opposite
-        label.
-    :param seed: Either an instance of a numpy random number generator or a seed for it.
-
-    :return: ValuationResult object containing computed data values.
-    """
-
-    algorithm_name = "classwise_shapley"
-    result = ValuationResult.zeros(
-        algorithm="classwise_shapley",
-        indices=u.data.indices,
-        data_names=u.data.data_names,
-    )
-
-    rng = np.random.default_rng(seed)
-    _, y_train = u.data.get_training_data(u.data.indices)
-    class_indices_set, class_complement_indices_set = split_indices_by_label(
-        u.data.indices,
-        y_train,
-        label,
-    )
-    _, complement_y_train = u.data.get_training_data(class_complement_indices_set)
-    indices_permutation = rng.permutation(class_indices_set)
-
-    for subset_idx, subset_complement in enumerate(
-        random_powerset_group_conditional(
-            class_complement_indices_set,
-            complement_y_train,
-            min_elements_per_group=min_elements_per_label,
-            seed=rng,
-        )
-    ):
-        result += _permutation_montecarlo_shapley_rollout(
-            u,
-            indices_permutation,
-            additional_indices=subset_complement,
-            truncation=truncation,
-            algorithm_name=algorithm_name,
-            use_default_scorer_value=use_default_scorer_value,
-        )
-        if done(result):
-            break
+            result.scale(in_class_acc / sigma, indices=indices_label_set)
 
     return result
 
@@ -500,9 +495,14 @@ def _permutation_montecarlo_shapley_rollout(
     use_default_scorer_value: bool = True,
 ) -> ValuationResult:
     """
-    A truncated version of a permutation-based MC estimator.
-    values. It generates a permutation p[i] of the class label indices and iterates over
-    all subsets starting from the empty set to the full set of indices.
+    Represents a truncated version of a permutation-based MC estimator. It iterates over
+    all subsets starting from the empty set to the full set of indices as specified by
+    `permutation`. For each subset, the marginal contribution is computed and added to
+    the result. The computation is interrupted if the truncation policy returns `True`.
+
+    !!! Todo
+        Reuse in [permutation_montecarlo_shapley()]
+        [pydvl.value.shapley.montecarlo.permutation_montecarlo_shapley]
 
     Args:
         u: Utility object containing model, data, and scoring function.
@@ -515,6 +515,7 @@ def _permutation_montecarlo_shapley_rollout(
             always considered.
         use_default_scorer_value: Use default scorer value even if additional_indices
             is not None.
+
     Returns:
          ValuationResult object containing computed data values.
     """
@@ -577,17 +578,20 @@ def _permutation_montecarlo_shapley_rollout(
     return result
 
 
-def split_indices_by_label(
+def _split_indices_by_label(
     indices: NDArray[np.int_], labels: NDArray[np.int_], label: int
 ) -> Tuple[NDArray[np.int_], NDArray[np.int_]]:
     """
-    Splits the indices into two sets based on the value of  ``label``: those samples
+    Splits the indices into two sets based on the value of `label`, e.g. those samples
     with and without that label.
 
-    :param indices: The indices to be used for referring to the data.
-    :param labels: Corresponding labels for the indices.
-    :param label: Label to be used for splitting.
-    :return: Tuple with two sets of indices.
+    Args:
+        indices: The indices to be used for referring to the data.
+        labels: Corresponding labels for the indices.
+        label: Label to be used for splitting.
+
+    Returns:
+        Tuple with two sets of indices.
     """
     active_elements = labels == label
     class_indices_set = np.where(active_elements)[0]
