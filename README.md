@@ -71,6 +71,10 @@ methods from the following papers:
   Valuation Framework for Machine Learning](http://arxiv.org/abs/2110.14049).
   In Proceedings of the 25th International Conference on Artificial Intelligence
   and Statistics (AISTATS) 2022, Vol. 151. Valencia, Spain: PMLR, 2022.
+- Kwon, Yongchan, and James Zou. [Data-OOB: Out-of-Bag Estimate as a Simple and
+  Efficient Data Value](https://proceedings.mlr.press/v202/kwon23e.html). In
+  Proceedings of the 40th International Conference on Machine Learning, 18135–52.
+  PMLR, 2023.
 
 Influence Functions compute the effect that single points have on an estimator /
 model. We implement methods from the following papers:
@@ -82,6 +86,9 @@ model. We implement methods from the following papers:
 - Naman Agarwal, Brian Bullins, and Elad Hazan, [Second-Order Stochastic Optimization
   for Machine Learning in Linear Time](https://www.jmlr.org/papers/v18/16-491.html),
   Journal of Machine Learning Research 18 (2017): 1-40.
+- Schioppa, Andrea, Polina Zablotskaia, David Vilar, and Artem Sokolov. 
+  [Scaling Up Influence Functions](http://arxiv.org/abs/2112.03052). 
+  In Proceedings of the AAAI-22. arXiv, 2021.
 
 # Installation
 

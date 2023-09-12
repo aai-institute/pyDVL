@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Implementation of Data-OOB by @BastienZim
+  [PR #426](https://github.com/aai-institute/pyDVL/pull/426)
+- Refactoring of parallel module. Old imports will stop working in v0.9.0
+  [PR #421](https://github.com/aai-institute/pyDVL/pull/421)
+
 ## 0.7.0 - 📚🆕 Documentation and IF overhaul, new methods and bug fixes 💥🐞
 
 This is our first β release! We have worked hard to deliver improvements across
