@@ -196,15 +196,15 @@ def random_powerset_label_min(
         subsets: List[NDArray[T]] = []
         for label in unique_labels:
             label_indices = np.asarray(np.where(labels == label)[0])
-            subset_length = int(
+            subset_size = int(
                 rng.integers(
                     min(min_elements_per_label, len(label_indices)),
                     len(label_indices) + 1,
                 )
             )
-            if subset_length > 0:
+            if subset_size > 0:
                 subsets.append(
-                    random_subset_of_size(s[label_indices], subset_length, seed=rng)
+                    random_subset_of_size(s[label_indices], subset_size, seed=rng)
                 )
 
         if len(subsets) > 0:
