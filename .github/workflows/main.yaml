@@ -1,4 +1,4 @@
-name: Run tests, build docs, publish to TestPyPI
+name: Tests, docs, package
 
 on:
   push:
