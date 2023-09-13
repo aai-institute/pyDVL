@@ -1,6 +1,4 @@
 r"""
-Implementation of Class-wise Shapley, introduced in (Schoch et al., 2022)[^1].
-
 Class-wise Shapley (Schoch et al., 2022)[^1] offers a distinct Shapley framework tailored
 for classification problems. Let $D$ be the dataset, $D_{y_i}$ be the subset of $D$ with
 labels $y_i$, and $D_{-y_i}$ be the complement of $D_{y_i}$ in $D$. The key idea is that
@@ -45,12 +43,13 @@ the train set. This specific dataset is chosen as it allows to solve the model
 
 $$y = \max(0, \min(1, \text{round}(\beta^T x)))$$
 
-in closed form $\beta = \frac{\text{dot}(x, y)}{\text{dot}(x, x)}$. By using the tables
-that represent in-class accuracy $a_S(D_{y_i})$ and out-of-class accuracy 
-$a_S(D_{-y_i})$ the Monte Carlo estimator with $\{S^{(1)}, \dots, S^{(K)}\} 
-= 2^{T_{-y_i}}$ and $\{\sigma^{(1)}, \dots, sigma^{(L)}\} = \Pi(T_{y_i}\setminus\{i\})$ 
-can be evaluated. Note that $2^M$ is the powerset of $M$. The details are left out to 
-the curious reader.
+in closed form $\beta = \frac{\text{dot}(x, y)}{\text{dot}(x, x)}$. From the closed-form
+solution, the tables for in-class accuracy $a_S(D_{y_i})$ and out-of-class accuracy 
+$a_S(D_{-y_i})$ can be calculated. By using these tables and setting 
+$\{S^{(1)}, \dots, S^{(K)}\} = 2^{T_{-y_i}}$ and 
+$\{\sigma^{(1)}, \dots, \sigma^{(L)}\} = \Pi(T_{y_i}\setminus\{i\})$,
+the Monte Carlo estimator can be evaluated ($2^M$ is the powerset of $M$).
+The details of the derivation are left to the eager reader.
 
 # References
 
