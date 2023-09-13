@@ -21,3 +21,5 @@ pytest-timeout
 pytest-lazy-fixture
 wheel
 twine==4.0.2
+datasets==2.6.1
+torchvision==0.14.1
