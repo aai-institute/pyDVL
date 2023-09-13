@@ -199,6 +199,7 @@ nav:
       - KNN Shapley: examples/shapley_knn_flowers.ipynb
       - Data utility learning: examples/shapley_utility_learning.ipynb
       - Least Core: examples/least_core_basic.ipynb
+      - Data OOB: examples/data_oob.ipynb
   - The Influence Function:
     - Introduction: influence/index.md
     - Examples:
