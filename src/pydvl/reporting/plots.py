@@ -1,14 +1,23 @@
-from typing import Any, List, Optional, OrderedDict, Sequence
+from functools import partial
+from typing import Any, List, Literal, Optional, OrderedDict, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy as sp
+from deprecate import deprecated
 from matplotlib.axes import Axes
 from numpy.typing import NDArray
-from scipy.stats import norm
+from scipy.stats import norm, t
+
+from pydvl.value import ValuationResult
 
 
+@deprecated(
+    target=None,
+    deprecated_in="0.7.1",
+    remove_in="0.9.0",
+)
 def shaded_mean_std(
     data: np.ndarray,
     abscissa: Optional[Sequence[Any]] = None,
@@ -21,7 +30,12 @@ def shaded_mean_std(
     ax: Optional[Axes] = None,
     **kwargs,
 ) -> Axes:
-    """The usual mean \(\pm\) std deviation plot to aggregate runs of experiments.
+    r"""The usual mean \(\pm\) std deviation plot to aggregate runs of
+    experiments.
+
+    !!! warning "Deprecation notice"
+        This function is bogus and will be removed in the future in favour of
+        properly computed confidence intervals.
 
     Args:
         data: axis 0 is to be aggregated on (e.g. runs) and axis 1 is the
@@ -56,6 +70,67 @@ def shaded_mean_std(
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
 
+    return ax
+
+
+def plot_values_ci(
+    values: ValuationResult,
+    level: float,
+    type: Literal["normal", "t", "auto"] = "auto",
+    mean_color: Optional[str] = "dodgerblue",
+    shade_color: Optional[str] = "lightblue",
+    ax: Optional[plt.Axes] = None,
+    **kwargs,
+):
+    """Plot values and a confidence interval.
+
+    Supported intervals are based on the normal and the t distributions.
+
+    Args:
+        values: The valuation result.
+        level: The confidence level.
+        type: The type of confidence interval to use. If "auto", uses "norm" if
+            the minimum number of updates for all indices is greater than 30,
+            otherwise uses "t".
+        mean_color: The color of the mean line.
+        shade_color: The color of the confidence interval.
+        ax: If passed, axes object into which to insert the figure. Otherwise,
+            a new figure is created and the axes returned.
+        **kwargs: Additional arguments to pass to the plot function.
+
+    Returns:
+        The matplotlib axes.
+    """
+
+    ppfs = {
+        "normal": norm.ppf,
+        "t": partial(t.ppf, df=values.counts - 1),
+        "auto": norm.ppf
+        if np.min(values.counts) > 30
+        else partial(t.ppf, df=values.counts - 1),
+    }
+
+    try:
+        score = ppfs[type](1 - level / 2)
+    except KeyError:
+        raise ValueError(
+            f"Unknown confidence interval type requested: {type}."
+        ) from None
+
+    abscissa = np.arange(len(values))
+    bound = score * values.stderr
+
+    if ax is None:
+        fig, ax = plt.subplots()
+
+    ax.fill_between(
+        abscissa,
+        values.values - bound,
+        values.values + bound,
+        alpha=0.3,
+        color=shade_color,
+    )
+    ax.plot(abscissa, values.values, color=mean_color, **kwargs)
     return ax
 
 
@@ -108,8 +183,9 @@ def plot_shapley(
     ylabel: Optional[str] = None,
 ) -> plt.Axes:
     r"""Plots the shapley values, as returned from
-    [compute_shapley_values][pydvl.value.shapley.common.compute_shapley_values], with error bars
-    corresponding to an $\alpha$-level confidence interval.
+    [compute_shapley_values][pydvl.value.shapley.common.compute_shapley_values],
+    with error bars corresponding to an $\alpha$-level Normal confidence
+    interval.
 
     Args:
         df: dataframe with the shapley values
