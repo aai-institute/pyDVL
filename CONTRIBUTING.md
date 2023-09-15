@@ -151,7 +151,7 @@ cells which are then hidden in the documentation.
 
 In order to do this, cells are marked with tags understood by the mkdocs
 plugin [`mkdocs-jupyter`](https://github.com/danielfrg/mkdocs-jupyter#readme),
-namely adding the following to the relevant cells:
+namely adding the following to the metadata of the relevant cells:
 
 ```yaml
 "tags": [

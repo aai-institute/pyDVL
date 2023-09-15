@@ -15,8 +15,8 @@ alias:
 training set which reflects its contribution to the final performance of some
 model trained on it. Some methods attempt to be model-agnostic, but in most
 cases the model is an integral part of the method. In these cases, this number
-not an intrinsic property of the element of interest, but typically a function
-of three factors:
+is not an intrinsic property of the element of interest, but typically a
+function of three factors:
 
 1. The dataset $D$, or more generally, the distribution it was sampled
    from (with this we mean that *value* would ideally be the (expected)
@@ -28,8 +28,8 @@ of three factors:
    of a linear model.
 
 3. The performance metric of interest $u$ for the problem. When value depends on
-   a model, it must be measured in some way which uses it. E.g. the $R^2$ score or
-   the negative MSE over a test set.
+   a model, it must be measured in some way which uses it. E.g. the $R^2$ score
+   or the negative MSE over a test set.
 
 pyDVL collects algorithms for the computation of data values in this sense,
 mostly those derived from cooperative game theory. The methods can be found in
