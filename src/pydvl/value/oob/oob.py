@@ -98,7 +98,7 @@ def compute_data_oob(
     ):  # The bottleneck is the bag fitting not this part so TQDM is not very useful here
         oob_idx = np.setxor1d(u.data.indices, np.unique(samples))
         array_loss = loss(
-            preds=est.predict(u.data.x_train[oob_idx]), y=u.data.y_train[oob_idx]
+            x1=est.predict(u.data.x_train[oob_idx]), x2=u.data.y_train[oob_idx]
         )
         result += ValuationResult(
             algorithm="data_oob",
@@ -109,32 +109,28 @@ def compute_data_oob(
     return result
 
 
-def point_wise_accuracy(preds: NDArray, y: NDArray) -> NDArray:
-    r"""Computes point wise accuracy
+def point_wise_accuracy(x1: NDArray[T], x2: NDArray[T]) -> NDArray[T]:
+    r"""Point-wise 0-1 loss between two arrays
 
     Args:
-        preds: Model prediction on
-        y:  data labels corresponding to the model predictions
+        x1: Array of values (e.g. model predictions)
+        x2: Array of values (e.g. labels)
 
     Returns:
-        Array of point wise accuracy
+        Array with point-wise 0-1 losses between labels and model predictions
     """
-    return np.array(preds == y, dtype=np.int_)
+    return np.array(x1 == x2, dtype=x1.dtype)
 
 
-def neg_l2_distance(preds: NDArray[T], y: NDArray[T]) -> NDArray[T]:
-    r"""Computes negative l2 distance between label and model prediction
+def neg_l2_distance(x1: NDArray[T], x2: NDArray[T]) -> NDArray[T]:
+    r"""Point-wise negative $l_2$ distance between two arrays
 
     Args:
-        preds: Model prediction on
-        y:  data labels corresponding to the model predictions
+        x1: Array of values (e.g. model predictions)
+        x2: Array of values (e.g. labels)
 
     Returns:
-        Array with point wise negative l2 distance between label and model prediction
+        Array with point-wise negative $l_2$ distances between labels and model
+        predictions
     """
-    return -np.square(
-        np.array(
-            preds - y,
-            dtype=np.float64,
-        )
-    )
+    return -np.square(np.array(x1 - x2), dtype=x1.dtype)
