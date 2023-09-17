@@ -484,7 +484,7 @@ class ValuationResult(
         repr_string += ")"
         return repr_string
 
-    def _check_compatible(self, other: "ValuationResult"):
+    def _check_compatible(self, other: ValuationResult):
         if not isinstance(other, ValuationResult):
             raise NotImplementedError(
                 f"Cannot combine ValuationResult with {type(other)}"
@@ -492,7 +492,9 @@ class ValuationResult(
         if self.algorithm and self.algorithm != other.algorithm:
             raise ValueError("Cannot combine results from different algorithms")
 
-    def __add__(self, other: "ValuationResult") -> "ValuationResult":
+    def __add__(
+        self, other: ValuationResult[IndexT, NameT]
+    ) -> ValuationResult[IndexT, NameT]:
         """Adds two ValuationResults.
 
         The values must have been computed with the same algorithm. An exception
@@ -601,7 +603,7 @@ class ValuationResult(
             # extra_values=self._extra_values.update(other._extra_values),
         )
 
-    def update(self, idx: int, new_value: float) -> "ValuationResult":
+    def update(self, idx: int, new_value: float) -> ValuationResult[IndexT, NameT]:
         """Updates the result in place with a new value, using running mean
         and variance.
 
@@ -623,7 +625,7 @@ class ValuationResult(
             self._values[pos], self._variances[pos], self._counts[pos], new_value
         )
         self[pos] = ValueItem(
-            index=cast(IndexT, idx),
+            index=cast(IndexT, idx),  # FIXME
             name=self._names[pos],
             value=val,
             variance=var,
@@ -766,7 +768,7 @@ class ValuationResult(
         indices: Optional[Sequence[IndexT] | NDArray[IndexT]] = None,
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         n_samples: int = 0,
-    ) -> "ValuationResult":
+    ) -> ValuationResult:
         """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
 
         Empty results are characterised by having an empty array of values. When
