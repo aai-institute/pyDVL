@@ -13,11 +13,7 @@ from scipy.stats import norm, t
 from pydvl.value import ValuationResult
 
 
-@deprecated(
-    target=None,
-    deprecated_in="0.7.1",
-    remove_in="0.9.0",
-)
+@deprecated(target=None, deprecated_in="0.7.1", remove_in="0.9.0")
 def shaded_mean_std(
     data: np.ndarray,
     abscissa: Optional[Sequence[Any]] = None,
@@ -73,16 +69,74 @@ def shaded_mean_std(
     return ax
 
 
-def plot_values_ci(
+def plot_ci_array(
+    data: NDArray,
+    level: float,
+    type: Literal["normal", "t", "auto"] = "normal",
+    abscissa: Optional[Sequence[Any]] = None,
+    mean_color: Optional[str] = "dodgerblue",
+    shade_color: Optional[str] = "lightblue",
+    ax: Optional[plt.Axes] = None,
+    **kwargs,
+) -> plt.Axes:
+    """Plot values and a confidence interval from a 2D array.
+
+    Supported intervals are based on the normal and the t distributions.
+
+    Args:
+        data: A 2D array with M different values for each of the N indices.
+        level: The confidence level.
+        type: The type of confidence interval to use.
+        abscissa: The values for the x-axis. Leave empty to use increasing
+            integers.
+        mean_color: The color of the mean line.
+        shade_color: The color of the confidence interval.
+        ax: If passed, axes object into which to insert the figure. Otherwise,
+            a new figure is created and the axes returned.
+        **kwargs: Additional arguments to pass to the plot function.
+
+    Returns:
+        The matplotlib axes.
+    """
+
+    m, n = data.shape
+
+    means = np.mean(data, axis=0)
+    variances = np.var(data, axis=0, ddof=1)
+
+    dummy = ValuationResult(
+        algorithm="dummy",
+        values=means,
+        variances=variances,
+        counts=np.ones_like(means, dtype=np.int_) * m,
+        indices=np.arange(n),
+        data_names=abscissa if abscissa is not None else np.arange(n),
+    )
+
+    return plot_ci_values(
+        dummy,
+        level=level,
+        type=type,
+        mean_color=mean_color,
+        shade_color=shade_color,
+        ax=ax,
+        **kwargs,
+    )
+
+
+def plot_ci_values(
     values: ValuationResult,
     level: float,
     type: Literal["normal", "t", "auto"] = "auto",
+    abscissa: Optional[Sequence[Any]] = None,
     mean_color: Optional[str] = "dodgerblue",
     shade_color: Optional[str] = "lightblue",
     ax: Optional[plt.Axes] = None,
     **kwargs,
 ):
     """Plot values and a confidence interval.
+
+    Uses `values.data_names` for the x-axis.
 
     Supported intervals are based on the normal and the t distributions.
 
@@ -92,6 +146,8 @@ def plot_values_ci(
         type: The type of confidence interval to use. If "auto", uses "norm" if
             the minimum number of updates for all indices is greater than 30,
             otherwise uses "t".
+        abscissa: The values for the x-axis. Leave empty to use increasing
+            integers.
         mean_color: The color of the mean line.
         shade_color: The color of the confidence interval.
         ax: If passed, axes object into which to insert the figure. Otherwise,
@@ -117,7 +173,8 @@ def plot_values_ci(
             f"Unknown confidence interval type requested: {type}."
         ) from None
 
-    abscissa = np.arange(len(values))
+    if abscissa is None:
+        abscissa = np.arange(len(values))
     bound = score * values.stderr
 
     if ax is None:
