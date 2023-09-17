@@ -40,10 +40,10 @@ class Dataset:
 
     def __init__(
         self,
-        x_train: Union[np.ndarray, pd.DataFrame],
-        y_train: Union[np.ndarray, pd.DataFrame],
-        x_test: Union[np.ndarray, pd.DataFrame],
-        y_test: Union[np.ndarray, pd.DataFrame],
+        x_train: Union[NDArray, pd.DataFrame],
+        y_train: Union[NDArray, pd.DataFrame],
+        x_test: Union[NDArray, pd.DataFrame],
+        y_test: Union[NDArray, pd.DataFrame],
         feature_names: Optional[Sequence[str]] = None,
         target_names: Optional[Sequence[str]] = None,
         data_names: Optional[Sequence[str]] = None,
@@ -124,8 +124,12 @@ class Dataset:
                 raise ValueError("Mismatching number of targets and names")
 
         self.description = description or "No description"
-        self._indices = np.arange(len(self.x_train))
-        self._data_names = data_names if data_names is not None else self._indices
+        self._indices = np.arange(len(self.x_train), dtype=np.int_)
+        self._data_names = (
+            np.array(data_names, dtype=object)
+            if data_names is not None
+            else self._indices.astype(object)
+        )
 
     def __getitem__(self, idx: Union[int, slice, Iterable]) -> Tuple:
         return self.x_train[idx], self.y_train[idx]
@@ -220,7 +224,7 @@ class Dataset:
             raise ValueError(f"Target {name} is not in {self.target_names}")
 
     @property
-    def indices(self):
+    def indices(self) -> NDArray[np.int_]:
         """Index of positions in data.x_train.
 
         Contiguous integers from 0 to len(Dataset).
@@ -228,7 +232,7 @@ class Dataset:
         return self._indices
 
     @property
-    def data_names(self):
+    def data_names(self) -> NDArray[np.object_]:
         """Names of each individual datapoint.
 
         Used for reporting Shapley values.
@@ -236,9 +240,9 @@ class Dataset:
         return self._data_names
 
     @property
-    def dim(self):
+    def dim(self) -> int:
         """Returns the number of dimensions of a sample."""
-        return self.x_train.shape[1] if len(self.x_train.shape) > 1 else 1
+        return int(self.x_train.shape[1]) if len(self.x_train.shape) > 1 else 1
 
     def __str__(self):
         return self.description
@@ -256,7 +260,7 @@ class Dataset:
         **kwargs,
     ) -> "Dataset":
         """Constructs a [Dataset][pydvl.utils.Dataset] object from a
-        [sklearn.utils.Bunch][sklearn.utils.Bunch], as returned by the `load_*`
+        [sklearn.utils.Bunch][], as returned by the `load_*`
         functions in [scikit-learn toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html).
 
         ??? Example
@@ -360,10 +364,10 @@ class Dataset:
 class GroupedDataset(Dataset):
     def __init__(
         self,
-        x_train: np.ndarray,
-        y_train: np.ndarray,
-        x_test: np.ndarray,
-        y_test: np.ndarray,
+        x_train: NDArray,
+        y_train: NDArray,
+        x_test: NDArray,
+        y_test: NDArray,
         data_groups: Sequence,
         feature_names: Optional[Sequence[str]] = None,
         target_names: Optional[Sequence[str]] = None,
@@ -423,7 +427,9 @@ class GroupedDataset(Dataset):
         self.group_items = list(self.groups.items())
         self._indices = np.arange(len(self.groups.keys()))
         self._data_names = (
-            group_names if group_names is not None else list(self.groups.keys())
+            np.array(group_names, dtype=object)
+            if group_names is not None
+            else np.array(self.groups.keys(), dtype=object)
         )
 
     def __len__(self):
