@@ -269,10 +269,7 @@ def compute_generic_semivalues(
 
                     pending.add(
                         executor.submit(
-                            _marginal,
-                            u=u,
-                            coefficient=correction,
-                            samples=samples,
+                            _marginal, u=u, coefficient=correction, samples=samples
                         )
                     )
             except StopIteration:
@@ -357,7 +354,8 @@ def compute_shapley_semivalues(
         Parameter `batch_size` is for experimental use and will be removed in
         future versions.
     """
-    return compute_generic_semivalues(
+    # HACK: cannot infer return type because of useless IndexT, NameT
+    return compute_generic_semivalues(  # type: ignore
         sampler_t(u.data.indices, seed=seed),
         u,
         shapley_coefficient,
@@ -414,7 +412,8 @@ def compute_banzhaf_semivalues(
         Parameter `batch_size` is for experimental use and will be removed in
         future versions.
     """
-    return compute_generic_semivalues(
+    # HACK: cannot infer return type because of useless IndexT, NameT
+    return compute_generic_semivalues(  # type: ignore
         sampler_t(u.data.indices, seed=seed),
         u,
         banzhaf_coefficient,
@@ -474,7 +473,8 @@ def compute_beta_shapley_semivalues(
         Parameter `batch_size` is for experimental use and will be removed in
         future versions.
     """
-    return compute_generic_semivalues(
+    # HACK: cannot infer return type because of useless IndexT, NameT
+    return compute_generic_semivalues(  # type: ignore
         sampler_t(u.data.indices, seed=seed),
         u,
         beta_coefficient(alpha, beta),
@@ -506,7 +506,7 @@ def compute_semivalues(
     *,
     done: StoppingCriterion = MaxUpdates(100),
     mode: SemiValueMode = SemiValueMode.Shapley,
-    sampler_t: Type[StochasticSampler] = PermutationSampler,
+    sampler_t: Type[StochasticSampler[IndexT]] = PermutationSampler[IndexT],
     batch_size: int = 1,
     n_jobs: int = 1,
     seed: Optional[Seed] = None,
@@ -575,7 +575,9 @@ def compute_semivalues(
     else:
         raise ValueError(f"Unknown mode {mode}")
     coefficient = cast(SVCoefficient, coefficient)
-    return compute_generic_semivalues(
+
+    # HACK: cannot infer return type because of useless IndexT, NameT
+    return compute_generic_semivalues(  # type: ignore
         sampler_t(u.data.indices, seed=seed),
         u,
         coefficient,
