@@ -762,7 +762,7 @@ class ValuationResult(
         indices: Optional[Sequence[IndexT] | NDArray[IndexT]] = None,
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         n_samples: int = 0,
-    ) -> ValuationResult[IndexT, NameT]:
+    ) -> ValuationResult:
         """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
 
         Empty results are characterised by having an empty array of values. When
