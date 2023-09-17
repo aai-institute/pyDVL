@@ -424,5 +424,8 @@ class RandomHierarchicalSampler(StochasticSamplerMixin, PowersetSampler[IndexT])
 # TODO Replace by Intersection[StochasticSamplerMixin, PowersetSampler[T]]
 # See https://github.com/python/typing/issues/213
 StochasticSampler = Union[
-    UniformSampler, PermutationSampler, AntitheticSampler, RandomHierarchicalSampler
+    UniformSampler[IndexT],
+    PermutationSampler[IndexT],
+    AntitheticSampler[IndexT],
+    RandomHierarchicalSampler[IndexT],
 ]
