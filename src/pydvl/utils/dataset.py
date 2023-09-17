@@ -429,7 +429,7 @@ class GroupedDataset(Dataset):
         self._data_names = (
             np.array(group_names, dtype=object)
             if group_names is not None
-            else np.array(self.groups.keys(), dtype=object)
+            else np.array(list(self.groups.keys()), dtype=object)
         )
 
     def __len__(self):
