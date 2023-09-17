@@ -180,7 +180,7 @@ def _marginal(
     "in future versions.",
 )
 def compute_generic_semivalues(
-    sampler: PowersetSampler,
+    sampler: PowersetSampler[IndexT],
     u: Utility,
     coefficient: SVCoefficient,
     done: StoppingCriterion,

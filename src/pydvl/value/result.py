@@ -734,7 +734,7 @@ class ValuationResult(
         indices: Optional[Sequence[IndexT] | NDArray[IndexT]] = None,
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         n_samples: int = 0,
-    ) -> "ValuationResult":
+    ) -> ValuationResult:
         """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
 
         Empty results are characterised by having an empty array of values. When
@@ -762,7 +762,7 @@ class ValuationResult(
         indices: Optional[Sequence[IndexT] | NDArray[IndexT]] = None,
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         n_samples: int = 0,
-    ) -> ValuationResult:
+    ) -> ValuationResult[IndexT, NameT]:
         """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
 
         Empty results are characterised by having an empty array of values. When
@@ -783,12 +783,12 @@ class ValuationResult(
         if indices is None:
             indices = np.arange(n_samples, dtype=np.int_)
         else:
-            indices = np.array(indices)
+            indices = np.array(indices, dtype=np.int_)
         return cls(
             algorithm=algorithm,
             status=Status.Pending,
             indices=indices,
-            data_names=data_names
+            data_names=np.array(data_names, dtype=object)
             if data_names is not None
             else np.empty_like(indices, dtype=object),
             values=np.zeros(len(indices)),
