@@ -534,5 +534,6 @@ def compute_semivalues(
         coefficient,
         done,
         n_jobs=n_jobs,
+        batch_size=batch_size,
         **kwargs,
     )
