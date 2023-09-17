@@ -73,7 +73,7 @@ def plot_ci_array(
     data: NDArray,
     level: float,
     type: Literal["normal", "t", "auto"] = "normal",
-    abscissa: Optional[Sequence[Any]] = None,
+    abscissa: Optional[Sequence[str]] = None,
     mean_color: Optional[str] = "dodgerblue",
     shade_color: Optional[str] = "lightblue",
     ax: Optional[plt.Axes] = None,
@@ -104,13 +104,15 @@ def plot_ci_array(
     means = np.mean(data, axis=0)
     variances = np.var(data, axis=0, ddof=1)
 
-    dummy = ValuationResult(
+    dummy: ValuationResult[np.int_, str] = ValuationResult(
         algorithm="dummy",
         values=means,
         variances=variances,
         counts=np.ones_like(means, dtype=np.int_) * m,
         indices=np.arange(n),
-        data_names=abscissa if abscissa is not None else np.arange(n),
+        data_names=np.array(abscissa, dtype=str)
+        if abscissa is not None
+        else np.arange(n, dtype=str),
     )
 
     return plot_ci_values(
@@ -128,7 +130,7 @@ def plot_ci_values(
     values: ValuationResult,
     level: float,
     type: Literal["normal", "t", "auto"] = "auto",
-    abscissa: Optional[Sequence[Any]] = None,
+    abscissa: Optional[Sequence[str]] = None,
     mean_color: Optional[str] = "dodgerblue",
     shade_color: Optional[str] = "lightblue",
     ax: Optional[plt.Axes] = None,
@@ -174,7 +176,7 @@ def plot_ci_values(
         ) from None
 
     if abscissa is None:
-        abscissa = np.arange(len(values))
+        abscissa = [str(i) for i, _ in enumerate(values)]
     bound = score * values.stderr
 
     if ax is None:
