@@ -9,12 +9,14 @@ where the coefficients $w(k)$ satisfy the property:
 
 $$\sum_{k=1}^n w(k) = 1.$$
 
-!!! Note
+??? Note
     For implementation consistency, we slightly depart from the common definition
     of semi-values, which includes a factor $1/n$ in the sum over subsets.
     Instead, we subsume this factor into the coefficient $w(k)$.
 
-As such, the computation of a semi-value requires two components:
+## Main components
+
+The computation of a semi-value requires two components:
 
 1. A **subset sampler** that generates subsets of the set $D$ of interest.
 2. A **coefficient** $w(k)$ that assigns a weight to each subset size $k$.
@@ -44,6 +46,11 @@ is the weight correction due to the reformulation.
     require caching to be enabled or computation will be doubled wrt. a 'direct'
     implementation of permutation MC.
 
+## Computing semi-values
+
+Samplers and coefficients can be arbitrarily mixed by means of the main entry
+point of this module,
+[compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
 There are several pre-defined coefficients, including the Shapley value of
 (Ghorbani and Zou, 2019)[^1], the Banzhaf index of (Wang and Jia)[^3], and the Beta
 coefficient of (Kwon and Zou, 2022)[^2]. For each of these methods, there is a
@@ -52,6 +59,16 @@ convenience wrapper function. Respectively, these are:
 [compute_banzhaf_semivalues][pydvl.value.semivalues.compute_banzhaf_semivalues],
 and [compute_beta_shapley_semivalues][pydvl.value.semivalues.compute_beta_shapley_semivalues].
 instead.
+
+!!! tip "Parallelization and batching"
+    In order to ensure reproducibility and fine-grained control of
+    parallelization, samples are generated in the main process and then
+    distributed to worker processes for evaluation. For small sample sizes, this
+    can lead to a significant overhead. To avoid this, we temporarily provide an
+    additional argument `batch_size` to all methods which can improve
+    performance with small models up to an order of magnitude. Note that this
+    argument will be removed before version 1.0 in favour of a more general
+    solution.
 
 
 ## References
@@ -110,7 +127,8 @@ log = logging.getLogger(__name__)
 
 
 class SVCoefficient(Protocol):
-    """A coefficient for the computation of semi-values."""
+    """The protocol that coefficients for the computation of semi-values must
+    fulfill."""
 
     def __call__(self, n: int, k: int) -> float:
         """Computes the coefficient for a given subset size.
@@ -183,8 +201,8 @@ def compute_generic_semivalues(
         Object with the results.
 
     !!! warning "Deprecation notice"
-        Parameter `batch_size` is for experimental use and will be removed in future
-        versions.
+        Parameter `batch_size` is for experimental use and will be removed in
+        future versions.
     """
     from concurrent.futures import FIRST_COMPLETED, Future, wait
 
@@ -308,21 +326,22 @@ def compute_shapley_semivalues(
     Args:
         u: Utility object with model, data, and scoring function.
         done: Stopping criterion.
-        sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
-            for a list.
+        sampler_t: The sampler type to use. See the
+            [sampler][pydvl.value.sampler] module for a list.
         batch_size: Number of marginal evaluations per single parallel job.
         n_jobs: Number of parallel jobs to use.
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
-        seed: Either an instance of a numpy random number generator or a seed for it.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
         progress: Whether to display a progress bar.
 
     Returns:
         Object with the results.
 
     !!! warning "Deprecation notice"
-        Parameter `batch_size` is for experimental use and will be removed in future
-        versions.
+        Parameter `batch_size` is for experimental use and will be removed in
+        future versions.
     """
     return compute_generic_semivalues(
         sampler_t(u.data.indices, seed=seed),
@@ -356,11 +375,12 @@ def compute_banzhaf_semivalues(
     Args:
         u: Utility object with model, data, and scoring function.
         done: Stopping criterion.
-        sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler` for a
-            list.
+        sampler_t: The sampler type to use. See the
+            [sampler][pydvl.value.sampler] module for a list.
         batch_size: Number of marginal evaluations per single parallel job.
         n_jobs: Number of parallel jobs to use.
-        seed: Either an instance of a numpy random number generator or a seed for it.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
         config: Object configuring parallel computation, with cluster address,
             number of cpus, etc.
         progress: Whether to display a progress bar.
@@ -369,8 +389,8 @@ def compute_banzhaf_semivalues(
         Object with the results.
 
     !!! warning "Deprecation notice"
-        Parameter `batch_size` is for experimental use and will be removed in future
-        versions.
+        Parameter `batch_size` is for experimental use and will be removed in
+        future versions.
     """
     return compute_generic_semivalues(
         sampler_t(u.data.indices, seed=seed),
@@ -408,7 +428,8 @@ def compute_beta_shapley_semivalues(
         alpha: Alpha parameter of the Beta distribution.
         beta: Beta parameter of the Beta distribution.
         done: Stopping criterion.
-        sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler` for a list.
+        sampler_t: The sampler type to use. See the
+            [sampler][pydvl.value.sampler] module for a list.
         batch_size: Number of marginal evaluations per (parallelized) task.
         n_jobs: Number of parallel jobs to use.
         seed: Either an instance of a numpy random number generator or a seed for it.
@@ -420,8 +441,8 @@ def compute_beta_shapley_semivalues(
         Object with the results.
 
     !!! warning "Deprecation notice"
-        Parameter `batch_size` is for experimental use and will be removed in future
-        versions.
+        Parameter `batch_size` is for experimental use and will be removed in
+        future versions.
     """
     return compute_generic_semivalues(
         sampler_t(u.data.indices, seed=seed),
@@ -514,8 +535,8 @@ def compute_semivalues(
         Object with the results.
 
     !!! warning "Deprecation notice"
-        Parameter `batch_size` is for experimental use and will be removed in future
-        versions.
+        Parameter `batch_size` is for experimental use and will be removed in
+        future versions.
     """
     if mode == SemiValueMode.Shapley:
         coefficient = shapley_coefficient
