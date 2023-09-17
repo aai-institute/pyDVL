@@ -51,7 +51,6 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    TypeVar,
     Union,
     overload,
 )
@@ -61,7 +60,7 @@ from deprecate import deprecated, void
 from numpy.typing import NDArray
 
 from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
-from pydvl.utils.types import Seed
+from pydvl.utils.types import IndexT, Seed
 
 __all__ = [
     "AntitheticSampler",
@@ -74,8 +73,6 @@ __all__ = [
     "StochasticSamplerMixin",
 ]
 
-
-IndexT = TypeVar("IndexT", bound=np.int_)
 SampleT = Tuple[IndexT, NDArray[IndexT]]
 Sequence.register(np.ndarray)
 

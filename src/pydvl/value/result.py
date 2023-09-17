@@ -57,8 +57,6 @@ from typing import (
     Literal,
     Optional,
     Sequence,
-    Tuple,
-    TypeVar,
     Union,
     cast,
     overload,
@@ -71,20 +69,16 @@ from numpy.typing import NDArray
 from pydvl.utils.dataset import Dataset
 from pydvl.utils.numeric import running_moments
 from pydvl.utils.status import Status
-from pydvl.utils.types import Seed
+from pydvl.utils.types import IndexT, NameT, Seed
 
 try:
     import pandas  # Try to import here for the benefit of mypy
 except ImportError:
     pass
 
-__all__ = ["ValuationResult", "ValueItem", "IndexT", "NameT"]
+__all__ = ["ValuationResult", "ValueItem"]
 
 logger = logging.getLogger(__name__)
-
-# TODO: Move to value.types once it's there
-IndexT = TypeVar("IndexT", bound=np.int_)
-NameT = TypeVar("NameT", bound=Any)
 
 
 @total_ordering

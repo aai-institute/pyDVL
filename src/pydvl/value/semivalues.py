@@ -94,14 +94,13 @@ from enum import Enum
 from itertools import islice
 from typing import Collection, List, Optional, Protocol, Tuple, Type, TypeVar, cast
 
-import numpy as np
 import scipy as sp
 from deprecate import deprecated
 from tqdm import tqdm
 
 from pydvl.parallel.config import ParallelConfig
 from pydvl.utils import Utility
-from pydvl.utils.types import Seed
+from pydvl.utils.types import IndexT, Seed
 from pydvl.value import ValuationResult
 from pydvl.value.sampler import (
     PermutationSampler,
@@ -140,7 +139,6 @@ class SVCoefficient(Protocol):
         ...
 
 
-IndexT = TypeVar("IndexT", bound=np.generic)
 MarginalT = Tuple[IndexT, float]
 
 
