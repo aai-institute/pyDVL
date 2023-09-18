@@ -71,9 +71,7 @@ def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) 
 
 
 def random_subset(
-    s: NDArray[T],
-    q: float = 0.5,
-    seed: Optional[Seed] = None,
+    s: NDArray[T], q: float = 0.5, seed: Optional[Seed] = None
 ) -> NDArray[T]:
     """Returns one subset at random from ``s``.
 
@@ -81,7 +79,8 @@ def random_subset(
         s: set to sample from
         q: Sampling probability for elements. The default 0.5 yields a
             uniform distribution over the power set of s.
-        seed: Either an instance of a numpy random number generator or a seed for it.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
 
     Returns:
         The subset
@@ -135,9 +134,7 @@ def random_powerset(
 
 
 def random_subset_of_size(
-    s: NDArray[T],
-    size: int,
-    seed: Optional[Seed] = None,
+    s: NDArray[T], size: int, seed: Optional[Seed] = None
 ) -> NDArray[T]:
     """Samples a random subset of given size uniformly from the powerset
     of `s`.
