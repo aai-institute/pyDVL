@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Any, Dict, Iterable, Tuple, TypeVar
+from typing import Any, Collection, Dict, Iterable, Mapping, Tuple, Union
 
 import torch
 
@@ -27,9 +27,8 @@ def to_model_device(x: torch.Tensor, model: torch.nn.Module) -> torch.Tensor:
     Returns:
         The tensor `x` moved to the device of the `model`, if device of model is set.
     """
-    if hasattr(model, "device"):
-        return x.to(model.device)
-    return x
+    device = next(model.parameters()).device
+    return x.to(device)
 
 
 def flatten_tensors_to_vector(tensors: Iterable[torch.Tensor]) -> torch.Tensor:
@@ -91,17 +90,16 @@ def reshape_vector_to_tensors(
     return tuple(tensors)
 
 
-TorchTensorContainerType = TypeVar(
-    "TorchTensorContainerType",
+TorchTensorContainerType = Union[
     torch.Tensor,
-    Tuple[torch.Tensor, ...],
-    Dict[str, torch.Tensor],
-)
-"""Type variable for a PyTorch tensor or a container thereof."""
+    Collection[torch.Tensor],
+    Mapping[str, torch.Tensor],
+]
+"""Type for a PyTorch tensor or a container thereof."""
 
 
 def align_structure(
-    source: Dict[str, torch.Tensor],
+    source: Mapping[str, torch.Tensor],
     target: TorchTensorContainerType,
 ) -> Dict[str, torch.Tensor]:
     """

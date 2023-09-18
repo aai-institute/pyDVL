@@ -48,7 +48,7 @@ class TruncationPolicy(abc.ABC):
         for this.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.n_calls: int = 0
         self.n_truncations: int = 0
 

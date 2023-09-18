@@ -11,6 +11,7 @@ from numpy.typing import NDArray
 
 __all__ = [
     "ensure_seed_sequence",
+    "LossFunction",
     "MapFunction",
     "NoPublicConstructor",
     "ReduceFunction",
@@ -28,6 +29,11 @@ class MapFunction(Protocol[R]):
 
 class ReduceFunction(Protocol[R]):
     def __call__(self, *args: Any, **kwargs: Any) -> R:
+        ...
+
+
+class LossFunction(Protocol):
+    def __call__(self, y_true: NDArray, y_pred: NDArray) -> NDArray:
         ...
 
 

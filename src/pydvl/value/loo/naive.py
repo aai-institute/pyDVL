@@ -14,6 +14,6 @@ __all__ = ["naive_loo"]
     remove_in="0.8.0",
     args_extra=dict(n_jobs=1),
 )
-def naive_loo(u: Utility, *, progress: bool = True, **kwargs) -> ValuationResult:
+def naive_loo(u: Utility, *, progress: bool = True, **kwargs) -> ValuationResult:  # type: ignore
     """Deprecated. Use [compute_loo][pydvl.value.loo.compute_loo] instead."""
-    pass  # type: ignore
+    pass
