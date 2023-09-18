@@ -6,12 +6,15 @@ from __future__ import annotations
 from abc import ABCMeta
 from typing import Any, Optional, Protocol, TypeVar, Union, cast
 
+import numpy as np
 from numpy.random import Generator, SeedSequence
 from numpy.typing import NDArray
 
 __all__ = [
     "ensure_seed_sequence",
     "LossFunction",
+    "IndexT",
+    "NameT",
     "MapFunction",
     "NoPublicConstructor",
     "ReduceFunction",
@@ -19,7 +22,10 @@ __all__ = [
     "SupervisedModel",
 ]
 
+IndexT = TypeVar("IndexT", bound=np.int_)
+NameT = TypeVar("NameT", bound=np.object_)
 R = TypeVar("R", covariant=True)
+Seed = Union[int, Generator]
 
 
 class MapFunction(Protocol[R]):
@@ -78,9 +84,6 @@ class NoPublicConstructor(ABCMeta):
 
     def create(cls, *args: Any, **kwargs: Any):
         return super().__call__(*args, **kwargs)
-
-
-Seed = Union[int, Generator]
 
 
 def ensure_seed_sequence(
