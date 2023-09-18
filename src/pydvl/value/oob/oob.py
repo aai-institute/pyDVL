@@ -84,7 +84,7 @@ def compute_data_oob(
     rng = np.random.default_rng(seed)
     random_state = np.random.RandomState(rng.bit_generator)
 
-    result: ValuationResult[np.int_, np.float_] = ValuationResult.empty(
+    result: ValuationResult[np.int_, np.object_] = ValuationResult.empty(
         algorithm="data_oob", indices=u.data.indices, data_names=u.data.data_names
     )
 
