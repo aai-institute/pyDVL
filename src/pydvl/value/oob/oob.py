@@ -131,28 +131,28 @@ def compute_data_oob(
     return result
 
 
-def point_wise_accuracy(x1: NDArray[T], x2: NDArray[T]) -> NDArray[T]:
+def point_wise_accuracy(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
     r"""Point-wise 0-1 loss between two arrays
 
     Args:
-        x1: Array of values (e.g. model predictions)
-        x2: Array of values (e.g. labels)
+        y_true: Array of true values (e.g. labels)
+        y_pred: Array of estimated values (e.g. model predictions)
 
     Returns:
         Array with point-wise 0-1 losses between labels and model predictions
     """
-    return np.array(x1 == x2, dtype=x1.dtype)
+    return np.array(y_pred == y_true, dtype=y_pred.dtype)
 
 
-def neg_l2_distance(x1: NDArray[T], x2: NDArray[T]) -> NDArray[T]:
+def neg_l2_distance(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
     r"""Point-wise negative $l_2$ distance between two arrays
 
     Args:
-        x1: Array of values (e.g. model predictions)
-        x2: Array of values (e.g. labels)
+        y_true: Array of true values (e.g. labels)
+        y_pred: Array of estimated values (e.g. model predictions)
 
     Returns:
         Array with point-wise negative $l_2$ distances between labels and model
         predictions
     """
-    return -np.square(np.array(x1 - x2), dtype=x1.dtype)
+    return -np.square(np.array(y_pred - y_true), dtype=y_pred.dtype)
