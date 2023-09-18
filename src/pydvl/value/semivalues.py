@@ -186,6 +186,7 @@ def compute_generic_semivalues(
     done: StoppingCriterion,
     *,
     batch_size: int = 1,
+    skip_converged: bool = False,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -198,6 +199,15 @@ def compute_generic_semivalues(
         coefficient: The semi-value coefficient
         done: Stopping criterion.
         batch_size: Number of marginal evaluations per single parallel job.
+        skip_converged: Whether to skip marginal evaluations for indices that
+            have already converged. **CAUTION**: This is only entirely safe if
+            the stopping criterion is [MaxUpdates][pydvl.value.stopping.MaxUpdates].
+            For any other stopping criterion, the convergence status of indices
+            may change during the computation, or they may be marked as having
+            converged even though in fact the estimated values are far from the
+            true values (e.g. for
+            [AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError],
+            you will probably have to carefully adjust the threshold).
         n_jobs: Number of parallel jobs to use.
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
@@ -212,7 +222,7 @@ def compute_generic_semivalues(
     """
     from concurrent.futures import FIRST_COMPLETED, Future, wait
 
-    from pydvl.utils import effective_n_jobs, init_executor, init_parallel_backend
+    from pydvl.parallel import effective_n_jobs, init_executor, init_parallel_backend
 
     if isinstance(sampler, PermutationSampler) and not u.enable_cache:
         log.warning(
@@ -262,16 +272,30 @@ def compute_generic_semivalues(
 
             # Ensure that we always have n_submitted_jobs running
             try:
-                for _ in range(n_submitted_jobs - len(pending)):
-                    samples = tuple(islice(sampler_it, batch_size))
+                while len(pending) < n_submitted_jobs:
+                    samples = dict(islice(sampler_it, batch_size))
                     if len(samples) == 0:
                         raise StopIteration
 
-                    pending.add(
-                        executor.submit(
-                            _marginal, u=u, coefficient=correction, samples=samples
+                    # Filter out samples for indices that have already converged
+                    if skip_converged and len(done.converged) > 0:
+                        filtered_samples = tuple(
+                            (idx, sample)
+                            for idx, sample in samples.items()
+                            if not done.converged[idx]
                         )
-                    )
+                    else:
+                        filtered_samples = tuple(samples.items())
+
+                    if filtered_samples:
+                        pending.add(
+                            executor.submit(
+                                _marginal,
+                                u=u,
+                                coefficient=correction,
+                                samples=filtered_samples,
+                            )
+                        )
             except StopIteration:
                 if len(pending) == 0:
                     return result
