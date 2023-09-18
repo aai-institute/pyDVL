@@ -6,20 +6,21 @@ computation of values. Please see the documentation on
 [Utility][pydvl.utils.utility.Utility] holds information about model,
 data and scoring function (the latter being what one usually understands
 under *utility* in the general definition of Shapley value).
-It is automatically cached across machines.
+It is automatically cached across machines when the
+[cache is configured][setting-up-the-cache] and it is enabled upon construction.
 
 [DataUtilityLearning][pydvl.utils.utility.DataUtilityLearning] adds support
 for learning the scoring function to avoid repeated re-training
 of the model to compute the score.
 
-This module also contains Utility classes for toy games that are used
+This module also contains derived `Utility` classes for toy games that are used
 for testing and for demonstration purposes.
 
 ## References
 
 [^1]: <a name="wang_improving_2022"></a>Wang, T., Yang, Y. and Jia, R., 2021.
-    [Improving cooperative game theory-based data valuation via data utility learning](https://arxiv.org/abs/2107.06336).
-    arXiv preprint arXiv:2107.06336.
+    [Improving cooperative game theory-based data valuation via data utility
+    learning](https://arxiv.org/abs/2107.06336). arXiv preprint arXiv:2107.06336.
 
 """
 import logging
@@ -49,27 +50,24 @@ class Utility:
 
     An instance of `Utility` holds the triple of model, dataset and scoring
     function which determines the value of data points. This is used for the
-    computation of
-    [all game-theoretic values][game-theoretical-methods]
-    like [Shapley values][pydvl.value.shapley] and
-    [the Least Core][pydvl.value.least_core].
+    computation of [all game-theoretic values][game-theoretical-methods] like
+    [Shapley values][pydvl.value.shapley] and [the Least
+    Core][pydvl.value.least_core].
 
-    The Utility expect the model to fulfill
-    the [SupervisedModel][pydvl.utils.types.SupervisedModel] interface i.e.
+    The Utility expect the model to fulfill the
+    [SupervisedModel][pydvl.utils.types.SupervisedModel] interface i.e.
     to have `fit()`, `predict()`, and `score()` methods.
 
     When calling the utility, the model will be
-    [cloned](https://scikit-learn.org/stable/modules/generated/sklearn.base
-    .clone.html)
+    [cloned](https://scikit-learn.org/stable/modules/generated/sklearn.base.clone.html)
     if it is a Sci-Kit Learn model, otherwise a copy is created using
-    `deepcopy()` from the builtin [copy](https://docs.python.org/3/
-    library/copy.html) module.
+    [copy.deepcopy][]
 
-    Since evaluating the scoring function requires retraining the model
-    and that can be time-consuming, this class wraps it and caches
-    the results of each execution. Caching is available both locally
-    and across nodes, but must always be enabled for your
-    project first, see [Setting up the cache][setting-up-the-cache].
+    Since evaluating the scoring function requires retraining the model and that
+    can be time-consuming, this class wraps it and caches the results of each
+    execution. Caching is available both locally and across nodes, but must
+    always be enabled for your project first, see [Setting up the
+    cache][setting-up-the-cache].
 
     Attributes:
         model: The supervised model.
@@ -86,13 +84,13 @@ class Utility:
             or [GroupedDataset][pydvl.utils.dataset.GroupedDataset] instance.
         scorer: A scoring object. If None, the `score()` method of the model
             will be used. See [score][pydvl.utils.score] for ways to create
-            and compose scorers, in particular how to set default values and ranges.
-            For convenience, a string can be passed, which will be used to construct
-            a [Scorer][pydvl.utils.score.Scorer].
+            and compose scorers, in particular how to set default values and
+            ranges. For convenience, a string can be passed, which will be used
+            to construct a [Scorer][pydvl.utils.score.Scorer].
         default_score: As a convenience when no `scorer` object is passed
-            (where a default value can be provided), this argument also allows to set
-            the default score for models that have not been fit, e.g. when too little
-            data is passed, or errors arise.
+            (where a default value can be provided), this argument also allows
+            to set the default score for models that have not been fit, e.g.
+            when too little data is passed, or errors arise.
         score_range: As with `default_score`, this is a convenience argument for
             when no `scorer` argument is provided, to set the numerical range
             of the score function. Some Monte Carlo methods can use this to

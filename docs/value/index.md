@@ -18,18 +18,20 @@ cases the model is an integral part of the method. In these cases, this number
 is not an intrinsic property of the element of interest, but typically a
 function of three factors:
 
-1. The dataset $D$, or more generally, the distribution it was sampled
-   from (with this we mean that *value* would ideally be the (expected)
-   contribution of a data point to any random set $D$ sampled from the same
-   distribution).
+1. The dataset $D$, or more generally, the distribution it was sampled from: In
+   some cases one only cares about values wrt. a given data set, in others
+   value would ideally be the (expected) contribution of a data point to any
+   random set $D$ sampled from the same distribution. pyDVL implements methods
+   of the first kind.
 
-2. The algorithm $\mathcal{A}$ mapping the data $D$ to some estimator $f$
-   in a model class $\mathcal{F}$. E.g. MSE minimization to find the parameters
-   of a linear model.
+2. The algorithm $\mathcal{A}$ mapping the data $D$ to some estimator $f$ in a
+   model class $\mathcal{F}$. E.g. MSE minimization to find the parameters of a
+   linear model.
 
 3. The performance metric of interest $u$ for the problem. When value depends on
    a model, it must be measured in some way which uses it. E.g. the $R^2$ score
-   or the negative MSE over a test set.
+   or the negative MSE over a test set. This metric will be computed over a
+   held-out valuation set.
 
 pyDVL collects algorithms for the computation of data values in this sense,
 mostly those derived from cooperative game theory. The methods can be found in

@@ -181,7 +181,7 @@ def memcached(
             not cached.
         allow_repeated_evaluations: If `True`, repeated calls to a function
             with the same arguments will be allowed and outputs averaged until the
-            running standard deviation of the mean stabilises below
+            running standard deviation of the mean stabilizes below
             `rtol_stderr * mean`.
         rtol_stderr: relative tolerance for repeated evaluations. More precisely,
             [memcached()][pydvl.utils.caching.memcached] will stop evaluating the function once the

@@ -20,8 +20,6 @@ from .types import Losses
 
 logger = logging.getLogger(__name__)
 
-from numpy.typing import NDArray
-
 MODEL_PATH = Path().resolve().parent / "data" / "models"
 
 

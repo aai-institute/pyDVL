@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from numpy._typing import NDArray
 
 from pydvl.utils.numeric import (
     powerset,
