@@ -2608,24 +2608,26 @@ to <a href="#computing-data-values">Computing data values</a>.</p>
 training set which reflects its contribution to the final performance of some
 model trained on it. Some methods attempt to be model-agnostic, but in most
 cases the model is an integral part of the method. In these cases, this number
-not an intrinsic property of the element of interest, but typically a function
-of three factors:</p>
+is not an intrinsic property of the element of interest, but typically a
+function of three factors:</p>
 <ol>
 <li>
-<p>The dataset <span class="arithmatex">\(D\)</span>, or more generally, the distribution it was sampled
-   from (with this we mean that <em>value</em> would ideally be the (expected)
-   contribution of a data point to any random set <span class="arithmatex">\(D\)</span> sampled from the same
-   distribution).</p>
+<p>The dataset <span class="arithmatex">\(D\)</span>, or more generally, the distribution it was sampled from: In
+   some cases one only cares about values wrt. a given data set, in others
+   value would ideally be the (expected) contribution of a data point to any
+   random set <span class="arithmatex">\(D\)</span> sampled from the same distribution. pyDVL implements methods
+   of the first kind.</p>
 </li>
 <li>
-<p>The algorithm <span class="arithmatex">\(\mathcal{A}\)</span> mapping the data <span class="arithmatex">\(D\)</span> to some estimator <span class="arithmatex">\(f\)</span>
-   in a model class <span class="arithmatex">\(\mathcal{F}\)</span>. E.g. <abbr title="Mean Squared Error">MSE</abbr> minimization to find the parameters
-   of a linear model.</p>
+<p>The algorithm <span class="arithmatex">\(\mathcal{A}\)</span> mapping the data <span class="arithmatex">\(D\)</span> to some estimator <span class="arithmatex">\(f\)</span> in a
+   model class <span class="arithmatex">\(\mathcal{F}\)</span>. E.g. <abbr title="Mean Squared Error">MSE</abbr> minimization to find the parameters of a
+   linear model.</p>
 </li>
 <li>
 <p>The performance metric of interest <span class="arithmatex">\(u\)</span> for the problem. When value depends on
-   a model, it must be measured in some way which uses it. E.g. the <span class="arithmatex">\(R^2\)</span> score or
-   the negative <abbr title="Mean Squared Error">MSE</abbr> over a test set.</p>
+   a model, it must be measured in some way which uses it. E.g. the <span class="arithmatex">\(R^2\)</span> score
+   or the negative <abbr title="Mean Squared Error">MSE</abbr> over a test set. This metric will be computed over a
+   held-out valuation set.</p>
 </li>
 </ol>
 <p>pyDVL collects algorithms for the computation of data values in this sense,
@@ -2954,11 +2956,11 @@ can also introduce issues in the low-value regime.</p>
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-09-12</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-09-18</span>
       
         <br>
         Created:
-        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-09-12</span>
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-09-18</span>
       
     
   </small>

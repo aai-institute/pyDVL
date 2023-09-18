@@ -2725,6 +2725,8 @@
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
 <h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <ul>
+<li>Implementation of Data-OOB by @BastienZim
+  <a href="https://github.com/aai-institute/pyDVL/pull/426">PR #426</a></li>
 <li>Refactoring of parallel module. Old imports will stop working in v0.9.0
   <a href="https://github.com/aai-institute/pyDVL/pull/421">PR #421</a></li>
 </ul>
@@ -2745,6 +2747,10 @@ randomness.</p>
   <code>pydvl.value.semivalues</code>. Introduced new type <code>Seed</code> and conversion function 
   <code>ensure_seed_sequence</code>.
   <a href="https://github.com/aai-institute/pyDVL/pull/396">PR #396</a></li>
+<li>Added <code>batch_size</code> parameter to <code>compute_banzhaf_semivalues</code>,
+  <code>compute_beta_shapley_semivalues</code>, <code>compute_shapley_semivalues</code> and
+  <code>compute_generic_semivalues</code>.
+  <a href="https://github.com/aai-institute/pyDVL/pull/428">PR #428</a></li>
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2968,11 +2974,11 @@ randomness.</p>
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-09-12</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-09-18</span>
       
         <br>
         Created:
-        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-09-12</span>
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-09-18</span>
       
     
   </small>
