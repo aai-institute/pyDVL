@@ -506,7 +506,7 @@ def compute_semivalues(
     *,
     done: StoppingCriterion = MaxUpdates(100),
     mode: SemiValueMode = SemiValueMode.Shapley,
-    sampler_t: Type[StochasticSampler[IndexT]] = PermutationSampler[IndexT],
+    sampler_t: Type[StochasticSampler] = PermutationSampler,
     batch_size: int = 1,
     n_jobs: int = 1,
     seed: Optional[Seed] = None,
