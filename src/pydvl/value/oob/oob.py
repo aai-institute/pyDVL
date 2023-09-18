@@ -120,7 +120,7 @@ def compute_data_oob(
     ):  # The bottleneck is the bag fitting not this part so TQDM is not very useful here
         oob_idx = np.setxor1d(u.data.indices, np.unique(samples))
         array_loss = loss(
-            x1=est.predict(u.data.x_train[oob_idx]), x2=u.data.y_train[oob_idx]
+            y_true=u.data.y_train[oob_idx], y_pred=est.predict(u.data.x_train[oob_idx])
         )
         result += ValuationResult(
             algorithm="data_oob",
