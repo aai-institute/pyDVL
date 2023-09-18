@@ -4,7 +4,6 @@ its associated gradient and matrix vector product calculations. Note that there 
 module.
 """
 
-import itertools
 from typing import List, Tuple
 
 import numpy as np

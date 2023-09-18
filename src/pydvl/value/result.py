@@ -471,7 +471,7 @@ class ValuationResult(
             f"values={np.array_str(self.values, precision=4, suppress_small=True)},"
             f"indices={np.array_str(self.indices)},"
             f"names={np.array_str(self.names)},"
-            f"counts={np.array_str(self.counts)},"
+            f"counts={np.array_str(self.counts)}"
         )
         for k, v in self._extra_values.items():
             repr_string += f", {k}={v}"
