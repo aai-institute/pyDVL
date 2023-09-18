@@ -201,7 +201,9 @@ def permutation_montecarlo_shapley(
     n_submitted_jobs = 2 * max_workers  # number of jobs in the executor's queue
 
     seed_sequence = ensure_seed_sequence(seed)
-    result = ValuationResult.zeros(algorithm=algorithm)
+    result = ValuationResult.zeros(
+        algorithm=algorithm, indices=u.data.indices, data_names=u.data.data_names
+    )
 
     pbar = tqdm(disable=not progress, total=100, unit="%")
 

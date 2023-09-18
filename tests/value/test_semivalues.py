@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from pydvl.parallel.config import ParallelConfig
+from pydvl.utils.types import Seed
 from pydvl.value.sampler import (
     AntitheticSampler,
     DeterministicPermutationSampler,
@@ -23,6 +24,7 @@ from pydvl.value.semivalues import (
 from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates
 
 from . import check_values
+from .utils import timed
 
 
 @pytest.mark.parametrize("num_samples", [5])
@@ -56,6 +58,49 @@ def test_shapley(
         config=parallel_config,
     )
     check_values(values, exact_values, rtol=0.2)
+
+
+@pytest.mark.parametrize(
+    "num_samples,sampler,coefficient,batch_size",
+    [(5, PermutationSampler, beta_coefficient(1, 1), 5)],
+)
+def test_shapley_batch_size(
+    num_samples: int,
+    analytic_shapley,
+    sampler: Type[PermutationSampler],
+    coefficient: SVCoefficient,
+    batch_size: int,
+    n_jobs: int,
+    parallel_config: ParallelConfig,
+    seed: Seed,
+):
+    u, exact_values = analytic_shapley
+    criterion = AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2 ** (num_samples * 2))
+    timed_fn = timed(compute_generic_semivalues)
+    result_single_batch = timed_fn(
+        sampler(u.data.indices, seed=seed),
+        u,
+        coefficient,
+        criterion,
+        n_jobs=n_jobs,
+        batch_size=1,
+        config=parallel_config,
+    )
+    total_seconds_single_batch = timed_fn.execution_time
+    result_multi_batch = timed_fn(
+        sampler(u.data.indices, seed=seed),
+        u,
+        coefficient,
+        criterion,
+        n_jobs=n_jobs,
+        batch_size=batch_size,
+        config=parallel_config,
+    )
+    total_seconds_multi_batch = timed_fn.execution_time
+    assert total_seconds_multi_batch < total_seconds_single_batch * 1.1
+
+    # Occasionally, batch_2 arrives before batch_1, so rtol isn't always 0.
+    check_values(result_single_batch, result_multi_batch, rtol=1e-4)
 
 
 @pytest.mark.parametrize("num_samples", [5])
