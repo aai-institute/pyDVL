@@ -38,6 +38,15 @@ jobs:
         pre-commit run --all --show-diff-on-failure
         python build_scripts/run_pylint.py | (pylint-json2html -f jsonextended -o pylint.html)
       shell: bash
+    - name: Generate mypy cache key
+      id: generate-mypy-cache-key
+      run: |
+        MYPY_VERSION=$(mypy --version | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+        echo "key=mypy-${{ env.pythonLocation }}-$MYPY_VERSION" >> $GITHUB_OUTPUT
+    - uses: actions/cache@v3
+      with:
+        path: .mypy_cache
+        key: ${{ steps.generate-mypy-cache-key.outputs.key }}
     - name: Check Type Hints
       run: mypy src/
   docs:
