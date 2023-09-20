@@ -49,7 +49,12 @@ a.autorefs-external:hover::after {
 }
 
 .md-typeset h2 {
-  font-size: 1.7em;
+  font-size: 1.3em;
+  font-weight: 300;
+}
+
+.md-typeset h3 {
+  font-size: 1.1em;
   font-weight: 300;
 }
 
@@ -75,12 +80,6 @@ a.autorefs-external:hover::after {
 /* Prevent selection of >>>, ... and output in Python code blocks */
 .highlight .gp, .highlight .go { /* Generic.Prompt, Generic.Output */
     user-select: none;
-}
-
-/* Nicer style of headers in generated API */
-h2 code {
-    font-size: large!important;
-    background-color: inherit!important;
 }
 
 /* Remove cell input and output prompt */
