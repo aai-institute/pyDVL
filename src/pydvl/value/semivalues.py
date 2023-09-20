@@ -212,7 +212,7 @@ def compute_generic_semivalues(
     """
     from concurrent.futures import FIRST_COMPLETED, Future, wait
 
-    from pydvl.utils import effective_n_jobs, init_executor, init_parallel_backend
+    from pydvl.parallel import effective_n_jobs, init_executor, init_parallel_backend
 
     if isinstance(sampler, PermutationSampler) and not u.enable_cache:
         log.warning(
