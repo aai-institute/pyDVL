@@ -104,8 +104,9 @@ def compute_influence_factors(
             )  # type:ignore
 
     try:
-        # if provided input_data implements __len__, pre-allocate the result tensor to reduce memory consumption
-        resulting_shape = (len(test_data), model.num_params)  # type:ignore
+        # in case input_data is a torch DataLoader created from a Dataset,
+        # we can pre-allocate the result tensor to reduce memory consumption
+        resulting_shape = (len(test_data.dataset), model.num_params)  # type:ignore
         rhs = cat_gen(
             test_grads(), resulting_shape, model  # type:ignore
         )  # type:ignore
@@ -174,8 +175,9 @@ def compute_influences_up(
             )  # type:ignore
 
     try:
-        # if provided input_data implements __len__, pre-allocate the result tensor to reduce memory consumption
-        resulting_shape = (len(input_data), model.num_params)  # type:ignore
+        # in case input_data is a torch DataLoader created from a Dataset,
+        # we can pre-allocate the result tensor to reduce memory consumption
+        resulting_shape = (len(input_data.dataset), model.num_params)  # type:ignore
         train_grad_tensor = cat_gen(
             train_grads(), resulting_shape, model  # type:ignore
         )  # type:ignore
