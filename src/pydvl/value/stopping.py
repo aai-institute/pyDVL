@@ -293,13 +293,13 @@ def make_criterion(
 class AbsoluteStandardError(StoppingCriterion):
     r"""Determine convergence based on the standard error of the values.
 
-    If $s_i$ is the standard error for datum $i$ and $v_i$ its value, then this
-    criterion returns [Converged][pydvl.utils.status.Status] if
-    $s_i < \epsilon$ for all $i$ and a threshold value $\epsilon \gt 0$.
+    If $s_i$ is the standard error for datum $i$, then this criterion returns
+    [Converged][pydvl.utils.status.Status] if $s_i < \epsilon$ for all $i$ and a
+    threshold value $\epsilon \gt 0$.
 
     Args:
         threshold: A value is considered to have converged if the standard
-            error is below this value. A way of choosing it is to pick some
+            error is below this threshold. A way of choosing it is to pick some
             percentage of the range of the values. For Shapley values this is
             the difference between the maximum and minimum of the utility
             function (to see this substitute the maximum and minimum values of
@@ -309,7 +309,7 @@ class AbsoluteStandardError(StoppingCriterion):
         burn_in: The number of iterations to ignore before checking for
             convergence. This is required because computations typically start
             with zero variance, as a result of using
-            [empty()][pydvl.value.result.ValuationResult.empty]. The default is
+            [zeros()][pydvl.value.result.ValuationResult.zeros]. The default is
             set to an arbitrary minimum which is usually enough but may need to
             be increased.
     """
