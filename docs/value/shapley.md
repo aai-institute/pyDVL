@@ -78,6 +78,53 @@ stop condition. This is an instance of a
 [MaxTime][pydvl.value.stopping.MaxTime] and
 [AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError].
 
+### Class-wise Shapley
+
+Class-wise Shapley [@schoch_csshapley_2022] offers a distinct Shapley framework tailored
+for classification problems. Let $D$ be the dataset, $D_{y_i}$ be the subset of $D$ with
+labels $y_i$, and $D_{-y_i}$ be the complement of $D_{y_i}$ in $D$. The key idea is that
+a sample $(x_i, y_i)$, might enhance the overall performance on $D$, while being 
+detrimental for the performance on $D_{y_i}$. To address this nuanced behavior, the
+authors introduced the estimator
+
+$$
+v_u(i) = \frac{1}{2^{|D_{-y_i}|}} \sum_{S_{-y_i}} \frac{1}{|D_{y_i}|!}
+\sum_{S_{y_i}} \binom{|D_{y_i}|-1}{|S_{y_i}|}^{-1}
+[u( S_{y_i} \cup \{i\} | S_{-y_i} ) − u( S_{y_i} | S_{-y_i})],
+$$
+
+where $S_{y_i} \subseteq D_{y_i} \setminus \{i\}$ and $S_{-y_i} \subseteq D_{-y_i}$. In
+other words, the summations are over the powerset of $D_{y_i} \setminus \{i\}$ and 
+$D_{-y_i}$ respectively. The estimator employs a specialized utility function
+
+$$
+u(S_{y_i}|S_{-y_i}) = a_S(D_{y_i}) \exp(a_S(D_{-y_i})),
+$$
+
+where $S=S_{y_i} \cup S_{-y_i}$ and $a_S(D)$ is the accuracy of the model trained on $S$
+and evaluated on $D$.In practical applications, the evaluation of this estimator 
+leverages both Monte Carlo sampling and permutation Monte Carlo sampling 
+[@castro_polynomial_2009].
+
+
+```python
+from pydvl.utils import Dataset, Utility
+from pydvl.value import HistoryDeviation, MaxChecks, RelativeTruncation
+from pydvl.value.shapley.classwise import compute_classwise_shapley_values, \
+    ClasswiseScorer
+
+model = ...
+data = Dataset(...)
+scoring = ClasswiseScorer("accuracy")
+utility = Utility(model, data, scoring)
+values = compute_classwise_shapley_values(
+    utility,
+    done=HistoryDeviation(n_steps=500, rtol=5e-2),
+    truncation=RelativeTruncation(utility, rtol=0.01),
+    done_sample_complements=MaxChecks(1),
+    normalize_values=True
+)
+```
 
 ### Owen sampling
 

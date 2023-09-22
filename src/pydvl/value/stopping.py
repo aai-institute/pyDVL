@@ -34,7 +34,7 @@ these operations affect the behavior of the stopping criteria.
 ## References
 
 [^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
-    [Data Shapley: Equitable Valuation of Data for Machine Learning](https://proceedings.mlr.press/v97/ghorbani19c.html).
+    [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).
     In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
 """
 
@@ -146,6 +146,9 @@ class StoppingCriterion(abc.ABC):
         if self.converged.size == 0:
             return 0.0
         return float(np.mean(self.converged).item())
+
+    def reset(self):
+        pass
 
     @property
     def converged(self) -> NDArray[np.bool_]:
@@ -323,7 +326,7 @@ class MaxChecks(StoppingCriterion):
     def _check(self, result: ValuationResult) -> Status:
         if self.n_checks:
             self._count += 1
-            if self._count > self.n_checks:
+            if self._count >= self.n_checks:
                 self._converged = np.ones_like(result.values, dtype=bool)
                 return Status.Converged
         return Status.Pending
@@ -332,6 +335,9 @@ class MaxChecks(StoppingCriterion):
         if self.n_checks:
             return min(1.0, self._count / self.n_checks)
         return 0.0
+
+    def reset(self):
+        self._count = 0
 
 
 class MaxUpdates(StoppingCriterion):
@@ -447,6 +453,9 @@ class MaxTime(StoppingCriterion):
             return 0.0
         return (time() - self.start) / self.max_seconds
 
+    def reset(self):
+        self.start = time()
+
 
 class HistoryDeviation(StoppingCriterion):
     r"""A simple check for relative distance to a previous step in the
@@ -520,10 +529,13 @@ class HistoryDeviation(StoppingCriterion):
             quots = np.divide(diffs, curr[ii], out=diffs, where=curr[ii] != 0)
             # quots holds the quotients when the denominator is non-zero, and
             # the absolute difference, which is just the memory, otherwise.
-            if np.mean(quots) < self.rtol:
+            if len(quots) > 0 and np.mean(quots) < self.rtol:
                 self._converged = self.update_op(
                     self._converged, r.counts > self.n_steps
                 )  # type: ignore
                 if np.all(self._converged):
                     return Status.Converged
         return Status.Pending
+
+    def reset(self):
+        self._memory = None  # type: ignore

@@ -1,4 +1,5 @@
 *[CSP]: Constraint Satisfaction Problem
+*[CS]: Class-wise Shapley
 *[GT]: Group Testing
 *[LC]: Least Core
 *[LOO]: Leave-One-Out

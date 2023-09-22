@@ -193,6 +193,6 @@ def test_max_checks():
         assert not done(v)
 
     done = MaxChecks(5)
-    for _ in range(5):
+    for _ in range(4):
         assert not done(v)
     assert done(v)
