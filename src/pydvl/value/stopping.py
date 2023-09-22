@@ -9,7 +9,7 @@ the number of updates to values, which depending on the algorithm may mean a
 different number of utility evaluations or imply other computations like solving
 a linear or quadratic program.
 
-# Creating stopping criteria
+## Creating stopping criteria
 
 The easiest way is to declare a function implementing the interface
 [StoppingCriterionCallable][pydvl.value.stopping.StoppingCriterionCallable] and
@@ -22,7 +22,7 @@ inherit from this class and implement the abstract methods
 [_check][pydvl.value.stopping.StoppingCriterion._check] and
 [completion][pydvl.value.stopping.StoppingCriterion.completion].
 
-# Composing stopping criteria
+## Composing stopping criteria
 
 Objects of type [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] can
 be composed with the binary operators `&` (*and*), and `|` (*or*), following the
@@ -30,6 +30,37 @@ truth tables of [Status][pydvl.utils.status.Status]. The unary operator `~`
 (*not*) is also supported. See
 [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] for details on how
 these operations affect the behavior of the stopping criteria.
+
+## Choosing a stopping criterion
+
+The choice of a stopping criterion greatly depends on the algorithm and the
+context. A safe bet is to combine a [MaxUpdates][pydvl.value.stopping.MaxUpdates]
+or a [MaxTime][pydvl.value.stopping.MaxTime] with a
+[HistoryDeviation][pydvl.value.stopping.HistoryDeviation] or an
+[AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError]. The former
+will ensure that the computation does not run for too long, while the latter
+will ensure that the results are stable enough. Note however that if the
+thresholds for the latter are too lax, one will end up running until a maximum
+number of iterations or time.
+
+??? Example
+    ```python
+    criterion = AbsoluteStandardError(threshold=1e-3, burn_in=32) | MaxUpdates(1000)
+    values = compute_generic_semivalues(
+        sampler(data.indices),
+        utility,
+        coefficient,
+        criterion,
+        skip_converged=True,  # skip values that have converged (CAREFUL!)
+    )
+    ```
+    This will compute the semivalues of `utility` using `sampler` until either
+    the absolute standard error is below `1e-3` or `1000` updates have been
+    performed. The `burn_in` parameter is used to discard the first `32` updates
+    from the computation of the standard error. The `skip_converged` parameter
+    is used to skip values that have converged, which is useful if
+    [AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError] is met
+    before [MaxUpdates][pydvl.value.stopping.MaxUpdates] for some indices.
 
 ## References
 
