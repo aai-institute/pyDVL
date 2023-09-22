@@ -196,7 +196,6 @@ def seed_numpy(seed=42):
     np.random.seed(seed)
 
 
-@pytest.fixture(scope="session")
 def num_workers():
     # Run with 2 CPUs inside GitHub actions
     if os.getenv("CI"):
@@ -205,9 +204,22 @@ def num_workers():
     return max(1, min(available_cpus() - 1, 4))
 
 
-@pytest.fixture
-def n_jobs(num_workers):
-    return num_workers
+@pytest.fixture(scope="session")
+def n_jobs():
+    return num_workers()
+
+
+def pytest_xdist_auto_num_workers(config) -> Optional[int]:
+    """Return the number of workers to use for pytest-xdist.
+
+    This is used by pytest-xdist to automatically determine the number of
+    workers to use. We want to use all available CPUs, but leave one CPU for
+    the main process.
+    """
+
+    if config.option.numprocesses == "auto":
+        return max(1, (available_cpus() - 1) // num_workers())
+    return None
 
 
 ################################################################################
