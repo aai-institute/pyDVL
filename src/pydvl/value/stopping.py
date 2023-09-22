@@ -192,8 +192,12 @@ class StoppingCriterion(abc.ABC):
         """
         return self._converged
 
+    @deprecated(target=None, deprecated_in="0.7.1", remove_in="0.8.0")
     @property
     def name(self):
+        return type(self).__name__
+
+    def __str__(self):
         return type(self).__name__
 
     def __call__(self, result: ValuationResult) -> Status:
@@ -213,7 +217,7 @@ class StoppingCriterion(abc.ABC):
             fun=lambda result: self._check(result) & other._check(result),
             converged=lambda: self.converged & other.converged,
             completion=lambda: min(self.completion(), other.completion()),
-            name=f"Composite StoppingCriterion: {self.name} AND {other.name}",
+            name=f"Composite StoppingCriterion: {str(self)} AND {str(other)}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __or__(self, other: "StoppingCriterion") -> "StoppingCriterion":
@@ -221,7 +225,7 @@ class StoppingCriterion(abc.ABC):
             fun=lambda result: self._check(result) | other._check(result),
             converged=lambda: self.converged | other.converged,
             completion=lambda: max(self.completion(), other.completion()),
-            name=f"Composite StoppingCriterion: {self.name} OR {other.name}",
+            name=f"Composite StoppingCriterion: {str(self)} OR {str(other)}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __invert__(self) -> "StoppingCriterion":
@@ -229,7 +233,7 @@ class StoppingCriterion(abc.ABC):
             fun=lambda result: ~self._check(result),
             converged=lambda: ~self.converged,
             completion=lambda: 1 - self.completion(),
-            name=f"Composite StoppingCriterion: NOT {self.name}",
+            name=f"Composite StoppingCriterion: NOT {str(self)}",
         )(modify_result=self.modify_result)
 
 
@@ -270,9 +274,13 @@ def make_criterion(
                 return super().converged
             return converged()
 
+        @deprecated(target=None, deprecated_in="0.7.1", remove_in="0.8.0")
         @property
         def name(self):
             return self._name
+
+        def __str__(self):
+            return f"{self._name}"
 
         def completion(self) -> float:
             if completion is None:
@@ -326,6 +334,9 @@ class AbsoluteStandardError(StoppingCriterion):
             return Status.Converged
         return Status.Pending
 
+    def __str__(self):
+        return f"AbsoluteStandardError(threshold={self.threshold}, fraction={self.fraction}, burn_in={self.burn_in})"
+
 
 class StandardError(AbsoluteStandardError):
     @deprecated(target=AbsoluteStandardError, deprecated_in="0.6.0", remove_in="0.8.0")
@@ -363,6 +374,9 @@ class MaxChecks(StoppingCriterion):
         if self.n_checks:
             return min(1.0, self._count / self.n_checks)
         return 0.0
+
+    def __str__(self):
+        return f"MaxChecks(n_checks={self.n_checks})"
 
 
 class MaxUpdates(StoppingCriterion):
@@ -408,6 +422,9 @@ class MaxUpdates(StoppingCriterion):
             return self.last_max / self.n_updates
         return 0.0
 
+    def __str__(self):
+        return f"MaxUpdates(n_updates={self.n_updates})"
+
 
 class MinUpdates(StoppingCriterion):
     """Terminate as soon as all value updates exceed or equal the given threshold.
@@ -445,6 +462,9 @@ class MinUpdates(StoppingCriterion):
             return self.last_min / self.n_updates
         return 0.0
 
+    def __str__(self):
+        return f"MinUpdates(n_updates={self.n_updates})"
+
 
 class MaxTime(StoppingCriterion):
     """Terminate if the computation time exceeds the given number of seconds.
@@ -477,6 +497,9 @@ class MaxTime(StoppingCriterion):
         if self.max_seconds is None:
             return 0.0
         return (time() - self.start) / self.max_seconds
+
+    def __str__(self):
+        return f"MaxTime(seconds={self.max_seconds})"
 
 
 class HistoryDeviation(StoppingCriterion):
@@ -558,3 +581,6 @@ class HistoryDeviation(StoppingCriterion):
                 if np.all(self._converged):
                     return Status.Converged
         return Status.Pending
+
+    def __str__(self):
+        return f"HistoryDeviation(n_steps={self.n_steps}, rtol={self.rtol})"
