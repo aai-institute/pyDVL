@@ -39,28 +39,36 @@ or a [MaxTime][pydvl.value.stopping.MaxTime] with a
 [HistoryDeviation][pydvl.value.stopping.HistoryDeviation] or an
 [AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError]. The former
 will ensure that the computation does not run for too long, while the latter
-will ensure that the results are stable enough. Note however that if the
-thresholds for the latter are too lax, one will end up running until a maximum
-number of iterations or time.
+will try to achieve results that are stable enough. Note however that if the
+thresholds too strict, one will always end up running until a maximum number of
+iterations or time.
+
 
 ??? Example
     ```python
+    from pydvl.value import AbsoluteStandardError, MaxUpdates, compute_banzhaf_semivalues
+
+    utility = ...  # some utility object
     criterion = AbsoluteStandardError(threshold=1e-3, burn_in=32) | MaxUpdates(1000)
-    values = compute_generic_semivalues(
-        sampler(data.indices),
+    values = compute_banzhaf_semivalues(
         utility,
-        coefficient,
         criterion,
         skip_converged=True,  # skip values that have converged (CAREFUL!)
     )
     ```
-    This will compute the semivalues of `utility` using `sampler` until either
-    the absolute standard error is below `1e-3` or `1000` updates have been
+    This will compute the Banzhaf semivalues for `utility` until either the
+    absolute standard error is below `1e-3` or `1000` updates have been
     performed. The `burn_in` parameter is used to discard the first `32` updates
     from the computation of the standard error. The `skip_converged` parameter
-    is used to skip values that have converged, which is useful if
+    is used to avoid computing more marginals for indices that have converged,
+    which is useful if
     [AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError] is met
     before [MaxUpdates][pydvl.value.stopping.MaxUpdates] for some indices.
+
+!!! Warning
+    Be careful not to reuse the same stopping criterion for different
+    computations. The object has state and will not be reset between calls.
+
 
 ## References
 
