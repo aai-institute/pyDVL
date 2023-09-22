@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Using pytest-xdist for faster local tests
+  [PR #440](https://github.com/aai-institute/pyDVL/pull/440)
 - Implementation of Data-OOB by @BastienZim
   [PR #426](https://github.com/aai-institute/pyDVL/pull/426), 
   [PR $431](https://github.com/aai-institute/pyDVL/pull/431)
