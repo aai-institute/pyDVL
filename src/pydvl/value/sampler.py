@@ -27,7 +27,7 @@ The samplers are used in the [semivalues][pydvl.value.semivalues] module to
 compute any semi-value, in particular Shapley and Beta values, and Banzhaf
 indices.
 
-# Slicing of samplers
+## Slicing of samplers
 
 The samplers can be sliced for parallel computation. For those which are
 embarrassingly parallel, this is done by slicing the set of "outer" indices and
@@ -36,6 +36,15 @@ samplers, such as [DeterministicUniformSampler][pydvl.value.sampler.Deterministi
 and [UniformSampler][pydvl.value.sampler.UniformSampler]. In contrast, slicing a
 [PermutationSampler][pydvl.value.sampler.PermutationSampler] creates a new
 sampler which iterates over the same indices.
+
+
+## References
+
+[^1]: <a name="mitchell_sampling_2022"></a>Mitchell, Rory, Joshua Cooper, Eibe
+      Frank, and Geoffrey Holmes. [Sampling Permutations for Shapley Value
+      Estimation](http://jmlr.org/papers/v23/21-0439.html). Journal of Machine
+      Learning Research 23, no. 43 (2022): 1–46.
+
 """
 
 from __future__ import annotations
@@ -371,6 +380,27 @@ class PermutationSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
     @classmethod
     def weight(cls, n: int, subset_len: int) -> float:
         return n * math.comb(n - 1, subset_len) if n > 0 else 1.0
+
+
+class AntitheticPermutationSampler(PermutationSampler[IndexT]):
+    """Samples permutations like
+    [PermutationSampler][pydvl.value.sampler.PermutationSampler], but after
+    each permutation, it returns the same permutation in reverse order.
+
+    This sampler was suggested in (Mitchell et al. 2022)<sup><a
+    href="#mitchell_sampling_2022">1</a></sup>
+    """
+
+    def __iter__(self) -> Iterator[SampleT]:
+        while True:
+            permutation = self._rng.permutation(self._indices)
+            for perm in permutation, permutation[::-1]:
+                for i, idx in enumerate(perm):
+                    yield idx, perm[:i]
+                    self._n_samples += 1
+
+            if self._n_samples == 0:  # Empty index set
+                break
 
 
 class DeterministicPermutationSampler(PermutationSampler[IndexT]):
