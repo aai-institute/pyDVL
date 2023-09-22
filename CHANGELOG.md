@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Faster semi-value computation with per-index check of stopping criteria (optional)
+  [PR #437](https://github.com/aai-institute/pyDVL/pull/437)
 - Implementation of Data-OOB by @BastienZim
   [PR #426](https://github.com/aai-institute/pyDVL/pull/426), 
   [PR $431](https://github.com/aai-institute/pyDVL/pull/431)
