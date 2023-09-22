@@ -315,18 +315,19 @@ class AntitheticSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
     """An iterator to perform uniform random sampling of subsets, and their
     complements.
 
-    Works as :class:`~pydvl.value.sampler.UniformSampler`, but for every tuple
-    $(i,S)$, it subsequently returns $(i,S^c)$, where $S^c$ is the complement of
-    the set $S$, including the index $i$ itself.
+    Works as [UniformSampler][pydvl.value.sampler.UniformSampler], but for every
+    tuple $(i,S)$, it subsequently returns $(i,S^c)$, where $S^c$ is the
+    complement of the set $S$ in the set of indices, excluding $i$.
     """
 
     def __iter__(self) -> Iterator[SampleT]:
         while True:
             for idx in self.iterindices():
-                subset = random_subset(self.complement([idx]), seed=self._rng)
+                _complement = self.complement([idx])
+                subset = random_subset(_complement, seed=self._rng)
                 yield idx, subset
                 self._n_samples += 1
-                yield idx, self.complement(np.concatenate((subset, np.array([idx]))))
+                yield idx, np.setxor1d(_complement, subset)
                 self._n_samples += 1
             if self._n_samples == 0:  # Empty index set
                 break
