@@ -48,7 +48,7 @@ def test_shapley(
     parallel_config: ParallelConfig,
 ):
     u, exact_values = analytic_shapley
-    criterion = AbsoluteStandardError(0.001, 1.0) | MaxUpdates(2 ** (num_samples * 2))
+    criterion = AbsoluteStandardError(1e-4) | MaxUpdates(1000)
     values = compute_generic_semivalues(
         sampler(u.data.indices),
         u,
@@ -76,23 +76,25 @@ def test_shapley_batch_size(
     seed: Seed,
 ):
     u, exact_values = analytic_shapley
-    criterion = AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2 ** (num_samples * 2))
     timed_fn = timed(compute_generic_semivalues)
     result_single_batch = timed_fn(
         sampler(u.data.indices, seed=seed),
         u,
         coefficient,
-        criterion,
+        done=AbsoluteStandardError(1e-4) | MaxUpdates(1000),
+        skip_converged=True,
         n_jobs=n_jobs,
         batch_size=1,
         config=parallel_config,
     )
     total_seconds_single_batch = timed_fn.execution_time
+
     result_multi_batch = timed_fn(
         sampler(u.data.indices, seed=seed),
         u,
         coefficient,
-        criterion,
+        done=AbsoluteStandardError(1e-4) | MaxUpdates(1000),
+        skip_converged=True,
         n_jobs=n_jobs,
         batch_size=batch_size,
         config=parallel_config,
@@ -123,11 +125,13 @@ def test_banzhaf(
     parallel_config: ParallelConfig,
 ):
     u, exact_values = analytic_banzhaf
+    criterion = AbsoluteStandardError(1e-4, burn_in=32) | MaxUpdates(1000)
     values = compute_generic_semivalues(
         sampler(u.data.indices),
         u,
         banzhaf_coefficient,
-        AbsoluteStandardError(0.04, 1.0) | MaxUpdates(2 ** (num_samples * 2)),
+        criterion,
+        skip_converged=True,
         n_jobs=n_jobs,
         config=parallel_config,
     )
