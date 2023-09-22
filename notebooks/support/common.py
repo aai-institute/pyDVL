@@ -1,7 +1,10 @@
 import logging
 import os
+import pickle
 from copy import deepcopy
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from functools import wraps
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -551,3 +554,104 @@ def plot_corrupted_influences_distribution(
         axes[idx].set_title(f"Influences for {label=}")
         axes[idx].legend()
     plt.show()
+
+
+def filecache(path: Path) -> Callable[[Callable], Callable]:
+    """Wraps a function to cache its output on disk.
+
+    There is no hashing of the arguments of the function. This function merely
+    checks whether `filename` exists and if so, loads the output from it, and if
+    not it calls the function and saves the output to `filename`.
+
+    Args:
+        fun: Function to wrap.
+        filename: Name of the file to cache the output to.
+    Returns:
+        The wrapped function.
+    """
+
+    def decorator(fun: Callable) -> Callable:
+        @wraps(fun)
+        def wrapper(*args, **kwargs):
+            try:
+                with path.open("rb") as fd:
+                    print(f"Found cached file: {path.name}.")
+                    return pickle.load(fd)
+            except (FileNotFoundError, EOFError, pickle.UnpicklingError):
+                result = fun(*args, **kwargs)
+                with path.open("wb") as fd:
+                    pickle.dump(result, fd)
+                return result
+
+        return wrapper
+
+    return decorator
+
+
+@filecache(path=Path("adult_data.pkl"))
+def load_adult_data():
+    data_url = (
+        "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data"
+    )
+
+    column_names = [
+        "age",
+        "workclass",
+        "fnlwgt",
+        "education",
+        "education-num",
+        "marital-status",
+        "occupation",
+        "relationship",
+        "race",
+        "sex",
+        "capital-gain",
+        "capital-loss",
+        "hours-per-week",
+        "native-country",
+        "income",
+    ]
+
+    data_types = {
+        "age": int,
+        "workclass": "category",
+        "fnlwgt": int,
+        "education": "category",
+        "education-num": int,
+        "marital-status": "category",
+        "occupation": "category",
+        "relationship": "category",
+        "race": "category",
+        "sex": "category",
+        "capital-gain": int,
+        "capital-loss": int,
+        "hours-per-week": int,
+        "native-country": "category",
+        "income": "category",
+    }
+
+    data_adult = pd.read_csv(
+        data_url,
+        names=column_names,
+        sep=",\s*",
+        engine="python",
+        na_values="?",
+        dtype=data_types,
+        nrows=2000,
+    )
+
+    # Drop categorical columns
+    data_adult = data_adult.drop(
+        columns=[
+            "workclass",
+            "education",
+            "marital-status",
+            "occupation",
+            "relationship",
+            "race",
+            "sex",
+            "native-country",
+        ]
+    )
+
+    return data_adult
