@@ -200,10 +200,15 @@ class StoppingCriterion(abc.ABC):
         """
         return self._converged
 
-    @deprecated(target=None, deprecated_in="0.7.1", remove_in="0.8.0")
     @property
     def name(self):
-        return type(self).__name__
+        log = logging.getLogger(__name__)
+        # This string for the benefit of deprecation searches:
+        # remove_in="0.8.0"
+        log.warning(
+            "The `name` attribute of `StoppingCriterion` is deprecated and will be removed in 0.8.0. "
+        )
+        return getattr(self, "_name", type(self).__name__)
 
     def __str__(self):
         return type(self).__name__
@@ -281,11 +286,6 @@ def make_criterion(
             if converged is None:
                 return super().converged
             return converged()
-
-        @deprecated(target=None, deprecated_in="0.7.1", remove_in="0.8.0")
-        @property
-        def name(self):
-            return self._name
 
         def __str__(self):
             return f"{self._name}"
