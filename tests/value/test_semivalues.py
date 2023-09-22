@@ -48,12 +48,13 @@ def test_shapley(
     parallel_config: ParallelConfig,
 ):
     u, exact_values = analytic_shapley
-    criterion = AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2 ** (num_samples * 2))
+    criterion = AbsoluteStandardError(0.001, 1.0) | MaxUpdates(2 ** (num_samples * 2))
     values = compute_generic_semivalues(
         sampler(u.data.indices),
         u,
         coefficient,
         criterion,
+        skip_converged=True,
         n_jobs=n_jobs,
         config=parallel_config,
     )
