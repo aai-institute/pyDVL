@@ -111,7 +111,7 @@ documentation.
 
 For influence computation, follow these steps:
 
-1. Wrap your model and loss in a `TorchTwiceDifferential` object
+1. Wrap your model and loss in a `TorchTwiceDifferentiable` object
 2. Compute influence factors by providing training data and inversion method
 
 Using the conjugate gradient algorithm, this would look like:

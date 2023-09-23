@@ -36,7 +36,7 @@ or using an early stopping strategy to reduce computation
 ## References
 
 [^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
-    [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).
+    [Data Shapley: Equitable Valuation of Data for Machine Learning](https://proceedings.mlr.press/v97/ghorbani19c.html).
     In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
 
 """
@@ -201,7 +201,9 @@ def permutation_montecarlo_shapley(
     n_submitted_jobs = 2 * max_workers  # number of jobs in the executor's queue
 
     seed_sequence = ensure_seed_sequence(seed)
-    result = ValuationResult.zeros(algorithm=algorithm)
+    result = ValuationResult.zeros(
+        algorithm=algorithm, indices=u.data.indices, data_names=u.data.data_names
+    )
 
     pbar = tqdm(disable=not progress, total=100, unit="%")
 

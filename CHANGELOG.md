@@ -3,7 +3,8 @@
 ## Unreleased
 
 - Implementation of Data-OOB by @BastienZim
-  [PR #426](https://github.com/aai-institute/pyDVL/pull/426)
+  [PR #426](https://github.com/aai-institute/pyDVL/pull/426), 
+  [PR $431](https://github.com/aai-institute/pyDVL/pull/431)
 - Refactoring of parallel module. Old imports will stop working in v0.9.0
   [PR #421](https://github.com/aai-institute/pyDVL/pull/421)
 
@@ -26,6 +27,10 @@ randomness.
   `pydvl.value.semivalues`. Introduced new type `Seed` and conversion function 
   `ensure_seed_sequence`.
   [PR #396](https://github.com/aai-institute/pyDVL/pull/396)
+- Added `batch_size` parameter to `compute_banzhaf_semivalues`,
+  `compute_beta_shapley_semivalues`, `compute_shapley_semivalues` and
+  `compute_generic_semivalues`.
+  [PR #428](https://github.com/aai-institute/pyDVL/pull/428)
 
 ### Changed
 
@@ -247,3 +252,4 @@ It contains:
 - Parallelization of computations with Ray
 - Documentation
 - Notebooks containing examples of different use cases
+

@@ -91,9 +91,7 @@ def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) 
 
 
 def random_subset(
-    s: NDArray[T],
-    q: float = 0.5,
-    seed: Optional[Seed] = None,
+    s: NDArray[T], q: float = 0.5, seed: Optional[Seed] = None
 ) -> NDArray[T]:
     """Returns one subset at random from ``s``.
 
@@ -216,9 +214,7 @@ def random_powerset_label_min(
 
 
 def random_subset_of_size(
-    s: NDArray[T],
-    size: int,
-    seed: Optional[Seed] = None,
+    s: NDArray[T], size: int, seed: Optional[Seed] = None
 ) -> NDArray[T]:
     """Samples a random subset of given size uniformly from the powerset
     of `s`.
