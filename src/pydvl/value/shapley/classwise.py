@@ -71,17 +71,19 @@ from numpy.random import SeedSequence
 from numpy.typing import NDArray
 from tqdm import tqdm
 
+from pydvl.parallel import (
+    ParallelConfig,
+    effective_n_jobs,
+    init_executor,
+    init_parallel_backend,
+)
 from pydvl.utils import (
     Dataset,
-    ParallelConfig,
     Scorer,
     Seed,
     SupervisedModel,
     Utility,
-    effective_n_jobs,
     ensure_seed_sequence,
-    init_executor,
-    init_parallel_backend,
     random_powerset_label_min,
 )
 from pydvl.value.result import ValuationResult

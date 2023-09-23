@@ -4,10 +4,6 @@ library.
 """
 from __future__ import annotations
 
-import logging
-import os
-import random
-import time
 from itertools import chain, combinations
 from typing import (
     Collection,
@@ -17,8 +13,6 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
-    Union,
-    cast,
     overload,
 )
 
@@ -38,10 +32,6 @@ __all__ = [
     "random_subset_of_size",
     "top_k_value_accuracy",
 ]
-
-
-logger = logging.getLogger(__name__)
-
 
 T = TypeVar("T", bound=np.generic)
 
@@ -132,8 +122,7 @@ def random_powerset(
             Defaults to `np.iinfo(np.int32).max`
         q: Sampling probability for elements. The default 0.5 yields a
             uniform distribution over the power set of s.
-        seed: Either an instance of a numpy random number generator or a seed
-            for it.
+        seed: Either an instance of a numpy random number generator or a seed for it.
 
     Returns:
         Samples from the power set of `s`.
@@ -184,7 +173,8 @@ def random_powerset_label_min(
 
     if min_elements_per_label < 0:
         raise ValueError(
-            f"Parameter min_elements={min_elements_per_label} needs to be bigger or equal to 0."
+            f"Parameter min_elements={min_elements_per_label} needs to be bigger or "
+            f"equal to 0."
         )
 
     rng = np.random.default_rng(seed)

@@ -31,6 +31,9 @@ randomness.
   `compute_beta_shapley_semivalues`, `compute_shapley_semivalues` and
   `compute_generic_semivalues`.
   [PR #428](https://github.com/aai-institute/pyDVL/pull/428)
+- Added classwise Shapley as proposed by (Schoch et al. 2021)
+  [https://arxiv.org/abs/2211.06800]
+  [PR #338](https://github.com/aai-institute/pyDVL/pull/338)
 
 ### Changed
 
