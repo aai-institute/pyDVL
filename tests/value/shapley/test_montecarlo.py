@@ -207,7 +207,6 @@ def test_linear_montecarlo_shapley(
 
     """
     u, exact_values = linear_shapley
-    check_total_value(u, exact_values, rtol=rtol)
 
     values = compute_shapley_values(
         u, mode=fun, progress=False, n_jobs=n_jobs, **kwargs

@@ -10,6 +10,7 @@ from sklearn.utils import Bunch
 
 from pydvl.parallel.backend import available_cpus
 from pydvl.utils import Dataset, MemcachedClientConfig
+from tests.cache import CloudPickleCache
 from tests.tolerate import (
     TolerateErrorFixture,
     TolerateErrorsSession,
@@ -18,16 +19,8 @@ from tests.tolerate import (
 
 if TYPE_CHECKING:
     from _pytest.config import Config
+    from _pytest.fixtures import FixtureRequest
     from _pytest.terminal import TerminalReporter
-
-
-def is_memcache_responsive(hostname, port):
-    try:
-        client = Client(server=(hostname, port))
-        client.flush_all()
-        return True
-    except ConnectionRefusedError:
-        return False
 
 
 def pytest_addoption(parser):
@@ -50,6 +43,22 @@ def pytest_addoption(parser):
         default=False,
         help="Disable reporting. Verbose mode takes precedence.",
     )
+
+
+@pytest.fixture
+def cache(request: "FixtureRequest") -> CloudPickleCache:
+    """Return a cache object that can persist state between testing sessions.
+
+    cache.get(key, default)
+    cache.set(key, value)
+
+    Keys must be ``/`` separated strings, where the first part is usually the
+    name of your plugin or application to avoid clashes with other cache users.
+
+    Values can be any object handled by the json stdlib module.
+    """
+    assert request.config.cloud_pickle_cache is not None
+    return request.config.cloud_pickle_cache
 
 
 @pytest.fixture()
@@ -80,6 +89,15 @@ def pytorch_seed(seed):
         torch.use_deterministic_algorithms(True, warn_only=True)
     except ImportError:
         pass
+
+
+def is_memcache_responsive(hostname, port):
+    try:
+        client = Client(server=(hostname, port))
+        client.flush_all()
+        return True
+    except ConnectionRefusedError:
+        return False
 
 
 @pytest.fixture(scope="session")
@@ -173,12 +191,14 @@ def linear_dataset(a: float, b: float, num_points: int):
     """Constructs a dataset sampling from y=ax+b + eps, with eps~Gaussian and
     x in [-1,1]
 
-    :param a: Slope
-    :param b: intercept
-    :param num_points: number of (x,y) samples to construct
-    :param train_size: fraction of points to use for training (between 0 and 1)
+    Args:
+        a: Slope
+        b: intercept
+        num_points: number of (x,y) samples to construct
+        train_size: fraction of points to use for training (between 0 and 1)
 
-    :return: Dataset with train/test split. call str() on it to see the parameters
+    Returns:
+        Dataset with train/test split. call str() on it to see the parameters
     """
     step = 2 / num_points
     stddev = 0.1
@@ -212,22 +232,23 @@ def n_jobs(num_workers):
 
 
 ################################################################################
-# Tolerate Errors Plugin
+# Tolerate Errors and CloudPickleCache Plugins
 
 
-@pytest.fixture(scope="function")
-def tolerate(request: pytest.FixtureRequest):
-    fixture = TolerateErrorFixture(request.node)
-    return fixture
-
-
-def pytest_configure(config):
+def pytest_configure(config: "Config"):
     config.addinivalue_line(
         "markers",
         "tolerate: mark a test to swallow errors up to a certain threshold. "
         "Use to test (ε,δ)-approximations.",
     )
     config._tolerate_session = TolerateErrorsSession(config)
+    config.cloud_pickle_cache = CloudPickleCache.for_config(config, _ispytest=True)
+
+
+@pytest.fixture(scope="function")
+def tolerate(request: pytest.FixtureRequest):
+    fixture = TolerateErrorFixture(request.node)
+    return fixture
 
 
 def pytest_runtest_setup(item: pytest.Item):
