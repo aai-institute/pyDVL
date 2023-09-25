@@ -12,7 +12,7 @@ build-backend = "setuptools.build_meta"
 profile = "black"
 
 [tool.pytest.ini_options]
-addopts = "--cov-report=term-missing --durations=10"
+addopts = "--cov-report=term-missing --durations=30 --profile-svg"
 testpaths = [
     "tests"
 ]
