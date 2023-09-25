@@ -6,7 +6,6 @@
 In: Published at ICML 2023
 
 """
-from collections.abc import Callable
 from typing import Optional, TypeVar
 
 import numpy as np
@@ -14,7 +13,7 @@ from numpy.typing import NDArray
 from sklearn.base import is_classifier, is_regressor
 from sklearn.ensemble import BaggingClassifier, BaggingRegressor
 
-from pydvl.utils import Utility, maybe_progress
+from pydvl.utils import Seed, Utility, maybe_progress
 from pydvl.utils.types import LossFunction
 from pydvl.value.result import ValuationResult
 
@@ -25,21 +24,27 @@ T = TypeVar("T", bound=np.number)
 
 def compute_data_oob(
     u: Utility,
+    *,
     n_est: int = 10,
     max_samples: float = 0.8,
     n_jobs: Optional[int] = None,
     loss: Optional[LossFunction] = None,
-    *,
+    seed: Optional[Seed] = None,
     progress: bool = False,
 ) -> ValuationResult:
     r"""Computes Data out of bag values
 
-    This implements the method described in (Kwon and Zou, 2023) <sup><a href="kwon_data_2023">1</a></sup>.
-    It fits several base estimators provided through u.model through a bagging process. The point value corresponds to the average loss of estimators which were not fit on it.
+    This implements the method described in
+    (Kwon and Zou, 2023)<sup><a href="kwon_data_2023">1</a></sup>.
+    It fits several base estimators provided through u.model through a bagging
+    process. The point value corresponds to the average loss of estimators which
+    were not fit on it.
 
-    $w_{bj}\in Z$ is the number of times the j-th datum $(x_j, y_j)$ is selected in the b-th bootstrap dataset.
+    $w_{bj}\in Z$ is the number of times the j-th datum $(x_j, y_j)$ is selected
+    in the b-th bootstrap dataset.
 
-    $$\psi((x_i,y_i),\Theta_B):=\frac{\sum_{b=1}^{B}\mathbb{1}(w_{bi}=0)T(y_i, \hat{f}_b(x_i))}{\sum_{b=1}^{B}
+    $$\psi((x_i,y_i),\Theta_B):=\frac{\sum_{b=1}^{B}\mathbb{1}(w_{bi}=0)T(y_i,
+    \hat{f}_b(x_i))}{\sum_{b=1}^{B}
     \mathbb{1}
     (w_{bi}=0)}$$
 
@@ -50,23 +55,31 @@ def compute_data_oob(
     \rightarrow \mathbb{R}
     $$
 
-    T is a score function that represents the goodness of a weak learner $\hat{f}_b$ at the i-th datum $(x_i, y_i)$.
+    T is a score function that represents the goodness of a weak learner
+    $\hat{f}_b$ at the i-th datum $(x_i, y_i)$.
 
-    There is a need to tune n_est and max_samples jointly to ensure all samples are at least 1 time oob, otherwise the result could include a nan value for that datum.
+    `n_est` and `max_samples` must be tuned jointly to ensure that all samples
+    are at least 1 time out-of-bag, otherwise the result could include a NaN
+    value for that datum.
 
     Args:
         u: Utility object with model, data, and scoring function.
         n_est: Number of estimator used in the bagging procedure.
-        max_samples: The fraction of samples to draw to train each base estimator.
+        max_samples: The fraction of samples to draw to train each base
+            estimator.
+        loss: A function taking as parameters model prediction and corresponding
+            data labels(y_true, y_pred) and returning an array of point-wise errors.
         n_jobs: The number of jobs to run in parallel used in the bagging
             procedure for both fit and predict.
-        loss: A function taking as parameters model prediction and corresponding
-            data labels(preds, y) and returning an array of point-wise errors.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
         progress: If True, display a progress bar.
 
     Returns:
         Object with the data values.
     """
+    rng = np.random.default_rng(seed)
+    random_state = np.random.RandomState(rng.bit_generator)
 
     result: ValuationResult[np.int_, np.object_] = ValuationResult.empty(
         algorithm="data_oob", indices=u.data.indices, data_names=u.data.data_names
@@ -74,13 +87,21 @@ def compute_data_oob(
 
     if is_classifier(u.model):
         bag = BaggingClassifier(
-            u.model, n_estimators=n_est, max_samples=max_samples, n_jobs=n_jobs
+            u.model,
+            n_estimators=n_est,
+            max_samples=max_samples,
+            n_jobs=n_jobs,
+            random_state=random_state,
         )
         if loss is None:
             loss = point_wise_accuracy
     elif is_regressor(u.model):
         bag = BaggingRegressor(
-            u.model, n_estimators=n_est, max_samples=max_samples, n_jobs=n_jobs
+            u.model,
+            n_estimators=n_est,
+            max_samples=max_samples,
+            n_jobs=n_jobs,
+            random_state=random_state,
         )
         if loss is None:
             loss = neg_l2_distance
@@ -108,32 +129,28 @@ def compute_data_oob(
     return result
 
 
-def point_wise_accuracy(y_true: NDArray, y_pred: NDArray) -> NDArray[np.int_]:
-    r"""Computes point-wise accuracy between true labels and model predictions.
+def point_wise_accuracy(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
+    r"""Point-wise 0-1 loss between two arrays
 
     Args:
-        y_true: True labels.
-        y_pred: Predicted labels.
+        y_true: Array of true values (e.g. labels)
+        y_pred: Array of estimated values (e.g. model predictions)
 
     Returns:
-        Array of point-wise accuracy
+        Array with point-wise 0-1 losses between labels and model predictions
     """
-    return np.asarray(y_pred == y_true, dtype=np.int_)
+    return np.array(y_pred == y_true, dtype=y_pred.dtype)
 
 
 def neg_l2_distance(y_true: NDArray[T], y_pred: NDArray[T]) -> NDArray[T]:
-    r"""Computes negative l2 distance between ground truth and model predictions.
+    r"""Point-wise negative $l_2$ distance between two arrays
 
     Args:
-        y_true: Ground truth values.
-        y_pred: Predicted values.
+        y_true: Array of true values (e.g. labels)
+        y_pred: Array of estimated values (e.g. model predictions)
 
     Returns:
-        Array with point-wise negative l2 distance between label and model prediction
+        Array with point-wise negative $l_2$ distances between labels and model
+        predictions
     """
-    return -np.square(
-        np.array(
-            y_pred - y_true,
-            dtype=np.float64,
-        )
-    )
+    return -np.square(np.array(y_pred - y_true), dtype=y_pred.dtype)

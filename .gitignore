@@ -139,6 +139,7 @@ pylint.html
 # Saved data
 runs/
 data/models/
+*.pkl
 
 # Docs
 docs_build

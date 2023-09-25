@@ -1,3 +1,4 @@
+from ..parallel import *
 from .caching import *
 from .config import *
 from .dataset import *

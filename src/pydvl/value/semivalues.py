@@ -74,15 +74,15 @@ instead.
 ## References
 
 [^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
-    [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).
+    [Data Shapley: Equitable Valuation of Data for Machine Learning](https://proceedings.mlr.press/v97/ghorbani19c.html).
     In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
 
 [^2]: <a name="kwon_beta_2022"></a>Kwon, Y. and Zou, J., 2022.
-    [Beta Shapley: A Unified and Noise-reduced Data Valuation Framework for Machine Learning](http://arxiv.org/abs/2110.14049).
+    [Beta Shapley: A Unified and Noise-reduced Data Valuation Framework for Machine Learning](https://arxiv.org/abs/2110.14049).
     In: Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022, Vol. 151. PMLR, Valencia, Spain.
 
 [^3]: <a name="wang_data_2022"></a>Wang, J.T. and Jia, R., 2022.
-    [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](http://arxiv.org/abs/2205.15466).
+    [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://arxiv.org/abs/2205.15466).
     ArXiv preprint arXiv:2205.15466.
 """
 from __future__ import annotations

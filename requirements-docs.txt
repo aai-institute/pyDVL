@@ -15,5 +15,6 @@ mkdocs-material
 mkdocs-section-index
 mkdocs-macros-plugin
 neoteroi-mkdocs  # Needed for card grid on home page
-pypandoc
+pypandoc; sys_platform == 'darwin'
+pypandoc_binary; sys_platform != 'darwin'
 GitPython

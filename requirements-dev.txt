@@ -19,6 +19,7 @@ pytest-docker==2.0.0
 pytest-mock
 pytest-timeout
 pytest-lazy-fixture
+pytest-xdist>=3.3.1
 pytest-profiling
 wheel
 twine==4.0.2
