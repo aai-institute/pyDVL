@@ -1,6 +1,6 @@
 import os
 from dataclasses import asdict
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
 
 import numpy as np
 import pytest
