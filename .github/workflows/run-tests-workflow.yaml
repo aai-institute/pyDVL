@@ -29,8 +29,13 @@ jobs:
     - name: Cache Tox Directory for Tests
       uses: actions/cache@v3
       with:
-        key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini', 'requirements.txt') }}
+        key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini', 'requirements.txt') }}-${{ inputs.python_version }}
         path: .tox
+    - name: Cache Pytest Cache Directory
+      uses: actions/cache@v3
+      with:
+        key: pytest-cache-${{ github.ref }}-${{ runner.os }}-${{ inputs.python_version }}
+        path: .tox/tests/.pytest_cache
     - name: Test Base Modules
       run: tox -e tests -- -m "not torch"
       if: inputs.tests_to_run == 'base'
@@ -41,3 +46,8 @@ jobs:
       run: tox -e tests -- notebooks/
       if: inputs.tests_to_run == 'notebooks'
       continue-on-error: true
+    - name: Archive pytest-profiling result
+      uses: actions/upload-artifact@v3
+      with:
+        name: pytest-profile-graph
+        path: combined.svg

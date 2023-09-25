@@ -142,3 +142,6 @@ data/models/
 
 # Docs
 docs_build
+
+# pytest-profiling
+prof/
