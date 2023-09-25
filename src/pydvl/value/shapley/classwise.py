@@ -24,15 +24,7 @@ v_u(i) = \frac{1}{K} \sum_k \frac{1}{L} \sum_l
 $$
 
 with $S^{(1)}, \dots, S^{(K)} \subseteq T_{-y_i}$ and 
-$\sigma^{(1)}, \dots, \sigma^{(L)} \in \Pi(T_{y_i}\setminus\{i\})$. Furthermore, the
-estimator employs a specialized utility function
-
-$$
-u(S_{y_i}|S_{-y_i}) = a_S(D_{y_i}) \exp(a_S(D_{-y_i})),
-$$
-
-where $S=S_{y_i} \cup S_{-y_i}$ and $a_S(D)$ is the accuracy of the model trained on $S$
-and evaluated on $D$. 
+$\sigma^{(1)}, \dots, \sigma^{(L)} \in \Pi(T_{y_i}\setminus\{i\})$.
 
 !!! info "Notes for derivation of test cases."
     Let $D=\{(1,0),(2,0),(3,0),(4,1)\}$ be the test set and $T=\{(1,0),(2,0),(3,1),(4,1)\}$
@@ -113,10 +105,13 @@ class ClasswiseScorer(Scorer):
     1</a></sup>.
 
     !!! info "Surface plot for default values."
-        ![](img/classwise-shapley-discounted-utility-function.svg){:style="float:left"}
+        ![Surface plot](img/classwise-shapley-discounted-utility-function.svg)
+
         For $f(x)=x$ and $g(x)=e^x$ the surface plot looks as shown in the left plot
-        where the x-axis refers to in-class accuracy a_S(D_{y_i}) and the y-axis to
-        out-of-class accuracy $a_S(D_{-y_i})$
+        where the x-axis refers to in-class accuracy $a_S(D_{y_i})$ and the y-axis to
+        out-of-class accuracy $a_S(D_{-y_i})$. The white lines represent the contour
+        lines annotated with the gradients.
+
 
     Args:
         default: Score used when a model cannot be fit, e.g. when too little data is
