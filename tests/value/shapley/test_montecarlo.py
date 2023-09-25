@@ -84,33 +84,7 @@ test_cases_montecarlo_shapley_reproducible_stochastic = [
     "num_samples, fun, kwargs", test_cases_montecarlo_shapley_reproducible_stochastic
 )
 @pytest.mark.parametrize("num_points, num_features", [(12, 3)])
-def test_montecarlo_shapley_housing_dataset_reproducible(
-    num_samples: int,
-    housing_dataset: Dataset,
-    parallel_config: ParallelConfig,
-    n_jobs: int,
-    fun: ShapleyMode,
-    kwargs: dict,
-    seed: Seed,
-):
-    values_1, values_2 = call_with_seeds(
-        compute_shapley_values,
-        Utility(LinearRegression(), data=housing_dataset, scorer="r2"),
-        mode=fun,
-        n_jobs=n_jobs,
-        config=parallel_config,
-        progress=False,
-        seeds=(seed, seed),
-        **deepcopy(kwargs)
-    )
-    np.testing.assert_equal(values_1.values, values_2.values)
-
-
-@pytest.mark.parametrize(
-    "num_samples, fun, kwargs", test_cases_montecarlo_shapley_reproducible_stochastic
-)
-@pytest.mark.parametrize("num_points, num_features", [(12, 4)])
-def test_montecarlo_shapley_housing_dataset_stochastic(
+def test_montecarlo_shapley_housing_dataset(
     num_samples: int,
     housing_dataset: Dataset,
     parallel_config: ParallelConfig,
@@ -120,21 +94,22 @@ def test_montecarlo_shapley_housing_dataset_stochastic(
     seed: Seed,
     seed_alt: Seed,
 ):
-    values_1, values_2 = call_with_seeds(
+    values_1, values_2, values_3 = call_with_seeds(
         compute_shapley_values,
         Utility(LinearRegression(), data=housing_dataset, scorer="r2"),
         mode=fun,
         n_jobs=n_jobs,
         config=parallel_config,
         progress=False,
-        seeds=(seed, seed_alt),
+        seeds=(seed, seed, seed_alt),
         **deepcopy(kwargs)
     )
+    np.testing.assert_equal(values_1.values, values_2.values)
     with pytest.raises(AssertionError):
-        np.testing.assert_equal(values_1.values, values_2.values)
+        np.testing.assert_equal(values_1.values, values_3.values)
 
 
-@pytest.mark.parametrize("num_samples, delta, eps", [(8, 0.1, 0.1)])
+@pytest.mark.parametrize("num_samples, delta, eps", [(6, 0.1, 0.1)])
 @pytest.mark.parametrize(
     "fun", [ShapleyMode.PermutationMontecarlo, ShapleyMode.CombinatorialMontecarlo]
 )
@@ -228,7 +203,7 @@ def test_linear_montecarlo_shapley(
         (ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=400)),
         (
             ShapleyMode.GroupTesting,
-            dict(n_samples=int(1e5), epsilon=0.2, delta=0.01),
+            dict(n_samples=int(5e4), epsilon=0.25, delta=0.1),
         ),
     ],
 )

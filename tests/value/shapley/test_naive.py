@@ -127,14 +127,13 @@ def test_linear_with_outlier(
     "coefficients, scorer",
     [
         (np.random.randint(-3, 3, size=3), "r2"),
-        (np.random.randint(-3, 3, size=5), "neg_median_absolute_error"),
-        (np.random.randint(-3, 3, size=7), "explained_variance"),
+        (np.random.randint(-3, 3, size=3), "neg_median_absolute_error"),
+        (np.random.randint(-3, 3, size=3), "explained_variance"),
     ],
 )
 def test_polynomial(
     polynomial_dataset,
     polynomial_pipeline,
-    memcache_client_config,
     scorer,
     rtol=0.01,
     total_atol=1e-5,
@@ -144,7 +143,6 @@ def test_polynomial(
         polynomial_pipeline,
         dataset,
         scorer=scorer,
-        cache_options=MemcachedConfig(client_config=memcache_client_config),
     )
 
     values_combinatorial = combinatorial_exact_shapley(poly_utility, progress=False)

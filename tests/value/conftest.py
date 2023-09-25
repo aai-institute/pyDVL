@@ -4,6 +4,7 @@ from numpy.typing import NDArray
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.utils import Bunch
 
 from pydvl.parallel.config import ParallelConfig
 from pydvl.utils import Dataset, SupervisedModel, Utility
@@ -17,8 +18,6 @@ from . import polynomial
 @pytest.fixture(scope="function")
 def polynomial_dataset(coefficients: np.ndarray):
     """Coefficients must be for monomials of increasing degree"""
-    from sklearn.utils import Bunch
-
     x = np.arange(-1, 1, 0.05)
     locs = polynomial(coefficients, x)
     y = np.random.normal(loc=locs, scale=0.3)
