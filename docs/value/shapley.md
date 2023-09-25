@@ -84,7 +84,7 @@ Class-wise Shapley [@schoch_csshapley_2022] offers a distinct Shapley framework 
 for classification problems. Let $D$ be the dataset, $D_{y_i}$ be the subset of $D$ with
 labels $y_i$, and $D_{-y_i}$ be the complement of $D_{y_i}$ in $D$. The key idea is that
 a sample $(x_i, y_i)$, might enhance the overall performance on $D$, while being 
-detrimental for the performance on $D_{y_i}$. To address this nuanced behavior, the
+detrimental for the performance on $D_{y_i}$. To address this issue, the
 authors introduced the estimator
 
 $$
@@ -95,17 +95,7 @@ $$
 
 where $S_{y_i} \subseteq D_{y_i} \setminus \{i\}$ and $S_{-y_i} \subseteq D_{-y_i}$. In
 other words, the summations are over the powerset of $D_{y_i} \setminus \{i\}$ and 
-$D_{-y_i}$ respectively. The estimator employs a specialized utility function
-
-$$
-u(S_{y_i}|S_{-y_i}) = a_S(D_{y_i}) \exp(a_S(D_{-y_i})),
-$$
-
-where $S=S_{y_i} \cup S_{-y_i}$ and $a_S(D)$ is the accuracy of the model trained on $S$
-and evaluated on $D$.In practical applications, the evaluation of this estimator 
-leverages both Monte Carlo sampling and permutation Monte Carlo sampling 
-[@castro_polynomial_2009].
-
+$D_{-y_i}$ respectively. The algorithm can be applied by using the snippet
 
 ```python
 from pydvl.utils import Dataset, Utility
@@ -115,7 +105,7 @@ from pydvl.value.shapley.classwise import compute_classwise_shapley_values, \
 
 model = ...
 data = Dataset(...)
-scoring = ClasswiseScorer("accuracy")
+scoring = ("accuracy")
 utility = Utility(model, data, scoring)
 values = compute_classwise_shapley_values(
     utility,
@@ -125,6 +115,10 @@ values = compute_classwise_shapley_values(
     normalize_values=True
 )
 ```
+
+where `ClasswiseScorer` is a special type of scorer only applicable for classification
+problems. In practical applications, the evaluation of this estimator leverages both
+Monte Carlo sampling and permutation Monte Carlo sampling [@castro_polynomial_2009].
 
 ### Owen sampling
 

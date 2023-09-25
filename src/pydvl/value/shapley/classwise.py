@@ -3,8 +3,8 @@ Class-wise Shapley (Schoch et al., 2022)[^1] offers a distinct Shapley framework
 for classification problems. Let $D$ be the dataset, $D_{y_i}$ be the subset of $D$ with
 labels $y_i$, and $D_{-y_i}$ be the complement of $D_{y_i}$ in $D$. The key idea is that
 a sample $(x_i, y_i)$, might enhance the overall performance on $D$, while being 
-detrimental for the performance on $D_{y_i}$. To address this nuanced behavior, the
-authors introduced the estimator
+detrimental for the performance on $D_{y_i}$. The valuation formula of the paper is 
+given by
 
 $$
 v_u(i) = \frac{1}{2^{|D_{-y_i}|}} \sum_{S_{-y_i}} \frac{1}{|D_{y_i}|!}
@@ -14,7 +14,18 @@ $$
 
 where $S_{y_i} \subseteq D_{y_i} \setminus \{i\}$ and $S_{-y_i} \subseteq D_{-y_i}$. In
 other words, the summations are over the powerset of $D_{y_i} \setminus \{i\}$ and 
-$D_{-y_i}$ respectively. The estimator employs a specialized utility function
+$D_{-y_i}$ respectively. In practical applications, the implementation of this estimator
+leverages both Monte Carlo sampling and permutation Monte Carlo sampling. Applying these
+techniques results in the estimator
+
+$$
+v_u(i) = \frac{1}{K} \sum_k \frac{1}{L} \sum_l
+[u(\sigma^{(l)}_{:i} \cup \{i\} | S^{(k)} ) − u( \sigma^{(l)}_{:i} | S^{(k)})],
+$$
+
+with $S^{(1)}, \dots, S^{(K)} \subseteq T_{-y_i}$ and 
+$\sigma^{(1)}, \dots, \sigma^{(L)} \in \Pi(T_{y_i}\setminus\{i\})$. Furthermore, the
+estimator employs a specialized utility function
 
 $$
 u(S_{y_i}|S_{-y_i}) = a_S(D_{y_i}) \exp(a_S(D_{-y_i})),
@@ -23,33 +34,19 @@ $$
 where $S=S_{y_i} \cup S_{-y_i}$ and $a_S(D)$ is the accuracy of the model trained on $S$
 and evaluated on $D$. 
 
-## Monte Carlo sampling + Permutation Monte Carlo sampling
+!!! info "Notes for derivation of test cases."
+    Let $D=\{(1,0),(2,0),(3,0),(4,1)\}$ be the test set and $T=\{(1,0),(2,0),(3,1),(4,1)\}$
+    the train set. This specific dataset is chosen as it allows to solve the model
 
-In practical applications, the evaluation of this estimator leverages both Monte Carlo 
-sampling and permutation Monte Carlo sampling. This results in the estimator
+    $$y = \max(0, \min(1, \text{round}(\beta^T x)))$$
 
-$$
-v_u(i) = \frac{1}{K} \sum_k \frac{1}{L} \sum_l
-[u(\sigma^{(l)}_{:i} \cup \{i\} | S^{(k)} ) − u( \sigma^{(l)}_{:i} | S^{(k)})],
-$$
-
-with $S^{(1)}, \dots, S^{(K)} \subseteq T_{-y_i}$ and 
- $\sigma^{(1)}, \dots, \sigma^{(L)} \in \Pi(T_{y_i}\setminus\{i\})$.
-
-## Derivation of  test case
-
-Let $D=\{(1,0),(2,0),(3,0),(4,1)\}$ be the test set and $T=\{(1,0),(2,0),(3,1),(4,1)\}$
-the train set. This specific dataset is chosen as it allows to solve the model
-
-$$y = \max(0, \min(1, \text{round}(\beta^T x)))$$
-
-in closed form $\beta = \frac{\text{dot}(x, y)}{\text{dot}(x, x)}$. From the closed-form
-solution, the tables for in-class accuracy $a_S(D_{y_i})$ and out-of-class accuracy 
-$a_S(D_{-y_i})$ can be calculated. By using these tables and setting 
-$\{S^{(1)}, \dots, S^{(K)}\} = 2^{T_{-y_i}}$ and 
-$\{\sigma^{(1)}, \dots, \sigma^{(L)}\} = \Pi(T_{y_i}\setminus\{i\})$,
-the Monte Carlo estimator can be evaluated ($2^M$ is the powerset of $M$).
-The details of the derivation are left to the eager reader.
+    in closed form $\beta = \frac{\text{dot}(x, y)}{\text{dot}(x, x)}$. From the closed-form
+    solution, the tables for in-class accuracy $a_S(D_{y_i})$ and out-of-class accuracy 
+    $a_S(D_{-y_i})$ can be calculated. By using these tables and setting 
+    $\{S^{(1)}, \dots, S^{(K)}\} = 2^{T_{-y_i}}$ and 
+    $\{\sigma^{(1)}, \dots, \sigma^{(L)}\} = \Pi(T_{y_i}\setminus\{i\})$,
+    the Monte Carlo estimator can be evaluated ($2^M$ is the powerset of $M$).
+    The details of the derivation are left to the eager reader.
 
 # References
 
@@ -114,6 +111,12 @@ class ClasswiseScorer(Scorer):
     where $f$ and $g$ are continuous, monotonic functions. For a detailed explanation,
     refer to section four of (Schoch et al., 2022)<sup><a href="#schoch_csshapley_2022">
     1</a></sup>.
+
+    !!! info "Surface plot for default values."
+        ![](img/classwise-shapley-discounted-utility-function.svg){:style="float:left"}
+        For $f(x)=x$ and $g(x)=e^x$ the surface plot looks as shown in the left plot
+        where the x-axis refers to in-class accuracy a_S(D_{y_i}) and the y-axis to
+        out-of-class accuracy $a_S(D_{-y_i})$
 
     Args:
         default: Score used when a model cannot be fit, e.g. when too little data is
