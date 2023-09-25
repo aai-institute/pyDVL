@@ -149,7 +149,6 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
                     param,
                 ),
                 (x.to(self.device),),
-                strict=True,
             )
             return self.loss(outputs, y.to(self.device))
 
@@ -404,7 +403,7 @@ def model_hessian_low_rank(
             and corresponding eigenvectors of the Hessian.
     """
     raw_hvp = get_hvp_function(
-        model.model, model.loss, training_data, use_hessian_avg=True
+        model.model, model.loss, training_data, use_hessian_avg=True, reverse_only=False
     )
 
     return lanzcos_low_rank_hessian_approx(
