@@ -171,14 +171,6 @@ def _marginal(
 #     deprecated_in="0.8.0",
 #     remove_in="0.9.0",
 # )
-@deprecated(
-    target=True,
-    deprecated_in="0.7.0",
-    remove_in="0.9.0",
-    args_mapping={"batch_size": None},
-    template_mgs="batch_size is for experimental use and will be removed"
-    "in future versions.",
-)
 def compute_generic_semivalues(
     sampler: PowersetSampler[IndexT],
     u: Utility,
@@ -307,14 +299,6 @@ def beta_coefficient(alpha: float, beta: float) -> SVCoefficient:
     return cast(SVCoefficient, beta_coefficient_w)
 
 
-@deprecated(
-    target=True,
-    deprecated_in="0.7.0",
-    remove_in="0.9.0",
-    args_mapping={"batch_size": None},
-    template_mgs="batch_size is for experimental use and will be removed"
-    "in future versions.",
-)
 def compute_shapley_semivalues(
     u: Utility,
     *,
@@ -367,14 +351,6 @@ def compute_shapley_semivalues(
     )
 
 
-@deprecated(
-    target=True,
-    deprecated_in="0.7.0",
-    remove_in="0.9.0",
-    args_mapping={"batch_size": None},
-    template_mgs="batch_size is for experimental use and will be removed"
-    "in future versions.",
-)
 def compute_banzhaf_semivalues(
     u: Utility,
     *,
@@ -425,14 +401,6 @@ def compute_banzhaf_semivalues(
     )
 
 
-@deprecated(
-    target=True,
-    deprecated_in="0.7.0",
-    remove_in="0.9.0",
-    args_mapping={"batch_size": None},
-    template_mgs="batch_size is for experimental use and will be removed"
-    "in future versions.",
-)
 def compute_beta_shapley_semivalues(
     u: Utility,
     *,
