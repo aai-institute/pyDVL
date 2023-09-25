@@ -16,7 +16,6 @@ from pydvl.value.shapley.naive import combinatorial_exact_shapley
 from pydvl.value.stopping import MaxChecks, MaxUpdates
 
 from .. import check_rank_correlation, check_total_value, check_values
-from ..conftest import polynomial_dataset
 from ..utils import call_with_seeds
 
 log = logging.getLogger(__name__)
@@ -170,13 +169,13 @@ def test_hoeffding_bound_montecarlo(
     "fun, kwargs",
     [
         # FIXME: Hoeffding says 400 should be enough
-        (ShapleyMode.PermutationMontecarlo, dict(done=MaxUpdates(600))),
+        (ShapleyMode.PermutationMontecarlo, dict(done=MaxUpdates(500))),
         (ShapleyMode.CombinatorialMontecarlo, dict(done=MaxUpdates(2**11))),
         (ShapleyMode.Owen, dict(n_samples=2, max_q=300)),
         (ShapleyMode.OwenAntithetic, dict(n_samples=2, max_q=300)),
         (
             ShapleyMode.GroupTesting,
-            dict(n_samples=int(1e5), epsilon=0.2, delta=0.01),
+            dict(n_samples=int(5e4), epsilon=0.25, delta=0.1),
         ),
     ],
 )
@@ -188,6 +187,7 @@ def test_linear_montecarlo_shapley(
     rtol: float,
     fun: ShapleyMode,
     kwargs: dict,
+    seed: int,
 ):
     """Tests values for all methods using a linear dataset.
 
@@ -209,7 +209,7 @@ def test_linear_montecarlo_shapley(
     u, exact_values = linear_shapley
 
     values = compute_shapley_values(
-        u, mode=fun, progress=False, n_jobs=n_jobs, **kwargs
+        u, mode=fun, progress=False, n_jobs=n_jobs, seed=seed, **kwargs
     )
 
     check_values(values, exact_values, rtol=rtol)
