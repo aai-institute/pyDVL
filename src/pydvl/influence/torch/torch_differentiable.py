@@ -566,12 +566,15 @@ def solve_batch_cg(
             and a dictionary containing information about the convergence of CG,
             one entry for each line of the matrix.
     """
+    if len(training_data) == 0:
+        raise ValueError("Training dataloader must not be empty.")
+
     total_grad_xy = torch.empty()
     total_points = 0
 
     for x, y in maybe_progress(training_data, progress, desc="Batch Train Gradients"):
         grad_xy = model.grad(x, y, create_graph=True)
-        if len(total_grad_xy.size()) == 0:
+        if total_grad_xy.nelement() == 0:
             total_grad_xy = torch.zeros_like(grad_xy)
         total_grad_xy += grad_xy * len(x)
         total_points += len(x)
