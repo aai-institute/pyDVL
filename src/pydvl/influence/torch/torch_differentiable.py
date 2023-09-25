@@ -403,7 +403,7 @@ def model_hessian_low_rank(
             and corresponding eigenvectors of the Hessian.
     """
     raw_hvp = get_hvp_function(
-        model.model, model.loss, training_data, use_hessian_avg=True, reverse_only=False
+        model.model, model.loss, training_data, use_hessian_avg=True
     )
 
     return lanzcos_low_rank_hessian_approx(
