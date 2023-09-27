@@ -104,7 +104,7 @@ def plot_ci_array(
     means = np.mean(data, axis=0)
     variances = np.var(data, axis=0, ddof=1)
 
-    dummy: ValuationResult[np.int_, str] = ValuationResult(
+    dummy = ValuationResult[np.int_, np.object_](
         algorithm="dummy",
         values=means,
         variances=variances,

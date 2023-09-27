@@ -92,7 +92,7 @@ import math
 import warnings
 from enum import Enum
 from itertools import islice
-from typing import Collection, List, Optional, Protocol, Tuple, Type, TypeVar, cast
+from typing import Iterable, List, Optional, Protocol, Tuple, Type, cast
 
 import scipy as sp
 from deprecate import deprecated
@@ -143,7 +143,7 @@ MarginalT = Tuple[IndexT, float]
 
 
 def _marginal(
-    u: Utility, coefficient: SVCoefficient, samples: Collection[SampleT]
+    u: Utility, coefficient: SVCoefficient, samples: Iterable[SampleT]
 ) -> Tuple[MarginalT, ...]:
     """Computation of marginal utility. This is a helper function for
     [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
@@ -278,7 +278,7 @@ def compute_generic_semivalues(
                         raise StopIteration
 
                     # Filter out samples for indices that have already converged
-                    filtered_samples = samples
+                    filtered_samples: Iterable = samples
                     if skip_converged and len(done.converged) > 0:
                         # t[0] is the index for the sample
                         filtered_samples = filter(
