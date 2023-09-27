@@ -273,19 +273,17 @@ def compute_generic_semivalues(
             # Ensure that we always have n_submitted_jobs running
             try:
                 while len(pending) < n_submitted_jobs:
-                    samples = dict(islice(sampler_it, batch_size))
+                    samples = tuple(islice(sampler_it, batch_size))
                     if len(samples) == 0:
                         raise StopIteration
 
                     # Filter out samples for indices that have already converged
+                    filtered_samples = samples
                     if skip_converged and len(done.converged) > 0:
-                        filtered_samples = tuple(
-                            (idx, sample)
-                            for idx, sample in samples.items()
-                            if not done.converged[idx]
+                        # t[0] is the index for the sample
+                        filtered_samples = filter(
+                            lambda t: not done.converged[t[0]], samples
                         )
-                    else:
-                        filtered_samples = tuple(samples.items())
 
                     if filtered_samples:
                         pending.add(
