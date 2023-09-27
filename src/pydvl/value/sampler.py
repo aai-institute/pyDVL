@@ -389,6 +389,8 @@ class AntitheticPermutationSampler(PermutationSampler[IndexT]):
 
     This sampler was suggested in (Mitchell et al. 2022)<sup><a
     href="#mitchell_sampling_2022">1</a></sup>
+
+    !!! tip "New in version 0.7.1"
     """
 
     def __iter__(self) -> Iterator[SampleT]:
