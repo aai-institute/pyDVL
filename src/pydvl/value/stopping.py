@@ -288,7 +288,7 @@ def make_criterion(
             return converged()
 
         def __str__(self):
-            return f"{self._name}"
+            return self._name
 
         def completion(self) -> float:
             if completion is None:

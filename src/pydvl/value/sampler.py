@@ -191,7 +191,7 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[IndexT]):
         return len(self._outer_indices)
 
     def __str__(self):
-        return f"{self.__class__.__name__}"
+        return self.__class__.__name__
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._indices}, {self._outer_indices})"
