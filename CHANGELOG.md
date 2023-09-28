@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Using pytest-xdist for faster local tests
+  [PR #440](https://github.com/aai-institute/pyDVL/pull/440)
 - Added `AntitheticPermutationSampler`
   [PR #439](https://github.com/aai-institute/pyDVL/pull/439)
 - Implementation of Data-OOB by @BastienZim

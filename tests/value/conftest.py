@@ -10,6 +10,7 @@ from pydvl.utils import Dataset, SupervisedModel, Utility
 from pydvl.utils.status import Status
 from pydvl.value import ValuationResult
 
+from ..conftest import num_workers
 from . import polynomial
 
 
@@ -122,5 +123,5 @@ def linear_shapley(linear_dataset, scorer, n_jobs):
 
 
 @pytest.fixture(scope="module")
-def parallel_config(num_workers):
-    yield ParallelConfig(backend="joblib", n_cpus_local=num_workers, wait_timeout=0.1)
+def parallel_config():
+    yield ParallelConfig(backend="joblib", n_cpus_local=num_workers(), wait_timeout=0.1)
