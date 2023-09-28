@@ -9,9 +9,10 @@ models, as introduced in (Koh and Liang, 2017)[^1].
     In: Proceedings of the 34th International Conference on Machine Learning, pp. 1885–1894. PMLR.
 """
 import logging
+from abc import ABC, abstractmethod
 from copy import deepcopy
 from enum import Enum
-from typing import Any, Callable, Dict, Generator, Optional, Type
+from typing import Any, Callable, Dict, Generator, Generic, Optional, Type
 
 from ..utils import maybe_progress
 from .inversion import InversionMethod, solve_hvp
@@ -324,3 +325,23 @@ def compute_influences(
         influence_factors,
         progress=progress,
     )
+
+
+class Influence(Generic[TensorType], ABC):
+
+    @property
+    @abstractmethod
+    def num_parameters(self):
+        pass
+
+    @abstractmethod
+    def up_weighting(self, x: TensorType, y: TensorType) -> TensorType:
+        pass
+
+    @abstractmethod
+    def perturbation(self, x: TensorType, y: TensorType) -> TensorType:
+        pass
+
+    @abstractmethod
+    def factors(self, x: TensorType) -> TensorType:
+        pass

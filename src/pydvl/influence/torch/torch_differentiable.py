@@ -14,6 +14,7 @@ influence of a training point on the model.
     In: Journal of Machine Learning Research, Vol. 18, pp. 1–40. JMLR.
 """
 import logging
+from abc import ABC
 from dataclasses import dataclass
 from functools import partial
 from typing import Callable, Generator, List, Optional, Sequence, Tuple
@@ -27,6 +28,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
+from ..general import Influence
 from ..inversion import InversionMethod, InversionRegistry
 from ..twice_differentiable import (
     InverseHvpResult,
@@ -849,3 +851,27 @@ def solve_arnoldi(
             "eigenvectors": low_rank_representation.projections,
         },
     )
+
+
+class TorchInfluence(Influence[torch.Tensor], ABC):
+    def __init__(
+        self,
+        model: nn.Module,
+        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        train_dataloader: DataLoader,
+    ):
+        self.train_dataloader = train_dataloader
+        self.loss = loss
+        self.model = model
+        self._num_parameters = sum([p.numel() for p in model.parameters() if p.requires_grad])
+        self._model_device = next((p.device for p in model.parameters() if p.requires_grad))
+        super().__init__()
+
+    @property
+    def num_parameters(self):
+        return self._num_parameters
+
+    @property
+    def model_device(self):
+        return self._model_device
+
