@@ -24,7 +24,7 @@
   doi = {10.5281/zenodo.8173733},
   url = {https://zenodo.org/record/8173733},
   urldate = {2023-08-27},
-  abstract = {Replication}
+  abstract = {We investigate the results of [1] in the field of data valuation. We repeat their experiments and conclude that the (Monte Carlo) Least Core is sensitive to important characteristics of the ML problem of interest, making it difficult to apply.},
 }
 
 @article{castro_polynomial_2009,
@@ -196,6 +196,21 @@
   abstract = {Distributional data Shapley value (DShapley) has recently been proposed as a principled framework to quantify the contribution of individual datum in machine learning. DShapley develops the founda...},
   eventtitle = {International {{Conference}} on {{Artificial Intelligence}} and {{Statistics}}},
   langid = {english}
+}
+
+@article{mitchell_sampling_2022,
+  title = {Sampling {{Permutations}} for {{Shapley Value Estimation}}},
+  author = {Mitchell, Rory and Cooper, Joshua and Frank, Eibe and Holmes, Geoffrey},
+  date = {2022},
+  journaltitle = {Journal of Machine Learning Research},
+  shortjournal = {J. Mach. Learn. Res.},
+  volume = {23},
+  number = {43},
+  pages = {1--46},
+  issn = {1533-7928},
+  url = {http://jmlr.org/papers/v23/21-0439.html},
+  urldate = {2022-10-23},
+  abstract = {Game-theoretic attribution techniques based on Shapley values are used to interpret black-box machine learning models, but their exact calculation is generally NP-hard, requiring approximation methods for non-trivial models. As the computation of Shapley values can be expressed as a summation over a set of permutations, a common approach is to sample a subset of these permutations for approximation. Unfortunately, standard Monte Carlo sampling methods can exhibit slow convergence, and more sophisticated quasi-Monte Carlo methods have not yet been applied to the space of permutations. To address this, we investigate new approaches based on two classes of approximation methods and compare them empirically. First, we demonstrate quadrature techniques in a RKHS containing functions of permutations, using the Mallows kernel in combination with kernel herding and sequential Bayesian quadrature. The RKHS perspective also leads to quasi-Monte Carlo type error bounds, with a tractable discrepancy measure defined on permutations. Second, we exploit connections between the hypersphere  S d−2 Sd−2  and permutations to create practical algorithms for generating permutation samples with good properties. Experiments show the above techniques provide significant improvements for Shapley value estimates over existing methods, converging to a smaller RMSE in the same number of model evaluations.}
 }
 
 @inproceedings{okhrati_multilinear_2021,

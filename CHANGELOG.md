@@ -6,6 +6,8 @@
   [PR #437](https://github.com/aai-institute/pyDVL/pull/437)
 - Using pytest-xdist for faster local tests
   [PR #440](https://github.com/aai-institute/pyDVL/pull/440)
+- Added `AntitheticPermutationSampler`
+  [PR #439](https://github.com/aai-institute/pyDVL/pull/439)
 - Implementation of Data-OOB by @BastienZim
   [PR #426](https://github.com/aai-institute/pyDVL/pull/426), 
   [PR $431](https://github.com/aai-institute/pyDVL/pull/431)
