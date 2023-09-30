@@ -1,35 +1,49 @@
-"""
+r"""
 Stopping criteria for value computations.
 
-This module provides a basic set of stopping criteria, like [MaxUpdates][pydvl.value.stopping.MaxUpdates],
-[MaxTime][pydvl.value.stopping.MaxTime], or [HistoryDeviation][pydvl.value.stopping.HistoryDeviation] among others.
-These can behave in different ways depending on the context.
-For example, [MaxUpdates][pydvl.value.stopping.MaxUpdates] limits
+This module provides a basic set of stopping criteria, like
+[MaxUpdates][pydvl.value.stopping.MaxUpdates],
+[MaxTime][pydvl.value.stopping.MaxTime], or
+[HistoryDeviation][pydvl.value.stopping.HistoryDeviation] among others. These
+can behave in different ways depending on the context. For example,
+[MaxUpdates][pydvl.value.stopping.MaxUpdates] limits
 the number of updates to values, which depending on the algorithm may mean a
 different number of utility evaluations or imply other computations like solving
 a linear or quadratic program.
 
-## Creating stopping criteria
+Stopping criteria are callables that are evaluated on a
+[ValuationResult][pydvl.value.result.ValuationResult] and return a
+[Status][pydvl.utils.status.Status] object. They can be combined using boolean
+operators.
 
-The easiest way is to declare a function implementing the interface
-[StoppingCriterionCallable][pydvl.value.stopping.StoppingCriterionCallable] and
-wrap it with [make_criterion()][pydvl.value.stopping.make_criterion]. This
-creates a [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] object
-that can be composed with other stopping criteria.
+## How convergence is determined
 
-Alternatively, and in particular if reporting of completion is required, one can
-inherit from this class and implement the abstract methods
-[_check][pydvl.value.stopping.StoppingCriterion._check] and
-[completion][pydvl.value.stopping.StoppingCriterion.completion].
+Most stopping criteria keep track of the convergence of each index separately
+but make global decisions based on the overall convergence of some fraction of
+all indices. For example, if we have a stopping criterion that checks whether
+the standard error of 90% of values is below a threshold, then methods will keep
+updating **all** indices until 90% of them have converged, irrespective of the
+quality of the individual estimates, and *without freezing updates* for indices
+along the way as values individually attain low standard error.
 
-## Composing stopping criteria
+This has some practical implications, because some values do tend to converge
+sooner than others. For example, assume we use the criterion
+`AbsoluteStandardError(0.02) | MaxUpdates(1000)`. Then values close to 0 might
+be marked as "converged" rather quickly because they fulfill the first
+criterion, say after 20 iterations, despite being poor estimates. Because other
+indices take much longer to have low standard error and the criterion is a
+global check, the "converged" ones keep being updated and end up being good
+estimates. In this case, this has been beneficial, but one might not wish for
+converged values to be updated, if one is sure that the criterion is adequate
+for individual values.
 
-Objects of type [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] can
-be composed with the binary operators `&` (*and*), and `|` (*or*), following the
-truth tables of [Status][pydvl.utils.status.Status]. The unary operator `~`
-(*not*) is also supported. See
-[StoppingCriterion][pydvl.value.stopping.StoppingCriterion] for details on how
-these operations affect the behavior of the stopping criteria.
+[Semi-value methods][pydvl.value.semivalues] include a parameter
+`skip_converged` that allows to skip the computation of values that have
+converged. The way to avoid doing this too early is to use a more stringent
+check, e.g. `AbsoluteStandardError(1e-3) | MaxUpdates(1000)`. With
+`skip_converged=True` this check can still take less time than the first one,
+despite requiring more iterations for some indices.
+
 
 ## Choosing a stopping criterion
 
@@ -40,8 +54,10 @@ or a [MaxTime][pydvl.value.stopping.MaxTime] with a
 [AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError]. The former
 will ensure that the computation does not run for too long, while the latter
 will try to achieve results that are stable enough. Note however that if the
-thresholds too strict, one will always end up running until a maximum number of
-iterations or time.
+threshold is too strict, one will always end up running until a maximum number
+of iterations or time. Also keep in mind that different values converge at
+different times, so you might want to use tight thresholds and `skip_converged`
+as described above for semi-values.
 
 
 ??? Example
@@ -67,7 +83,31 @@ iterations or time.
 
 !!! Warning
     Be careful not to reuse the same stopping criterion for different
-    computations. The object has state and will not be reset between calls.
+    computations. The object has state and will not be reset between calls to
+    value computation methods. If you need to reuse the same criterion, you
+    should create a new instance.
+
+
+## Creating stopping criteria
+
+The easiest way is to declare a function implementing the interface
+[StoppingCriterionCallable][pydvl.value.stopping.StoppingCriterionCallable] and
+wrap it with [make_criterion()][pydvl.value.stopping.make_criterion]. This
+creates a [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] object
+that can be composed with other stopping criteria.
+
+Alternatively, and in particular if reporting of completion is required, one can
+inherit from this class and implement the abstract methods `_check` and
+[completion][pydvl.value.stopping.StoppingCriterion.completion].
+
+## Combining stopping criteria
+
+Objects of type [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] can
+be combined with the binary operators `&` (*and*), and `|` (*or*), following the
+truth tables of [Status][pydvl.utils.status.Status]. The unary operator `~`
+(*not*) is also supported. See
+[StoppingCriterion][pydvl.value.stopping.StoppingCriterion] for details on how
+these operations affect the behavior of the stopping criteria.
 
 
 ## References
