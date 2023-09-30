@@ -7,6 +7,7 @@ import pytest
 from pydvl.parallel.config import ParallelConfig
 from pydvl.utils.types import Seed
 from pydvl.value.sampler import (
+    AntitheticPermutationSampler,
     AntitheticSampler,
     DeterministicPermutationSampler,
     DeterministicUniformSampler,
@@ -36,6 +37,7 @@ from .utils import timed
         UniformSampler,
         PermutationSampler,
         AntitheticSampler,
+        AntitheticPermutationSampler,
     ],
 )
 @pytest.mark.parametrize("coefficient", [shapley_coefficient, beta_coefficient(1, 1)])
@@ -112,6 +114,7 @@ def test_shapley_batch_size(
         UniformSampler,
         PermutationSampler,
         AntitheticSampler,
+        AntitheticPermutationSampler,
     ],
 )
 def test_banzhaf(
