@@ -22,7 +22,7 @@ from pydvl.value.semivalues import (
     compute_generic_semivalues,
     shapley_coefficient,
 )
-from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates
+from pydvl.value.stopping import HistoryDeviation, MaxUpdates
 
 from . import check_values
 from .utils import timed
@@ -50,7 +50,7 @@ def test_shapley(
     parallel_config: ParallelConfig,
 ):
     u, exact_values = analytic_shapley
-    criterion = AbsoluteStandardError(1e-4) | MaxUpdates(1000)
+    criterion = HistoryDeviation(50, 1e-3) | MaxUpdates(1000)
     values = compute_generic_semivalues(
         sampler(u.data.indices),
         u,
@@ -83,7 +83,7 @@ def test_shapley_batch_size(
         sampler(u.data.indices, seed=seed),
         u,
         coefficient,
-        done=AbsoluteStandardError(1e-4) | MaxUpdates(1000),
+        done=HistoryDeviation(50, 1e-3) | MaxUpdates(1000),
         skip_converged=True,
         n_jobs=n_jobs,
         batch_size=1,
@@ -95,7 +95,7 @@ def test_shapley_batch_size(
         sampler(u.data.indices, seed=seed),
         u,
         coefficient,
-        done=AbsoluteStandardError(1e-4) | MaxUpdates(1000),
+        done=HistoryDeviation(50, 1e-3) | MaxUpdates(1000),
         skip_converged=True,
         n_jobs=n_jobs,
         batch_size=batch_size,
@@ -128,7 +128,7 @@ def test_banzhaf(
     parallel_config: ParallelConfig,
 ):
     u, exact_values = analytic_banzhaf
-    criterion = AbsoluteStandardError(1e-4, burn_in=32) | MaxUpdates(1000)
+    criterion = HistoryDeviation(50, 1e-3) | MaxUpdates(1000)
     values = compute_generic_semivalues(
         sampler(u.data.indices),
         u,
