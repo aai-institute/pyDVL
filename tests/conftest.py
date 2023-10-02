@@ -82,7 +82,9 @@ def pytorch_seed(seed):
 
 
 @pytest.fixture(scope="session")
-def do_not_start_memcache(request):
+def do_not_start_memcache(request, worker_id):
+    if worker_id != "master":
+        return True
     return request.config.getoption("--do-not-start-memcache")
 
 
@@ -130,6 +132,7 @@ def memcached_service(docker_ip, docker_services, do_not_start_memcache):
             pause=0.5,
             check=lambda: is_memcache_responsive(hostname, port),
         )
+
         return hostname, port
 
 
