@@ -181,7 +181,7 @@ for hiding the output only.
 
 It is important to leave a warning at the top of the document to avoid confusion.
 Examples for hidden imports and plots are available in the notebooks, e.g. in
-[Shapley for data valuation](https://aai-institute.github.io/pyDVL/examples/shapley_basic_spotify.ipynb).
+*notebooks/shapley_basic_spotify.ipynb*.
 
 ### Plots in Notebooks
 If you add a plot to a notebook, which should also render nicely in browser
