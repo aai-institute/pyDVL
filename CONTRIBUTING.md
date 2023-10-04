@@ -170,12 +170,29 @@ Or:
 ]
 ```
 
-To only hide the input 
+To only hide the input and
+
+```yaml
+"tags": [
+  "hide-output"
+]
+```
+for hiding the output only.
 
 It is important to leave a warning at the top of the document to avoid confusion.
 Examples for hidden imports and plots are available in the notebooks, e.g. in
 [Shapley for data valuation](https://aai-institute.github.io/pyDVL/examples/shapley_basic_spotify.ipynb).
 
+### Plots in Notebooks
+If you add a plot to a notebook, which should also render nicely in browser
+dark mode, add the tag *invertible-output*, i.e.
+
+```yaml
+"tags": [
+  "invertible-output"
+]
+```
+This applies a simple CSS-filter to the output image of the cell.
 
 ## Documentation
 
