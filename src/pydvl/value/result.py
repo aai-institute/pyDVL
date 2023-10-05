@@ -784,13 +784,17 @@ class ValuationResult(
             indices = np.arange(n_samples, dtype=np.int_)
         else:
             indices = np.array(indices, dtype=np.int_)
+
+        if data_names is None:
+            data_names = np.array(indices)
+        else:
+            data_names = np.array(data_names)
+
         return cls(
             algorithm=algorithm,
             status=Status.Pending,
             indices=indices,
-            data_names=np.array(data_names, dtype=object)
-            if data_names is not None
-            else np.empty_like(indices, dtype=object),
+            data_names=data_names,
             values=np.zeros(len(indices)),
             variances=np.zeros(len(indices)),
             counts=np.zeros(len(indices), dtype=np.int_),

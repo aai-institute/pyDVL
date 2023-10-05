@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix initialization of `data_names` in `ValuationResult.zeros()`
+  [PR #443](https://github.com/aai-institute/pyDVL/pull/443)
 - Using pytest-xdist for faster local tests
   [PR #440](https://github.com/aai-institute/pyDVL/pull/440)
 - Added `AntitheticPermutationSampler`
