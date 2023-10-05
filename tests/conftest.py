@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import functools
+import logging
 import os
 from collections import defaultdict
 from dataclasses import asdict
@@ -31,10 +34,10 @@ def is_memcache_responsive(hostname, port):
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--do-not-start-memcache",
+        "--memcached-service",
         action="store_true",
-        help="When this flag is used, memcache won't be started by a fixture"
-        " and is instead expected to be already running",
+        default="localhost:11211",
+        help="Address of memcached server to use for tests.",
     )
     group = parser.getgroup("tolerate")
     group.addoption(
@@ -82,67 +85,17 @@ def pytorch_seed(seed):
 
 
 @pytest.fixture(scope="session")
-def do_not_start_memcache(request, worker_id):
-    if worker_id != "master":
-        return True
-    return request.config.getoption("--do-not-start-memcache")
-
-
-@pytest.fixture(scope="session")
-def docker_services(
-    docker_compose_command,
-    docker_compose_file,
-    docker_compose_project_name,
-    docker_setup,
-    docker_cleanup,
-    do_not_start_memcache,
-):
-    """Start all services from a docker compose file (`docker-compose up`).
-    After test are finished, shutdown all services (`docker-compose down`)."""
-    from pytest_docker.plugin import get_docker_services
-
-    if do_not_start_memcache:
-        yield
-    else:
-        with get_docker_services(
-            docker_compose_command,
-            docker_compose_file,
-            docker_compose_project_name,
-            docker_setup,
-            docker_cleanup,
-        ) as docker_service:
-            yield docker_service
-
-
-@pytest.fixture(scope="session")
-def memcached_service(docker_ip, docker_services, do_not_start_memcache):
-    """Ensure that memcached service is up and responsive.
-
-    If `do_not_start_memcache` is True then we just return the default values
-    'localhost', 11211
-    """
-    if do_not_start_memcache:
-        return "localhost", 11211
-    else:
-        # `port_for` takes a container port and returns the corresponding host port
-        port = docker_services.port_for("memcached", 11211)
-        hostname, port = docker_ip, port
-        docker_services.wait_until_responsive(
-            timeout=30.0,
-            pause=0.5,
-            check=lambda: is_memcache_responsive(hostname, port),
-        )
-
-        return hostname, port
+def memcached_service(request) -> tuple[str, int]:
+    opt = request.config.getoption("--memcached-service", default="localhost:11211")
+    host, port = opt.split(":")
+    return host, int(port)
 
 
 @pytest.fixture(scope="function")
 def memcache_client_config(memcached_service) -> MemcachedClientConfig:
-    client_config = MemcachedClientConfig(
+    return MemcachedClientConfig(
         server=memcached_service, connect_timeout=1.0, timeout=1, no_delay=True
     )
-    Client(**asdict(client_config)).flush_all()
-    return client_config
 
 
 @pytest.fixture(scope="function")

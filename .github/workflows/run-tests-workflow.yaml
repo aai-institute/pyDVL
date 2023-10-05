@@ -31,6 +31,8 @@ jobs:
       with:
         key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini', 'requirements.txt') }}
         path: .tox
+    - name: Set up memcached
+      uses: niden/actions-memcached@v7
     - name: Test Base Modules
       run: tox
       if: inputs.tests_to_run == 'base'
