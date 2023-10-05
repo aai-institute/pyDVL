@@ -34,7 +34,7 @@ jobs:
     - name: Set up memcached
       uses: niden/actions-memcached@v7
     - name: Test Base Modules
-      run: tox
+      run: tox -e base
       if: inputs.tests_to_run == 'base'
     - name: Test Modules that rely on PyTorch
       run: tox -e torch
