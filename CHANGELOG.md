@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- No longer using docker within tests to start a memcached server
+  [PR #444](https://github.com/aai-institute/pyDVL/pull/444)
 - Using pytest-xdist for faster local tests
   [PR #440](https://github.com/aai-institute/pyDVL/pull/440)
 - Added `AntitheticPermutationSampler`
