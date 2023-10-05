@@ -107,11 +107,9 @@ def memcached_client(memcache_client_config) -> Tuple[Client, MemcachedClientCon
         c.flush_all()
         return c, memcache_client_config
     except Exception as e:
-        print(
-            f"Could not connect to memcached server "
-            f'{memcache_client_config["server"]}: {e}'
-        )
-        raise e
+        raise ConnectionError(
+            f"Could not connect to memcached at {memcache_client_config.server}"
+        ) from e
 
 
 @pytest.fixture(scope="function")
@@ -355,6 +353,14 @@ def pytest_configure(config):
         "Use to test (ε,δ)-approximations.",
     )
     config._tolerate_session = TolerateErrorsSession(config)
+
+    worker_id = os.environ.get("PYTEST_XDIST_WORKER")
+    if worker_id is not None:
+        logging.basicConfig(
+            format="%(asctime)s %(levelname)s %(message)s",
+            filename=f"tests_{worker_id}.log",
+            level=logging.DEBUG,
+        )
 
 
 def pytest_runtest_setup(item: pytest.Item):
