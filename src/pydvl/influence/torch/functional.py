@@ -91,7 +91,7 @@ def batch_hvp_gen(
 
     for inputs, targets in iter(data_loader):
         batch_loss = batch_loss_function(model, loss, inputs, targets)
-        model_params = dict(model.named_parameters())
+        model_params = {k: p for k, p in model.named_parameters() if p.requires_grad}
 
         def batch_hvp(vec: torch.Tensor):
             return flatten_tensors_to_vector(
@@ -166,9 +166,7 @@ def batch_loss_function(
     """
 
     def batch_loss(params: Dict[str, torch.Tensor]):
-        outputs = functional_call(
-            model, params, (to_model_device(x, model),), strict=True
-        )
+        outputs = functional_call(model, params, (to_model_device(x, model),))
         return loss(outputs, y)
 
     return batch_loss
@@ -209,7 +207,9 @@ def get_hvp_function(
     """
 
     params = {
-        k: p if track_gradients else p.detach() for k, p in model.named_parameters()
+        k: p if track_gradients else p.detach()
+        for k, p in model.named_parameters()
+        if p.requires_grad
     }
 
     def hvp_function(vec: torch.Tensor) -> torch.Tensor:
