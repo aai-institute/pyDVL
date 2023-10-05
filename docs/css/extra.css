@@ -107,11 +107,14 @@ a.autorefs-external:hover::after {
   color: black;
 }
 
-
 body[data-md-color-scheme="default"] .invertible img {
 }
 
 body[data-md-color-scheme="slate"] .invertible img {
+    filter: invert(100%) hue-rotate(180deg);
+}
+
+body[data-md-color-scheme="slate"] .celltag_invertible-output img {
     filter: invert(100%) hue-rotate(180deg);
 }
 
