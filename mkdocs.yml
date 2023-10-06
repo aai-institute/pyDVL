@@ -194,6 +194,7 @@ nav:
     - Shapley Values: value/shapley.md
     - Semi-values: value/semi-values.md
     - The core: value/the-core.md
+    - Classwise Shapley: value/classwise-shapley.md
     - Examples:
       - Shapley values: examples/shapley_basic_spotify.ipynb
       - KNN Shapley: examples/shapley_knn_flowers.ipynb

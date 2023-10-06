@@ -26,7 +26,7 @@ $$
 with $S^{(1)}, \dots, S^{(K)} \subseteq T_{-y_i}$ and 
 $\sigma^{(1)}, \dots, \sigma^{(L)} \in \Pi(T_{y_i}\setminus\{i\})$.
 
-!!! info "Notes for derivation of test cases."
+??? info "Notes for derivation of test cases."
     Let $D=\{(1,0),(2,0),(3,0),(4,1)\}$ be the test set and $T=\{(1,0),(2,0),(3,1),(4,1)\}$
     the train set. This specific dataset is chosen as it allows to solve the model
 
@@ -104,16 +104,14 @@ class ClasswiseScorer(Scorer):
     refer to section four of (Schoch et al., 2022)<sup><a href="#schoch_csshapley_2022">
     1</a></sup>.
 
-    !!! info "Surface plot for default values."
-        ![Surface plot](img/classwise-shapley-discounted-utility-function.svg)
-
-        For $f(x)=x$ and $g(x)=e^x$ the surface plot looks as shown in the left plot
-        where the x-axis refers to in-class accuracy $a_S(D_{y_i})$ and the y-axis to
-        out-of-class accuracy $a_S(D_{-y_i})$. The white lines represent the contour
-        lines annotated with the gradients.
-
+    !!! warning Multi-class support
+        Metrics must support multiple class labels if you intend to apply them to a
+        multi-class problem. For instance, the metric 'accuracy' supports multiple
+        classes, but the metric 'f1' does not. For a two-class classification problem,
+        using 'f1_weighted' is essentially equivalent to using 'accuracy'.
 
     Args:
+        scoring: Name of the scoring function. See [Scorer][pydvl.utils.scorer.Scorer].
         default: Score used when a model cannot be fit, e.g. when too little data is
             passed, or errors arise.
         range: Numerical range of the score function. Some Monte Carlo methods can
@@ -138,7 +136,7 @@ class ClasswiseScorer(Scorer):
         self,
         scoring: str = "accuracy",
         default: float = 0.0,
-        range: Tuple[float, float] = (0, np.inf),
+        range: Tuple[float, float] = (0, 1),
         in_class_discount_fn: Callable[[float], float] = lambda x: x,
         out_of_class_discount_fn: Callable[[float], float] = np.exp,
         initial_label: Optional[int] = None,
