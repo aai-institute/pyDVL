@@ -1,10 +1,10 @@
 r"""
-Class-wise Shapley (Schoch et al., 2022)[^1] offers a distinct Shapley framework tailored
-for classification problems. Let $D$ be the dataset, $D_{y_i}$ be the subset of $D$ with
-labels $y_i$, and $D_{-y_i}$ be the complement of $D_{y_i}$ in $D$. The key idea is that
-a sample $(x_i, y_i)$, might enhance the overall performance on $D$, while being 
-detrimental for the performance on $D_{y_i}$. The valuation formula of the paper is 
-given by
+Class-wise Shapley (Schoch et al., 2022)[^1] offers a Shapley framework tailored
+for classification problems. Let $D$ be a dataset, $D_{y_i}$ be the subset of
+$D$ with labels $y_i$, and $D_{-y_i}$ be the complement of $D_{y_i}$ in $D$. The
+key idea is that a sample $(x_i, y_i)$, might enhance the overall performance on
+$D$, while being detrimental for the performance on $D_{y_i}$. The Class-wise
+value is defined as:
 
 $$
 v_u(i) = \frac{1}{2^{|D_{-y_i}|}} \sum_{S_{-y_i}} \frac{1}{|D_{y_i}|!}
@@ -12,21 +12,24 @@ v_u(i) = \frac{1}{2^{|D_{-y_i}|}} \sum_{S_{-y_i}} \frac{1}{|D_{y_i}|!}
 [u( S_{y_i} \cup \{i\} | S_{-y_i} ) − u( S_{y_i} | S_{-y_i})],
 $$
 
-where $S_{y_i} \subseteq D_{y_i} \setminus \{i\}$ and $S_{-y_i} \subseteq D_{-y_i}$. In
-other words, the summations are over the powerset of $D_{y_i} \setminus \{i\}$ and 
-$D_{-y_i}$ respectively. In practical applications, the implementation of this estimator
-leverages both Monte Carlo sampling and permutation Monte Carlo sampling. Applying these
-techniques results in the estimator
+where $S_{y_i} \subseteq D_{y_i} \setminus \{i\}$ and $S_{-y_i} \subseteq
+D_{-y_i}$. In practice, this quantity is estimated using Monte Carlo sampling of
+the powerset and the set of index permutations. Applying these techniques
+results in the estimator
 
 $$
 v_u(i) = \frac{1}{K} \sum_k \frac{1}{L} \sum_l
 [u(\sigma^{(l)}_{:i} \cup \{i\} | S^{(k)} ) − u( \sigma^{(l)}_{:i} | S^{(k)})],
 $$
 
-with $S^{(1)}, \dots, S^{(K)} \subseteq T_{-y_i}$ and 
-$\sigma^{(1)}, \dots, \sigma^{(L)} \in \Pi(T_{y_i}\setminus\{i\})$.
+with $S^{(1)}, \dots, S^{(K)} \subseteq T_{-y_i},$ $\sigma^{(1)}, \dots,
+\sigma^{(L)} \in \Pi(T_{y_i}\setminus\{i\}),$ and $\sigma^{(l)}_{:i}$ denoting
+the set of indices in permutation $\sigma^{(l)}$ before the position where $i$
+appears. The sets $T_{y_i}$ and $T_{-y_i}$ are the training sets for the labels
+$y_i$ and $-y_i$, respectively.
 
-??? info "Notes for derivation of test cases."
+??? info "Notes for derivation of test cases"
+    The unit tests include the following manually constructed data:
     Let $D=\{(1,0),(2,0),(3,0),(4,1)\}$ be the test set and $T=\{(1,0),(2,0),(3,1),(4,1)\}$
     the train set. This specific dataset is chosen as it allows to solve the model
 
@@ -85,30 +88,29 @@ __all__ = ["ClasswiseScorer", "compute_classwise_shapley_values"]
 
 
 class ClasswiseScorer(Scorer):
-    r"""A Scorer designed for evaluation in classification problems. Its value is
-    derived from both in-class and out-of-class scores (Schoch et al., 2022)
-    <sup><a href="#schoch_csshapley_2022">1</a></sup>. Let $S$ represent the training
-    set and $D$ be the test set. For each label $c$, the test set $D$ is factorized into
-    two disjoint sets: $D_c$ for in-class instances and $D_{-c}$ for out-of-class
-    instances. The score function itself than estimates the in-class metric, adjusted by
-    the discounted out-of-class metric. In essence, the score function for each element
-    of label $c$ is conditioned on the out-of-class instances (or a subset thereof).
-    Both the in-class and out-of-class metrics are determined by an inner score function
-    $a_S$ trained on the train set $S$. The expression for the outer score function is
+    r"""A Scorer designed for evaluation in classification problems. Its value
+    is computed from an in-class and an out-of-class score (Schoch et al., 2022)
+    <sup><a href="#schoch_csshapley_2022">1</a></sup>. Let $S$ represent the
+    training set and $D$ be the valuation set. For each label $c$, $D$ is
+    factorized into two disjoint sets: $D_c$ for in-class instances and $D_{-c}$
+    for out-of-class instances. The score combines an in-class metric of
+    performance, adjusted by a discounted out-of-class metric. These "inner"
+    metrics must be provided or default to accuracy. They are combined into:
 
-    $${
-    u(S_{y_i}) = f(a_S(D_{y_i}))) g(a_S(D_{-y_i}))),
-    }$$
+    $$
+    u(S_{y_i}) = f(a_S(D_{y_i}))\ g(a_S(D_{-y_i})),
+    $$
 
-    where $f$ and $g$ are continuous, monotonic functions. For a detailed explanation,
-    refer to section four of (Schoch et al., 2022)<sup><a href="#schoch_csshapley_2022">
-    1</a></sup>.
+    where $f$ and $g$ are continuous, monotonic functions. For a detailed
+    explanation, refer to section four of (Schoch et al., 2022)<sup><a
+    href="#schoch_csshapley_2022"> 1</a></sup>.
 
     !!! warning Multi-class support
-        Metrics must support multiple class labels if you intend to apply them to a
-        multi-class problem. For instance, the metric 'accuracy' supports multiple
-        classes, but the metric 'f1' does not. For a two-class classification problem,
-        using 'f1_weighted' is essentially equivalent to using 'accuracy'.
+        Metrics must support multiple class labels if you intend to apply them
+        to a multi-class problem. For instance, the metric 'accuracy' supports
+        multiple classes, but the metric 'f1' does not. For a two-class
+        classification problem, using 'f1_weighted' is essentially equivalent to
+        using 'accuracy'.
 
     Args:
         scoring: Name of the scoring function. See [Scorer][pydvl.utils.scorer.Scorer].
@@ -180,12 +182,12 @@ class ClasswiseScorer(Scorer):
         rescale_scores: bool = True,
     ) -> Tuple[float, float]:
         r"""
-        Computes in-class and out-of-class scores using the provided scoring function
-        $s$. The result can be expressed as
+        Computes in-class and out-of-class scores using the provided inner
+        scoring function. The result is
 
-        $${
+        $$
         a_S(D=\{(x_1, y_1), \dots, (x_K, y_K)\}) = \frac{1}{N} \sum_k s(y(x_k), y_k).
-        }$$
+        $$
 
         In this context, for label $c$ calculations are executed twice: once for $D_c$
         and once for $D_{-c}$ to determine the in-class and out-of-class scores,
@@ -312,9 +314,7 @@ def compute_classwise_shapley_values(
     pbar = tqdm(disable=not progress, position=0, total=100, unit="%")
     algorithm = "classwise_shapley"
     accumulated_result = ValuationResult.zeros(
-        algorithm=algorithm,
-        indices=u.data.indices,
-        data_names=u.data.data_names,
+        algorithm=algorithm, indices=u.data.indices, data_names=u.data.data_names
     )
     terminate_exec = False
     seed_sequence = ensure_seed_sequence(seed)
@@ -396,9 +396,7 @@ def _permutation_montecarlo_classwise_shapley_one_step(
         done_sample_complements = MaxChecks(1)
 
     result = ValuationResult.zeros(
-        algorithm=algorithm_name,
-        indices=u.data.indices,
-        data_names=u.data.data_names,
+        algorithm=algorithm_name, indices=u.data.indices, data_names=u.data.data_names
     )
     rng = np.random.default_rng(seed)
     x_train, y_train = u.data.get_training_data(u.data.indices)
@@ -409,9 +407,7 @@ def _permutation_montecarlo_classwise_shapley_one_step(
     for label in unique_labels:
         u.scorer.label = label
         class_indices_set, class_complement_indices_set = _split_indices_by_label(
-            u.data.indices,
-            y_train,
-            label,
+            u.data.indices, y_train, label
         )
         _, complement_y_train = u.data.get_training_data(class_complement_indices_set)
         indices_permutation = rng.permutation(class_indices_set)
@@ -440,8 +436,7 @@ def _permutation_montecarlo_classwise_shapley_one_step(
 
 
 def _normalize_classwise_shapley_values(
-    result: ValuationResult,
-    u: Utility,
+    result: ValuationResult, u: Utility
 ) -> ValuationResult:
     r"""
     Normalize a valuation result specific to classwise Shapley.
@@ -525,9 +520,7 @@ def _permutation_montecarlo_shapley_rollout(
         )
 
     result = ValuationResult.zeros(
-        algorithm=algorithm_name,
-        indices=u.data.indices,
-        data_names=u.data.data_names,
+        algorithm=algorithm_name, indices=u.data.indices, data_names=u.data.data_names
     )
 
     prev_score = (
