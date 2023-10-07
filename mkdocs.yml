@@ -53,6 +53,8 @@ plugins:
           - hide
         remove_input_tags:
           - hide-input
+        remove_all_outputs_tags:
+          - hide-output
       binder: true
       binder_service_name: "gh"
       binder_branch: "develop"

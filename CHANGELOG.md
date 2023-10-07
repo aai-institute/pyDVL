@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- No longer using docker within tests to start a memcached server
+  [PR #444](https://github.com/aai-institute/pyDVL/pull/444)
+- Improvements and fixes to notebooks
+  [PR #436](https://github.com/aai-institute/pyDVL/pull/436)
+- Fix initialization of `data_names` in `ValuationResult.zeros()`
+  [PR #443](https://github.com/aai-institute/pyDVL/pull/443)
+- Using pytest-xdist for faster local tests
+  [PR #440](https://github.com/aai-institute/pyDVL/pull/440)
+- Added `AntitheticPermutationSampler`
+  [PR #439](https://github.com/aai-institute/pyDVL/pull/439)
 - Implementation of Data-OOB by @BastienZim
   [PR #426](https://github.com/aai-institute/pyDVL/pull/426), 
   [PR $431](https://github.com/aai-institute/pyDVL/pull/431)
