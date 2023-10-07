@@ -4,6 +4,10 @@
 
 - Faster semi-value computation with per-index check of stopping criteria (optional)
   [PR #437](https://github.com/aai-institute/pyDVL/pull/437)
+- Improvements and fixes to notebooks
+  [PR #436](https://github.com/aai-institute/pyDVL/pull/436)
+- Fix initialization of `data_names` in `ValuationResult.zeros()`
+  [PR #443](https://github.com/aai-institute/pyDVL/pull/443)
 - Using pytest-xdist for faster local tests
   [PR #440](https://github.com/aai-institute/pyDVL/pull/440)
 - Added `AntitheticPermutationSampler`
