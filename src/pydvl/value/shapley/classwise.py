@@ -55,8 +55,8 @@ $y_i$ and $-y_i$, respectively.
 import logging
 import numbers
 from concurrent.futures import FIRST_COMPLETED, Future, wait
-from copy import copy, deepcopy
-from typing import Callable, Optional, Set, Tuple, cast
+from copy import copy
+from typing import Callable, Optional, Set, Tuple, Union, cast
 
 import numpy as np
 from numpy.random import SeedSequence
@@ -72,6 +72,7 @@ from pydvl.parallel import (
 from pydvl.utils import (
     Dataset,
     Scorer,
+    ScorerCallable,
     Seed,
     SupervisedModel,
     Utility,
@@ -89,13 +90,14 @@ __all__ = ["ClasswiseScorer", "compute_classwise_shapley_values"]
 
 class ClasswiseScorer(Scorer):
     r"""A Scorer designed for evaluation in classification problems. Its value
-    is computed from an in-class and an out-of-class score (Schoch et al., 2022)
-    <sup><a href="#schoch_csshapley_2022">1</a></sup>. Let $S$ represent the
+    is computed from an in-class and an out-of-class "inner score" (Schoch et
+    al., 2022) <sup><a href="#schoch_csshapley_2022">1</a></sup>. Let $S$ be the
     training set and $D$ be the valuation set. For each label $c$, $D$ is
     factorized into two disjoint sets: $D_c$ for in-class instances and $D_{-c}$
     for out-of-class instances. The score combines an in-class metric of
-    performance, adjusted by a discounted out-of-class metric. These "inner"
-    metrics must be provided or default to accuracy. They are combined into:
+    performance, adjusted by a discounted out-of-class metric. These inner
+    scores must be provided upon construction or default to accuracy. They are
+    combined into:
 
     $$
     u(S_{y_i}) = f(a_S(D_{y_i}))\ g(a_S(D_{-y_i})),
@@ -113,9 +115,10 @@ class ClasswiseScorer(Scorer):
         using 'accuracy'.
 
     Args:
-        scoring: Name of the scoring function. See [Scorer][pydvl.utils.scorer.Scorer].
-        default: Score used when a model cannot be fit, e.g. when too little data is
-            passed, or errors arise.
+        scoring: Name of the scoring function or a callable that can be passed
+            to [Scorer][pydvl.utils.score.Scorer].
+        default: Score to use when a model fails to provide a number, e.g. when
+            too little was used to train it, or errors arise.
         range: Numerical range of the score function. Some Monte Carlo methods can
             use this to estimate the number of samples required for a certain quality of
             approximation. If not provided, it can be read from the `scoring` object
@@ -125,10 +128,8 @@ class ClasswiseScorer(Scorer):
             discount the in-class score.
         out_of_class_discount_fn: Continuous, monotonic increasing function used to
             discount the out-of-class score.
-        initial_label: Set initial label (Doesn't require to set parameter `label`
-            on [ClasswiseScorer][pydvl.value.shapley.classwise.ClasswiseScorer] in first
-            iteration)
-        name: Name of the scorer. If not provided, the name of the passed
+        initial_label: Set initial label (for the first iteration)
+        name: Name of the scorer. If not provided, the name of the inner scoring
             function will be prefixed by 'classwise '.
 
     !!! tip "New in version 0.7.1"
@@ -136,7 +137,7 @@ class ClasswiseScorer(Scorer):
 
     def __init__(
         self,
-        scoring: str = "accuracy",
+        scoring: Union[str, ScorerCallable] = "accuracy",
         default: float = 0.0,
         range: Tuple[float, float] = (0, 1),
         in_class_discount_fn: Callable[[float], float] = lambda x: x,
@@ -148,10 +149,10 @@ class ClasswiseScorer(Scorer):
         disc_score_out_of_class = out_of_class_discount_fn(range[1])
         transformed_range = (0, disc_score_in_class * disc_score_out_of_class)
         super().__init__(
-            "accuracy",
+            scoring=scoring,
             range=transformed_range,
             default=default,
-            name=name or f"classwise {scoring}",
+            name=name or f"classwise {str(scoring)}",
         )
         self._in_class_discount_fn = in_class_discount_fn
         self._out_of_class_discount_fn = out_of_class_discount_fn
@@ -247,9 +248,9 @@ def compute_classwise_shapley_values(
 ) -> ValuationResult:
     r"""
     Computes an approximate Class-wise Shapley value by sampling independent
-    permutations of the index set for each label and unifying it with index sets sampled
-    from the complement (with respect to the currently evaluated label), approximating
-    the sum:
+    permutations of the index set for each label and index sets sampled from the
+    powerset of the complement (with respect to the currently evaluated label),
+    approximating the sum:
 
     $$
     v_u(i) = \frac{1}{K} \sum_k \frac{1}{L} \sum_l
