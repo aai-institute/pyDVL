@@ -24,7 +24,7 @@ def test_stopping_criterion():
 
     StoppingCriterion.__abstractmethods__ = set()
     done = StoppingCriterion()
-    assert done.name == "StoppingCriterion"
+    assert str(done) == "StoppingCriterion"
     assert done.modify_result is True
 
 
