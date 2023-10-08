@@ -122,7 +122,8 @@ model, and used to prune the training set for a neural network. Random values
 serve as a baseline. The following plot shows valuation-set accuracy of the
 network on the y-axis, and the number of samples removed on the x-axis.
 
-![Accuracy of transferred values from logistic regression to an MLP](img/classwise-shapley-weighted-accuracy-drop-logistic-regression-to-mlp.svg)
+![Accuracy after sample removal using values transferred from logistic regression
+to an MLP](img/classwise-shapley-weighted-accuracy-drop-logistic-regression-to-mlp.svg)
 
 Samples are removed from high to low valuation order and hence we expect a steep
 decrease in the curve. CWS is competitive with the compared methods. Especially
@@ -138,6 +139,7 @@ This section takes a look at the distribution of CWS values for the above
 datasets. In the histogram plots one can see that it is slightly biased and
 often skewed.
 
-![Distribution of values computed using logistic regression](img/classwise-shapley-example-densities.svg)
+![Distribution of values computed using logistic
+regression](img/classwise-shapley-example-densities.svg)
 
 The curves are an approximation of the density using KDE. 
