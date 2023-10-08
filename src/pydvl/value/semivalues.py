@@ -278,11 +278,16 @@ def compute_generic_semivalues(
                         raise StopIteration
 
                     # Filter out samples for indices that have already converged
-                    filtered_samples: Iterable = samples
+                    filtered_samples = samples
                     if skip_converged and len(done.converged) > 0:
-                        # t[0] is the index for the sample
-                        filtered_samples = filter(
-                            lambda t: not done.converged[t[0]], samples
+                        # cloudpickle can't pickle this on python 3.8:
+                        # filtered_samples = filter(
+                        #     lambda t: not done.converged[t[0]], samples
+                        # )
+                        filtered_samples = tuple(
+                            (idx, sample)
+                            for idx, sample in samples
+                            if not done.converged[idx]
                         )
 
                     if filtered_samples:
