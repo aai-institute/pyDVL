@@ -95,35 +95,32 @@ illustrate the contour lines, annotated with their respective gradients.
 
 ## Evaluation
 
-Here is brief evaluation of the method using nine different datasets. The
-following table lists all used datasets with their number of features, classes
-and OpenML ID:
+We evaluate the method on the nine datasets used in [@schoch_csshapley_2022],
+using the same pre-processing. For images, PCA is used to reduce  down to 32 the
+number of features found by a `Resnet18` model. For more details on the
+pre-processing steps, please refer to the paper.
 
-| Dataset        | Data Type | Classes | Input Dims | OpenML ID |
-|----------------|-----------|---------|------------|-----------|
-| Diabetes       | Tabular   | 2       | 8          | 37        |
-| Click          | Tabular   | 2       | 11         | 1216      |
-| CPU            | Tabular   | 2       | 21         | 197       |
-| Covertype      | Tabular   | 7       | 54         | 1596      |
-| Phoneme        | Tabular   | 2       | 5          | 1489      |
-| FMNIST         | Image     | 2       | 32         | 40996     |
-| CIFAR10        | Image     | 2       | 32         | 40927     |
-| MNIST (binary) | Image     | 2       | 32         | 554       |
-| MNIST (multi)  | Image     | 10      | 32         | 554       |
+??? info "Datasets used for evaluation"
+    | Dataset        | Data Type | Classes | Input Dims | OpenML ID |
+    |----------------|-----------|---------|------------|-----------|
+    | Diabetes       | Tabular   | 2       | 8          | 37        |
+    | Click          | Tabular   | 2       | 11         | 1216      |
+    | CPU            | Tabular   | 2       | 21         | 197       |
+    | Covertype      | Tabular   | 7       | 54         | 1596      |
+    | Phoneme        | Tabular   | 2       | 5          | 1489      |
+    | FMNIST         | Image     | 2       | 32         | 40996     |
+    | CIFAR10        | Image     | 2       | 32         | 40927     |
+    | MNIST (binary) | Image     | 2       | 32         | 554       |
+    | MNIST (multi)  | Image     | 10      | 32         | 554       |
 
-The table is taken from [@schoch_csshapley_2022] and the same pre-processing
-steps are applied. For images, Principal Component Analysis (PCA) is used to
-obtain 32 features after `resnet18` extracts relevant features of the images.
-For more details on the pre-processing steps, please refer to the paper.
 
-### Comparison to the state-of-the-art
+### Value transfer
 
-We compare CWS to TMCS, Beta Shapley (Beta) and LOO on a sample removal task
-with value transfer to another model. Random values serve as a baseline.
-Logistic regression is used for the computation of values, and they are used to
-prune the training set for a neural network. The following plot shows
-valuation-set accuracy of the network on the y-axis, and the number of samples
-removed on the x-axis.
+We compare CWS to TMCS, Beta Shapley and LOO on a sample removal task with value
+transfer to another model. Values are computed using a logistic regression
+model, and used to prune the training set for a neural network. Random values
+serve as a baseline. The following plot shows valuation-set accuracy of the
+network on the y-axis, and the number of samples removed on the x-axis.
 
 ![Accuracy of transferred values from logistic regression to an MLP](img/classwise-shapley-weighted-accuracy-drop-logistic-regression-to-mlp.svg)
 
