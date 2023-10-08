@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- New method: Class-wise Shapley values
+  [PR #338](https://github.com/aai-institute/pyDVL/pull/338)
 - No longer using docker within tests to start a memcached server
   [PR #444](https://github.com/aai-institute/pyDVL/pull/444)
 - Improvements and fixes to notebooks
