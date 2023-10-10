@@ -1,4 +1,5 @@
 *[CSP]: Constraint Satisfaction Problem
+*[CV]: Coefficient of Variation
 *[CWS]: Class-wise Shapley
 *[DUL]: Data Utility Learning
 *[GT]: Group Testing

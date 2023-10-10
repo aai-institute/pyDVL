@@ -91,9 +91,9 @@ and $g$ for an exploration with different base scores.
 The level curves for $f(x)=x$ and $g(x)=e^x$ are depicted below. The white lines
 illustrate the contour lines, annotated with their respective gradients.
 
-![Level curves of the class-wise utility](img/classwise-shapley-discounted-utility-function.svg)
+![Level curves of the class-wise utility](img/classwise-shapley-discounted-utility-function.svg){ align=left width=33%  class=invertible }
 
-## Evaluation
+# Evaluation
 
 We evaluate the method on the nine datasets used in [@schoch_csshapley_2022],
 using the same pre-processing. For images, PCA is used to reduce  down to 32 the
@@ -113,17 +113,59 @@ pre-processing steps, please refer to the paper.
     | MNIST (binary) | Image     | 2       | 32         | 554       |
     | MNIST (multi)  | Image     | 10      | 32         | 554       |
 
+## Performance for (direct) point removal
 
-### Value transfer
+We compare the mean and the coefficient of variation (CV) of the weighted accuracy drop 
+(WAD) as proposed in [@schoch_csshapley_2022]. The metric is defined by 
 
-We compare CWS to TMCS, Beta Shapley and LOO on a sample removal task with value
-transfer to another model. Values are computed using a logistic regression
-model, and used to prune the training set for a neural network. Random values
-serve as a baseline. The following plot shows valuation-set accuracy of the
-network on the y-axis, and the number of samples removed on the x-axis.
+$$
+\text{WAD} = a_T(D) - \sum_{j=1}^{n} \frac{a_{T_{-\{1 \colon j \}}}(D)}{j},
+$$
+
+where $a_T(D)$ is the accuracy of the model (trained on $T$) evaluated on $D$ and 
+$T_{-\{1 \colon j \}}$ is the set $T$ without elements from $\{1 \colon j \}$. The 
+metric was evaluated over five runs and is summarized by mean $\mu_\text{WAD}$ and
+standard deviation $\sigma_\text{WAD}$. The valuation of the training samples and the 
+evaluation on the validation samples are both calculated based on a logistic regression 
+model. Let's have a look at the mean 
+
+![WAD drop (Mean)](img/classwise-shapley-metric-mlp-mean.svg){ align=left width=50%  class=invertible }
+
+of the metric WAD. The table shows that CWS is competitive with all three other methods.
+In all problems except `MNIST (multi)` it is better than TMCS, whereas in that
+case TMCS has a slight advantage. Another important quantity is the CV
+$\frac{\sigma_\text{WAD}}{\mu_\text{WAD}}$. It normalizes the standard
+deviation relative to the mean. The results are shown below.
+
+![WAD drop (CV)](img/classwise-shapley-metric-mlp-cv.svg){ align=left width=50%  class=invertible }
+
+It is noteworthy that CWS is not the best method in terms of CV (Lower CV means better
+performance). For `CIFAR10`, `Click`, `CPU` and `MNIST (binary)` Beta Shapley has the 
+lowest CV. For `Diabetes`, `MNIST (multi)` and `Phoneme` CWS is the winner and for 
+`FMNIST` and `Covertype` TMCS takes the lead. Without considering LOO, TMCS has the 
+highest relative standard deviation.
+
+The following plot shows valuation-set accuracy of logistic regression on the y-axis. 
+The x-axis shows the number of samples removed. Random values serve as a baseline.
+
+![Accuracy after sample removal using values from logistic regression](img/classwise-shapley-weighted-accuracy-drop-logistic-regression-to-logistic-regression.svg){ class=invertible }
+
+Overall we conclude that in terms of mean WAD CWS and TMCS are the best methods. In
+terms of the CV CWS and Beta Shapley are the clear winners. Hence, CWS is a competitive
+method for valuation of data sets with a low relative standard deviation. We remark that
+for all valuation methods the same number of _evaluations of the marginal utility_ was 
+used.
+
+## Performance in value transfer for point removal
+
+Practically more relevant is transfer of values for one model to another one. As before
+the values are calculated using a logistic regression model. However, here they are 
+used to prune the training set for a neural network. The following plot shows 
+valuation-set accuracy of the network on the y-axis, and the number of samples removed
+on the x-axis.
 
 ![Accuracy after sample removal using values transferred from logistic regression
-to an MLP](img/classwise-shapley-weighted-accuracy-drop-logistic-regression-to-mlp.svg)
+to an MLP](img/classwise-shapley-weighted-accuracy-drop-logistic-regression-to-mlp.svg){ class=invertible }
 
 Samples are removed from high to low valuation order and hence we expect a steep
 decrease in the curve. CWS is competitive with the compared methods. Especially
@@ -133,13 +175,23 @@ the performance is on par with TMC. For `MNIST (binary)` and `Phoneme` the
 performance is competitive. We remark that for all valuation methods the
 same number of _evaluations of the marginal utility_ was used.
 
-### Value distribution
+## Density of values 
 
-This section takes a look at the distribution of CWS values for the above
-datasets. In the histogram plots one can see that it is slightly biased and
-often skewed.
+Last but not least let's compare the distribution of values for TMCS (green) and CWS
+(red). Therefore, the following plots show a histogram the density estimated by kernel
+density estimation (KDE). 
 
-![Distribution of values computed using logistic
-regression](img/classwise-shapley-example-densities.svg)
 
-The curves are an approximation of the density using KDE. 
+![Density of TMCS and CWS](img/classwise-shapley-density.svg){ class=invertible }
+
+As the metrics already suggest TMCS has a higher variance as CWS. In mean, they 
+seem to approximate the same quantity, which is not obvious due to their different 
+nature of their utility functions. 
+
+For `Click` TMCS has a multi-modal distribution of values. This is inferior to CWS which
+has only one-mode and is more stable on that dataset. `Click` is a very unbalanced 
+dataset and hence CWS seems to be more robust on unbalanced datasets. It seems that
+CWS is a good way to handle classification problems. Given the underlying similarities 
+in the architecture of TMCS, Beta Shapley, and CWS algorithms, there's a clear pathway 
+for improving convergence rates, sample efficiency, and stabilize variance in all of 
+these methods.
