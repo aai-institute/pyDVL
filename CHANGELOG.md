@@ -6,6 +6,8 @@
   [PR #338](https://github.com/aai-institute/pyDVL/pull/338)
 - No longer using docker within tests to start a memcached server
   [PR #444](https://github.com/aai-institute/pyDVL/pull/444)
+- Faster semi-value computation with per-index check of stopping criteria (optional)
+  [PR #437](https://github.com/aai-institute/pyDVL/pull/437)
 - Improvements and fixes to notebooks
   [PR #436](https://github.com/aai-institute/pyDVL/pull/436)
 - Fix initialization of `data_names` in `ValuationResult.zeros()`
