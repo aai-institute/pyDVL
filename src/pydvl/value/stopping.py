@@ -554,10 +554,9 @@ class MaxTime(StoppingCriterion):
 
     def reset(self):
         self.start = time()
-      
+
     def __str__(self):
         return f"MaxTime(seconds={self.max_seconds})"
-
 
 
 class HistoryDeviation(StoppingCriterion):
