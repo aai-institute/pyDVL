@@ -4,8 +4,6 @@ title: Class-wise Shapley
 
 # Class-wise Shapley
 
-## AlgorIntroductionithm
-
 Class-wise Shapley (CWS) [@schoch_csshapley_2022] offers a Shapley framework
 tailored for classification problems. Let $D$ be a dataset, $D_{y_i}$ be the
 subset of $D$ with labels $y_i$, and $D_{-y_i}$ be the complement of $D_{y_i}$
@@ -90,35 +88,45 @@ and $g$ for an exploration with different base scores.
     )
     ```
 
-The level curves for $f(x)=x$ and $g(x)=e^x$ are depicted below. The lines
-illustrate the contour lines, annotated with their respective gradients.
-
-![Level curves of the class-wise utility](img/classwise-shapley-discounted-utility-function.svg){ align=left width=33%  class=invertible }
+??? Surface of the discounted utility function
+    The level curves for $f(x)=x$ and $g(x)=e^x$ are depicted below. The lines
+    illustrate the contour lines, annotated with their respective gradients.
+    ![Level curves of the class-wise
+    utility](img/classwise-shapley-discounted-utility-function.svg){ align=left width=33%  class=invertible }
 
 ## Evaluation
 
 We evaluate the method on the nine datasets used in [@schoch_csshapley_2022],
-using the same pre-processing. For images, PCA is used to reduce  down to 32 the
-number of features found by a `Resnet18` model. For more details on the
-pre-processing steps, please refer to the paper.
+using the same pre-processing. For images, PCA is used to project the feature, found
+by a pre-trained `Resnet18` model, to 32 principal components. A loc-scale normalization
+is performed for all models, except gradient boosting. The latter is not sensitive to
+the scale of the features. The following table shows the datasets used in the
 
-??? info "Datasets used for evaluation"
-    | Dataset        | Data Type | Classes | Input Dims | OpenML ID |
-    |----------------|-----------|---------|------------|-----------|
-    | Diabetes       | Tabular   | 2       | 8          | 37        |
-    | Click          | Tabular   | 2       | 11         | 1216      |
-    | CPU            | Tabular   | 2       | 21         | 197       |
-    | Covertype      | Tabular   | 7       | 54         | 1596      |
-    | Phoneme        | Tabular   | 2       | 5          | 1489      |
-    | FMNIST         | Image     | 2       | 32         | 40996     |
-    | CIFAR10        | Image     | 2       | 32         | 40927     |
-    | MNIST (binary) | Image     | 2       | 32         | 554       |
-    | MNIST (multi)  | Image     | 10      | 32         | 554       |
+| Dataset        | Data Type | Classes | Input Dims | OpenML ID |
+|----------------|-----------|---------|------------|-----------|
+| Diabetes       | Tabular   | 2       | 8          | 37        |
+| Click          | Tabular   | 2       | 11         | 1216      |
+| CPU            | Tabular   | 2       | 21         | 197       |
+| Covertype      | Tabular   | 7       | 54         | 1596      |
+| Phoneme        | Tabular   | 2       | 5          | 1489      |
+| FMNIST         | Image     | 2       | 32         | 40996     |
+| CIFAR10        | Image     | 2       | 32         | 40927     |
+| MNIST (binary) | Image     | 2       | 32         | 554       |
+| MNIST (multi)  | Image     | 10      | 32         | 554       |
 
-### Performance for (direct) point removal
+experiments. In general there are three different experiments: point removal, noise
+removal and a distribution analysis. Metrics are evaluated as tables for mean and
+coefficient of variation (CV) $\frac{\sigma}{\mu}$ of an inner metric. The former 
+displays the performance of the method, whereas the latter displays the repeatability of
+the method. We assume the mean has to be maximized and the CV has to be minimized. 
+Furthermore, we remark that for all sampling-based valuation methods the same number of
+_evaluations of the marginal utility_ was used. This is important, to make the 
+algorithms comparable. In practice one should consider using a more sophisticated 
+stopping criterion.
 
-We compare the mean and the coefficient of variation (CV) of the weighted accuracy drop 
-(WAD) as proposed in [@schoch_csshapley_2022]. The metric is defined by 
+### Dataset pruning for logistic regression
+
+Weighted accuracy drop (WAD) [@schoch_csshapley_2022] is defined as
 
 $$
 \text{WAD} =  \sum_{j=1}^{n} \left ( \frac{1}{j} \sum_{i=1}^{j} 
@@ -133,15 +141,16 @@ standard deviation $\sigma_\text{WAD}$. The valuation of the training samples an
 evaluation on the validation samples are both calculated based on a logistic regression 
 model. Let's have a look at the mean 
 
-![Weighted accuracy drop (Mean)](img/classwise-shapley-metric-wad-mean.svg){ align=left width=50%  class=invertible }
+![Weighted accuracy drop
+(Mean)](img/classwise-shapley-metric-wad-mean.svg){ align=left width=50%  class=invertible }
 
 of the metric WAD. The table shows that CWS is competitive with all three other methods.
 In all problems except `MNIST (multi)` it is better than TMCS, whereas in that
-case TMCS has a slight advantage. Another important quantity is the CV
-$\frac{\sigma_\text{WAD}}{\mu_\text{WAD}}$. It normalizes the standard
-deviation by the mean. The results are shown below.
+case TMCS has a slight advantage. Another important quantity is the CV. The results are 
+shown below.
 
-![Weighted accuracy drop (CV)](img/classwise-shapley-metric-wad-cv.svg){ align=left width=50%  class=invertible }
+![Weighted accuracy drop 
+(CV)](img/classwise-shapley-metric-wad-cv.svg){ align=left width=50%  class=invertible }
 
 It is noteworthy that CWS is not the best method in terms of CV (Lower CV means better
 performance). For `CIFAR10`, `Click`, `CPU` and `MNIST (binary)` Beta Shapley has the 
@@ -155,16 +164,15 @@ Each line represents five runs, whereas bootstrapping was used to estimate the 9
 confidence intervals.
 
 
-![Accuracy after sample removal using values from logistic regression](img/classwise-shapley-weighted-accuracy-drop-logistic-regression-to-logistic-regression.svg){ class=invertible }
+![Accuracy after sample removal using values from logistic 
+regression](img/classwise-shapley-weighted-accuracy-drop-logistic-regression-to-logistic-regression.svg){ class=invertible }
 
 Samples are removed from high to low valuation order and hence we expect a steep
 decrease in the curve. Overall we conclude that in terms of mean WAD CWS and TMCS are 
 the best methods. In terms of CV, CWS and Beta Shapley are the clear winners. Hence, CWS
-is a competitive method for valuation of data sets with a low relative standard
-deviation. We remark that for all valuation methods the same number of _evaluations of 
-the marginal utility_ was used.
+is a competitive CV. 
 
-### Performance in value transfer for point removal
+### Dataset pruning for neural network by value transfer
 
 Practically more relevant is the transfer of values from one model to another one. As 
 before the values are calculated using logistic regression. However, this time they are
@@ -172,67 +180,69 @@ used to prune the training set for a neural network. The following plot shows
 valuation-set accuracy of the network on the y-axis, and the number of samples removed
 on the x-axis.
 
-![Accuracy after sample removal using values transferred from logistic regression
-to an MLP](img/classwise-shapley-weighted-accuracy-drop-logistic-regression-to-mlp.svg){ class=invertible }
+![Accuracy after sample removal using values transferred from logistic regression to an 
+MLP](img/classwise-shapley-weighted-accuracy-drop-logistic-regression-to-mlp.svg){ class=invertible }
 
-Again samples are removed from high to low valuation order and hence we expect a steep
-decrease in the curve. CWS is competitive with the compared methods. Especially
-in very unbalanced datasets, like `Click`, the performance of CWS seems
-superior. In other datasets, like `Covertype` and `Diabetes` and `MNIST (multi)`
-the performance is on par with TMC. For `MNIST (binary)` and `Phoneme` the
-performance is competitive.
+As in the previous experiment samples are removed from high to low valuation order and 
+hence we expect a steep decrease in the curve. CWS is competitive with the compared
+methods. Especially in very unbalanced datasets, like `Click`, the performance of CWS
+seems superior. In other datasets, like `Covertype` and `Diabetes` and `MNIST (multi)`
+the performance is on par with TMC. For `MNIST (binary)` and `Phoneme` the performance 
+is competitive.
 
-### Density of values
+### Detection of mis-labelled data points
 
-This experiment compares the distribution of values for TMCS (green) and CWS
-(red). Both methods are chosen due to their competivieness. The following plots show a 
-histogram as well as the density estimated by kernel density estimation (KDE). 
-
-
-![Density of TMCS and CWS](img/classwise-shapley-density.svg){ class=invertible }
-
-As apparent in the metric CV from the previous section, the variance of CWS is lower 
-than for TCMS. They seem to approximate the same form of distribution, although their
-utility functions are different.
-
-For `Click` TMCS has a multi-modal distribution of values. This is inferior to CWS which
-has only one-mode and is more stable on that dataset. `Click` is a very unbalanced 
-dataset, and we conclude that CWS seems to be more robust on unbalanced datasets. 
-
-### Noise removal for 20% of the flipped data
-
-Another type of experiment uses the algorithms to explore mis-labelled data points. The
-indices are chosen randomly. Multi-class datasets are discarded, because they do not 
+The next experiment uses the algorithms to detect mis-labelled data points. 20% of the
+indices is selected by choice. Multi-class datasets are discarded, because they do not 
 possess a unique flipping strategy. The following table shows the mean of the area under
-the curve (AUC) of five runs. 
+the curve (AUC) for five runs. 
 
-![Area under the Curve (Mean)](img/classwise-shapley-metric-auc-mean.svg){ align=left width=50%  class=invertible }
+![Area under the Curve 
+(Mean)](img/classwise-shapley-metric-auc-mean.svg){ align=left width=50%  class=invertible }
 
 In the majority of the cases TMCS has a slight advantage over CWS on average. For
 `Click` CWS has a slight edge, most probably due to the unbalanced nature of `Click`.
 The following plot shows the CV for the AUC of the five runs.
 
-![Area under the Curve (CV)](img/classwise-shapley-metric-auc-cv.svg){ align=left width=50%  class=invertible }
+![Area under the Curve 
+(CV)](img/classwise-shapley-metric-auc-cv.svg){ align=left width=50%  class=invertible }
  
-In terms of CV, CWS has a clear edge over TMCS and Beta Shapley. The following plot 
-shows the receiving operator characteristic (ROC) for the mean of five runs.
+In terms of CV, CWS has a clear edge over TMCS and Beta Shapley. The receiving operator
+characteristic (ROC) curve is a plot of the precision to the recall. The classifier
+uses the $n$-smallest values 
+respect to the order of the valuation. The following plot shows thec (ROC) for the mean 
+of five runs.
 
-![Receiver Operating Characteristic](img/classwise-shapley-roc-auc-logistic-regression.svg){ align=left width=50%  class=invertible }
+![Receiver Operating
+Characteristic](img/classwise-shapley-roc-auc-logistic-regression.svg){ align=left width=50%  class=invertible }
 
-The ROC curve is a plot of the true positive rate (TPR) against the false positive rate
-(FPR). The TPR is the ratio of correctly classified positive samples to all positive
-samples. The FPR is the ratio of incorrectly classified negative samples to all negative
-samples. This tuple is calculated for all prefixes of the training set with respect to
-the values. Although it seems that TMCS is the winner, considering sample efficiency, 
+Although it seems that TMCS is the winner: If you consider sample efficiency, 
 CWS stays competitive. For a perfectly balanced dataset, CWS needs fewer samples than
-TCMS on average. CWS is competitive and almost on par with TCMS, while requring less
-samples on average.
+TCMS on average. Furthermore, CWS is almost on par with TCMS performance-wise.
+
+### Density of values
+
+This experiment compares the distribution of values for TMCS (green) and CWS
+(red). Both methods are chosen due to their competitiveness. The plot shows a 
+histogram as well as the density estimated by kernel density estimation (KDE) for each
+dataset.
+
+![Density of TMCS and
+CWS](img/classwise-shapley-density.svg){ class=invertible }
+
+Similar to the behaviour of the CV from the previous section, the variance of CWS is
+lower than for TCMS. They seem to approximate the same of distribution, although their 
+utility functions are quite different. 
+
+For `Click` TMCS has a multi-modal distribution of values. This is inferior to CWS which
+has only one-mode and is more stable on that dataset. `Click` is a very unbalanced 
+dataset, and we conclude that CWS seems to be more robust on unbalanced datasets.
 
 ## Conclusion
 
 CWS is a reasonable and effective way to handle classification problems. It reduces the 
 computing power and variance by splitting up the data set into classes. Given the 
 underlying similarities in the architecture of TMCS, Beta Shapley, and CWS, there's a
-clear pathway for improving convergence rates, sample efficiency, and stabilize variance 
-for TMCS and Beta Shapley. 
+clear pathway for improving convergence rates, sample efficiency, and stabilizing
+variance for TMCS and Beta Shapley. 
 
