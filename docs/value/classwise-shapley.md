@@ -88,7 +88,7 @@ and $g$ for an exploration with different base scores.
     )
     ```
 
-??? Surface of the discounted utility function
+??? "Surface of the discounted utility function"
     The level curves for $f(x)=x$ and $g(x)=e^x$ are depicted below. The lines
     illustrate the contour lines, annotated with their respective gradients.
     ![Level curves of the class-wise
@@ -117,7 +117,10 @@ the scale of the features. The following table shows the datasets used in the
 experiments. In general there are three different experiments: point removal, noise
 removal and a distribution analysis. Metrics are evaluated as tables for mean and
 coefficient of variation (CV) $\frac{\sigma}{\mu}$ of an inner metric. The former 
-displays the performance of the method, whereas the latter displays the repeatability of
+displays the performance of the method, whereas the latter displays the stability of a 
+method. We normalize by the mean to make standard deviations for different runs
+comparable.
+
 the method. We assume the mean has to be maximized and the CV has to be minimized. 
 Furthermore, we remark that for all sampling-based valuation methods the same number of
 _evaluations of the marginal utility_ was used. This is important, to make the 
@@ -231,8 +234,8 @@ dataset.
 CWS](img/classwise-shapley-density.svg){ class=invertible }
 
 Similar to the behaviour of the CV from the previous section, the variance of CWS is
-lower than for TCMS. They seem to approximate the same of distribution, although their 
-utility functions are quite different. 
+lower than for TCMS. They seem to approximate the same mode although their utility 
+function is very different.
 
 For `Click` TMCS has a multi-modal distribution of values. This is inferior to CWS which
 has only one-mode and is more stable on that dataset. `Click` is a very unbalanced 
