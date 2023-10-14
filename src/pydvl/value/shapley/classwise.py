@@ -13,9 +13,15 @@ v_u(i) = \frac{1}{2^{|D_{-y_i}|}} \sum_{S_{-y_i}} \frac{1}{|D_{y_i}|!}
 $$
 
 where $S_{y_i} \subseteq D_{y_i} \setminus \{i\}$ and $S_{-y_i} \subseteq
-D_{-y_i}$. In practice, this quantity is estimated using Monte Carlo sampling of
-the powerset and the set of index permutations. Applying these techniques
-results in the estimator
+D_{-y_i}$.
+
+!!! tip "Analysis of Class-wise Shapley"
+    For a detailed analysis of the method, with comparison to other valuation
+    techniques, please refer to the [main
+    documentation](../../../../../value/classwise-shapley).
+
+In practice, the quantity above is estimated using Monte Carlo sampling of
+the powerset and the set of index permutations. This results in the estimator
 
 $$
 v_u(i) = \frac{1}{K} \sum_k \frac{1}{L} \sum_l
@@ -110,27 +116,28 @@ class ClasswiseScorer(Scorer):
     !!! warning Multi-class support
         Metrics must support multiple class labels if you intend to apply them
         to a multi-class problem. For instance, the metric 'accuracy' supports
-        multiple classes, but the metric 'f1' does not. For a two-class
-        classification problem, using 'f1_weighted' is essentially equivalent to
-        using 'accuracy'.
+        multiple classes, but the metric `f1` does not. For a two-class
+        classification problem, using `f1_weighted` is essentially equivalent to
+        using `accuracy`.
 
     Args:
         scoring: Name of the scoring function or a callable that can be passed
             to [Scorer][pydvl.utils.score.Scorer].
         default: Score to use when a model fails to provide a number, e.g. when
             too little was used to train it, or errors arise.
-        range: Numerical range of the score function. Some Monte Carlo methods can
-            use this to estimate the number of samples required for a certain quality of
-            approximation. If not provided, it can be read from the `scoring` object
-            if it provides it, for instance if it was constructed with
+        range: Numerical range of the score function. Some Monte Carlo methods
+            can use this to estimate the number of samples required for a
+            certain quality of approximation. If not provided, it can be read
+            from the `scoring` object if it provides it, for instance if it was
+            constructed with
             [compose_score][pydvl.utils.score.compose_score].
         in_class_discount_fn: Continuous, monotonic increasing function used to
             discount the in-class score.
-        out_of_class_discount_fn: Continuous, monotonic increasing function used to
-            discount the out-of-class score.
+        out_of_class_discount_fn: Continuous, monotonic increasing function used
+            to discount the out-of-class score.
         initial_label: Set initial label (for the first iteration)
         name: Name of the scorer. If not provided, the name of the inner scoring
-            function will be prefixed by 'classwise '.
+            function will be prefixed by `classwise `.
 
     !!! tip "New in version 0.7.1"
     """

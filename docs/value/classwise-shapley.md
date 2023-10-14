@@ -42,7 +42,9 @@ the dataset.
     Like all other game-theoretic valuation methods, CWS requires a
     [Utility][pydvl.utils.utility.Utility] object constructed with model and
     dataset, with the peculiarity of requiring a specific
-    [ClasswiseScorer][pydvl.value.shapley.classwise.ClasswiseScorer]:
+    [ClasswiseScorer][pydvl.value.shapley.classwise.ClasswiseScorer]. The entry
+    point is the function
+    [compute_classwise_shapley_values][pydvl.value.shapley.classwise.compute_classwise_shapley_values]:
 
     ```python
     from pydvl.value import *
