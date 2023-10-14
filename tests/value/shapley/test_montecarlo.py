@@ -5,14 +5,8 @@ import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import (
-    Dataset,
-    GroupedDataset,
-    MemcachedConfig,
-    ParallelConfig,
-    Status,
-    Utility,
-)
+from pydvl.parallel.config import ParallelConfig
+from pydvl.utils import Dataset, GroupedDataset, MemcachedConfig, Status, Utility
 from pydvl.utils.numeric import num_samples_permutation_hoeffding
 from pydvl.utils.score import Scorer, squashed_r2
 from pydvl.utils.types import Seed
@@ -23,7 +17,7 @@ from pydvl.value.stopping import MaxChecks, MaxUpdates
 
 from .. import check_rank_correlation, check_total_value, check_values
 from ..conftest import polynomial_dataset
-from ..utils import call_fn_multiple_seeds
+from ..utils import call_with_seeds
 
 log = logging.getLogger(__name__)
 
@@ -100,7 +94,7 @@ def test_montecarlo_shapley_housing_dataset_reproducible(
     kwargs: dict,
     seed: Seed,
 ):
-    values_1, values_2 = call_fn_multiple_seeds(
+    values_1, values_2 = call_with_seeds(
         compute_shapley_values,
         Utility(LinearRegression(), data=housing_dataset, scorer="r2"),
         mode=fun,
@@ -127,7 +121,7 @@ def test_montecarlo_shapley_housing_dataset_stochastic(
     seed: Seed,
     seed_alt: Seed,
 ):
-    values_1, values_2 = call_fn_multiple_seeds(
+    values_1, values_2 = call_with_seeds(
         compute_shapley_values,
         Utility(LinearRegression(), data=housing_dataset, scorer="r2"),
         mode=fun,

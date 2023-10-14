@@ -53,6 +53,8 @@ plugins:
           - hide
         remove_input_tags:
           - hide-input
+        remove_all_outputs_tags:
+          - hide-output
       binder: true
       binder_service_name: "gh"
       binder_branch: "develop"
@@ -191,14 +193,16 @@ nav:
   - Data Valuation:
     - Introduction: value/index.md
     - Notation: value/notation.md
-    - Shapley Values: value/shapley.md
+    - Shapley values: value/shapley.md
     - Semi-values: value/semi-values.md
     - The core: value/the-core.md
+    - Classwise Shapley: value/classwise-shapley.md
     - Examples:
       - Shapley values: examples/shapley_basic_spotify.ipynb
       - KNN Shapley: examples/shapley_knn_flowers.ipynb
       - Data utility learning: examples/shapley_utility_learning.ipynb
       - Least Core: examples/least_core_basic.ipynb
+      - Data OOB: examples/data_oob.ipynb
   - The Influence Function:
     - Introduction: influence/index.md
     - Examples:

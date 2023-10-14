@@ -24,7 +24,7 @@
   doi = {10.5281/zenodo.8173733},
   url = {https://zenodo.org/record/8173733},
   urldate = {2023-08-27},
-  abstract = {Replication}
+  abstract = {We investigate the results of [1] in the field of data valuation. We repeat their experiments and conclude that the (Monte Carlo) Least Core is sensitive to important characteristics of the ML problem of interest, making it difficult to apply.},
 }
 
 @article{castro_polynomial_2009,
@@ -198,6 +198,21 @@
   langid = {english}
 }
 
+@article{mitchell_sampling_2022,
+  title = {Sampling {{Permutations}} for {{Shapley Value Estimation}}},
+  author = {Mitchell, Rory and Cooper, Joshua and Frank, Eibe and Holmes, Geoffrey},
+  date = {2022},
+  journaltitle = {Journal of Machine Learning Research},
+  shortjournal = {J. Mach. Learn. Res.},
+  volume = {23},
+  number = {43},
+  pages = {1--46},
+  issn = {1533-7928},
+  url = {http://jmlr.org/papers/v23/21-0439.html},
+  urldate = {2022-10-23},
+  abstract = {Game-theoretic attribution techniques based on Shapley values are used to interpret black-box machine learning models, but their exact calculation is generally NP-hard, requiring approximation methods for non-trivial models. As the computation of Shapley values can be expressed as a summation over a set of permutations, a common approach is to sample a subset of these permutations for approximation. Unfortunately, standard Monte Carlo sampling methods can exhibit slow convergence, and more sophisticated quasi-Monte Carlo methods have not yet been applied to the space of permutations. To address this, we investigate new approaches based on two classes of approximation methods and compare them empirically. First, we demonstrate quadrature techniques in a RKHS containing functions of permutations, using the Mallows kernel in combination with kernel herding and sequential Bayesian quadrature. The RKHS perspective also leads to quasi-Monte Carlo type error bounds, with a tractable discrepancy measure defined on permutations. Second, we exploit connections between the hypersphere  S d−2 Sd−2  and permutations to create practical algorithms for generating permutation samples with good properties. Experiments show the above techniques provide significant improvements for Shapley value estimates over existing methods, converging to a smaller RMSE in the same number of model evaluations.}
+}
+
 @inproceedings{okhrati_multilinear_2021,
   title = {A {{Multilinear Sampling Algorithm}} to {{Estimate Shapley Values}}},
   booktitle = {2020 25th {{International Conference}} on {{Pattern Recognition}} ({{ICPR}})},
@@ -311,4 +326,20 @@
   eventtitle = {{{AAAI Conference}} on {{Artificial Intelligence}}},
   langid = {english},
   keywords = {notion}
+}
+
+@InProceedings{kwon_data_2023,
+  title = 	 {Data-{OOB}: Out-of-bag Estimate as a Simple and Efficient Data Value},
+  author =       {Kwon, Yongchan and Zou, James},
+  booktitle = 	 {Proceedings of the 40th International Conference on Machine Learning},
+  pages = 	 {18135--18152},
+  year = 	 {2023},
+  editor = 	 {Krause, Andreas and Brunskill, Emma and Cho, Kyunghyun and Engelhardt, Barbara and Sabato, Sivan and Scarlett, Jonathan},
+  volume = 	 {202},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {23--29 Jul},
+  publisher =    {PMLR},
+  pdf = 	 {https://proceedings.mlr.press/v202/kwon23e/kwon23e.pdf},
+  url = 	 {https://proceedings.mlr.press/v202/kwon23e.html},
+  abstract = 	 {Data valuation is a powerful framework for providing statistical insights into which data are beneficial or detrimental to model training. Many Shapley-based data valuation methods have shown promising results in various downstream tasks, however, they are well known to be computationally challenging as it requires training a large number of models. As a result, it has been recognized as infeasible to apply to large datasets. To address this issue, we propose Data-OOB, a new data valuation method for a bagging model that utilizes the out-of-bag estimate. The proposed method is computationally efficient and can scale to millions of data by reusing trained weak learners. Specifically, Data-OOB takes less than $2.25$ hours on a single CPU processor when there are $10^6$ samples to evaluate and the input dimension is $100$. Furthermore, Data-OOB has solid theoretical interpretations in that it identifies the same important data point as the infinitesimal jackknife influence function when two different points are compared. We conduct comprehensive experiments using 12 classification datasets, each with thousands of sample sizes. We demonstrate that the proposed method significantly outperforms existing state-of-the-art data valuation methods in identifying mislabeled data and finding a set of helpful (or harmful) data points, highlighting the potential for applying data values in real-world applications.}
 }

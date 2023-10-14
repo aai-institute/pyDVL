@@ -49,7 +49,12 @@ a.autorefs-external:hover::after {
 }
 
 .md-typeset h2 {
-  font-size: 1.7em;
+  font-size: 1.3em;
+  font-weight: 300;
+}
+
+.md-typeset h3 {
+  font-size: 1.1em;
   font-weight: 300;
 }
 
@@ -77,12 +82,6 @@ a.autorefs-external:hover::after {
     user-select: none;
 }
 
-/* Nicer style of headers in generated API */
-h2 code {
-    font-size: large!important;
-    background-color: inherit!important;
-}
-
 /* Remove cell input and output prompt */
 .jp-InputArea-prompt, .jp-OutputArea-prompt {
     display: none !important;
@@ -108,11 +107,14 @@ h2 code {
   color: black;
 }
 
-
 body[data-md-color-scheme="default"] .invertible img {
 }
 
 body[data-md-color-scheme="slate"] .invertible img {
+    filter: invert(100%) hue-rotate(180deg);
+}
+
+body[data-md-color-scheme="slate"] .celltag_invertible-output img {
     filter: invert(100%) hue-rotate(180deg);
 }
 

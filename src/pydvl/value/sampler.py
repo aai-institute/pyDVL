@@ -27,7 +27,7 @@ The samplers are used in the [semivalues][pydvl.value.semivalues] module to
 compute any semi-value, in particular Shapley and Beta values, and Banzhaf
 indices.
 
-# Slicing of samplers
+## Slicing of samplers
 
 The samplers can be sliced for parallel computation. For those which are
 embarrassingly parallel, this is done by slicing the set of "outer" indices and
@@ -36,6 +36,15 @@ samplers, such as [DeterministicUniformSampler][pydvl.value.sampler.Deterministi
 and [UniformSampler][pydvl.value.sampler.UniformSampler]. In contrast, slicing a
 [PermutationSampler][pydvl.value.sampler.PermutationSampler] creates a new
 sampler which iterates over the same indices.
+
+
+## References
+
+[^1]: <a name="mitchell_sampling_2022"></a>Mitchell, Rory, Joshua Cooper, Eibe
+      Frank, and Geoffrey Holmes. [Sampling Permutations for Shapley Value
+      Estimation](http://jmlr.org/papers/v23/21-0439.html). Journal of Machine
+      Learning Research 23, no. 43 (2022): 1–46.
+
 """
 
 from __future__ import annotations
@@ -51,7 +60,6 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    TypeVar,
     Union,
     overload,
 )
@@ -61,7 +69,7 @@ from deprecate import deprecated, void
 from numpy.typing import NDArray
 
 from pydvl.utils.numeric import powerset, random_subset, random_subset_of_size
-from pydvl.utils.types import Seed
+from pydvl.utils.types import IndexT, Seed
 
 __all__ = [
     "AntitheticSampler",
@@ -74,13 +82,11 @@ __all__ = [
     "StochasticSamplerMixin",
 ]
 
-
-T = TypeVar("T", bound=np.generic)
-SampleT = Tuple[T, NDArray[T]]
+SampleT = Tuple[IndexT, NDArray[IndexT]]
 Sequence.register(np.ndarray)
 
 
-class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
+class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[IndexT]):
     """Samplers are custom iterables over subsets of indices.
 
     Calling ``iter()`` on a sampler returns an iterator over tuples of the form
@@ -121,9 +127,9 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
 
     def __init__(
         self,
-        indices: NDArray[T],
+        indices: NDArray[IndexT],
         index_iteration: IndexIteration = IndexIteration.Sequential,
-        outer_indices: NDArray[T] | None = None,
+        outer_indices: NDArray[IndexT] | None = None,
     ):
         """
         Args:
@@ -141,11 +147,11 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
         self._n_samples = 0
 
     @property
-    def indices(self) -> NDArray[T]:
+    def indices(self) -> NDArray[IndexT]:
         return self._indices
 
     @indices.setter
-    def indices(self, indices: NDArray[T]):
+    def indices(self, indices: NDArray[IndexT]):
         raise AttributeError("Cannot set indices of sampler")
 
     @property
@@ -156,10 +162,10 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
     def n_samples(self, n: int):
         raise AttributeError("Cannot reset a sampler's number of samples")
 
-    def complement(self, exclude: Sequence[T]) -> NDArray[T]:
-        return np.setxor1d(self._indices, exclude)
+    def complement(self, exclude: Sequence[IndexT]) -> NDArray[IndexT]:
+        return np.setxor1d(self._indices, exclude)  # type: ignore
 
-    def iterindices(self) -> Iterator[T]:
+    def iterindices(self) -> Iterator[IndexT]:
         """Iterates over indices in the order specified at construction.
 
         FIXME: this is probably not very useful, but I couldn't decide
@@ -173,14 +179,14 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
                 yield np.random.choice(self._outer_indices, size=1).item()
 
     @overload
-    def __getitem__(self, key: slice) -> PowersetSampler[T]:
+    def __getitem__(self, key: slice) -> PowersetSampler[IndexT]:
         ...
 
     @overload
-    def __getitem__(self, key: list[int]) -> PowersetSampler[T]:
+    def __getitem__(self, key: list[int]) -> PowersetSampler[IndexT]:
         ...
 
-    def __getitem__(self, key: slice | list[int]) -> PowersetSampler[T]:
+    def __getitem__(self, key: slice | list[int]) -> PowersetSampler[IndexT]:
         if isinstance(key, slice) or isinstance(key, Iterable):
             return self.__class__(
                 self._indices,
@@ -194,7 +200,7 @@ class PowersetSampler(abc.ABC, Iterable[SampleT], Generic[T]):
         return len(self._outer_indices)
 
     def __str__(self):
-        return f"{self.__class__.__name__}"
+        return self.__class__.__name__
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._indices}, {self._outer_indices})"
@@ -231,8 +237,8 @@ class StochasticSamplerMixin:
         self._rng = np.random.default_rng(seed)
 
 
-class DeterministicUniformSampler(PowersetSampler[T]):
-    def __init__(self, indices: NDArray[T], *args, **kwargs):
+class DeterministicUniformSampler(PowersetSampler[IndexT]):
+    def __init__(self, indices: NDArray[IndexT], *args, **kwargs):
         """An iterator to perform uniform deterministic sampling of subsets.
 
         For every index $i$, each subset of the complement `indices - {i}` is
@@ -268,7 +274,7 @@ class DeterministicUniformSampler(PowersetSampler[T]):
         return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
-class UniformSampler(StochasticSamplerMixin, PowersetSampler[T]):
+class UniformSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
     """An iterator to perform uniform random sampling of subsets.
 
     Iterating over every index $i$, either in sequence or at random depending on
@@ -306,30 +312,31 @@ class UniformSampler(StochasticSamplerMixin, PowersetSampler[T]):
         return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
-class DeterministicCombinatorialSampler(DeterministicUniformSampler[T]):
+class DeterministicCombinatorialSampler(DeterministicUniformSampler[IndexT]):
     @deprecated(
         target=DeterministicUniformSampler, deprecated_in="0.6.0", remove_in="0.8.0"
     )
-    def __init__(self, indices: NDArray[T], *args, **kwargs):
+    def __init__(self, indices: NDArray[IndexT], *args, **kwargs):
         void(indices, args, kwargs)
 
 
-class AntitheticSampler(StochasticSamplerMixin, PowersetSampler[T]):
+class AntitheticSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
     """An iterator to perform uniform random sampling of subsets, and their
     complements.
 
-    Works as :class:`~pydvl.value.sampler.UniformSampler`, but for every tuple
-    $(i,S)$, it subsequently returns $(i,S^c)$, where $S^c$ is the complement of
-    the set $S$, including the index $i$ itself.
+    Works as [UniformSampler][pydvl.value.sampler.UniformSampler], but for every
+    tuple $(i,S)$, it subsequently returns $(i,S^c)$, where $S^c$ is the
+    complement of the set $S$ in the set of indices, excluding $i$.
     """
 
     def __iter__(self) -> Iterator[SampleT]:
         while True:
             for idx in self.iterindices():
-                subset = random_subset(self.complement([idx]), seed=self._rng)
+                _complement = self.complement([idx])
+                subset = random_subset(_complement, seed=self._rng)
                 yield idx, subset
                 self._n_samples += 1
-                yield idx, self.complement(np.concatenate((subset, np.array([idx]))))
+                yield idx, np.setxor1d(_complement, subset)
                 self._n_samples += 1
             if self._n_samples == 0:  # Empty index set
                 break
@@ -339,7 +346,7 @@ class AntitheticSampler(StochasticSamplerMixin, PowersetSampler[T]):
         return float(2 ** (n - 1)) if n > 0 else 1.0
 
 
-class PermutationSampler(StochasticSamplerMixin, PowersetSampler[T]):
+class PermutationSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
     """Sample permutations of indices and iterate through each returning
     increasing subsets, as required for the permutation definition of
     semi-values.
@@ -365,7 +372,7 @@ class PermutationSampler(StochasticSamplerMixin, PowersetSampler[T]):
             if self._n_samples == 0:  # Empty index set
                 break
 
-    def __getitem__(self, key: slice | list[int]) -> PowersetSampler[T]:
+    def __getitem__(self, key: slice | list[int]) -> PowersetSampler[IndexT]:
         """Permutation samplers cannot be split across indices, so we return
         a copy of the full sampler."""
         return super().__getitem__(slice(None))
@@ -375,7 +382,30 @@ class PermutationSampler(StochasticSamplerMixin, PowersetSampler[T]):
         return n * math.comb(n - 1, subset_len) if n > 0 else 1.0
 
 
-class DeterministicPermutationSampler(PermutationSampler[T]):
+class AntitheticPermutationSampler(PermutationSampler[IndexT]):
+    """Samples permutations like
+    [PermutationSampler][pydvl.value.sampler.PermutationSampler], but after
+    each permutation, it returns the same permutation in reverse order.
+
+    This sampler was suggested in (Mitchell et al. 2022)<sup><a
+    href="#mitchell_sampling_2022">1</a></sup>
+
+    !!! tip "New in version 0.7.1"
+    """
+
+    def __iter__(self) -> Iterator[SampleT]:
+        while True:
+            permutation = self._rng.permutation(self._indices)
+            for perm in permutation, permutation[::-1]:
+                for i, idx in enumerate(perm):
+                    yield idx, perm[:i]
+                    self._n_samples += 1
+
+            if self._n_samples == 0:  # Empty index set
+                break
+
+
+class DeterministicPermutationSampler(PermutationSampler[IndexT]):
     """Samples all n! permutations of the indices deterministically, and
     iterates through them, returning sets as required for the permutation-based
     definition of semi-values.
@@ -397,7 +427,7 @@ class DeterministicPermutationSampler(PermutationSampler[T]):
                 self._n_samples += 1
 
 
-class RandomHierarchicalSampler(StochasticSamplerMixin, PowersetSampler[T]):
+class RandomHierarchicalSampler(StochasticSamplerMixin, PowersetSampler[IndexT]):
     """For every index, sample a set size, then a set of that size.
 
     !!! Todo
@@ -424,5 +454,8 @@ class RandomHierarchicalSampler(StochasticSamplerMixin, PowersetSampler[T]):
 # TODO Replace by Intersection[StochasticSamplerMixin, PowersetSampler[T]]
 # See https://github.com/python/typing/issues/213
 StochasticSampler = Union[
-    UniformSampler, PermutationSampler, AntitheticSampler, RandomHierarchicalSampler
+    UniformSampler[IndexT],
+    PermutationSampler[IndexT],
+    AntitheticSampler[IndexT],
+    RandomHierarchicalSampler[IndexT],
 ]

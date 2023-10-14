@@ -13,9 +13,11 @@ on:
       tag_name:
         description: The name of the tag for which a package should be published
         type: string
-        required: false
+        required: true
 
 env:
+  GITHUB_BOT_USERNAME: github-actions[bot]
+  GITHUB_BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
   PY_COLORS: 1
 
 jobs:
@@ -24,35 +26,14 @@ jobs:
     concurrency:
       group: publish
     steps:
-      - uses: actions/checkout@v3
+      - name: Checking out last commit in release
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        uses: actions/checkout@v3
+      - name: Checking out last commit for tag ${{ inputs.tag_name }}
+        uses: actions/checkout@v3
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         with:
-          fetch-depth: 0
-      - name: Fail if manually triggered workflow does not have 'tag_name' input
-        if: github.event_name == 'workflow_dispatch' && inputs.tag_name == ''
-        run: |
-          echo "Input 'tag_name' should not be empty"
-          exit -1
-      - name: Extract branch name from input
-        id: get_branch_name_input
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          export BRANCH_NAME=$(git log -1 --format='%D' ${{ inputs.tag_name }} | sed -e 's/.*origin\/\(.*\).*/\1/')
-          echo "$BRANCH_NAME"
-          echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
-      - name: Extract branch name from tag
-        id: get_branch_name_tag
-        if: github.release.tag_name != ''
-        run: |
-          export BRANCH_NAME=$(git log -1 --format='%D' ${{ github.release.tag_name }} | sed -e 's/.*origin\/\(.*\).*/\1/')
-          echo "$BRANCH_NAME"
-          echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
-        shell: bash
-      - name: Fail if tag is not on 'master' branch
-        if: ${{ steps.get_branch_name_tag.outputs.branch_name != 'master' && steps.get_branch_name_input.outputs.branch_name != 'master' }}
-        run: |
-          echo "Tag is on branch ${{ steps.get_branch_name.outputs.branch_name }}"
-          echo "Should be on Master branch instead"
-          exit -1
+          ref: ${{ inputs.tag_name }}
       - name: Fail if running locally
         if: ${{ env.ACT }} # skip during local actions testing
         run: |
@@ -72,8 +53,8 @@ jobs:
         uses: ./.github/actions/deploy-docs
         with:
           version: ${{ env.CURRENT_VERSION }}
-          alias: latest
-          title: Latest
+          alias: stable
+          title: ${{ env.CURRENT_VERSION }}
           email: ${{ env.GITHUB_BOT_EMAIL }}
           username: ${{ env.GITHUB_BOT_USERNAME }}
           set-default: 'true'

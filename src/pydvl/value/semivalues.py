@@ -9,12 +9,14 @@ where the coefficients $w(k)$ satisfy the property:
 
 $$\sum_{k=1}^n w(k) = 1.$$
 
-!!! Note
+??? Note
     For implementation consistency, we slightly depart from the common definition
     of semi-values, which includes a factor $1/n$ in the sum over subsets.
     Instead, we subsume this factor into the coefficient $w(k)$.
 
-As such, the computation of a semi-value requires two components:
+## Main components
+
+The computation of a semi-value requires two components:
 
 1. A **subset sampler** that generates subsets of the set $D$ of interest.
 2. A **coefficient** $w(k)$ that assigns a weight to each subset size $k$.
@@ -44,6 +46,11 @@ is the weight correction due to the reformulation.
     require caching to be enabled or computation will be doubled wrt. a 'direct'
     implementation of permutation MC.
 
+## Computing semi-values
+
+Samplers and coefficients can be arbitrarily mixed by means of the main entry
+point of this module,
+[compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
 There are several pre-defined coefficients, including the Shapley value of
 (Ghorbani and Zou, 2019)[^1], the Banzhaf index of (Wang and Jia)[^3], and the Beta
 coefficient of (Kwon and Zou, 2022)[^2]. For each of these methods, there is a
@@ -53,35 +60,47 @@ convenience wrapper function. Respectively, these are:
 and [compute_beta_shapley_semivalues][pydvl.value.semivalues.compute_beta_shapley_semivalues].
 instead.
 
+!!! tip "Parallelization and batching"
+    In order to ensure reproducibility and fine-grained control of
+    parallelization, samples are generated in the main process and then
+    distributed to worker processes for evaluation. For small sample sizes, this
+    can lead to a significant overhead. To avoid this, we temporarily provide an
+    additional argument `batch_size` to all methods which can improve
+    performance with small models up to an order of magnitude. Note that this
+    argument will be removed before version 1.0 in favour of a more general
+    solution.
+
 
 ## References
 
 [^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
-    [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).
+    [Data Shapley: Equitable Valuation of Data for Machine Learning](https://proceedings.mlr.press/v97/ghorbani19c.html).
     In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
 
 [^2]: <a name="kwon_beta_2022"></a>Kwon, Y. and Zou, J., 2022.
-    [Beta Shapley: A Unified and Noise-reduced Data Valuation Framework for Machine Learning](http://arxiv.org/abs/2110.14049).
+    [Beta Shapley: A Unified and Noise-reduced Data Valuation Framework for Machine Learning](https://arxiv.org/abs/2110.14049).
     In: Proceedings of the 25th International Conference on Artificial Intelligence and Statistics (AISTATS) 2022, Vol. 151. PMLR, Valencia, Spain.
 
 [^3]: <a name="wang_data_2022"></a>Wang, J.T. and Jia, R., 2022.
-    [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](http://arxiv.org/abs/2205.15466).
+    [Data Banzhaf: A Robust Data Valuation Framework for Machine Learning](https://arxiv.org/abs/2205.15466).
     ArXiv preprint arXiv:2205.15466.
 """
 from __future__ import annotations
 
 import logging
 import math
+import warnings
 from enum import Enum
-from typing import Optional, Protocol, Tuple, Type, TypeVar, cast
+from itertools import islice
+from typing import Iterable, List, Optional, Protocol, Tuple, Type, cast
 
-import numpy as np
 import scipy as sp
 from deprecate import deprecated
 from tqdm import tqdm
 
-from pydvl.utils import ParallelConfig, Utility
-from pydvl.utils.types import Seed
+from pydvl.parallel.config import ParallelConfig
+from pydvl.utils import Utility
+from pydvl.utils.types import IndexT, Seed
 from pydvl.value import ValuationResult
 from pydvl.value.sampler import (
     PermutationSampler,
@@ -107,7 +126,8 @@ log = logging.getLogger(__name__)
 
 
 class SVCoefficient(Protocol):
-    """A coefficient for the computation of semi-values."""
+    """The protocol that coefficients for the computation of semi-values must
+    fulfill."""
 
     def __call__(self, n: int, k: int) -> float:
         """Computes the coefficient for a given subset size.
@@ -119,27 +139,31 @@ class SVCoefficient(Protocol):
         ...
 
 
-IndexT = TypeVar("IndexT", bound=np.generic)
 MarginalT = Tuple[IndexT, float]
 
 
-def _marginal(u: Utility, coefficient: SVCoefficient, sample: SampleT) -> MarginalT:
+def _marginal(
+    u: Utility, coefficient: SVCoefficient, samples: Iterable[SampleT]
+) -> Tuple[MarginalT, ...]:
     """Computation of marginal utility. This is a helper function for
     [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
 
     Args:
         u: Utility object with model, data, and scoring function.
         coefficient: The semivalue coefficient and sampler weight
-        sample: A tuple of index and subset of indices to compute a marginal
-            utility.
+        samples: A collection of samples. Each sample is a tuple of index and subset of
+            indices to compute a marginal utility.
 
     Returns:
-        Tuple with index and its marginal utility.
+        A collection of marginals. Each marginal is a tuple with index and its marginal
+        utility.
     """
     n = len(u.data)
-    idx, s = sample
-    marginal = (u({idx}.union(s)) - u(s)) * coefficient(n, len(s))
-    return idx, marginal
+    marginals: List[MarginalT] = []
+    for idx, s in samples:
+        marginal = (u({idx}.union(s)) - u(s)) * coefficient(n, len(s))
+        marginals.append((idx, marginal))
+    return tuple(marginals)
 
 
 # @deprecated(
@@ -148,11 +172,13 @@ def _marginal(u: Utility, coefficient: SVCoefficient, sample: SampleT) -> Margin
 #     remove_in="0.9.0",
 # )
 def compute_generic_semivalues(
-    sampler: PowersetSampler,
+    sampler: PowersetSampler[IndexT],
     u: Utility,
     coefficient: SVCoefficient,
     done: StoppingCriterion,
     *,
+    batch_size: int = 1,
+    skip_converged: bool = False,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -164,6 +190,16 @@ def compute_generic_semivalues(
         u: Utility object with model, data, and scoring function.
         coefficient: The semi-value coefficient
         done: Stopping criterion.
+        batch_size: Number of marginal evaluations per single parallel job.
+        skip_converged: Whether to skip marginal evaluations for indices that
+            have already converged. **CAUTION**: This is only entirely safe if
+            the stopping criterion is [MaxUpdates][pydvl.value.stopping.MaxUpdates].
+            For any other stopping criterion, the convergence status of indices
+            may change during the computation, or they may be marked as having
+            converged even though in fact the estimated values are far from the
+            true values (e.g. for
+            [AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError],
+            you will probably have to carefully adjust the threshold).
         n_jobs: Number of parallel jobs to use.
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
@@ -171,15 +207,26 @@ def compute_generic_semivalues(
 
     Returns:
         Object with the results.
+
+    !!! warning "Deprecation notice"
+        Parameter `batch_size` is for experimental use and will be removed in
+        future versions.
     """
     from concurrent.futures import FIRST_COMPLETED, Future, wait
 
-    from pydvl.utils import effective_n_jobs, init_executor, init_parallel_backend
+    from pydvl.parallel import effective_n_jobs, init_executor, init_parallel_backend
 
     if isinstance(sampler, PermutationSampler) and not u.enable_cache:
         log.warning(
             "PermutationSampler requires caching to be enabled or computation "
             "will be doubled wrt. a 'direct' implementation of permutation MC"
+        )
+
+    if batch_size != 1:
+        warnings.warn(
+            "Parameter `batch_size` is for experimental use and will be"
+            " removed in future versions",
+            DeprecationWarning,
         )
 
     result = ValuationResult.zeros(
@@ -210,22 +257,40 @@ def compute_generic_semivalues(
 
             completed, pending = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
             for future in completed:
-                idx, marginal = future.result()
-                result.update(idx, marginal)
-                if done(result):
-                    return result
+                for idx, marginal in future.result():
+                    result.update(idx, marginal)
+                    if done(result):
+                        return result
 
             # Ensure that we always have n_submitted_jobs running
             try:
-                for _ in range(n_submitted_jobs - len(pending)):
-                    pending.add(
-                        executor.submit(
-                            _marginal,
-                            u=u,
-                            coefficient=correction,
-                            sample=next(sampler_it),
+                while len(pending) < n_submitted_jobs:
+                    samples = tuple(islice(sampler_it, batch_size))
+                    if len(samples) == 0:
+                        raise StopIteration
+
+                    # Filter out samples for indices that have already converged
+                    filtered_samples = samples
+                    if skip_converged and len(done.converged) > 0:
+                        # cloudpickle can't pickle this on python 3.8:
+                        # filtered_samples = filter(
+                        #     lambda t: not done.converged[t[0]], samples
+                        # )
+                        filtered_samples = tuple(
+                            (idx, sample)
+                            for idx, sample in samples
+                            if not done.converged[idx]
                         )
-                    )
+
+                    if filtered_samples:
+                        pending.add(
+                            executor.submit(
+                                _marginal,
+                                u=u,
+                                coefficient=correction,
+                                samples=filtered_samples,
+                            )
+                        )
             except StopIteration:
                 if len(pending) == 0:
                     return result
@@ -266,6 +331,7 @@ def compute_shapley_semivalues(
     *,
     done: StoppingCriterion = MaxUpdates(100),
     sampler_t: Type[StochasticSampler] = PermutationSampler,
+    batch_size: int = 1,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -282,22 +348,30 @@ def compute_shapley_semivalues(
     Args:
         u: Utility object with model, data, and scoring function.
         done: Stopping criterion.
-        sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler`
-            for a list.
+        sampler_t: The sampler type to use. See the
+            [sampler][pydvl.value.sampler] module for a list.
+        batch_size: Number of marginal evaluations per single parallel job.
         n_jobs: Number of parallel jobs to use.
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
-        seed: Either an instance of a numpy random number generator or a seed for it.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
         progress: Whether to display a progress bar.
 
     Returns:
         Object with the results.
+
+    !!! warning "Deprecation notice"
+        Parameter `batch_size` is for experimental use and will be removed in
+        future versions.
     """
-    return compute_generic_semivalues(
+    # HACK: cannot infer return type because of useless IndexT, NameT
+    return compute_generic_semivalues(  # type: ignore
         sampler_t(u.data.indices, seed=seed),
         u,
         shapley_coefficient,
         done,
+        batch_size=batch_size,
         n_jobs=n_jobs,
         config=config,
         progress=progress,
@@ -309,6 +383,7 @@ def compute_banzhaf_semivalues(
     *,
     done: StoppingCriterion = MaxUpdates(100),
     sampler_t: Type[StochasticSampler] = PermutationSampler,
+    batch_size: int = 1,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -323,22 +398,30 @@ def compute_banzhaf_semivalues(
     Args:
         u: Utility object with model, data, and scoring function.
         done: Stopping criterion.
-        sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler` for a
-            list.
+        sampler_t: The sampler type to use. See the
+            [sampler][pydvl.value.sampler] module for a list.
+        batch_size: Number of marginal evaluations per single parallel job.
         n_jobs: Number of parallel jobs to use.
-        seed: Either an instance of a numpy random number generator or a seed for it.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
         config: Object configuring parallel computation, with cluster address,
             number of cpus, etc.
         progress: Whether to display a progress bar.
 
     Returns:
         Object with the results.
+
+    !!! warning "Deprecation notice"
+        Parameter `batch_size` is for experimental use and will be removed in
+        future versions.
     """
-    return compute_generic_semivalues(
+    # HACK: cannot infer return type because of useless IndexT, NameT
+    return compute_generic_semivalues(  # type: ignore
         sampler_t(u.data.indices, seed=seed),
         u,
         banzhaf_coefficient,
         done,
+        batch_size=batch_size,
         n_jobs=n_jobs,
         config=config,
         progress=progress,
@@ -352,6 +435,7 @@ def compute_beta_shapley_semivalues(
     beta: float = 1,
     done: StoppingCriterion = MaxUpdates(100),
     sampler_t: Type[StochasticSampler] = PermutationSampler,
+    batch_size: int = 1,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -368,7 +452,9 @@ def compute_beta_shapley_semivalues(
         alpha: Alpha parameter of the Beta distribution.
         beta: Beta parameter of the Beta distribution.
         done: Stopping criterion.
-        sampler_t: The sampler type to use. See :mod:`pydvl.value.sampler` for a list.
+        sampler_t: The sampler type to use. See the
+            [sampler][pydvl.value.sampler] module for a list.
+        batch_size: Number of marginal evaluations per (parallelized) task.
         n_jobs: Number of parallel jobs to use.
         seed: Either an instance of a numpy random number generator or a seed for it.
         config: Object configuring parallel computation, with cluster address, number of
@@ -377,23 +463,25 @@ def compute_beta_shapley_semivalues(
 
     Returns:
         Object with the results.
+
+    !!! warning "Deprecation notice"
+        Parameter `batch_size` is for experimental use and will be removed in
+        future versions.
     """
-    return compute_generic_semivalues(
+    # HACK: cannot infer return type because of useless IndexT, NameT
+    return compute_generic_semivalues(  # type: ignore
         sampler_t(u.data.indices, seed=seed),
         u,
         beta_coefficient(alpha, beta),
         done,
+        batch_size=batch_size,
         n_jobs=n_jobs,
         config=config,
         progress=progress,
     )
 
 
-@deprecated(
-    target=True,
-    deprecated_in="0.7.0",
-    remove_in="0.8.0",
-)
+@deprecated(target=True, deprecated_in="0.7.0", remove_in="0.8.0")
 class SemiValueMode(str, Enum):
     """Enumeration of semi-value modes.
 
@@ -413,7 +501,8 @@ def compute_semivalues(
     *,
     done: StoppingCriterion = MaxUpdates(100),
     mode: SemiValueMode = SemiValueMode.Shapley,
-    sampler_t: Type[StochasticSampler] = PermutationSampler,
+    sampler_t: Type[StochasticSampler[IndexT]] = PermutationSampler[IndexT],
+    batch_size: int = 1,
     n_jobs: int = 1,
     seed: Optional[Seed] = None,
     **kwargs,
@@ -457,6 +546,7 @@ def compute_semivalues(
             [SemiValueMode][pydvl.value.semivalues.SemiValueMode] for a list.
         sampler_t: The sampler type to use. See [sampler][pydvl.value.sampler]
             for a list.
+        batch_size: Number of marginal evaluations per (parallelized) task.
         n_jobs: Number of parallel jobs to use.
         seed: Either an instance of a numpy random number generator or a seed for it.
         kwargs: Additional keyword arguments passed to
@@ -464,6 +554,10 @@ def compute_semivalues(
 
     Returns:
         Object with the results.
+
+    !!! warning "Deprecation notice"
+        Parameter `batch_size` is for experimental use and will be removed in
+        future versions.
     """
     if mode == SemiValueMode.Shapley:
         coefficient = shapley_coefficient
@@ -476,11 +570,14 @@ def compute_semivalues(
     else:
         raise ValueError(f"Unknown mode {mode}")
     coefficient = cast(SVCoefficient, coefficient)
-    return compute_generic_semivalues(
+
+    # HACK: cannot infer return type because of useless IndexT, NameT
+    return compute_generic_semivalues(  # type: ignore
         sampler_t(u.data.indices, seed=seed),
         u,
         coefficient,
         done,
         n_jobs=n_jobs,
+        batch_size=batch_size,
         **kwargs,
     )

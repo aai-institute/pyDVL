@@ -5,7 +5,16 @@ library.
 from __future__ import annotations
 
 from itertools import chain, combinations
-from typing import Collection, Generator, Iterator, Optional, Tuple, TypeVar, overload
+from typing import (
+    Collection,
+    Generator,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    overload,
+)
 
 import numpy as np
 from numpy.typing import NDArray
@@ -19,6 +28,7 @@ __all__ = [
     "random_matrix_with_condition_number",
     "random_subset",
     "random_powerset",
+    "random_powerset_label_min",
     "random_subset_of_size",
     "top_k_value_accuracy",
 ]
@@ -71,9 +81,7 @@ def num_samples_permutation_hoeffding(eps: float, delta: float, u_range: float) 
 
 
 def random_subset(
-    s: NDArray[T],
-    q: float = 0.5,
-    seed: Optional[Seed] = None,
+    s: NDArray[T], q: float = 0.5, seed: Optional[Seed] = None
 ) -> NDArray[T]:
     """Returns one subset at random from ``s``.
 
@@ -81,7 +89,8 @@ def random_subset(
         s: set to sample from
         q: Sampling probability for elements. The default 0.5 yields a
             uniform distribution over the power set of s.
-        seed: Either an instance of a numpy random number generator or a seed for it.
+        seed: Either an instance of a numpy random number generator or a seed
+            for it.
 
     Returns:
         The subset
@@ -134,10 +143,68 @@ def random_powerset(
         total += 1
 
 
-def random_subset_of_size(
+def random_powerset_label_min(
     s: NDArray[T],
-    size: int,
+    labels: NDArray[np.int_],
+    min_elements_per_label: int = 1,
     seed: Optional[Seed] = None,
+) -> Generator[NDArray[T], None, None]:
+    """Draws random subsets from `s`, while ensuring that at least
+    `min_elements_per_label` elements per label are included in the draw. It can be used
+    for classification problems to ensure that a set contains information for all labels
+    (or not if `min_elements_per_label=0`).
+
+    Args:
+        s: Set to sample from
+        labels: Labels for the samples
+        min_elements_per_label: Minimum number of elements for each label.
+        seed: Either an instance of a numpy random number generator or a seed for it.
+
+    Returns:
+        Generated draw from the powerset of s with `min_elements_per_label` for each
+        label.
+
+    Raises:
+        ValueError: If `s` and `labels` are of different length or
+            `min_elements_per_label` is smaller than 0.
+    """
+    if len(labels) != len(s):
+        raise ValueError("Set and labels have to be of same size.")
+
+    if min_elements_per_label < 0:
+        raise ValueError(
+            f"Parameter min_elements={min_elements_per_label} needs to be bigger or "
+            f"equal to 0."
+        )
+
+    rng = np.random.default_rng(seed)
+    unique_labels = np.unique(labels)
+
+    while True:
+        subsets: List[NDArray[T]] = []
+        for label in unique_labels:
+            label_indices = np.asarray(np.where(labels == label)[0])
+            subset_size = int(
+                rng.integers(
+                    min(min_elements_per_label, len(label_indices)),
+                    len(label_indices) + 1,
+                )
+            )
+            if subset_size > 0:
+                subsets.append(
+                    random_subset_of_size(s[label_indices], subset_size, seed=rng)
+                )
+
+        if len(subsets) > 0:
+            subset = np.concatenate(tuple(subsets))
+            rng.shuffle(subset)
+            yield subset
+        else:
+            yield np.array([], dtype=s.dtype)
+
+
+def random_subset_of_size(
+    s: NDArray[T], size: int, seed: Optional[Seed] = None
 ) -> NDArray[T]:
     """Samples a random subset of given size uniformly from the powerset
     of `s`.

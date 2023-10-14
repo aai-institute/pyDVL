@@ -17,8 +17,10 @@ You can read more [in the documentation][computing-data-values].
 ## References
 
 [^1]: <a name="jia_efficient_2019"></a>Jia, R. et al., 2019.
-    [Towards Efficient Data Valuation Based on the Shapley Value](http://proceedings.mlr.press/v89/jia19a.html).
-    In: Proceedings of the 22nd International Conference on Artificial Intelligence and Statistics, pp. 1167–1176. PMLR.
+    [Towards Efficient Data Valuation Based on the Shapley
+    Value](https://proceedings.mlr.press/v89/jia19a.html).
+    In: Proceedings of the 22nd International Conference on Artificial
+    Intelligence and Statistics, pp. 1167–1176. PMLR.
 """
 import logging
 from collections import namedtuple
@@ -29,9 +31,9 @@ import numpy as np
 from numpy.random import SeedSequence
 from numpy.typing import NDArray
 
-from pydvl.utils import MapReduceJob, ParallelConfig, Utility, maybe_progress
+from pydvl.parallel import MapReduceJob, ParallelConfig, effective_n_jobs
+from pydvl.utils import Utility, maybe_progress
 from pydvl.utils.numeric import random_subset_of_size
-from pydvl.utils.parallel.backend import effective_n_jobs
 from pydvl.utils.status import Status
 from pydvl.utils.types import Seed, ensure_seed_sequence
 from pydvl.value import ValuationResult

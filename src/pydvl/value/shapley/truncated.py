@@ -2,20 +2,21 @@
 ## References
 
 [^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
-    [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).
+    [Data Shapley: Equitable Valuation of Data for Machine Learning](https://proceedings.mlr.press/v97/ghorbani19c.html).
     In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
 
 """
 import abc
 import logging
-from typing import cast
+from typing import Optional, cast
 
 import numpy as np
 from deprecate import deprecated
 
-from pydvl.utils import ParallelConfig, Utility, running_moments
+from pydvl.parallel.config import ParallelConfig
+from pydvl.utils import Utility, running_moments
 from pydvl.value import ValuationResult
-from pydvl.value.stopping import StoppingCriterion
+from pydvl.value.stopping import MaxChecks, StoppingCriterion
 
 __all__ = [
     "TruncationPolicy",
@@ -57,7 +58,7 @@ class TruncationPolicy(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def reset(self):
+    def reset(self, u: Optional[Utility] = None):
         """Reset the policy to a state ready for a new permutation."""
         ...
 
@@ -83,7 +84,7 @@ class NoTruncation(TruncationPolicy):
     def _check(self, idx: int, score: float) -> bool:
         return False
 
-    def reset(self):
+    def reset(self, u: Optional[Utility] = None):
         pass
 
 
@@ -114,7 +115,7 @@ class FixedTruncation(TruncationPolicy):
         self.count += 1
         return self.count >= self.max_marginals
 
-    def reset(self):
+    def reset(self, u: Optional[Utility] = None):
         self.count = 0
 
 
@@ -133,14 +134,18 @@ class RelativeTruncation(TruncationPolicy):
         super().__init__()
         self.rtol = rtol
         logger.info("Computing total utility for permutation truncation.")
-        self.total_utility = u(u.data.indices)
+        self.total_utility = self.reset(u)
+        self._u = u
 
     def _check(self, idx: int, score: float) -> bool:
         # Explicit cast for the benefit of mypy 🤷
         return bool(np.allclose(score, self.total_utility, rtol=self.rtol))
 
-    def reset(self):
-        pass
+    def reset(self, u: Optional[Utility] = None):
+        if u is None:
+            u = self._u
+
+        self.total_utility = u(u.data.indices)
 
 
 class BootstrapTruncation(TruncationPolicy):
@@ -178,7 +183,7 @@ class BootstrapTruncation(TruncationPolicy):
             self.sigmas * np.sqrt(self.variance)
         )
 
-    def reset(self):
+    def reset(self, u: Optional[Utility] = None):
         self.count = 0
         self.variance = self.mean = 0
 

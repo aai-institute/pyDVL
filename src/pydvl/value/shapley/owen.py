@@ -16,7 +16,8 @@ import numpy as np
 from numpy.typing import NDArray
 from tqdm import tqdm
 
-from pydvl.utils import MapReduceJob, ParallelConfig, Utility, random_powerset
+from pydvl.parallel import MapReduceJob, ParallelConfig
+from pydvl.utils import Utility, random_powerset
 from pydvl.utils.types import Seed
 from pydvl.value import ValuationResult
 from pydvl.value.stopping import MinUpdates

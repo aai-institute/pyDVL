@@ -149,7 +149,6 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
                     param,
                 ),
                 (x.to(self.device),),
-                strict=True,
             )
             return self.loss(outputs, y.to(self.device))
 

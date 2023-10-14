@@ -4,7 +4,8 @@ from concurrent.futures import FIRST_COMPLETED, Future, wait
 
 from tqdm import tqdm
 
-from pydvl.utils import ParallelConfig, Utility, effective_n_jobs, init_executor
+from pydvl.parallel import ParallelConfig, effective_n_jobs, init_executor
+from pydvl.utils import Utility
 from pydvl.value.result import ValuationResult
 
 __all__ = ["compute_loo"]

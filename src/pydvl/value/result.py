@@ -57,8 +57,6 @@ from typing import (
     Literal,
     Optional,
     Sequence,
-    Tuple,
-    TypeVar,
     Union,
     cast,
     overload,
@@ -71,20 +69,16 @@ from numpy.typing import NDArray
 from pydvl.utils.dataset import Dataset
 from pydvl.utils.numeric import running_moments
 from pydvl.utils.status import Status
-from pydvl.utils.types import Seed
+from pydvl.utils.types import IndexT, NameT, Seed
 
 try:
     import pandas  # Try to import here for the benefit of mypy
 except ImportError:
     pass
 
-__all__ = ["ValuationResult", "ValueItem", "IndexT", "NameT"]
+__all__ = ["ValuationResult", "ValueItem"]
 
 logger = logging.getLogger(__name__)
-
-# TODO: Move to value.types once it's there
-IndexT = TypeVar("IndexT", bound=np.int_)
-NameT = TypeVar("NameT", bound=Any)
 
 
 @total_ordering
@@ -477,14 +471,14 @@ class ValuationResult(
             f"values={np.array_str(self.values, precision=4, suppress_small=True)},"
             f"indices={np.array_str(self.indices)},"
             f"names={np.array_str(self.names)},"
-            f"counts={np.array_str(self.counts)},"
+            f"counts={np.array_str(self.counts)}"
         )
         for k, v in self._extra_values.items():
             repr_string += f", {k}={v}"
         repr_string += ")"
         return repr_string
 
-    def _check_compatible(self, other: "ValuationResult"):
+    def _check_compatible(self, other: ValuationResult):
         if not isinstance(other, ValuationResult):
             raise NotImplementedError(
                 f"Cannot combine ValuationResult with {type(other)}"
@@ -492,7 +486,9 @@ class ValuationResult(
         if self.algorithm and self.algorithm != other.algorithm:
             raise ValueError("Cannot combine results from different algorithms")
 
-    def __add__(self, other: "ValuationResult") -> "ValuationResult":
+    def __add__(
+        self, other: ValuationResult[IndexT, NameT]
+    ) -> ValuationResult[IndexT, NameT]:
         """Adds two ValuationResults.
 
         The values must have been computed with the same algorithm. An exception
@@ -542,10 +538,14 @@ class ValuationResult(
         xm[other_pos] = other._values
         vm[other_pos] = other._variances
 
+        # np.maximum(1, n + m) covers case n = m = 0.
+        n_m_sum = np.maximum(1, n + m)
+
         # Sample mean of n+m samples from two means of n and m samples
-        xnm = (n * xn + m * xm) / (n + m)
+        xnm = (n * xn + m * xm) / n_m_sum
+
         # Sample variance of n+m samples from two sample variances of n and m samples
-        vnm = (n * (vn + xn**2) + m * (vm + xm**2)) / (n + m) - xnm**2
+        vnm = (n * (vn + xn**2) + m * (vm + xm**2)) / n_m_sum - xnm**2
 
         if np.any(vnm < 0):
             if np.any(vnm < -1e-6):
@@ -601,7 +601,7 @@ class ValuationResult(
             # extra_values=self._extra_values.update(other._extra_values),
         )
 
-    def update(self, idx: int, new_value: float) -> "ValuationResult":
+    def update(self, idx: int, new_value: float) -> ValuationResult[IndexT, NameT]:
         """Updates the result in place with a new value, using running mean
         and variance.
 
@@ -623,13 +623,24 @@ class ValuationResult(
             self._values[pos], self._variances[pos], self._counts[pos], new_value
         )
         self[pos] = ValueItem(
-            index=cast(IndexT, idx),
+            index=cast(IndexT, idx),  # FIXME
             name=self._names[pos],
             value=val,
             variance=var,
             count=self._counts[pos] + 1,
         )
         return self
+
+    def scale(self, factor: float, indices: Optional[NDArray[IndexT]] = None):
+        """
+        Scales the values and variances of the result by a coefficient.
+
+        Args:
+            factor: Factor to scale by.
+            indices: Indices to scale. If None, all values are scaled.
+        """
+        self._values[self._sort_positions[indices]] *= factor
+        self._variances[self._sort_positions[indices]] *= factor**2
 
     def get(self, idx: Integral) -> ValueItem:
         """Retrieves a ValueItem by data index, as opposed to sort index, like
@@ -738,7 +749,7 @@ class ValuationResult(
         indices: Optional[Sequence[IndexT] | NDArray[IndexT]] = None,
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         n_samples: int = 0,
-    ) -> "ValuationResult":
+    ) -> ValuationResult:
         """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
 
         Empty results are characterised by having an empty array of values. When
@@ -766,7 +777,7 @@ class ValuationResult(
         indices: Optional[Sequence[IndexT] | NDArray[IndexT]] = None,
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         n_samples: int = 0,
-    ) -> "ValuationResult":
+    ) -> ValuationResult:
         """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
 
         Empty results are characterised by having an empty array of values. When
@@ -787,14 +798,18 @@ class ValuationResult(
         if indices is None:
             indices = np.arange(n_samples, dtype=np.int_)
         else:
-            indices = np.array(indices)
+            indices = np.array(indices, dtype=np.int_)
+
+        if data_names is None:
+            data_names = np.array(indices)
+        else:
+            data_names = np.array(data_names)
+
         return cls(
             algorithm=algorithm,
             status=Status.Pending,
             indices=indices,
-            data_names=data_names
-            if data_names is not None
-            else np.empty_like(indices, dtype=object),
+            data_names=data_names,
             values=np.zeros(len(indices)),
             variances=np.zeros(len(indices)),
             counts=np.zeros(len(indices), dtype=np.int_),

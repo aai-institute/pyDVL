@@ -5,7 +5,7 @@ inputs:
     description: Version number to use
     required: true
   alias:
-    description: Alias to use (latest or stable)
+    description: Alias to use (stable or develop)
     required: true
   title:
     description: Alternative title to use

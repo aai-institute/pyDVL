@@ -1,15 +1,94 @@
-"""
+r"""
 Stopping criteria for value computations.
 
-This module provides a basic set of stopping criteria, like [MaxUpdates][pydvl.value.stopping.MaxUpdates],
-[MaxTime][pydvl.value.stopping.MaxTime], or [HistoryDeviation][pydvl.value.stopping.HistoryDeviation] among others.
-These can behave in different ways depending on the context.
-For example, [MaxUpdates][pydvl.value.stopping.MaxUpdates] limits
+This module provides a basic set of stopping criteria, like
+[MaxUpdates][pydvl.value.stopping.MaxUpdates],
+[MaxTime][pydvl.value.stopping.MaxTime], or
+[HistoryDeviation][pydvl.value.stopping.HistoryDeviation] among others. These
+can behave in different ways depending on the context. For example,
+[MaxUpdates][pydvl.value.stopping.MaxUpdates] limits
 the number of updates to values, which depending on the algorithm may mean a
 different number of utility evaluations or imply other computations like solving
 a linear or quadratic program.
 
-# Creating stopping criteria
+Stopping criteria are callables that are evaluated on a
+[ValuationResult][pydvl.value.result.ValuationResult] and return a
+[Status][pydvl.utils.status.Status] object. They can be combined using boolean
+operators.
+
+## How convergence is determined
+
+Most stopping criteria keep track of the convergence of each index separately
+but make global decisions based on the overall convergence of some fraction of
+all indices. For example, if we have a stopping criterion that checks whether
+the standard error of 90% of values is below a threshold, then methods will keep
+updating **all** indices until 90% of them have converged, irrespective of the
+quality of the individual estimates, and *without freezing updates* for indices
+along the way as values individually attain low standard error.
+
+This has some practical implications, because some values do tend to converge
+sooner than others. For example, assume we use the criterion
+`AbsoluteStandardError(0.02) | MaxUpdates(1000)`. Then values close to 0 might
+be marked as "converged" rather quickly because they fulfill the first
+criterion, say after 20 iterations, despite being poor estimates. Because other
+indices take much longer to have low standard error and the criterion is a
+global check, the "converged" ones keep being updated and end up being good
+estimates. In this case, this has been beneficial, but one might not wish for
+converged values to be updated, if one is sure that the criterion is adequate
+for individual values.
+
+[Semi-value methods][pydvl.value.semivalues] include a parameter
+`skip_converged` that allows to skip the computation of values that have
+converged. The way to avoid doing this too early is to use a more stringent
+check, e.g. `AbsoluteStandardError(1e-3) | MaxUpdates(1000)`. With
+`skip_converged=True` this check can still take less time than the first one,
+despite requiring more iterations for some indices.
+
+
+## Choosing a stopping criterion
+
+The choice of a stopping criterion greatly depends on the algorithm and the
+context. A safe bet is to combine a [MaxUpdates][pydvl.value.stopping.MaxUpdates]
+or a [MaxTime][pydvl.value.stopping.MaxTime] with a
+[HistoryDeviation][pydvl.value.stopping.HistoryDeviation] or an
+[AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError]. The former
+will ensure that the computation does not run for too long, while the latter
+will try to achieve results that are stable enough. Note however that if the
+threshold is too strict, one will always end up running until a maximum number
+of iterations or time. Also keep in mind that different values converge at
+different times, so you might want to use tight thresholds and `skip_converged`
+as described above for semi-values.
+
+
+??? Example
+    ```python
+    from pydvl.value import AbsoluteStandardError, MaxUpdates, compute_banzhaf_semivalues
+
+    utility = ...  # some utility object
+    criterion = AbsoluteStandardError(threshold=1e-3, burn_in=32) | MaxUpdates(1000)
+    values = compute_banzhaf_semivalues(
+        utility,
+        criterion,
+        skip_converged=True,  # skip values that have converged (CAREFUL!)
+    )
+    ```
+    This will compute the Banzhaf semivalues for `utility` until either the
+    absolute standard error is below `1e-3` or `1000` updates have been
+    performed. The `burn_in` parameter is used to discard the first `32` updates
+    from the computation of the standard error. The `skip_converged` parameter
+    is used to avoid computing more marginals for indices that have converged,
+    which is useful if
+    [AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError] is met
+    before [MaxUpdates][pydvl.value.stopping.MaxUpdates] for some indices.
+
+!!! Warning
+    Be careful not to reuse the same stopping criterion for different
+    computations. The object has state and will not be reset between calls to
+    value computation methods. If you need to reuse the same criterion, you
+    should create a new instance.
+
+
+## Creating stopping criteria
 
 The easiest way is to declare a function implementing the interface
 [StoppingCriterionCallable][pydvl.value.stopping.StoppingCriterionCallable] and
@@ -18,23 +97,23 @@ creates a [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] object
 that can be composed with other stopping criteria.
 
 Alternatively, and in particular if reporting of completion is required, one can
-inherit from this class and implement the abstract methods
-[_check][pydvl.value.stopping.StoppingCriterion._check] and
+inherit from this class and implement the abstract methods `_check` and
 [completion][pydvl.value.stopping.StoppingCriterion.completion].
 
-# Composing stopping criteria
+## Combining stopping criteria
 
 Objects of type [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] can
-be composed with the binary operators `&` (*and*), and `|` (*or*), following the
+be combined with the binary operators `&` (*and*), and `|` (*or*), following the
 truth tables of [Status][pydvl.utils.status.Status]. The unary operator `~`
 (*not*) is also supported. See
 [StoppingCriterion][pydvl.value.stopping.StoppingCriterion] for details on how
 these operations affect the behavior of the stopping criteria.
 
+
 ## References
 
 [^1]: <a name="ghorbani_data_2019"></a>Ghorbani, A., Zou, J., 2019.
-    [Data Shapley: Equitable Valuation of Data for Machine Learning](http://proceedings.mlr.press/v97/ghorbani19c.html).
+    [Data Shapley: Equitable Valuation of Data for Machine Learning](https://proceedings.mlr.press/v97/ghorbani19c.html).
     In: Proceedings of the 36th International Conference on Machine Learning, PMLR, pp. 2242–2251.
 """
 
@@ -147,6 +226,9 @@ class StoppingCriterion(abc.ABC):
             return 0.0
         return float(np.mean(self.converged).item())
 
+    def reset(self):
+        pass
+
     @property
     def converged(self) -> NDArray[np.bool_]:
         """Returns a boolean array indicating whether the values have converged
@@ -163,6 +245,15 @@ class StoppingCriterion(abc.ABC):
 
     @property
     def name(self):
+        log = logging.getLogger(__name__)
+        # This string for the benefit of deprecation searches:
+        # remove_in="0.8.0"
+        log.warning(
+            "The `name` attribute of `StoppingCriterion` is deprecated and will be removed in 0.8.0. "
+        )
+        return getattr(self, "_name", type(self).__name__)
+
+    def __str__(self):
         return type(self).__name__
 
     def __call__(self, result: ValuationResult) -> Status:
@@ -182,7 +273,7 @@ class StoppingCriterion(abc.ABC):
             fun=lambda result: self._check(result) & other._check(result),
             converged=lambda: self.converged & other.converged,
             completion=lambda: min(self.completion(), other.completion()),
-            name=f"Composite StoppingCriterion: {self.name} AND {other.name}",
+            name=f"Composite StoppingCriterion: {str(self)} AND {str(other)}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __or__(self, other: "StoppingCriterion") -> "StoppingCriterion":
@@ -190,7 +281,7 @@ class StoppingCriterion(abc.ABC):
             fun=lambda result: self._check(result) | other._check(result),
             converged=lambda: self.converged | other.converged,
             completion=lambda: max(self.completion(), other.completion()),
-            name=f"Composite StoppingCriterion: {self.name} OR {other.name}",
+            name=f"Composite StoppingCriterion: {str(self)} OR {str(other)}",
         )(modify_result=self.modify_result or other.modify_result)
 
     def __invert__(self) -> "StoppingCriterion":
@@ -198,7 +289,7 @@ class StoppingCriterion(abc.ABC):
             fun=lambda result: ~self._check(result),
             converged=lambda: ~self.converged,
             completion=lambda: 1 - self.completion(),
-            name=f"Composite StoppingCriterion: NOT {self.name}",
+            name=f"Composite StoppingCriterion: NOT {str(self)}",
         )(modify_result=self.modify_result)
 
 
@@ -239,8 +330,7 @@ def make_criterion(
                 return super().converged
             return converged()
 
-        @property
-        def name(self):
+        def __str__(self):
             return self._name
 
         def completion(self) -> float:
@@ -254,13 +344,13 @@ def make_criterion(
 class AbsoluteStandardError(StoppingCriterion):
     r"""Determine convergence based on the standard error of the values.
 
-    If $s_i$ is the standard error for datum $i$ and $v_i$ its value, then this
-    criterion returns [Converged][pydvl.utils.status.Status] if
-    $s_i < \epsilon$ for all $i$ and a threshold value $\epsilon \gt 0$.
+    If $s_i$ is the standard error for datum $i$, then this criterion returns
+    [Converged][pydvl.utils.status.Status] if $s_i < \epsilon$ for all $i$ and a
+    threshold value $\epsilon \gt 0$.
 
     Args:
         threshold: A value is considered to have converged if the standard
-            error is below this value. A way of choosing it is to pick some
+            error is below this threshold. A way of choosing it is to pick some
             percentage of the range of the values. For Shapley values this is
             the difference between the maximum and minimum of the utility
             function (to see this substitute the maximum and minimum values of
@@ -270,7 +360,7 @@ class AbsoluteStandardError(StoppingCriterion):
         burn_in: The number of iterations to ignore before checking for
             convergence. This is required because computations typically start
             with zero variance, as a result of using
-            [empty()][pydvl.value.result.ValuationResult.empty]. The default is
+            [zeros()][pydvl.value.result.ValuationResult.zeros]. The default is
             set to an arbitrary minimum which is usually enough but may need to
             be increased.
     """
@@ -294,6 +384,9 @@ class AbsoluteStandardError(StoppingCriterion):
         if np.mean(self._converged) >= self.fraction:
             return Status.Converged
         return Status.Pending
+
+    def __str__(self):
+        return f"AbsoluteStandardError(threshold={self.threshold}, fraction={self.fraction}, burn_in={self.burn_in})"
 
 
 class StandardError(AbsoluteStandardError):
@@ -323,7 +416,7 @@ class MaxChecks(StoppingCriterion):
     def _check(self, result: ValuationResult) -> Status:
         if self.n_checks:
             self._count += 1
-            if self._count > self.n_checks:
+            if self._count >= self.n_checks:
                 self._converged = np.ones_like(result.values, dtype=bool)
                 return Status.Converged
         return Status.Pending
@@ -332,6 +425,12 @@ class MaxChecks(StoppingCriterion):
         if self.n_checks:
             return min(1.0, self._count / self.n_checks)
         return 0.0
+
+    def reset(self):
+        self._count = 0
+
+    def __str__(self):
+        return f"MaxChecks(n_checks={self.n_checks})"
 
 
 class MaxUpdates(StoppingCriterion):
@@ -377,6 +476,9 @@ class MaxUpdates(StoppingCriterion):
             return self.last_max / self.n_updates
         return 0.0
 
+    def __str__(self):
+        return f"MaxUpdates(n_updates={self.n_updates})"
+
 
 class MinUpdates(StoppingCriterion):
     """Terminate as soon as all value updates exceed or equal the given threshold.
@@ -414,6 +516,9 @@ class MinUpdates(StoppingCriterion):
             return self.last_min / self.n_updates
         return 0.0
 
+    def __str__(self):
+        return f"MinUpdates(n_updates={self.n_updates})"
+
 
 class MaxTime(StoppingCriterion):
     """Terminate if the computation time exceeds the given number of seconds.
@@ -446,6 +551,12 @@ class MaxTime(StoppingCriterion):
         if self.max_seconds is None:
             return 0.0
         return (time() - self.start) / self.max_seconds
+
+    def reset(self):
+        self.start = time()
+
+    def __str__(self):
+        return f"MaxTime(seconds={self.max_seconds})"
 
 
 class HistoryDeviation(StoppingCriterion):
@@ -520,10 +631,16 @@ class HistoryDeviation(StoppingCriterion):
             quots = np.divide(diffs, curr[ii], out=diffs, where=curr[ii] != 0)
             # quots holds the quotients when the denominator is non-zero, and
             # the absolute difference, which is just the memory, otherwise.
-            if np.mean(quots) < self.rtol:
+            if len(quots) > 0 and np.mean(quots) < self.rtol:
                 self._converged = self.update_op(
                     self._converged, r.counts > self.n_steps
                 )  # type: ignore
                 if np.all(self._converged):
                     return Status.Converged
         return Status.Pending
+
+    def reset(self):
+        self._memory = None  # type: ignore
+
+    def __str__(self):
+        return f"HistoryDeviation(n_steps={self.n_steps}, rtol={self.rtol})"

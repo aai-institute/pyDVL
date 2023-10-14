@@ -47,13 +47,10 @@ def check_values(
     *,
     extra_values_names: Sequence[str] = tuple(),
 ):
-    """Compares values in dictionaries.
+    """Compares values.
 
     Asserts that `|value - exact_value| < |exact_value| * rtol + atol` for
-    all pairs of `value`, `exact_value` with equal keys.
-
-    Note that this does not assume any ordering (despite values typically being
-    stored in an OrderedDict elsewhere.
+    all pairs of `value`, `exact_value` with equal index.
 
     :param values:
     :param exact_values:

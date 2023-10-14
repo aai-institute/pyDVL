@@ -7,23 +7,24 @@
 </p>
 
 <p align="center" style="text-align:center;">
-    <a href="https://github.com/aai-institute/pyDVL/actions/workflows/tox.yaml">
-        <img src="https://github.com/aai-institute/pyDVL/actions/workflows/tox.yaml/badge.svg" alt="Build Status"/>
-    </a>
-    <br>
-    <a href="https://pypi.org/project/pydvl/">
-        <img src="https://img.shields.io/pypi/v/pydvl.svg"/>
+    <a href="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml">
+        <img src="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml/badge.svg" alt="Build status" >
     </a>
     <a href="https://pypi.org/project/pydvl/">
-        <img src="https://img.shields.io/pypi/pyversions/pydvl.svg"/>
+        <img src="https://img.shields.io/pypi/v/pydvl.svg" alt="PyPI">
     </a>
-    <img alt="PyPI - License" src="https://img.shields.io/pypi/l/pydvl"/>
-</p>
-
-<p align="center" style="text-align:center;">
-    <strong>
-    <a href="https://aai-institute.github.io/pyDVL">Docs</a>
-    </strong>
+    <a href="https://pypi.org/project/pydvl/">
+        <img src="https://img.shields.io/pypi/pyversions/pydvl.svg" alt="Version">
+    </a>
+    <a href="https://raw.githubusercontent.com/aai-institute/pyDVL/master/LICENSE">
+        <img alt="License" src="https://img.shields.io/pypi/l/pydvl">
+    </a>
+    <a href="https://zenodo.org/badge/latestdoi/354117916">
+        <img src="https://zenodo.org/badge/354117916.svg" alt="DOI">
+    </a>
+    <a href="https://pydvl.org">
+        <img src="https://img.shields.io/badge/docs-All%20versions-009485" alt="documentation">
+    </a>
 </p>
 
 pyDVL collects algorithms for Data Valuation and Influence Function computation.
@@ -51,7 +52,7 @@ methods from the following papers:
   Shapley Values](https://doi.org/10.1109/ICPR48806.2021.9412511). In 25th
   International Conference on Pattern Recognition (ICPR 2020), 7992–99. IEEE,
   2021.
-- Yan, T., & Procaccia, A. D. [If You Like Shapley Then You’ll Love the
+- Yan, T., and Procaccia, A. D. [If You Like Shapley Then You’ll Love the
   Core](https://ojs.aaai.org/index.php/AAAI/article/view/16721). Proceedings of
   the AAAI Conference on Artificial Intelligence, 35(6) (2021): 5751-5759.
 - Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nick Hynes, Nezihe Merve
@@ -66,6 +67,15 @@ methods from the following papers:
   Valuation Framework for Machine Learning](http://arxiv.org/abs/2110.14049).
   In Proceedings of the 25th International Conference on Artificial Intelligence
   and Statistics (AISTATS) 2022, Vol. 151. Valencia, Spain: PMLR, 2022.
+- Kwon, Yongchan, and James Zou. [Data-OOB: Out-of-Bag Estimate as a Simple and
+  Efficient Data Value](https://proceedings.mlr.press/v202/kwon23e.html). In
+  Proceedings of the 40th International Conference on Machine Learning, 18135–52.
+  PMLR, 2023.
+- Schoch, Stephanie, Haifeng Xu, and Yangfeng Ji. [CS-Shapley: Class-Wise
+  Shapley Values for Data Valuation in
+  Classification](https://openreview.net/forum?id=KTOcrOR5mQ9). In Proc. of the
+  Thirty-Sixth Conference on Neural Information Processing Systems (NeurIPS).
+  New Orleans, Louisiana, USA, 2022.
 
 Influence Functions compute the effect that single points have on an estimator /
 model. We implement methods from the following papers:
@@ -77,6 +87,9 @@ model. We implement methods from the following papers:
 - Naman Agarwal, Brian Bullins, and Elad Hazan, [Second-Order Stochastic Optimization
   for Machine Learning in Linear Time](https://www.jmlr.org/papers/v18/16-491.html),
   Journal of Machine Learning Research 18 (2017): 1-40.
+- Schioppa, Andrea, Polina Zablotskaia, David Vilar, and Artem Sokolov. 
+  [Scaling Up Influence Functions](http://arxiv.org/abs/2112.03052). 
+  In Proceedings of the AAAI-22. arXiv, 2021.
 
 # Installation
 
@@ -103,7 +116,7 @@ documentation.
 
 For influence computation, follow these steps:
 
-1. Wrap your model and loss in a `TorchTwiceDifferential` object
+1. Wrap your model and loss in a `TorchTwiceDifferentiable` object
 2. Compute influence factors by providing training data and inversion method
 
 Using the conjugate gradient algorithm, this would look like:

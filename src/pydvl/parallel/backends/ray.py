@@ -7,8 +7,8 @@ import ray
 from ray import ObjectRef
 from ray.util.joblib import register_ray
 
-from pydvl.utils import ParallelConfig
-from pydvl.utils.parallel.backend import BaseParallelBackend, CancellationPolicy
+from pydvl.parallel.backend import BaseParallelBackend, CancellationPolicy
+from pydvl.parallel.config import ParallelConfig
 
 __all__ = ["RayParallelBackend"]
 
@@ -20,7 +20,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     """Class used to wrap ray to make it transparent to algorithms.
 
     It shouldn't be initialized directly. You should instead call
-    [init_parallel_backend()][pydvl.utils.parallel.backend.init_parallel_backend].
+    [init_parallel_backend()][pydvl.parallel.backend.init_parallel_backend].
 
     Args:
         config: instance of [ParallelConfig][pydvl.utils.config.ParallelConfig]
@@ -43,7 +43,7 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
         config: ParallelConfig = ParallelConfig(),
         cancel_futures: CancellationPolicy = CancellationPolicy.PENDING,
     ) -> Executor:
-        from pydvl.utils.parallel.futures.ray import RayExecutor
+        from pydvl.parallel.futures.ray import RayExecutor
 
         return RayExecutor(max_workers, config=config, cancel_futures=cancel_futures)  # type: ignore
 
