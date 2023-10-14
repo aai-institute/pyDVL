@@ -469,7 +469,7 @@
         
   
   <span class="md-ellipsis">
-    Shapley Values
+    Shapley values
   </span>
   
 
@@ -524,6 +524,26 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../value/classwise-shapley/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Classwise Shapley
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
     
     
     
@@ -533,9 +553,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
         
-          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -546,8 +566,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_6">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
             <span class="md-nav__icon md-icon"></span>
             Examples
           </label>
@@ -2376,6 +2396,26 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/pydvl/value/shapley/classwise/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Classwise
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/pydvl/value/shapley/common/" class="md-nav__link">
         
   
@@ -2725,6 +2765,8 @@
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
 <h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <ul>
+<li>New method: Class-wise Shapley values
+  <a href="https://github.com/aai-institute/pyDVL/pull/338">PR #338</a></li>
 <li>No longer using docker within tests to start a memcached server
   <a href="https://github.com/aai-institute/pyDVL/pull/444">PR #444</a></li>
 <li>Faster semi-value computation with per-index check of stopping criteria (optional)
@@ -2764,6 +2806,9 @@ randomness.</p>
   <code>compute_beta_shapley_semivalues</code>, <code>compute_shapley_semivalues</code> and
   <code>compute_generic_semivalues</code>.
   <a href="https://github.com/aai-institute/pyDVL/pull/428">PR #428</a></li>
+<li>Added classwise Shapley as proposed by (Schoch et al. 2021)
+  [https://arxiv.org/abs/2211.06800]
+  <a href="https://github.com/aai-institute/pyDVL/pull/338">PR #338</a></li>
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2987,11 +3032,11 @@ randomness.</p>
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-10-08</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-10-14</span>
       
         <br>
         Created:
-        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-10-08</span>
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-10-14</span>
       
     
   </small>

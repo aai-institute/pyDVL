@@ -478,7 +478,7 @@
           
   
   <span class="md-ellipsis">
-    Shapley Values
+    Shapley values
   </span>
   
 
@@ -489,7 +489,7 @@
         
   
   <span class="md-ellipsis">
-    Shapley Values
+    Shapley values
   </span>
   
 
@@ -617,6 +617,26 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../classwise-shapley/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Classwise Shapley
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
     
     
     
@@ -626,9 +646,9 @@
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
         
-          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -639,8 +659,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_6">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
             <span class="md-nav__icon md-icon"></span>
             Examples
           </label>
@@ -2310,6 +2330,26 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/pydvl/value/shapley/classwise/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Classwise
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/pydvl/value/shapley/common/" class="md-nav__link">
         
   
@@ -2592,7 +2632,7 @@
   
 
 
-  <h1>Shapley Values</h1>
+  <h1>Shapley values</h1>
 
 <h2 id="shapley-value">Shapley value<a class="headerlink" href="#shapley-value" title="Permanent link">&para;</a></h2>
 <p>The Shapley method is an approach to compute data values originating in
@@ -2726,8 +2766,9 @@ used in pyDVL with:</p>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">values</span> <span class="o">=</span> <span class="n">compute_shapley_values</span><span class="p">(</span><span class="n">u</span><span class="o">=</span><span class="n">utility</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;knn&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="group-testing">Group testing<a class="headerlink" href="#group-testing" title="Permanent link">&para;</a></h3>
-<p>An alternative approach introduced in (Jia et al., 2019)<sup id="fnref2:4"><a class="footnote-ref" href="#fn:4">4</a></sup> first approximates
-the differences of values with a Monte Carlo sum. With</p>
+<p>An alternative method for the approximation of Shapley values introduced in
+ (Jia et al., 2019)<sup id="fnref2:4"><a class="footnote-ref" href="#fn:4">4</a></sup> first estimates the differences of values with a Monte
+Carlo sum. With</p>
 <div class="arithmatex">\[\hat{\Delta}_{i j} \approx v_i - v_j,\]</div>
 <p>one then solves the following linear constraint satisfaction problem (<abbr title="Constraint Satisfaction Problem">CSP</abbr>) to
 infer the final values:</p>
@@ -2788,11 +2829,11 @@ its variance.</p>
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-10-08</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-10-14</span>
       
         <br>
         Created:
-        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-10-08</span>
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-10-14</span>
       
     
   </small>
