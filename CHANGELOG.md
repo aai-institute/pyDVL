@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- New method: Class-wise Shapley values
+  [PR #338](https://github.com/aai-institute/pyDVL/pull/338)
 - No longer using docker within tests to start a memcached server
   [PR #444](https://github.com/aai-institute/pyDVL/pull/444)
 - Faster semi-value computation with per-index check of stopping criteria (optional)
@@ -43,6 +45,9 @@ randomness.
   `compute_beta_shapley_semivalues`, `compute_shapley_semivalues` and
   `compute_generic_semivalues`.
   [PR #428](https://github.com/aai-institute/pyDVL/pull/428)
+- Added classwise Shapley as proposed by (Schoch et al. 2021)
+  [https://arxiv.org/abs/2211.06800]
+  [PR #338](https://github.com/aai-institute/pyDVL/pull/338)
 
 ### Changed
 

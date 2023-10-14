@@ -71,6 +71,11 @@ methods from the following papers:
   Efficient Data Value](https://proceedings.mlr.press/v202/kwon23e.html). In
   Proceedings of the 40th International Conference on Machine Learning, 18135–52.
   PMLR, 2023.
+- Schoch, Stephanie, Haifeng Xu, and Yangfeng Ji. [CS-Shapley: Class-Wise
+  Shapley Values for Data Valuation in
+  Classification](https://openreview.net/forum?id=KTOcrOR5mQ9). In Proc. of the
+  Thirty-Sixth Conference on Neural Information Processing Systems (NeurIPS).
+  New Orleans, Louisiana, USA, 2022.
 
 Influence Functions compute the effect that single points have on an estimator /
 model. We implement methods from the following papers:

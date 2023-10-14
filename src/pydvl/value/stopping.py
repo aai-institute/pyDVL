@@ -226,6 +226,9 @@ class StoppingCriterion(abc.ABC):
             return 0.0
         return float(np.mean(self.converged).item())
 
+    def reset(self):
+        pass
+
     @property
     def converged(self) -> NDArray[np.bool_]:
         """Returns a boolean array indicating whether the values have converged
@@ -413,7 +416,7 @@ class MaxChecks(StoppingCriterion):
     def _check(self, result: ValuationResult) -> Status:
         if self.n_checks:
             self._count += 1
-            if self._count > self.n_checks:
+            if self._count >= self.n_checks:
                 self._converged = np.ones_like(result.values, dtype=bool)
                 return Status.Converged
         return Status.Pending
@@ -422,6 +425,9 @@ class MaxChecks(StoppingCriterion):
         if self.n_checks:
             return min(1.0, self._count / self.n_checks)
         return 0.0
+
+    def reset(self):
+        self._count = 0
 
     def __str__(self):
         return f"MaxChecks(n_checks={self.n_checks})"
@@ -546,6 +552,9 @@ class MaxTime(StoppingCriterion):
             return 0.0
         return (time() - self.start) / self.max_seconds
 
+    def reset(self):
+        self.start = time()
+
     def __str__(self):
         return f"MaxTime(seconds={self.max_seconds})"
 
@@ -622,13 +631,16 @@ class HistoryDeviation(StoppingCriterion):
             quots = np.divide(diffs, curr[ii], out=diffs, where=curr[ii] != 0)
             # quots holds the quotients when the denominator is non-zero, and
             # the absolute difference, which is just the memory, otherwise.
-            if np.mean(quots) < self.rtol:
+            if len(quots) > 0 and np.mean(quots) < self.rtol:
                 self._converged = self.update_op(
                     self._converged, r.counts > self.n_steps
                 )  # type: ignore
                 if np.all(self._converged):
                     return Status.Converged
         return Status.Pending
+
+    def reset(self):
+        self._memory = None  # type: ignore
 
     def __str__(self):
         return f"HistoryDeviation(n_steps={self.n_steps}, rtol={self.rtol})"

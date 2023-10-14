@@ -17,8 +17,10 @@ You can read more [in the documentation][computing-data-values].
 ## References
 
 [^1]: <a name="jia_efficient_2019"></a>Jia, R. et al., 2019.
-    [Towards Efficient Data Valuation Based on the Shapley Value](https://proceedings.mlr.press/v89/jia19a.html).
-    In: Proceedings of the 22nd International Conference on Artificial Intelligence and Statistics, pp. 1167–1176. PMLR.
+    [Towards Efficient Data Valuation Based on the Shapley
+    Value](https://proceedings.mlr.press/v89/jia19a.html).
+    In: Proceedings of the 22nd International Conference on Artificial
+    Intelligence and Statistics, pp. 1167–1176. PMLR.
 """
 import logging
 from collections import namedtuple
