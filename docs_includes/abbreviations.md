@@ -11,8 +11,11 @@
 *[MCLC]: Monte Carlo Least Core
 *[MCS]: Monte Carlo Shapley
 *[ML]: Machine Learning
+*[MLP]: Multi-Layer Perceptron
 *[MLRC]: Machine Learning Reproducibility Challenge
 *[MSE]: Mean Squared Error
 *[PCA]: Principal Component Analysis
+*[ROC]: Receiver Operating Characteristic
 *[SV]: Shapley Value
 *[TMCS]: Truncated Monte Carlo Shapley
+*[WAD]: Weighted Accuracy Drop
