@@ -252,6 +252,7 @@ def compute_classwise_shapley_values(
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
     seed: Optional[Seed] = None,
+    history: bool = False,
 ) -> ValuationResult:
     r"""
     Computes an approximate Class-wise Shapley value by sampling independent
@@ -291,6 +292,8 @@ def compute_classwise_shapley_values(
         config: Parallel configuration.
         progress: Whether to display a progress bar.
         seed: Either an instance of a numpy random number generator or a seed for it.
+        history: True, if the history for each data index should be stored in
+            `ValuationResult`.
 
     Returns:
         ValuationResult object containing computed data values.
@@ -322,7 +325,10 @@ def compute_classwise_shapley_values(
     pbar = tqdm(disable=not progress, position=0, total=100, unit="%")
     algorithm = "classwise_shapley"
     accumulated_result = ValuationResult.zeros(
-        algorithm=algorithm, indices=u.data.indices, data_names=u.data.data_names
+        algorithm=algorithm,
+        indices=u.data.indices,
+        data_names=u.data.data_names,
+        history=history,
     )
     terminate_exec = False
     seed_sequence = ensure_seed_sequence(seed)

@@ -182,6 +182,7 @@ def compute_generic_semivalues(
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
+    history: bool = False,
 ) -> ValuationResult:
     """Computes semi-values for a given utility function and subset sampler.
 
@@ -204,6 +205,8 @@ def compute_generic_semivalues(
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
         progress: Whether to display a progress bar.
+        history: True, if the history for each data index should be stored in
+            `ValuationResult`.
 
     Returns:
         Object with the results.
@@ -233,6 +236,7 @@ def compute_generic_semivalues(
         algorithm=f"semivalue-{str(sampler)}-{coefficient.__name__}",  # type: ignore
         indices=u.data.indices,
         data_names=u.data.data_names,
+        history=history,
     )
 
     parallel_backend = init_parallel_backend(config)
@@ -336,6 +340,7 @@ def compute_shapley_semivalues(
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
     seed: Optional[Seed] = None,
+    history: bool = False,
 ) -> ValuationResult:
     """Computes Shapley values for a given utility function.
 
@@ -357,7 +362,8 @@ def compute_shapley_semivalues(
         seed: Either an instance of a numpy random number generator or a seed
             for it.
         progress: Whether to display a progress bar.
-
+        history: True, if the history for each data index should be stored in
+            `ValuationResult`.
     Returns:
         Object with the results.
 
@@ -375,6 +381,7 @@ def compute_shapley_semivalues(
         n_jobs=n_jobs,
         config=config,
         progress=progress,
+        history=history,
     )
 
 
@@ -388,6 +395,7 @@ def compute_banzhaf_semivalues(
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
     seed: Optional[Seed] = None,
+    history: bool = False,
 ) -> ValuationResult:
     """Computes Banzhaf values for a given utility function.
 
@@ -407,7 +415,8 @@ def compute_banzhaf_semivalues(
         config: Object configuring parallel computation, with cluster address,
             number of cpus, etc.
         progress: Whether to display a progress bar.
-
+        history: True, if the history for each data index should be stored in
+            `ValuationResult`.
     Returns:
         Object with the results.
 
@@ -425,6 +434,7 @@ def compute_banzhaf_semivalues(
         n_jobs=n_jobs,
         config=config,
         progress=progress,
+        history=history,
     )
 
 
@@ -440,6 +450,7 @@ def compute_beta_shapley_semivalues(
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
     seed: Optional[Seed] = None,
+    history: bool = False,
 ) -> ValuationResult:
     """Computes Beta Shapley values for a given utility function.
 
@@ -460,7 +471,8 @@ def compute_beta_shapley_semivalues(
         config: Object configuring parallel computation, with cluster address, number of
             cpus, etc.
         progress: Whether to display a progress bar.
-
+        history: True, if the history for each data index should be stored in
+            `ValuationResult`.
     Returns:
         Object with the results.
 
@@ -478,6 +490,7 @@ def compute_beta_shapley_semivalues(
         n_jobs=n_jobs,
         config=config,
         progress=progress,
+        history=history,
     )
 
 

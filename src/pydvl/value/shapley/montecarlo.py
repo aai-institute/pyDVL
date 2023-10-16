@@ -142,6 +142,7 @@ def permutation_montecarlo_shapley(
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
     seed: Seed = None,
+    history: bool = False,
 ) -> ValuationResult:
     r"""Computes an approximate Shapley value by sampling independent
     permutations of the index set, approximating the sum:
@@ -189,6 +190,8 @@ def permutation_montecarlo_shapley(
             number of cpus, etc.
         progress: Whether to display a progress bar.
         seed: Either an instance of a numpy random number generator or a seed for it.
+        history: True, if the history for each data index should be stored in
+            `ValuationResult`.
 
     Returns:
         Object with the data values.
@@ -202,7 +205,10 @@ def permutation_montecarlo_shapley(
 
     seed_sequence = ensure_seed_sequence(seed)
     result = ValuationResult.zeros(
-        algorithm=algorithm, indices=u.data.indices, data_names=u.data.data_names
+        algorithm=algorithm,
+        indices=u.data.indices,
+        data_names=u.data.data_names,
+        history=history,
     )
 
     pbar = tqdm(disable=not progress, total=100, unit="%")
