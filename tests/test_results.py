@@ -420,3 +420,49 @@ def test_empty(n):
 def test_empty_deprecation():
     with pytest.warns(DeprecationWarning):
         v3 = ValuationResult.empty(indices=[1, 2, 3])
+
+
+@pytest.mark.parametrize("n", [5])
+def test_history_via_update(n):
+    v = ValuationResult(values=np.arange(n), history=True)
+    for idx in range(n):
+        v.update(idx, idx + 1)
+
+    for idx in range(n):
+        assert np.all(v.history[idx] == np.array([idx, idx + 0.5]))
+
+
+@pytest.mark.parametrize("n_sub,n_all", [(3, 5)])
+def test_history_via_add_inclusive(n_sub: int, n_all: int):
+    v1 = ValuationResult(
+        values=np.arange(n_all), indices=np.arange(n_all), history=True
+    )
+    v2 = ValuationResult(values=np.arange(1, n_sub + 1), indices=np.arange(n_sub))
+    v = v1 + v2
+
+    for idx in range(n_sub):
+        assert np.all(v.history[idx] == np.array([idx, idx + 0.5]))
+
+    for idx in range(n_sub, n_all):
+        assert np.all(v.history[idx] == np.array([idx]))
+
+
+@pytest.mark.parametrize("n_sub,n_all", [(3, 5)])
+def test_history_via_add_exclusive(n_sub: int, n_all: int):
+    v1 = ValuationResult(
+        values=np.arange(1, n_sub + 1), indices=np.arange(n_sub), history=True
+    )
+    v2 = ValuationResult(values=np.arange(n_all), indices=np.arange(n_all))
+    v = v1 + v2
+
+    for idx in range(n_sub):
+        assert np.all(v.history[idx] == np.array([idx + 1, idx + 0.5]))
+
+    for idx in range(n_sub, n_all):
+        assert np.all(v.history[idx] == np.array([idx]))
+
+
+def test_history_deactivated():
+    v = ValuationResult(values=np.arange(2))
+    with pytest.raises(ValueError):
+        v.history

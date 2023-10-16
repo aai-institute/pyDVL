@@ -50,6 +50,7 @@ from functools import total_ordering
 from numbers import Integral
 from typing import (
     Any,
+    Dict,
     Generic,
     Iterable,
     Iterator,
@@ -200,6 +201,7 @@ class ValuationResult(
             this affects usage as an iterable or sequence.
         extra_values: Additional values that can be passed as keyword arguments.
             This can contain, for example, the least core value.
+        history: True, if the history for each data index should be stored.
 
     Raises:
          ValueError: If input arrays have mismatching lengths.
@@ -209,6 +211,7 @@ class ValuationResult(
     _values: NDArray[np.float_]
     _counts: NDArray[np.int_]
     _variances: NDArray[np.float_]
+    _history: Optional[Dict[int, List[float]]]
     _data: Dataset
     _names: NDArray[NameT]
     _algorithm: str
@@ -228,6 +231,7 @@ class ValuationResult(
         algorithm: str = "",
         status: Status = Status.Pending,
         sort: bool = False,
+        history: bool = False,
         **extra_values,
     ):
         if variances is not None and len(variances) != len(values):
@@ -268,6 +272,11 @@ class ValuationResult(
         )
         if sort:
             self.sort()
+        self._history = (
+            {idx: [float(self._values[idx])] for idx in range(len(self))}
+            if history
+            else None
+        )
 
     def sort(
         self,
@@ -422,12 +431,15 @@ class ValuationResult(
                 key += len(self)
             if key < 0 or int(key) >= len(self):
                 raise IndexError(f"Index {key} out of range (0, {len(self)}).")
-            pos = self._sort_positions[key]
+            pos = int(self._sort_positions[key])
             self._indices[pos] = value.index
             self._names[pos] = value.name
             self._values[pos] = value.value
             self._variances[pos] = value.variance
             self._counts[pos] = value.count
+
+            if self._history is not None:
+                self._history[pos].append(value.value)
         else:
             raise TypeError("Indices must be integers, iterable or slices")
 
@@ -589,7 +601,7 @@ class ValuationResult(
         names[this_pos] = self._names
         names[other_pos] = other._names
 
-        return ValuationResult(
+        result = ValuationResult(
             algorithm=self.algorithm or other.algorithm or "",
             status=self.status & other.status,
             indices=indices,
@@ -597,9 +609,33 @@ class ValuationResult(
             variances=vnm,
             counts=n + m,
             data_names=names,
+            history=self._history is not None
             # FIXME: What to do with extra_values? This is not commutative:
             # extra_values=self._extra_values.update(other._extra_values),
         )
+        if self._history is not None:
+            result._history = self._history
+            for pos in other_pos:
+                if pos not in self._history:
+                    result._history[pos] = []
+                result._history[pos].append(xnm[pos])
+        return result
+
+    @property
+    def history(self) -> Dict[int, NDArray[np.float_]]:
+        """
+        Returns:
+            A dictionary mapping data indices to arrays of historic values. Each value
+             represents one update to the data index through either one of the methods
+            `update` or `__add__`.
+        """
+        if self._history is None:
+            raise ValueError("Set `history` if you want to log a history.")
+
+        return {
+            self._indices[pos]: np.asarray(self._history[pos])
+            for pos in self._history.keys()
+        }
 
     def update(self, idx: int, new_value: float) -> ValuationResult[IndexT, NameT]:
         """Updates the result in place with a new value, using running mean
@@ -631,15 +667,24 @@ class ValuationResult(
         )
         return self
 
-    def scale(self, factor: float, indices: Optional[NDArray[IndexT]] = None):
+    def scale(
+        self,
+        factor: float,
+        indices: Optional[NDArray[IndexT]] = None,
+        scale_history: bool = False,
+    ):
         """
         Scales the values and variances of the result by a coefficient.
 
         Args:
             factor: Factor to scale by.
             indices: Indices to scale. If None, all values are scaled.
+            scale_history: True, if the history should be scaled as well.
         """
         self._values[self._sort_positions[indices]] *= factor
+        if scale_history and self._history is not None:
+            for pos in self._sort_positions[indices]:  # type: ignore
+                self._history[int(pos)] = [factor * v for v in self._history[int(pos)]]
         self._variances[self._sort_positions[indices]] *= factor**2
 
     def get(self, idx: Integral) -> ValueItem:
@@ -699,6 +744,7 @@ class ValuationResult(
         size: int,
         total: Optional[float] = None,
         seed: Optional[Seed] = None,
+        history: bool = False,
         **kwargs,
     ) -> "ValuationResult":
         """Creates a [ValuationResult][pydvl.value.result.ValuationResult] object and fills it with an array
@@ -709,6 +755,9 @@ class ValuationResult(
             size: Number of values to generate
             total: If set, the values are normalized to sum to this number
                 ("efficiency" property of Shapley values).
+            seed: Either an instance of a numpy random number generator or a seed for
+                it.
+            history: True, if the history for each data index should be stored.
             kwargs: Additional options to pass to the constructor of
                 [ValuationResult][pydvl.value.result.ValuationResult]. Use to override status, names, etc.
 
@@ -730,7 +779,12 @@ class ValuationResult(
         if total is not None:
             values *= total / np.sum(values)
 
-        options = dict(values=values, status=Status.Converged, algorithm="random")
+        options = dict(
+            values=values,
+            status=Status.Converged,
+            algorithm="random",
+            history=history,
+        )
         options.update(kwargs)
         return cls(**options)  # type: ignore
 
@@ -749,6 +803,7 @@ class ValuationResult(
         indices: Optional[Sequence[IndexT] | NDArray[IndexT]] = None,
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         n_samples: int = 0,
+        history: bool = False,
     ) -> ValuationResult:
         """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
 
@@ -757,6 +812,7 @@ class ValuationResult(
 
         Args:
             algorithm: Name of the algorithm used to compute the values
+            history: True, if the history for each data index should be stored.
 
         Returns:
             Object with the results.
@@ -767,8 +823,14 @@ class ValuationResult(
                 indices=indices,
                 data_names=data_names,
                 n_samples=n_samples,
+                history=history,
             )
-        return cls(algorithm=algorithm, status=Status.Pending, values=np.array([]))
+        return cls(
+            algorithm=algorithm,
+            status=Status.Pending,
+            values=np.array([]),
+            history=history,
+        )
 
     @classmethod
     def zeros(
@@ -777,6 +839,7 @@ class ValuationResult(
         indices: Optional[Sequence[IndexT] | NDArray[IndexT]] = None,
         data_names: Optional[Sequence[NameT] | NDArray[NameT]] = None,
         n_samples: int = 0,
+        history: bool = False,
     ) -> ValuationResult:
         """Creates an empty [ValuationResult][pydvl.value.result.ValuationResult] object.
 
@@ -791,6 +854,7 @@ class ValuationResult(
                 the names will be set to the string representation of the indices.
             n_samples: Number of data points whose values are computed. If
                 not given, the length of `indices` will be used.
+            history: True, if the history for each data index should be stored.
 
         Returns:
             Object with the results.
@@ -813,4 +877,5 @@ class ValuationResult(
             values=np.zeros(len(indices)),
             variances=np.zeros(len(indices)),
             counts=np.zeros(len(indices), dtype=np.int_),
+            history=history,
         )
