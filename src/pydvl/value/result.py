@@ -601,7 +601,7 @@ class ValuationResult(
         names[this_pos] = self._names
         names[other_pos] = other._names
 
-        result = ValuationResult(
+        result: ValuationResult[IndexT, NameT] = ValuationResult(
             algorithm=self.algorithm or other.algorithm or "",
             status=self.status & other.status,
             indices=indices,
