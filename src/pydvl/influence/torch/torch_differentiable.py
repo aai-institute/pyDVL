@@ -530,8 +530,8 @@ def solve_linear(
         x = torch.linalg.solve(matrix, b.T).T
     except torch.linalg.LinAlgError as e:
         raise RuntimeError(
-            f"In case, you observe failure of the direct solver, due to singularity of the hessian matrix,"
-            f" consider to increase the parameter hessian_perturbation: \n{e}"
+            f"Direct inversion failed, possibly due to the Hessian being singular. "
+            f"Consider increasing the parameter 'hessian_perturbation' (currently: {hessian_perturbation}). \n{e}"
         )
     return InverseHvpResult(x=x, info=info)
 
