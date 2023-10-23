@@ -175,8 +175,9 @@ values = compute_shapley_values(u=utility, mode="knn")
 
 ### Group testing
 
-An alternative approach introduced in [@jia_efficient_2019a] first approximates
-the differences of values with a Monte Carlo sum. With
+An alternative method for the approximation of Shapley values introduced in
+[@jia_efficient_2019a] first estimates the differences of values with a Monte
+Carlo sum. With
 
 $$\hat{\Delta}_{i j} \approx v_i - v_j,$$
 

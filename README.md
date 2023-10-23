@@ -52,7 +52,7 @@ methods from the following papers:
   Shapley Values](https://doi.org/10.1109/ICPR48806.2021.9412511). In 25th
   International Conference on Pattern Recognition (ICPR 2020), 7992–99. IEEE,
   2021.
-- Yan, T., & Procaccia, A. D. [If You Like Shapley Then You’ll Love the
+- Yan, T., and Procaccia, A. D. [If You Like Shapley Then You’ll Love the
   Core](https://ojs.aaai.org/index.php/AAAI/article/view/16721). Proceedings of
   the AAAI Conference on Artificial Intelligence, 35(6) (2021): 5751-5759.
 - Jia, Ruoxi, David Dao, Boxin Wang, Frances Ann Hubis, Nick Hynes, Nezihe Merve
@@ -71,6 +71,11 @@ methods from the following papers:
   Efficient Data Value](https://proceedings.mlr.press/v202/kwon23e.html). In
   Proceedings of the 40th International Conference on Machine Learning, 18135–52.
   PMLR, 2023.
+- Schoch, Stephanie, Haifeng Xu, and Yangfeng Ji. [CS-Shapley: Class-Wise
+  Shapley Values for Data Valuation in
+  Classification](https://openreview.net/forum?id=KTOcrOR5mQ9). In Proc. of the
+  Thirty-Sixth Conference on Neural Information Processing Systems (NeurIPS).
+  New Orleans, Louisiana, USA, 2022.
 
 Influence Functions compute the effect that single points have on an estimator /
 model. We implement methods from the following papers:

@@ -95,11 +95,14 @@ run only certain tests using patterns (`-k`) or marker (`-m`).
 tox -e base -- <optional arguments>
 ```
 
-One important argument is `--do-not-start-memcache`. This prevents the test
-fixture from starting a new memcache server for testing and instead expects an
-already running local server listening on port 11211 (memcached's default port).
-If you run single tests within PyCharm, you will want to add this option to the
-run configurations.
+Two important arguments are `--memcached-service` which allows to change the
+default of `localhost:11211` (memcached's default) to a different address, and
+`-n` which sets the number of parallel workers for pytest-xdist. There are two
+layers of parallelization in the tests. An inner one within the tests
+themselves, i.e. the parallelism in the algorithms, and an outer one by
+pytest-xdist. The latter is controlled by the `-n` argument. If you experience
+segmentation faults with the tests, try running them with `-n 0` to disable
+parallelization.
 
 To test modules that rely on PyTorch, use:
 
@@ -170,12 +173,29 @@ Or:
 ]
 ```
 
-To only hide the input 
+To only hide the input and
+
+```yaml
+"tags": [
+  "hide-output"
+]
+```
+for hiding the output only.
 
 It is important to leave a warning at the top of the document to avoid confusion.
 Examples for hidden imports and plots are available in the notebooks, e.g. in
-[Shapley for data valuation](https://aai-institute.github.io/pyDVL/examples/shapley_basic_spotify.ipynb).
+*notebooks/shapley_basic_spotify.ipynb*.
 
+### Plots in Notebooks
+If you add a plot to a notebook, which should also render nicely in browser
+dark mode, add the tag *invertible-output*, i.e.
+
+```yaml
+"tags": [
+  "invertible-output"
+]
+```
+This applies a simple CSS-filter to the output image of the cell.
 
 ## Documentation
 
@@ -309,7 +329,22 @@ Refer to its official
 [readme](https://github.com/nektos/act#installation-through-package-managers)
 for more installation options.
 
-#### Cheatsheat
+#### act cheatsheet
+
+By default, `act` will run **all  workflows** in `.github/workflows`. You can
+use the `-W` flag to specify a specific workflow file to run, or you can rely
+on the job id to be unique (but then you'll see warnings for the workflows
+without that job id).
+
+```shell
+# Run only the main tests for python 3.8 after a push event (implicit) 
+act -W .github/workflows/run-tests-workflow.yaml \
+    -j run-tests \
+    --input tests_to_run=base\
+    --input python_version=3.8
+```
+
+Other common flags are: 
 
 ```shell
 # List all actions for all events:

@@ -92,7 +92,7 @@ import math
 import warnings
 from enum import Enum
 from itertools import islice
-from typing import Collection, List, Optional, Protocol, Tuple, Type, TypeVar, cast
+from typing import Iterable, List, Optional, Protocol, Tuple, Type, cast
 
 import scipy as sp
 from deprecate import deprecated
@@ -143,7 +143,7 @@ MarginalT = Tuple[IndexT, float]
 
 
 def _marginal(
-    u: Utility, coefficient: SVCoefficient, samples: Collection[SampleT]
+    u: Utility, coefficient: SVCoefficient, samples: Iterable[SampleT]
 ) -> Tuple[MarginalT, ...]:
     """Computation of marginal utility. This is a helper function for
     [compute_generic_semivalues][pydvl.value.semivalues.compute_generic_semivalues].
@@ -171,14 +171,6 @@ def _marginal(
 #     deprecated_in="0.8.0",
 #     remove_in="0.9.0",
 # )
-@deprecated(
-    target=True,
-    deprecated_in="0.7.0",
-    remove_in="0.9.0",
-    args_mapping={"batch_size": None},
-    template_mgs="batch_size is for experimental use and will be removed"
-    "in future versions.",
-)
 def compute_generic_semivalues(
     sampler: PowersetSampler[IndexT],
     u: Utility,
@@ -186,6 +178,7 @@ def compute_generic_semivalues(
     done: StoppingCriterion,
     *,
     batch_size: int = 1,
+    skip_converged: bool = False,
     n_jobs: int = 1,
     config: ParallelConfig = ParallelConfig(),
     progress: bool = False,
@@ -198,6 +191,15 @@ def compute_generic_semivalues(
         coefficient: The semi-value coefficient
         done: Stopping criterion.
         batch_size: Number of marginal evaluations per single parallel job.
+        skip_converged: Whether to skip marginal evaluations for indices that
+            have already converged. **CAUTION**: This is only entirely safe if
+            the stopping criterion is [MaxUpdates][pydvl.value.stopping.MaxUpdates].
+            For any other stopping criterion, the convergence status of indices
+            may change during the computation, or they may be marked as having
+            converged even though in fact the estimated values are far from the
+            true values (e.g. for
+            [AbsoluteStandardError][pydvl.value.stopping.AbsoluteStandardError],
+            you will probably have to carefully adjust the threshold).
         n_jobs: Number of parallel jobs to use.
         config: Object configuring parallel computation, with cluster
             address, number of cpus, etc.
@@ -262,16 +264,33 @@ def compute_generic_semivalues(
 
             # Ensure that we always have n_submitted_jobs running
             try:
-                for _ in range(n_submitted_jobs - len(pending)):
+                while len(pending) < n_submitted_jobs:
                     samples = tuple(islice(sampler_it, batch_size))
                     if len(samples) == 0:
                         raise StopIteration
 
-                    pending.add(
-                        executor.submit(
-                            _marginal, u=u, coefficient=correction, samples=samples
+                    # Filter out samples for indices that have already converged
+                    filtered_samples = samples
+                    if skip_converged and len(done.converged) > 0:
+                        # cloudpickle can't pickle this on python 3.8:
+                        # filtered_samples = filter(
+                        #     lambda t: not done.converged[t[0]], samples
+                        # )
+                        filtered_samples = tuple(
+                            (idx, sample)
+                            for idx, sample in samples
+                            if not done.converged[idx]
                         )
-                    )
+
+                    if filtered_samples:
+                        pending.add(
+                            executor.submit(
+                                _marginal,
+                                u=u,
+                                coefficient=correction,
+                                samples=filtered_samples,
+                            )
+                        )
             except StopIteration:
                 if len(pending) == 0:
                     return result
@@ -307,14 +326,6 @@ def beta_coefficient(alpha: float, beta: float) -> SVCoefficient:
     return cast(SVCoefficient, beta_coefficient_w)
 
 
-@deprecated(
-    target=True,
-    deprecated_in="0.7.0",
-    remove_in="0.9.0",
-    args_mapping={"batch_size": None},
-    template_mgs="batch_size is for experimental use and will be removed"
-    "in future versions.",
-)
 def compute_shapley_semivalues(
     u: Utility,
     *,
@@ -367,14 +378,6 @@ def compute_shapley_semivalues(
     )
 
 
-@deprecated(
-    target=True,
-    deprecated_in="0.7.0",
-    remove_in="0.9.0",
-    args_mapping={"batch_size": None},
-    template_mgs="batch_size is for experimental use and will be removed"
-    "in future versions.",
-)
 def compute_banzhaf_semivalues(
     u: Utility,
     *,
@@ -425,14 +428,6 @@ def compute_banzhaf_semivalues(
     )
 
 
-@deprecated(
-    target=True,
-    deprecated_in="0.7.0",
-    remove_in="0.9.0",
-    args_mapping={"batch_size": None},
-    template_mgs="batch_size is for experimental use and will be removed"
-    "in future versions.",
-)
 def compute_beta_shapley_semivalues(
     u: Utility,
     *,

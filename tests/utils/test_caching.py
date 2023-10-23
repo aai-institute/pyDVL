@@ -70,7 +70,7 @@ def test_memcached_parallel_jobs(memcached_client, parallel_config):
     assert hits_after - hits_before >= n_runs - 2
 
 
-def test_memcached_repeated_training(memcached_client):
+def test_memcached_repeated_training(memcached_client, worker_id: str):
     _, config = memcached_client
 
     @memcached(
@@ -78,24 +78,20 @@ def test_memcached_repeated_training(memcached_client):
         time_threshold=0,  # Always cache results
         allow_repeated_evaluations=True,
         rtol_stderr=0.01,
-        # Note that we typically do NOT want to ignore run_id
-        ignore_args=["job_id", "run_id"],
     )
-    def foo(indices: NDArray[np.int_]) -> float:
-        # from pydvl.utils.logging import logger
-        # logger.info(f"run_id: {run_id}, running...")
+    def foo(indices: NDArray[np.int_], uid: str) -> float:
         return float(np.sum(indices)) + np.random.normal(scale=10)
 
     n = 7
-    foo(np.arange(n))
+    foo(np.arange(n), worker_id)
     for _ in range(10_000):
-        result = foo(np.arange(n))
+        result = foo(np.arange(n), worker_id)
 
     assert (result - np.sum(np.arange(n))) < 1
     assert foo.stats.sets < foo.stats.hits
 
 
-def test_memcached_faster_with_repeated_training(memcached_client):
+def test_memcached_faster_with_repeated_training(memcached_client, worker_id: str):
     _, config = memcached_client
 
     @memcached(
@@ -103,35 +99,29 @@ def test_memcached_faster_with_repeated_training(memcached_client):
         time_threshold=0,  # Always cache results
         allow_repeated_evaluations=True,
         rtol_stderr=0.1,
-        # Note that we typically do NOT want to ignore run_id
-        ignore_args=["job_id", "run_id"],
     )
-    def foo_cache(indices: NDArray[np.int_]) -> float:
-        # from pydvl.utils.logging import logger
-        # logger.info(f"run_id: {run_id}, running...")
+    def foo_cache(indices: NDArray[np.int_], uid: str) -> float:
         sleep(0.01)
         return float(np.sum(indices)) + np.random.normal(scale=1)
 
-    def foo_no_cache(indices: NDArray[np.int_]) -> float:
-        # from pydvl.utils.logging import logger
-        # logger.info(f"run_id: {run_id}, running...")
+    def foo_no_cache(indices: NDArray[np.int_], uid: str) -> float:
         sleep(0.01)
         return float(np.sum(indices)) + np.random.normal(scale=1)
 
     n = 3
-    foo_cache(np.arange(n))
-    foo_no_cache(np.arange(n))
+    foo_cache(np.arange(n), worker_id)
+    foo_no_cache(np.arange(n), worker_id)
 
     start = time()
     for _ in range(300):
-        result_fast = foo_cache(np.arange(n))
+        result_fast = foo_cache(np.arange(n), worker_id)
     end = time()
     fast_time = end - start
 
     start = time()
     results_slow = []
     for _ in range(300):
-        result = foo_no_cache(np.arange(n))
+        result = foo_no_cache(np.arange(n), worker_id)
         results_slow.append(result)
     end = time()
     slow_time = end - start

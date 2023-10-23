@@ -538,10 +538,14 @@ class ValuationResult(
         xm[other_pos] = other._values
         vm[other_pos] = other._variances
 
+        # np.maximum(1, n + m) covers case n = m = 0.
+        n_m_sum = np.maximum(1, n + m)
+
         # Sample mean of n+m samples from two means of n and m samples
-        xnm = (n * xn + m * xm) / (n + m)
+        xnm = (n * xn + m * xm) / n_m_sum
+
         # Sample variance of n+m samples from two sample variances of n and m samples
-        vnm = (n * (vn + xn**2) + m * (vm + xm**2)) / (n + m) - xnm**2
+        vnm = (n * (vn + xn**2) + m * (vm + xm**2)) / n_m_sum - xnm**2
 
         if np.any(vnm < 0):
             if np.any(vnm < -1e-6):
@@ -626,6 +630,17 @@ class ValuationResult(
             count=self._counts[pos] + 1,
         )
         return self
+
+    def scale(self, factor: float, indices: Optional[NDArray[IndexT]] = None):
+        """
+        Scales the values and variances of the result by a coefficient.
+
+        Args:
+            factor: Factor to scale by.
+            indices: Indices to scale. If None, all values are scaled.
+        """
+        self._values[self._sort_positions[indices]] *= factor
+        self._variances[self._sort_positions[indices]] *= factor**2
 
     def get(self, idx: Integral) -> ValueItem:
         """Retrieves a ValueItem by data index, as opposed to sort index, like
@@ -784,13 +799,17 @@ class ValuationResult(
             indices = np.arange(n_samples, dtype=np.int_)
         else:
             indices = np.array(indices, dtype=np.int_)
+
+        if data_names is None:
+            data_names = np.array(indices)
+        else:
+            data_names = np.array(data_names)
+
         return cls(
             algorithm=algorithm,
             status=Status.Pending,
             indices=indices,
-            data_names=np.array(data_names, dtype=object)
-            if data_names is not None
-            else np.empty_like(indices, dtype=object),
+            data_names=data_names,
             values=np.zeros(len(indices)),
             variances=np.zeros(len(indices)),
             counts=np.zeros(len(indices), dtype=np.int_),

@@ -7,6 +7,7 @@ import pytest
 from pydvl.parallel.config import ParallelConfig
 from pydvl.utils.types import Seed
 from pydvl.value.sampler import (
+    AntitheticPermutationSampler,
     AntitheticSampler,
     DeterministicPermutationSampler,
     DeterministicUniformSampler,
@@ -21,7 +22,7 @@ from pydvl.value.semivalues import (
     compute_generic_semivalues,
     shapley_coefficient,
 )
-from pydvl.value.stopping import AbsoluteStandardError, MaxUpdates
+from pydvl.value.stopping import HistoryDeviation, MaxUpdates
 
 from . import check_values
 from .utils import timed
@@ -36,6 +37,7 @@ from .utils import timed
         UniformSampler,
         PermutationSampler,
         AntitheticSampler,
+        AntitheticPermutationSampler,
     ],
 )
 @pytest.mark.parametrize("coefficient", [shapley_coefficient, beta_coefficient(1, 1)])
@@ -48,12 +50,13 @@ def test_shapley(
     parallel_config: ParallelConfig,
 ):
     u, exact_values = analytic_shapley
-    criterion = AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2 ** (num_samples * 2))
+    criterion = HistoryDeviation(50, 1e-3) | MaxUpdates(1000)
     values = compute_generic_semivalues(
         sampler(u.data.indices),
         u,
         coefficient,
         criterion,
+        skip_converged=True,
         n_jobs=n_jobs,
         config=parallel_config,
     )
@@ -75,23 +78,25 @@ def test_shapley_batch_size(
     seed: Seed,
 ):
     u, exact_values = analytic_shapley
-    criterion = AbsoluteStandardError(0.02, 1.0) | MaxUpdates(2 ** (num_samples * 2))
     timed_fn = timed(compute_generic_semivalues)
     result_single_batch = timed_fn(
         sampler(u.data.indices, seed=seed),
         u,
         coefficient,
-        criterion,
+        done=HistoryDeviation(50, 1e-3) | MaxUpdates(1000),
+        skip_converged=True,
         n_jobs=n_jobs,
         batch_size=1,
         config=parallel_config,
     )
     total_seconds_single_batch = timed_fn.execution_time
+
     result_multi_batch = timed_fn(
         sampler(u.data.indices, seed=seed),
         u,
         coefficient,
-        criterion,
+        done=HistoryDeviation(50, 1e-3) | MaxUpdates(1000),
+        skip_converged=True,
         n_jobs=n_jobs,
         batch_size=batch_size,
         config=parallel_config,
@@ -112,6 +117,7 @@ def test_shapley_batch_size(
         UniformSampler,
         PermutationSampler,
         AntitheticSampler,
+        AntitheticPermutationSampler,
     ],
 )
 def test_banzhaf(
@@ -122,11 +128,13 @@ def test_banzhaf(
     parallel_config: ParallelConfig,
 ):
     u, exact_values = analytic_banzhaf
+    criterion = HistoryDeviation(50, 1e-3) | MaxUpdates(1000)
     values = compute_generic_semivalues(
         sampler(u.data.indices),
         u,
         banzhaf_coefficient,
-        AbsoluteStandardError(0.04, 1.0) | MaxUpdates(2 ** (num_samples * 2)),
+        criterion,
+        skip_converged=True,
         n_jobs=n_jobs,
         config=parallel_config,
     )

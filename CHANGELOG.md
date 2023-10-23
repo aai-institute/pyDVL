@@ -1,14 +1,36 @@
 # Changelog
 
-## Unreleased
 
-- Using pytest-xdist for faster local tests
-  [PR #440](https://github.com/aai-institute/pyDVL/pull/440)
-- Implementation of Data-OOB by @BastienZim
+## 0.7.1 - 🆕 New methods, bug fixes and improvements for local tests 🐞🧪
+
+### Added
+
+- New method: Class-wise Shapley values
+  [PR #338](https://github.com/aai-institute/pyDVL/pull/338)
+- New method: Data-OOB by @BastienZim 
   [PR #426](https://github.com/aai-institute/pyDVL/pull/426), 
   [PR $431](https://github.com/aai-institute/pyDVL/pull/431)
+- Added `AntitheticPermutationSampler`
+  [PR #439](https://github.com/aai-institute/pyDVL/pull/439)
+- Faster semi-value computation with per-index check of stopping criteria (optional)
+  [PR #437](https://github.com/aai-institute/pyDVL/pull/437)
+
+### Changed
+
+- No longer using docker within tests to start a memcached server
+  [PR #444](https://github.com/aai-institute/pyDVL/pull/444)
+- Using pytest-xdist for faster local tests
+  [PR #440](https://github.com/aai-institute/pyDVL/pull/440)
+- Improvements and fixes to notebooks
+  [PR #436](https://github.com/aai-institute/pyDVL/pull/436)
 - Refactoring of parallel module. Old imports will stop working in v0.9.0
   [PR #421](https://github.com/aai-institute/pyDVL/pull/421)
+
+### Fixed
+
+- Fix initialization of `data_names` in `ValuationResult.zeros()`
+  [PR #443](https://github.com/aai-institute/pyDVL/pull/443)
+
 
 ## 0.7.0 - 📚🆕 Documentation and IF overhaul, new methods and bug fixes 💥🐞
 
@@ -33,6 +55,9 @@ randomness.
   `compute_beta_shapley_semivalues`, `compute_shapley_semivalues` and
   `compute_generic_semivalues`.
   [PR #428](https://github.com/aai-institute/pyDVL/pull/428)
+- Added classwise Shapley as proposed by (Schoch et al. 2021)
+  [https://arxiv.org/abs/2211.06800]
+  [PR #338](https://github.com/aai-institute/pyDVL/pull/338)
 
 ### Changed
 

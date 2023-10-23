@@ -11,6 +11,7 @@ all methods.
 
 from ..result import *
 from ..stopping import *
+from .classwise import *
 from .common import *
 from .gt import *
 from .knn import *

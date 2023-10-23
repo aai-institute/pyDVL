@@ -36,6 +36,8 @@ jobs:
       with:
         key: pytest-cache-${{ github.ref }}-${{ runner.os }}-${{ inputs.python_version }}
         path: .tox/tests/.pytest_cache
+    - name: Set up memcached
+      uses: niden/actions-memcached@v7
     - name: Test Base Modules
       run: tox -e tests -- -m "not torch"
       if: inputs.tests_to_run == 'base'
