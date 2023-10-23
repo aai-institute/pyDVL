@@ -526,7 +526,14 @@ def solve_linear(
         model.num_params, device=model.device
     )
     info = {"hessian": hessian}
-    return InverseHvpResult(x=torch.linalg.solve(matrix, b.T).T, info=info)
+    try:
+        x = torch.linalg.solve(matrix, b.T).T
+    except torch.linalg.LinAlgError as e:
+        raise RuntimeError(
+            f"In case, you observe failure of the direct solver, due to singularity of the hessian matrix,"
+            f" consider to increase the parameter hessian_perturbation: \n{e}"
+        )
+    return InverseHvpResult(x=x, info=info)
 
 
 @InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Cg)
