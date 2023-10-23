@@ -101,7 +101,7 @@ def is_memcache_responsive(hostname, port):
 
 
 @pytest.fixture(scope="session")
-def memcached_service(request) -> tuple[str, int]:
+def memcached_service(request) -> Tuple[str, int]:
     opt = request.config.getoption("--memcached-service", default="localhost:11211")
     host, port = opt.split(":")
     return host, int(port)
