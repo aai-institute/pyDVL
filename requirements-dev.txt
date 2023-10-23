@@ -13,12 +13,13 @@ bump2version==1.0.1
 jupyter
 nbconvert>=7.2.9
 nbstripout == 0.6.1
-pytest==7.2.2
+pytest==7.4.2
 pytest-cov
 pytest-mock
 pytest-timeout
 pytest-lazy-fixture
 pytest-xdist>=3.3.1
 pytest-profiling
+pytest-cases~=3.8
 wheel
 twine==4.0.2
