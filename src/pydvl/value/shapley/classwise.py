@@ -369,7 +369,7 @@ def compute_classwise_shapley_values(
 def _permutation_montecarlo_classwise_shapley_one_step(
     u: Utility,
     *,
-    done_sample_complements: StoppingCriterion = None,
+    done_sample_complements: Optional[StoppingCriterion] = None,
     truncation: TruncationPolicy,
     use_default_scorer_value: bool = True,
     min_elements_per_label: int = 1,

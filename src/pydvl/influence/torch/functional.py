@@ -175,7 +175,7 @@ def batch_loss_function(
         A function that computes the loss of the model on the batch for given model parameters.
     """
 
-    def batch_loss(params: Dict[str, torch.Tensor]) -> torch.Tensor:
+    def batch_loss(params: TorchTensorContainerType) -> torch.Tensor:
         outputs = functional_call(model, params, (to_model_device(x, model),))
         return loss(outputs, y)
 
