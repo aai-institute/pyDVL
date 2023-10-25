@@ -117,9 +117,13 @@ def test_hvp(model_data, tol: float):
 
     params = dict(torch_model.named_parameters())
 
-    f = batch_loss_function(torch_model, torch.nn.functional.mse_loss, x, y)
-
-    Hvp_autograd = hvp(f, params, align_structure(params, vec))
+    Hvp_autograd = hvp(
+        lambda p: batch_loss_function(torch_model, torch.nn.functional.mse_loss)(
+            p, x, y
+        ),
+        params,
+        align_structure(params, vec),
+    )
 
     flat_Hvp_autograd = flatten_tensors_to_vector(Hvp_autograd.values())
     assert torch.allclose(flat_Hvp_autograd, H_analytical @ vec, rtol=tol)
