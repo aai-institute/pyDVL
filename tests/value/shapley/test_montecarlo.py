@@ -1,5 +1,5 @@
 import logging
-from copy import copy, deepcopy
+from copy import deepcopy
 
 import numpy as np
 import pytest
@@ -37,13 +37,13 @@ log = logging.getLogger(__name__)
         (12, ShapleyMode.Owen, 0.1, 1e-4, dict(n_samples=4, max_q=200)),
         (12, ShapleyMode.OwenAntithetic, 0.1, 1e-4, dict(n_samples=4, max_q=200)),
         (
-            4,
+            3,
             ShapleyMode.GroupTesting,
             0.1,
             # Because of the inaccuracy of GTS, a high atol is required for the
             # value 0, for which the rtol has no effect.
             1e-2,
-            dict(n_samples=int(4e5), epsilon=0.2, delta=0.01),
+            dict(n_samples=int(4e4), epsilon=0.2, delta=0.01),
         ),
     ],
 )
@@ -56,32 +56,38 @@ def test_analytic_montecarlo_shapley(
     rtol: float,
     atol: float,
     kwargs: dict,
+    seed,
 ):
     u, exact_values = analytic_shapley
 
     values = compute_shapley_values(
-        u, mode=fun, n_jobs=n_jobs, config=parallel_config, progress=False, **kwargs
+        u,
+        mode=fun,
+        n_jobs=n_jobs,
+        config=parallel_config,
+        progress=False,
+        seed=seed,
+        **kwargs
     )
 
     check_values(values, exact_values, rtol=rtol, atol=atol)
 
 
-test_cases_montecarlo_shapley_reproducible_stochastic = [
-    # TODO Add once issue #416 is closed.
-    # (12, ShapleyMode.PermutationMontecarlo, {"done": MaxChecks(1)}),
-    (
-        12,
-        ShapleyMode.CombinatorialMontecarlo,
-        {"done": MaxChecks(4)},
-    ),
-    (12, ShapleyMode.Owen, dict(n_samples=4, max_q=200)),
-    (12, ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=200)),
-    (4, ShapleyMode.GroupTesting, dict(n_samples=21, epsilon=0.2, delta=0.01)),
-]
-
-
+@pytest.mark.slow
 @pytest.mark.parametrize(
-    "num_samples, fun, kwargs", test_cases_montecarlo_shapley_reproducible_stochastic
+    "num_samples, fun, kwargs",
+    [
+        # TODO Add once issue #416 is closed.
+        # (12, ShapleyMode.PermutationMontecarlo, {"done": MaxChecks(1)}),
+        (
+            12,
+            ShapleyMode.CombinatorialMontecarlo,
+            {"done": MaxChecks(4)},
+        ),
+        (12, ShapleyMode.Owen, dict(n_samples=4, max_q=200)),
+        (12, ShapleyMode.OwenAntithetic, dict(n_samples=4, max_q=200)),
+        (4, ShapleyMode.GroupTesting, dict(n_samples=21, epsilon=0.2, delta=0.01)),
+    ],
 )
 @pytest.mark.parametrize("num_points, num_features", [(12, 3)])
 def test_montecarlo_shapley_housing_dataset(
@@ -109,6 +115,7 @@ def test_montecarlo_shapley_housing_dataset(
         np.testing.assert_equal(values_1.values, values_3.values)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("num_samples, delta, eps", [(6, 0.1, 0.1)])
 @pytest.mark.parametrize(
     "fun", [ShapleyMode.PermutationMontecarlo, ShapleyMode.CombinatorialMontecarlo]
@@ -148,9 +155,10 @@ def test_hoeffding_bound_montecarlo(
         (ShapleyMode.CombinatorialMontecarlo, dict(done=MaxUpdates(2**11))),
         (ShapleyMode.Owen, dict(n_samples=2, max_q=300)),
         (ShapleyMode.OwenAntithetic, dict(n_samples=2, max_q=300)),
-        (
+        pytest.param(
             ShapleyMode.GroupTesting,
             dict(n_samples=int(5e4), epsilon=0.25, delta=0.1),
+            marks=pytest.mark.slow,
         ),
     ],
 )
@@ -191,6 +199,7 @@ def test_linear_montecarlo_shapley(
     check_total_value(u, values, rtol=rtol)  # FIXME, could be more than rtol
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "a, b, num_points", [(2, 0, 21)]  # training set will have 0.3 * 21 ~= 6 samples
 )

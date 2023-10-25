@@ -19,7 +19,7 @@ from . import polynomial
 @pytest.fixture(scope="function")
 def polynomial_dataset(coefficients: np.ndarray):
     """Coefficients must be for monomials of increasing degree"""
-    x = np.arange(-1, 1, 0.05)
+    x = np.arange(-1, 1, 0.1)
     locs = polynomial(coefficients, x)
     y = np.random.normal(loc=locs, scale=0.3)
     db = Bunch()

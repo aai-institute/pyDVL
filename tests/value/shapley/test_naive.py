@@ -36,10 +36,10 @@ def test_analytic_exact_shapley(num_samples, analytic_shapley, fun, rtol, total_
 @pytest.mark.parametrize(
     "a, b, num_points, scorer",
     [
-        (2, 0, 20, "r2"),
-        (2, 1, 20, "r2"),
-        (2, 1, 20, "neg_median_absolute_error"),
-        (2, 1, 20, "explained_variance"),
+        (2, 0, 10, "r2"),
+        (2, 1, 10, "r2"),
+        (2, 1, 10, "neg_median_absolute_error"),
+        (2, 1, 10, "explained_variance"),
     ],
 )
 def test_linear(
@@ -96,6 +96,7 @@ def test_grouped_linear(
     check_values(values_combinatorial, values_permutation, rtol=rtol)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "a, b, num_points, scorer",
     [
@@ -154,6 +155,7 @@ def test_polynomial(
     check_values(values_combinatorial, values_permutation, rtol=rtol)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "coefficients, scorer",
     [

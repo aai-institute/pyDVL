@@ -1,3 +1,4 @@
+import logging
 import os
 from dataclasses import asdict
 from typing import TYPE_CHECKING, Optional, Tuple
@@ -5,10 +6,11 @@ from typing import TYPE_CHECKING, Optional, Tuple
 import numpy as np
 import pytest
 from pymemcache.client import Client
+from pytest import Config, FixtureRequest
 from sklearn import datasets
 from sklearn.utils import Bunch
 
-from pydvl.parallel.backend import available_cpus
+from pydvl.parallel import available_cpus
 from pydvl.utils import Dataset, MemcachedClientConfig
 from tests.cache import CloudPickleCache
 from tests.tolerate import (
@@ -18,8 +20,6 @@ from tests.tolerate import (
 )
 
 if TYPE_CHECKING:
-    from _pytest.config import Config
-    from _pytest.fixtures import FixtureRequest
     from _pytest.terminal import TerminalReporter
 
 
@@ -29,6 +29,11 @@ def pytest_addoption(parser):
         action="store_true",
         default="localhost:11211",
         help="Address of memcached server to use for tests.",
+    )
+    parser.addoption(
+        "--slow-tests",
+        action="store_true",
+        help="Run tests marked as slow using the @slow marker",
     )
     group = parser.getgroup("tolerate")
     group.addoption(
@@ -207,11 +212,10 @@ def pytest_configure(config: "Config"):
     config._tolerate_session = TolerateErrorsSession(config)
     config.cloud_pickle_cache = CloudPickleCache.for_config(config, _ispytest=True)
 
-
-@pytest.fixture(scope="function")
-def tolerate(request: pytest.FixtureRequest):
-    fixture = TolerateErrorFixture(request.node)
-    return fixture
+    config.addinivalue_line(
+        "markers",
+        "slow: mark a test as slow and only run if explicitly request with the --slow-tests flag",
+    )
 
     worker_id = os.environ.get("PYTEST_XDIST_WORKER")
     if worker_id is not None:
@@ -223,10 +227,16 @@ def tolerate(request: pytest.FixtureRequest):
 
 
 def pytest_runtest_setup(item: pytest.Item):
-    marker = item.get_closest_marker("tolerate")
+    marker = item.get_closest_marker("slow")
     if marker:
-        if not marker.kwargs:
-            raise ValueError("tolerate marker requires keywords arguments")
+        if not item.config.getoption("--slow-tests"):
+            pytest.skip("slow test")
+
+
+@pytest.fixture(scope="function")
+def tolerate(request: pytest.FixtureRequest):
+    fixture = TolerateErrorFixture(request.node)
+    return fixture
 
 
 @pytest.hookimpl(hookwrapper=True)

@@ -36,7 +36,7 @@ from .utils import timed
         DeterministicPermutationSampler,
         UniformSampler,
         PermutationSampler,
-        AntitheticSampler,
+        pytest.param(AntitheticSampler, marks=pytest.mark.slow),
         AntitheticPermutationSampler,
     ],
 )
