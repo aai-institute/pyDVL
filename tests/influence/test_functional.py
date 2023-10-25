@@ -2,21 +2,32 @@ from dataclasses import astuple
 
 import pytest
 
-from tests.influence.conftest import linear_model, linear_mixed_second_derivative_analytical
-from tests.influence.test_torch_differentiable import linear_mvp_model, DATA_OUTPUT_NOISE
+from tests.influence.conftest import (
+    linear_mixed_second_derivative_analytical,
+    linear_model,
+)
+from tests.influence.test_torch_differentiable import (
+    DATA_OUTPUT_NOISE,
+    linear_mvp_model,
+)
 
 torch = pytest.importorskip("torch")
+import numpy as np
 import torch
 from torch.nn.functional import mse_loss
 from torch.utils.data import DataLoader, TensorDataset
-import numpy as np
 
-from pydvl.influence.torch.functional import (batch_loss_function, hvp, get_hvp_function, get_hessian,
-                                              per_sample_gradient, matrix_jacobian_product, per_sample_mixed_derivative)
+from pydvl.influence.torch.functional import (
+    batch_loss_function,
+    get_hessian,
+    get_hvp_function,
+    hvp,
+    matrix_jacobian_product,
+    per_sample_gradient,
+    per_sample_mixed_derivative,
+)
 from pydvl.influence.torch.util import align_structure, flatten_dimensions
-
-
-from tests.influence.test_util import test_parameters, model_data
+from tests.influence.test_util import model_data, test_parameters
 
 
 @pytest.mark.torch
@@ -47,9 +58,7 @@ def test_hvp(model_data, tol: float):
     [(astuple(tp.model_params), tp.batch_size) for tp in test_parameters],
     indirect=["model_data"],
 )
-def test_get_hvp_function(
-    model_data, tol: float, use_avg: bool, batch_size: int
-):
+def test_get_hvp_function(model_data, tol: float, use_avg: bool, batch_size: int):
     torch_model, x, y, vec, H_analytical = model_data
     data_loader = DataLoader(TensorDataset(x, y), batch_size=batch_size)
 
@@ -73,7 +82,10 @@ def test_get_hvp_function(
     indirect=["model_data"],
 )
 def test_get_hessian(
-    model_data, tol: float, use_avg: bool, batch_size: int,
+    model_data,
+    tol: float,
+    use_avg: bool,
+    batch_size: int,
 ):
     torch_model, x, y, _, H_analytical = model_data
     data_loader = DataLoader(TensorDataset(x, y), batch_size=batch_size)
@@ -127,7 +139,7 @@ def test_matrix_jacobian_product(in_features, out_features, batch_size):
     y = torch.randn(batch_size, out_features, requires_grad=True)
     y_pred = model(x)
 
-    G = torch.randn((10, out_features*(in_features + 1)))
+    G = torch.randn((10, out_features * (in_features + 1)))
     mjp = matrix_jacobian_product(model, torch.nn.functional.mse_loss, G)(params, x, y)
 
     dL_dw = torch.vmap(
@@ -162,7 +174,13 @@ def test_mixed_derivatives(in_features, out_features, train_set_size):
         train_y,
     )
 
-    functorch_mixed_derivatives = per_sample_mixed_derivative(model, loss)(params, torch.as_tensor(train_x), torch.as_tensor(train_y))
-    flat_functorch_mixed_derivatives = flatten_dimensions(functorch_mixed_derivatives.values(), keep_first_n=2)
-    assert torch.allclose(torch.as_tensor(test_derivative), flat_functorch_mixed_derivatives.transpose(2, 1))
-
+    functorch_mixed_derivatives = per_sample_mixed_derivative(model, loss)(
+        params, torch.as_tensor(train_x), torch.as_tensor(train_y)
+    )
+    flat_functorch_mixed_derivatives = flatten_dimensions(
+        functorch_mixed_derivatives.values(), keep_first_n=2
+    )
+    assert torch.allclose(
+        torch.as_tensor(test_derivative),
+        flat_functorch_mixed_derivatives.transpose(2, 1),
+    )

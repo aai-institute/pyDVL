@@ -14,7 +14,7 @@ __all__ = [
     "align_structure",
     "as_tensor",
     "align_with_model",
-    "flatten_dimensions"
+    "flatten_dimensions",
 ]
 
 

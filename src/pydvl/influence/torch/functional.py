@@ -18,7 +18,7 @@ __all__ = [
     "per_sample_loss",
     "per_sample_gradient",
     "matrix_jacobian_product",
-    "per_sample_mixed_derivative"
+    "per_sample_mixed_derivative",
 ]
 
 

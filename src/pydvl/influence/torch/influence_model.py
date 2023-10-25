@@ -1,14 +1,24 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Tuple, Optional
+from typing import Callable, Optional, Tuple
 
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
-from .torch_differentiable import solve_batch_cg, TorchTwiceDifferentiable, solve_lissa, solve_arnoldi, \
-    model_hessian_low_rank, LowRankProductRepresentation
-from .functional import per_sample_gradient, per_sample_mixed_derivative, get_hessian, \
-    matrix_jacobian_product
+from .functional import (
+    get_hessian,
+    matrix_jacobian_product,
+    per_sample_gradient,
+    per_sample_mixed_derivative,
+)
+from .torch_differentiable import (
+    LowRankProductRepresentation,
+    TorchTwiceDifferentiable,
+    model_hessian_low_rank,
+    solve_arnoldi,
+    solve_batch_cg,
+    solve_lissa,
+)
 from .util import flatten_dimensions
 
 
@@ -26,7 +36,9 @@ class TorchInfluence(ABC):
         self._model_device = next(
             (p.device for p in model.parameters() if p.requires_grad)
         )
-        self._model_params = {k: p for k, p in self.model.named_parameters() if p.requires_grad}
+        self._model_params = {
+            k: p for k, p in self.model.named_parameters() if p.requires_grad
+        }
         super().__init__()
 
     @property
@@ -41,22 +53,32 @@ class TorchInfluence(ABC):
     def model_params(self):
         return self._model_params
 
-    def _flat_loss_grad(self, z: Tuple[torch.Tensor, torch.Tensor], detach: bool = False):
+    def _flat_loss_grad(
+        self, z: Tuple[torch.Tensor, torch.Tensor], detach: bool = False
+    ):
         grads = per_sample_gradient(self.model, self.loss)(self.model_params, *z)
-        return flatten_dimensions(map(lambda t: t.detach() if detach else t, grads.values()), keep_first_n=0)
+        return flatten_dimensions(
+            map(lambda t: t.detach() if detach else t, grads.values()), keep_first_n=0
+        )
 
     def up_weighting(
-        self, z_test: Tuple[torch.Tensor, torch.Tensor], z: Tuple[torch.Tensor, torch.Tensor]
+        self,
+        z_test: Tuple[torch.Tensor, torch.Tensor],
+        z: Tuple[torch.Tensor, torch.Tensor],
     ) -> torch.Tensor:
         left = self._flat_loss_grad(z_test, detach=True)
         right = self.factors(z)
         return (left @ right.T).T
 
     def perturbation(
-        self, z_test: Tuple[torch.Tensor, torch.Tensor], z: Tuple[torch.Tensor, torch.Tensor]
+        self,
+        z_test: Tuple[torch.Tensor, torch.Tensor],
+        z: Tuple[torch.Tensor, torch.Tensor],
     ) -> torch.Tensor:
         left = self.factors(z_test)
-        right = per_sample_mixed_derivative(self.model, self.loss)(self.model_params, *z)
+        right = per_sample_mixed_derivative(self.model, self.loss)(
+            self.model_params, *z
+        )
         flat_right = flatten_dimensions(right.values(), keep_first_n=2)
         return torch.einsum("ia,jab->ijb", left, flat_right)
 
@@ -257,9 +279,13 @@ class ArnoldiInfluence(TorchInfluence):
     def up_weighting(
         self, x: Tuple[torch.Tensor, torch.Tensor], y: Tuple[torch.Tensor, torch.Tensor]
     ) -> torch.Tensor:
-        mjp = matrix_jacobian_product(self.model, self.loss, self.low_rank_representation.projections)
+        mjp = matrix_jacobian_product(
+            self.model, self.loss, self.low_rank_representation.projections
+        )
         left = mjp(self.model_params, *x)
-        right = torch.diag_embed(1.0 / self.low_rank_representation.eigen_vals) @ mjp(self.model_params, *y)
+        right = torch.diag_embed(1.0 / self.low_rank_representation.eigen_vals) @ mjp(
+            self.model_params, *y
+        )
         return torch.einsum("ij, kj -> ik", left, right)
 
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
