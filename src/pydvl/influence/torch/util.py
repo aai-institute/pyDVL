@@ -13,6 +13,8 @@ __all__ = [
     "TorchTensorContainerType",
     "align_structure",
     "as_tensor",
+    "align_with_model",
+    "flatten_dimensions"
 ]
 
 
@@ -45,7 +47,7 @@ def flatten_tensors_to_vector(tensors: Iterable[torch.Tensor]) -> torch.Tensor:
     Returns:
         A 1D tensor that is the concatenation of all the reshaped input tensors.
     """
-    return torch.cat([t.contiguous().view(-1) for t in tensors])
+    return flatten_dimensions(tensors)
 
 
 def reshape_vector_to_tensors(
@@ -183,3 +185,34 @@ def as_tensor(a: Any, warn=True, **kwargs) -> torch.Tensor:
     if warn and not isinstance(a, torch.Tensor):
         logger.warning("Converting tensor to type torch.Tensor.")
     return torch.as_tensor(a, **kwargs)
+
+
+def align_with_model(x: TorchTensorContainerType, model: torch.nn.Module):
+    """
+    Aligns an input to the model's parameter structure, i.e. transforms it into a dict with the same keys as
+    model.named_parameters() and matching tensor shapes
+
+    Args:
+        x: The input to be aligned. It can be a dictionary, tuple, or tensor.
+        model: model to use for alignment
+
+    Returns:
+        The aligned version of `x`.
+
+    Raises:
+        ValueError: If `x` cannot be aligned to match the model's parameters .
+
+    """
+    model_params = {k: p for k, p in model.named_parameters() if p.requires_grad}
+    return align_structure(model_params, x)
+
+
+def flatten_dimensions(tensors: Iterable[torch.Tensor], keep_first_n: int = None):
+    flattened_tensors = []
+    for t in tensors:
+        if keep_first_n is None:
+            t_flat = t.reshape(-1)
+        else:
+            t_flat = t.reshape(*[t.shape[k] for k in range(keep_first_n)], -1)
+        flattened_tensors.append(t_flat)
+    return torch.cat(flattened_tensors, dim=-1)
