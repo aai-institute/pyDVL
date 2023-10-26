@@ -38,16 +38,17 @@ def plot_gaussian_blobs(
     """Plots training and test data in two separate plots, with the optimal
     decision boundary as passed to the line argument.
 
-    :param train_ds: A 2-element tuple with training data and labels thereof.
-        Features have shape `(N, 2)` and the target_variable has shape `(n,)`.
-    :param test_ds: A 2-element tuple with test data and labels. Same format as
-        train_ds.
-    :param x_min: Set to define the minimum boundaries of the plot.
-    :param x_max: Set to define the maximum boundaries of the plot.
-    :param line: Optional, line of shape (M,2), where each row is a point of the
-        2-d line.
-    :param s: The thickness of the points to plot.
-    :param figsize: for `plt.figure()`
+    Args:
+        train_ds: A 2-element tuple with training data and labels thereof.
+            Features have shape `(N, 2)` and the target_variable has shape `(n,)`.
+        test_ds: A 2-element tuple with test data and labels. Same format as
+            train_ds.
+        x_min: Set to define the minimum boundaries of the plot.
+        x_max: Set to define the maximum boundaries of the plot.
+        line: Optional, line of shape (M,2), where each row is a point of the
+            2-d line.
+        s: The thickness of the points to plot.
+        figsize: for `plt.figure()`
     """
 
     fig = plt.figure(figsize=figsize, constrained_layout=True)
@@ -117,12 +118,13 @@ def plot_influences(
 ) -> plt.Axes:
     """Plots the influence values of the training data with a color map.
 
-    :param x: Input to the model, of shape (N,2) with N being the total number
-        of points.
-    :param influences: an array  of shape (N,) with influence values for each
-        data point.
-    :param line: Optional, line of shape [Mx2], where each row is a point of the
-        2-dimensional line. (??)
+    Args:
+        x: Input to the model, of shape (N,2) with N being the total number
+            of points.
+        influences: an array  of shape (N,) with influence values for each
+            data point.
+        line: Optional, line of shape [Mx2], where each row is a point of the
+            2-dimensional line. (??)
     """
     if ax is None:
         _, ax = plt.subplots()
@@ -163,16 +165,17 @@ def plot_iris(
 ):
     """Scatter plots for the iris dataset.
 
-    :param data: a Dataset with a valid train / test split
-    :param indices: subset of `data.indices`.
-    :param highlight_indices: circle these indices in red
-    :param suptitle: centered title for the figure
-    :param legend_title: A title for the legend
-    :param legend_labels: Labels for the legend entries
-    :param colors: use with indices to set the color (e.g. to values).
-    :param colorbar_limits: Range of values to display in the colorbar. A
-        colorbar will only be displayed if there are more than 10 colors.
-    :param figsize: Size of figure for matplotlib
+    Args:
+        data: a Dataset with a valid train / test split
+        indices: subset of `data.indices`.
+        highlight_indices: circle these indices in red
+        suptitle: centered title for the figure
+        legend_title: A title for the legend
+        legend_labels: Labels for the legend entries
+        colors: use with indices to set the color (e.g. to values).
+        colorbar_limits: Range of values to display in the colorbar. A
+            colorbar will only be displayed if there are more than 10 colors.
+        figsize: Size of figure for matplotlib
     """
     if indices is not None:
         x_train = data.x_train[indices]
@@ -281,16 +284,20 @@ def load_preprocess_imagenet(
     """Loads the tiny imagenet dataset from huggingface and preprocesses it
     for model input.
 
-    :param train_size: fraction of indices to use for training
-    :param test_size: fraction of data to use for testing
-    :param downsampling_ratio: which fraction of the full dataset to keep.
-        E.g. downsample_ds_to_fraction=0.2 only 20% of the dataset is kept
-    :param keep_labels: which of the original labels to keep and their names.
-        E.g. keep_labels={10:"a", 20: "b"} only returns the images with labels
-        10 and 20 and changes the values to "a" and "b" respectively.
-    :param random_state: Random state. Fix this for reproducibility of sampling.
-    :return: a tuple of three dataframes, first holding the training data,
-    second validation, third test.
+    Args:
+        train_size: fraction of indices to use for training
+        test_size: fraction of data to use for testing
+        downsampling_ratio: which fraction of the full dataset to keep.
+            E.g. downsample_ds_to_fraction=0.2 only 20% of the dataset is kept
+        keep_labels: which of the original labels to keep and their names.
+            E.g. keep_labels={10:"a", 20: "b"} only returns the images with labels
+            10 and 20 and changes the values to "a" and "b" respectively.
+        random_state: Random state. Fix this for reproducibility of sampling.
+
+    Returns:
+        a tuple of three dataframes, first holding the training data,
+        second validation, third test.
+
         Each has 3 keys: normalized_images has all the input images, rescaled
         to mean 0.5 and std 0.225,
         labels has the labels of each image, while images has the unmodified
@@ -334,8 +341,10 @@ def load_preprocess_imagenet(
         )
         return split_ds
 
+    dataset_path = "Maysee/tiny-imagenet"
+
     if os.environ.get("CI"):
-        tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="valid")
+        tiny_imagenet = load_dataset(dataset_path, split="valid")
         if keep_labels is not None:
             tiny_imagenet = tiny_imagenet.filter(
                 lambda item: item["label"] in keep_labels
@@ -349,7 +358,7 @@ def load_preprocess_imagenet(
         test_ds = _process_dataset(tiny_imagenet_test)
         return train_ds, val_ds, test_ds
 
-    tiny_imagenet = load_dataset("Maysee/tiny-imagenet", split="train")
+    tiny_imagenet = load_dataset(dataset_path, split="train")
 
     if downsampling_ratio != 1:
         tiny_imagenet = tiny_imagenet.shard(
@@ -374,8 +383,9 @@ def plot_sample_images(dataset: pd.DataFrame, n_images_per_class: int = 3):
     """Plots several images for each class of a pre-processed imagenet dataset
     (or a subset of it).
 
-    :param dataset: imagenet dataset
-    :param n_images_per_class: number of images per class to plot
+    Args:
+        dataset: imagenet dataset
+        n_images_per_class: number of images per class to plot
     """
     labels = dataset["labels"].unique()
     fig, axes = plt.subplots(nrows=n_images_per_class, ncols=len(labels))
@@ -401,9 +411,10 @@ def plot_lowest_highest_influence_images(
     of `num_to_plot` images each. Those on the right column have the lowest influence,
      those on the right the highest.
 
-    :param subset_influences: an array with influence values
-    :param subset_images: a list of images
-    :param num_to_plot: int, number of high and low influence images to plot
+    Args:
+        subset_influences: an array with influence values
+        subset_images: a list of images
+        num_to_plot: int, number of high and low influence images to plot
     """
     top_if_idxs = np.argsort(subset_influences)[-num_to_plot:]
     bottom_if_idxs = np.argsort(subset_influences)[:num_to_plot]
@@ -427,8 +438,9 @@ def plot_lowest_highest_influence_images(
 def plot_losses(losses: Losses):
     """Plots the train and validation loss
 
-    :param training_loss: list of training losses, one per epoch
-    :param validation_loss: list of validation losses, one per epoch
+    Args:
+        training_loss: list of training losses, one per epoch
+        validation_loss: list of validation losses, one per epoch
     """
     _, ax = plt.subplots()
     ax.plot(losses.training, label="Train")
@@ -448,11 +460,13 @@ def corrupt_imagenet(
     it takes a fraction of the images with the highest influence and (randomly)
     flips their labels.
 
-    :param dataset: preprocessed tiny imagenet dataset
-    :param fraction_to_corrupt: float, fraction of data to corrupt
-    :param avg_influences: average influences of each training point on the test set in the \
-        non-corrupted case.
-    :return: first element is the corrupted dataset, second is the list of indices \
+    Args:
+        dataset: preprocessed tiny imagenet dataset
+        fraction_to_corrupt: float, fraction of data to corrupt
+        avg_influences: average influences of each training point on the test set in the \
+            non-corrupted case.
+    Returns:
+        first element is the corrupted dataset, second is the list of indices \
         related to the images that have been corrupted.
     """
     labels = dataset["labels"].unique()
@@ -485,10 +499,13 @@ def compute_mean_corrupted_influences(
     """Given a corrupted dataset, it returns a dataframe with average influence for each class,
     separating corrupted and original points.
 
-    :param corrupted_dataset: corrupted dataset as returned by get_corrupted_imagenet
-    :param corrupted_indices: list of corrupted indices, as returned by get_corrupted_imagenet
-    :param avg_corrupted_influences: average influence of each training point on the test dataset
-    :return: a dataframe holding the average influence of corrupted and non-corrupted data
+    Args:
+        corrupted_dataset: corrupted dataset as returned by get_corrupted_imagenet
+        corrupted_indices: list of corrupted indices, as returned by get_corrupted_imagenet
+        avg_corrupted_influences: average influence of each training point on the test dataset
+
+    Returns:
+        a dataframe holding the average influence of corrupted and non-corrupted data
     """
     labels = corrupted_dataset["labels"].unique()
     avg_label_influence = pd.DataFrame(
@@ -525,14 +542,17 @@ def plot_corrupted_influences_distribution(
     where the distribution of the influence of non-corrupted points is compared
     to that of corrupted ones.
 
-    :param corrupted_dataset: corrupted dataset as returned by
-        get_corrupted_imagenet
-    :param corrupted_indices: list of corrupted indices, as returned by
-        get_corrupted_imagenet
-    :param avg_corrupted_influences: average influence of each training point on
-        the test dataset
-    :param figsize: for `plt.subplots()`
-    :return: a dataframe holding the average influence of corrupted and
+    Args:
+        corrupted_dataset: corrupted dataset as returned by
+            get_corrupted_imagenet
+        corrupted_indices: list of corrupted indices, as returned by
+            get_corrupted_imagenet
+        avg_corrupted_influences: average influence of each training point on
+            the test dataset
+        figsize: for `plt.subplots()`
+
+    Returns:
+        a dataframe holding the average influence of corrupted and
         non-corrupted data
     """
     labels = corrupted_dataset["labels"].unique()

@@ -33,15 +33,18 @@ class TorchLogisticRegression(nn.Module):
         n_input: int,
     ):
         """
-        :param n_input: Number of features in the input.
+        Args:
+            n_input: Number of features in the input.
         """
         super().__init__()
         self.fc1 = nn.Linear(n_input, 1, bias=True, dtype=float)
 
     def forward(self, x):
         """
-        :param x: Tensor [NxD], with N the batch length and D the number of features.
-        :returns: A tensor [N] representing the probability of the positive class for each sample.
+        Args:
+            x: Tensor [NxD], with N the batch length and D the number of features.
+        Returns:
+            A tensor [N] representing the probability of the positive class for each sample.
         """
         x = torch.as_tensor(x)
         return torch.sigmoid(self.fc1(x))
@@ -57,8 +60,9 @@ class TorchMLP(nn.Module):
         layers_size: List[int],
     ):
         """
-        :param layers_size: list of integers representing the number of
-            neurons in each layer.
+        Args:
+            layers_size: list of integers representing the number of
+                neurons in each layer.
         """
         super().__init__()
         if len(layers_size) < 2:
@@ -79,9 +83,13 @@ class TorchMLP(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Perform forward pass through the network.
-        :param x: Tensor input of shape [NxD], with N batch size and D number of
+
+        Args:
+            x: Tensor input of shape [NxD], with N batch size and D number of
             features.
-        :returns: Tensor output of shape[NxK], with K the output size of the network.
+
+        Returns:
+            Tensor output of shape[NxK], with K the output size of the network.
         """
         return self.layers(x)
 
@@ -95,19 +103,23 @@ def fit_torch_model(
     scheduler: Optional[_LRScheduler] = None,
     num_epochs: int = 1,
     progress: bool = True,
+    device: torch.device = torch.device("cpu"),
 ) -> Losses:
     """
     Fits a pytorch model to the supplied data.
     Represents a simple machine learning loop, iterating over a number of
     epochs, sampling data with a certain batch size, calculating gradients and updating the parameters through a
     loss function.
-    :param model: A pytorch model.
-    :param training_data: A pytorch DataLoader with the training data.
-    :param val_data: A pytorch DataLoader with the validation data.
-    :param optimizer: Select either ADAM or ADAM_W.
-    :param scheduler: A pytorch scheduler. If None, no scheduler is used.
-    :param num_epochs: Number of epochs to repeat training.
-    :param progress: True, iff progress shall be printed.
+
+    Args:
+        model: A pytorch model.
+        training_data: A pytorch DataLoader with the training data.
+        val_data: A pytorch DataLoader with the validation data.
+        optimizer: Select either ADAM or ADAM_W.
+        scheduler: A pytorch scheduler. If None, no scheduler is used.
+        num_epochs: Number of epochs to repeat training.
+        progress: True, iff progress shall be printed.
+        device: Device on which the model is and to which the batches should be moved.
     """
     train_loss = []
     val_loss = []
@@ -116,9 +128,11 @@ def fit_torch_model(
         batch_loss = []
         for train_batch in training_data:
             batch_x, batch_y = train_batch
+            batch_x = batch_x.to(device)
+            batch_y = batch_y.to(device)
             pred_y = model(batch_x)
             loss_value = loss(torch.squeeze(pred_y), torch.squeeze(batch_y))
-            batch_loss.append(loss_value.item())
+            batch_loss.append(loss_value.cpu().item())
 
             logger.debug(f"Epoch: {epoch} ---> Training loss: {loss_value.item()}")
             loss_value.backward()
@@ -131,10 +145,11 @@ def fit_torch_model(
             batch_val_loss = []
             for val_batch in val_data:
                 batch_x, batch_y = val_batch
+                batch_x = batch_x.to(device)
+                batch_y = batch_y.to(device)
                 pred_y = model(batch_x)
-                batch_val_loss.append(
-                    loss(torch.squeeze(pred_y), torch.squeeze(batch_y)).item()
-                )
+                loss_value = loss(torch.squeeze(pred_y), torch.squeeze(batch_y))
+                batch_val_loss.append(loss_value.cpu().item())
 
         mean_epoch_train_loss = np.mean(batch_loss)
         mean_epoch_val_loss = np.mean(batch_val_loss)
@@ -156,8 +171,6 @@ def new_resnet_model(output_size: int) -> nn.Module:
     model.avgpool = nn.AdaptiveAvgPool2d(1)
     n_features = model.fc.in_features
     model.fc = nn.Linear(n_features, output_size)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model.to(device)
 
     return model
 
@@ -175,6 +188,7 @@ class TrainingManager:
         train_data: DataLoader,
         val_data: DataLoader,
         data_dir: Path,
+        device: torch.device = torch.device("cpu"),
     ):
         self.name = name
         self.model = model
@@ -182,6 +196,8 @@ class TrainingManager:
         self.train_data = train_data
         self.val_data = val_data
         self.data_dir = data_dir
+        self.device = device
+        self.model = self.model.to(self.device)
         os.makedirs(self.data_dir, exist_ok=True)
 
     def train(
@@ -191,7 +207,8 @@ class TrainingManager:
         use_cache: bool = True,
     ) -> Losses:
         """
-        :return: Tuple of training_loss, validation_loss
+        Returns:
+            Tuple of training_loss, validation_loss
         """
         if use_cache:
             try:
@@ -210,6 +227,7 @@ class TrainingManager:
             loss=self.loss,
             optimizer=optimizer,
             num_epochs=n_epochs,
+            device=self.device,
         )
         if use_cache:
             self.save(losses)
@@ -219,8 +237,9 @@ class TrainingManager:
     def save(self, losses: Losses):
         """Saves the model weights and training and validation losses.
 
-        :param training_loss: list of training losses, one per epoch
-        :param validation_loss: list of validation losses, also one per epoch
+        Args:
+            training_loss: list of training losses, one per epoch
+            validation_loss: list of validation losses, also one per epoch
         """
         torch.save(self.model.state_dict(), self.data_dir / f"{self.name}_weights.pth")
         with open(self.data_dir / f"{self.name}_train_val_loss.pkl", "wb") as file:
@@ -228,7 +247,9 @@ class TrainingManager:
 
     def load(self) -> Losses:
         """Loads model weights and training and validation losses.
-        :return: two arrays, one with training and one with validation losses.
+
+        Returns:
+            two arrays, one with training and one with validation losses.
         """
         self.model.load_state_dict(
             torch.load(self.data_dir / f"{self.name}_weights.pth")
