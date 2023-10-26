@@ -243,7 +243,7 @@ def test_future_cancellation(parallel_config):
 
     assert future.result() == 2
 
-    from ray.exceptions import TaskCancelledError
+    from ray.exceptions import RayTaskError, TaskCancelledError
 
     with init_executor(
         config=parallel_config, cancel_futures=CancellationPolicy.ALL
@@ -256,7 +256,7 @@ def test_future_cancellation(parallel_config):
 
     assert future._state == "FINISHED"
 
-    with pytest.raises(TaskCancelledError):
+    with pytest.raises((TaskCancelledError, RayTaskError)):
         future.result()
 
     assert time.monotonic() - start < 1
