@@ -124,7 +124,7 @@ class MapReduceJob(Generic[T, R]):
         Returns:
              The result of the reduce function.
         """
-        parallel_kwargs = {"n_jobs": self.n_jobs}
+        parallel_kwargs: Dict[str, Any] = {"n_jobs": self.n_jobs}
         if self.config.backend == "joblib":
             parallel_kwargs["backend"] = "loky"
         else:
