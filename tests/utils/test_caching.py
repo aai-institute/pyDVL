@@ -134,10 +134,12 @@ def test_memcached_faster_with_repeated_training(memcached_client, worker_id: st
 @pytest.mark.parametrize("n_jobs", [1, 2])
 @pytest.mark.parametrize("n_runs", [20])
 def test_memcached_parallel_repeated_training(
-    memcached_client, n, atol, n_jobs, n_runs, parallel_config, seed=42
+    memcached_client, n, atol, n_jobs, n_runs, parallel_config, seed
 ):
+    if parallel_config.backend != "joblib":
+        pytest.skip("We don't have to test this with all parallel backends")
     _, config = memcached_client
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
 
     @memcached(
         client_config=config,
@@ -150,7 +152,7 @@ def test_memcached_parallel_repeated_training(
     def map_func(indices: NDArray[np.int_]) -> float:
         # from pydvl.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
-        return np.sum(indices).item() + np.random.normal(scale=5)
+        return np.sum(indices).item() + rng.normal(scale=5)
 
     def reduce_func(chunks: NDArray[np.float_]) -> float:
         return np.sum(chunks).item()
