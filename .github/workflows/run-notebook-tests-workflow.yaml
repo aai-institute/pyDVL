@@ -30,7 +30,7 @@ jobs:
     - name: Cache Pytest Cache Directory
       uses: actions/cache@v3
       with:
-        key: pytest-cache-${{ github.ref }}-${{ runner.os }}-${{ inputs.python_version }}
+        key: pytest-cache-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini', 'requirements.txt') }}-${{ inputs.python_version }}
         path: .tox/tests/.pytest_cache
     - name: Set up memcached
       uses: niden/actions-memcached@v7
