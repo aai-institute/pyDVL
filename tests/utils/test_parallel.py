@@ -229,6 +229,7 @@ def test_futures_executor_map_with_max_workers(parallel_config):
     assert total_time > max(1.0, 3 / num_workers())
 
 
+@pytest.mark.timeout(10)
 def test_future_cancellation(parallel_config):
     if parallel_config.backend != "ray":
         pytest.skip("Currently this test only works with Ray")
@@ -250,7 +251,8 @@ def test_future_cancellation(parallel_config):
         start = time.monotonic()
         future = executor.submit(lambda t: time.sleep(t), 5)
 
-    time.sleep(0.1)
+    while future._state != "FINISHED":
+        time.sleep(0.1)
 
     assert future._state == "FINISHED"
 
