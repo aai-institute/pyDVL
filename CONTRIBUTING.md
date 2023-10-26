@@ -118,7 +118,8 @@ There are a few important arguments:
   If you experience segmentation faults with the tests,
   try running them with `-n 0` to disable parallelization.
 
-- `--slow-tests` enables running slow tests.
+- `--slow-tests` enables running slow tests. See below for a description
+  of slow tests.
 
 ### Markers
 
@@ -130,7 +131,13 @@ Two important markers are:
 
 - `pytest.mark.slow` which is used to mark slow tests and skip them by default.
 
-  You can run additionaly run slow tests using: `pytest --slow-tests`
+  A slow test is any test that takes 45 seconds or more to run and that can be
+  skipped most of the time. In some cases a test is slow, but it is required
+  in order to ensure that a feature works as expected and that are no bugs.
+  In those cases, we should not use this marker.
+
+  Slow tests are always run on CI. Locally, they are skipped
+  by default but can be additionally run using: `pytest --slow-tests`.
 
 - `pytest.mark.torch` which is used to mark tests that require PyTorch.
 
@@ -346,6 +353,9 @@ runs](#skipping-ci-runs)).
    pytest --splits 3 --group 2
    pytest --splits 3 --group 3
    ```
+   
+   Each one of these commands should be run in a separate shell/job
+   to run the test groups in parallel and decrease the total runtime.
 
 
 ### Running Github Actions locally
