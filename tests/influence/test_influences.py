@@ -25,7 +25,7 @@ from .conftest import (
 )
 
 # Mark the entire module
-pytest.mark.torch()
+pytestmark = pytest.mark.torch
 
 
 def analytical_linear_influences(
