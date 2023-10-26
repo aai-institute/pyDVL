@@ -25,13 +25,8 @@ jobs:
     - name: Cache Tox Directory for Tests
       uses: actions/cache@v3
       with:
-        key: tox-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini', 'requirements.txt') }}-${{ inputs.python_version }}
+        key: tox-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('tox.ini', 'requirements.txt') }}-${{ inputs.python_version }}
         path: .tox
-    - name: Cache Pytest Cache Directory
-      uses: actions/cache@v3
-      with:
-        key: pytest-cache-${{ github.ref }}-${{ runner.os }}-${{ hashFiles('tox.ini', 'requirements.txt') }}-${{ inputs.python_version }}
-        path: .tox/tests/.pytest_cache
     - name: Set up memcached
       uses: niden/actions-memcached@v7
     - name: Test Notebooks
