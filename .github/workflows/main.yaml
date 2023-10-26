@@ -66,34 +66,16 @@ jobs:
         pandoc-version: ${{ env.PANDOC_VERSION }}
     - name: Build Docs
       run: mkdocs build
-  group-1-tests:
+  group-tests:
     strategy:
       matrix:
         python_version: ["3.8", "3.9", "3.10"]
-    name: Run Group 1 tests
+        group_number: [1, 2, 3, 4]
+    name: Run Group Tests
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
-      tests_to_run: group1
-      python_version: ${{ matrix.python_version }}
-    needs: [code-quality]
-  group-2-tests:
-    strategy:
-      matrix:
-        python_version: ["3.8", "3.9", "3.10"]
-    name: Run Group 2 tests
-    uses: ./.github/workflows/run-tests-workflow.yaml
-    with:
-      tests_to_run: group2
-      python_version: ${{ matrix.python_version }}
-    needs: [code-quality]
-  group-3-tests:
-    strategy:
-      matrix:
-        python_version: ["3.8", "3.9", "3.10"]
-    name: Run Group 3 tests
-    uses: ./.github/workflows/run-tests-workflow.yaml
-    with:
-      tests_to_run: group3
+      split_size: 4
+      group_number: ${{ matrix.group_number }}
       python_version: ${{ matrix.python_version }}
     needs: [code-quality]
   notebook-tests:
@@ -101,15 +83,14 @@ jobs:
       matrix:
         python_version: ["3.8", "3.9", "3.10"]
     name: Run notebook tests
-    uses: ./.github/workflows/run-tests-workflow.yaml
+    uses: ./.github/workflows/run-notebook-tests-workflow.yaml
     with:
-      tests_to_run: notebooks
       python_version: ${{ matrix.python_version }}
     needs: [code-quality]
   push-docs-and-release-testpypi:
     name: Push Docs and maybe release Package to TestPyPI
     runs-on: ubuntu-latest
-    needs: [docs, group-1-tests, group-2-tests, group-3-tests, notebook-tests]
+    needs: [docs, group-tests, notebook-tests]
     if: ${{ github.ref == 'refs/heads/develop' }}
     concurrency:
       group: publish

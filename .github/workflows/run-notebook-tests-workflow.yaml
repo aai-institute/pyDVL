@@ -3,14 +3,6 @@ name: Run Tests
 on:
   workflow_call:
     inputs:
-      split_size:
-        description: "Determines the number of groups into which the tests should be split"
-        type: string
-        default: 4
-      group_number:
-        description: "Determines which which group of tests to run. Can be 1, 2, ..., split_size"
-        type: string
-        required: true
       python_version:
         description: "Determines which Python version to use"
         type: string
@@ -42,5 +34,12 @@ jobs:
         path: .tox/tests/.pytest_cache
     - name: Set up memcached
       uses: niden/actions-memcached@v7
-    - name: Test Group ${{ inputs.group_number }}
-      run: tox -e tests -- --slow-tests --splits ${{ inputs.split_size }} --group ${{ inputs.group_number }} --splitting-algorithm least_duration
+    - name: Test Group 1
+      run: tox -e tests -- --slow-tests --splits 3 --group 1 --splitting-algorithm least_duration
+      if: inputs.tests_to_run == 'group1'
+    - name: Test Group 2
+      run: tox -e tests -- --slow-tests --splits 3 --group 2 --splitting-algorithm least_duration
+      if: inputs.tests_to_run == 'group2'
+    - name: Test Group 3
+      run: tox -e tests -- --slow-tests --splits 3 --group 3 --splitting-algorithm least_duration
+      if: inputs.tests_to_run == 'group3'
