@@ -66,24 +66,34 @@ jobs:
         pandoc-version: ${{ env.PANDOC_VERSION }}
     - name: Build Docs
       run: mkdocs build
-  base-tests:
+  group-1-tests:
     strategy:
       matrix:
         python_version: ["3.8", "3.9", "3.10"]
-    name: Run base tests
+    name: Run Group 1 tests
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
-      tests_to_run: base
+      tests_to_run: group1
       python_version: ${{ matrix.python_version }}
     needs: [code-quality]
-  torch-tests:
+  group-2-tests:
     strategy:
       matrix:
         python_version: ["3.8", "3.9", "3.10"]
-    name: Run tests that use PyTorch
+    name: Run Group 2 tests
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
-      tests_to_run: torch
+      tests_to_run: group2
+      python_version: ${{ matrix.python_version }}
+    needs: [code-quality]
+  group-3-tests:
+    strategy:
+      matrix:
+        python_version: ["3.8", "3.9", "3.10"]
+    name: Run Group 3 tests
+    uses: ./.github/workflows/run-tests-workflow.yaml
+    with:
+      tests_to_run: group3
       python_version: ${{ matrix.python_version }}
     needs: [code-quality]
   notebook-tests:
