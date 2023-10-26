@@ -44,3 +44,7 @@ jobs:
       uses: niden/actions-memcached@v7
     - name: Test Group ${{ inputs.group_number }}
       run: tox -e tests -- --slow-tests --splits ${{ inputs.split_size }} --group ${{ inputs.group_number }} --splitting-algorithm least_duration
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
