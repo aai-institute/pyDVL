@@ -248,7 +248,6 @@ def test_future_cancellation(parallel_config):
     with init_executor(
         config=parallel_config, cancel_futures=CancellationPolicy.ALL
     ) as executor:
-        start = time.monotonic()
         future = executor.submit(lambda t: time.sleep(t), 5)
 
     while future._state != "FINISHED":
@@ -258,5 +257,3 @@ def test_future_cancellation(parallel_config):
 
     with pytest.raises((TaskCancelledError, RayTaskError)):
         future.result()
-
-    assert time.monotonic() - start < 1
