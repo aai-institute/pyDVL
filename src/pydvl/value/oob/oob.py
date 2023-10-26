@@ -27,8 +27,8 @@ def compute_data_oob(
     *,
     n_est: int = 10,
     max_samples: float = 0.8,
-    n_jobs: Optional[int] = None,
     loss: Optional[LossFunction] = None,
+    n_jobs: Optional[int] = None,
     seed: Optional[Seed] = None,
     progress: bool = False,
 ) -> ValuationResult:
