@@ -109,7 +109,7 @@ jobs:
   push-docs-and-release-testpypi:
     name: Push Docs and maybe release Package to TestPyPI
     runs-on: ubuntu-latest
-    needs: [docs, base-tests, torch-tests, notebook-tests]
+    needs: [docs, group-1-tests, group-2-tests, group-3-tests, notebook-tests]
     if: ${{ github.ref == 'refs/heads/develop' }}
     concurrency:
       group: publish
