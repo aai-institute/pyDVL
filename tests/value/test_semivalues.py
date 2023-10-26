@@ -126,11 +126,12 @@ def test_banzhaf(
     sampler: Type[PowersetSampler],
     n_jobs: int,
     parallel_config: ParallelConfig,
+    seed,
 ):
     u, exact_values = analytic_banzhaf
     criterion = HistoryDeviation(50, 1e-3) | MaxUpdates(1000)
     values = compute_generic_semivalues(
-        sampler(u.data.indices),
+        sampler(u.data.indices, seed=seed),
         u,
         banzhaf_coefficient,
         criterion,
