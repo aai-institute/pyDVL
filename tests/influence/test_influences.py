@@ -468,7 +468,8 @@ def test_influences_arnoldi(
     assert np.allclose(direct_influence, low_rank_influence, rtol=1e-1)
 
     precomputed_low_rank = model_hessian_low_rank(
-        model,
+        model.model,
+        model.loss,
         training_data=train_data_loader,
         hessian_perturbation=hessian_reg,
         rank_estimate=num_parameters - 1,

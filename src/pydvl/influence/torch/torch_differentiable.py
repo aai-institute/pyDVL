@@ -356,7 +356,8 @@ def lanzcos_low_rank_hessian_approx(
 
 
 def model_hessian_low_rank(
-    model: TorchTwiceDifferentiable,
+    model: torch.nn.Module,
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     training_data: DataLoader,
     hessian_perturbation: float = 0.0,
     rank_estimate: int = 10,
@@ -376,8 +377,8 @@ def model_hessian_low_rank(
 
 
     Args:
-        model: A PyTorch model instance that is twice differentiable, wrapped into `TorchTwiceDifferential`.
-            The Hessian will be calculated with respect to this model's parameters.
+        model: A PyTorch model instance. The Hessian will be calculated with respect to this model's parameters.
+        loss : A callable that computes the loss.
         training_data: A DataLoader instance that provides the model's training data.
             Used in calculating the Hessian-vector products.
         hessian_perturbation: Optional regularization parameter added to the Hessian-vector product
@@ -402,13 +403,12 @@ def model_hessian_low_rank(
             instance that contains the top (up until rank_estimate) eigenvalues
             and corresponding eigenvectors of the Hessian.
     """
-    raw_hvp = get_hvp_function(
-        model.model, model.loss, training_data, use_hessian_avg=True
-    )
+    raw_hvp = get_hvp_function(model, loss, training_data, use_hessian_avg=True)
+    num_params = sum([p.numel() for p in model.parameters() if p.requires_grad])
 
     return lanzcos_low_rank_hessian_approx(
         hessian_vp=raw_hvp,
-        matrix_shape=(model.num_params, model.num_params),
+        matrix_shape=(num_params, num_params),
         hessian_perturbation=hessian_perturbation,
         rank_estimate=rank_estimate,
         krylov_dimension=krylov_dimension,
@@ -817,7 +817,8 @@ def solve_arnoldi(
             )
 
         low_rank_representation = model_hessian_low_rank(
-            model,
+            model.model,
+            model.loss,
             training_data,
             hessian_perturbation=hessian_perturbation,
             rank_estimate=rank_estimate,
