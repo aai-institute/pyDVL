@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from concurrent.futures import Executor
 from typing import Any, Callable, Iterable, TypeVar
 
@@ -28,7 +29,10 @@ class RayParallelBackend(BaseParallelBackend, backend_name="ray"):
     """
 
     def __init__(self, config: ParallelConfig):
-        self.config = {"address": config.address, "logging_level": config.logging_level}
+        self.config = {
+            "address": config.address,
+            "logging_level": config.logging_level or logging.WARNING,
+        }
         if self.config["address"] is None:
             self.config["num_cpus"] = config.n_cpus_local
         if not ray.is_initialized():
