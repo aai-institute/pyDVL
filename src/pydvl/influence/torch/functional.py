@@ -94,15 +94,16 @@ def batch_hvp_gen(
             will compute the Hessian-vector product H(vec) for the given model and loss in a batch-wise manner, where
             (inputs, targets) coming from one batch.
     """
-    blf = batch_loss_function(model, loss)
 
     for inputs, targets in iter(data_loader):
-        model_params = {k: p for k, p in model.named_parameters() if p.requires_grad}
 
         def batch_hvp(vec: torch.Tensor):
+            model_params = {
+                k: p for k, p in model.named_parameters() if p.requires_grad
+            }
             return flatten_tensors_to_vector(
                 hvp(
-                    lambda p: blf(p, inputs, targets),
+                    lambda p: batch_loss_function(model, loss)(p, inputs, targets),
                     model_params,
                     align_structure(model_params, vec),
                     reverse_only=reverse_only,
@@ -218,13 +219,12 @@ def get_hvp_function(
             function with respect to the `model`'s parameters and the input vector.
     """
 
-    params = {
-        k: p if track_gradients else p.detach()
-        for k, p in model.named_parameters()
-        if p.requires_grad
-    }
-
     def hvp_function(vec: torch.Tensor) -> torch.Tensor:
+        params = {
+            k: p if track_gradients else p.detach()
+            for k, p in model.named_parameters()
+            if p.requires_grad
+        }
         v = align_structure(params, vec)
         empirical_loss = empirical_loss_function(model, loss, data_loader)
         return flatten_tensors_to_vector(
@@ -388,7 +388,6 @@ def matrix_jacobian_product(
         parameters for the given matrix `g`.
 
     """
-    psl = per_sample_loss(model, loss)
 
     def single_jvp(
         params: Dict[str, torch.Tensor],
@@ -397,7 +396,7 @@ def matrix_jacobian_product(
         _g: torch.Tensor,
     ):
         return torch.func.jvp(
-            lambda p: psl(p, x, y),
+            lambda p: per_sample_loss(model, loss)(p, x, y),
             (params,),
             (align_with_model(_g, model),),
         )[1]
