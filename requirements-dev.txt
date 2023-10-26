@@ -19,7 +19,6 @@ pytest-mock
 pytest-timeout
 pytest-lazy-fixture
 pytest-xdist>=3.3.1
-pytest-profiling
 pytest-cases~=3.8
 pytest-split
 pytest-sugar

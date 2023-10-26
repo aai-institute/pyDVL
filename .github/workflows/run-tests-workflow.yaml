@@ -51,8 +51,3 @@ jobs:
       run: tox -e tests -- notebooks/
       if: inputs.tests_to_run == 'notebooks'
       continue-on-error: true
-    - name: Archive pytest-profiling result
-      uses: actions/upload-artifact@v3
-      with:
-        name: pytest-profile-graph
-        path: combined.svg
