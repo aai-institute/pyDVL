@@ -39,13 +39,13 @@ jobs:
     - name: Set up memcached
       uses: niden/actions-memcached@v7
     - name: Test Group 1
-      run: tox -e tests -- --slow-tests --splits 3 --group 1
+      run: tox -e tests -- --slow-tests --splits 3 --group 1 --splitting-algorithm least_duration
       if: inputs.tests_to_run == 'group1'
     - name: Test Group 2
-      run: tox -e tests -- --slow-tests --splits 3 --group 2
+      run: tox -e tests -- --slow-tests --splits 3 --group 2 --splitting-algorithm least_duration
       if: inputs.tests_to_run == 'group2'
     - name: Test Group 3
-      run: tox -e tests -- --slow-tests --splits 3 --group 3
+      run: tox -e tests -- --slow-tests --splits 3 --group 3 --splitting-algorithm least_duration
       if: inputs.tests_to_run == 'group3'
     - name: Test Notebooks
       run: tox -e tests -- notebooks/
