@@ -10,13 +10,13 @@ models, as introduced in (Koh and Liang, 2017)[^1].
 """
 import logging
 from copy import deepcopy
-from enum import Enum
 from typing import Any, Callable, Dict, Generator, Optional, Type
 
 from ..utils import maybe_progress
-from .inversion import InversionMethod, solve_hvp
+from .inversion import InfluenceRegistry, InversionMethod, solve_hvp
 from .twice_differentiable import (
     DataLoaderType,
+    InfluenceType,
     InverseHvpResult,
     TensorType,
     TensorUtilities,
@@ -71,44 +71,13 @@ def compute_influence_factors(
         model
     )
 
-    stack = tensor_util.stack
-    unsqueeze = tensor_util.unsqueeze
-    cat_gen = tensor_util.cat_gen
-    cat = tensor_util.cat
-
-    def test_grads() -> Generator[TensorType, None, None]:
-        for x_test, y_test in maybe_progress(
-            test_data, progress, desc="Batch Test Gradients"
-        ):
-            yield stack(
-                [
-                    model.grad(inpt, target)
-                    for inpt, target in zip(unsqueeze(x_test, 1), y_test)
-                ]
-            )  # type:ignore
-
-    try:
-        # in case input_data is a torch DataLoader created from a Dataset,
-        # we can pre-allocate the result tensor to reduce memory consumption
-        resulting_shape = (len(test_data.dataset), model.num_params)  # type:ignore
-        rhs = cat_gen(
-            test_grads(), resulting_shape, model  # type:ignore
-        )  # type:ignore
-    except Exception as e:
-        logger.warning(
-            f"Failed to pre-allocate result tensor: {e}\n"
-            f"Evaluate all resulting tensor and concatenate"
-        )
-        rhs = cat(list(test_grads()))
-
-    return solve_hvp(
-        inversion_method,
-        model,
-        training_data,
-        rhs,
-        hessian_perturbation=hessian_perturbation,
-        **kwargs,
+    influence = InfluenceRegistry.get(  # type:ignore
+        type(model), inversion_method
+    )(
+        model, training_data, hessian_perturbation, **kwargs
     )
+
+    return influence.factors(tensor_util.data_loader_to_tensor_tuple(test_data))
 
 
 def compute_influences_up(
@@ -292,19 +261,18 @@ def compute_influences(
     if test_data is None:
         test_data = deepcopy(training_data)
 
-    influence_factors, _ = compute_influence_factors(
-        differentiable_model,
-        training_data,
-        test_data,
-        inversion_method,
-        hessian_perturbation=hessian_regularization,
-        progress=progress,
-        **kwargs,
+    tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
+        differentiable_model
     )
+    data_loader_to_tensor_tuple = tensor_util.data_loader_to_tensor_tuple
 
-    return influence_type_registry[influence_type](
-        differentiable_model,
-        input_data,
-        influence_factors,
-        progress=progress,
-    )
+    input_data_tup = data_loader_to_tensor_tuple(input_data)
+    test_data_tup = data_loader_to_tensor_tuple(test_data)
+
+    influence = InfluenceRegistry.get(  # type:ignore
+        type(differentiable_model), inversion_method
+    )(differentiable_model, training_data, hessian_regularization, **kwargs)
+
+    return influence.values(
+        test_data_tup, input_data_tup, influence_type
+    )  # type:ignore

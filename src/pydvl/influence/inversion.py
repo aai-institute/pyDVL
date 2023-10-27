@@ -15,6 +15,7 @@ __all__ = [
 
 from .twice_differentiable import (
     DataLoaderType,
+    Influence,
     InverseHvpResult,
     TensorType,
     TwiceDifferentiable,
@@ -203,3 +204,39 @@ class InversionRegistry:
         return cls.get(type(model), inversion_method)(
             model, training_data, b, hessian_perturbation, **kwargs
         )
+
+
+class InfluenceRegistry:
+
+    registry: Dict[
+        Tuple[Type[TwiceDifferentiable], InversionMethod], Callable[[Any], Influence]
+    ] = {}
+
+    @classmethod
+    def register(
+        cls,
+        model_type: Type[TwiceDifferentiable],
+        inversion_method: InversionMethod,
+    ):
+
+        key = (model_type, inversion_method)
+
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+
+            cls.registry[key] = wrapper
+            return wrapper
+
+        return decorator
+
+    @classmethod
+    def get(
+        cls, model_type: Type[TwiceDifferentiable], inversion_method: InversionMethod
+    ) -> Callable[[TwiceDifferentiable, DataLoaderType, float, Any], Influence]:
+        key = (model_type, inversion_method)
+        method = cls.registry.get(key, None)
+        if method is None:
+            raise ValueError(f"No function registered for {key}")
+        return method

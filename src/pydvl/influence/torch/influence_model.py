@@ -269,3 +269,66 @@ class ArnoldiInfluence(TorchInfluence):
         )
         return x
 
+
+@InfluenceRegistry.register(TorchTwiceDifferentiable, InversionMethod.Direct)
+def direct_factory(
+    twice_differentiable: TorchTwiceDifferentiable,
+    data_loader: DataLoader,
+    hessian_regularization: float,
+    **kwargs,
+):
+    return DirectInfluence(
+        twice_differentiable.model,
+        twice_differentiable.loss,
+        data_loader=data_loader,
+        hessian_regularization=hessian_regularization,
+        **kwargs,
+    )
+
+
+@InfluenceRegistry.register(TorchTwiceDifferentiable, InversionMethod.Cg)
+def cg_factory(
+    twice_differentiable: TorchTwiceDifferentiable,
+    data_loader: DataLoader,
+    hessian_regularization: float,
+    **kwargs,
+):
+    return BatchCgInfluence(
+        twice_differentiable.model,
+        twice_differentiable.loss,
+        train_dataloader=data_loader,
+        hessian_regularization=hessian_regularization,
+        **kwargs,
+    )
+
+
+@InfluenceRegistry.register(TorchTwiceDifferentiable, InversionMethod.Lissa)
+def lissa_factory(
+    twice_differentiable: TorchTwiceDifferentiable,
+    data_loader: DataLoader,
+    hessian_regularization: float,
+    **kwargs,
+):
+    return LissaInfluence(
+        twice_differentiable.model,
+        twice_differentiable.loss,
+        train_dataloader=data_loader,
+        hessian_regularization=hessian_regularization,
+        **kwargs,
+    )
+
+
+@InfluenceRegistry.register(TorchTwiceDifferentiable, InversionMethod.Arnoldi)
+def arnoldi_factory(
+    twice_differentiable: TorchTwiceDifferentiable,
+    data_loader: DataLoader,
+    hessian_regularization: float,
+    **kwargs,
+):
+    return ArnoldiInfluence(
+        twice_differentiable.model,
+        twice_differentiable.loss,
+        data_loader=data_loader,
+        hessian_regularization=hessian_regularization,
+        **kwargs,
+    )
