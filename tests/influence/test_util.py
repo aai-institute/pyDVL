@@ -9,12 +9,17 @@ from numpy.typing import NDArray
 from torch.nn.functional import mse_loss
 from torch.utils.data import DataLoader, TensorDataset
 
-from pydvl.influence.torch.functional import batch_loss_function, get_hvp_function, hvp
+from pydvl.influence.torch.functional import (
+    batch_loss_function,
+    get_batch_hvp,
+    get_hvp_function,
+    hvp,
+)
 from pydvl.influence.torch.torch_differentiable import lanzcos_low_rank_hessian_approx
 from pydvl.influence.torch.util import (
     TorchTensorContainerType,
     align_structure,
-    flatten_tensors_to_vector,
+    flatten_dimensions,
 )
 from tests.influence.conftest import linear_hessian_analytical, linear_model
 
@@ -94,7 +99,7 @@ def model_data(request):
     x = torch.rand(train_size, dimension[-1])
     y = torch.rand(train_size, dimension[0])
     torch_model = linear_torch_model_from_numpy(A, b)
-    vec = flatten_tensors_to_vector(
+    vec = flatten_dimensions(
         tuple(
             torch.rand(*p.shape)
             for name, p in torch_model.named_parameters()
@@ -112,21 +117,10 @@ def model_data(request):
     [(astuple(tp.model_params), 1e-5) for tp in test_parameters],
     indirect=["model_data"],
 )
-def test_hvp(model_data, tol: float):
+def test_batch_hvp(model_data, tol: float):
     torch_model, x, y, vec, H_analytical = model_data
-
-    params = dict(torch_model.named_parameters())
-
-    Hvp_autograd = hvp(
-        lambda p: batch_loss_function(torch_model, torch.nn.functional.mse_loss)(
-            p, x, y
-        ),
-        params,
-        align_structure(params, vec),
-    )
-
-    flat_Hvp_autograd = flatten_tensors_to_vector(Hvp_autograd.values())
-    assert torch.allclose(flat_Hvp_autograd, H_analytical @ vec, rtol=tol)
+    Hvp_autograd = get_batch_hvp(torch_model, torch.nn.functional.mse_loss)(x, y, vec)
+    assert torch.allclose(Hvp_autograd, H_analytical @ vec, rtol=tol)
 
 
 @pytest.mark.torch

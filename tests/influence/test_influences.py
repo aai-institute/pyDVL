@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from math import prod
 from typing import Callable, Dict, Tuple
 
 import numpy as np
@@ -365,7 +366,7 @@ def test_influences_nn(
         assert approx_influences.shape == (test_data_len, data_len)
 
     if influence_type == InfluenceType.Perturbation:
-        assert approx_influences.shape == (test_data_len, data_len, *input_dim)
+        assert approx_influences.shape == (test_data_len, data_len, prod(input_dim))
 
     # check that influences are not all constant
     assert not np.all(approx_influences == approx_influences.item(0))

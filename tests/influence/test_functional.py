@@ -174,11 +174,15 @@ def test_mixed_derivatives(in_features, out_features, train_set_size):
         train_y,
     )
 
+    torch_train_x = torch.as_tensor(train_x)
+    torch_train_y = torch.as_tensor(train_y)
+
     functorch_mixed_derivatives = per_sample_mixed_derivative(model, loss)(
-        params, torch.as_tensor(train_x), torch.as_tensor(train_y)
+        params, torch_train_x, torch_train_y
     )
+    shape = (torch_train_x.shape[0], torch_train_x.shape[1], -1)
     flat_functorch_mixed_derivatives = flatten_dimensions(
-        functorch_mixed_derivatives.values(), keep_first_n=2
+        functorch_mixed_derivatives.values(), shape=shape
     )
     assert torch.allclose(
         torch.as_tensor(test_derivative),

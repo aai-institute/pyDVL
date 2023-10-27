@@ -69,10 +69,10 @@ def hvp(
 
 
 def get_batch_hvp(
-        model: torch.nn.Module,
-        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        reverse_only: bool = True,
-        detach: bool = True
+    model: torch.nn.Module,
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    reverse_only: bool = True,
+    detach: bool = True,
 ) -> Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor]:
     """
     Creates a function to compute the batch-wise Hessian-vector product (HVP) for a given model and loss function.
@@ -111,7 +111,9 @@ def get_batch_hvp(
 
     def b_hvp(x: torch.Tensor, y: torch.Tensor, vec: torch.Tensor):
         model_params = {
-            k: p.detach() if detach else p for k, p in model.named_parameters() if p.requires_grad
+            k: p.detach() if detach else p
+            for k, p in model.named_parameters()
+            if p.requires_grad
         }
         return flatten_dimensions(
             hvp(
