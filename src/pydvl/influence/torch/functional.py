@@ -8,7 +8,7 @@ from .util import (
     TorchTensorContainerType,
     align_structure,
     align_with_model,
-    flatten_tensors_to_vector,
+    flatten_dimensions,
     to_model_device,
 )
 
@@ -227,7 +227,7 @@ def get_hvp_function(
         }
         v = align_structure(params, vec)
         empirical_loss = empirical_loss_function(model, loss, data_loader)
-        return flatten_tensors_to_vector(
+        return flatten_dimensions(
             hvp(empirical_loss, params, v, reverse_only=reverse_only).values()
         )
 
@@ -275,7 +275,7 @@ def get_hessian(
     }
     num_parameters = sum([p.numel() for p in params.values()])
     model_dtype = next((p.dtype for p in params.values()))
-    flat_params = flatten_tensors_to_vector(params.values())
+    flat_params = flatten_dimensions(params.values())
 
     if use_hessian_avg:
         hessian = torch.zeros((num_parameters, num_parameters), dtype=model_dtype)

@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "to_model_device",
-    "flatten_tensors_to_vector",
     "reshape_vector_to_tensors",
     "TorchTensorContainerType",
     "align_structure",
@@ -32,22 +31,6 @@ def to_model_device(x: torch.Tensor, model: torch.nn.Module) -> torch.Tensor:
     if hasattr(model, "device"):
         return x.to(model.device)
     return x
-
-
-def flatten_tensors_to_vector(tensors: Iterable[torch.Tensor]) -> torch.Tensor:
-    """
-    Flatten multiple tensors into a single 1D tensor (vector).
-
-    This function takes an iterable of tensors and reshapes each of them into a 1D tensor.
-    These reshaped tensors are then concatenated together into a single 1D tensor in the order they were given.
-
-    Args:
-        tensors: An iterable of tensors to be reshaped and concatenated.
-
-    Returns:
-        A 1D tensor that is the concatenation of all the reshaped input tensors.
-    """
-    return flatten_dimensions(tensors)
 
 
 def reshape_vector_to_tensors(
@@ -207,12 +190,38 @@ def align_with_model(x: TorchTensorContainerType, model: torch.nn.Module):
     return align_structure(model_params, x)
 
 
-def flatten_dimensions(tensors: Iterable[torch.Tensor], keep_first_n: int = None):
-    flattened_tensors = []
-    for t in tensors:
-        if keep_first_n is None:
-            t_flat = t.reshape(-1)
-        else:
-            t_flat = t.reshape(*[t.shape[k] for k in range(keep_first_n)], -1)
-        flattened_tensors.append(t_flat)
-    return torch.cat(flattened_tensors, dim=-1)
+def flatten_dimensions(
+    tensors: Iterable[torch.Tensor], shape: Tuple[int, ...] = None, concat_at: int = -1
+) -> torch.Tensor:
+    """
+    Flattens the dimensions of each tensor in the given iterable and concatenates them along a specified dimension.
+
+    This function takes an iterable of PyTorch tensors and flattens each tensor.
+    Optionally, each tensor can be reshaped to a specified shape before concatenation.
+    The concatenation is performed along the dimension specified by `concat_at`.
+
+    Args:
+        tensors: An iterable containing PyTorch tensors to be flattened and concatenated.
+        shape: A tuple representing the desired shape to which each tensor is reshaped before concatenation.
+            If None, tensors are flattened to 1D. Defaults to None.
+        concat_at: The dimension along which to concatenate the tensors. Defaults to -1.
+
+    Returns:
+        A single tensor resulting from the concatenation of the input tensors,
+        each either flattened or reshaped as specified.
+
+    Examples:
+        >>> tensors = [torch.tensor([[1, 2], [3, 4]]), torch.tensor([[5, 6], [7, 8]])]
+        >>> flatten_dimensions(tensors)
+        tensor([1, 2, 3, 4, 5, 6, 7, 8])
+
+        >>> flatten_dimensions(tensors, shape=(2, 2), concat_at=0)
+        tensor([[1, 2],
+                [3, 4],
+                [5, 6],
+                [7, 8]])
+    """
+    return torch.cat(
+        [t.reshape(-1) if shape is None else t.reshape(*shape) for t in tensors],
+        dim=concat_at,
+    )

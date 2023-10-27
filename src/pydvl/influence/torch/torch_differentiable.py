@@ -35,6 +35,7 @@ from ..twice_differentiable import (
 )
 from .functional import get_hvp_function
 from .util import align_structure, as_tensor, flatten_tensors_to_vector
+from .util import align_structure, as_tensor, flatten_dimensions
 
 __all__ = [
     "TorchTwiceDifferentiable",
@@ -127,7 +128,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
         grad_f = torch.autograd.grad(
             loss_value, self.parameters, create_graph=create_graph
         )
-        return flatten_tensors_to_vector(grad_f)
+        return flatten_dimensions(grad_f)
 
     def hessian(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         r"""
@@ -152,7 +153,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
             )
             return self.loss(outputs, y.to(self.device))
 
-        params = flatten_tensors_to_vector(
+        params = flatten_dimensions(
             p.detach() for p in self.model.parameters() if p.requires_grad
         )
         return torch.func.hessian(model_func)(params)
@@ -194,9 +195,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
         mvp = []
         for i in maybe_progress(range(len(z)), progress, desc="MVP"):
             mvp.append(
-                flatten_tensors_to_vector(
-                    autograd.grad(z[i], backprop_on, retain_graph=True)
-                )
+                flatten_dimensions(autograd.grad(z[i], backprop_on, retain_graph=True))
             )
         return torch.stack([grad.contiguous().view(-1) for grad in mvp]).detach()
 

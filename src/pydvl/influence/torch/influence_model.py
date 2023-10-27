@@ -56,9 +56,10 @@ class TorchInfluence(ABC):
     def _flat_loss_grad(
         self, z: Tuple[torch.Tensor, torch.Tensor], detach: bool = False
     ):
+    def _flat_loss_grad(self, z: Tuple[torch.Tensor, torch.Tensor]):
         grads = per_sample_gradient(self.model, self.loss)(self.model_params, *z)
-        return flatten_dimensions(
-            map(lambda t: t.detach() if detach else t, grads.values()), keep_first_n=0
+        shape = (z[0].shape[0], -1)
+        return flatten_dimensions(grads.values(), shape=shape)
         )
 
     def up_weighting(
