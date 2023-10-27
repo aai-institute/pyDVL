@@ -1,3 +1,4 @@
+import functools
 from typing import Callable, Dict, Generator
 
 import torch
@@ -67,50 +68,61 @@ def hvp(
     return output
 
 
-def batch_hvp_gen(
-    model: torch.nn.Module,
-    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-    data_loader: DataLoader,
-    reverse_only: bool = True,
-) -> Generator[Callable[[torch.Tensor], torch.Tensor], None, None]:
-    r"""
-    Generates a sequence of batch Hessian-vector product (HVP) computations for the provided model, loss function,
-    and data loader. If \(f_i\) is the model's loss on the \(i\)-th batch and \(\theta\) the model parameters,
-    this is the sequence of the callable matrix vector products for the matrices
+def get_batch_hvp(
+        model: torch.nn.Module,
+        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        reverse_only: bool = True,
+        detach: bool = True
+) -> Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor]:
+    """
+    Creates a function to compute the batch-wise Hessian-vector product (HVP) for a given model and loss function.
 
-    \[\nabla_{\theta}\nabla_{\theta}f_i(\theta), \quad i=1,\dots, \text{num_batches} \]
-
-    i.e. iterating over the data_loader, yielding partial function calls for calculating HVPs.
+    This function takes a PyTorch model, a loss function, and optional boolean parameters. It returns a callable
+    that computes the Hessian-vector product for batches of input data and a given vector. The computation can be
+    performed in reverse mode only, based on the `reverse_only` parameter. Additionally, the function allows
+    detaching of the model's parameters from the current computation graph based on the `detach` parameter.
 
     Args:
-        model: The PyTorch model for which the HVP is calculated.
-        loss: The loss function used to calculate the gradient and HVP.
-        data_loader: PyTorch DataLoader object containing the dataset for which the HVP is calculated.
-        reverse_only: Whether to use only reverse-mode autodiff
-            (True, default) or both forward- and reverse-mode autodiff (False).
+        model: The PyTorch model for which the Hessian-vector product is to be computed.
+        loss: The loss function. It should take two
+            torch.Tensor objects as input and return a torch.Tensor.
+        reverse_only (bool, optional): If True, the Hessian-vector product is computed in reverse mode only. Defaults
+            to True.
+        detach (bool, optional): If True, the model's parameters are detached from the current computation graph
+            before computation. This can save memory during gradient calculations. Defaults to True.
 
-    Yields:
-        Partial functions `H_{batch}(vec)=hvp(model, loss, inputs, targets, vec)` that when called,
-            will compute the Hessian-vector product H(vec) for the given model and loss in a batch-wise manner, where
-            (inputs, targets) coming from one batch.
+    Returns:
+        Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor]: A function that takes three torch.Tensor
+        objects - input data (x), target data (y), and a vector (vec) - and returns the Hessian-vector product as a
+        torch.Tensor.
+
+    Example Usage:
+        # Assume `model` is a PyTorch model and `loss_fn` is a loss function.
+        b_hvp_function = batch_hvp(model, loss_fn)
+
+        # `x_batch`, `y_batch` are batches of input and target data, and `vec` is a vector.
+        hvp_result = b_hvp_function(x_batch, y_batch, vec)
+
+    Note:
+        The returned function internally manages model parameters based on the `detach` argument. When `detach` is
+        True, it detaches the parameters from the computation graph which can be beneficial for reducing memory usage
+        during gradient calculations.
     """
 
-    for inputs, targets in iter(data_loader):
+    def b_hvp(x: torch.Tensor, y: torch.Tensor, vec: torch.Tensor):
+        model_params = {
+            k: p.detach() if detach else p for k, p in model.named_parameters() if p.requires_grad
+        }
+        return flatten_dimensions(
+            hvp(
+                lambda p: batch_loss_function(model, loss)(p, x, y),
+                model_params,
+                align_structure(model_params, vec),
+                reverse_only=reverse_only,
+            ).values()
+        )
 
-        def batch_hvp(vec: torch.Tensor):
-            model_params = {
-                k: p for k, p in model.named_parameters() if p.requires_grad
-            }
-            return flatten_tensors_to_vector(
-                hvp(
-                    lambda p: batch_loss_function(model, loss)(p, inputs, targets),
-                    model_params,
-                    align_structure(model_params, vec),
-                    reverse_only=reverse_only,
-                ).values()
-            )
-
-        yield batch_hvp
+    return b_hvp
 
 
 def empirical_loss_function(
@@ -234,9 +246,9 @@ def get_hvp_function(
     def avg_hvp_function(vec: torch.Tensor) -> torch.Tensor:
         num_batches = len(data_loader)
         avg_hessian = to_model_device(torch.zeros_like(vec), model)
-
-        for batch_hvp in batch_hvp_gen(model, loss, data_loader, reverse_only):
-            avg_hessian += batch_hvp(vec)
+        b_hvp = get_batch_hvp(model, loss, reverse_only)
+        for x, y in iter(data_loader):
+            avg_hessian += b_hvp(x, y, vec)
 
         return avg_hessian / float(num_batches)
 
@@ -328,7 +340,16 @@ def per_sample_loss(
         inputs, the model's predictions, and the true values. The callable will return a tensor where
         each entry corresponds to the loss of the corresponding sample.
     """
-    return torch.vmap(batch_loss_function(model, loss), in_dims=(None, 0, 0))
+
+    def compute_loss(
+        params: Dict[str, torch.Tensor], x: torch.Tensor, y: torch.Tensor
+    ) -> torch.Tensor:
+        outputs = functional_call(
+            model, params, (to_model_device(x.unsqueeze(0), model),)
+        )
+        return loss(outputs, y.unsqueeze(0))
+
+    return torch.vmap(compute_loss, in_dims=(None, 0, 0))
 
 
 def per_sample_gradient(
@@ -434,7 +455,14 @@ def per_sample_mixed_derivative(
         parameters and input.
 
     """
+
+    def compute_loss(params: Dict[str, torch.Tensor], x: torch.Tensor, y: torch.Tensor):
+        outputs = functional_call(
+            model, params, (to_model_device(x.unsqueeze(0), model),)
+        )
+        return loss(outputs, y.unsqueeze(0))
+
     return torch.vmap(
-        torch.func.jacrev(torch.func.grad(batch_loss_function(model, loss), argnums=1)),
+        torch.func.jacrev(torch.func.grad(compute_loss, argnums=1)),
         in_dims=(None, 0, 0),
     )
