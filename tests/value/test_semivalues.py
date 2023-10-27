@@ -48,11 +48,12 @@ def test_shapley(
     coefficient: SVCoefficient,
     n_jobs: int,
     parallel_config: ParallelConfig,
+    seed: Seed,
 ):
     u, exact_values = analytic_shapley
     criterion = HistoryDeviation(50, 1e-3) | MaxUpdates(1000)
     values = compute_generic_semivalues(
-        sampler(u.data.indices),
+        sampler(u.data.indices, seed=seed),
         u,
         coefficient,
         criterion,
