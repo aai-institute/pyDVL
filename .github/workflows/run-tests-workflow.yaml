@@ -45,4 +45,4 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage.xml
         env_vars: OS,PYTHON
-        verbose: true
+        verbose: false
