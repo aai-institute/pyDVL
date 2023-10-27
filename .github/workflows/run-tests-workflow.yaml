@@ -41,5 +41,7 @@ jobs:
       run: tox -e tests -- --slow-tests --splits ${{ inputs.split_size }} --group ${{ inputs.group_number }} --splitting-algorithm least_duration
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        env_vars: OS,PYTHON
+        verbose: true
