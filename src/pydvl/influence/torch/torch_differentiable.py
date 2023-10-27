@@ -418,9 +418,21 @@ def model_hessian_low_rank(
     )
 
 
-class TorchTensorUtilities(TensorUtilities[torch.Tensor, TorchTwiceDifferentiable]):
+class TorchTensorUtilities(
+    TensorUtilities[torch.Tensor, TorchTwiceDifferentiable, DataLoader]
+):
     twice_differentiable_type = TorchTwiceDifferentiable
 
+    @staticmethod
+    def data_loader_to_tensor_tuple(data_loader: DataLoader):
+        X_list = []
+        Y_list = []
+
+        for x, y in data_loader:
+            X_list.append(x)
+            Y_list.append(y)
+
+        return torch.cat(X_list), torch.cat(Y_list)
     @staticmethod
     def einsum(equation: str, *operands) -> torch.Tensor:
         """Sums the product of the elements of the input :attr:`operands` along dimensions specified using a notation

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum
 from typing import (
     Any,
     Dict,
@@ -132,7 +133,7 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
         """
 
 
-class TensorUtilities(Generic[TensorType, ModelType], ABC):
+class TensorUtilities(Generic[TensorType, ModelType, DataLoaderType], ABC):
     twice_differentiable_type: Type[TwiceDifferentiable]
     registry: Dict[Type[TwiceDifferentiable], Type["TensorUtilities"]] = {}
 
@@ -160,6 +161,13 @@ class TensorUtilities(Generic[TensorType, ModelType], ABC):
         cls.registry[cls.twice_differentiable_type] = cls
 
         super().__init_subclass__(**kwargs)
+
+    @staticmethod
+    @abstractmethod
+    def data_loader_to_tensor_tuple(
+        data_loader: DataLoaderType,
+    ) -> Tuple[TensorType, TensorType]:
+        pass
 
     @staticmethod
     @abstractmethod
