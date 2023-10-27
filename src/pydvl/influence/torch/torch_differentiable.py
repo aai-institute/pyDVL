@@ -33,8 +33,7 @@ from ..twice_differentiable import (
     TensorUtilities,
     TwiceDifferentiable,
 )
-from .functional import get_hvp_function
-from .util import align_structure, as_tensor, flatten_tensors_to_vector
+from .functional import get_batch_hvp, get_hvp_function
 from .util import align_structure, as_tensor, flatten_dimensions
 
 __all__ = [
@@ -433,6 +432,7 @@ class TorchTensorUtilities(
             Y_list.append(y)
 
         return torch.cat(X_list), torch.cat(Y_list)
+
     @staticmethod
     def einsum(equation: str, *operands) -> torch.Tensor:
         """Sums the product of the elements of the input :attr:`operands` along dimensions specified using a notation
@@ -728,12 +728,11 @@ def solve_lissa(
         """
         return b + (1 - dampen) * h - reg_hvp(h) / scale
 
+    b_hvp = torch.vmap(get_batch_hvp(model.model, model.loss), in_dims=(None, None, 0))
     for _ in maybe_progress(range(maxiter), progress, desc="Lissa"):
         x, y = next(iter(shuffled_training_data))
-        grad_xy = model.grad(x, y, create_graph=True)
-        reg_hvp = (
-            lambda v: model.mvp(grad_xy, v, model.parameters) + hessian_perturbation * v
-        )
+        # grad_xy = model.grad(x, y, create_graph=True)
+        reg_hvp = lambda v: b_hvp(x, y, v) + hessian_perturbation * v
         residual = lissa_step(h_estimate, reg_hvp) - h_estimate
         h_estimate += residual
         if torch.isnan(h_estimate).any():
