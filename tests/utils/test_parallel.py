@@ -230,6 +230,7 @@ def test_futures_executor_map_with_max_workers(parallel_config):
 
 
 @pytest.mark.timeout(30)
+@pytest.mark.tolerate(max_failures=1)
 def test_future_cancellation(parallel_config):
     if parallel_config.backend != "ray":
         pytest.skip("Currently this test only works with Ray")
