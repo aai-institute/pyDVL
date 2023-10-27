@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from concurrent.futures import Executor
 from typing import Callable, TypeVar, cast
 
@@ -15,7 +16,7 @@ __all__ = ["JoblibParallelBackend"]
 
 T = TypeVar("T")
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
@@ -43,7 +44,7 @@ class JoblibParallelBackend(BaseParallelBackend, backend_name="joblib"):
         cancel_futures: CancellationPolicy = CancellationPolicy.NONE,
     ) -> Executor:
         if cancel_futures not in (CancellationPolicy.NONE, False):
-            log.warning(
+            warnings.warn(
                 "Cancellation of futures is not supported by the joblib backend"
             )
         return cast(Executor, get_reusable_executor(max_workers=max_workers))
