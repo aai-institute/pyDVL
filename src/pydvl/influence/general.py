@@ -23,25 +23,9 @@ from .twice_differentiable import (
     TwiceDifferentiable,
 )
 
-__all__ = ["compute_influences", "InfluenceType", "compute_influence_factors"]
+__all__ = ["compute_influences", "compute_influence_factors"]
 
 logger = logging.getLogger(__name__)
-
-
-class InfluenceType(str, Enum):
-    r"""
-    Enum representation for the types of influence.
-
-    Attributes:
-        Up: Up-weighting a training point, see section 2.1 of
-            (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>
-        Perturbation: Perturb a training point, see section 2.2 of
-            (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>
-
-    """
-
-    Up = "up"
-    Perturbation = "perturbation"
 
 
 def compute_influence_factors(

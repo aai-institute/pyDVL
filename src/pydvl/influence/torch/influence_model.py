@@ -1,10 +1,13 @@
 from abc import ABC, abstractmethod
+from math import prod
 from typing import Callable, Optional, Tuple
 
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
+from ..inversion import InfluenceRegistry, InversionMethod
+from ..twice_differentiable import Influence, InfluenceType, TensorType
 from .functional import (
     get_hessian,
     matrix_jacobian_product,
@@ -22,7 +25,7 @@ from .torch_differentiable import (
 from .util import flatten_dimensions
 
 
-class TorchInfluence(ABC):
+class TorchInfluence(Influence[torch.Tensor], ABC):
     def __init__(
         self,
         model: nn.Module,
@@ -37,7 +40,7 @@ class TorchInfluence(ABC):
             (p.device for p in model.parameters() if p.requires_grad)
         )
         self._model_params = {
-            k: p for k, p in self.model.named_parameters() if p.requires_grad
+            k: p.detach() for k, p in self.model.named_parameters() if p.requires_grad
         }
         super().__init__()
 
@@ -53,54 +56,47 @@ class TorchInfluence(ABC):
     def model_params(self):
         return self._model_params
 
-    def _flat_loss_grad(
-        self, z: Tuple[torch.Tensor, torch.Tensor], detach: bool = False
-    ):
     def _flat_loss_grad(self, z: Tuple[torch.Tensor, torch.Tensor]):
         grads = per_sample_gradient(self.model, self.loss)(self.model_params, *z)
         shape = (z[0].shape[0], -1)
         return flatten_dimensions(grads.values(), shape=shape)
-        )
 
-    def up_weighting(
+    def _flat_loss_mixed_grad(self, z: Tuple[torch.Tensor, torch.Tensor]):
+        mixed_grads = per_sample_mixed_derivative(self.model, self.loss)(
+            self.model_params, *z
+        )
+        shape = (z[0].shape[0], prod(z[0].shape[1:]), -1)
+        return flatten_dimensions(mixed_grads.values(), shape=shape)
+
+    def values(
         self,
         z_test: Tuple[torch.Tensor, torch.Tensor],
         z: Tuple[torch.Tensor, torch.Tensor],
+        influence_type: InfluenceType,
     ) -> torch.Tensor:
-        left = self._flat_loss_grad(z_test, detach=True)
-        right = self.factors(z)
-        return (left @ right.T).T
+        if influence_type is InfluenceType.Up:
+            return self.up_weighting(self.factors(z_test), z)
+        return self.perturbation(self.factors(z_test), z)
+
+    def up_weighting(
+        self, z_test_factors: torch.Tensor, z: Tuple[torch.Tensor, torch.Tensor]
+    ) -> TensorType:
+        return z_test_factors @ self._flat_loss_grad(z).T
 
     def perturbation(
         self,
-        z_test: Tuple[torch.Tensor, torch.Tensor],
+        z_test_factors: torch.Tensor,
         z: Tuple[torch.Tensor, torch.Tensor],
     ) -> torch.Tensor:
-        left = self.factors(z_test)
-        right = per_sample_mixed_derivative(self.model, self.loss)(
-            self.model_params, *z
+        return torch.einsum(
+            "ia,jba->ijb", z_test_factors, self._flat_loss_mixed_grad(z)
         )
-        flat_right = flatten_dimensions(right.values(), keep_first_n=2)
-        return torch.einsum("ia,jab->ijb", left, flat_right)
 
-    def factors(self, x: Tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
-        rhs = self._flat_loss_grad(x, detach=True)
-        return self._solve_hvp(rhs)
+    def factors(self, z: Tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
+        return self._solve_hvp(self._flat_loss_grad(z))
 
     @abstractmethod
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        pass
-
-    @classmethod
-    @abstractmethod
-    def from_model(
-        cls,
-        model: nn.Module,
-        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        train_dataloader: DataLoader,
-        hessian_perturbation: float,
-        **kwargs,
-    ):
         pass
 
 
@@ -109,35 +105,26 @@ class DirectInfluence(TorchInfluence):
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        hessian: torch.Tensor,
-        hessian_perturbation: float,
+        hessian_regularization: float,
+        hessian: torch.Tensor = None,
+        data_loader: DataLoader = None,
     ):
+        if hessian is None and data_loader is None:
+            raise ValueError(
+                f"Either provide a pre-computed hessian or a data_loader to compute the hessian"
+            )
+
         super().__init__(model, loss)
-        self.hessian_perturbation = hessian_perturbation
-        self.hessian = hessian
-        self.perturbed_matrix = hessian + hessian_perturbation * torch.eye(
+        self.hessian_perturbation = hessian_regularization
+        self.hessian = (
+            hessian if hessian is not None else get_hessian(model, loss, data_loader)
+        )
+        self.perturbed_matrix = self.hessian + hessian_regularization * torch.eye(
             self.num_parameters, device=self.model_device
         )
 
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
         return torch.linalg.solve(self.perturbed_matrix, rhs.T).T
-
-    @classmethod
-    def from_model(
-        cls,
-        model: nn.Module,
-        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        train_dataloader: DataLoader,
-        hessian_perturbation: float,
-        use_average_hessian: bool = True,
-    ):
-        hessian = get_hessian(
-            model,
-            loss,
-            train_dataloader,
-            use_hessian_avg=use_average_hessian,
-        )
-        return cls(model, loss, hessian, hessian_perturbation)
 
 
 class BatchCgInfluence(TorchInfluence):
@@ -146,7 +133,7 @@ class BatchCgInfluence(TorchInfluence):
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         train_dataloader: DataLoader,
-        hessian_perturbation: float,
+        hessian_regularization: float,
         x0: Optional[torch.Tensor] = None,
         rtol: float = 1e-7,
         atol: float = 1e-7,
@@ -159,7 +146,7 @@ class BatchCgInfluence(TorchInfluence):
         self.atol = atol
         self.rtol = rtol
         self.x0 = x0
-        self.hessian_perturbation = hessian_perturbation
+        self.hessian_regularization = hessian_regularization
         self.train_dataloader = train_dataloader
 
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
@@ -168,38 +155,13 @@ class BatchCgInfluence(TorchInfluence):
             TorchTwiceDifferentiable(self.model, self.loss),
             self.train_dataloader,
             rhs,
-            self.hessian_perturbation,
+            self.hessian_regularization,
             x0=self.x0,
             rtol=self.rtol,
             atol=self.atol,
             maxiter=self.maxiter,
         )
         return x
-
-    @classmethod
-    def from_model(
-        cls,
-        model: nn.Module,
-        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        train_dataloader: DataLoader,
-        hessian_perturbation: float,
-        x0: Optional[torch.Tensor] = None,
-        rtol: float = 1e-7,
-        atol: float = 1e-7,
-        maxiter: Optional[int] = None,
-        progress: bool = False,
-    ):
-        return cls(
-            model,
-            loss,
-            train_dataloader,
-            hessian_perturbation,
-            x0,
-            rtol,
-            atol,
-            maxiter,
-            progress,
-        )
 
 
 class LissaInfluence(TorchInfluence):
@@ -208,7 +170,7 @@ class LissaInfluence(TorchInfluence):
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         train_dataloader: DataLoader,
-        hessian_perturbation: float,
+        hessian_regularization: float,
         maxiter: int = 1000,
         dampen: float = 0.0,
         scale: float = 10.0,
@@ -218,7 +180,7 @@ class LissaInfluence(TorchInfluence):
     ):
         super().__init__(model, loss)
         self.maxiter = maxiter
-        self.hessian_perturbation = hessian_perturbation
+        self.hessian_regularization = hessian_regularization
         self.progress = progress
         self.rtol = rtol
         self.h0 = h0
@@ -232,7 +194,7 @@ class LissaInfluence(TorchInfluence):
             TorchTwiceDifferentiable(self.model, self.loss),
             self.train_dataloader,
             rhs,
-            self.hessian_perturbation,
+            self.hessian_regularization,
             maxiter=self.maxiter,
             dampen=self.dampen,
             scale=self.scale,
@@ -242,52 +204,61 @@ class LissaInfluence(TorchInfluence):
         )
         return x
 
-    @classmethod
-    def from_model(
-        cls,
-        model: nn.Module,
-        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        train_dataloader: DataLoader,
-        hessian_perturbation: float,
-        maxiter: int = 1000,
-        dampen: float = 0.0,
-        scale: float = 10.0,
-        h0: Optional[torch.Tensor] = None,
-        rtol: float = 1e-4,
-        progress: bool = False,
-    ):
-        return cls(
-            model,
-            loss,
-            train_dataloader,
-            hessian_perturbation,
-            maxiter,
-            dampen,
-            scale,
-            h0,
-            rtol,
-            progress,
-        )
-
 
 class ArnoldiInfluence(TorchInfluence):
     def __init__(
-        self, model, loss, low_rank_representation: LowRankProductRepresentation
+        self,
+        model,
+        loss,
+        low_rank_representation: LowRankProductRepresentation = None,
+        data_loader: DataLoader = None,
+        hessian_regularization: float = 0.0,
+        rank_estimate: int = 10,
+        krylov_dimension: Optional[int] = None,
+        tol: float = 1e-6,
+        max_iter: Optional[int] = None,
+        eigen_computation_on_gpu: bool = False,
     ):
+        if low_rank_representation is None and data_loader is None:
+            raise ValueError(
+                f"Either provide a pre-computed hessian or a data_loader to compute the hessian"
+            )
+
+        if low_rank_representation is None:
+            low_rank_representation = model_hessian_low_rank(
+                model,
+                loss,
+                data_loader,
+                hessian_perturbation=hessian_regularization,
+                rank_estimate=rank_estimate,
+                krylov_dimension=krylov_dimension,
+                tol=tol,
+                max_iter=max_iter,
+                eigen_computation_on_gpu=eigen_computation_on_gpu,
+            )
+
         self.low_rank_representation = low_rank_representation
+
         super().__init__(model, loss)
 
-    def up_weighting(
-        self, x: Tuple[torch.Tensor, torch.Tensor], y: Tuple[torch.Tensor, torch.Tensor]
+    def values(
+        self,
+        z_test: Tuple[torch.Tensor, torch.Tensor],
+        z: Tuple[torch.Tensor, torch.Tensor],
+        influence_type: InfluenceType,
     ) -> torch.Tensor:
-        mjp = matrix_jacobian_product(
-            self.model, self.loss, self.low_rank_representation.projections
-        )
-        left = mjp(self.model_params, *x)
-        right = torch.diag_embed(1.0 / self.low_rank_representation.eigen_vals) @ mjp(
-            self.model_params, *y
-        )
-        return torch.einsum("ij, kj -> ik", left, right)
+
+        if influence_type is InfluenceType.Up:
+            mjp = matrix_jacobian_product(
+                self.model, self.loss, self.low_rank_representation.projections.T
+            )
+            left = mjp(self.model_params, *z_test)
+            right = torch.diag_embed(
+                1.0 / self.low_rank_representation.eigen_vals
+            ) @ mjp(self.model_params, *z)
+            return torch.einsum("ij, ik -> jk", left, right)
+
+        return self.perturbation(self.factors(z_test), z)
 
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
         x, _ = solve_arnoldi(
@@ -298,27 +269,3 @@ class ArnoldiInfluence(TorchInfluence):
         )
         return x
 
-    @classmethod
-    def from_model(
-        cls,
-        model: nn.Module,
-        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        train_dataloader: DataLoader,
-        hessian_perturbation: float,
-        rank_estimate: int = 10,
-        krylov_dimension: Optional[int] = None,
-        tol: float = 1e-6,
-        max_iter: Optional[int] = None,
-        eigen_computation_on_gpu: bool = False,
-    ):
-        low_rank_representation = model_hessian_low_rank(
-            TorchTwiceDifferentiable(model, loss),
-            train_dataloader,
-            hessian_perturbation,
-            rank_estimate,
-            krylov_dimension,
-            tol,
-            max_iter,
-            eigen_computation_on_gpu,
-        )
-        return cls(model, loss, low_rank_representation)

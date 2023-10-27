@@ -248,3 +248,50 @@ class TensorUtilities(Generic[TensorType, ModelType], ABC):
             )
 
         return tu
+
+
+class InfluenceType(str, Enum):
+    r"""
+    Enum representation for the types of influence.
+
+    Attributes:
+        Up: Up-weighting a training point, see section 2.1 of
+            (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>
+        Perturbation: Perturb a training point, see section 2.2 of
+            (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup>
+
+    """
+
+    Up = "up"
+    Perturbation = "perturbation"
+
+
+class Influence(Generic[TensorType], ABC):
+    @abstractmethod
+    def up_weighting(
+        self,
+        z_test_factors: TensorType,
+        z: Tuple[TensorType, TensorType],
+    ) -> TensorType:
+        pass
+
+    @abstractmethod
+    def perturbation(
+        self,
+        z_test_factors: TensorType,
+        z: Tuple[TensorType, TensorType],
+    ) -> TensorType:
+        pass
+
+    @abstractmethod
+    def factors(self, z: Tuple[TensorType, TensorType]) -> TensorType:
+        pass
+
+    @abstractmethod
+    def values(
+        self,
+        z_test: Tuple[TensorType, TensorType],
+        z: Tuple[TensorType, TensorType],
+        influence_type: InfluenceType,
+    ) -> TensorType:
+        pass
