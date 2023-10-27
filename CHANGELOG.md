@@ -5,7 +5,7 @@
 
 ### Changed
 
-- Simplify and improve tests
+- Simplify and improve tests, add CodeCov code coverage
   [PR #429](https://github.com/aai-institute/pyDVL/pull/429)
 
 ## 0.7.1 - 🆕 New methods, bug fixes and improvements for local tests 🐞🧪
