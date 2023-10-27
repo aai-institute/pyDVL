@@ -110,7 +110,7 @@ pip install pyDVL --index-url https://test.pypi.org/simple/
 ```
 
 For more instructions and information refer to [Installing pyDVL
-](https://aai-institute.github.io/pyDVL/20-install.html) in the
+](https://pydvl.org/stable/getting-started/installation/) in the
 documentation.
 
 # Usage
@@ -192,9 +192,11 @@ values = compute_shapley_values(
 ```
 
 For more instructions and information refer to [Getting
-Started](https://aai-institute.github.io/pyDVL/10-getting-started.html) in
-the documentation. We provide several
-[examples](https://aai-institute.github.io/pyDVL/examples/index.html)
+Started](https://pydvl.org/stable/getting-started/first-steps/) in
+the documentation. We provide several examples for data valuation
+(e.g. [Shapley Data Valuation](https://pydvl.org/stable/examples/shapley_basic_spotify/))
+and for influence functions
+(e.g. [Influence Functions for Neural Networks](https://pydvl.org/stable/examples/influence_imagenet/))
 with details on the algorithms and their applications.
 
 ## Caching
@@ -210,7 +212,7 @@ docker container run --rm -p 11211:11211 --name pydvl-cache -d memcached:latest
 ```
 
 You can read more in the
-[documentation](https://aai-institute.github.io/pyDVL/getting-started/first-steps/#caching).
+[documentation](https://pydvl.org/stable/getting-started/first-steps/#caching).
 
 # Contributing
 
