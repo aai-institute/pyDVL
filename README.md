@@ -10,6 +10,9 @@
     <a href="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml">
         <img src="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml/badge.svg" alt="Build status" >
     </a>
+    <a href="https://codecov.io/gh/aai-institute/pyDVL">
+      <img src="https://codecov.io/gh/aai-institute/pyDVL/graph/badge.svg?token=VN7DNDE0FV"/>
+    </a>
     <a href="https://pypi.org/project/pydvl/">
         <img src="https://img.shields.io/pypi/v/pydvl.svg" alt="PyPI">
     </a>
