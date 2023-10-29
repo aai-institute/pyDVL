@@ -345,6 +345,16 @@ runs](#skipping-ci-runs)).
    For that we use [pytest-split](https://jerry-git.github.io/pytest-split)
    to first store the duration of all tests with `pytest --store-durations pytest --slow-tests`
    in a `.test_durations` file.
+
+   > **Note** This does not have to be done each time a new test or test case
+   > is added. For new tests and test cases pytes-split assumes
+   > average test execution time(calculated based on the stored information)
+   > for every test which does not have duration information stored.
+   > Thus, there's no need to store durations after changing the test suite.
+   > However, when there are major changes in the suite compared
+   > to what's stored in .test_durations, it's recommended to update
+   > the duration information with `--store-durations` to ensure
+   > that the splitting is in balance.
    
    Then we can have as many splits as we want:
 
