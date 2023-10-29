@@ -112,6 +112,8 @@ def analytic_banzhaf(dummy_utility):
 
 @pytest.fixture(scope="function")
 def linear_shapley(cache, linear_dataset, scorer, n_jobs):
+    """This fixture makes use of the cache fixture to avoid recomputing
+    exact shapley values for each test run."""
     args_hash = cache.hash_arguments(linear_dataset, scorer, n_jobs)
     u_cache_key = f"linear_shapley_u_{args_hash}"
     exact_values_cache_key = f"linear_shapley_exact_values_{args_hash}"

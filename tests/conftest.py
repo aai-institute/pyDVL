@@ -54,8 +54,10 @@ def pytest_addoption(parser):
 def cache(request: "FixtureRequest") -> CloudPickleCache:
     """Return a cache object that can persist state between testing sessions.
 
+    ```pycon
     cache.get(key, default)
     cache.set(key, value)
+    ```
 
     Keys must be ``/`` separated strings, where the first part is usually the
     name of your plugin or application to avoid clashes with other cache users.
