@@ -1,5 +1,6 @@
 import logging
 from time import sleep, time
+from typing import Optional
 
 import numpy as np
 import pytest
@@ -7,6 +8,7 @@ from numpy.typing import NDArray
 
 from pydvl.parallel import MapReduceJob
 from pydvl.utils import memcached
+from pydvl.utils.types import Seed
 
 logger = logging.getLogger(__name__)
 
@@ -134,10 +136,11 @@ def test_memcached_faster_with_repeated_training(memcached_client, worker_id: st
 @pytest.mark.parametrize("n_jobs", [1, 2])
 @pytest.mark.parametrize("n_runs", [20])
 def test_memcached_parallel_repeated_training(
-    memcached_client, n, atol, n_jobs, n_runs, parallel_config, seed=42
+    memcached_client, n, atol, n_jobs, n_runs, parallel_config, seed
 ):
+    if parallel_config.backend != "joblib":
+        pytest.skip("We don't have to test this with all parallel backends")
     _, config = memcached_client
-    np.random.seed(seed)
 
     @memcached(
         client_config=config,
@@ -147,10 +150,11 @@ def test_memcached_parallel_repeated_training(
         # Note that we typically do NOT want to ignore run_id
         ignore_args=["job_id", "run_id"],
     )
-    def map_func(indices: NDArray[np.int_]) -> float:
+    def map_func(indices: NDArray[np.int_], seed: Optional[Seed] = None) -> float:
         # from pydvl.utils.logging import logger
         # logger.info(f"run_id: {run_id}, running...")
-        return np.sum(indices).item() + np.random.normal(scale=5)
+        rng = np.random.default_rng(seed)
+        return np.sum(indices).item() + rng.normal(scale=5)
 
     def reduce_func(chunks: NDArray[np.float_]) -> float:
         return np.sum(chunks).item()
@@ -160,7 +164,7 @@ def test_memcached_parallel_repeated_training(
     )
     results = []
     for _ in range(n_runs):
-        result = map_reduce_job()
+        result = map_reduce_job(seed=seed)
         results.append(result)
 
     exact_value = np.sum(np.arange(n)).item()

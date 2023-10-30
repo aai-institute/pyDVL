@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import (
     Any,
+    Collection,
     Dict,
     Generator,
     Generic,
@@ -12,6 +13,7 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
+    Union,
 )
 
 __all__ = [
@@ -23,7 +25,7 @@ __all__ = [
     "TensorUtilities",
 ]
 
-TensorType = TypeVar("TensorType", bound=Sequence)
+TensorType = TypeVar("TensorType", bound=Collection)
 """Type variable for tensors, i.e. sequences of numbers"""
 
 ModelType = TypeVar("ModelType", bound="TwiceDifferentiable")
@@ -73,6 +75,7 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
         """Returns all the model parameters that require differentiation"""
         pass
 
+    @abstractmethod
     def grad(
         self, x: TensorType, y: TensorType, create_graph: bool = False
     ) -> TensorType:
@@ -90,6 +93,7 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
 
         pass
 
+    @abstractmethod
     def hessian(self, x: TensorType, y: TensorType) -> TensorType:
         r"""
         Calculates the full Hessian of \(L(f(x),y)\) with respect to the model parameters given data \(x\) and \(y\).
@@ -110,7 +114,7 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
     def mvp(
         grad_xy: TensorType,
         v: TensorType,
-        backprop_on: TensorType,
+        backprop_on: Union[TensorType, Sequence[TensorType]],
         *,
         progress: bool = False,
     ) -> TensorType:
@@ -131,6 +135,7 @@ class TwiceDifferentiable(ABC, Generic[TensorType]):
             A matrix representing the implicit matrix-vector product of the model along the given directions.
                 Output shape is [DxM], where \(M\) is the number of elements of `backprop_on`.
         """
+        pass
 
 
 class TensorUtilities(Generic[TensorType, ModelType, DataLoaderType], ABC):

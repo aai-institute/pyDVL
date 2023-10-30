@@ -1,5 +1,4 @@
-import functools
-from typing import Callable, Dict, Generator
+from typing import Callable, Dict
 
 import torch
 from torch.func import functional_call, grad, jvp, vjp
@@ -45,16 +44,17 @@ def hvp(
             (True, default) or both forward- and reverse-mode autodiff (False).
 
     Returns:
-       The HVP of the function at the given parameters with the given vector.
+        The HVP of the function at the given parameters with the given vector.
 
-    Example:
-    ```python
-    >>> def f(z): return torch.sum(z**2)
-    >>> u = torch.ones(10, requires_grad=True)
-    >>> v = torch.ones(10)
-    >>> hvp_vec = hvp(f, u, v)
-    >>> assert torch.allclose(hvp_vec, torch.full((10, ), 2.0))
-    ```
+    ??? Example
+
+        ```pycon
+        >>> def f(z): return torch.sum(z**2)
+        >>> u = torch.ones(10, requires_grad=True)
+        >>> v = torch.ones(10)
+        >>> hvp_vec = hvp(f, u, v)
+        >>> assert torch.allclose(hvp_vec, torch.full((10, ), 2.0))
+        ```
     """
 
     output: TorchTensorContainerType
@@ -136,9 +136,9 @@ def empirical_loss_function(
     where $N$ is the number of all elements provided by the data_loader.
 
     Args:
-      model: The model for which the loss should be computed.
-      loss: The loss function to be used.
-      data_loader: The data loader for iterating over the dataset.
+        model: The model for which the loss should be computed.
+        loss: The loss function to be used.
+        data_loader: The data loader for iterating over the dataset.
 
     Returns:
         A function that computes the empirical loss of the model on the dataset for given model parameters.

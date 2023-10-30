@@ -6,18 +6,22 @@ isort == 5.12.0
 pylint==2.12.0
 pylint-json2html
 anybadge
-mypy == 0.982
+mypy==1.5.1
 types-tqdm
 pandas-stubs
 bump2version==1.0.1
 jupyter
 nbconvert>=7.2.9
 nbstripout == 0.6.1
-pytest==7.2.2
+pytest==7.4.2
 pytest-cov
 pytest-mock
 pytest-timeout
 pytest-lazy-fixture
 pytest-xdist>=3.3.1
+pytest-cases~=3.8
+pytest-split
+pytest-sugar
+nbmake
 wheel
 twine==4.0.2

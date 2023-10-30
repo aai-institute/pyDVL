@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 @pytest.mark.parametrize("n_jobs", [1, -1])
 @pytest.mark.parametrize("non_negative_subsidy", (True, False))
 def test_montecarlo_least_core(
-    test_utility, rtol, n_iterations, n_jobs, non_negative_subsidy
+    test_utility, rtol, n_iterations, n_jobs, non_negative_subsidy, seed
 ):
     u, exact_values = test_utility
 
@@ -30,6 +30,7 @@ def test_montecarlo_least_core(
         non_negative_subsidy=non_negative_subsidy,
         progress=False,
         n_jobs=n_jobs,
+        seed=seed,
     )
     if non_negative_subsidy:
         check_values(values, exact_values)

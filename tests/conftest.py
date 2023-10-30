@@ -1,35 +1,26 @@
-from __future__ import annotations
-
-import functools
 import logging
 import os
-from collections import defaultdict
 from dataclasses import asdict
-from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Type
+from typing import TYPE_CHECKING, Optional, Tuple
 
 import numpy as np
 import pytest
 from pymemcache.client import Client
+from pytest import Config, FixtureRequest
 from sklearn import datasets
 from sklearn.utils import Bunch
 
-from pydvl.parallel.backend import available_cpus
+from pydvl.parallel import available_cpus
 from pydvl.utils import Dataset, MemcachedClientConfig
+from tests.cache import CloudPickleCache
+from tests.tolerate import (
+    TolerateErrorFixture,
+    TolerateErrorsSession,
+    wrap_pytest_function,
+)
 
 if TYPE_CHECKING:
-    from _pytest.config import Config
     from _pytest.terminal import TerminalReporter
-
-EXCEPTIONS_TYPE = Optional[Sequence[Type[BaseException]]]
-
-
-def is_memcache_responsive(hostname, port):
-    try:
-        client = Client(server=(hostname, port))
-        client.flush_all()
-        return True
-    except ConnectionRefusedError:
-        return False
 
 
 def pytest_addoption(parser):
@@ -38,6 +29,11 @@ def pytest_addoption(parser):
         action="store_true",
         default="localhost:11211",
         help="Address of memcached server to use for tests.",
+    )
+    parser.addoption(
+        "--slow-tests",
+        action="store_true",
+        help="Run tests marked as slow using the @slow marker",
     )
     group = parser.getgroup("tolerate")
     group.addoption(
@@ -52,6 +48,24 @@ def pytest_addoption(parser):
         default=False,
         help="Disable reporting. Verbose mode takes precedence.",
     )
+
+
+@pytest.fixture
+def cache(request: "FixtureRequest") -> CloudPickleCache:
+    """Return a cache object that can persist state between testing sessions.
+
+    ```pycon
+    cache.get(key, default)
+    cache.set(key, value)
+    ```
+
+    Keys must be ``/`` separated strings, where the first part is usually the
+    name of your plugin or application to avoid clashes with other cache users.
+
+    Values can be any object handled by the json stdlib module.
+    """
+    assert request.config.cloud_pickle_cache is not None
+    return request.config.cloud_pickle_cache
 
 
 @pytest.fixture()
@@ -84,8 +98,17 @@ def pytorch_seed(seed):
         pass
 
 
+def is_memcache_responsive(hostname, port):
+    try:
+        client = Client(server=(hostname, port))
+        client.flush_all()
+        return True
+    except ConnectionRefusedError:
+        return False
+
+
 @pytest.fixture(scope="session")
-def memcached_service(request) -> tuple[str, int]:
+def memcached_service(request) -> Tuple[str, int]:
     opt = request.config.getoption("--memcached-service", default="localhost:11211")
     host, port = opt.split(":")
     return host, int(port)
@@ -126,12 +149,14 @@ def linear_dataset(a: float, b: float, num_points: int):
     """Constructs a dataset sampling from y=ax+b + eps, with eps~Gaussian and
     x in [-1,1]
 
-    :param a: Slope
-    :param b: intercept
-    :param num_points: number of (x,y) samples to construct
-    :param train_size: fraction of points to use for training (between 0 and 1)
+    Args:
+        a: Slope
+        b: intercept
+        num_points: number of (x,y) samples to construct
+        train_size: fraction of points to use for training (between 0 and 1)
 
-    :return: Dataset with train/test split. call str() on it to see the parameters
+    Returns:
+        Dataset with train/test split. call str() on it to see the parameters
     """
     step = 2 / num_points
     stddev = 0.1
@@ -177,182 +202,22 @@ def pytest_xdist_auto_num_workers(config) -> Optional[int]:
 
 
 ################################################################################
-# Tolerate Errors Plugin
+# Tolerate Errors and CloudPickleCache Plugins
 
 
-class TolerateErrorsSession:
-    def __init__(self, config: "Config") -> None:
-        self.verbose = config.getoption("tolerate_verbose")
-        self.quiet = False if self.verbose else config.getoption("tolerate_quiet")
-        self.columns = ["passed", "failed", "skipped", "max_failures"]
-        self.labels = {
-            "name": "Name",
-            "passed": "Passed",
-            "failed": "Failed",
-            "skipped": "Skipped",
-            "max_failures": "Maximum Allowed # Failures",
-        }
-        self._tests = defaultdict(TolerateErrorsTestItem)
-
-    def get_max_failures(self, key: str) -> int:
-        return self._tests[key].max_failures
-
-    def set_max_failures(self, key: str, value: int) -> None:
-        self._tests[key].max_failures = value
-
-    def get_num_passed(self, key: str) -> int:
-        return self._tests[key].passed
-
-    def increment_num_passed(self, key: str) -> None:
-        self._tests[key].passed += 1
-
-    def get_num_failures(self, key: str) -> int:
-        return self._tests[key].failed
-
-    def increment_num_failures(self, key: str) -> None:
-        self._tests[key].failed += 1
-
-    def get_num_skipped(self, key: str) -> int:
-        return self._tests[key].skipped
-
-    def increment_num_skipped(self, key: str) -> None:
-        self._tests[key].skipped += 1
-
-    def set_exceptions_to_ignore(self, key: str, value: EXCEPTIONS_TYPE) -> None:
-        if value is None:
-            self._tests[key].exceptions_to_ignore = tuple()
-        elif isinstance(value, Sequence):
-            self._tests[key].exceptions_to_ignore = value
-        else:
-            self._tests[key].exceptions_to_ignore = (value,)
-
-    def get_exceptions_to_ignore(self, key: str) -> EXCEPTIONS_TYPE:
-        return self._tests[key].exceptions_to_ignore
-
-    def has_exceeded_max_failures(self, key: str) -> bool:
-        return self._tests[key].failed > self._tests[key].max_failures
-
-    def display(self, terminalreporter: "TerminalReporter"):
-        if self.quiet:
-            return
-        if len(self._tests) == 0:
-            return
-        terminalreporter.ensure_newline()
-        terminalreporter.write_line("")
-        widths = {
-            "name": 3
-            + max(len(self.labels["name"]), max(len(name) for name in self._tests))
-        }
-        for key in self.columns:
-            widths[key] = 5 + len(self.labels[key])
-
-        labels_line = self.labels["name"].ljust(widths["name"]) + "".join(
-            self.labels[prop].rjust(widths[prop]) for prop in self.columns
-        )
-        terminalreporter.write_line(
-            " tolerate: {count} tests ".format(count=len(self._tests)).center(
-                len(labels_line), "-"
-            ),
-            yellow=True,
-        )
-        terminalreporter.write_line(labels_line)
-        terminalreporter.write_line("-" * len(labels_line), yellow=True)
-        for name in self._tests:
-            has_error = self.has_exceeded_max_failures(name)
-            terminalreporter.write(
-                name.ljust(widths["name"]),
-                red=has_error,
-                green=not has_error,
-                bold=True,
-            )
-            for prop in self.columns:
-                terminalreporter.write(
-                    "{0:>{1}}".format(self._tests[name][prop], widths[prop])
-                )
-            terminalreporter.write("\n")
-        terminalreporter.write_line("-" * len(labels_line), yellow=True)
-        terminalreporter.write_line("")
-
-
-class TolerateErrorsTestItem:
-    def __init__(self):
-        self.max_failures = 0
-        self.failed = 0
-        self.passed = 0
-        self.skipped = 0
-        self.exceptions_to_ignore = tuple()
-
-    def __getitem__(self, item: str):
-        return getattr(self, item)
-
-
-class TolerateErrorFixture:
-    def __init__(self, node: pytest.Item):
-        if hasattr(node, "originalname"):
-            self.name = node.originalname
-        else:
-            self.name = node.name
-        self.session: TolerateErrorsSession = node.config._tolerate_session
-        marker = node.get_closest_marker("tolerate")
-        if marker:
-            max_failures = marker.kwargs.get("max_failures")
-            exceptions_to_ignore = marker.kwargs.get("exceptions_to_ignore")
-            self.session.set_max_failures(self.name, max_failures)
-            self.session.set_exceptions_to_ignore(self.name, exceptions_to_ignore)
-
-    def __call__(
-        self, max_failures: int, *, exceptions_to_ignore: EXCEPTIONS_TYPE = None
-    ):
-        self.session.set_max_failures(self.name, max_failures)
-        self.session.set_exceptions_to_ignore(self.name, exceptions_to_ignore)
-        return self
-
-    def __enter__(self):
-        if self.session.has_exceeded_max_failures(self.name):
-            self.session.increment_num_skipped(self.name)
-            pytest.skip(
-                f"Maximum number of allowed failures, {self.session.get_max_failures(self.name)}, was already exceeded"
-            )
-
-    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
-        if exc_type is None:
-            self.session.increment_num_passed(self.name)
-        else:
-            exceptions_to_ignore = self.session.get_exceptions_to_ignore(self.name)
-            if not any(exc_type is x for x in exceptions_to_ignore):
-                self.session.increment_num_failures(self.name)
-        if self.session.has_exceeded_max_failures(self.name):
-            pytest.fail(
-                f"Maximum number of allowed failures, {self.session.get_max_failures(self.name)}, was exceeded"
-            )
-        return True
-
-
-def wrap_pytest_function(pyfuncitem: pytest.Function):
-    testfunction = pyfuncitem.obj
-    tolerate_obj = TolerateErrorFixture(pyfuncitem)
-
-    @functools.wraps(testfunction)
-    def wrapper(*args, **kwargs):
-        with tolerate_obj:
-            testfunction(*args, **kwargs)
-
-    pyfuncitem.obj = wrapper
-
-
-@pytest.fixture(scope="function")
-def tolerate(request: pytest.FixtureRequest):
-    fixture = TolerateErrorFixture(request.node)
-    return fixture
-
-
-def pytest_configure(config):
+def pytest_configure(config: "Config"):
     config.addinivalue_line(
         "markers",
         "tolerate: mark a test to swallow errors up to a certain threshold. "
         "Use to test (ε,δ)-approximations.",
     )
     config._tolerate_session = TolerateErrorsSession(config)
+    config.cloud_pickle_cache = CloudPickleCache.for_config(config, _ispytest=True)
+
+    config.addinivalue_line(
+        "markers",
+        "slow: mark a test as slow and only run if explicitly request with the --slow-tests flag",
+    )
 
     worker_id = os.environ.get("PYTEST_XDIST_WORKER")
     if worker_id is not None:
@@ -364,10 +229,16 @@ def pytest_configure(config):
 
 
 def pytest_runtest_setup(item: pytest.Item):
-    marker = item.get_closest_marker("tolerate")
+    marker = item.get_closest_marker("slow")
     if marker:
-        if not marker.kwargs:
-            raise ValueError("tolerate marker requires keywords arguments")
+        if not item.config.getoption("--slow-tests"):
+            pytest.skip("slow test")
+
+
+@pytest.fixture(scope="function")
+def tolerate(request: pytest.FixtureRequest):
+    fixture = TolerateErrorFixture(request.node)
+    return fixture
 
 
 @pytest.hookimpl(hookwrapper=True)
