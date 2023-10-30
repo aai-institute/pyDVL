@@ -403,7 +403,7 @@ def model_hessian_low_rank(
     """
     raw_hvp = get_hvp_function(model, loss, training_data, use_hessian_avg=True)
     num_params = sum([p.numel() for p in model.parameters() if p.requires_grad])
-
+    device = next(model.parameters()).device
     return lanzcos_low_rank_hessian_approx(
         hessian_vp=raw_hvp,
         matrix_shape=(num_params, num_params),
@@ -412,7 +412,7 @@ def model_hessian_low_rank(
         krylov_dimension=krylov_dimension,
         tol=tol,
         max_iter=max_iter,
-        device=model.device if hasattr(model, "device") else None,
+        device=device,
         eigen_computation_on_gpu=eigen_computation_on_gpu,
     )
 
@@ -727,12 +727,12 @@ def solve_lissa(
             The next estimate of the hessian inverse.
         """
         return b + (1 - dampen) * h - reg_hvp(h) / scale
-
-    b_hvp = torch.vmap(get_batch_hvp(model.model, model.loss), in_dims=(None, None, 0))
+    model_params = {k: p.detach() for k, p in model.model.named_parameters() if p.requires_grad}
+    b_hvp = torch.vmap(get_batch_hvp(model.model, model.loss), in_dims=(None, None, None, 0))
     for _ in maybe_progress(range(maxiter), progress, desc="Lissa"):
         x, y = next(iter(shuffled_training_data))
         # grad_xy = model.grad(x, y, create_graph=True)
-        reg_hvp = lambda v: b_hvp(x, y, v) + hessian_perturbation * v
+        reg_hvp = lambda v: b_hvp(model_params, x, y, v) + hessian_perturbation * v
         residual = lissa_step(h_estimate, reg_hvp) - h_estimate
         h_estimate += residual
         if torch.isnan(h_estimate).any():

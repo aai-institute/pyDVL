@@ -72,8 +72,7 @@ def get_batch_hvp(
     model: torch.nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     reverse_only: bool = True,
-    detach: bool = True,
-) -> Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor]:
+) -> Callable[[Dict[str, torch.Tensor], torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor]:
     """
     Creates a function to compute the batch-wise Hessian-vector product (HVP) for a given model and loss function.
 
@@ -88,8 +87,6 @@ def get_batch_hvp(
             torch.Tensor objects as input and return a torch.Tensor.
         reverse_only (bool, optional): If True, the Hessian-vector product is computed in reverse mode only. Defaults
             to True.
-        detach (bool, optional): If True, the model's parameters are detached from the current computation graph
-            before computation. This can save memory during gradient calculations. Defaults to True.
 
     Returns:
         Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor]: A function that takes three torch.Tensor
@@ -109,17 +106,12 @@ def get_batch_hvp(
         during gradient calculations.
     """
 
-    def b_hvp(x: torch.Tensor, y: torch.Tensor, vec: torch.Tensor):
-        model_params = {
-            k: p.detach() if detach else p
-            for k, p in model.named_parameters()
-            if p.requires_grad
-        }
+    def b_hvp(params: Dict[str, torch.Tensor], x: torch.Tensor, y: torch.Tensor, vec: torch.Tensor):
         return flatten_dimensions(
             hvp(
                 lambda p: batch_loss_function(model, loss)(p, x, y),
-                model_params,
-                align_structure(model_params, vec),
+                params,
+                align_structure(params, vec),
                 reverse_only=reverse_only,
             ).values()
         )
@@ -136,7 +128,9 @@ def empirical_loss_function(
     Creates a function to compute the empirical loss of a given model on a given dataset.
     If we denote the model parameters with \( \theta \), the resulting function approximates:
 
-    \[f(\theta) \coloneqq \frac{1}{N}\sum_{i=1}^N \operatorname{loss}(y_i, \operatorname{model}(\theta, x_i))\]
+    $$
+    f(\theta) \coloneqq \frac{1}{N}\sum_{i=1}^N \operatorname{loss}(y_i, \operatorname{model}(\theta, x_i))
+    $$
 
     for a loss function $\operatorname{loss}$ and a model $\operatorname{model}$ with model parameters $\theta$,
     where $N$ is the number of all elements provided by the data_loader.
@@ -249,8 +243,14 @@ def get_hvp_function(
         num_batches = len(data_loader)
         avg_hessian = to_model_device(torch.zeros_like(vec), model)
         b_hvp = get_batch_hvp(model, loss, reverse_only)
+        params = {
+            k: to_model_device(p, model) if track_gradients else to_model_device(p.detach(), model)
+            for k, p in model.named_parameters()
+            if p.requires_grad
+        }
         for x, y in iter(data_loader):
-            avg_hessian += b_hvp(x, y, vec)
+            x, y = to_model_device(x, model), to_model_device(y, model)
+            avg_hessian += b_hvp(params, x, y, to_model_device(vec, model))
 
         return avg_hessian / float(num_batches)
 
@@ -327,8 +327,10 @@ def per_sample_loss(
     """
     Generates a function to compute per-sample losses using PyTorch's vmap, i.e. the vector-valued function
 
-    \[f(\theta, x, y)  \coloneqq (\operatorname{loss}(\operatorname{model}(\theta, x_1), y_1), \dots,
-    \operatorname{loss}(\operatorname{model}(\theta, x_N), y_N))\],
+    $$
+    f(\theta, x, y)  \coloneqq (\operatorname{loss}(\operatorname{model}(\theta, x_1), y_1), \dots,
+    \operatorname{loss}(\operatorname{model}(\theta, x_N), y_N)),
+    $$
 
     for a loss function $\operatorname{loss}$ and a model $\operatorname{model}$ with model parameters $\theta$,
     where $N$ is the number of elements in the batch.
@@ -363,10 +365,10 @@ def per_sample_gradient(
     Generates a function to computes the per-sample gradient of the loss with respect to the model's parameters, i.e.
     the tensor-valued function
 
-    \[
-    f(\theta, x, y) /coloneqq (\nabla_{\theta}\operatorname{loss}(\operatorname{model}(\theta, x_1), y_1), \dots,
+    $$
+    f(\theta, x, y) \coloneqq (\nabla_{\theta}\operatorname{loss}(\operatorname{model}(\theta, x_1), y_1), \dots,
     \nabla_{\theta}\operatorname{loss}(\operatorname{model}(\theta, x_N), y_N)
-    \]
+    $$
 
     for a loss function $\operatorname{loss}$ and a model $\operatorname{model}$ with model parameters $\theta$,
     where $N$ is the number of elements in the batch.
