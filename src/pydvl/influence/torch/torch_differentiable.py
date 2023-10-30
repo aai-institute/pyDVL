@@ -318,7 +318,7 @@ def lanzcos_low_rank_hessian_approx(
 
         def mv(x):
             x_torch = torch.as_tensor(x, device=device, dtype=torch_dtype)
-            y: NDArray = (
+            y = (
                 (hessian_vp(x_torch) + hessian_perturbation * x_torch)
                 .detach()
                 .cpu()

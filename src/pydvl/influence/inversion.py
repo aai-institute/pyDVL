@@ -209,7 +209,8 @@ class InversionRegistry:
 class InfluenceRegistry:
 
     registry: Dict[
-        Tuple[Type[TwiceDifferentiable], InversionMethod], Callable[[Any], Influence]
+        Tuple[Type[TwiceDifferentiable], InversionMethod],
+        Callable[[TwiceDifferentiable, DataLoaderType, float, Any], Influence],
     ] = {}
 
     @classmethod

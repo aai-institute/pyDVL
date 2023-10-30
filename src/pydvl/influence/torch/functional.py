@@ -356,7 +356,10 @@ def per_sample_loss(
         )
         return loss(outputs, y.unsqueeze(0))
 
-    return torch.vmap(compute_loss, in_dims=(None, 0, 0))
+    vmap_loss: Callable[
+        [Dict[str, torch.Tensor], torch.Tensor, torch.Tensor], torch.Tensor
+    ] = torch.vmap(compute_loss, in_dims=(None, 0, 0))
+    return vmap_loss
 
 
 def per_sample_gradient(
@@ -388,7 +391,10 @@ def per_sample_gradient(
 
     """
 
-    return torch.func.jacrev(per_sample_loss(model, loss))
+    per_sample_grad: Callable[
+        [Dict[str, torch.Tensor], torch.Tensor, torch.Tensor], Dict[str, torch.Tensor]
+    ] = torch.func.jacrev(per_sample_loss(model, loss))
+    return per_sample_grad
 
 
 def matrix_jacobian_product(
@@ -469,7 +475,10 @@ def per_sample_mixed_derivative(
         )
         return loss(outputs, y.unsqueeze(0))
 
-    return torch.vmap(
+    per_samp_mix_derivative: Callable[
+        [Dict[str, torch.Tensor], torch.Tensor, torch.Tensor], Dict[str, torch.Tensor]
+    ] = torch.vmap(
         torch.func.jacrev(torch.func.grad(compute_loss, argnums=1)),
         in_dims=(None, 0, 0),
     )
+    return per_samp_mix_derivative

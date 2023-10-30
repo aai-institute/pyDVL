@@ -81,7 +81,7 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
 
     def up_weighting(
         self, z_test_factors: torch.Tensor, z: Tuple[torch.Tensor, torch.Tensor]
-    ) -> TensorType:
+    ) -> torch.Tensor:
         return z_test_factors @ self._flat_loss_grad(z).T
 
     def perturbation(
@@ -215,7 +215,7 @@ class ArnoldiInfluence(TorchInfluence):
         self,
         model,
         loss,
-        low_rank_representation: LowRankProductRepresentation = None,
+        low_rank_representation: Optional[LowRankProductRepresentation] = None,
         data_loader: DataLoader = None,
         hessian_regularization: float = 0.0,
         rank_estimate: int = 10,

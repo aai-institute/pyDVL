@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Any, Collection, Dict, Iterable, Mapping, Tuple, Union
+from typing import Any, Collection, Dict, Iterable, Mapping, Optional, Tuple, Union
 
 import torch
 
@@ -189,7 +189,9 @@ def align_with_model(x: TorchTensorContainerType, model: torch.nn.Module):
 
 
 def flatten_dimensions(
-    tensors: Iterable[torch.Tensor], shape: Tuple[int, ...] = None, concat_at: int = -1
+    tensors: Iterable[torch.Tensor],
+    shape: Optional[Tuple[int, ...]] = None,
+    concat_at: int = -1,
 ) -> torch.Tensor:
     """
     Flattens the dimensions of each tensor in the given iterable and concatenates them along a specified dimension.
