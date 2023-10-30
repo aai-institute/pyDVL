@@ -21,7 +21,7 @@ class ParallelConfig:
     backend: Literal["joblib", "ray"] = "joblib"
     address: Optional[Union[str, Tuple[str, int]]] = None
     n_cpus_local: Optional[int] = None
-    logging_level: int = logging.WARNING
+    logging_level: Optional[int] = None
     wait_timeout: float = 1.0
 
     def __post_init__(self) -> None:

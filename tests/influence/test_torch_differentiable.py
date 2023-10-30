@@ -29,6 +29,9 @@ from pydvl.influence.torch import (
     solve_lissa,
 )
 
+# Mark the entire module
+pytestmark = pytest.mark.torch
+
 DATA_OUTPUT_NOISE: float = 0.01
 
 PROBLEM_DIMENSIONS: List[Tuple[int, int]] = [
@@ -49,7 +52,6 @@ def linear_mvp_model(A, b):
     return TorchTwiceDifferentiable(model=model, loss=loss)
 
 
-@pytest.mark.torch
 @pytest.mark.parametrize(
     "problem_dimension",
     PROBLEM_DIMENSIONS,
@@ -82,7 +84,6 @@ def test_linear_grad(
     assert np.allclose(train_grads_analytical, train_grads_autograd, rtol=1e-5)
 
 
-@pytest.mark.torch
 @pytest.mark.parametrize(
     "problem_dimension",
     PROBLEM_DIMENSIONS,
@@ -115,7 +116,6 @@ def test_linear_hessian(
     assert np.allclose(test_hessian_analytical, estimated_hessian, rtol=1e-5)
 
 
-@pytest.mark.torch
 @pytest.mark.parametrize(
     "problem_dimension",
     PROBLEM_DIMENSIONS,
@@ -161,7 +161,6 @@ def test_linear_mixed_derivative(
 REDUCED_PROBLEM_DIMENSIONS: List[Tuple[int, int]] = [(5, 10), (2, 5)]
 
 
-@pytest.mark.torch
 @pytest.mark.parametrize(
     "problem_dimension",
     REDUCED_PROBLEM_DIMENSIONS,

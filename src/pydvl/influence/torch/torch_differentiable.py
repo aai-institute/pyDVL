@@ -16,7 +16,7 @@ influence of a training point on the model.
 import logging
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Generator, List, Optional, Sequence, Tuple
+from typing import Callable, Generator, List, Optional, Sequence, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -155,13 +155,13 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
         params = flatten_tensors_to_vector(
             p.detach() for p in self.model.parameters() if p.requires_grad
         )
-        return torch.func.hessian(model_func)(params)
+        return torch.func.hessian(model_func)(params)  # type: ignore
 
     @staticmethod
     def mvp(
         grad_xy: torch.Tensor,
         v: torch.Tensor,
-        backprop_on: torch.Tensor,
+        backprop_on: Union[torch.Tensor, Sequence[torch.Tensor]],
         *,
         progress: bool = False,
     ) -> torch.Tensor:
@@ -246,7 +246,7 @@ def lanzcos_low_rank_hessian_approx(
     max_iter: Optional[int] = None,
     device: Optional[torch.device] = None,
     eigen_computation_on_gpu: bool = False,
-    torch_dtype: torch.dtype = None,
+    torch_dtype: Optional[torch.dtype] = None,
 ) -> LowRankProductRepresentation:
     r"""
     Calculates a low-rank approximation of the Hessian matrix of a scalar-valued
@@ -307,7 +307,7 @@ def lanzcos_low_rank_hessian_approx(
                 "Without setting an explicit device, cupy is not supported"
             )
 
-        def to_torch_conversion_function(x):
+        def to_torch_conversion_function(x: cp.NDArray) -> torch.Tensor:
             return from_dlpack(x.toDlpack()).to(torch_dtype)
 
         def mv(x):
@@ -432,12 +432,12 @@ class TorchTensorUtilities(TensorUtilities[torch.Tensor, TorchTwiceDifferentiabl
     @staticmethod
     def cat(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
         """Concatenates a sequence of tensors into a single torch tensor"""
-        return torch.cat(a, **kwargs)
+        return torch.cat(a, **kwargs)  # type: ignore
 
     @staticmethod
     def stack(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
         """Stacks a sequence of tensors into a single torch tensor"""
-        return torch.stack(a, **kwargs)
+        return torch.stack(a, **kwargs)  # type: ignore
 
     @staticmethod
     def unsqueeze(x: torch.Tensor, dim: int) -> torch.Tensor:
@@ -572,19 +572,26 @@ def solve_batch_cg(
             and a dictionary containing information about the convergence of CG,
             one entry for each line of the matrix.
     """
+    if len(training_data) == 0:
+        raise ValueError("Training dataloader must not be empty.")
 
-    total_grad_xy = 0
+    total_grad_xy = torch.empty(0)
     total_points = 0
+
     for x, y in maybe_progress(training_data, progress, desc="Batch Train Gradients"):
         grad_xy = model.grad(x, y, create_graph=True)
+        if total_grad_xy.nelement() == 0:
+            total_grad_xy = torch.zeros_like(grad_xy)
         total_grad_xy += grad_xy * len(x)
         total_points += len(x)
+
     backprop_on = model.parameters
     reg_hvp = lambda v: model.mvp(
         total_grad_xy / total_points, v, backprop_on
     ) + hessian_perturbation * v.type(torch.float64)
     batch_cg = torch.zeros_like(b)
     info = {}
+
     for idx, bi in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
         batch_result, batch_info = solve_cg(
             reg_hvp, bi, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter

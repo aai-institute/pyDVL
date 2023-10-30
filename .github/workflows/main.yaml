@@ -38,6 +38,15 @@ jobs:
         pre-commit run --all --show-diff-on-failure
         python build_scripts/run_pylint.py | (pylint-json2html -f jsonextended -o pylint.html)
       shell: bash
+    - name: Generate mypy cache key
+      id: generate-mypy-cache-key
+      run: |
+        MYPY_VERSION=$(mypy --version | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+        echo "key=mypy-$MYPY_VERSION-${{ env.pythonLocation }}" >> $GITHUB_OUTPUT
+    - uses: actions/cache@v3
+      with:
+        path: .mypy_cache
+        key: ${{ steps.generate-mypy-cache-key.outputs.key }}
     - name: Check Type Hints
       run: mypy src/
   docs:
@@ -57,40 +66,32 @@ jobs:
         pandoc-version: ${{ env.PANDOC_VERSION }}
     - name: Build Docs
       run: mkdocs build
-  base-tests:
+  group-tests:
     strategy:
+      fail-fast: false
       matrix:
         python_version: ["3.8", "3.9", "3.10"]
-    name: Run base tests
+        group_number: [1, 2, 3, 4]
+    name: Run Tests - Python ${{ matrix.python_version }} - Group ${{ matrix.group_number }}
     uses: ./.github/workflows/run-tests-workflow.yaml
     with:
-      tests_to_run: base
-      python_version: ${{ matrix.python_version }}
-    needs: [code-quality]
-  torch-tests:
-    strategy:
-      matrix:
-        python_version: ["3.8", "3.9", "3.10"]
-    name: Run tests that use PyTorch
-    uses: ./.github/workflows/run-tests-workflow.yaml
-    with:
-      tests_to_run: torch
+      split_size: 4
+      group_number: ${{ matrix.group_number }}
       python_version: ${{ matrix.python_version }}
     needs: [code-quality]
   notebook-tests:
     strategy:
       matrix:
         python_version: ["3.8", "3.9", "3.10"]
-    name: Run notebook tests
-    uses: ./.github/workflows/run-tests-workflow.yaml
+    name: Run Notebook tests -  Python ${{ matrix.python_version }}
+    uses: ./.github/workflows/run-notebook-tests-workflow.yaml
     with:
-      tests_to_run: notebooks
       python_version: ${{ matrix.python_version }}
     needs: [code-quality]
   push-docs-and-release-testpypi:
     name: Push Docs and maybe release Package to TestPyPI
     runs-on: ubuntu-latest
-    needs: [docs, base-tests, torch-tests, notebook-tests]
+    needs: [docs, group-tests, notebook-tests]
     if: ${{ github.ref == 'refs/heads/develop' }}
     concurrency:
       group: publish

@@ -7,23 +7,26 @@
 </p>
 
 <p align="center" style="text-align:center;">
-    <a href="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml">
-        <img src="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml/badge.svg" alt="Build status" >
-    </a>
     <a href="https://pypi.org/project/pydvl/">
         <img src="https://img.shields.io/pypi/v/pydvl.svg" alt="PyPI">
     </a>
     <a href="https://pypi.org/project/pydvl/">
         <img src="https://img.shields.io/pypi/pyversions/pydvl.svg" alt="Version">
     </a>
+    <a href="https://pydvl.org">
+        <img src="https://img.shields.io/badge/docs-All%20versions-009485" alt="documentation">
+    </a>
     <a href="https://raw.githubusercontent.com/aai-institute/pyDVL/master/LICENSE">
         <img alt="License" src="https://img.shields.io/pypi/l/pydvl">
     </a>
+    <a href="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml">
+        <img src="https://github.com/aai-institute/pyDVL/actions/workflows/main.yaml/badge.svg" alt="Build status" >
+    </a>
+    <a href="https://codecov.io/gh/aai-institute/pyDVL">
+      <img src="https://codecov.io/gh/aai-institute/pyDVL/graph/badge.svg?token=VN7DNDE0FV"/>
+    </a>
     <a href="https://zenodo.org/badge/latestdoi/354117916">
         <img src="https://zenodo.org/badge/354117916.svg" alt="DOI">
-    </a>
-    <a href="https://pydvl.org">
-        <img src="https://img.shields.io/badge/docs-All%20versions-009485" alt="documentation">
     </a>
 </p>
 
@@ -107,7 +110,7 @@ pip install pyDVL --index-url https://test.pypi.org/simple/
 ```
 
 For more instructions and information refer to [Installing pyDVL
-](https://aai-institute.github.io/pyDVL/20-install.html) in the
+](https://pydvl.org/stable/getting-started/installation/) in the
 documentation.
 
 # Usage
@@ -189,9 +192,11 @@ values = compute_shapley_values(
 ```
 
 For more instructions and information refer to [Getting
-Started](https://aai-institute.github.io/pyDVL/10-getting-started.html) in
-the documentation. We provide several
-[examples](https://aai-institute.github.io/pyDVL/examples/index.html)
+Started](https://pydvl.org/stable/getting-started/first-steps/) in
+the documentation. We provide several examples for data valuation
+(e.g. [Shapley Data Valuation](https://pydvl.org/stable/examples/shapley_basic_spotify/))
+and for influence functions
+(e.g. [Influence Functions for Neural Networks](https://pydvl.org/stable/examples/influence_imagenet/))
 with details on the algorithms and their applications.
 
 ## Caching
@@ -207,7 +212,7 @@ docker container run --rm -p 11211:11211 --name pydvl-cache -d memcached:latest
 ```
 
 You can read more in the
-[documentation](https://aai-institute.github.io/pyDVL/getting-started/first-steps/#caching).
+[documentation](https://pydvl.org/stable/getting-started/first-steps/#caching).
 
 # Contributing
 
