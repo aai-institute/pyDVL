@@ -96,8 +96,8 @@ from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
 from pymemcache.client import Client, RetryingClient
 
-from .config import MemcachedClientConfig
-from .numeric import running_moments
+from ..config import MemcachedClientConfig
+from ..numeric import running_moments
 
 PICKLE_VERSION = 5  # python >= 3.8
 
