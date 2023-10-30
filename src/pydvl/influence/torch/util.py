@@ -1,8 +1,13 @@
 import logging
 import math
+from functools import partial
 from typing import Any, Collection, Dict, Iterable, Mapping, Optional, Tuple, Union
 
+import dask
+import numpy as np
 import torch
+from dask import array as da
+from torch.utils.data import Dataset
 
 logger = logging.getLogger(__name__)
 
@@ -224,4 +229,94 @@ def flatten_dimensions(
     return torch.cat(
         [t.reshape(-1) if shape is None else t.reshape(*shape) for t in tensors],
         dim=concat_at,
+    )
+
+
+def torch_dataset_to_dask_array(
+    dataset: Dataset,
+    chunk_size: int,
+    total_size: Optional[int] = None,
+    resulting_dtype=np.float32,
+) -> Tuple[da.Array, ...]:
+    """
+    Construct tuple of dask arrays from a PyTorch dataset, using dask.delayed
+
+    Args:
+        dataset (Dataset): PyTorch dataset.
+        chunk_size (int): The size of the chunks for the resulting Dask arrays.
+        total_size:
+        resulting_dtype:
+
+    Returns:
+        Tuple[da.Array, ...]: Tuple of Dask arrays corresponding to each tensor in the dataset.
+    """
+
+    def _infer_data_len(d_set: Dataset):
+        try:
+            num_data = len(d_set)
+            if total_size is not None and num_data != total_size:
+                raise ValueError(
+                    f"The number of samples in the dataset ({num_data}), derived from calling ´len´, "
+                    f"does not match the provided total number of samples ({total_size}). Call"
+                    f"the function without total_size."
+                )
+            return num_data
+        except TypeError as e:
+            err_msg = f"Could not infer the number of samples in the dataset from calling ´len´. Original error: {e}."
+            if total_size is not None:
+                logger.warning(
+                    err_msg
+                    + f" Using the provided total number of samples {total_size}."
+                )
+                return total_size
+            else:
+                logger.warning(
+                    err_msg
+                    + f" Infer the number of samples from the dataset, via iterating the dataset once. "
+                    f"This might induce severe overhead, so consider"
+                    f"providing total_size, if you know the number of samples beforehand."
+                )
+                idx = 0
+                while True:
+                    try:
+                        _ = d_set[idx]
+                        idx += 1
+                    except IndexError:
+                        return idx + 1
+
+    def _get_chunk(start_idx: int, stop_idx: int, d_set: Dataset):
+        try:
+            return d_set[start_idx:stop_idx]
+        except Exception:
+            return torch.stack([d_set[idx] for idx in range(start_idx, stop_idx)])
+
+    num_samples = _infer_data_len(dataset)
+    chunk_indices = [
+        (i, min(i + chunk_size, num_samples)) for i in range(0, num_samples, chunk_size)
+    ]
+
+    delayed_chunks = [
+        dask.delayed(partial(_get_chunk, start, stop))(dataset)
+        for start, stop in chunk_indices
+    ]
+
+    sample = dataset[0]
+    if not isinstance(sample, tuple):
+        sample = (sample,)
+
+    delayed_arrays_dict = {k: [] for k in range(len(sample))}
+
+    for chunk, (start, stop) in zip(delayed_chunks, chunk_indices):
+        for tensor_idx, sample_tensor in enumerate(sample):
+
+            delayed_tensor = da.from_delayed(
+                dask.delayed(lambda t: t.cpu().numpy())(chunk[tensor_idx]),
+                shape=(stop - start, *sample_tensor.shape),
+                dtype=resulting_dtype,
+            )
+
+            delayed_arrays_dict[tensor_idx].append(delayed_tensor)
+
+    return tuple(
+        da.concatenate(array_list) for array_list in delayed_arrays_dict.values()
     )
