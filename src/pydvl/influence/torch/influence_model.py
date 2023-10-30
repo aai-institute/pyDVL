@@ -12,7 +12,7 @@ from .functional import (
     get_hessian,
     matrix_jacobian_product,
     per_sample_gradient,
-    per_sample_mixed_derivative,
+    per_sample_mixed_derivative, get_hvp_function,
 )
 from .torch_differentiable import (
     LowRankProductRepresentation,
@@ -93,7 +93,9 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
         )
 
     def factors(self, z: Tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
-        return self._solve_hvp(self._flat_loss_grad(z))
+        x, y = z
+        x, y = x.to(self.model_device), y.to(self.model_device)
+        return self._solve_hvp(self._flat_loss_grad((x, y)))
 
     @abstractmethod
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
@@ -119,12 +121,11 @@ class DirectInfluence(TorchInfluence):
         self.hessian = (
             hessian if hessian is not None else get_hessian(model, loss, data_loader)
         )
-        self.perturbed_matrix = self.hessian + hessian_regularization * torch.eye(
-            self.num_parameters, device=self.model_device
-        )
 
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        return torch.linalg.solve(self.perturbed_matrix, rhs.T).T
+        return torch.linalg.solve(self.hessian + self.hessian_perturbation * torch.eye(
+            self.num_parameters, device=self.model_device
+        ), rhs.T).T
 
 
 class BatchCgInfluence(TorchInfluence):
