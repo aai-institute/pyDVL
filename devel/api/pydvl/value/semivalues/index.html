@@ -3428,7 +3428,7 @@ future versions.</p>
 </span><span id="__span-0-272"><a id="__codelineno-0-272" name="__codelineno-0-272"></a>                    <span class="c1"># Filter out samples for indices that have already converged</span>
 </span><span id="__span-0-273"><a id="__codelineno-0-273" name="__codelineno-0-273"></a>                    <span class="n">filtered_samples</span> <span class="o">=</span> <span class="n">samples</span>
 </span><span id="__span-0-274"><a id="__codelineno-0-274" name="__codelineno-0-274"></a>                    <span class="k">if</span> <span class="n">skip_converged</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">done</span><span class="o">.</span><span class="n">converged</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span id="__span-0-275"><a id="__codelineno-0-275" name="__codelineno-0-275"></a>                        <span class="c1"># cloudpickle can&#39;t pickle this on python 3.8:</span>
+</span><span id="__span-0-275"><a id="__codelineno-0-275" name="__codelineno-0-275"></a>                        <span class="c1"># TODO: cloudpickle can&#39;t pickle this on python 3.8:</span>
 </span><span id="__span-0-276"><a id="__codelineno-0-276" name="__codelineno-0-276"></a>                        <span class="c1"># filtered_samples = filter(</span>
 </span><span id="__span-0-277"><a id="__codelineno-0-277" name="__codelineno-0-277"></a>                        <span class="c1">#     lambda t: not done.converged[t[0]], samples</span>
 </span><span id="__span-0-278"><a id="__codelineno-0-278" name="__codelineno-0-278"></a>                        <span class="c1"># )</span>
@@ -4434,7 +4434,7 @@ future versions.</p>
 
 
 <h2 id="pydvl.value.semivalues.compute_semivalues" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">compute_semivalues</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="n">SemiValueMode</span><span class="o">.</span><span class="n">Shapley</span><span class="p">,</span> <span class="n">sampler_t</span><span class="o">=</span><span class="n">PermutationSampler</span><span class="p">[</span><span class="n">IndexT</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+          <code class="highlight language-python"><span class="n">compute_semivalues</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">done</span><span class="o">=</span><span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="n">SemiValueMode</span><span class="o">.</span><span class="n">Shapley</span><span class="p">,</span> <span class="n">sampler_t</span><span class="o">=</span><span class="n">PermutationSampler</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
 <a href="#pydvl.value.semivalues.compute_semivalues" class="headerlink" title="Permanent link">&para;</a></h2>
 
@@ -4544,11 +4544,11 @@ for a list.</p>
             <p>
                 <span class="doc-param-annotation">
                   <b>TYPE:</b>
-                    <code><a class="autorefs autorefs-external" title="typing.Type" href="https://docs.python.org/3/library/typing.html#typing.Type">Type</a>[<span title="pydvl.value.sampler.StochasticSampler">StochasticSampler</span>[<span title="pydvl.utils.types.IndexT">IndexT</span>]]</code>
+                    <code><a class="autorefs autorefs-external" title="typing.Type" href="https://docs.python.org/3/library/typing.html#typing.Type">Type</a>[<span title="pydvl.value.sampler.StochasticSampler">StochasticSampler</span>]</code>
                 </span>
                 <span class="doc-param-default">
                   <b>DEFAULT:</b> 
-                    <code><a class="autorefs autorefs-internal" title="pydvl.value.sampler.PermutationSampler" href="../sampler/#pydvl.value.sampler.PermutationSampler">PermutationSampler</a>[<span title="pydvl.utils.types.IndexT">IndexT</span>]</code>
+                    <code><a class="autorefs autorefs-internal" title="pydvl.value.sampler.PermutationSampler" href="../sampler/#pydvl.value.sampler.PermutationSampler">PermutationSampler</a></code>
                 </span>
             </p>
           </td>
@@ -4748,7 +4748,7 @@ future versions.</p>
 </span><span id="__span-0-501"><a id="__codelineno-0-501" name="__codelineno-0-501"></a>    <span class="o">*</span><span class="p">,</span>
 </span><span id="__span-0-502"><a id="__codelineno-0-502" name="__codelineno-0-502"></a>    <span class="n">done</span><span class="p">:</span> <span class="n">StoppingCriterion</span> <span class="o">=</span> <span class="n">MaxUpdates</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span>
 </span><span id="__span-0-503"><a id="__codelineno-0-503" name="__codelineno-0-503"></a>    <span class="n">mode</span><span class="p">:</span> <span class="n">SemiValueMode</span> <span class="o">=</span> <span class="n">SemiValueMode</span><span class="o">.</span><span class="n">Shapley</span><span class="p">,</span>
-</span><span id="__span-0-504"><a id="__codelineno-0-504" name="__codelineno-0-504"></a>    <span class="n">sampler_t</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">StochasticSampler</span><span class="p">[</span><span class="n">IndexT</span><span class="p">]]</span> <span class="o">=</span> <span class="n">PermutationSampler</span><span class="p">[</span><span class="n">IndexT</span><span class="p">],</span>
+</span><span id="__span-0-504"><a id="__codelineno-0-504" name="__codelineno-0-504"></a>    <span class="n">sampler_t</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">StochasticSampler</span><span class="p">]</span> <span class="o">=</span> <span class="n">PermutationSampler</span><span class="p">,</span>
 </span><span id="__span-0-505"><a id="__codelineno-0-505" name="__codelineno-0-505"></a>    <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
 </span><span id="__span-0-506"><a id="__codelineno-0-506" name="__codelineno-0-506"></a>    <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
 </span><span id="__span-0-507"><a id="__codelineno-0-507" name="__codelineno-0-507"></a>    <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Seed</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -4847,11 +4847,11 @@ future versions.</p>
   <small>
     
       Last update:
-      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-10-25</span>
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-10-30</span>
       
         <br>
         Created:
-        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-10-25</span>
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date">2023-10-30</span>
       
     
   </small>
