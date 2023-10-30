@@ -401,17 +401,6 @@ def test_influences_nn(
 
     assert np.allclose(approx_influences, direct_influence, rtol=1e-1)
 
-    if influence_type == InfluenceType.Up:
-        assert approx_influences.shape == (test_data_len, data_len)
-
-    if influence_type == InfluenceType.Perturbation:
-        assert approx_influences.shape == (test_data_len, data_len, prod(input_dim))
-
-    # check that influences are not all constant
-    assert not np.all(approx_influences == approx_influences.item(0))
-
-    assert np.allclose(approx_influences, direct_influence, rtol=1e-1)
-
     if test_case.influence_type == InfluenceType.Up:
         assert approx_influences.shape == (
             test_case.test_data_len,
@@ -422,8 +411,13 @@ def test_influences_nn(
         assert approx_influences.shape == (
             test_case.test_data_len,
             test_case.train_data_len,
-            *test_case.input_dim,
+            prod(test_case.input_dim),
         )
+
+    # check that influences are not all constant
+    assert not np.all(approx_influences == approx_influences.item(0))
+
+    assert np.allclose(approx_influences, direct_influence, rtol=1e-1)
 
 
 @parametrize(

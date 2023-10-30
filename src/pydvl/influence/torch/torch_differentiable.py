@@ -734,8 +734,13 @@ def solve_lissa(
             The next estimate of the hessian inverse.
         """
         return b + (1 - dampen) * h - reg_hvp(h) / scale
-    model_params = {k: p.detach() for k, p in model.model.named_parameters() if p.requires_grad}
-    b_hvp = torch.vmap(get_batch_hvp(model.model, model.loss), in_dims=(None, None, None, 0))
+
+    model_params = {
+        k: p.detach() for k, p in model.model.named_parameters() if p.requires_grad
+    }
+    b_hvp = torch.vmap(
+        get_batch_hvp(model.model, model.loss), in_dims=(None, None, None, 0)
+    )
     for _ in maybe_progress(range(maxiter), progress, desc="Lissa"):
         x, y = next(iter(shuffled_training_data))
         # grad_xy = model.grad(x, y, create_graph=True)

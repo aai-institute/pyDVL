@@ -4,13 +4,7 @@ import torch
 from torch.func import functional_call, grad, jvp, vjp
 from torch.utils.data import DataLoader
 
-from .util import (
-    TorchTensorContainerType,
-    align_structure,
-    align_with_model,
-    flatten_dimensions,
-    to_model_device,
-)
+from .util import align_structure, align_with_model, flatten_dimensions, to_model_device
 
 __all__ = [
     "get_hvp_function",
@@ -23,11 +17,11 @@ __all__ = [
 
 
 def hvp(
-    func: Callable[[TorchTensorContainerType], torch.Tensor],
-    params: TorchTensorContainerType,
-    vec: TorchTensorContainerType,
+    func: Callable[[Dict[str, torch.Tensor]], torch.Tensor],
+    params: Dict[str, torch.Tensor],
+    vec: Dict[str, torch.Tensor],
     reverse_only: bool = True,
-) -> TorchTensorContainerType:
+) -> Dict[str, torch.Tensor]:
     r"""
     Computes the Hessian-vector product (HVP) for a given function at given parameters, i.e.
 
@@ -57,7 +51,7 @@ def hvp(
         ```
     """
 
-    output: TorchTensorContainerType
+    output: Dict[str, torch.Tensor]
 
     if reverse_only:
         _, vjp_fn = vjp(grad(func), params)
@@ -72,7 +66,9 @@ def get_batch_hvp(
     model: torch.nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     reverse_only: bool = True,
-) -> Callable[[Dict[str, torch.Tensor], torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor]:
+) -> Callable[
+    [Dict[str, torch.Tensor], torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor
+]:
     """
     Creates a function to compute the batch-wise Hessian-vector product (HVP) for a given model and loss function.
 
@@ -106,7 +102,12 @@ def get_batch_hvp(
         during gradient calculations.
     """
 
-    def b_hvp(params: Dict[str, torch.Tensor], x: torch.Tensor, y: torch.Tensor, vec: torch.Tensor):
+    def b_hvp(
+        params: Dict[str, torch.Tensor],
+        x: torch.Tensor,
+        y: torch.Tensor,
+        vec: torch.Tensor,
+    ):
         return flatten_dimensions(
             hvp(
                 lambda p: batch_loss_function(model, loss)(p, x, y),
@@ -244,7 +245,9 @@ def get_hvp_function(
         avg_hessian = to_model_device(torch.zeros_like(vec), model)
         b_hvp = get_batch_hvp(model, loss, reverse_only)
         params = {
-            k: to_model_device(p, model) if track_gradients else to_model_device(p.detach(), model)
+            k: to_model_device(p, model)
+            if track_gradients
+            else to_model_device(p.detach(), model)
             for k, p in model.named_parameters()
             if p.requires_grad
         }

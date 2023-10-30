@@ -10,7 +10,7 @@ models, as introduced in (Koh and Liang, 2017)[^1].
 """
 import logging
 from copy import deepcopy
-from typing import Any, Callable, Dict, Generator, Optional, Type, Tuple
+from typing import Any, Callable, Dict, Generator, Optional, Tuple, Type
 
 import dask.array as da
 import distributed
@@ -20,12 +20,12 @@ from ..utils import maybe_progress
 from .inversion import InfluenceRegistry, InversionMethod
 from .twice_differentiable import (
     DataLoaderType,
+    Influence,
     InfluenceType,
     InverseHvpResult,
     TensorType,
     TensorUtilities,
     TwiceDifferentiable,
-    Influence
 )
 
 __all__ = ["compute_influences", "compute_influence_factors"]
@@ -286,28 +286,54 @@ def compute_influences(
 class DaskInfluenceEngine(Influence[da.Array]):
     def __init__(self, influence_model: Influence):
         client = self._get_client()
-        self.influence_model = influence_model if client is None else client.scatter(influence_model)
+        self.influence_model = (
+            influence_model if client is None else client.scatter(influence_model)
+        )
 
     def factors(self, z: Tuple[da.Array, da.Array]) -> da.Array:
         X, Y = z
         if self._get_client() is not None:
             # Use a lambda function to handle the future of self.influence_model
-            func = lambda x, y, model_future: model_future.factors((torch.as_tensor(x, dtype=torch.float32), torch.as_tensor(y, dtype=torch.float32))).cpu().numpy()
+            func = (
+                lambda x, y, model_future: model_future.factors(
+                    (
+                        torch.as_tensor(x, dtype=torch.float32),
+                        torch.as_tensor(y, dtype=torch.float32),
+                    )
+                )
+                .cpu()
+                .numpy()
+            )
             # Include self.influence_model as an extra argument to map_blocks
             result = da.map_blocks(func, X, Y, self.influence_model, dtype=X.dtype)
         else:
             # If self.influence_model is not a future, use it directly
-            result = da.map_blocks(lambda x, y: self.influence_model.factors((torch.as_tensor(x), torch.as_tensor(y))).numpy(), X, Y, dtype=X.dtype)
+            result = da.map_blocks(
+                lambda x, y: self.influence_model.factors(
+                    (torch.as_tensor(x), torch.as_tensor(y))
+                ).numpy(),
+                X,
+                Y,
+                dtype=X.dtype,
+            )
         return result
 
-    def values(self, z_test: Tuple[da.Array, da.Array], z: Tuple[da.Array, da.Array],
-               influence_type: InfluenceType) -> da.Array:
+    def values(
+        self,
+        z_test: Tuple[da.Array, da.Array],
+        z: Tuple[da.Array, da.Array],
+        influence_type: InfluenceType,
+    ) -> da.Array:
         pass
 
-    def up_weighting(self, z_test_factors: TensorType, z: Tuple[TensorType, TensorType]) -> TensorType:
+    def up_weighting(
+        self, z_test_factors: TensorType, z: Tuple[TensorType, TensorType]
+    ) -> TensorType:
         pass
 
-    def perturbation(self, z_test_factors: TensorType, z: Tuple[TensorType, TensorType]) -> TensorType:
+    def perturbation(
+        self, z_test_factors: TensorType, z: Tuple[TensorType, TensorType]
+    ) -> TensorType:
         pass
 
     @staticmethod
@@ -316,6 +342,3 @@ class DaskInfluenceEngine(Influence[da.Array]):
             return distributed.get_client()
         except ValueError:
             return None
-
-
-

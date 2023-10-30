@@ -10,9 +10,10 @@ from ..inversion import InfluenceRegistry, InversionMethod
 from ..twice_differentiable import Influence, InfluenceType, TensorType
 from .functional import (
     get_hessian,
+    get_hvp_function,
     matrix_jacobian_product,
     per_sample_gradient,
-    per_sample_mixed_derivative, get_hvp_function,
+    per_sample_mixed_derivative,
 )
 from .torch_differentiable import (
     LowRankProductRepresentation,
@@ -123,9 +124,12 @@ class DirectInfluence(TorchInfluence):
         )
 
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        return torch.linalg.solve(self.hessian + self.hessian_perturbation * torch.eye(
-            self.num_parameters, device=self.model_device
-        ), rhs.T).T
+        return torch.linalg.solve(
+            self.hessian
+            + self.hessian_perturbation
+            * torch.eye(self.num_parameters, device=self.model_device),
+            rhs.T,
+        ).T
 
 
 class BatchCgInfluence(TorchInfluence):

@@ -119,8 +119,12 @@ def model_data(request):
 )
 def test_batch_hvp(model_data, tol: float):
     torch_model, x, y, vec, H_analytical = model_data
-    model_params = {k: v.detach() for k, v in torch_model.named_parameters() if v.requires_grad}
-    Hvp_autograd = get_batch_hvp(torch_model, torch.nn.functional.mse_loss)(model_params, x, y, vec)
+    model_params = {
+        k: v.detach() for k, v in torch_model.named_parameters() if v.requires_grad
+    }
+    Hvp_autograd = get_batch_hvp(torch_model, torch.nn.functional.mse_loss)(
+        model_params, x, y, vec
+    )
     assert torch.allclose(Hvp_autograd, H_analytical @ vec, rtol=tol)
 
 
