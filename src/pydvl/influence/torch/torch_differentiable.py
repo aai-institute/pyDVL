@@ -16,10 +16,13 @@ influence of a training point on the model.
 import logging
 from dataclasses import dataclass
 from functools import partial
+from multiprocessing import reduction
 from typing import Callable, Generator, List, Optional, Sequence, Tuple
 
 import torch
 import torch.nn as nn
+from nngeometry.metrics import FIM
+from nngeometry.object import PMatEKFAC
 from numpy.typing import NDArray
 from scipy.sparse.linalg import ArpackNoConvergence
 from torch import autograd
@@ -42,6 +45,7 @@ __all__ = [
     "solve_batch_cg",
     "solve_lissa",
     "solve_arnoldi",
+    "solve_ekfac",
     "lanzcos_low_rank_hessian_approx",
     "model_hessian_low_rank",
 ]
@@ -740,6 +744,35 @@ def solve_lissa(
         "mean_perc_residual": mean_residual * 100,
     }
     return InverseHvpResult(x=h_estimate / scale, info=info)
+
+
+@InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Ekfac)
+def solve_ekfac(
+    model: TorchTwiceDifferentiable,
+    training_data: DataLoader,
+    b: torch.Tensor,
+    hessian_perturbation: float = 0.0,
+) -> InverseHvpResult:
+    hessian_repr = FIM(
+        model.model,
+        training_data,
+        representation=PMatEKFAC,
+        n_output=model.model.layers[-2].out_features,
+    )
+    hessian_repr.update_diag(training_data)
+    hessian = hessian_repr.get_dense_tensor()
+    matrix = hessian + hessian_perturbation * torch.eye(
+        model.num_params, device=model.device
+    )
+    info = {"hessian": hessian}
+    try:
+        x = torch.linalg.solve(matrix, b.T).T
+    except torch.linalg.LinAlgError as e:
+        raise RuntimeError(
+            f"Direct inversion failed, possibly due to the Hessian being singular. "
+            f"Consider increasing the parameter 'hessian_perturbation' (currently: {hessian_perturbation}). \n{e}"
+        )
+    return InverseHvpResult(x=x, info=info)
 
 
 @InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Arnoldi)

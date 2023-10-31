@@ -32,6 +32,7 @@ class InversionMethod(str, Enum):
     Cg = "cg"
     Lissa = "lissa"
     Arnoldi = "arnoldi"
+    Ekfac = "ekfac"
 
 
 def solve_hvp(
