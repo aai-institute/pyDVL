@@ -1,6 +1,7 @@
 from dataclasses import astuple, dataclass
 from typing import Any, Dict, Tuple
 
+import numpy as np
 import pytest
 
 torch = pytest.importorskip("torch")
@@ -19,7 +20,7 @@ from pydvl.influence.torch.torch_differentiable import lanzcos_low_rank_hessian_
 from pydvl.influence.torch.util import (
     TorchTensorContainerType,
     align_structure,
-    flatten_dimensions,
+    flatten_dimensions, torch_dataset_to_dask_array,
 )
 from tests.influence.conftest import linear_hessian_analytical, linear_model
 
@@ -227,3 +228,38 @@ def test_align_structure_success(
 def test_align_structure_error(source: Dict[str, torch.Tensor], target: Any):
     with pytest.raises(ValueError):
         align_structure(source, target)
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize("chunk_size", [5, 6])
+@pytest.mark.parametrize("total_size", [50, 30, 45])
+@pytest.mark.parametrize("tailing_dimensions", [(3,), (5, 8), (3, 7, 2)])
+def test_torch_dataset_to_dask_array(chunk_size: int, total_size: int, tailing_dimensions: Tuple[int,...]):
+    x_torch = torch.rand(*tuple([total_size, *tailing_dimensions]))
+    y_torch = torch.rand(*tuple([total_size, *list(map(lambda x: x - 1, tailing_dimensions))]))
+
+    class CustomDataset(torch.utils.data.Dataset):
+        def __init__(self, *tensors):
+            self.tensors = tensors
+
+        def __getitem__(self, index):
+            return tuple([t[index] for t in self.tensors])
+
+    data_set = CustomDataset(x_torch, y_torch)
+    tensor_data_set = torch.utils.data.TensorDataset(x_torch)
+
+    for d_set in [data_set, tensor_data_set]:
+        x_da = torch_dataset_to_dask_array(d_set, chunk_size=chunk_size)
+        assert x_da[0].shape == x_torch.shape
+        assert sum(x_da[0].chunks[0]) == total_size
+        assert all([len(c) == 1 and c[0] == tailing_dimensions[k] for k, c in enumerate(x_da[0].chunks[1:])])
+        assert np.allclose(x_torch.numpy(), x_da[0].compute())
+
+    y_da = torch_dataset_to_dask_array(data_set, chunk_size=chunk_size)[1]
+    assert np.allclose(y_torch.numpy(), y_da.compute())
+    assert y_da.shape == y_torch.shape
+    assert sum(y_da.chunks[0]) == total_size
+    assert all([len(c) == 1 and c[0] == tailing_dimensions[k] - 1 for k, c in enumerate(y_da.chunks[1:])])
+
+    with pytest.raises(ValueError):
+        torch_dataset_to_dask_array(tensor_data_set, chunk_size=chunk_size, total_size=total_size+1)

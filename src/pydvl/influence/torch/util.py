@@ -242,8 +242,8 @@ def torch_dataset_to_dask_array(
     Construct tuple of dask arrays from a PyTorch dataset, using dask.delayed
 
     Args:
-        dataset (Dataset): PyTorch dataset.
-        chunk_size (int): The size of the chunks for the resulting Dask arrays.
+        dataset: A thread-safe PyTorch dataset
+        chunk_size: The size of the chunks for the resulting Dask arrays.
         total_size:
         resulting_dtype:
 
@@ -279,16 +279,27 @@ def torch_dataset_to_dask_array(
                 idx = 0
                 while True:
                     try:
-                        _ = d_set[idx]
+                        t = d_set[idx]
+                        if all(_t.numel() == 0 for _t in t):
+                            return idx
                         idx += 1
-                    except IndexError:
-                        return idx + 1
 
-    def _get_chunk(start_idx: int, stop_idx: int, d_set: Dataset):
+                    except IndexError:
+                        return idx
+
+    sample = dataset[0]
+    if not isinstance(sample, tuple):
+        sample = (sample,)
+
+    def _get_chunk(start_idx: int, stop_idx: int, d_set: Dataset) -> Tuple[torch.Tensor, ...]:
         try:
-            return d_set[start_idx:stop_idx]
+            t = d_set[start_idx:stop_idx]
+            if not isinstance(t, tuple):
+                t = (t,)
+            return t
         except Exception:
-            return torch.stack([d_set[idx] for idx in range(start_idx, stop_idx)])
+            nested_tensor_list = [[d_set[idx][k] for idx in range(start_idx, stop_idx)] for k in range(len(sample))]
+            return tuple(map(torch.stack, nested_tensor_list))
 
     num_samples = _infer_data_len(dataset)
     chunk_indices = [
@@ -297,12 +308,8 @@ def torch_dataset_to_dask_array(
 
     delayed_chunks = [
         dask.delayed(partial(_get_chunk, start, stop))(dataset)
-        for start, stop in chunk_indices
+        for (start, stop) in chunk_indices
     ]
-
-    sample = dataset[0]
-    if not isinstance(sample, tuple):
-        sample = (sample,)
 
     delayed_arrays_dict = {k: [] for k in range(len(sample))}
 
