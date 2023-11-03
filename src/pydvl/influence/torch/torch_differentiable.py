@@ -17,10 +17,12 @@ import logging
 from dataclasses import dataclass
 from functools import partial
 from multiprocessing import reduction
+from turtle import update
 from typing import Callable, Generator, List, Optional, Sequence, Tuple
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from nngeometry.metrics import FIM
 from nngeometry.object import PMatEKFAC
 from numpy.typing import NDArray
@@ -752,14 +754,48 @@ def solve_ekfac(
     training_data: DataLoader,
     b: torch.Tensor,
     hessian_perturbation: float = 0.0,
+    update_diag: bool = True,
+    with_logits: bool = False,
 ) -> InverseHvpResult:
+
+    allowed_losses = (
+        nn.CrossEntropyLoss,
+        nn.BCELoss,
+        nn.BCEWithLogitsLoss,
+        F.cross_entropy,
+        F.binary_cross_entropy,
+        F.binary_cross_entropy_with_logits,
+    )
+
+    if model.loss not in allowed_losses:
+        raise ValueError(
+            "Current implementation of EK-FAC only supports classification with Cross Entropy Losses."
+        )
+
+    if with_logits:
+        log_probs = lambda x: torch.log_softmax(model.model(x[0].to(model.device)))
+        output_dim = model.model[-1].out_features
+    else:
+        log_probs = lambda x: torch.log(model.model(x[0].to(model.device)))
+        output_dim = model.model[-2].out_features
+
+    def function(*d):
+        log_probs_ = log_probs(d)
+        probs = torch.exp(log_probs_).detach()
+        return log_probs_ * probs**0.5
+
     hessian_repr = FIM(
         model.model,
         training_data,
         representation=PMatEKFAC,
-        n_output=model.model.layers[-2].out_features,
+        n_output=output_dim,
+        function=function,
+        # FIXME: this is a bit awkward. Maybe open issue in nngeometry
+        variant="regression",
     )
-    hessian_repr.update_diag(training_data)
+
+    if update_diag:
+        hessian_repr.update_diag(training_data)
     hessian = hessian_repr.get_dense_tensor()
     matrix = hessian + hessian_perturbation * torch.eye(
         model.num_params, device=model.device

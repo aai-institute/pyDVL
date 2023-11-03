@@ -23,7 +23,13 @@ from .twice_differentiable import (
     TwiceDifferentiable,
 )
 
-__all__ = ["compute_influences", "InfluenceType", "compute_influence_factors"]
+__all__ = [
+    "compute_influences",
+    "InfluenceType",
+    "compute_influence_factors",
+    "compute_influences_up",
+    "compute_influences_pert",
+]
 
 logger = logging.getLogger(__name__)
 
