@@ -280,11 +280,21 @@ class InfluenceType(str, Enum):
 
 
 class Influence(Generic[TensorType], ABC):
+    @property
+    @abstractmethod
+    def num_parameters(self):
+        pass
+
+    @abstractmethod
+    def prepare_for_distributed(self) -> "Influence":
+        pass
+
     @abstractmethod
     def up_weighting(
         self,
         z_test_factors: TensorType,
-        z: Tuple[TensorType, TensorType],
+        x: TensorType,
+        y: TensorType,
     ) -> TensorType:
         pass
 
@@ -292,19 +302,22 @@ class Influence(Generic[TensorType], ABC):
     def perturbation(
         self,
         z_test_factors: TensorType,
-        z: Tuple[TensorType, TensorType],
+        x: TensorType,
+        y: TensorType,
     ) -> TensorType:
         pass
 
     @abstractmethod
-    def factors(self, z: Tuple[TensorType, TensorType]) -> TensorType:
+    def factors(self, x: TensorType, y: TensorType) -> InverseHvpResult:
         pass
 
     @abstractmethod
     def values(
         self,
-        z_test: Tuple[TensorType, TensorType],
-        z: Tuple[TensorType, TensorType],
+        x_test: TensorType,
+        y_test: TensorType,
+        x: TensorType,
+        y: TensorType,
         influence_type: InfluenceType,
-    ) -> TensorType:
+    ) -> InverseHvpResult:
         pass

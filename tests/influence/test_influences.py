@@ -274,7 +274,7 @@ def model_and_data(
 @fixture
 def direct_influence(model_and_data, test_case: TestCase):
     model, train_dataloader, test_dataloader = model_and_data
-    direct_influence = compute_influences(
+    direct_influence, _ = compute_influences(
         model,
         training_data=train_dataloader,
         test_data=test_dataloader,
@@ -342,7 +342,7 @@ def test_influence_linear_model(
         batch_size=40,
     )
 
-    influence_values = compute_influences(
+    influence_values, _ = compute_influences(
         TorchTwiceDifferentiable(linear_layer, loss),
         training_data=train_data_loader,
         test_data=test_data_loader,
@@ -352,7 +352,9 @@ def test_influence_linear_model(
         inversion_method=inversion_method,
         hessian_regularization=hessian_reg,
         **inversion_method_kwargs,
-    ).numpy()
+    )
+
+    influence_values = influence_values.numpy()
 
     assert np.logical_not(np.any(np.isnan(influence_values)))
     abs_influence = np.abs(influence_values)
@@ -386,7 +388,7 @@ def test_influences_nn(
 ):
     model, train_dataloader, test_dataloader = model_and_data
 
-    approx_influences = compute_influences(
+    approx_influences, _ = compute_influences(
         model,
         training_data=train_dataloader,
         test_data=test_dataloader,
@@ -395,7 +397,9 @@ def test_influences_nn(
         inversion_method=inversion_method,
         hessian_regularization=test_case.hessian_reg,
         **inversion_method_kwargs,
-    ).numpy()
+    )
+
+    approx_influences = approx_influences.numpy()
 
     assert not np.any(np.isnan(approx_influences))
 
@@ -418,6 +422,7 @@ def test_influences_nn(
     assert not np.all(approx_influences == approx_influences.item(0))
 
     assert np.allclose(approx_influences, direct_influence, rtol=1e-1)
+
 
 
 @parametrize(
@@ -444,7 +449,7 @@ def test_influences_arnoldi(
 
     num_parameters = sum(p.numel() for p in model.model.parameters() if p.requires_grad)
 
-    low_rank_influence = compute_influences(
+    low_rank_influence, _ = compute_influences(
         model,
         training_data=train_dataloader,
         test_data=test_dataloader,
@@ -468,7 +473,7 @@ def test_influences_arnoldi(
         rank_estimate=num_parameters - 1,
     )
 
-    precomputed_low_rank_influence = compute_influences(
+    precomputed_low_rank_influence, _ = compute_influences(
         model,
         training_data=train_dataloader,
         test_data=test_dataloader,

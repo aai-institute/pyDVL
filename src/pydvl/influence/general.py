@@ -10,11 +10,16 @@ models, as introduced in (Koh and Liang, 2017)[^1].
 """
 import logging
 from copy import deepcopy
-from typing import Any, Callable, Dict, Generator, Optional, Tuple, Type
+from itertools import groupby
+from typing import Any, Callable, Dict, Generator, Optional, Tuple, Type, Union
 
+import dask
 import dask.array as da
 import distributed
+import numpy as np
 import torch
+from distributed import Future, wait
+from numpy._typing import NDArray
 
 from ..utils import maybe_progress
 from .inversion import InfluenceRegistry, InversionMethod
@@ -82,7 +87,7 @@ def compute_influence_factors(
         model, training_data, hessian_perturbation, **kwargs
     )
 
-    return influence.factors(tensor_util.data_loader_to_tensor_tuple(test_data))
+    return influence.factors(*tensor_util.data_loader_to_tensor_tuple(test_data))
 
 
 def compute_influences_up(
@@ -227,7 +232,7 @@ def compute_influences(
     hessian_regularization: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
-) -> TensorType:  # type: ignore # ToDO fix typing
+) -> InverseHvpResult:  # type: ignore # ToDO fix typing
     r"""
     Calculates the influence of each input data point on the specified test points.
 
@@ -278,63 +283,171 @@ def compute_influences(
         type(differentiable_model), inversion_method
     )(differentiable_model, training_data, hessian_regularization, **kwargs)
 
-    return influence.values(
-        test_data_tup, input_data_tup, influence_type
-    )  # type:ignore
+    return influence.values(*test_data_tup, *input_data_tup, influence_type)
 
 
-class DaskInfluenceEngine(Influence[da.Array]):
-    def __init__(self, influence_model: Influence):
+class DaskInfluence(Influence[da.Array]):
+    def __init__(
+        self,
+        influence_model: Influence,
+        to_numpy: Callable[[Any], np.ndarray],
+        from_numpy: Callable[[np.ndarray], Any],
+    ):
+        self.from_numpy = from_numpy
+        self.to_numpy = to_numpy
+        self._num_parameters = influence_model.num_parameters
+        self.influence_model = influence_model.prepare_for_distributed()
+
         client = self._get_client()
-        self.influence_model = (
-            influence_model if client is None else client.scatter(influence_model)
+        if client is not None:
+            self.influence_model = client.scatter(influence_model, broadcast=True)
+
+    @property
+    def num_parameters(self):
+        return self._num_parameters
+
+    def prepare_for_distributed(self) -> "DaskInfluence":
+        return self
+
+    @staticmethod
+    def _validate_un_chunked(x: da.Array):
+        if any([len(c) > 1 for c in x.chunks[1:]]):
+            raise ValueError("Array must be un-chunked in ever dimension but the first")
+
+    @staticmethod
+    def _validate_aligned_chunking(x: da.Array, y: da.Array):
+        if x.chunks[0] != y.chunks[0]:
+            raise ValueError(
+                "x and y must have the same chunking in the first dimension"
+            )
+
+    @staticmethod
+    def _get_chunk_indices(chunk_sizes: Tuple[int, ...]) -> Tuple[Tuple[int, int], ...]:
+        indices = []
+        start = 0
+
+        for value, group in groupby(chunk_sizes):
+            length = sum(group)
+            indices.append((start, start + length))
+            start += length
+
+        return tuple(indices)
+
+    def factors(self, x: da.Array, y: da.Array) -> InverseHvpResult[da.Array]:
+
+        self._validate_aligned_chunking(x, y)
+        self._validate_un_chunked(x)
+        self._validate_un_chunked(y)
+
+        def func(x_numpy: NDArray, y_numpy: NDArray, model: Influence):
+            factors, _ = model.factors(
+                self.from_numpy(x_numpy), self.from_numpy(y_numpy)
+            )
+            return self.to_numpy(factors)
+
+        def block_func(x_block: da.Array, y_block: NDArray):
+            chunk_size = x.chunks[0][0]
+            return da.map_blocks(
+                func,
+                x_block,
+                y_block,
+                self.influence_model,
+                dtype=x_block.dtype,
+                chunks=(chunk_size, self.num_parameters),
+            )
+
+        return da.concatenate(
+            [
+                block_func(x[start:stop], y[start:stop])
+                for (start, stop) in self._get_chunk_indices(x.chunks[0])
+            ],
+            axis=0,
         )
 
-    def factors(self, z: Tuple[da.Array, da.Array]) -> da.Array:
-        X, Y = z
-        if self._get_client() is not None:
-            # Use a lambda function to handle the future of self.influence_model
-            func = (
-                lambda x, y, model_future: model_future.factors(
-                    (
-                        torch.as_tensor(x, dtype=torch.float32),
-                        torch.as_tensor(y, dtype=torch.float32),
-                    )
-                )
-                .cpu()
-                .numpy()
+    def up_weighting(
+        self, z_test_factors: da.Array, x: da.Array, y: da.Array
+    ) -> da.Array:
+        self._validate_aligned_chunking(x, y)
+        self._validate_un_chunked(x)
+        self._validate_un_chunked(y)
+        self._validate_un_chunked(z_test_factors)
+
+        def func(
+            z_test_numpy: NDArray, x_numpy: NDArray, y_numpy: NDArray, model: Influence
+        ):
+            ups = model.up_weighting(
+                self.from_numpy(z_test_numpy),
+                self.from_numpy(x_numpy),
+                self.from_numpy(y_numpy),
             )
-            # Include self.influence_model as an extra argument to map_blocks
-            result = da.map_blocks(func, X, Y, self.influence_model, dtype=X.dtype)
-        else:
-            # If self.influence_model is not a future, use it directly
-            result = da.map_blocks(
-                lambda x, y: self.influence_model.factors(
-                    (torch.as_tensor(x), torch.as_tensor(y))
-                ).numpy(),
-                X,
-                Y,
-                dtype=X.dtype,
+            return self.to_numpy(ups)
+
+        return da.blockwise(
+            func, "ij", z_test_factors, "ik", x, "jn", y, "jm",
+            model=self.influence_model,
+            concatenate=True,
+            dtype=x.dtype
+        )
+
+    def perturbation(
+        self, z_test_factors: da.Array, x: da.Array, y: da.Array
+    ) -> da.Array:
+        self._validate_aligned_chunking(x, y)
+        self._validate_un_chunked(x)
+        self._validate_un_chunked(y)
+        self._validate_un_chunked(z_test_factors)
+
+        def func(
+                z_test_numpy: NDArray, x_numpy: NDArray, y_numpy: NDArray, model: Influence
+        ):
+            ups = model.perturbation(
+                self.from_numpy(z_test_numpy),
+                self.from_numpy(x_numpy),
+                self.from_numpy(y_numpy),
             )
-        return result
+            return self.to_numpy(ups)
+
+        return da.blockwise(
+            func, "ijb", z_test_factors, "ik", x, "jb", y, "jm",
+            model=self.influence_model,
+            concatenate=True,
+            align_arrays=True,
+            dtype=x.dtype
+        )
 
     def values(
         self,
-        z_test: Tuple[da.Array, da.Array],
-        z: Tuple[da.Array, da.Array],
+        x_test: da.Array,
+        y_test: da.Array,
+        x: da.Array,
+        y: da.Array,
         influence_type: InfluenceType,
-    ) -> da.Array:
-        pass
+    ) -> InverseHvpResult:
+        self._validate_aligned_chunking(x, y)
+        self._validate_aligned_chunking(x_test, y_test)
+        self._validate_un_chunked(x)
+        self._validate_un_chunked(y)
+        self._validate_un_chunked(x_test)
+        self._validate_un_chunked(y_test)
 
-    def up_weighting(
-        self, z_test_factors: TensorType, z: Tuple[TensorType, TensorType]
-    ) -> TensorType:
-        pass
+        def func(
+                x_test_numpy: NDArray, y_test_numpy: NDArray, x_numpy: NDArray, y_numpy: NDArray, model: Influence
+        ):
+            values, _ = model.values(
+                self.from_numpy(x_test_numpy),
+                self.from_numpy(y_test_numpy),
+                self.from_numpy(x_numpy),
+                self.from_numpy(y_numpy),
+                influence_type
+            )
+            return self.to_numpy(values)
 
-    def perturbation(
-        self, z_test_factors: TensorType, z: Tuple[TensorType, TensorType]
-    ) -> TensorType:
-        pass
+        resulting_shape = "ij" if influence_type is InfluenceType.Up else "ijk"
+        result = da.blockwise(
+            func, resulting_shape, x_test, "ik", y_test, "im", x, "jk", y, "jm", model=self.influence_model,
+            concatenate=True, dtype=x.dtype, align_arrays=True
+        )
+        return InverseHvpResult(result, {})
 
     @staticmethod
     def _get_client() -> Optional[distributed.Client]:

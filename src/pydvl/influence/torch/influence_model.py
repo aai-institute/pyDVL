@@ -1,16 +1,16 @@
+import logging
 from abc import ABC, abstractmethod
 from math import prod
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional
 
 import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
 from ..inversion import InfluenceRegistry, InversionMethod
-from ..twice_differentiable import Influence, InfluenceType, TensorType
+from ..twice_differentiable import Influence, InfluenceType, InverseHvpResult
 from .functional import (
     get_hessian,
-    get_hvp_function,
     matrix_jacobian_product,
     per_sample_gradient,
     per_sample_mixed_derivative,
@@ -24,6 +24,8 @@ from .torch_differentiable import (
     solve_lissa,
 )
 from .util import flatten_dimensions
+
+logger = logging.getLogger(__name__)
 
 
 class TorchInfluence(Influence[torch.Tensor], ABC):
@@ -57,49 +59,60 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
     def model_params(self):
         return self._model_params
 
-    def _flat_loss_grad(self, z: Tuple[torch.Tensor, torch.Tensor]):
-        grads = per_sample_gradient(self.model, self.loss)(self.model_params, *z)
-        shape = (z[0].shape[0], -1)
+    def _loss_grad(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        grads = per_sample_gradient(self.model, self.loss)(self.model_params, x, y)
+        shape = (x.shape[0], -1)
         return flatten_dimensions(grads.values(), shape=shape)
 
-    def _flat_loss_mixed_grad(self, z: Tuple[torch.Tensor, torch.Tensor]):
+    def _flat_loss_mixed_grad(self, x: torch.Tensor, y: torch.Tensor):
         mixed_grads = per_sample_mixed_derivative(self.model, self.loss)(
-            self.model_params, *z
+            self.model_params, x, y
         )
-        shape = (z[0].shape[0], prod(z[0].shape[1:]), -1)
+        shape = (x.shape[0], prod(x.shape[1:]), -1)
         return flatten_dimensions(mixed_grads.values(), shape=shape)
 
     def values(
         self,
-        z_test: Tuple[torch.Tensor, torch.Tensor],
-        z: Tuple[torch.Tensor, torch.Tensor],
+        x_test: torch.Tensor,
+        y_test: torch.Tensor,
+        x: torch.Tensor,
+        y: torch.Tensor,
         influence_type: InfluenceType,
-    ) -> torch.Tensor:
+    ) -> InverseHvpResult:
         if influence_type is InfluenceType.Up:
-            return self.up_weighting(self.factors(z_test), z)
-        return self.perturbation(self.factors(z_test), z)
+            if x_test.shape[0] <= y.shape[0]:
+                factor, info = self.factors(x_test, y_test)
+                values = self.up_weighting(factor, x, y)
+            else:
+                factor, info = self.factors(x, y)
+                values = self.up_weighting(factor, x_test, y_test)
+        else:
+            factor, info = self.factors(x_test, y_test)
+            values = self.perturbation(factor, x, y)
+        return InverseHvpResult(values, info)
 
     def up_weighting(
-        self, z_test_factors: torch.Tensor, z: Tuple[torch.Tensor, torch.Tensor]
-    ) -> torch.Tensor:
-        return z_test_factors @ self._flat_loss_grad(z).T
-
-    def perturbation(
         self,
         z_test_factors: torch.Tensor,
-        z: Tuple[torch.Tensor, torch.Tensor],
+        x: torch.Tensor,
+        y: torch.Tensor,
+    ) -> torch.Tensor:
+        return z_test_factors @ self._loss_grad(x, y).T
+
+    def perturbation(
+        self, z_test_factors: torch.Tensor, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
         return torch.einsum(
-            "ia,jba->ijb", z_test_factors, self._flat_loss_mixed_grad(z)
+            "ia,jba->ijb", z_test_factors, self._flat_loss_mixed_grad(x, y)
         )
 
-    def factors(self, z: Tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
-        x, y = z
-        x, y = x.to(self.model_device), y.to(self.model_device)
-        return self._solve_hvp(self._flat_loss_grad((x, y)))
+    def factors(self, x: torch.Tensor, y: torch.Tensor) -> InverseHvpResult:
+        return self._solve_hvp(
+            self._loss_grad(x.to(self.model_device), y.to(self.model_device))
+        )
 
     @abstractmethod
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
+    def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
         pass
 
 
@@ -110,26 +123,50 @@ class DirectInfluence(TorchInfluence):
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         hessian_regularization: float,
         hessian: torch.Tensor = None,
-        data_loader: DataLoader = None,
+        train_dataloader: DataLoader = None,
+        return_hessian_in_info: bool = True,
     ):
-        if hessian is None and data_loader is None:
+        if hessian is None and train_dataloader is None:
             raise ValueError(
                 f"Either provide a pre-computed hessian or a data_loader to compute the hessian"
             )
 
         super().__init__(model, loss)
+        self.return_hessian_in_info = return_hessian_in_info
         self.hessian_perturbation = hessian_regularization
         self.hessian = (
-            hessian if hessian is not None else get_hessian(model, loss, data_loader)
+            hessian if hessian is not None else get_hessian(model, loss, train_dataloader)
         )
 
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        return torch.linalg.solve(
-            self.hessian
+    def prepare_for_distributed(self) -> "Influence":
+        if self.return_hessian_in_info:
+            self.return_hessian_in_info = False
+            logger.warning(
+                f"Modified parameter `return_hessian_in_info` to `False`, "
+                f"to prepare for distributed computing"
+            )
+        return self
+
+    def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
+        result = torch.linalg.solve(
+            self.hessian.to(self.model_device)
             + self.hessian_perturbation
             * torch.eye(self.num_parameters, device=self.model_device),
-            rhs.T,
+            rhs.T.to(self.model_device),
         ).T
+        info = {}
+        if self.return_hessian_in_info:
+            info["hessian"] = self.hessian
+        return InverseHvpResult(result, info)
+
+    def to(self, device: torch.device):
+        self.hessian = self.hessian.to(device)
+        self.model = self.model.to(device)
+        self._model_device = device
+        self._model_params = {
+            k: p.to(device) for k, p in self.model.named_parameters() if p.requires_grad
+        }
+        return self
 
 
 class BatchCgInfluence(TorchInfluence):
@@ -154,9 +191,12 @@ class BatchCgInfluence(TorchInfluence):
         self.hessian_regularization = hessian_regularization
         self.train_dataloader = train_dataloader
 
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
+    def prepare_for_distributed(self) -> "Influence":
+        return self
+
+    def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
         # TODO directly implement the method here and remove call to obsolete function
-        x, _ = solve_batch_cg(
+        x, info = solve_batch_cg(
             TorchTwiceDifferentiable(self.model, self.loss),
             self.train_dataloader,
             rhs,
@@ -166,7 +206,15 @@ class BatchCgInfluence(TorchInfluence):
             atol=self.atol,
             maxiter=self.maxiter,
         )
-        return x
+        return InverseHvpResult(x, info)
+
+    def to(self, device: torch.device):
+        self.model = self.model.to(device)
+        self._model_params = {
+            k: p.to(device) for k, p in self.model.named_parameters() if p.requires_grad
+        }
+        self._model_device = device
+        return self
 
 
 class LissaInfluence(TorchInfluence):
@@ -193,9 +241,12 @@ class LissaInfluence(TorchInfluence):
         self.dampen = dampen
         self.train_dataloader = train_dataloader
 
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
+    def prepare_for_distributed(self) -> "Influence":
+        return self
+
+    def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
         # TODO directly implement the method here and remove call to obsolete function
-        x, _ = solve_lissa(
+        x, info = solve_lissa(
             TorchTwiceDifferentiable(self.model, self.loss),
             self.train_dataloader,
             rhs,
@@ -207,7 +258,7 @@ class LissaInfluence(TorchInfluence):
             rtol=self.rtol,
             progress=self.progress,
         )
-        return x
+        return InverseHvpResult(x, info)
 
 
 class ArnoldiInfluence(TorchInfluence):
@@ -216,15 +267,16 @@ class ArnoldiInfluence(TorchInfluence):
         model,
         loss,
         low_rank_representation: Optional[LowRankProductRepresentation] = None,
-        data_loader: DataLoader = None,
+        train_dataloader: DataLoader = None,
         hessian_regularization: float = 0.0,
         rank_estimate: int = 10,
         krylov_dimension: Optional[int] = None,
         tol: float = 1e-6,
         max_iter: Optional[int] = None,
         eigen_computation_on_gpu: bool = False,
+        return_low_rank_representation_in_info: bool = True,
     ):
-        if low_rank_representation is None and data_loader is None:
+        if low_rank_representation is None and train_dataloader is None:
             raise ValueError(
                 f"Either provide a pre-computed hessian or a data_loader to compute the hessian"
             )
@@ -233,7 +285,7 @@ class ArnoldiInfluence(TorchInfluence):
             low_rank_representation = model_hessian_low_rank(
                 model,
                 loss,
-                data_loader,
+                train_dataloader,
                 hessian_perturbation=hessian_regularization,
                 rank_estimate=rank_estimate,
                 krylov_dimension=krylov_dimension,
@@ -243,36 +295,60 @@ class ArnoldiInfluence(TorchInfluence):
             )
 
         self.low_rank_representation = low_rank_representation
+        self.return_low_rank_representation_in_info = (
+            return_low_rank_representation_in_info
+        )
 
         super().__init__(model, loss)
 
+    def prepare_for_distributed(self) -> "Influence":
+        if self.return_low_rank_representation_in_info:
+            self.return_low_rank_representation_in_info = False
+            logger.warning(
+                f"Modified parameter `return_low_rank_representation_in_info` to `False`, "
+                f"to prepare for distributed computing"
+            )
+        return self
+
     def values(
         self,
-        z_test: Tuple[torch.Tensor, torch.Tensor],
-        z: Tuple[torch.Tensor, torch.Tensor],
+        x_test: torch.Tensor,
+        y_test: torch.Tensor,
+        x: torch.Tensor,
+        y: torch.Tensor,
         influence_type: InfluenceType,
-    ) -> torch.Tensor:
+    ) -> InverseHvpResult:
 
         if influence_type is InfluenceType.Up:
             mjp = matrix_jacobian_product(
                 self.model, self.loss, self.low_rank_representation.projections.T
             )
-            left = mjp(self.model_params, *z_test)
+            left = mjp(self.model_params, x_test, y_test)
             right = torch.diag_embed(
                 1.0 / self.low_rank_representation.eigen_vals
-            ) @ mjp(self.model_params, *z)
-            return torch.einsum("ij, ik -> jk", left, right)
+            ) @ mjp(self.model_params, x, y)
+            values = torch.einsum("ij, ik -> jk", left, right)
+        else:
+            factors, _ = self.factors(x_test, y_test)
+            values = self.perturbation(factors, x, y)
+        info = {}
+        if self.return_low_rank_representation_in_info:
+            info["low_rank_representation"] = self.low_rank_representation
+        return InverseHvpResult(values, info)
 
-        return self.perturbation(self.factors(z_test), z)
-
-    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        x, _ = solve_arnoldi(
+    def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
+        x, info = solve_arnoldi(
             TorchTwiceDifferentiable(self.model, self.loss),
             None,
             rhs,
             low_rank_representation=self.low_rank_representation,
         )
-        return x
+        return InverseHvpResult(x, info)
+
+    def to(self, device: torch.device):
+        return ArnoldiInfluence(
+            self.model.to(device), self.loss, self.low_rank_representation.to(device)
+        )
 
 
 @InfluenceRegistry.register(TorchTwiceDifferentiable, InversionMethod.Direct)
@@ -285,7 +361,7 @@ def direct_factory(
     return DirectInfluence(
         twice_differentiable.model,
         twice_differentiable.loss,
-        data_loader=data_loader,
+        train_dataloader=data_loader,
         hessian_regularization=hessian_regularization,
         **kwargs,
     )
@@ -333,7 +409,7 @@ def arnoldi_factory(
     return ArnoldiInfluence(
         twice_differentiable.model,
         twice_differentiable.loss,
-        data_loader=data_loader,
+        train_dataloader=data_loader,
         hessian_regularization=hessian_regularization,
         **kwargs,
     )
