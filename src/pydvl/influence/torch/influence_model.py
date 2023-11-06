@@ -135,7 +135,9 @@ class DirectInfluence(TorchInfluence):
         self.return_hessian_in_info = return_hessian_in_info
         self.hessian_perturbation = hessian_regularization
         self.hessian = (
-            hessian if hessian is not None else get_hessian(model, loss, train_dataloader)
+            hessian
+            if hessian is not None
+            else get_hessian(model, loss, train_dataloader)
         )
 
     def prepare_for_distributed(self) -> "Influence":

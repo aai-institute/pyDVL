@@ -291,14 +291,19 @@ def torch_dataset_to_dask_array(
     if not isinstance(sample, tuple):
         sample = (sample,)
 
-    def _get_chunk(start_idx: int, stop_idx: int, d_set: Dataset) -> Tuple[torch.Tensor, ...]:
+    def _get_chunk(
+        start_idx: int, stop_idx: int, d_set: Dataset
+    ) -> Tuple[torch.Tensor, ...]:
         try:
             t = d_set[start_idx:stop_idx]
             if not isinstance(t, tuple):
                 t = (t,)
             return t
         except Exception:
-            nested_tensor_list = [[d_set[idx][k] for idx in range(start_idx, stop_idx)] for k in range(len(sample))]
+            nested_tensor_list = [
+                [d_set[idx][k] for idx in range(start_idx, stop_idx)]
+                for k in range(len(sample))
+            ]
             return tuple(map(torch.stack, nested_tensor_list))
 
     num_samples = _infer_data_len(dataset)

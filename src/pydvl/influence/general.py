@@ -383,10 +383,17 @@ class DaskInfluence(Influence[da.Array]):
             return self.to_numpy(ups)
 
         return da.blockwise(
-            func, "ij", z_test_factors, "ik", x, "jn", y, "jm",
+            func,
+            "ij",
+            z_test_factors,
+            "ik",
+            x,
+            "jn",
+            y,
+            "jm",
             model=self.influence_model,
             concatenate=True,
-            dtype=x.dtype
+            dtype=x.dtype,
         )
 
     def perturbation(
@@ -398,7 +405,7 @@ class DaskInfluence(Influence[da.Array]):
         self._validate_un_chunked(z_test_factors)
 
         def func(
-                z_test_numpy: NDArray, x_numpy: NDArray, y_numpy: NDArray, model: Influence
+            z_test_numpy: NDArray, x_numpy: NDArray, y_numpy: NDArray, model: Influence
         ):
             ups = model.perturbation(
                 self.from_numpy(z_test_numpy),
@@ -408,11 +415,18 @@ class DaskInfluence(Influence[da.Array]):
             return self.to_numpy(ups)
 
         return da.blockwise(
-            func, "ijb", z_test_factors, "ik", x, "jb", y, "jm",
+            func,
+            "ijb",
+            z_test_factors,
+            "ik",
+            x,
+            "jb",
+            y,
+            "jm",
             model=self.influence_model,
             concatenate=True,
             align_arrays=True,
-            dtype=x.dtype
+            dtype=x.dtype,
         )
 
     def values(
@@ -431,21 +445,37 @@ class DaskInfluence(Influence[da.Array]):
         self._validate_un_chunked(y_test)
 
         def func(
-                x_test_numpy: NDArray, y_test_numpy: NDArray, x_numpy: NDArray, y_numpy: NDArray, model: Influence
+            x_test_numpy: NDArray,
+            y_test_numpy: NDArray,
+            x_numpy: NDArray,
+            y_numpy: NDArray,
+            model: Influence,
         ):
             values, _ = model.values(
                 self.from_numpy(x_test_numpy),
                 self.from_numpy(y_test_numpy),
                 self.from_numpy(x_numpy),
                 self.from_numpy(y_numpy),
-                influence_type
+                influence_type,
             )
             return self.to_numpy(values)
 
         resulting_shape = "ij" if influence_type is InfluenceType.Up else "ijk"
         result = da.blockwise(
-            func, resulting_shape, x_test, "ik", y_test, "im", x, "jk", y, "jm", model=self.influence_model,
-            concatenate=True, dtype=x.dtype, align_arrays=True
+            func,
+            resulting_shape,
+            x_test,
+            "ik",
+            y_test,
+            "im",
+            x,
+            "jk",
+            y,
+            "jm",
+            model=self.influence_model,
+            concatenate=True,
+            dtype=x.dtype,
+            align_arrays=True,
         )
         return InverseHvpResult(result, {})
 

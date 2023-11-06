@@ -337,8 +337,12 @@ def test_influence_linear_model(
 
     train_data_loader = DataLoader(list(zip(*train_data)), batch_size=40, shuffle=True)
     input_data = DataLoader(list(zip(*train_data)), batch_size=40)
+    train_data_set = TensorDataset(*list(map(torch.from_numpy, train_data)))
+    test_data_set = TensorDataset(*list(map(torch.from_numpy, test_data)))
+    train_data_loader = DataLoader(train_data_set, batch_size=40, num_workers=0)
+    input_data = DataLoader(train_data_set, batch_size=40)
     test_data_loader = DataLoader(
-        list(zip(*test_data)),
+        test_data_set,
         batch_size=40,
     )
 
@@ -422,7 +426,6 @@ def test_influences_nn(
     assert not np.all(approx_influences == approx_influences.item(0))
 
     assert np.allclose(approx_influences, direct_influence, rtol=1e-1)
-
 
 
 @parametrize(
