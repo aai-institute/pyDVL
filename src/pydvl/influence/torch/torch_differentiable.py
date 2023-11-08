@@ -16,6 +16,7 @@ influence of a training point on the model.
 import logging
 from dataclasses import dataclass
 from functools import partial
+from math import log
 from multiprocessing import reduction
 from turtle import update
 from typing import Callable, Generator, List, Optional, Sequence, Tuple
@@ -23,6 +24,7 @@ from typing import Callable, Generator, List, Optional, Sequence, Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from nngeometry.layercollection import LayerCollection
 from nngeometry.metrics import FIM
 from nngeometry.object import PMatEKFAC
 from numpy.typing import NDArray
@@ -758,40 +760,74 @@ def solve_ekfac(
     with_logits: bool = False,
 ) -> InverseHvpResult:
 
-    allowed_losses = (
+    allowed_losses = [
         nn.CrossEntropyLoss,
         nn.BCELoss,
         nn.BCEWithLogitsLoss,
+    ]
+
+    funcional_losses = [
         F.cross_entropy,
         F.binary_cross_entropy,
         F.binary_cross_entropy_with_logits,
-    )
+    ]
 
-    if model.loss not in allowed_losses:
-        raise ValueError(
-            "Current implementation of EK-FAC only supports classification with Cross Entropy Losses."
-        )
+    if not any(isinstance(model.loss, loss) for loss in allowed_losses):
+        if not model.loss in funcional_losses:
+            logger.warning(
+                f"EK-FAC inversion method supports only Cross Entropy Losses. Found {model.loss}"
+            )
+
+    if (
+        isinstance(model.loss, nn.BCEWithLogitsLoss)
+        or model.loss == F.binary_cross_entropy_with_logits
+    ):
+        if with_logits == False:
+            logger.warning(
+                f"Provided loss {model.loss} but the with_logits argument is set to False."
+            )
 
     if with_logits:
-        log_probs = lambda x: torch.log_softmax(model.model(x[0].to(model.device)))
-        output_dim = model.model[-1].out_features
+        probs = lambda x: torch.softmax(model.model(x[0].to(model.device)))
     else:
-        log_probs = lambda x: torch.log(model.model(x[0].to(model.device)))
-        output_dim = model.model[-2].out_features
+        probs = lambda x: model.model(x[0].to(model.device))
 
     def function(*d):
-        log_probs_ = log_probs(d)
-        probs = torch.exp(log_probs_).detach()
-        return log_probs_ * probs**0.5
+        probs_ = probs(d)
+        log_probs_ = torch.log(probs_)
+        log_probs_ = torch.where(
+            torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
+        )
+        return torch.mean(log_probs_ * probs_.detach() ** 0.5, axis=1)
+
+    active_layers = LayerCollection()
+    for name, module in model.model.named_modules():
+        if name == "":
+            continue
+        layer_requires_grad = [param.requires_grad for param in module.parameters()]
+        if any(layer_requires_grad):
+            if not (isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d)):
+                raise ValueError(
+                    f"EK-FAC inversion method supports only Linear and Conv2d layers. "
+                    f"Module {name} has parameters requiring gradients."
+                )
+            else:
+                active_layers.add_layer(
+                    "%s.%s" % (name, str(module)),
+                    LayerCollection._module_to_layer(module),
+                )
 
     hessian_repr = FIM(
         model.model,
         training_data,
         representation=PMatEKFAC,
-        n_output=output_dim,
+        n_output=1,
         function=function,
-        # FIXME: this is a bit awkward. Maybe open issue in nngeometry
+        # FIXME: this is a bit awkward: in order to pass the correct function,
+        # we need to set this to "regression", even though we are doing classification.
+        # Maybe open issue in nngeometry
         variant="regression",
+        layer_collection=active_layers,
     )
 
     if update_diag:
