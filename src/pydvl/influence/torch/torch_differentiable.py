@@ -20,6 +20,10 @@ from typing import Callable, Generator, List, Optional, Sequence, Tuple, Union
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+from nngeometry.layercollection import LayerCollection
+from nngeometry.metrics import FIM
+from nngeometry.object import PMatEKFAC
 from numpy.typing import NDArray
 from scipy.sparse.linalg import ArpackNoConvergence
 from torch import autograd
@@ -747,6 +751,103 @@ def solve_lissa(
         "mean_perc_residual": mean_residual * 100,
     }
     return InverseHvpResult(x=h_estimate / scale, info=info)
+
+
+@InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Ekfac)
+def solve_ekfac(
+    model: TorchTwiceDifferentiable,
+    training_data: DataLoader,
+    b: torch.Tensor,
+    hessian_perturbation: float = 0.0,
+    update_diag: bool = True,
+    with_logits: bool = False,
+) -> InverseHvpResult:
+
+    allowed_losses = [
+        nn.CrossEntropyLoss,
+        nn.BCELoss,
+        nn.BCEWithLogitsLoss,
+    ]
+
+    funcional_losses = [
+        F.cross_entropy,
+        F.binary_cross_entropy,
+        F.binary_cross_entropy_with_logits,
+    ]
+
+    if not any(isinstance(model.loss, loss) for loss in allowed_losses):
+        if not model.loss in funcional_losses:
+            logger.warning(
+                f"EK-FAC inversion method supports only Cross Entropy Losses. Found {model.loss}"
+            )
+
+    if (
+        isinstance(model.loss, nn.BCEWithLogitsLoss)
+        or model.loss == F.binary_cross_entropy_with_logits
+    ):
+        if with_logits == False:
+            logger.warning(
+                f"Provided loss {model.loss} but the with_logits argument is set to False."
+            )
+
+    if with_logits:
+        probs = lambda x: torch.softmax(model.model(x[0].to(model.device)))
+    else:
+        probs = lambda x: model.model(x[0].to(model.device))
+
+    def function(*d):
+        probs_ = probs(d)
+        log_probs_ = torch.log(probs_)
+        log_probs_ = torch.where(
+            torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
+        )
+        return torch.mean(log_probs_ * probs_.detach() ** 0.5, axis=1)
+
+    active_layers = LayerCollection()
+    for name, module in model.model.named_modules():
+        if name == "":
+            continue
+        layer_requires_grad = [param.requires_grad for param in module.parameters()]
+        if any(layer_requires_grad):
+            if not (isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d)):
+                raise ValueError(
+                    f"EK-FAC inversion method supports only Linear and Conv2d layers. "
+                    f"Module {name} has parameters requiring gradients."
+                )
+            else:
+                active_layers.add_layer(
+                    "%s.%s" % (name, str(module)),
+                    LayerCollection._module_to_layer(module),
+                )
+
+    hessian_repr = FIM(
+        model.model,
+        training_data,
+        representation=PMatEKFAC,
+        n_output=1,
+        function=function,
+        # FIXME: this is a bit awkward: in order to pass the correct function,
+        # we need to set this to "regression", even though we are doing classification.
+        # Maybe open issue in nngeometry
+        variant="regression",
+        layer_collection=active_layers,
+    )
+
+    if update_diag:
+        hessian_repr.update_diag(training_data)
+    hessian = hessian_repr.get_dense_tensor()
+    matrix = hessian + hessian_perturbation * torch.eye(
+        model.num_params, device=model.device
+    )
+    info = {"hessian": hessian}
+    try:
+        x = torch.linalg.solve(matrix, b.T).T
+    except torch.linalg.LinAlgError as e:
+        raise RuntimeError(
+            f"Direct inversion failed, possibly due to the Hessian being singular. "
+            f"Consider increasing the parameter 'hessian_perturbation' (currently: {hessian_perturbation}). \n{e}"
+        )
+    return InverseHvpResult(x=x, info=info)
 
 
 @InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Arnoldi)
