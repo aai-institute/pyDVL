@@ -16,17 +16,10 @@ influence of a training point on the model.
 import logging
 from dataclasses import dataclass
 from functools import partial
-from math import log
-from multiprocessing import reduction
-from turtle import update
-from typing import Callable, Generator, List, Optional, Sequence, Tuple
+from typing import Callable, Generator, List, Optional, Sequence, Tuple, Union
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from nngeometry.layercollection import LayerCollection
-from nngeometry.metrics import FIM
-from nngeometry.object import PMatEKFAC
 from numpy.typing import NDArray
 from scipy.sparse.linalg import ArpackNoConvergence
 from torch import autograd
@@ -49,7 +42,6 @@ __all__ = [
     "solve_batch_cg",
     "solve_lissa",
     "solve_arnoldi",
-    "solve_ekfac",
     "lanzcos_low_rank_hessian_approx",
     "model_hessian_low_rank",
 ]
@@ -163,13 +155,13 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
         params = flatten_tensors_to_vector(
             p.detach() for p in self.model.parameters() if p.requires_grad
         )
-        return torch.func.hessian(model_func)(params)
+        return torch.func.hessian(model_func)(params)  # type: ignore
 
     @staticmethod
     def mvp(
         grad_xy: torch.Tensor,
         v: torch.Tensor,
-        backprop_on: torch.Tensor,
+        backprop_on: Union[torch.Tensor, Sequence[torch.Tensor]],
         *,
         progress: bool = False,
     ) -> torch.Tensor:
@@ -254,7 +246,7 @@ def lanzcos_low_rank_hessian_approx(
     max_iter: Optional[int] = None,
     device: Optional[torch.device] = None,
     eigen_computation_on_gpu: bool = False,
-    torch_dtype: torch.dtype = None,
+    torch_dtype: Optional[torch.dtype] = None,
 ) -> LowRankProductRepresentation:
     r"""
     Calculates a low-rank approximation of the Hessian matrix of a scalar-valued
@@ -315,7 +307,7 @@ def lanzcos_low_rank_hessian_approx(
                 "Without setting an explicit device, cupy is not supported"
             )
 
-        def to_torch_conversion_function(x):
+        def to_torch_conversion_function(x: cp.NDArray) -> torch.Tensor:
             return from_dlpack(x.toDlpack()).to(torch_dtype)
 
         def mv(x):
@@ -440,12 +432,12 @@ class TorchTensorUtilities(TensorUtilities[torch.Tensor, TorchTwiceDifferentiabl
     @staticmethod
     def cat(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
         """Concatenates a sequence of tensors into a single torch tensor"""
-        return torch.cat(a, **kwargs)
+        return torch.cat(a, **kwargs)  # type: ignore
 
     @staticmethod
     def stack(a: Sequence[torch.Tensor], **kwargs) -> torch.Tensor:
         """Stacks a sequence of tensors into a single torch tensor"""
-        return torch.stack(a, **kwargs)
+        return torch.stack(a, **kwargs)  # type: ignore
 
     @staticmethod
     def unsqueeze(x: torch.Tensor, dim: int) -> torch.Tensor:
@@ -580,19 +572,26 @@ def solve_batch_cg(
             and a dictionary containing information about the convergence of CG,
             one entry for each line of the matrix.
     """
+    if len(training_data) == 0:
+        raise ValueError("Training dataloader must not be empty.")
 
-    total_grad_xy = 0
+    total_grad_xy = torch.empty(0)
     total_points = 0
+
     for x, y in maybe_progress(training_data, progress, desc="Batch Train Gradients"):
         grad_xy = model.grad(x, y, create_graph=True)
+        if total_grad_xy.nelement() == 0:
+            total_grad_xy = torch.zeros_like(grad_xy)
         total_grad_xy += grad_xy * len(x)
         total_points += len(x)
+
     backprop_on = model.parameters
     reg_hvp = lambda v: model.mvp(
         total_grad_xy / total_points, v, backprop_on
     ) + hessian_perturbation * v.type(torch.float64)
     batch_cg = torch.zeros_like(b)
     info = {}
+
     for idx, bi in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
         batch_result, batch_info = solve_cg(
             reg_hvp, bi, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter
@@ -748,103 +747,6 @@ def solve_lissa(
         "mean_perc_residual": mean_residual * 100,
     }
     return InverseHvpResult(x=h_estimate / scale, info=info)
-
-
-@InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Ekfac)
-def solve_ekfac(
-    model: TorchTwiceDifferentiable,
-    training_data: DataLoader,
-    b: torch.Tensor,
-    hessian_perturbation: float = 0.0,
-    update_diag: bool = True,
-    with_logits: bool = False,
-) -> InverseHvpResult:
-
-    allowed_losses = [
-        nn.CrossEntropyLoss,
-        nn.BCELoss,
-        nn.BCEWithLogitsLoss,
-    ]
-
-    funcional_losses = [
-        F.cross_entropy,
-        F.binary_cross_entropy,
-        F.binary_cross_entropy_with_logits,
-    ]
-
-    if not any(isinstance(model.loss, loss) for loss in allowed_losses):
-        if not model.loss in funcional_losses:
-            logger.warning(
-                f"EK-FAC inversion method supports only Cross Entropy Losses. Found {model.loss}"
-            )
-
-    if (
-        isinstance(model.loss, nn.BCEWithLogitsLoss)
-        or model.loss == F.binary_cross_entropy_with_logits
-    ):
-        if with_logits == False:
-            logger.warning(
-                f"Provided loss {model.loss} but the with_logits argument is set to False."
-            )
-
-    if with_logits:
-        probs = lambda x: torch.softmax(model.model(x[0].to(model.device)))
-    else:
-        probs = lambda x: model.model(x[0].to(model.device))
-
-    def function(*d):
-        probs_ = probs(d)
-        log_probs_ = torch.log(probs_)
-        log_probs_ = torch.where(
-            torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
-        )
-        return torch.mean(log_probs_ * probs_.detach() ** 0.5, axis=1)
-
-    active_layers = LayerCollection()
-    for name, module in model.model.named_modules():
-        if name == "":
-            continue
-        layer_requires_grad = [param.requires_grad for param in module.parameters()]
-        if any(layer_requires_grad):
-            if not (isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d)):
-                raise ValueError(
-                    f"EK-FAC inversion method supports only Linear and Conv2d layers. "
-                    f"Module {name} has parameters requiring gradients."
-                )
-            else:
-                active_layers.add_layer(
-                    "%s.%s" % (name, str(module)),
-                    LayerCollection._module_to_layer(module),
-                )
-
-    hessian_repr = FIM(
-        model.model,
-        training_data,
-        representation=PMatEKFAC,
-        n_output=1,
-        function=function,
-        # FIXME: this is a bit awkward: in order to pass the correct function,
-        # we need to set this to "regression", even though we are doing classification.
-        # Maybe open issue in nngeometry
-        variant="regression",
-        layer_collection=active_layers,
-    )
-
-    if update_diag:
-        hessian_repr.update_diag(training_data)
-    hessian = hessian_repr.get_dense_tensor()
-    matrix = hessian + hessian_perturbation * torch.eye(
-        model.num_params, device=model.device
-    )
-    info = {"hessian": hessian}
-    try:
-        x = torch.linalg.solve(matrix, b.T).T
-    except torch.linalg.LinAlgError as e:
-        raise RuntimeError(
-            f"Direct inversion failed, possibly due to the Hessian being singular. "
-            f"Consider increasing the parameter 'hessian_perturbation' (currently: {hessian_perturbation}). \n{e}"
-        )
-    return InverseHvpResult(x=x, info=info)
 
 
 @InversionRegistry.register(TorchTwiceDifferentiable, InversionMethod.Arnoldi)

@@ -1,16 +1,8 @@
-name: Run Tests
+name: Run Notebook Tests
 
 on:
   workflow_call:
     inputs:
-      split_size:
-        description: "Determines the number of groups into which the tests should be split"
-        type: string
-        default: 4
-      group_number:
-        description: "Determines which which group of tests to run. Can be 1, 2, ..., split_size"
-        type: string
-        required: true
       python_version:
         description: "Determines which Python version to use"
         type: string
@@ -37,12 +29,6 @@ jobs:
         path: .tox
     - name: Set up memcached
       uses: niden/actions-memcached@v7
-    - name: Test Group ${{ inputs.group_number }}
-      run: tox -e tests -- --slow-tests --splits ${{ inputs.split_size }} --group ${{ inputs.group_number }}
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage.xml
-        env_vars: OS,PYTHON
-        verbose: false
+    - name: Test Notebooks
+      run: tox -e notebook-tests
+      continue-on-error: true

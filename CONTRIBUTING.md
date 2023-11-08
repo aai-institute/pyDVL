@@ -92,28 +92,67 @@ It is possible to pass optional command line arguments to pytest, for example to
 run only certain tests using patterns (`-k`) or marker (`-m`).
 
 ```shell
-tox -e base -- <optional arguments>
+tox -e tests -- <optional arguments>
 ```
 
-Two important arguments are `--memcached-service` which allows to change the
-default of `localhost:11211` (memcached's default) to a different address, and
-`-n` which sets the number of parallel workers for pytest-xdist. There are two
-layers of parallelization in the tests. An inner one within the tests
-themselves, i.e. the parallelism in the algorithms, and an outer one by
-pytest-xdist. The latter is controlled by the `-n` argument. If you experience
-segmentation faults with the tests, try running them with `-n 0` to disable
-parallelization.
+There are a few important arguments:
 
-To test modules that rely on PyTorch, use:
+- `--memcached-service` allows to change the default of `localhost:11211` (memcached's default)
+  to a different address.
 
-```shell
-tox -e torch
-```
+  [Memcached](https://www.memcached.org/) is needed for testing
+  caching as well as speeding certain methods (e.g. Permutation Shapley).
+
+  To start memcached locally in the background with Docker use:
+
+  ```shell
+   run --name pydvl-memcache -p 11211:11211 -d memcached
+  ```
+
+- `-n` sets the number of parallel workers for 
+  [pytest-xdist](https://pytest-xdist.readthedocs.io/en/latest/).
+  
+  There are two layers of parallelization in the tests.
+  An inner one within the tests themselves, i.e. the parallelism in the algorithms,
+  and an outer one by pytest-xdist. The latter is controlled by the `-n` argument.
+  If you experience segmentation faults with the tests,
+  try running them with `-n 0` to disable parallelization.
+
+- `--slow-tests` enables running slow tests. See below for a description
+  of slow tests.
+
+### Markers
+
+We use a few different markers to differentiate between tests and runs
+groups of them of separately. Use `pytest --markers` to get a list and description
+of all available markers.
+
+Two important markers are:
+
+- `pytest.mark.slow` which is used to mark slow tests and skip them by default.
+
+  A slow test is any test that takes 45 seconds or more to run and that can be
+  skipped most of the time. In some cases a test is slow, but it is required
+  in order to ensure that a feature works as expected and that are no bugs.
+  In those cases, we should not use this marker.
+
+  Slow tests are always run on CI. Locally, they are skipped
+  by default but can be additionally run using: `pytest --slow-tests`.
+
+- `pytest.mark.torch` which is used to mark tests that require PyTorch.
+
+  To test modules that rely on PyTorch, use:
+
+  ```shell
+  tox -e tests -- -m "torch"
+  ```
+
+### Other Things
 
 To test the notebooks separately, run (see [below](#notebooks) for details):
 
 ```shell
-tox -e notebooks
+tox -e tests -- notebooks/
 ```
 
 To create a package locally, run:
@@ -301,6 +340,33 @@ sizeable amount of time, so care must be taken not to overdo it:
 1. All algorithm tests must be on very simple datasets and as quick as possible
 2. We try not to trigger CI pipelines when unnecessary (see [Skipping CI
 runs](#skipping-ci-runs)).
+3. We split the tests based on their duration into groups and run them in parallel.
+  
+   For that we use [pytest-split](https://jerry-git.github.io/pytest-split)
+   to first store the duration of all tests with `pytest --store-durations pytest --slow-tests`
+   in a `.test_durations` file.
+
+   > **Note** This does not have to be done each time a new test or test case
+   > is added. For new tests and test cases pytes-split assumes
+   > average test execution time(calculated based on the stored information)
+   > for every test which does not have duration information stored.
+   > Thus, there's no need to store durations after changing the test suite.
+   > However, when there are major changes in the suite compared
+   > to what's stored in .test_durations, it's recommended to update
+   > the duration information with `--store-durations` to ensure
+   > that the splitting is in balance.
+   
+   Then we can have as many splits as we want:
+
+   ```shell
+   pytest --splits 3 --group 1
+   pytest --splits 3 --group 2
+   pytest --splits 3 --group 3
+   ```
+   
+   Each one of these commands should be run in a separate shell/job
+   to run the test groups in parallel and decrease the total runtime.
+
 
 ### Running Github Actions locally
 
