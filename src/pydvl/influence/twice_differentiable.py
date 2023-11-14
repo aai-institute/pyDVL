@@ -285,6 +285,11 @@ class Influence(Generic[TensorType], ABC):
     def num_parameters(self):
         pass
 
+    @property
+    @abstractmethod
+    def info_is_empty(self) -> bool:
+        pass
+
     @abstractmethod
     def prepare_for_distributed(self) -> "Influence":
         pass

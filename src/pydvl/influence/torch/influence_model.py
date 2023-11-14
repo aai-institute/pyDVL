@@ -124,7 +124,7 @@ class DirectInfluence(TorchInfluence):
         hessian_regularization: float,
         hessian: torch.Tensor = None,
         train_dataloader: DataLoader = None,
-        return_hessian_in_info: bool = True,
+        return_hessian_in_info: bool = False,
     ):
         if hessian is None and train_dataloader is None:
             raise ValueError(
@@ -139,6 +139,10 @@ class DirectInfluence(TorchInfluence):
             if hessian is not None
             else get_hessian(model, loss, train_dataloader)
         )
+
+    @property
+    def info_is_empty(self) -> bool:
+        return not self.return_hessian_in_info
 
     def prepare_for_distributed(self) -> "Influence":
         if self.return_hessian_in_info:
@@ -193,6 +197,10 @@ class BatchCgInfluence(TorchInfluence):
         self.hessian_regularization = hessian_regularization
         self.train_dataloader = train_dataloader
 
+    @property
+    def info_is_empty(self) -> bool:
+        return False
+
     def prepare_for_distributed(self) -> "Influence":
         return self
 
@@ -243,6 +251,10 @@ class LissaInfluence(TorchInfluence):
         self.dampen = dampen
         self.train_dataloader = train_dataloader
 
+    @property
+    def info_is_empty(self):
+        return False
+
     def prepare_for_distributed(self) -> "Influence":
         return self
 
@@ -276,7 +288,7 @@ class ArnoldiInfluence(TorchInfluence):
         tol: float = 1e-6,
         max_iter: Optional[int] = None,
         eigen_computation_on_gpu: bool = False,
-        return_low_rank_representation_in_info: bool = True,
+        return_low_rank_representation_in_info: bool = False,
     ):
         if low_rank_representation is None and train_dataloader is None:
             raise ValueError(
@@ -297,11 +309,12 @@ class ArnoldiInfluence(TorchInfluence):
             )
 
         self.low_rank_representation = low_rank_representation
-        self.return_low_rank_representation_in_info = (
-            return_low_rank_representation_in_info
-        )
-
+        self.return_low_rank_representation_in_info = return_low_rank_representation_in_info
         super().__init__(model, loss)
+
+    @property
+    def info_is_empty(self) -> bool:
+        return not self.return_low_rank_representation_in_info
 
     def prepare_for_distributed(self) -> "Influence":
         if self.return_low_rank_representation_in_info:
@@ -345,6 +358,8 @@ class ArnoldiInfluence(TorchInfluence):
             rhs,
             low_rank_representation=self.low_rank_representation,
         )
+        if not self.return_low_rank_representation_in_info:
+            info = {}
         return InverseHvpResult(x, info)
 
     def to(self, device: torch.device):
@@ -365,6 +380,7 @@ def direct_factory(
         twice_differentiable.loss,
         train_dataloader=data_loader,
         hessian_regularization=hessian_regularization,
+        return_hessian_in_info=True,
         **kwargs,
     )
 
@@ -413,5 +429,6 @@ def arnoldi_factory(
         twice_differentiable.loss,
         train_dataloader=data_loader,
         hessian_regularization=hessian_regularization,
+        return_low_rank_representation_in_info=True,
         **kwargs,
     )

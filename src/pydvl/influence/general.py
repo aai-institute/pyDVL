@@ -292,15 +292,21 @@ class DaskInfluence(Influence[da.Array]):
         influence_model: Influence,
         to_numpy: Callable[[Any], np.ndarray],
         from_numpy: Callable[[np.ndarray], Any],
+        return_block_info: bool = False,
     ):
         self.from_numpy = from_numpy
         self.to_numpy = to_numpy
         self._num_parameters = influence_model.num_parameters
         self.influence_model = influence_model.prepare_for_distributed()
+        self.return_block_info = return_block_info
 
         client = self._get_client()
         if client is not None:
             self.influence_model = client.scatter(influence_model, broadcast=True)
+
+    @property
+    def info_is_empty(self) -> bool:
+        return self.influence_model.info_is_empty or not self.return_block_info
 
     @property
     def num_parameters(self):
@@ -356,13 +362,14 @@ class DaskInfluence(Influence[da.Array]):
                 chunks=(chunk_size, self.num_parameters),
             )
 
-        return da.concatenate(
+        fac = da.concatenate(
             [
                 block_func(x[start:stop], y[start:stop])
                 for (start, stop) in self._get_chunk_indices(x.chunks[0])
             ],
             axis=0,
         )
+        return InverseHvpResult(fac, {})
 
     def up_weighting(
         self, z_test_factors: da.Array, x: da.Array, y: da.Array
