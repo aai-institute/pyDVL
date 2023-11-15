@@ -9,6 +9,7 @@ models, as introduced in (Koh and Liang, 2017)[^1].
     In: Proceedings of the 34th International Conference on Machine Learning, pp. 1885–1894. PMLR.
 """
 import logging
+from collections import OrderedDict
 from copy import deepcopy
 from itertools import groupby
 from typing import Any, Callable, Dict, Generator, Optional, Tuple, Type, Union
@@ -90,7 +91,7 @@ def compute_influence_factors(
 
     def factors_gen() -> Generator[TensorType, None, None]:
         for x_test, y_test in maybe_progress(
-                test_data, progress, desc="Batch test factors"
+            test_data, progress, desc="Batch test factors"
         ):
             yield influence.factors(x_test, y_test)
 
@@ -286,16 +287,29 @@ def compute_influences(
     if test_data is None:
         test_data = deepcopy(training_data)
 
-    factors = compute_influence_factors(differentiable_model, training_data, test_data, inversion_method, hessian_perturbation=hessian_regularization, **kwargs)
+    factors = compute_influence_factors(
+        differentiable_model,
+        training_data,
+        test_data,
+        inversion_method,
+        hessian_perturbation=hessian_regularization,
+        **kwargs,
+    )
 
     influence = InfluenceRegistry.get(  # type:ignore
         type(differentiable_model), inversion_method
     )(differentiable_model, training_data, hessian_regularization, **kwargs)
 
-    influence_function = influence.up_weighting if influence_type is InfluenceType.Up else influence.perturbation
+    influence_function = (
+        influence.up_weighting
+        if influence_type is InfluenceType.Up
+        else influence.perturbation
+    )
 
     def values_gen() -> Generator[TensorType, None, None]:
-        for x, y in maybe_progress(input_data, progress, desc="Batch input influence values"):
+        for x, y in maybe_progress(
+            input_data, progress, desc="Batch input influence values"
+        ):
             yield influence_function(factors.x, x, y)
 
     tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
@@ -349,14 +363,21 @@ class DaskInfluence(Influence[da.Array]):
             )
 
     @staticmethod
-    def _get_chunk_indices(chunk_sizes: Tuple[int, ...]) -> Tuple[Tuple[int, int], ...]:
+    def _get_chunk_indices(
+        chunk_sizes: Tuple[int, ...], aggregate_same_chunk_size: bool = False
+    ) -> Tuple[Tuple[int, int], ...]:
         indices = []
         start = 0
 
-        for value, group in groupby(chunk_sizes):
-            length = sum(group)
-            indices.append((start, start + length))
-            start += length
+        if aggregate_same_chunk_size:
+            for value, group in groupby(chunk_sizes):
+                length = sum(group)
+                indices.append((start, start + length))
+                start += length
+        else:
+            for value in chunk_sizes:
+                indices.append((start, start + value))
+                start += value
 
         return tuple(indices)
 
@@ -369,7 +390,44 @@ class DaskInfluence(Influence[da.Array]):
         if self.info_is_empty:
             return InverseHvpResult(self._factors_without_info(x, y), {})
 
-    def _factors_without_info(self, x: da.Array, y: da.Array) -> da.Array:
+        def factors(inf_model, x_chunk: NDArray, y_chunk: NDArray) -> InverseHvpResult:
+            return inf_model.factors(self.from_numpy(x_chunk), self.from_numpy(y_chunk))
+
+        influence_model_future = (
+            dask.delayed(self.influence_model)
+            if isinstance(self.influence_model, Influence)
+            else self.influence_model
+        )
+
+        x_delayed = [t[0] for t in x.to_delayed()]
+        y_delayed = [t[0] for t in y.to_delayed()]
+
+        inverse_hvp_results_dict = OrderedDict(
+            (
+                (start, stop),
+                dask.delayed(factors)(influence_model_future, x_chunk, y_chunk),
+            )
+            for (start, stop), x_chunk, y_chunk in zip(
+                self._get_chunk_indices(x.chunks[0]), x_delayed, y_delayed
+            )
+        )
+        result_array = da.concatenate(
+            [
+                da.from_delayed(
+                    dask.delayed(lambda result: self.to_numpy(result.x))(i_hvp_result),
+                    dtype=x.dtype,
+                    shape=(stop - start, self.num_parameters),
+                )
+                for (start, stop), i_hvp_result in inverse_hvp_results_dict.items()
+            ]
+        )
+        result_info_dict = {
+            (start, stop): dask.delayed(lambda result: result.info)(i_hvp_result)
+            for (start, stop), i_hvp_result in inverse_hvp_results_dict.items()
+        }
+        return InverseHvpResult(result_array, result_info_dict)
+
+    def _factors_without_info(self, x: da.Array, y: da.Array):
         def func(x_numpy: NDArray, y_numpy: NDArray, model: Influence):
             factors, _ = model.factors(
                 self.from_numpy(x_numpy), self.from_numpy(y_numpy)
@@ -390,7 +448,9 @@ class DaskInfluence(Influence[da.Array]):
         return da.concatenate(
             [
                 block_func(x[start:stop], y[start:stop])
-                for (start, stop) in self._get_chunk_indices(x.chunks[0])
+                for (start, stop) in self._get_chunk_indices(
+                    x.chunks[0], aggregate_same_chunk_size=True
+                )
             ],
             axis=0,
         )
