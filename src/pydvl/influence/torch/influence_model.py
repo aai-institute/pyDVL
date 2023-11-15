@@ -309,7 +309,9 @@ class ArnoldiInfluence(TorchInfluence):
             )
 
         self.low_rank_representation = low_rank_representation
-        self.return_low_rank_representation_in_info = return_low_rank_representation_in_info
+        self.return_low_rank_representation_in_info = (
+            return_low_rank_representation_in_info
+        )
         super().__init__(model, loss)
 
     @property

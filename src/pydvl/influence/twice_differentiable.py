@@ -313,7 +313,7 @@ class Influence(Generic[TensorType], ABC):
         pass
 
     @abstractmethod
-    def factors(self, x: TensorType, y: TensorType) -> InverseHvpResult:
+    def factors(self, x: TensorType, y: TensorType) -> InverseHvpResult[TensorType]:
         pass
 
     @abstractmethod

@@ -299,14 +299,14 @@ class DaskInfluence(Influence[da.Array]):
         self._num_parameters = influence_model.num_parameters
         self.influence_model = influence_model.prepare_for_distributed()
         self.return_block_info = return_block_info
-
+        self._info_is_empty = influence_model.info_is_empty or not return_block_info
         client = self._get_client()
         if client is not None:
             self.influence_model = client.scatter(influence_model, broadcast=True)
 
     @property
     def info_is_empty(self) -> bool:
-        return self.influence_model.info_is_empty or not self.return_block_info
+        return self._info_is_empty
 
     @property
     def num_parameters(self):
@@ -345,6 +345,10 @@ class DaskInfluence(Influence[da.Array]):
         self._validate_un_chunked(x)
         self._validate_un_chunked(y)
 
+        if self.info_is_empty:
+            return InverseHvpResult(self._factors_without_info(x, y), {})
+
+    def _factors_without_info(self, x: da.Array, y: da.Array) -> da.Array:
         def func(x_numpy: NDArray, y_numpy: NDArray, model: Influence):
             factors, _ = model.factors(
                 self.from_numpy(x_numpy), self.from_numpy(y_numpy)
@@ -362,14 +366,13 @@ class DaskInfluence(Influence[da.Array]):
                 chunks=(chunk_size, self.num_parameters),
             )
 
-        fac = da.concatenate(
+        return da.concatenate(
             [
                 block_func(x[start:stop], y[start:stop])
                 for (start, stop) in self._get_chunk_indices(x.chunks[0])
             ],
             axis=0,
         )
-        return InverseHvpResult(fac, {})
 
     def up_weighting(
         self, z_test_factors: da.Array, x: da.Array, y: da.Array
