@@ -80,6 +80,8 @@ def compute_influence_factors(
     tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
         model
     )
+    cat_gen = tensor_util.cat_gen
+    cat = tensor_util.cat
 
     influence = InfluenceRegistry.get(  # type:ignore
         type(model), inversion_method
@@ -87,7 +89,25 @@ def compute_influence_factors(
         model, training_data, hessian_perturbation, **kwargs
     )
 
-    return influence.factors(*tensor_util.data_loader_to_tensor_tuple(test_data))
+    def factors_gen() -> Generator[TensorType, None, None]:
+        for x_test, y_test in maybe_progress(
+                test_data, progress, desc="Batch Test Gradients"
+        ):
+            yield influence.factors(x_test, y_test)
+
+    try:
+        # in case input_data is a torch DataLoader created from a Dataset,
+        # we can pre-allocate the result tensor to reduce memory consumption
+        resulting_shape = (len(test_data.dataset), model.num_params)  # type:ignore
+        factors = cat_gen(factors_gen(), resulting_shape, model)  # type:ignore
+    except Exception as e:
+        logger.warning(
+            f"Failed to pre-allocate result tensor: {e}\n"
+            f"Evaluate all resulting tensor and concatenate"
+        )
+        factors = cat(list(factors_gen()))
+
+    return factors
 
 
 def compute_influences_up(
