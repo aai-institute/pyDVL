@@ -80,7 +80,6 @@ def compute_influence_factors(
     tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
         model
     )
-    cat_gen = tensor_util.cat_gen
     cat = tensor_util.cat
 
     influence = InfluenceRegistry.get(  # type:ignore
@@ -91,23 +90,19 @@ def compute_influence_factors(
 
     def factors_gen() -> Generator[TensorType, None, None]:
         for x_test, y_test in maybe_progress(
-                test_data, progress, desc="Batch Test Gradients"
+                test_data, progress, desc="Batch test factors"
         ):
             yield influence.factors(x_test, y_test)
 
-    try:
-        # in case input_data is a torch DataLoader created from a Dataset,
-        # we can pre-allocate the result tensor to reduce memory consumption
-        resulting_shape = (len(test_data.dataset), model.num_params)  # type:ignore
-        factors = cat_gen(factors_gen(), resulting_shape, model)  # type:ignore
-    except Exception as e:
-        logger.warning(
-            f"Failed to pre-allocate result tensor: {e}\n"
-            f"Evaluate all resulting tensor and concatenate"
-        )
-        factors = cat(list(factors_gen()))
+    info_dict = {}
+    tensor_list = []
+    for k, factors in enumerate(factors_gen()):
+        info_dict[k] = factors.info
+        tensor_list.append(factors.x)
 
-    return factors
+    values = cat(tensor_list)
+
+    return InverseHvpResult(values, info_dict)
 
 
 def compute_influences_up(
@@ -291,19 +286,25 @@ def compute_influences(
     if test_data is None:
         test_data = deepcopy(training_data)
 
-    tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
-        differentiable_model
-    )
-    data_loader_to_tensor_tuple = tensor_util.data_loader_to_tensor_tuple
-
-    input_data_tup = data_loader_to_tensor_tuple(input_data)
-    test_data_tup = data_loader_to_tensor_tuple(test_data)
+    factors = compute_influence_factors(differentiable_model, training_data, test_data, inversion_method, hessian_perturbation=hessian_regularization, **kwargs)
 
     influence = InfluenceRegistry.get(  # type:ignore
         type(differentiable_model), inversion_method
     )(differentiable_model, training_data, hessian_regularization, **kwargs)
 
-    return influence.values(*test_data_tup, *input_data_tup, influence_type)
+    influence_function = influence.up_weighting if influence_type is InfluenceType.Up else influence.perturbation
+
+    def values_gen() -> Generator[TensorType, None, None]:
+        for x, y in maybe_progress(input_data, progress, desc="Batch input influence values"):
+            yield influence_function(factors.x, x, y)
+
+    tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
+        differentiable_model
+    )
+    cat = tensor_util.cat
+    values = cat(list(values_gen()), dim=1)
+
+    return InverseHvpResult(values, factors.info)
 
 
 class DaskInfluence(Influence[da.Array]):
