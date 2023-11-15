@@ -760,43 +760,10 @@ def solve_ekfac(
     b: torch.Tensor,
     hessian_perturbation: float = 0.0,
     update_diag: bool = True,
-    with_logits: bool = False,
+    return_hessian: bool = False,
 ) -> InverseHvpResult:
-
-    allowed_losses = [
-        nn.CrossEntropyLoss,
-        nn.BCELoss,
-        nn.BCEWithLogitsLoss,
-    ]
-
-    funcional_losses = [
-        F.cross_entropy,
-        F.binary_cross_entropy,
-        F.binary_cross_entropy_with_logits,
-    ]
-
-    if not any(isinstance(model.loss, loss) for loss in allowed_losses):
-        if not model.loss in funcional_losses:
-            logger.warning(
-                f"EK-FAC inversion method supports only Cross Entropy Losses. Found {model.loss}"
-            )
-
-    if (
-        isinstance(model.loss, nn.BCEWithLogitsLoss)
-        or model.loss == F.binary_cross_entropy_with_logits
-    ):
-        if with_logits == False:
-            logger.warning(
-                f"Provided loss {model.loss} but the with_logits argument is set to False."
-            )
-
-    if with_logits:
-        probs = lambda x: torch.softmax(model.model(x[0].to(model.device)))
-    else:
-        probs = lambda x: model.model(x[0].to(model.device))
-
-    def function(*d):
-        probs_ = probs(d)
+    def batch_loss_fn(*d):
+        probs_ = torch.softmax(model.model(d[0].to(model.device)), dim=1)
         log_probs_ = torch.log(probs_)
         log_probs_ = torch.where(
             torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
@@ -804,8 +771,9 @@ def solve_ekfac(
         return torch.mean(log_probs_ * probs_.detach() ** 0.5, axis=1)
 
     active_layers = LayerCollection()
+    skip_modules = ["", "layers"]
     for name, module in model.model.named_modules():
-        if name == "":
+        if name in skip_modules:
             continue
         layer_requires_grad = [param.requires_grad for param in module.parameters()]
         if any(layer_requires_grad):
@@ -820,13 +788,13 @@ def solve_ekfac(
                     LayerCollection._module_to_layer(module),
                 )
 
-    hessian_repr = FIM(
+    hessian_repr: PMatEKFAC = FIM(
         model.model,
         training_data,
         representation=PMatEKFAC,
         n_output=1,
-        function=function,
-        # FIXME: this is a bit awkward: in order to pass the correct function,
+        function=batch_loss_fn,
+        # HACK: in order to pass the correct function,
         # we need to set this to "regression", even though we are doing classification.
         # Maybe open issue in nngeometry
         variant="regression",
@@ -835,18 +803,43 @@ def solve_ekfac(
 
     if update_diag:
         hessian_repr.update_diag(training_data)
-    hessian = hessian_repr.get_dense_tensor()
-    matrix = hessian + hessian_perturbation * torch.eye(
-        model.num_params, device=model.device
-    )
-    info = {"hessian": hessian}
-    try:
-        x = torch.linalg.solve(matrix, b.T).T
-    except torch.linalg.LinAlgError as e:
-        raise RuntimeError(
-            f"Direct inversion failed, possibly due to the Hessian being singular. "
-            f"Consider increasing the parameter 'hessian_perturbation' (currently: {hessian_perturbation}). \n{e}"
+    if return_hessian:
+        hessian = hessian_repr.get_dense_tensor()
+        matrix = hessian + hessian_perturbation * torch.eye(
+            model.num_params, device=model.device
         )
+        info = {"hessian": hessian}
+        try:
+            x = torch.linalg.solve(matrix, b.T).T
+        except torch.linalg.LinAlgError as e:
+            raise RuntimeError(
+                f"Direct inversion failed, possibly due to the Hessian being singular. "
+                f"Consider increasing the parameter 'hessian_perturbation' (currently: {hessian_perturbation}). \n{e}"
+            )
+    else:
+        x = b.clone()
+        try:
+            inverse_hessian_repr = hessian_repr.inverse(regul=hessian_perturbation)
+        except Exception as e:
+            raise RuntimeError(
+                "Exception encountered, possibly due to the Hessian being singular. "
+                f"Consider increasing the parameter 'hessian_perturbation' (currently: {hessian_perturbation}). \n{e}"
+            )
+        _, diags = inverse_hessian_repr.data
+        kfe_layers = inverse_hessian_repr.get_KFE()
+        for (
+            layer_id,
+            _,
+        ) in inverse_hessian_repr.generator.layer_collection.layers.items():
+            diag = diags[layer_id]
+            start = inverse_hessian_repr.generator.layer_collection.p_pos[layer_id]
+            sAG = diag.numel()
+            kfe_layer = kfe_layers[layer_id]
+            layer_block = torch.mm(
+                kfe_layer, torch.mm(torch.diag(diag.view(-1)), kfe_layer.t())
+            ).to(model.device)
+            x[:, start : start + sAG] = b[:, start : start + sAG] @ layer_block
+        info = {"hessian_repr": hessian_repr}
     return InverseHvpResult(x=x, info=info)
 
 
