@@ -760,7 +760,7 @@ def solve_ekfac(
     b: torch.Tensor,
     hessian_perturbation: float = 0.0,
     update_diag: bool = True,
-    return_hessian: bool = False,
+    full_calculation: bool = True,
 ) -> InverseHvpResult:
     def batch_loss_fn(*d):
         probs_ = torch.softmax(model.model(d[0].to(model.device)), dim=1)
@@ -768,7 +768,7 @@ def solve_ekfac(
         log_probs_ = torch.where(
             torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
         )
-        return torch.mean(log_probs_ * probs_.detach() ** 0.5, axis=1)
+        return torch.sum(log_probs_ * probs_.detach() ** 0.5, axis=1)
 
     active_layers = LayerCollection()
     skip_modules = ["", "layers"]
@@ -803,21 +803,8 @@ def solve_ekfac(
 
     if update_diag:
         hessian_repr.update_diag(training_data)
-    if return_hessian:
-        hessian = hessian_repr.get_dense_tensor()
-        matrix = hessian + hessian_perturbation * torch.eye(
-            model.num_params, device=model.device
-        )
-        info = {"hessian": hessian}
-        try:
-            x = torch.linalg.solve(matrix, b.T).T
-        except torch.linalg.LinAlgError as e:
-            raise RuntimeError(
-                f"Direct inversion failed, possibly due to the Hessian being singular. "
-                f"Consider increasing the parameter 'hessian_perturbation' (currently: {hessian_perturbation}). \n{e}"
-            )
-    else:
-        x = b.clone()
+    x = b.clone()
+    if full_calculation:
         try:
             inverse_hessian_repr = hessian_repr.inverse(regul=hessian_perturbation)
         except Exception as e:
@@ -827,10 +814,7 @@ def solve_ekfac(
             )
         _, diags = inverse_hessian_repr.data
         kfe_layers = inverse_hessian_repr.get_KFE()
-        for (
-            layer_id,
-            _,
-        ) in inverse_hessian_repr.generator.layer_collection.layers.items():
+        for layer_id in inverse_hessian_repr.generator.layer_collection.layers.keys():
             diag = diags[layer_id]
             start = inverse_hessian_repr.generator.layer_collection.p_pos[layer_id]
             sAG = diag.numel()
@@ -839,7 +823,7 @@ def solve_ekfac(
                 kfe_layer, torch.mm(torch.diag(diag.view(-1)), kfe_layer.t())
             ).to(model.device)
             x[:, start : start + sAG] = b[:, start : start + sAG] @ layer_block
-        info = {"hessian_repr": hessian_repr}
+    info = {"hessian_repr": hessian_repr}
     return InverseHvpResult(x=x, info=info)
 
 
