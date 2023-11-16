@@ -292,10 +292,13 @@ def get_hessian(
     }
     num_parameters = sum([p.numel() for p in params.values()])
     model_dtype = next((p.dtype for p in params.values()))
+
     flat_params = flatten_dimensions(params.values())
 
     if use_hessian_avg:
-        hessian = torch.zeros((num_parameters, num_parameters), dtype=model_dtype)
+        hessian = to_model_device(
+            torch.zeros((num_parameters, num_parameters), dtype=model_dtype), model
+        )
         blf = batch_loss_function(model, loss)
 
         def flat_input_batch_loss_function(
@@ -304,9 +307,8 @@ def get_hessian(
             return blf(align_with_model(p, model), t_x, t_y)
 
         for x, y in iter(data_loader):
-
             hessian += torch.func.hessian(flat_input_batch_loss_function)(
-                flat_params, x, y
+                flat_params, to_model_device(x, model), to_model_device(y, model)
             )
 
         hessian /= len(data_loader)

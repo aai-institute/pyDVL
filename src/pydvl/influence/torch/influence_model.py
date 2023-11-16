@@ -23,7 +23,7 @@ from .torch_differentiable import (
     solve_batch_cg,
     solve_lissa,
 )
-from .util import flatten_dimensions
+from .util import flatten_dimensions, to_model_device
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +170,9 @@ class DirectInfluence(TorchInfluence):
         self.model = self.model.to(device)
         self._model_device = device
         self._model_params = {
-            k: p.to(device) for k, p in self.model.named_parameters() if p.requires_grad
+            k: p.detach().to(device)
+            for k, p in self.model.named_parameters()
+            if p.requires_grad
         }
         return self
 
@@ -221,7 +223,9 @@ class BatchCgInfluence(TorchInfluence):
     def to(self, device: torch.device):
         self.model = self.model.to(device)
         self._model_params = {
-            k: p.to(device) for k, p in self.model.named_parameters() if p.requires_grad
+            k: p.detach().to(device)
+            for k, p in self.model.named_parameters()
+            if p.requires_grad
         }
         self._model_device = device
         return self
@@ -308,7 +312,7 @@ class ArnoldiInfluence(TorchInfluence):
                 eigen_computation_on_gpu=eigen_computation_on_gpu,
             )
 
-        self.low_rank_representation = low_rank_representation
+        self.low_rank_representation = to_model_device(low_rank_representation, model)
         self.return_low_rank_representation_in_info = (
             return_low_rank_representation_in_info
         )
