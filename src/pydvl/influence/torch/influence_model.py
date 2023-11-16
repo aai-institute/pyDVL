@@ -140,10 +140,6 @@ class DirectInfluence(TorchInfluence):
             else get_hessian(model, loss, train_dataloader)
         )
 
-    @property
-    def info_is_empty(self) -> bool:
-        return not self.return_hessian_in_info
-
     def prepare_for_distributed(self) -> "Influence":
         if self.return_hessian_in_info:
             self.return_hessian_in_info = False
@@ -199,10 +195,6 @@ class BatchCgInfluence(TorchInfluence):
         self.hessian_regularization = hessian_regularization
         self.train_dataloader = train_dataloader
 
-    @property
-    def info_is_empty(self) -> bool:
-        return False
-
     def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
         # TODO directly implement the method here and remove call to obsolete function
         x, info = solve_batch_cg(
@@ -251,10 +243,6 @@ class LissaInfluence(TorchInfluence):
         self.scale = scale
         self.dampen = dampen
         self.train_dataloader = train_dataloader
-
-    @property
-    def info_is_empty(self):
-        return False
 
     def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
         # TODO directly implement the method here and remove call to obsolete function
@@ -311,10 +299,6 @@ class ArnoldiInfluence(TorchInfluence):
             return_low_rank_representation_in_info
         )
         super().__init__(model, loss)
-
-    @property
-    def info_is_empty(self) -> bool:
-        return not self.return_low_rank_representation_in_info
 
     def prepare_for_distributed(self) -> "Influence":
         if self.return_low_rank_representation_in_info:

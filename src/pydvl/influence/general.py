@@ -327,21 +327,14 @@ class DaskInfluence(Influence[da.Array]):
         influence_model: Influence,
         to_numpy: Callable[[Any], np.ndarray],
         from_numpy: Callable[[np.ndarray], Any],
-        return_block_info: bool = False,
     ):
         self.from_numpy = from_numpy
         self.to_numpy = to_numpy
         self._num_parameters = influence_model.num_parameters
         self.influence_model = influence_model.prepare_for_distributed()
-        self.return_block_info = return_block_info
-        self._info_is_empty = influence_model.info_is_empty or not return_block_info
         client = self._get_client()
         if client is not None:
             self.influence_model = client.scatter(influence_model, broadcast=True)
-
-    @property
-    def info_is_empty(self) -> bool:
-        return self._info_is_empty
 
     @property
     def num_parameters(self):
@@ -383,11 +376,11 @@ class DaskInfluence(Influence[da.Array]):
         self._validate_aligned_chunking(x, y)
         self._validate_un_chunked(x)
         self._validate_un_chunked(y)
+        return InverseHvpResult(self._factors_without_info(x, y), {})
 
-        if self.info_is_empty:
-            return InverseHvpResult(self._factors_without_info(x, y), {})
+    def _factors_with_info(self, x: da.Array, y: da.Array) -> InverseHvpResult[da.Array]:
 
-        def factors(inf_model, x_chunk: NDArray, y_chunk: NDArray) -> InverseHvpResult:
+        def chunk_factors(inf_model, x_chunk: NDArray, y_chunk: NDArray) -> InverseHvpResult:
             return inf_model.factors(self.from_numpy(x_chunk), self.from_numpy(y_chunk))
 
         influence_model_future = (
@@ -402,7 +395,7 @@ class DaskInfluence(Influence[da.Array]):
         inverse_hvp_results_dict = OrderedDict(
             (
                 (start, stop),
-                dask.delayed(factors)(influence_model_future, x_chunk, y_chunk),
+                dask.delayed(chunk_factors)(influence_model_future, x_chunk, y_chunk),
             )
             for (start, stop), x_chunk, y_chunk in zip(
                 self._get_chunk_indices(x.chunks[0]), x_delayed, y_delayed

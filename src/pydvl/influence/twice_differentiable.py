@@ -287,8 +287,6 @@ class Influence(Generic[TensorType], ABC):
 
     @property
     @abstractmethod
-    def info_is_empty(self) -> bool:
-        pass
 
     def prepare_for_distributed(self) -> "Influence":
         """Overwrite this method, in case the instance has to be modified, before being distributed.
