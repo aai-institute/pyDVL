@@ -203,9 +203,6 @@ class BatchCgInfluence(TorchInfluence):
     def info_is_empty(self) -> bool:
         return False
 
-    def prepare_for_distributed(self) -> "Influence":
-        return self
-
     def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
         # TODO directly implement the method here and remove call to obsolete function
         x, info = solve_batch_cg(
@@ -258,9 +255,6 @@ class LissaInfluence(TorchInfluence):
     @property
     def info_is_empty(self):
         return False
-
-    def prepare_for_distributed(self) -> "Influence":
-        return self
 
     def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
         # TODO directly implement the method here and remove call to obsolete function

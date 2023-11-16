@@ -290,9 +290,11 @@ class Influence(Generic[TensorType], ABC):
     def info_is_empty(self) -> bool:
         pass
 
-    @abstractmethod
     def prepare_for_distributed(self) -> "Influence":
-        pass
+        """Overwrite this method, in case the instance has to be modified, before being distributed.
+        Must be called explicitly.
+        """
+        return self
 
     @abstractmethod
     def up_weighting(

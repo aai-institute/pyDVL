@@ -347,9 +347,6 @@ class DaskInfluence(Influence[da.Array]):
     def num_parameters(self):
         return self._num_parameters
 
-    def prepare_for_distributed(self) -> "DaskInfluence":
-        return self
-
     @staticmethod
     def _validate_un_chunked(x: da.Array):
         if any([len(c) > 1 for c in x.chunks[1:]]):
