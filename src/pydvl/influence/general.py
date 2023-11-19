@@ -378,45 +378,6 @@ class DaskInfluence(Influence[da.Array]):
         self._validate_un_chunked(y)
         return InverseHvpResult(self._factors_without_info(x, y), {})
 
-    def _factors_with_info(self, x: da.Array, y: da.Array) -> InverseHvpResult[da.Array]:
-
-        def chunk_factors(inf_model, x_chunk: NDArray, y_chunk: NDArray) -> InverseHvpResult:
-            return inf_model.factors(self.from_numpy(x_chunk), self.from_numpy(y_chunk))
-
-        influence_model_future = (
-            dask.delayed(self.influence_model)
-            if isinstance(self.influence_model, Influence)
-            else self.influence_model
-        )
-
-        x_delayed = [t[0] for t in x.to_delayed()]
-        y_delayed = [t[0] for t in y.to_delayed()]
-
-        inverse_hvp_results_dict = OrderedDict(
-            (
-                (start, stop),
-                dask.delayed(chunk_factors)(influence_model_future, x_chunk, y_chunk),
-            )
-            for (start, stop), x_chunk, y_chunk in zip(
-                self._get_chunk_indices(x.chunks[0]), x_delayed, y_delayed
-            )
-        )
-        result_array = da.concatenate(
-            [
-                da.from_delayed(
-                    dask.delayed(lambda result: self.to_numpy(result.x))(i_hvp_result),
-                    dtype=x.dtype,
-                    shape=(stop - start, self.num_parameters),
-                )
-                for (start, stop), i_hvp_result in inverse_hvp_results_dict.items()
-            ]
-        )
-        result_info_dict = {
-            (start, stop): dask.delayed(lambda result: result.info)(i_hvp_result)
-            for (start, stop), i_hvp_result in inverse_hvp_results_dict.items()
-        }
-        return InverseHvpResult(result_array, result_info_dict)
-
     def _factors_without_info(self, x: da.Array, y: da.Array):
         def func(x_numpy: NDArray, y_numpy: NDArray, model: Influence):
             factors, _ = model.factors(
