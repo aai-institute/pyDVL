@@ -335,8 +335,6 @@ def test_influence_linear_model(
         hessian_regularization=hessian_reg,
     )
 
-    train_data_loader = DataLoader(list(zip(*train_data)), batch_size=40, shuffle=True)
-    input_data = DataLoader(list(zip(*train_data)), batch_size=40)
     train_data_set = TensorDataset(*list(map(torch.from_numpy, train_data)))
     test_data_set = TensorDataset(*list(map(torch.from_numpy, test_data)))
     train_data_loader = DataLoader(train_data_set, batch_size=40, num_workers=0)
