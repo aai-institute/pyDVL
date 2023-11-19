@@ -1,12 +1,12 @@
 from itertools import groupby
-from typing import Callable, Any, Tuple, Optional
+from typing import Any, Callable, Optional, Tuple
 
 import distributed
 import numpy as np
 from dask import array as da
 from numpy.typing import NDArray
 
-from ..twice_differentiable import Influence, InverseHvpResult, InfluenceType
+from ..twice_differentiable import Influence, InfluenceType, InverseHvpResult
 
 __all__ = ["DaskInfluence"]
 

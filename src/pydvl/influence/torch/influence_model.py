@@ -13,6 +13,7 @@ from ..twice_differentiable import Influence, InfluenceType, InverseHvpResult
 from .functional import (
     get_batch_hvp,
     get_hessian,
+    get_hvp_function,
     matrix_jacobian_product,
     per_sample_gradient,
     per_sample_mixed_derivative,
@@ -21,9 +22,7 @@ from .torch_differentiable import (
     LowRankProductRepresentation,
     TorchTwiceDifferentiable,
     model_hessian_low_rank,
-    solve_arnoldi,
-    solve_batch_cg,
-    solve_lissa,
+    solve_cg,
 )
 from .util import flatten_dimensions
 
@@ -180,6 +179,16 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
 
 
 class DirectInfluence(TorchInfluence):
+    r"""
+    Given a model and training data, it finds x such that \(Hx = b\), with \(H\) being the model hessian.
+
+    Args:
+        model: A model wrapped in the TwiceDifferentiable interface.
+        train_dataloader: A DataLoader containing the training data.
+        b: A vector or matrix, the right hand side of the equation \(Hx = b\).
+        hessian_regularization: Regularization of the hessian.
+    """
+
     def __init__(
         self,
         model: nn.Module,
@@ -259,18 +268,28 @@ class BatchCgInfluence(TorchInfluence):
         self.train_dataloader = train_dataloader
 
     def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
-        # TODO directly implement the method here and remove call to obsolete function
-        x, info = solve_batch_cg(
-            TorchTwiceDifferentiable(self.model, self.loss),
-            self.train_dataloader,
-            rhs,
-            self.hessian_regularization,
-            x0=self.x0,
-            rtol=self.rtol,
-            atol=self.atol,
-            maxiter=self.maxiter,
-        )
-        return InverseHvpResult(x, info)
+        if len(self.train_dataloader) == 0:
+            raise ValueError("Training dataloader must not be empty.")
+
+        hvp = get_hvp_function(self.model, self.loss, self.train_dataloader)
+        reg_hvp = lambda v: hvp(v) + self.hessian_regularization * v.type(rhs.dtype)
+        batch_cg = torch.zeros_like(rhs)
+        info = {}
+
+        for idx, bi in enumerate(
+            maybe_progress(rhs, self.progress, desc="Conjugate gradient")
+        ):
+            batch_result, batch_info = solve_cg(
+                reg_hvp,
+                bi,
+                x0=self.x0,
+                rtol=self.rtol,
+                atol=self.atol,
+                maxiter=self.maxiter,
+            )
+            batch_cg[idx] = batch_result
+            info[f"batch_{idx}"] = batch_info
+        return InverseHvpResult(x=batch_cg, info=info)
 
     def to(self, device: torch.device):
         self.model = self.model.to(device)
@@ -391,6 +410,43 @@ class LissaInfluence(TorchInfluence):
 
 
 class ArnoldiInfluence(TorchInfluence):
+    r"""
+    Solves the linear system Hx = b, where H is the Hessian of the model's loss function and b is the given
+    right-hand side vector.
+    It employs the [implicitly restarted Arnoldi method](https://en.wikipedia.org/wiki/Arnoldi_iteration) for
+    computing a partial eigen decomposition, which is used fo the inversion i.e.
+
+    \[x = V D^{-1} V^T b\]
+
+    where \(D\) is a diagonal matrix with the top (in absolute value) `rank_estimate` eigenvalues of the Hessian
+    and \(V\) contains the corresponding eigenvectors.
+
+    Args:
+        model: A PyTorch model instance that is twice differentiable, wrapped into
+            [TorchTwiceDifferential][pydvl.influence.torch.torch_differentiable.TorchTwiceDifferentiable].
+            The Hessian will be calculated with respect to this model's parameters.
+        train_dataloader: A DataLoader instance that provides the model's training data.
+            Used in calculating the Hessian-vector products.
+        hessian_regularization: Optional regularization parameter added to the Hessian-vector
+            product for numerical stability.
+        rank_estimate: The number of eigenvalues and corresponding eigenvectors to compute.
+            Represents the desired rank of the Hessian approximation.
+        krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
+            Defaults to min(model's number of parameters, max(2 times rank_estimate + 1, 20)).
+        low_rank_representation: An instance of
+            [LowRankProductRepresentation][pydvl.influence.torch.torch_differentiable.LowRankProductRepresentation]
+            containing a previously computed low-rank representation of the Hessian. If provided, all other parameters
+            are ignored; otherwise, a new low-rank representation is computed
+            using provided parameters.
+        tol: The stopping criteria for the Lanczos algorithm.
+            Ignored if `low_rank_representation` is provided.
+        max_iter: The maximum number of iterations for the Lanczos method.
+            Ignored if `low_rank_representation` is provided.
+        eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation on the model's device
+            via a cupy implementation. Ensure the model size or rank_estimate is appropriate for device memory.
+            If False, the eigen pair approximation is executed on the CPU by the scipy wrapper to ARPACK.
+    """
+
     def __init__(
         self,
         model,
@@ -485,16 +541,30 @@ class ArnoldiInfluence(TorchInfluence):
         return InverseHvpResult(values, info)
 
     def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
-        # TODO directly implement the method here and remove call to obsolete function
-        x, info = solve_arnoldi(
-            TorchTwiceDifferentiable(self.model, self.loss),
-            None,
-            rhs,
-            low_rank_representation=self.low_rank_representation,
+        rhs_device = rhs.device if hasattr(rhs, "device") else torch.device("cpu")
+        if rhs_device.type != self.low_rank_representation.device.type:
+            raise RuntimeError(
+                f"The devices for 'b' and 'low_rank_representation' do not match.\n"
+                f" - 'b' is on device: {rhs_device}\n"
+                f" - 'low_rank_representation' is on device: {self.low_rank_representation.device}\n"
+                f"\nTo resolve this, consider moving 'low_rank_representation' to '{rhs_device}' by using:\n"
+                f"low_rank_representation = low_rank_representation.to(b.device)"
+            )
+
+        result = self.low_rank_representation.projections @ (
+            torch.diag_embed(1.0 / self.low_rank_representation.eigen_vals)
+            @ (self.low_rank_representation.projections.t() @ rhs.t())
         )
-        if not self.return_low_rank_representation_in_info:
+
+        if self.return_low_rank_representation_in_info:
+            info = {
+                "eigenvalues": self.low_rank_representation.eigen_vals,
+                "eigenvectors": self.low_rank_representation.projections,
+            }
+        else:
             info = {}
-        return InverseHvpResult(x, info)
+
+        return InverseHvpResult(x=result.t(), info=info)
 
     def to(self, device: torch.device):
         return ArnoldiInfluence(
