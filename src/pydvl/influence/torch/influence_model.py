@@ -469,7 +469,7 @@ class ArnoldiInfluence(TorchInfluence):
                 model,
                 loss,
                 train_dataloader,
-                hessian_perturbation=hessian_regularization,
+                hessian_perturbation=0.0,  # regularization is applied, when computing values
                 rank_estimate=rank_estimate,
                 krylov_dimension=krylov_dimension,
                 tol=tol,
@@ -482,6 +482,7 @@ class ArnoldiInfluence(TorchInfluence):
         self.return_low_rank_representation_in_info = (
             return_low_rank_representation_in_info
         )
+        self.hessian_regularization = hessian_regularization
 
     def prepare_for_distributed(self) -> "Influence":
         if self.return_low_rank_representation_in_info:
@@ -506,9 +507,14 @@ class ArnoldiInfluence(TorchInfluence):
                 self.model, self.loss, self.low_rank_representation.projections.T
             )
             left = mjp(self.model_params, x_test, y_test)
-            right = torch.diag_embed(
-                1.0 / self.low_rank_representation.eigen_vals
-            ) @ mjp(self.model_params, x, y)
+
+            regularized_eigenvalues = (
+                self.low_rank_representation.eigen_vals + self.hessian_regularization
+            )
+
+            right = torch.diag_embed(1.0 / regularized_eigenvalues) @ mjp(
+                self.model_params, x, y
+            )
             values = torch.einsum("ij, ik -> jk", left, right)
         else:
             factors, _ = self.factors(x_test, y_test)
@@ -549,8 +555,12 @@ class ArnoldiInfluence(TorchInfluence):
                 f"low_rank_representation = low_rank_representation.to(b.device)"
             )
 
+        regularized_eigenvalues = (
+            self.low_rank_representation.eigen_vals + self.hessian_regularization
+        )
+
         result = self.low_rank_representation.projections @ (
-            torch.diag_embed(1.0 / self.low_rank_representation.eigen_vals)
+            torch.diag_embed(1.0 / regularized_eigenvalues)
             @ (self.low_rank_representation.projections.t() @ rhs.t())
         )
 
