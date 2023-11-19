@@ -174,7 +174,7 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
         )
 
     @abstractmethod
-    def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
+    def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult[torch.Tensor]:
         pass
 
 
@@ -183,9 +183,8 @@ class DirectInfluence(TorchInfluence):
     Given a model and training data, it finds x such that \(Hx = b\), with \(H\) being the model hessian.
 
     Args:
-        model: A model wrapped in the TwiceDifferentiable interface.
+        model: instance of [torch.nn.Module][torch.nn.Module].
         train_dataloader: A DataLoader containing the training data.
-        b: A vector or matrix, the right hand side of the equation \(Hx = b\).
         hessian_regularization: Regularization of the hessian.
     """
 
@@ -422,8 +421,7 @@ class ArnoldiInfluence(TorchInfluence):
     and \(V\) contains the corresponding eigenvectors.
 
     Args:
-        model: A PyTorch model instance that is twice differentiable, wrapped into
-            [TorchTwiceDifferential][pydvl.influence.torch.torch_differentiable.TorchTwiceDifferentiable].
+        model: Instance of [torch.nn.Module][torch.nn.Module].
             The Hessian will be calculated with respect to this model's parameters.
         train_dataloader: A DataLoader instance that provides the model's training data.
             Used in calculating the Hessian-vector products.

@@ -304,7 +304,7 @@ class Influence(Generic[TensorType], ABC):
         x: TensorType,
         y: TensorType,
     ) -> TensorType:
-        """
+        r"""
         Overwrite this method to implement the computation of
         $$
         \langle z_test_factors, \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
@@ -327,7 +327,7 @@ class Influence(Generic[TensorType], ABC):
         x: TensorType,
         y: TensorType,
     ) -> TensorType:
-        """
+        r"""
         Overwrite this method to implement the computation of
         $$
         \langle z_test_factors, \nabla_x \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
@@ -345,7 +345,7 @@ class Influence(Generic[TensorType], ABC):
 
     @abstractmethod
     def factors(self, x: TensorType, y: TensorType) -> InverseHvpResult[TensorType]:
-        """
+        r"""
         Overwrite this method to implement the approximation of
         $$
         H^{-1}\nabla_{theta} \ell(y, f_{\theta}(x))
@@ -372,7 +372,7 @@ class Influence(Generic[TensorType], ABC):
         y: Optional[TensorType] = None,
         influence_type: InfluenceType = InfluenceType.Up,
     ) -> InverseHvpResult[TensorType]:
-        """
+        r"""
         Overwrite this method to implement the approximation of
         $$
         \langle H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test})), \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
