@@ -322,6 +322,18 @@ def compute_influences(
 
 
 class DaskInfluence(Influence[da.Array]):
+    """
+    Compute influences over dask.Array collections. Depends on a batch computation model
+    of type [Influence][pydvl.influence.twice_differentiable.Influence]. In addition, provide transformations
+    from and to numpy, corresponding to the tensor types of the batch computation model.
+    Args:
+        influence_model: instance of type [Influence][pydvl.influence.twice_differentiable.Influence], defines the
+            batch-wise computation model
+        to_numpy: transformation for turning the tensor type output of a batch computation into a numpy array
+        from_numpy: transformation for turning numpy arrays into the correct tensor type to apply the batch
+            computation model
+    """
+
     def __init__(
         self,
         influence_model: Influence,
@@ -338,6 +350,7 @@ class DaskInfluence(Influence[da.Array]):
 
     @property
     def num_parameters(self):
+        """Number of trainable parameters of the underlying model used in the batch computation"""
         return self._num_parameters
 
     @staticmethod
@@ -372,6 +385,23 @@ class DaskInfluence(Influence[da.Array]):
         return tuple(indices)
 
     def factors(self, x: da.Array, y: da.Array) -> InverseHvpResult[da.Array]:
+        """
+        Compute the expression
+        $$
+        H^{-1}\nabla_{theta} \ell(y, f_{\theta}(x))
+        $$
+        where the gradient are computed for the chunks of $(x, y)$.
+
+        Args:
+            x: model input to use in the gradient computations
+            y: label tensor to compute gradients
+
+        Returns:
+            Container object of type [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult] with a
+            tensor representing the element-wise inverse Hessian matrix vector products for the provided batch.
+            Retrieval of batch inversion information is not yet implemented.
+
+        """
 
         self._validate_aligned_chunking(x, y)
         self._validate_un_chunked(x)
@@ -409,6 +439,21 @@ class DaskInfluence(Influence[da.Array]):
     def up_weighting(
         self, z_test_factors: da.Array, x: da.Array, y: da.Array
     ) -> da.Array:
+        """
+        Computation of
+        $$
+        \langle z_test_factors, \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
+        $$
+        where the gradients are computed chunk-wise for the chunks of $(x, y)$.
+        Args:
+            z_test_factors: pre-computed array, approximating $H^{-1}\nabla_{\theta} \ell(y_{test}, f_{\theta}(x_{test}))$
+            x: model input to use in the gradient computations
+            y: label tensor to compute gradients
+
+        Returns:
+            [dask.array.Array][dask.array.Array] representing the element-wise scalar product of the provided batch
+
+        """
         self._validate_aligned_chunking(x, y)
         self._validate_un_chunked(x)
         self._validate_un_chunked(y)
@@ -441,6 +486,22 @@ class DaskInfluence(Influence[da.Array]):
     def perturbation(
         self, z_test_factors: da.Array, x: da.Array, y: da.Array
     ) -> da.Array:
+        """
+        Computation of
+        $$
+        \langle z_test_factors, \nabla_x \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
+        $$
+        where the gradients are computed chunk-wise for the chunks of $z_test_factors$  and $(x, y)$.
+        Args:
+            z_test_factors: pre-computed array, approximating $H^{-1}\nabla_{\theta} \ell(y_{test}, f_{\theta}(x_{test}))$
+            x: model input to use in the gradient computations
+            y: label tensor to compute gradients
+
+        Returns:
+            [dask.array.Array][dask.array.Array] representing the element-wise scalar product for the provided batch
+
+        """
+
         self._validate_aligned_chunking(x, y)
         self._validate_un_chunked(x)
         self._validate_un_chunked(y)
@@ -475,16 +536,49 @@ class DaskInfluence(Influence[da.Array]):
         self,
         x_test: da.Array,
         y_test: da.Array,
-        x: da.Array,
-        y: da.Array,
-        influence_type: InfluenceType,
+        x: Optional[da.Array] = None,
+        y: Optional[da.Array] = None,
+        influence_type: InfluenceType = InfluenceType.Up,
     ) -> InverseHvpResult:
-        self._validate_aligned_chunking(x, y)
+        """
+        Compute approximation of
+        $$
+        \langle H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test})), \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
+        $$
+        for the case of up-weighting influence, resp.
+        $$
+        \langle H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test})), \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
+        $$
+        for the perturbation type influence case. The computation is done block-wise for the chunks of the provided dask
+        arrays.
+
+        Args:
+            x_test: model input to use in the gradient computations of $H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test}))$
+            y_test: label tensor to compute gradients
+            x: optional model input to use in the gradient computations $\nabla_{theta}\ell(y, f_{\theta}(x))$, resp. $\nabla_{x}\nabla_{theta}\ell(y, f_{\theta}(x))$, if None,
+                use $x=x_{test}$
+            y: optional label tensor to compute gradients
+            influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
+
+        Returns:
+            Container object of type [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult] with a
+            [dask.array.Array][dask.array.Array] representing the element-wise scalar products for the provided batch.
+            Retrieval of batch inversion information is not yet implemented.
+
+        """
+
         self._validate_aligned_chunking(x_test, y_test)
-        self._validate_un_chunked(x)
-        self._validate_un_chunked(y)
         self._validate_un_chunked(x_test)
         self._validate_un_chunked(y_test)
+
+        if (x is None) != (y is None):
+            raise ValueError()  # ToDO error message
+        elif x is not None:
+            self._validate_aligned_chunking(x, y)
+            self._validate_un_chunked(x)
+            self._validate_un_chunked(y)
+        else:
+            x, y = x_test, y_test
 
         def func(
             x_test_numpy: NDArray,
