@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from pydvl.influence import InversionMethod, InfluenceType
+from pydvl.influence import InfluenceType, InversionMethod
 from pydvl.influence.dask import DaskInfluence
 from pydvl.influence.torch.influence_model import (
     ArnoldiInfluence,
@@ -19,13 +19,13 @@ num_data = 50
 chunk_size = 25
 t_x = torch.rand(num_data, dimensions[0])
 t_y = torch.rand(num_data, dimensions[1])
-t_x_test = torch.rand(int(num_data/10), dimensions[0])
-t_y_test = torch.rand(int(num_data/10), dimensions[1])
+t_x_test = torch.rand(int(num_data / 10), dimensions[0])
+t_y_test = torch.rand(int(num_data / 10), dimensions[1])
 data_loader = DataLoader(TensorDataset(t_x, t_y), batch_size=chunk_size)
 da_x = da.from_array(t_x.numpy(), chunks=(chunk_size, -1))
 da_y = da.from_array(t_y.numpy(), chunks=(chunk_size, -1))
-da_x_test = da.from_array(t_x_test.numpy(), chunks=(int(chunk_size/10), -1))
-da_y_test = da.from_array(t_y_test.numpy(), chunks=(int(chunk_size/10), -1))
+da_x_test = da.from_array(t_x_test.numpy(), chunks=(int(chunk_size / 10), -1))
+da_y_test = da.from_array(t_y_test.numpy(), chunks=(int(chunk_size / 10), -1))
 
 
 @pytest.fixture(scope="session")
@@ -75,13 +75,19 @@ def test_dask_influence_factors(influence_model):
     assert np.allclose(dask_fac, torch_fac, atol=1e-4)
 
 
-@pytest.mark.parametrize("influence_type", [InfluenceType.Up, InfluenceType.Perturbation])
+@pytest.mark.parametrize(
+    "influence_type", [InfluenceType.Up, InfluenceType.Perturbation]
+)
 @pytest.mark.torch
 def test_dask_influence_values(influence_model, influence_type):
     dask_inf = DaskInfluence(
         influence_model, lambda t: t.numpy(), lambda t: torch.from_numpy(t)
     )
-    dask_fac = dask_inf.values(da_x_test, da_y_test, da_x, da_y, influence_type=influence_type)
+    dask_fac = dask_inf.values(
+        da_x_test, da_y_test, da_x, da_y, influence_type=influence_type
+    )
     dask_fac = dask_fac.x.compute(scheduler="processes")
-    torch_fac = influence_model.values(t_x_test, t_y_test, t_x, t_y, influence_type=influence_type).x.numpy()
+    torch_fac = influence_model.values(
+        t_x_test, t_y_test, t_x, t_y, influence_type=influence_type
+    ).x.numpy()
     assert np.allclose(dask_fac, torch_fac, atol=1e-4)
