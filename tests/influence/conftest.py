@@ -2,9 +2,11 @@ from typing import Tuple
 
 import numpy as np
 import pytest
+from numpy._typing import NDArray
 from numpy.typing import NDArray
 from sklearn.preprocessing import MinMaxScaler
 
+from pydvl.influence import InfluenceType
 from pydvl.utils import Dataset, random_matrix_with_condition_number
 
 
@@ -195,3 +197,57 @@ def add_noise_to_linear_model(
     dataset.x_test = scaler_x.transform(dataset.x_test)
     dataset.y_test = scaler_y.transform(dataset.y_test)
     return (x_train, y_train), (x_test, y_test)
+
+
+def analytical_linear_influences(
+    linear_model: Tuple[NDArray[np.float_], NDArray[np.float_]],
+    x: NDArray[np.float_],
+    y: NDArray[np.float_],
+    x_test: NDArray[np.float_],
+    y_test: NDArray[np.float_],
+    influence_type: InfluenceType = InfluenceType.Up,
+    hessian_regularization: float = 0,
+):
+    """Calculates analytically the influence of each training sample on the
+     test samples for an ordinary least squares model (Ax+b=y with quadratic
+     loss).
+
+    :param linear_model: A tuple of arrays of shapes (N, M) and N representing A
+        and b respectively.
+    :param x: An array of shape (M, K) containing the features of the
+        training set.
+    :param y: An array of shape (M, L) containing the targets of the
+        training set.
+    :param x_test: An array of shape (N, K) containing the features of the test
+        set.
+    :param y_test: An array of shape (N, L) containing the targets of the test
+        set.
+    :param influence_type: the type of the influence.
+    :param hessian_regularization: regularization value for the hessian
+    :returns: An array of shape (B, C) with the influences of the training points
+        on the test points if influence_type is "up", an array of shape (K, L,
+        M) if influence_type is "perturbation".
+    """
+
+    s_test_analytical = linear_analytical_influence_factors(
+        linear_model, x, y, x_test, y_test, hessian_regularization
+    )
+    if influence_type == InfluenceType.Up:
+        train_grads_analytical = linear_derivative_analytical(
+            linear_model,
+            x,
+            y,
+        )
+        result: NDArray = np.einsum(
+            "ia,ja->ij", s_test_analytical, train_grads_analytical
+        )
+    elif influence_type == InfluenceType.Perturbation:
+        train_second_deriv_analytical = linear_mixed_second_derivative_analytical(
+            linear_model,
+            x,
+            y,
+        )
+        result: NDArray = np.einsum(
+            "ia,jab->ijb", s_test_analytical, train_second_deriv_analytical
+        )
+    return result
