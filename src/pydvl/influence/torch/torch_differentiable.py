@@ -16,7 +16,7 @@ influence of a training point on the model.
 import logging
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Generator, List, Optional, Sequence, Tuple, Union
+from typing import Callable, Generator, List, Literal, Optional, Sequence, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -24,6 +24,7 @@ import torch.nn.functional as F
 from nngeometry.layercollection import LayerCollection
 from nngeometry.metrics import FIM
 from nngeometry.object import PMatEKFAC
+from numpy import isin
 from numpy.typing import NDArray
 from scipy.sparse.linalg import ArpackNoConvergence
 from torch import autograd
@@ -423,6 +424,76 @@ def model_hessian_low_rank(
     )
 
 
+def get_kfac_blocks(
+    empirical_loss_fn: Callable[[torch.Tensor], torch.Tensor],
+    model: TorchTwiceDifferentiable,
+    data_loader: DataLoader,
+):
+
+    forward_x = {}
+    grad_y = {}
+    hooks = []
+    data_len = len(data_loader)
+
+    def input_hook(m, x, y, with_bias=True):
+        if with_bias:
+            x = torch.cat((x, torch.ones((x.shape[0], 1), device=model.device)), dim=1)
+        forward_x[m] += torch.mm(x.t(), x) / data_len
+
+    def grad_hook(m, m_grad, m_out):
+        grad_y[m] += torch.mm(m_out.t(), m_out) / data_len
+
+    for m_name, module in model.model.named_modules():
+        if len(list(module.children())) == 0 and len(list(module.parameters())) > 0:
+            layer_requires_grad = [param.requires_grad for param in module.parameters()]
+            if any(layer_requires_grad):
+                if isinstance(module, nn.Linear):
+                    sG = module.out_features
+                    sA = module.in_features + int(module.bias)
+                    forward_x[m_name] = torch.zeros((sA, sA), device=model.device)
+                    grad_y[m_name] = torch.zeros((sG, sG), device=model.device)
+                    hooks.append(module.register_forward_hook(input_hook))
+                    hooks.append(module.register_full_backward_hook(grad_hook))
+                elif isinstance(module, nn.Conv2d):
+                    pass
+                else:
+                    raise NotImplementedError(
+                        f"Only Linear and Conv2d layers are supported, but found module {m_name} requiring grad."
+                    )
+    for x, _ in data_loader:
+        pred_y = model.model(x)
+        loss = empirical_loss_fn(pred_y)
+        loss.backward()
+
+    for hook in hooks:
+        hook.remove()
+
+    return forward_x, grad_y
+
+
+def get_kfac_representation(loss_fn, model, data_loader):
+    """
+    Get KFAC representation of the loss function for the given model and data.
+
+    Args:
+        loss_fn: Loss function.
+        model: Model.
+        data_loader: Data loader.
+
+    Returns:
+        TODO
+    """
+    forward_x, grad_y = get_kfac_blocks(loss_fn, model, data_loader)
+    evecs = {}
+    diags = {}
+    for key in forward_x.keys():
+        evals_a, evecs_a = torch.linalg.eigh(forward_x[key])
+        evals_g, evecs_g = torch.linalg.eigh(grad_y[key])
+        evecs[key] = (evecs_a, evecs_g)
+        diags[key] = torch.kron(evals_a.view(-1, 1), evals_g.view(-1, 1))
+    return evecs, diags
+
+
 class TorchTensorUtilities(TensorUtilities[torch.Tensor, TorchTwiceDifferentiable]):
     twice_differentiable_type = TorchTwiceDifferentiable
 
@@ -760,51 +831,68 @@ def solve_ekfac(
     b: torch.Tensor,
     hessian_perturbation: float = 0.0,
     update_diag: bool = True,
-    full_calculation: bool = True,
+    local_implemetation: bool = False,
+    on_layers: Optional[Sequence[str]] = None,
 ) -> InverseHvpResult:
-    def batch_loss_fn(*d):
-        probs_ = torch.softmax(model.model(d[0].to(model.device)), dim=1)
-        log_probs_ = torch.log(probs_)
-        log_probs_ = torch.where(
-            torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
-        )
-        return torch.sum(log_probs_ * probs_.detach() ** 0.5, axis=1)
 
-    active_layers = LayerCollection()
-    skip_modules = ["", "layers"]
-    for name, module in model.model.named_modules():
-        if name in skip_modules:
-            continue
-        layer_requires_grad = [param.requires_grad for param in module.parameters()]
-        if any(layer_requires_grad):
-            if not (isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d)):
-                raise ValueError(
-                    f"EK-FAC inversion method supports only Linear and Conv2d layers. "
-                    f"Module {name} has parameters requiring gradients."
-                )
-            else:
+    if local_implemetation:
+
+        def batch_loss_fn(model_output: torch.Tensor) -> torch.Tensor:
+            probs_ = torch.softmax(model_output, dim=1)
+            log_probs_ = torch.log(probs_)
+            log_probs_ = torch.where(
+                torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
+            )
+            return torch.sum(log_probs_ * probs_.detach() ** 0.5)
+
+        kfac_blocks = get_kfac_representation(batch_loss_fn, model, training_data)
+    else:
+
+        def batch_loss_fn(d: Tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
+            probs_ = torch.softmax(model.model(d[0].to(model.device)), dim=1)
+            log_probs_ = torch.log(probs_)
+            log_probs_ = torch.where(
+                torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
+            )
+            return torch.sum(log_probs_ * probs_.detach() ** 0.5, axis=1)
+
+        active_layers = LayerCollection()
+        for name, module in model.model.named_modules():
+            if on_layers is None:
+                if (
+                    len(list(module.children())) == 0
+                    and len(list(module.parameters())) > 0
+                ):
+                    layer_requires_grad = [
+                        param.requires_grad for param in module.parameters()
+                    ]
+                    if any(layer_requires_grad):
+                        active_layers.add_layer(
+                            "%s.%s" % (name, str(module)),
+                            LayerCollection._module_to_layer(module),
+                        )
+            elif name in on_layers:
                 active_layers.add_layer(
                     "%s.%s" % (name, str(module)),
                     LayerCollection._module_to_layer(module),
                 )
 
-    hessian_repr: PMatEKFAC = FIM(
-        model.model,
-        training_data,
-        representation=PMatEKFAC,
-        n_output=1,
-        function=batch_loss_fn,
-        # HACK: in order to pass the correct function,
-        # we need to set this to "regression", even though we are doing classification.
-        # Maybe open issue in nngeometry
-        variant="regression",
-        layer_collection=active_layers,
-    )
+        hessian_repr: PMatEKFAC = FIM(
+            model.model,
+            training_data,
+            representation=PMatEKFAC,
+            n_output=1,
+            function=batch_loss_fn,
+            # HACK: in order to pass the correct function,
+            # we need to set this to "regression", even though we are doing classification.
+            # Maybe open issue in nngeometry
+            variant="regression",
+            layer_collection=active_layers,
+        )
 
-    if update_diag:
-        hessian_repr.update_diag(training_data)
-    x = b.clone()
-    if full_calculation:
+        if update_diag:
+            hessian_repr.update_diag(training_data)
+        x = b.clone()
         try:
             inverse_hessian_repr = hessian_repr.inverse(regul=hessian_perturbation)
         except Exception as e:
