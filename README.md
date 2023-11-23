@@ -111,7 +111,9 @@ pip install pyDVL --index-url https://test.pypi.org/simple/
 
 For more instructions and information refer to [Installing pyDVL
 ](https://pydvl.org/stable/getting-started/installation/) in the
-documentation.
+documentation. Refer more specifically to the [Dependencies
+](https://pydvl.org/stable/getting-started/installation/#extras)
+section for a list of extra requirements.
 
 # Usage
 
