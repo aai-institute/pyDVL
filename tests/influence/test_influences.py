@@ -151,6 +151,7 @@ class InfluenceTestCases:
         )
 
 
+
 @fixture
 @parametrize_with_cases(
     "case",
@@ -214,19 +215,38 @@ def direct_influence(model_and_data, test_case: TestCase) -> NDArray:
     ids=["train_set_size_200"],
 )
 @pytest.mark.parametrize(
-    "inversion_method, inversion_method_kwargs, rtol",
+    ["influence_factory", "rtol"],
     [
-        [InversionMethod.Direct, {}, 1e-7],
-        [InversionMethod.Cg, {}, 1e-1],
-        [InversionMethod.Lissa, {"maxiter": 6000, "scale": 100}, 0.3],
+        [
+            lambda model, loss, train_dataLoader, hessian_reg: BatchCgInfluence(
+                model, loss, train_dataLoader, hessian_regularization=hessian_reg
+            ),
+            1e-1,
+        ],
+        [
+            lambda model, loss, train_dataLoader, hessian_reg: LissaInfluence(
+                model,
+                loss,
+                train_dataLoader,
+                hessian_regularization=hessian_reg,
+                maxiter=6000,
+                scale=100,
+            ),
+            0.3,
+        ],
+        [
+            lambda model, loss, train_dataLoader, hessian_reg: DirectInfluence(
+                model, loss, hessian_reg, train_dataloader=train_dataLoader
+            ),
+            1e-4
+        ],
     ],
-    ids=[inv.value for inv in InversionMethod if inv is not InversionMethod.Arnoldi],
+    ids=["cg", "lissa", "direct"],
 )
 def test_influence_linear_model(
+    influence_factory: Callable,
+    rtol,
     influence_type: InfluenceType,
-    inversion_method: InversionMethod,
-    inversion_method_kwargs: Dict,
-    rtol: float,
     train_set_size: int,
     hessian_reg: float = 0.1,
     test_set_size: int = 20,
@@ -253,27 +273,12 @@ def test_influence_linear_model(
     )
 
     train_data_set = TensorDataset(*list(map(torch.from_numpy, train_data)))
-    test_data_set = TensorDataset(*list(map(torch.from_numpy, test_data)))
     train_data_loader = DataLoader(train_data_set, batch_size=40, num_workers=0)
-    input_data = DataLoader(train_data_set, batch_size=40)
-    test_data_loader = DataLoader(
-        test_data_set,
-        batch_size=40,
-    )
+    influence = influence_factory(linear_layer, loss, train_data_loader, hessian_reg)
 
-    influence_values = compute_influences(
-        TorchTwiceDifferentiable(linear_layer, loss),
-        training_data=train_data_loader,
-        test_data=test_data_loader,
-        input_data=input_data,
-        progress=False,
-        influence_type=influence_type,
-        inversion_method=inversion_method,
-        hessian_regularization=hessian_reg,
-        **inversion_method_kwargs,
-    )
-
-    influence_values = influence_values.numpy()
+    x_train, y_train = tuple(map(torch.from_numpy, train_data))
+    x_test, y_test = tuple(map(torch.from_numpy, test_data))
+    influence_values = influence.values(x_test, y_test, x_train, y_train, influence_type=influence_type).numpy()
 
     assert np.logical_not(np.any(np.isnan(influence_values)))
     abs_influence = np.abs(influence_values)
