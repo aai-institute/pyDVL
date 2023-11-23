@@ -25,7 +25,6 @@ for testing and for demonstration purposes.
 """
 import logging
 import warnings
-from dataclasses import asdict
 from typing import Dict, FrozenSet, Iterable, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -34,8 +33,7 @@ from sklearn.base import clone
 from sklearn.metrics import check_scoring
 
 from pydvl.utils import Dataset
-from pydvl.utils.caching import CacheStats, memcached, serialize
-from pydvl.utils.config import MemcachedConfig
+from pydvl.utils.caching import CacheBackendBase, CachedFuncConfig, CacheStats
 from pydvl.utils.score import Scorer
 from pydvl.utils.types import SupervisedModel
 
@@ -134,8 +132,8 @@ class Utility:
         score_range: Tuple[float, float] = (-np.inf, np.inf),
         catch_errors: bool = True,
         show_warnings: bool = False,
-        enable_cache: bool = False,
-        cache_options: Optional[MemcachedConfig] = None,
+        cache: Optional[CacheBackendBase] = None,
+        cached_func_options: CachedFuncConfig = CachedFuncConfig(),
         clone_before_fit: bool = True,
     ):
         self.model = self._clone_model(model)
@@ -148,10 +146,9 @@ class Utility:
         self.score_range = scorer.range if scorer is not None else np.array(score_range)
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
-        self.enable_cache = enable_cache
-        self.cache_options: MemcachedConfig = cache_options or MemcachedConfig()
+        self.cache = cache
+        self.cached_func_options = cached_func_options
         self.clone_before_fit = clone_before_fit
-        self._signature = serialize((hash(self.model), hash(data), hash(scorer)))
         self._initialize_utility_wrapper()
 
         # FIXME: can't modify docstring of methods. Instead, I could use a
@@ -159,12 +156,9 @@ class Utility:
         # self.__call__.__doc__ = self._utility_wrapper.__doc__
 
     def _initialize_utility_wrapper(self):
-        if self.enable_cache:
-            # asdict() is recursive, but we want client_config to remain a dataclass
-            options = asdict(self.cache_options)
-            options["client_config"] = self.cache_options.client_config
-            self._utility_wrapper = memcached(**options)(  # type: ignore
-                self._utility, signature=self._signature
+        if self.cache is not None:
+            self._utility_wrapper = self.cache.wrap(
+                self._utility, cached_func_config=self.cached_func_options
             )
         else:
             self._utility_wrapper = self._utility
@@ -245,17 +239,12 @@ class Utility:
         return model
 
     @property
-    def signature(self):
-        """Signature used for caching model results."""
-        return self._signature
-
-    @property
     def cache_stats(self) -> Optional[CacheStats]:
         """Cache statistics are gathered when cache is enabled.
-        See [CacheStats][pydvl.utils.caching.CacheStats] for all fields returned.
+        See [CacheStats][pydvl.utils.caching.base.CacheStats] for all fields returned.
         """
-        if self.enable_cache:
-            return self._utility_wrapper.stats  # type: ignore
+        if self.cache is not None:
+            return self._utility_wrapper.stats
         return None
 
     def __getstate__(self):
