@@ -13,13 +13,8 @@ __all__ = [
     "InversionRegistry",
 ]
 
-from .twice_differentiable import (
-    DataLoaderType,
-    Influence,
-    InverseHvpResult,
-    TensorType,
-    TwiceDifferentiable,
-)
+from .base_influence_model import Influence, TensorType
+from .twice_differentiable import DataLoaderType, InverseHvpResult, TwiceDifferentiable
 
 logger = logging.getLogger(__name__)
 

@@ -13,12 +13,11 @@ from copy import deepcopy
 from typing import Any, Callable, Dict, Generator, Optional, Type
 
 from ..utils import maybe_progress
+from .base_influence_model import InfluenceType, TensorType
 from .inversion import InfluenceRegistry, InversionMethod
 from .twice_differentiable import (
     DataLoaderType,
-    InfluenceType,
     InverseHvpResult,
-    TensorType,
     TensorUtilities,
     TwiceDifferentiable,
 )

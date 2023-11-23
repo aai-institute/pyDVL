@@ -6,7 +6,9 @@ import numpy as np
 from dask import array as da
 from numpy.typing import NDArray
 
-from ..twice_differentiable import Influence, InfluenceType, InverseHvpResult
+from .. import InfluenceType
+from ..base_influence_model import Influence
+from ..twice_differentiable import InverseHvpResult
 
 __all__ = ["DaskInfluence"]
 

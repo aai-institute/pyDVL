@@ -8,8 +8,10 @@ from torch import nn as nn
 from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
+from .. import InfluenceType
+from ..base_influence_model import Influence
 from ..inversion import InfluenceRegistry, InversionMethod
-from ..twice_differentiable import Influence, InfluenceType, InverseHvpResult
+from ..twice_differentiable import InverseHvpResult
 from .functional import (
     get_batch_hvp,
     get_hessian,
