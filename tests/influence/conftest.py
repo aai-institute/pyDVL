@@ -2,7 +2,6 @@ from typing import Tuple
 
 import numpy as np
 import pytest
-from numpy._typing import NDArray
 from numpy.typing import NDArray
 from sklearn.preprocessing import MinMaxScaler
 

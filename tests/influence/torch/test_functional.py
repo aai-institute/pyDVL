@@ -27,6 +27,7 @@ from pydvl.influence.torch.functional import (
     per_sample_mixed_derivative,
 )
 from pydvl.influence.torch.util import align_structure, flatten_dimensions
+
 from .test_util import model_data, test_parameters
 
 

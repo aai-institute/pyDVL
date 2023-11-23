@@ -11,7 +11,7 @@ from pydvl.influence.torch.influence_model import (
     BatchCgInfluence,
     DirectInfluence,
 )
-from tests.influence.test_influences import minimal_training
+from tests.influence.torch.conftest import minimal_training
 
 dimensions = (50, 2)
 num_params = (dimensions[0] + 1) * dimensions[1]
