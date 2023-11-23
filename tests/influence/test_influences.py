@@ -1,8 +1,18 @@
+from dataclasses import dataclass
 from math import prod
-from typing import Callable, Dict, NamedTuple, Tuple
+from typing import Callable, Dict, NamedTuple, Tuple, Optional
 
 import numpy as np
 import pytest
+from numpy.typing import NDArray
+
+from pydvl.influence.torch.influence_model import (
+    ArnoldiInfluence,
+    BatchCgInfluence,
+    DirectInfluence,
+    LissaInfluence, TorchInfluence,
+)
+from pydvl.influence.twice_differentiable import Influence
 
 from .torch.conftest import minimal_training
 
@@ -154,7 +164,14 @@ def test_case(case: TestCase) -> TestCase:
 @fixture
 def model_and_data(
     test_case: TestCase,
-) -> Tuple[TorchTwiceDifferentiable, DataLoader, DataLoader]:
+) -> Tuple[
+    torch.nn.Module,
+    Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+]:
     x_train = torch.rand((test_case.train_data_len, *test_case.input_dim))
     y_train = torch.rand((test_case.train_data_len, test_case.output_dim))
     x_test = torch.rand((test_case.test_data_len, *test_case.input_dim))
@@ -163,34 +180,29 @@ def model_and_data(
     train_dataloader = DataLoader(
         TensorDataset(x_train, y_train), batch_size=test_case.batch_size
     )
-    test_dataloader = DataLoader(
-        TensorDataset(x_test, y_test), batch_size=test_case.batch_size
-    )
 
     model = test_case.module_factory()
     model = minimal_training(
         model, train_dataloader, test_case.loss, lr=0.3, epochs=100
     )
     model.eval()
-    model = TorchTwiceDifferentiable(model, test_case.loss)
-    return model, train_dataloader, test_dataloader
+    return model, test_case.loss, x_train, y_train, x_test, y_test
 
 
 @fixture
-def direct_influence(model_and_data, test_case: TestCase):
-    model, train_dataloader, test_dataloader = model_and_data
-    direct_influence = compute_influences(
-        model,
-        training_data=train_dataloader,
-        test_data=test_dataloader,
-        progress=False,
-        influence_type=test_case.influence_type,
-        inversion_method=InversionMethod.Direct,
-        hessian_regularization=test_case.hessian_reg,
+def direct_influence(model_and_data, test_case: TestCase) -> NDArray:
+    model, loss, x_train, y_train, x_test, y_test = model_and_data
+    train_dataloader = DataLoader(
+        TensorDataset(x_train, y_train), batch_size=test_case.batch_size
     )
-    return direct_influence
+    direct_influence = DirectInfluence(
+        model, loss, test_case.hessian_reg, train_dataloader=train_dataloader
+    )
+    return direct_influence.values(
+        x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
+    ).numpy()
 
-
+   
 @pytest.mark.parametrize(
     "influence_type",
     InfluenceType,
@@ -274,39 +286,46 @@ def test_influence_linear_model(
 
 
 @parametrize(
-    "inversion_method, inversion_method_kwargs",
+    "influence_factory",
     [
-        ("cg", {}),
-        (
-            "lissa",
-            {
-                "maxiter": 150,
-                "scale": 10000,
-            },
+        lambda model, loss, train_dataLoader, hessian_reg: BatchCgInfluence(
+            model, loss, train_dataLoader, hessian_regularization=hessian_reg
+        ),
+        lambda model, loss, train_dataLoader, hessian_reg: LissaInfluence(
+            model,
+            loss,
+            train_dataLoader,
+            hessian_regularization=hessian_reg,
+            maxiter=150,
+            scale=10000,
         ),
     ],
+    ids=["cg", "lissa"],
 )
 def test_influences_nn(
     test_case: TestCase,
-    model_and_data: Tuple[TorchTwiceDifferentiable, DataLoader, DataLoader],
+    model_and_data: Tuple[
+        torch.nn.Module,
+        Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+    ],
     direct_influence,
-    inversion_method: InversionMethod,
-    inversion_method_kwargs: Dict,
+    influence_factory,
 ):
-    model, train_dataloader, test_dataloader = model_and_data
+    model, loss, x_train, y_train, x_test, y_test = model_and_data
 
-    approx_influences = compute_influences(
-        model,
-        training_data=train_dataloader,
-        test_data=test_dataloader,
-        progress=False,
-        influence_type=test_case.influence_type,
-        inversion_method=inversion_method,
-        hessian_regularization=test_case.hessian_reg,
-        **inversion_method_kwargs,
+    train_dataloader = DataLoader(
+        TensorDataset(x_train, y_train), batch_size=test_case.batch_size
     )
-
-    approx_influences = approx_influences.numpy()
+    influence_model = influence_factory(
+        model, loss, train_dataloader, test_case.hessian_reg
+    )
+    approx_influences = influence_model.values(
+        x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
+    ).numpy()
 
     assert not np.any(np.isnan(approx_influences))
 
@@ -331,62 +350,54 @@ def test_influences_nn(
     assert np.allclose(approx_influences, direct_influence, rtol=1e-1)
 
 
-@parametrize(
-    "inversion_method, inversion_method_kwargs",
-    [
-        ("cg", {}),
-        (
-            "lissa",
-            {
-                "maxiter": 150,
-                "scale": 10000,
-            },
-        ),
-    ],
-)
 def test_influences_arnoldi(
     test_case: TestCase,
-    model_and_data: Tuple[TorchTwiceDifferentiable, DataLoader, DataLoader],
+    model_and_data: Tuple[
+        torch.nn.Module,
+        Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+    ],
     direct_influence,
-    inversion_method: InversionMethod,
-    inversion_method_kwargs: Dict,
 ):
-    model, train_dataloader, test_dataloader = model_and_data
+    model, loss, x_train, y_train, x_test, y_test = model_and_data
 
-    num_parameters = sum(p.numel() for p in model.model.parameters() if p.requires_grad)
+    num_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    low_rank_influence = compute_influences(
+    train_dataloader = DataLoader(
+        TensorDataset(x_train, y_train), batch_size=test_case.batch_size
+    )
+    arnoldi_influence = ArnoldiInfluence(
         model,
-        training_data=train_dataloader,
-        test_data=test_dataloader,
-        progress=False,
-        influence_type=test_case.influence_type,
-        inversion_method=InversionMethod.Arnoldi,
+        loss,
+        train_dataloader=train_dataloader,
         hessian_regularization=test_case.hessian_reg,
-        # as the hessian of the small shallow networks is in general not low rank,
-        # so for these test cases, we choose
-        # the rank estimate as high as possible
         rank_estimate=num_parameters - 1,
     )
+    low_rank_influence = arnoldi_influence.values(
+        x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
+    ).numpy()
 
-    assert np.allclose(direct_influence, low_rank_influence, rtol=1e-1)
+    assert np.allclose(direct_influence, low_rank_influence)
 
     precomputed_low_rank = model_hessian_low_rank(
-        model.model,
-        model.loss,
+        model,
+        loss,
         training_data=train_dataloader,
-        hessian_perturbation=test_case.hessian_reg,
+        hessian_perturbation=0.0,
         rank_estimate=num_parameters - 1,
     )
-
-    precomputed_low_rank_influence = compute_influences(
+    arnoldi_influence = ArnoldiInfluence(
         model,
-        training_data=train_dataloader,
-        test_data=test_dataloader,
-        progress=False,
-        influence_type=test_case.influence_type,
-        inversion_method=InversionMethod.Arnoldi,
+        loss,
         low_rank_representation=precomputed_low_rank,
+        hessian_regularization=test_case.hessian_reg,
+        rank_estimate=num_parameters - 1,
     )
+    precomputed_low_rank_influence = arnoldi_influence.values(
+        x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
+    ).numpy()
 
-    assert np.allclose(direct_influence, precomputed_low_rank_influence, rtol=1e-1)
+    assert np.allclose(direct_influence, precomputed_low_rank_influence)
