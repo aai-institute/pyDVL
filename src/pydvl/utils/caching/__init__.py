@@ -32,6 +32,12 @@ default_config = dict(
 )
 ```
 
+# Supported Backends
+
+- [InMemoryCacheBackend][]
+- [DiskCacheBackend][]
+- [MemcachedCacheBackend][]
+
 # Usage with stochastic functions
 
 In addition to standard memoization, the decorator

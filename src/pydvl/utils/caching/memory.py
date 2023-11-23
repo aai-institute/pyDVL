@@ -1,16 +1,56 @@
 import os
 from typing import Any, Optional
 
-from pydvl.utils.caching.base import CacheBackendBase
+from pydvl.utils.caching.base import CacheBackend
 
 __all__ = ["InMemoryCacheBackend"]
 
 
-class InMemoryCacheBackend(CacheBackendBase):
+class InMemoryCacheBackend(CacheBackend):
     """In-memory cache backend that stores results in a dictionary.
 
-    Implements the CacheBackendBase interface for an in-memory-based cache.
+    Implements the CacheBackend interface for an in-memory-based cache.
     Stores cache entries as values in a dictionary, keyed by cache key.
+    This allows sharing evaluations across threads in a single process.
+
+    The implementation is not thread-safe.
+
+    Attributes:
+        cached_values: Dictionary used to store cached values.
+
+    ??? Examples
+        ``` pycon
+        >>> from pydvl.utils.caching.memory import InMemoryCacheBackend
+        >>> cache = InMemoryCacheBackend()
+        >>> cache.clear()
+        >>> value = 42
+        >>> cache.set("key", value)
+        >>> cache.get("key")
+        42
+        ```
+
+        ``` pycon
+        >>> from pydvl.utils.caching.memory import InMemoryCacheBackend
+        >>> cache = InMemoryCacheBackend()
+        >>> cache.clear()
+        >>> value = 42
+        >>> def foo(x: int):
+        ...     return x + 1
+        ...
+        >>> wrapped_foo = cache.wrap(foo)
+        >>> wrapped_foo(value)
+        43
+        >>> wrapped_foo.stats.misses
+        1
+        >>> wrapped_foo.stats.hits
+        0
+        >>> wrapped_foo(value)
+        43
+        >>> wrapped_foo.stats.misses
+        1
+        >>> wrapped_foo.stats.hits
+        1
+        ```
     """
 
     def __init__(self) -> None:

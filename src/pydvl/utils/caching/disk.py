@@ -5,7 +5,7 @@ from typing import Any, Optional, Union
 
 import cloudpickle
 
-from pydvl.utils.caching.base import CacheBackendBase
+from pydvl.utils.caching.base import CacheBackend
 
 __all__ = ["DiskCacheBackend"]
 
@@ -14,14 +14,54 @@ PICKLE_VERSION = 5  # python >= 3.8
 DEFAULT_CACHE_DIR = Path().home() / ".pydvl_cache/disk"
 
 
-class DiskCacheBackend(CacheBackendBase):
+class DiskCacheBackend(CacheBackend):
     """Disk cache backend that stores results in files.
 
-    Implements the CacheBackendBase interface for a disk-based cache.
+    Implements the CacheBackend interface for a disk-based cache.
     Stores cache entries as pickled files on disk, keyed by cache key.
+    This allows sharing evaluations across processes in a single node/computer.
+
+    Args:
+        cache_dir: Base directory for cache storage.
 
     Attributes:
         cache_dir: Base directory for cache storage.
+
+    ??? Examples
+        ``` pycon
+        >>> from pydvl.utils.caching.disk import DiskCacheBackend
+        >>> cache = DiskCacheBackend(cache_dir="/tmp/pydvl_disk_cache")
+        >>> cache.clear()
+        >>> value = 42
+        >>> cache.set("key", value)
+        >>> cache.get("key")
+        42
+        ```
+
+        ``` pycon
+        >>> from pydvl.utils.caching.disk import DiskCacheBackend
+        >>> cache = DiskCacheBackend(cache_dir="/tmp/pydvl_disk_cache")
+        >>> cache.clear()
+        >>> value = 42
+        >>> def foo(x: int):
+        ...     return x + 1
+        ...
+        >>> wrapped_foo = cache.wrap(foo)
+        >>> wrapped_foo(value)
+        43
+        >>> wrapped_foo.stats.misses
+        1
+        >>> wrapped_foo.stats.hits
+        0
+        >>> wrapped_foo(value)
+        43
+        >>> wrapped_foo.stats.misses
+        1
+        >>> wrapped_foo.stats.hits
+        1
+        ```
+
+
     """
 
     def __init__(
@@ -32,6 +72,7 @@ class DiskCacheBackend(CacheBackendBase):
 
         Args:
             cache_dir: Base directory for cache storage.
+                By default, this is set to `~/.pydvl_cache/disk`
         """
         super().__init__()
         self.cache_dir = Path(cache_dir)

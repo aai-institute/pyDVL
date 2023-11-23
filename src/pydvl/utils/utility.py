@@ -33,7 +33,7 @@ from sklearn.base import clone
 from sklearn.metrics import check_scoring
 
 from pydvl.utils import Dataset
-from pydvl.utils.caching import CacheBackendBase, CachedFuncConfig, CacheStats
+from pydvl.utils.caching import CacheBackend, CachedFuncConfig, CacheStats
 from pydvl.utils.score import Scorer
 from pydvl.utils.types import SupervisedModel
 
@@ -100,8 +100,11 @@ class Utility:
             calculations. When this happens, the `default_score` is returned as
             a score and computation continues.
         show_warnings: Set to `False` to suppress warnings thrown by `fit()`.
-        enable_cache: If `True`, use memcached for memoization.
-        cache_options: Optional configuration object for memcached.
+        cache: Optional instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
+            used to wrap the _utility method of the Utility instance.
+            By default, this is set to None and that means that the utility evaluations
+            will not be cached.
+        cached_func_options: Optional configuration object for cached utility evaluation.
         clone_before_fit: If `True`, the model will be cloned before calling
             `fit()`.
 
@@ -132,7 +135,7 @@ class Utility:
         score_range: Tuple[float, float] = (-np.inf, np.inf),
         catch_errors: bool = True,
         show_warnings: bool = False,
-        cache: Optional[CacheBackendBase] = None,
+        cache: Optional[CacheBackend] = None,
         cached_func_options: CachedFuncConfig = CachedFuncConfig(),
         clone_before_fit: bool = True,
     ):

@@ -1,84 +1,3 @@
-""" Distributed caching of functions.
-
-pyDVL uses [memcached](https://memcached.org) to cache utility values, through
-[pymemcache](https://pypi.org/project/pymemcache). This allows sharing
-evaluations across processes and nodes in a cluster. You can run memcached as a
-service, locally or remotely, see [Setting up the cache](#setting-up-the-cache)
-
-!!! Warning
-    Function evaluations are cached with a key based on the function's signature
-    and code. This can lead to undesired cache hits, see [Cache reuse](#cache-reuse).
-
-    Remember **not to reuse utility objects for different datasets**.
-
-# Configuration
-
-Memoization is disabled by default but can be enabled easily,
-see [Setting up the cache](#setting-up-the-cache).
-When enabled, it will be added to any callable used to construct a
-[Utility][pydvl.utils.utility.Utility] (done with the decorator [@memcached][pydvl.utils.caching.memcached]).
-Depending on the nature of the utility you might want to
-enable the computation of a running average of function values, see
-[Usage with stochastic functions](#usaage-with-stochastic-functions).
-You can see all configuration options under [MemcachedConfig][pydvl.utils.config.MemcachedConfig].
-
-## Default configuration
-
-```python
-default_config = dict(
-   server=('localhost', 11211),
-   connect_timeout=1.0,
-   timeout=0.1,
-   # IMPORTANT! Disable small packet consolidation:
-   no_delay=True,
-   serde=serde.PickleSerde(pickle_version=PICKLE_VERSION)
-)
-```
-
-# Usage with stochastic functions
-
-In addition to standard memoization, the decorator
-[memcached()][pydvl.utils.caching.memcached] can compute running average and
-standard error of repeated evaluations for the same input. This can be useful
-for stochastic functions with high variance (e.g. model training for small
-sample sizes), but drastically reduces the speed benefits of memoization.
-
-This behaviour can be activated with the argument `allow_repeated_evaluations`
-to [memcached()][pydvl.utils.caching.memcached].
-
-# Cache reuse
-
-When working directly with [memcached()][pydvl.utils.caching.memcached],  it is
-essential to only cache pure functions. If they have any kind of state, either
-internal or external (e.g. a closure over some data that may change), then the
-cache will fail to notice this and the same value will be returned.
-
-When a function is wrapped with [memcached()][pydvl.utils.caching.memcached] for
-memoization, its signature (input and output names) and code are used as a key
-for the cache. Alternatively you can pass a custom value to be used as key with
-
-```python
-cached_fun = memcached(**asdict(cache_options))(fun, signature=custom_signature)
-```
-
-If you are running experiments with the same [Utility][pydvl.utils.utility.Utility]
-but different datasets, this will lead to evaluations of the utility on new data
-returning old values because utilities only use sample indices as arguments (so
-there is no way to tell the difference between '1' for dataset A and '1' for
-dataset 2 from the point of view of the cache). One solution is to empty the
-cache between runs, but the preferred one is to **use a different Utility
-object for each dataset**.
-
-# Unexpected cache misses
-
-Because all arguments to a function are used as part of the key for the cache,
-sometimes one must exclude some of them. For example, If a function is going to
-run across multiple processes and some reporting arguments are added (like a
-`job_id` for logging purposes), these will be part of the signature and make the
-functions distinct to the eyes of the cache. This can be avoided with the use of
-[ignore_args][pydvl.utils.config.MemcachedConfig] in the configuration.
-
-"""
 from __future__ import annotations
 
 import logging
@@ -92,7 +11,7 @@ from pymemcache import MemcacheUnexpectedCloseError
 from pymemcache.client import Client, RetryingClient
 from pymemcache.serde import PickleSerde
 
-from .base import CacheBackendBase
+from .base import CacheBackend
 
 __all__ = ["MemcachedClientConfig", "MemcachedCacheBackend"]
 
@@ -109,13 +28,12 @@ class MemcachedClientConfig:
         server: A tuple of (IP|domain name, port).
         connect_timeout: How many seconds to wait before raising
             `ConnectionRefusedError` on failure to connect.
-        timeout: seconds to wait for send or recv calls on the socket
-            connected to memcached.
-        no_delay: set the `TCP_NODELAY` flag, which may help with performance
-            in some cases.
-        serde: a serializer / deserializer ("serde"). The default `PickleSerde`
-            should work in most cases. See [pymemcached's
-            documentation](https://pymemcache.readthedocs.io/en/latest/apidoc/pymemcache.client.base.html#pymemcache.client.base.Client)
+        timeout: Duration in seconds to wait for send or recv calls
+            on the socket connected to memcached.
+        no_delay: If True, set the `TCP_NODELAY` flag, which may help
+            with performance in some cases.
+        serde: Serializer / Deserializer ("serde"). The default `PickleSerde`
+            should work in most cases. See [pymemcache.client.base.Client][]
             for details.
     """
 
@@ -126,14 +44,54 @@ class MemcachedClientConfig:
     serde: PickleSerde = PickleSerde(pickle_version=PICKLE_VERSION)
 
 
-class MemcachedCacheBackend(CacheBackendBase):
-    """Memcached cache backend.
+class MemcachedCacheBackend(CacheBackend):
+    """Memcached cache backend for the distributed caching of functions.
 
-    Implements CacheBackendBase using a memcached client.
+    Implements the CacheBackend interface for a memcached based cache.
+    This allows sharing evaluations across processes and nodes in a cluster.
+    You can run memcached as a service, locally or remotely,
+    see [Setting up the cache](#setting-up-the-cache)
+
+    Args:
+        config: Memcached client configuration.
 
     Attributes:
         config: Memcached client configuration.
         client: Memcached client instance.
+
+    ??? Examples
+        ``` pycon
+        >>> from pydvl.utils.caching.memcached import MemcachedCacheBackend
+        >>> cache = MemcachedCacheBackend()
+        >>> cache.clear()
+        >>> value = 42
+        >>> cache.set("key", value)
+        >>> cache.get("key")
+        42
+        ```
+
+        ``` pycon
+        >>> from pydvl.utils.caching.memcached import MemcachedCacheBackend
+        >>> cache = MemcachedCacheBackend()
+        >>> cache.clear()
+        >>> value = 42
+        >>> def foo(x: int):
+        ...     return x + 1
+        ...
+        >>> wrapped_foo = cache.wrap(foo)
+        >>> wrapped_foo(value)
+        43
+        >>> wrapped_foo.stats.misses
+        1
+        >>> wrapped_foo.stats.hits
+        0
+        >>> wrapped_foo(value)
+        43
+        >>> wrapped_foo.stats.misses
+        1
+        >>> wrapped_foo.stats.hits
+        1
+        ```
     """
 
     def __init__(self, config: MemcachedClientConfig = MemcachedClientConfig()) -> None:

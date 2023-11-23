@@ -11,7 +11,7 @@ from joblib.func_inspect import filter_args
 from ..numeric import running_moments
 from .config import CachedFuncConfig
 
-__all__ = ["CacheStats", "CacheBackendBase", "CachedFunc"]
+__all__ = ["CacheStats", "CacheBackend", "CachedFunc"]
 
 T = TypeVar("T")
 
@@ -20,15 +20,15 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CacheStats:
-    """Statistics gathered by cached functions.
+    """Class used to store statistics gathered by cached functions.
 
     Attributes:
-        sets: number of times a value was set in the cache
-        misses: number of times a value was not found in the cache
-        hits: number of times a value was found in the cache
-        timeouts: number of times a timeout occurred
-        errors: number of times an error occurred
-        reconnects: number of times the client reconnected to the server
+        sets: Number of times a value was set in the cache.
+        misses: Number of times a value was not found in the cache.
+        hits: Number of times a value was found in the cache.
+        timeouts: Number of times a timeout occurred.
+        errors: Number of times an error occurred.
+        reconnects: Number of times the client reconnected to the server.
     """
 
     sets: int = 0
@@ -41,13 +41,13 @@ class CacheStats:
 
 @dataclass
 class CacheResult:
-    """A dataclass to store the cached result of a computation
+    """A class used to store the cached result of a computation
     as well as count and variance when using repeated evaluation.
 
     Attributes:
-        value: The cached value.
-        count: The number of times this value has been computed.
-        variance: The variance associated with the cached value.
+        value: Cached value.
+        count: Number of times this value has been computed.
+        variance: Variance associated with the cached value.
     """
 
     value: float
@@ -55,11 +55,11 @@ class CacheResult:
     variance: float = 0.0
 
 
-class CacheBackendBase(ABC):
+class CacheBackend(ABC):
     """Abstract base class for cache backends.
 
-    Implements cache management including wrapping functions to cache results,
-    retrieving results, setting results, clearing the cache, and combining cache keys.
+    Defines interface for cache access including wrapping callables,
+    getting/setting results, clearing cache, and combining cache keys.
 
     Attributes:
         stats: Cache statistics tracker.
@@ -130,39 +130,22 @@ class CachedFunc:
     """Caches callable function results with a provided cache backend.
 
     Wraps a callable function to cache its results using a provided
-    an instance of CacheBackendBase subclass.
-    Can configure cache keys, repeated evaluations, and cache stats tracking.
+    an instance of a subclass of [CacheBackend][pydvl.utils.caching.base.CacheBackend].
+
+    This class is heavily inspired from that of [joblib.memory.MemorizedFunc][].
 
     Args:
         func: Callable to wrap.
-        cache_backend: An instance of CacheBackendBase that handles
+        cache_backend: Instance of CacheBackendBase that handles
             setting and getting values.
-        cached_func_options:
-        ignore_args: Do not take these keyword arguments into account when
-            hashing the wrapped function for usage as key. This allows
-            sharing the cache among different jobs for the same experiment run if
-            the callable happens to have "nuisance" parameters like `job_id` which
-            do not affect the result of the computation.
-        time_threshold: computations taking less time than this many seconds are
-            not cached.
-        allow_repeated_evaluations: If `True`, repeated calls to a function
-            with the same arguments will be allowed and outputs averaged until the
-            running standard deviation of the mean stabilizes below
-            `rtol_stderr * mean`.
-        rtol_stderr: relative tolerance for repeated evaluations. More precisely,
-            [memcached()][pydvl.utils.caching.memcached] will stop evaluating the function once the
-            standard deviation of the mean is smaller than `rtol_stderr * mean`.
-        min_repetitions: minimum number of times that a function evaluation
-            on the same arguments is repeated before returning cached values. Useful
-            for stochastic functions only. If the model training is very noisy, set
-            this number to higher values to reduce variance.
+        cached_func_options: Configuration for wrapped function.
     """
 
     def __init__(
         self,
         func: Callable[..., T],
         *,
-        cache_backend: CacheBackendBase,
+        cache_backend: CacheBackend,
         cached_func_options: CachedFuncConfig = CachedFuncConfig(),
     ) -> None:
         self.func = func
