@@ -1,12 +1,18 @@
 # Changelog
 
-
 ## Unreleased
+
+### Added
+
+- New cache backends: InMemoryCacheBackend and DiskCacheBackend
+  [PR #458](https://github.com/aai-institute/pyDVL/pull/458)
 
 ### Changed
 
 - Simplify and improve tests, add CodeCov code coverage
   [PR #429](https://github.com/aai-institute/pyDVL/pull/429)
+- Refactor and simplify caching implementation 
+  [PR #458](https://github.com/aai-institute/pyDVL/pull/458)
 
 ## 0.7.1 - 🆕 New methods, bug fixes and improvements for local tests 🐞🧪
 
