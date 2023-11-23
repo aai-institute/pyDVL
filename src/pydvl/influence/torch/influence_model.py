@@ -108,9 +108,9 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
     def _non_symmetric_values(
         self,
         x_test: torch.Tensor,
-        y_test: Optional[torch.Tensor] = None,
-        x: Optional[torch.Tensor] = None,
-        y: Optional[torch.Tensor] = None,
+        y_test: torch.Tensor,
+        x: torch.Tensor,
+        y: torch.Tensor,
         influence_type: InfluenceType = InfluenceType.Up,
     ):
 
@@ -258,7 +258,6 @@ class BatchCgInfluence(TorchInfluence):
         hvp = get_hvp_function(self.model, self.loss, self.train_dataloader)
         reg_hvp = lambda v: hvp(v) + self.hessian_regularization * v.type(rhs.dtype)
         batch_cg = torch.zeros_like(rhs)
-        info = {}
 
         for idx, bi in enumerate(
             maybe_progress(rhs, self.progress, desc="Conjugate gradient")
@@ -463,7 +462,7 @@ class ArnoldiInfluence(TorchInfluence):
     def _non_symmetric_values(
         self,
         x_test: torch.Tensor,
-        y_test: Optional[torch.Tensor] = None,
+        y_test: torch.Tensor,
         x: Optional[torch.Tensor] = None,
         y: Optional[torch.Tensor] = None,
         influence_type: InfluenceType = InfluenceType.Up,

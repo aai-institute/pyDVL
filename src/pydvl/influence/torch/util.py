@@ -1,7 +1,17 @@
 import logging
 import math
 from functools import partial
-from typing import Any, Collection, Dict, Iterable, Mapping, Optional, Tuple, Union
+from typing import (
+    Any,
+    Collection,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import dask
 import numpy as np
@@ -298,7 +308,7 @@ def torch_dataset_to_dask_array(
             t = d_set[start_idx:stop_idx]
             if not isinstance(t, tuple):
                 t = (t,)
-            return t
+            return t  # type:ignore
         except Exception:
             nested_tensor_list = [
                 [d_set[idx][k] for idx in range(start_idx, stop_idx)]
@@ -316,7 +326,7 @@ def torch_dataset_to_dask_array(
         for (start, stop) in chunk_indices
     ]
 
-    delayed_arrays_dict = {k: [] for k in range(len(sample))}
+    delayed_arrays_dict: Dict[int, List[da.Array]] = {k: [] for k in range(len(sample))}
 
     for chunk, (start, stop) in zip(delayed_chunks, chunk_indices):
         for tensor_idx, sample_tensor in enumerate(sample):
