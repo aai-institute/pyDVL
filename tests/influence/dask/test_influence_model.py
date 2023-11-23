@@ -70,8 +70,8 @@ def test_dask_influence_factors(influence_model):
         influence_model, lambda t: t.numpy(), lambda t: torch.from_numpy(t)
     )
     dask_fac = dask_inf.factors(da_x, da_y)
-    dask_fac = dask_fac.x.compute(scheduler="processes")
-    torch_fac = influence_model.factors(t_x, t_y).x.numpy()
+    dask_fac = dask_fac.compute(scheduler="processes")
+    torch_fac = influence_model.factors(t_x, t_y).numpy()
     assert np.allclose(dask_fac, torch_fac, atol=1e-4)
 
 
@@ -86,8 +86,8 @@ def test_dask_influence_values(influence_model, influence_type):
     dask_fac = dask_inf.values(
         da_x_test, da_y_test, da_x, da_y, influence_type=influence_type
     )
-    dask_fac = dask_fac.x.compute(scheduler="processes")
+    dask_fac = dask_fac.compute(scheduler="processes")
     torch_fac = influence_model.values(
         t_x_test, t_y_test, t_x, t_y, influence_type=influence_type
-    ).x.numpy()
+    ).numpy()
     assert np.allclose(dask_fac, torch_fac, atol=1e-4)

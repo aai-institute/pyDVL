@@ -291,12 +291,6 @@ class Influence(Generic[TensorType], ABC):
     def num_parameters(self):
         """Number of trainable parameters of the underlying model"""
 
-    def prepare_for_distributed(self) -> "Influence":
-        """Overwrite this method, in case the instance has to be modified, before being distributed.
-        Must be called explicitly.
-        """
-        return self
-
     @abstractmethod
     def up_weighting(
         self,
@@ -344,7 +338,7 @@ class Influence(Generic[TensorType], ABC):
         """
 
     @abstractmethod
-    def factors(self, x: TensorType, y: TensorType) -> InverseHvpResult[TensorType]:
+    def factors(self, x: TensorType, y: TensorType) -> TensorType:
         r"""
         Overwrite this method to implement the approximation of
         $$
@@ -357,9 +351,7 @@ class Influence(Generic[TensorType], ABC):
             y: label tensor to compute gradients
 
         Returns:
-            Container object of type [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult] with a
-            tensor representing the element-wise inverse Hessian matrix vector products for the provided batch and
-            an optional info structure about the inversion process.
+            Tensor representing the element-wise inverse Hessian matrix vector products
 
         """
 
@@ -371,7 +363,7 @@ class Influence(Generic[TensorType], ABC):
         x: Optional[TensorType] = None,
         y: Optional[TensorType] = None,
         influence_type: InfluenceType = InfluenceType.Up,
-    ) -> InverseHvpResult[TensorType]:
+    ) -> TensorType:
         r"""
         Overwrite this method to implement the approximation of
         $$
@@ -392,8 +384,6 @@ class Influence(Generic[TensorType], ABC):
             influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
 
         Returns:
-            Container object of type [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult] with a
-            tensor representing the element-wise scalar products for the provided batch and
-            an optional info structure about the inversion process.
+            Tensor representing the element-wise scalar products for the provided batch
 
         """

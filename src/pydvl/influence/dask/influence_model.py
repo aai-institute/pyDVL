@@ -33,7 +33,7 @@ class DaskInfluence(Influence[da.Array]):
         self.from_numpy = from_numpy
         self.to_numpy = to_numpy
         self._num_parameters = influence_model.num_parameters
-        self.influence_model = influence_model.prepare_for_distributed()
+        self.influence_model = influence_model
         client = self._get_client()
         if client is not None:
             self.influence_model = client.scatter(influence_model, broadcast=True)
@@ -74,7 +74,7 @@ class DaskInfluence(Influence[da.Array]):
 
         return tuple(indices)
 
-    def factors(self, x: da.Array, y: da.Array) -> InverseHvpResult[da.Array]:
+    def factors(self, x: da.Array, y: da.Array) -> da.Array:
         """
         Compute the expression
         $$
@@ -96,13 +96,9 @@ class DaskInfluence(Influence[da.Array]):
         self._validate_aligned_chunking(x, y)
         self._validate_un_chunked(x)
         self._validate_un_chunked(y)
-        return InverseHvpResult(self._factors_without_info(x, y), {})
 
-    def _factors_without_info(self, x: da.Array, y: da.Array):
         def func(x_numpy: NDArray, y_numpy: NDArray, model: Influence):
-            factors, _ = model.factors(
-                self.from_numpy(x_numpy), self.from_numpy(y_numpy)
-            )
+            factors = model.factors(self.from_numpy(x_numpy), self.from_numpy(y_numpy))
             return self.to_numpy(factors)
 
         def block_func(x_block: da.Array, y_block: NDArray):
@@ -229,7 +225,7 @@ class DaskInfluence(Influence[da.Array]):
         x: Optional[da.Array] = None,
         y: Optional[da.Array] = None,
         influence_type: InfluenceType = InfluenceType.Up,
-    ) -> InverseHvpResult:
+    ) -> da.Array:
         """
         Compute approximation of
         $$
@@ -277,7 +273,7 @@ class DaskInfluence(Influence[da.Array]):
             y_numpy: NDArray,
             model: Influence,
         ):
-            values, _ = model.values(
+            values = model.values(
                 self.from_numpy(x_test_numpy),
                 self.from_numpy(y_test_numpy),
                 self.from_numpy(x_numpy),
@@ -287,7 +283,7 @@ class DaskInfluence(Influence[da.Array]):
             return self.to_numpy(values)
 
         resulting_shape = "ij" if influence_type is InfluenceType.Up else "ijk"
-        result = da.blockwise(
+        return da.blockwise(
             func,
             resulting_shape,
             x_test,
@@ -303,7 +299,6 @@ class DaskInfluence(Influence[da.Array]):
             dtype=x.dtype,
             align_arrays=True,
         )
-        return InverseHvpResult(result, {})
 
     @staticmethod
     def _get_client() -> Optional[distributed.Client]:

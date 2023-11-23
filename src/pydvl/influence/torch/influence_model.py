@@ -79,7 +79,7 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
         x: Optional[torch.Tensor] = None,
         y: Optional[torch.Tensor] = None,
         influence_type: InfluenceType = InfluenceType.Up,
-    ) -> InverseHvpResult:
+    ) -> torch.Tensor:
 
         if x is None:
 
@@ -116,19 +116,19 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
 
         if influence_type is InfluenceType.Up:
             if x_test.shape[0] <= y.shape[0]:
-                factor, info = self.factors(x_test, y_test)
+                factor = self.factors(x_test, y_test)
                 values = self.up_weighting(factor, x, y)
             else:
-                factor, info = self.factors(x, y)
+                factor = self.factors(x, y)
                 values = self.up_weighting(factor, x_test, y_test)
         else:
-            factor, info = self.factors(x_test, y_test)
+            factor = self.factors(x_test, y_test)
             values = self.perturbation(factor, x, y)
-        return InverseHvpResult(values, info)
+        return values
 
     def _symmetric_values(
         self, x: torch.Tensor, y: torch.Tensor, influence_type: InfluenceType
-    ) -> InverseHvpResult[torch.Tensor]:
+    ) -> torch.Tensor:
 
         grad = self._loss_grad(x, y)
         fac, info = self._solve_hvp(grad)
@@ -138,7 +138,7 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
         else:
             values = self.perturbation(fac, x, y)
 
-        return InverseHvpResult(values, info)
+        return values
 
     def up_weighting(
         self,
@@ -167,14 +167,14 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
             ),
         )
 
-    def factors(self, x: torch.Tensor, y: torch.Tensor) -> InverseHvpResult:
+    def factors(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
 
         return self._solve_hvp(
             self._loss_grad(x.to(self.model_device), y.to(self.model_device))
         )
 
     @abstractmethod
-    def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult[torch.Tensor]:
+    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
         pass
 
 
@@ -195,7 +195,6 @@ class DirectInfluence(TorchInfluence):
         hessian_regularization: float,
         hessian: torch.Tensor = None,
         train_dataloader: DataLoader = None,
-        return_hessian_in_info: bool = False,
     ):
         if hessian is None and train_dataloader is None:
             raise ValueError(
@@ -203,7 +202,6 @@ class DirectInfluence(TorchInfluence):
             )
 
         super().__init__(model, loss)
-        self.return_hessian_in_info = return_hessian_in_info
         self.hessian_perturbation = hessian_regularization
         self.hessian = (
             hessian
@@ -211,26 +209,13 @@ class DirectInfluence(TorchInfluence):
             else get_hessian(model, loss, train_dataloader)
         )
 
-    def prepare_for_distributed(self) -> "Influence":
-        if self.return_hessian_in_info:
-            self.return_hessian_in_info = False
-            logger.warning(
-                f"Modified parameter `return_hessian_in_info` to `False`, "
-                f"to prepare for distributed computing"
-            )
-        return self
-
-    def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
-        result = torch.linalg.solve(
+    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
+        return torch.linalg.solve(
             self.hessian.to(self.model_device)
             + self.hessian_perturbation
             * torch.eye(self.num_parameters, device=self.model_device),
             rhs.T.to(self.model_device),
         ).T
-        info = {}
-        if self.return_hessian_in_info:
-            info["hessian"] = self.hessian
-        return InverseHvpResult(result, info)
 
     def to(self, device: torch.device):
         self.hessian = self.hessian.to(device)
@@ -266,7 +251,7 @@ class BatchCgInfluence(TorchInfluence):
         self.hessian_regularization = hessian_regularization
         self.train_dataloader = train_dataloader
 
-    def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
+    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
         if len(self.train_dataloader) == 0:
             raise ValueError("Training dataloader must not be empty.")
 
@@ -287,8 +272,7 @@ class BatchCgInfluence(TorchInfluence):
                 maxiter=self.maxiter,
             )
             batch_cg[idx] = batch_result
-            info[f"batch_{idx}"] = batch_info
-        return InverseHvpResult(x=batch_cg, info=info)
+        return batch_cg
 
     def to(self, device: torch.device):
         self.model = self.model.to(device)
@@ -350,7 +334,7 @@ class LissaInfluence(TorchInfluence):
         self.dampen = dampen
         self.train_dataloader = train_dataloader
 
-    def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
+    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
 
         h_estimate = self.h0 if self.h0 is not None else torch.clone(rhs)
 
@@ -401,11 +385,7 @@ class LissaInfluence(TorchInfluence):
             f"Terminated Lissa with {max_residual*100:.2f} % max residual."
             f" Mean residual: {mean_residual*100:.5f} %"
         )
-        info = {
-            "max_perc_residual": max_residual * 100,
-            "mean_perc_residual": mean_residual * 100,
-        }
-        return InverseHvpResult(x=h_estimate / self.scale, info=info)
+        return h_estimate / self.scale
 
 
 class ArnoldiInfluence(TorchInfluence):
@@ -457,7 +437,6 @@ class ArnoldiInfluence(TorchInfluence):
         tol: float = 1e-6,
         max_iter: Optional[int] = None,
         eigen_computation_on_gpu: bool = False,
-        return_low_rank_representation_in_info: bool = False,
     ):
         if low_rank_representation is None and train_dataloader is None:
             raise ValueError(
@@ -479,19 +458,7 @@ class ArnoldiInfluence(TorchInfluence):
 
         super().__init__(model, loss)
         self.low_rank_representation = low_rank_representation.to(self.model_device)
-        self.return_low_rank_representation_in_info = (
-            return_low_rank_representation_in_info
-        )
         self.hessian_regularization = hessian_regularization
-
-    def prepare_for_distributed(self) -> "Influence":
-        if self.return_low_rank_representation_in_info:
-            self.return_low_rank_representation_in_info = False
-            logger.warning(
-                f"Modified parameter `return_low_rank_representation_in_info` to `False`, "
-                f"to prepare for distributed computing"
-            )
-        return self
 
     def _non_symmetric_values(
         self,
@@ -500,7 +467,7 @@ class ArnoldiInfluence(TorchInfluence):
         x: Optional[torch.Tensor] = None,
         y: Optional[torch.Tensor] = None,
         influence_type: InfluenceType = InfluenceType.Up,
-    ) -> InverseHvpResult[torch.Tensor]:
+    ) -> torch.Tensor:
 
         if influence_type is InfluenceType.Up:
             mjp = matrix_jacobian_product(
@@ -517,16 +484,14 @@ class ArnoldiInfluence(TorchInfluence):
             )
             values = torch.einsum("ij, ik -> jk", left, right)
         else:
-            factors, _ = self.factors(x_test, y_test)
+            factors = self.factors(x_test, y_test)
             values = self.perturbation(factors, x, y)
-        info = {}
-        if self.return_low_rank_representation_in_info:
-            info["low_rank_representation"] = self.low_rank_representation
-        return InverseHvpResult(values, info)
+
+        return values
 
     def _symmetric_values(
         self, x: torch.Tensor, y: torch.Tensor, influence_type: InfluenceType
-    ) -> InverseHvpResult[torch.Tensor]:
+    ) -> torch.Tensor:
 
         if influence_type is InfluenceType.Up:
             left = matrix_jacobian_product(
@@ -537,14 +502,12 @@ class ArnoldiInfluence(TorchInfluence):
             )
             values = torch.einsum("ij, ik -> jk", left, right)
         else:
-            factors, _ = self.factors(x, y)
+            factors = self.factors(x, y)
             values = self.perturbation(factors, x, y)
-        info = {}
-        if self.return_low_rank_representation_in_info:
-            info["low_rank_representation"] = self.low_rank_representation
-        return InverseHvpResult(values, info)
 
-    def _solve_hvp(self, rhs: torch.Tensor) -> InverseHvpResult:
+        return values
+
+    def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
         rhs_device = rhs.device if hasattr(rhs, "device") else torch.device("cpu")
         if rhs_device.type != self.low_rank_representation.device.type:
             raise RuntimeError(
@@ -564,15 +527,7 @@ class ArnoldiInfluence(TorchInfluence):
             @ (self.low_rank_representation.projections.t() @ rhs.t())
         )
 
-        if self.return_low_rank_representation_in_info:
-            info = {
-                "eigenvalues": self.low_rank_representation.eigen_vals,
-                "eigenvectors": self.low_rank_representation.projections,
-            }
-        else:
-            info = {}
-
-        return InverseHvpResult(x=result.t(), info=info)
+        return result.t()
 
     def to(self, device: torch.device):
         return ArnoldiInfluence(
@@ -592,7 +547,6 @@ def direct_factory(
         twice_differentiable.loss,
         train_dataloader=data_loader,
         hessian_regularization=hessian_regularization,
-        return_hessian_in_info=True,
         **kwargs,
     )
 
@@ -641,6 +595,5 @@ def arnoldi_factory(
         twice_differentiable.loss,
         train_dataloader=data_loader,
         hessian_regularization=hessian_regularization,
-        return_low_rank_representation_in_info=True,
         **kwargs,
     )

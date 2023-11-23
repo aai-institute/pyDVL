@@ -179,7 +179,7 @@ def model_and_data(
 @fixture
 def direct_influence(model_and_data, test_case: TestCase):
     model, train_dataloader, test_dataloader = model_and_data
-    direct_influence, _ = compute_influences(
+    direct_influence = compute_influences(
         model,
         training_data=train_dataloader,
         test_data=test_dataloader,
@@ -249,7 +249,7 @@ def test_influence_linear_model(
         batch_size=40,
     )
 
-    influence_values, _ = compute_influences(
+    influence_values = compute_influences(
         TorchTwiceDifferentiable(linear_layer, loss),
         training_data=train_data_loader,
         test_data=test_data_loader,
@@ -295,7 +295,7 @@ def test_influences_nn(
 ):
     model, train_dataloader, test_dataloader = model_and_data
 
-    approx_influences, _ = compute_influences(
+    approx_influences = compute_influences(
         model,
         training_data=train_dataloader,
         test_data=test_dataloader,
@@ -355,7 +355,7 @@ def test_influences_arnoldi(
 
     num_parameters = sum(p.numel() for p in model.model.parameters() if p.requires_grad)
 
-    low_rank_influence, _ = compute_influences(
+    low_rank_influence = compute_influences(
         model,
         training_data=train_dataloader,
         test_data=test_dataloader,
@@ -379,7 +379,7 @@ def test_influences_arnoldi(
         rank_estimate=num_parameters - 1,
     )
 
-    precomputed_low_rank_influence, _ = compute_influences(
+    precomputed_low_rank_influence = compute_influences(
         model,
         training_data=train_dataloader,
         test_data=test_dataloader,

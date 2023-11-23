@@ -84,15 +84,7 @@ def compute_influence_factors(
         ):
             yield influence.factors(x_test, y_test)
 
-    info_dict = {}
-    tensor_list = []
-    for k, factors in enumerate(factors_gen()):
-        info_dict[k] = factors.info
-        tensor_list.append(factors.x)
-
-    values = cat(tensor_list)
-
-    return InverseHvpResult(values, info_dict)
+    return cat(list(factors_gen()))
 
 
 def compute_influences_up(
@@ -237,7 +229,7 @@ def compute_influences(
     hessian_regularization: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
-) -> InverseHvpResult:  # type: ignore # ToDO fix typing
+) -> TensorType:  # type: ignore # ToDO fix typing
     r"""
     Calculates the influence of each input data point on the specified test points.
 
@@ -299,7 +291,7 @@ def compute_influences(
         for x, y in maybe_progress(
             input_data, progress, desc="Batch input influence values"
         ):
-            yield influence_function(factors.x, x, y)
+            yield influence_function(factors, x, y)
 
     tensor_util: Type[TensorUtilities] = TensorUtilities.from_twice_differentiable(
         differentiable_model
@@ -307,4 +299,4 @@ def compute_influences(
     cat = tensor_util.cat
     values = cat(list(values_gen()), dim=1)
 
-    return InverseHvpResult(values, factors.info)
+    return values
