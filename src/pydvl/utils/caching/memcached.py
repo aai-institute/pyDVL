@@ -86,127 +86,113 @@ import socket
 import uuid
 import warnings
 from dataclasses import asdict, dataclass
-from functools import wraps
-from hashlib import blake2b
-from io import BytesIO
-from time import time
-from typing import Any, Callable, Dict, Iterable, Optional, TypeVar, cast
+from typing import Any, Dict, Optional, Tuple
 
-from cloudpickle import Pickler
 from pymemcache import MemcacheUnexpectedCloseError
 from pymemcache.client import Client, RetryingClient
+from pymemcache.serde import PickleSerde
 
-from ..config import MemcachedClientConfig
-from ..numeric import running_moments
+from .base import CacheBackendBase
+
+__all__ = ["MemcachedClientConfig", "MemcachedCacheBackend"]
 
 PICKLE_VERSION = 5  # python >= 3.8
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar("T")
+
+@dataclass(frozen=True)
+class MemcachedClientConfig:
+    """Configuration of the memcached client.
+
+    Args:
+        server: A tuple of (IP|domain name, port).
+        connect_timeout: How many seconds to wait before raising
+            `ConnectionRefusedError` on failure to connect.
+        timeout: seconds to wait for send or recv calls on the socket
+            connected to memcached.
+        no_delay: set the `TCP_NODELAY` flag, which may help with performance
+            in some cases.
+        serde: a serializer / deserializer ("serde"). The default `PickleSerde`
+            should work in most cases. See [pymemcached's
+            documentation](https://pymemcache.readthedocs.io/en/latest/apidoc/pymemcache.client.base.html#pymemcache.client.base.Client)
+            for details.
+    """
+
+    server: Tuple[str, int] = ("localhost", 11211)
+    connect_timeout: float = 1.0
+    timeout: float = 1.0
+    no_delay: bool = True
+    serde: PickleSerde = PickleSerde(pickle_version=PICKLE_VERSION)
 
 
-@dataclass
-class CacheStats:
-    """Statistics gathered by cached functions.
+class MemcachedCacheBackend(CacheBackendBase):
+    """Memcached cache backend.
+
+    Implements CacheBackendBase using a memcached client.
 
     Attributes:
-        sets: number of times a value was set in the cache
-        misses: number of times a value was not found in the cache
-        hits: number of times a value was found in the cache
-        timeouts: number of times a timeout occurred
-        errors: number of times an error occurred
-        reconnects: number of times the client reconnected to the server
+        config: Memcached client configuration.
+        client: Memcached client instance.
     """
 
-    sets: int = 0
-    misses: int = 0
-    hits: int = 0
-    timeouts: int = 0
-    errors: int = 0
-    reconnects: int = 0
+    def __init__(self, config: MemcachedClientConfig = MemcachedClientConfig()) -> None:
+        """Initialize memcached cache backend.
 
+        Args:
+            config: Memcached client configuration.
+        """
+        super().__init__()
+        self.config = config
+        self.client = self._connect(self.config)
 
-def serialize(x: Any) -> bytes:
-    """Serialize an object to bytes.
-    Args:
-        x: object to serialize.
+    def get(self, key: str) -> Optional[Any]:
+        """Get value from memcached.
 
-    Returns:
-        serialized object.
-    """
-    pickled_output = BytesIO()
-    pickler = Pickler(pickled_output, PICKLE_VERSION)
-    pickler.dump(x)
-    return pickled_output.getvalue()
+        Args:
+            key: Cache key.
 
+        Returns:
+            Cached value or None if not found or client disconnected.
+        """
+        result = None
+        try:
+            result = self.client.get(key)
+        except socket.timeout as e:
+            self.stats.timeouts += 1
+            warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
+        except OSError as e:
+            self.stats.errors += 1
+            warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
+        except AttributeError as e:
+            # FIXME: this depends on _recv() failing on invalid sockets
+            # See pymemcache.base.py,
+            self.stats.reconnects += 1
+            warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
+            self.client = self._connect(self.config)
+        if result is None:
+            self.stats.misses += 1
+        else:
+            self.stats.hits += 1
+        return result
 
-def memcached(
-    client_config: Optional[MemcachedClientConfig] = None,
-    time_threshold: float = 0.3,
-    allow_repeated_evaluations: bool = False,
-    rtol_stderr: float = 0.1,
-    min_repetitions: int = 3,
-    ignore_args: Optional[Iterable[str]] = None,
-) -> Callable[[Callable[..., T], bytes | None], Callable[..., T]]:
-    """
-    Transparent, distributed memoization of function calls.
+    def set(self, key: str, value: Any) -> None:
+        """Set value in memcached.
 
-    Given a function and its signature, memcached uses a distributed cache
-    that, for each set of inputs, keeps track of the average returned value,
-    with variance and number of times it was calculated.
+        Args:
+            key: Cache key.
+            value: Value to cache.
+        """
+        self.client.set(key, value, noreply=True)
+        self.stats.sets += 1
 
-    If the function is deterministic, i.e. same input corresponds to the same
-    exact output, set `allow_repeated_evaluations` to `False`. If instead the
-    function is stochastic (like the training of a model depending on random
-    initializations), memcached() allows to set a minimum number of evaluations
-    to compute a running average, and a tolerance after which the function will
-    not be called anymore. In other words, the function will be recomputed
-    until the value has stabilized with a standard error smaller than
-    `rtol_stderr * running average`.
+    def clear(self) -> None:
+        """Flush all values from memcached."""
+        self.client.flush_all(noreply=True)
 
-    !!! Warning
-        Do not cache functions with state! See [Cache reuse](cache-reuse)
-
-    ??? Example
-        ```python
-        cached_fun = memcached(**asdict(cache_options))(heavy_computation)
-        ```
-
-    Args:
-        client_config: configuration for pymemcache's
-            [Client][pymemcache.client.base.Client].
-            Will be merged on top of the default configuration (see below).
-        time_threshold: computations taking less time than this many seconds are
-            not cached.
-        allow_repeated_evaluations: If `True`, repeated calls to a function
-            with the same arguments will be allowed and outputs averaged until the
-            running standard deviation of the mean stabilizes below
-            `rtol_stderr * mean`.
-        rtol_stderr: relative tolerance for repeated evaluations. More precisely,
-            [memcached()][pydvl.utils.caching.memcached] will stop evaluating the function once the
-            standard deviation of the mean is smaller than `rtol_stderr * mean`.
-        min_repetitions: minimum number of times that a function evaluation
-            on the same arguments is repeated before returning cached values. Useful
-            for stochastic functions only. If the model training is very noisy, set
-            this number to higher values to reduce variance.
-        ignore_args: Do not take these keyword arguments into account when
-            hashing the wrapped function for usage as key in memcached. This allows
-            sharing the cache among different jobs for the same experiment run if
-            the callable happens to have "nuisance" parameters like `job_id` which
-            do not affect the result of the computation.
-
-    Returns:
-        A wrapped function
-
-    """
-    if ignore_args is None:
-        ignore_args = []
-
-    # Do I really need this?
-    def connect(config: MemcachedClientConfig):
-        """First tries to establish a connection, then tries setting and
-        getting a value."""
+    @staticmethod
+    def _connect(config: MemcachedClientConfig) -> RetryingClient:
+        """Connect to memcached server."""
         try:
             client = RetryingClient(
                 Client(**asdict(config)),
@@ -226,114 +212,28 @@ def memcached(
                 f"to {config.server} after "
                 f"{config.connect_timeout} seconds: {str(e)}. Did you start memcached?"
             )
-            raise e
+            raise
         except AssertionError as e:
             logger.error(  # type: ignore
                 f"@memcached: Failure saving dummy value "
                 f"to {config.server}: {str(e)}"
             )
+            raise
 
-    def wrapper(fun: Callable[..., T], signature: Optional[bytes] = None):
-        if signature is None:
-            signature = serialize((fun.__code__.co_code, fun.__code__.co_consts))
+    def combine_hashes(self, *args: str) -> str:
+        """Join cache key components for Memcached."""
+        return ":".join(args)
 
-        @wraps(fun, updated=[])  # don't try to use update() for a class
-        class Wrapped:
-            config: MemcachedClientConfig
-            stats: CacheStats
-            client: RetryingClient
+    def __getstate__(self) -> Dict:
+        """Enables pickling after a socket has been opened to the
+        memcached server, by removing the client from the stored
+        data."""
+        odict = self.__dict__.copy()
+        del odict["client"]
+        return odict
 
-            def __init__(self, config: MemcachedClientConfig):
-                self.config = config
-                self.stats = CacheStats()
-                self.client = connect(self.config)
-                self._signature = signature
-
-            def __call__(self, *args, **kwargs) -> T:
-                key_kwargs = {k: v for k, v in kwargs.items() if k not in ignore_args}  # type: ignore
-                arg_signature: bytes = serialize((args, list(key_kwargs.items())))
-
-                key = blake2b(self._signature + arg_signature).hexdigest().encode("ASCII")  # type: ignore
-
-                result_dict: Dict[str, float] = self.get_key_value(key)
-                if result_dict is None:
-                    result_dict = {}
-                    start = time()
-                    value = fun(*args, **kwargs)
-                    end = time()
-                    result_dict["value"] = value
-                    if end - start >= time_threshold or allow_repeated_evaluations:
-                        result_dict["count"] = 1
-                        result_dict["variance"] = 0
-                        self.client.set(key, result_dict, noreply=True)
-                        self.stats.sets += 1
-                    self.stats.misses += 1
-                elif allow_repeated_evaluations:
-                    self.stats.hits += 1
-                    value = result_dict["value"]
-                    count = result_dict["count"]
-                    variance = result_dict["variance"]
-                    error_on_average = (variance / count) ** (1 / 2)
-                    if (
-                        error_on_average > rtol_stderr * value
-                        or count <= min_repetitions
-                    ):
-                        new_value = fun(*args, **kwargs)
-                        new_avg, new_var = running_moments(
-                            value, variance, int(count), cast(float, new_value)
-                        )
-                        result_dict["value"] = new_avg
-                        result_dict["count"] = count + 1
-                        result_dict["variance"] = new_var
-                        self.client.set(key, result_dict, noreply=True)
-                        self.stats.sets += 1
-                else:
-                    self.stats.hits += 1
-                return result_dict["value"]  # type: ignore
-
-            def __getstate__(self):
-                """Enables pickling after a socket has been opened to the
-                memcached server, by removing the client from the stored
-                data."""
-                odict = self.__dict__.copy()
-                del odict["client"]
-                return odict
-
-            def __setstate__(self, d: dict):
-                """Restores a client connection after loading from a pickle."""
-                self.config = d["config"]
-                self.stats = d["stats"]
-                self.client = Client(**asdict(self.config))
-                self._signature = signature
-
-            def get_key_value(self, key: bytes):
-                result = None
-                try:
-                    result = self.client.get(key)
-                except socket.timeout as e:
-                    self.stats.timeouts += 1
-                    warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
-                except OSError as e:
-                    self.stats.errors += 1
-                    warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
-                except AttributeError as e:
-                    # FIXME: this depends on _recv() failing on invalid sockets
-                    # See pymemcache.base.py,
-                    self.stats.reconnects += 1
-                    warnings.warn(f"{type(self).__name__}: {str(e)}", RuntimeWarning)
-                    self.client = connect(self.config)
-                return result
-
-        Wrapped.__doc__ = (
-            f"A wrapper around {fun.__name__}() with remote caching enabled.\n"
-            + (Wrapped.__doc__ or "")
-        )
-        Wrapped.__name__ = f"memcached_{fun.__name__}"
-        path = list(reversed(fun.__qualname__.split(".")))
-        patched = [f"memcached_{path[0]}"] + path[1:]
-        Wrapped.__qualname__ = ".".join(reversed(patched))
-
-        # TODO: pick from some config file or something
-        return Wrapped(client_config or MemcachedClientConfig())
-
-    return wrapper
+    def __setstate__(self, d: Dict):
+        """Restores a client connection after loading from a pickle."""
+        self.config = d["config"]
+        self.stats = d["stats"]
+        self.client = self._connect(self.config)
