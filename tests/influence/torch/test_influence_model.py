@@ -1,6 +1,5 @@
-from dataclasses import dataclass
 from math import prod
-from typing import Callable, Dict, NamedTuple, Optional, Tuple
+from typing import Callable, NamedTuple, Tuple
 
 import numpy as np
 import pytest
@@ -11,9 +10,7 @@ from pydvl.influence.torch.influence_model import (
     BatchCgInfluence,
     DirectInfluence,
     LissaInfluence,
-    TorchInfluence,
 )
-from pydvl.influence.twice_differentiable import Influence
 from tests.influence.torch.conftest import minimal_training
 
 torch = pytest.importorskip("torch")
@@ -24,8 +21,8 @@ from pytest_cases import fixture, parametrize, parametrize_with_cases
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from pydvl.influence import InfluenceType, InversionMethod, compute_influences
-from pydvl.influence.torch import TorchTwiceDifferentiable, model_hessian_low_rank
+from pydvl.influence import InfluenceType
+from pydvl.influence.torch import model_hessian_low_rank
 from tests.influence.conftest import (
     add_noise_to_linear_model,
     analytical_linear_influences,

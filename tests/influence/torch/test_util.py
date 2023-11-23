@@ -11,10 +11,8 @@ from torch.nn.functional import mse_loss
 from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence.torch.functional import (
-    batch_loss_function,
     get_batch_hvp,
     get_hvp_function,
-    hvp,
 )
 from pydvl.influence.torch.torch_differentiable import lanzcos_low_rank_hessian_approx
 from pydvl.influence.torch.util import (
