@@ -1,11 +1,13 @@
 # TODO add more tests!
+import pickle
 import warnings
 
 import numpy as np
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from pydvl.utils import DataUtilityLearning, MemcachedConfig, Scorer, Utility, powerset
+from pydvl.utils import DataUtilityLearning, Scorer, Utility, powerset
+from pydvl.utils.caching import InMemoryCacheBackend
 
 
 @pytest.mark.parametrize("show_warnings", [False, True])
@@ -27,15 +29,14 @@ def test_utility_show_warnings(housing_dataset, show_warnings, recwarn):
     utility = Utility(
         model=WarningModel(),
         data=housing_dataset,
-        enable_cache=False,
         show_warnings=show_warnings,
     )
     utility([0])
 
     if show_warnings:
-        assert len(recwarn) >= 1
+        assert len(recwarn) >= 1, recwarn.list
     else:
-        assert len(recwarn) == 0
+        assert len(recwarn) == 0, recwarn.list
 
 
 # noinspection PyUnresolvedReferences
@@ -46,7 +47,6 @@ def test_data_utility_learning_wrapper(linear_dataset, training_budget):
         model=LinearRegression(),
         data=linear_dataset,
         scorer=Scorer("r2"),
-        enable_cache=False,
     )
     wrapped_u = DataUtilityLearning(u, training_budget, LinearRegression())
     subsets = list(powerset(wrapped_u.utility.data.indices))
@@ -59,51 +59,40 @@ def test_data_utility_learning_wrapper(linear_dataset, training_budget):
 
 # noinspection PyUnresolvedReferences
 @pytest.mark.parametrize("a, b, num_points", [(2, 0, 8)])
-def test_cache(linear_dataset, memcache_client_config):
+def test_utility_with_cache(linear_dataset):
     u = Utility(
         model=LinearRegression(),
         data=linear_dataset,
         scorer=Scorer("r2"),
-        enable_cache=True,
-        cache_options=MemcachedConfig(
-            client_config=memcache_client_config, time_threshold=0
-        ),
+        cache=InMemoryCacheBackend(),
     )
     subsets = list(powerset(u.data.indices))
 
     for s in subsets:
         u(s)
-    assert u._utility_wrapper.stats.hits == 0
+    assert u._utility_wrapper.stats.hits == 0, u._utility_wrapper.stats
 
     for s in subsets:
         u(s)
-    assert u._utility_wrapper.stats.hits == len(subsets)
+
+    assert u._utility_wrapper.stats.hits == len(subsets), u._utility_wrapper.stats
 
 
 @pytest.mark.parametrize("a, b, num_points", [(2, 0, 8)])
-@pytest.mark.parametrize("model_kwargs", [({}, {}), ({}, {"fit_intercept": False})])
-def test_different_cache_signature(
-    linear_dataset, memcache_client_config, model_kwargs
-):
-    u1 = Utility(
-        model=LinearRegression(**model_kwargs[0]),
+@pytest.mark.parametrize("use_cache", [False, True])
+def test_utility_serialization(linear_dataset, use_cache):
+    if use_cache:
+        cache = InMemoryCacheBackend()
+    else:
+        cache = None
+    u = Utility(
+        model=LinearRegression(),
         data=linear_dataset,
         scorer=Scorer("r2"),
-        enable_cache=True,
-        cache_options=MemcachedConfig(
-            client_config=memcache_client_config, time_threshold=0
-        ),
+        cache=cache,
     )
-    u2 = Utility(
-        model=LinearRegression(**model_kwargs[1]),
-        data=linear_dataset,
-        scorer=Scorer("r2"),
-        enable_cache=True,
-        cache_options=MemcachedConfig(
-            client_config=memcache_client_config, time_threshold=0
-        ),
-    )
-
-    assert u1.signature != u2.signature
-    assert u1.signature == u1.signature
-    assert u2.signature == u2.signature
+    u_unpickled = pickle.loads(pickle.dumps(u))
+    assert type(u.model) == type(u_unpickled.model)
+    assert type(u.scorer) == type(u_unpickled.scorer)
+    assert type(u.data) == type(u_unpickled.data)
+    assert (u.data.x_train == u_unpickled.data.x_train).all()
