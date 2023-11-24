@@ -30,23 +30,23 @@ class DiskCacheBackend(CacheBackend):
     ??? Examples
         ``` pycon
         >>> from pydvl.utils.caching.disk import DiskCacheBackend
-        >>> cache = DiskCacheBackend(cache_dir="/tmp/pydvl_disk_cache")
-        >>> cache.clear()
+        >>> cache_backend = DiskCacheBackend(cache_dir="/tmp/pydvl_disk_cache")
+        >>> cache_backend.clear()
         >>> value = 42
-        >>> cache.set("key", value)
-        >>> cache.get("key")
+        >>> cache_backend.set("key", value)
+        >>> cache_backend.get("key")
         42
         ```
 
         ``` pycon
-        >>> from pydvl.utils.caching.disk import DiskCacheBackend
-        >>> cache = DiskCacheBackend(cache_dir="/tmp/pydvl_disk_cache")
-        >>> cache.clear()
+        >>> from pydvl.utils.caching.memcached import MemcachedCacheBackend
+        >>> cache_backend = MemcachedCacheBackend()
+        >>> cache_backend.clear()
         >>> value = 42
         >>> def foo(x: int):
         ...     return x + 1
         ...
-        >>> wrapped_foo = cache.wrap(foo)
+        >>> wrapped_foo = cache_backend.wrap(foo)
         >>> wrapped_foo(value)
         43
         >>> wrapped_foo.stats.misses
@@ -60,7 +60,6 @@ class DiskCacheBackend(CacheBackend):
         >>> wrapped_foo.stats.hits
         1
         ```
-
 
     """
 

@@ -100,7 +100,7 @@ class Utility:
             calculations. When this happens, the `default_score` is returned as
             a score and computation continues.
         show_warnings: Set to `False` to suppress warnings thrown by `fit()`.
-        cache: Optional instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
+        cache_backend: Optional instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
             used to wrap the _utility method of the Utility instance.
             By default, this is set to None and that means that the utility evaluations
             will not be cached.
@@ -135,7 +135,7 @@ class Utility:
         score_range: Tuple[float, float] = (-np.inf, np.inf),
         catch_errors: bool = True,
         show_warnings: bool = False,
-        cache: Optional[CacheBackend] = None,
+        cache_backend: Optional[CacheBackend] = None,
         cached_func_options: CachedFuncConfig = CachedFuncConfig(),
         clone_before_fit: bool = True,
     ):
@@ -149,7 +149,7 @@ class Utility:
         self.score_range = scorer.range if scorer is not None else np.array(score_range)
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
-        self.cache = cache
+        self.cache = cache_backend
         self.cached_func_options = cached_func_options
         self.clone_before_fit = clone_before_fit
         self._initialize_utility_wrapper()
