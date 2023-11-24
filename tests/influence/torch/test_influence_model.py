@@ -292,6 +292,13 @@ def test_influence_linear_model(
         influence_type=influence_type,
         hessian_regularization=hessian_reg,
     )
+    sym_analytical_influences = analytical_linear_influences(
+        (A, b),
+        *train_data,
+        *train_data,
+        influence_type=influence_type,
+        hessian_regularization=hessian_reg,
+    )
 
     train_data_set = TensorDataset(*list(map(torch.from_numpy, train_data)))
     train_data_loader = DataLoader(train_data_set, batch_size=40, num_workers=0)
@@ -302,14 +309,29 @@ def test_influence_linear_model(
     influence_values = influence.values(
         x_test, y_test, x_train, y_train, influence_type=influence_type
     ).numpy()
+    sym_influence_values = influence.values(
+        x_train, y_train, x_train, y_train, influence_type=influence_type
+    ).numpy()
+
+    with pytest.raises(ValueError):
+        influence.values(x_test, y_test, x=x_train, influence_type=influence_type)
+
+    def upper_quantile_equivalence(
+        approx_inf: NDArray, analytical_inf: NDArray, quantile: float
+    ):
+        abs_influence = np.abs(approx_inf)
+        upper_quantile_mask = abs_influence > np.quantile(abs_influence, quantile)
+        return np.allclose(
+            approx_inf[upper_quantile_mask],
+            analytical_inf[upper_quantile_mask],
+            rtol=rtol,
+        )
 
     assert np.logical_not(np.any(np.isnan(influence_values)))
-    abs_influence = np.abs(influence_values)
-    upper_quantile_mask = abs_influence > np.quantile(abs_influence, 0.9)
-    assert np.allclose(
-        influence_values[upper_quantile_mask],
-        analytical_influences[upper_quantile_mask],
-        rtol=rtol,
+    assert np.logical_not(np.any(np.isnan(sym_influence_values)))
+    assert upper_quantile_equivalence(influence_values, analytical_influences, 0.9)
+    assert upper_quantile_equivalence(
+        sym_influence_values, sym_analytical_influences, 0.9
     )
 
 
