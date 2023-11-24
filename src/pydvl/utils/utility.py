@@ -179,7 +179,8 @@ class Utility:
         """Clones the model, fits it on a subset of the training data
         and scores it on the test data.
 
-        If the object is constructed with `enable_cache = True`, results are
+        If an instance of [CacheBackend][pydvl.utils.caching.base.CacheBackend]
+        is passed during construction, results are
         memoized to avoid duplicate computation. This is useful in particular
         when computing utilities of permutations of indices or when randomly
         sampling from the powerset of indices.

@@ -72,7 +72,6 @@ def dummy_utility(num_samples):
         score_range=(0, x.sum() / x.max()),
         catch_errors=False,
         show_warnings=True,
-        enable_cache=False,
     )
 
 
@@ -122,7 +121,9 @@ def linear_shapley(cache, linear_dataset, scorer, n_jobs):
 
     if u is None:
         u = Utility(
-            LinearRegression(), data=linear_dataset, scorer=scorer, enable_cache=False
+            LinearRegression(),
+            data=linear_dataset,
+            scorer=scorer,
         )
         exact_values = combinatorial_exact_shapley(u, progress=False, n_jobs=n_jobs)
         cache.set(u_cache_key, u)
