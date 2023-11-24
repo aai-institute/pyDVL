@@ -117,7 +117,7 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
     ):
 
         if influence_type is InfluenceType.Up:
-            if x_test.shape[0] <= y.shape[0]:
+            if x_test.shape[0] <= x.shape[0]:
                 factor = self.factors(x_test, y_test)
                 values = self.up_weighting(factor, x, y)
             else:
@@ -133,7 +133,7 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
     ) -> torch.Tensor:
 
         grad = self._loss_grad(x, y)
-        fac, info = self._solve_hvp(grad)
+        fac = self._solve_hvp(grad)
 
         if influence_type is InfluenceType.Up:
             values = fac @ grad.T
@@ -498,9 +498,10 @@ class ArnoldiInfluence(TorchInfluence):
             left = matrix_jacobian_product(
                 self.model, self.loss, self.low_rank_representation.projections.T
             )(self.model_params, x, y)
-            right = (
-                torch.diag_embed(1.0 / self.low_rank_representation.eigen_vals) @ left
+            regularized_eigenvalues = (
+                self.low_rank_representation.eigen_vals + self.hessian_regularization
             )
+            right = torch.diag_embed(1.0 / regularized_eigenvalues) @ left
             values = torch.einsum("ij, ik -> jk", left, right)
         else:
             factors = self.factors(x, y)
@@ -509,15 +510,6 @@ class ArnoldiInfluence(TorchInfluence):
         return values
 
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
-        rhs_device = rhs.device if hasattr(rhs, "device") else torch.device("cpu")
-        if rhs_device.type != self.low_rank_representation.device.type:
-            raise RuntimeError(
-                f"The devices for 'b' and 'low_rank_representation' do not match.\n"
-                f" - 'b' is on device: {rhs_device}\n"
-                f" - 'low_rank_representation' is on device: {self.low_rank_representation.device}\n"
-                f"\nTo resolve this, consider moving 'low_rank_representation' to '{rhs_device}' by using:\n"
-                f"low_rank_representation = low_rank_representation.to(b.device)"
-            )
 
         regularized_eigenvalues = (
             self.low_rank_representation.eigen_vals + self.hessian_regularization
