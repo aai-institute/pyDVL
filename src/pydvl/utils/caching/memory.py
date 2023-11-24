@@ -1,5 +1,5 @@
 import os
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from pydvl.utils.caching.base import CacheBackend
 
@@ -56,7 +56,7 @@ class InMemoryCacheBackend(CacheBackend):
     def __init__(self) -> None:
         """Initialize the in-memory cache backend."""
         super().__init__()
-        self.cached_values = {}
+        self.cached_values: Dict[str, Any] = {}
 
     def get(self, key: str) -> Optional[Any]:
         """Get a value from the cache.

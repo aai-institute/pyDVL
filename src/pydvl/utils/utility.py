@@ -246,9 +246,10 @@ class Utility:
         """Cache statistics are gathered when cache is enabled.
         See [CacheStats][pydvl.utils.caching.base.CacheStats] for all fields returned.
         """
+        cache_stats: Optional[CacheStats] = None
         if self.cache is not None:
-            return self._utility_wrapper.stats
-        return None
+            cache_stats = self._utility_wrapper.stats
+        return cache_stats
 
     def __getstate__(self):
         state = self.__dict__.copy()

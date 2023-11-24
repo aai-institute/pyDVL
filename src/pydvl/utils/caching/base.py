@@ -13,8 +13,6 @@ from .config import CachedFuncConfig
 
 __all__ = ["CacheStats", "CacheBackend", "CachedFunc"]
 
-T = TypeVar("T")
-
 logger = logging.getLogger(__name__)
 
 
@@ -143,7 +141,7 @@ class CachedFunc:
 
     def __init__(
         self,
-        func: Callable[..., T],
+        func: Callable[..., float],
         *,
         cache_backend: CacheBackend,
         cached_func_options: CachedFuncConfig = CachedFuncConfig(),
@@ -160,14 +158,14 @@ class CachedFunc:
         patched = [f"cached_{path[0]}"] + path[1:]
         self.__qualname__ = ".".join(reversed(patched))
 
-    def __call__(self, *args, **kwargs) -> T:
+    def __call__(self, *args, **kwargs) -> float:
         """Call the wrapped cached function.
 
         Executes the wrapped function, caching and returning the result.
         """
         return self._cached_call(args, kwargs)
 
-    def _force_call(self, args, kwargs) -> Tuple[T, float]:
+    def _force_call(self, args, kwargs) -> Tuple[float, float]:
         """Force re-evaluation of the wrapped function.
 
         Executes the wrapped function without caching.
@@ -181,7 +179,7 @@ class CachedFunc:
         duration = end - start
         return value, duration
 
-    def _cached_call(self, args, kwargs) -> T:
+    def _cached_call(self, args, kwargs) -> float:
         """Cached wrapped function call.
 
         Executes the wrapped function with cache checking/setting.
@@ -233,26 +231,27 @@ class CachedFunc:
     @staticmethod
     def _hash_function(func: Callable) -> str:
         """Create hash for wrapped function."""
-        func_hash = hashing.hash((func.__code__.co_code, func.__code__.co_consts))
+        func_hash: str = hashing.hash((func.__code__.co_code, func.__code__.co_consts))
         return func_hash
 
     @staticmethod
     def _hash_arguments(
         func: Callable,
         ignore_args: Collection[str],
-        args: Tuple[Any],
+        args: Tuple[Any, ...],
         kwargs: Dict[str, Any],
     ) -> str:
         """Create hash for function arguments."""
-        return hashing.hash(
+        args_hash: str = hashing.hash(
             CachedFunc._filter_args(func, ignore_args, args, kwargs),
         )
+        return args_hash
 
     @staticmethod
     def _filter_args(
         func: Callable,
         ignore_args: Collection[str],
-        args: Tuple[Any],
+        args: Tuple[Any, ...],
         kwargs: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Filter arguments to exclude from cache keys."""
