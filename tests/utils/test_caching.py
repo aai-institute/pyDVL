@@ -42,7 +42,7 @@ def foo_with_random_and_sleep(indices: NDArray[np.int_], *args, **kwargs) -> flo
 
 
 # Used to test caching of methods
-class Test:
+class CacheTest:
     def __init__(self):
         self.value = 0
 
@@ -54,18 +54,18 @@ class Test:
 def cache_backend(request):
     backend: str = request.param
     if backend == "in-memory":
-        cache = InMemoryCacheBackend()
-        yield cache
-        cache.clear()
+        cache_backend = InMemoryCacheBackend()
+        yield cache_backend
+        cache_backend.clear()
     elif backend == "disk":
         with tempfile.TemporaryDirectory() as tempdir:
-            cache = DiskCacheBackend(tempdir)
-            yield cache
-            cache.clear()
+            cache_backend = DiskCacheBackend(tempdir)
+            yield cache_backend
+            cache_backend.clear()
     elif backend == "memcached":
-        cache = MemcachedCacheBackend()
-        yield cache
-        cache.clear()
+        cache_backend = MemcachedCacheBackend()
+        yield cache_backend
+        cache_backend.clear()
     else:
         raise ValueError(f"Unknown cache backend {backend}")
 
@@ -120,7 +120,7 @@ def test_cached_func_hash_arguments(args1, args2, expected_equal):
 
 
 def test_cached_func_hash_arguments_of_method():
-    obj = Test()
+    obj = CacheTest()
 
     hash1 = CachedFunc._hash_arguments(obj.foo, [], tuple(), {})
     obj.value += 1
@@ -206,7 +206,7 @@ def test_parallel_jobs(cache_backend, parallel_config):
     for _ in range(n_runs):
         result = map_reduce_job()
         results.append(result)
-    hits_after = cache.client.stats()[b"get_hits"]
+    hits_after = cache_backend.client.stats()[b"get_hits"]
 
     assert results[0] == n * (n - 1) / 2  # Sanity check
     # FIXME! This is non-deterministic: if packets are delayed for longer than
