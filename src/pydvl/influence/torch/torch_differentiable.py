@@ -429,31 +429,104 @@ def get_kfac_blocks(
     model: TorchTwiceDifferentiable,
     data_loader: DataLoader,
 ):
-
     forward_x = {}
     grad_y = {}
     hooks = []
-    data_len = len(data_loader)
+    data_len = len(data_loader.sampler)
 
-    def input_hook(m, x, y, with_bias=True):
+    def input_hook(m, x, y, m_name, with_bias=True):
+        x = x[0]
         if with_bias:
             x = torch.cat((x, torch.ones((x.shape[0], 1), device=model.device)), dim=1)
-        forward_x[m] += torch.mm(x.t(), x) / data_len
+        forward_x[m_name] += torch.mm(x.t(), x)
 
-    def grad_hook(m, m_grad, m_out):
-        grad_y[m] += torch.mm(m_out.t(), m_out) / data_len
+    def grad_hook(m, m_grad, m_out, m_name):
+        m_out = m_out[0]
+        grad_y[m_name] += torch.mm(m_out.t(), m_out)
 
     for m_name, module in model.model.named_modules():
         if len(list(module.children())) == 0 and len(list(module.parameters())) > 0:
             layer_requires_grad = [param.requires_grad for param in module.parameters()]
             if any(layer_requires_grad):
                 if isinstance(module, nn.Linear):
+                    has_bias = module.bias is not None
                     sG = module.out_features
-                    sA = module.in_features + int(module.bias)
+                    sA = module.in_features + int(has_bias)
                     forward_x[m_name] = torch.zeros((sA, sA), device=model.device)
                     grad_y[m_name] = torch.zeros((sG, sG), device=model.device)
-                    hooks.append(module.register_forward_hook(input_hook))
-                    hooks.append(module.register_full_backward_hook(grad_hook))
+                    hooks.append(
+                        module.register_forward_hook(
+                            partial(input_hook, with_bias=has_bias, m_name=m_name)
+                        )
+                    )
+                    hooks.append(
+                        module.register_full_backward_hook(
+                            partial(grad_hook, m_name=m_name)
+                        )
+                    )
+                elif isinstance(module, nn.Conv2d):
+                    pass
+                else:
+                    raise NotImplementedError(
+                        f"Only Linear and Conv2d layers are supported, but found module {m_name} requiring grad."
+                    )
+    for x, _ in data_loader:
+        model.model.zero_grad()
+        pred_y = model.model(x)
+        loss = empirical_loss_fn(pred_y)
+        loss.backward()
+
+    for hook in hooks:
+        hook.remove()
+
+    for key in forward_x.keys():
+        forward_x[key] /= data_len
+        grad_y[key] /= data_len
+
+    return forward_x, grad_y
+
+
+def get_updated_diag(
+    empirical_loss_fn: Callable[[torch.Tensor], torch.Tensor],
+    model: TorchTwiceDifferentiable,
+    data_loader: DataLoader,
+    evecs,
+):
+    diags = {}
+    hooks = []
+    last_x_kfe = {}
+    data_len = len(data_loader.sampler)
+
+    def input_hook(m, x, y, m_name, with_bias=True):
+        x = x[0]
+        if with_bias:
+            x = torch.cat((x, torch.ones((x.shape[0], 1), device=model.device)), dim=1)
+        last_x_kfe[m_name] = torch.mm(x, evecs[m_name][0]) / data_len
+
+    def grad_hook(m, m_grad, m_out, m_name):
+        m_out = m_out[0]
+        gy_kfe = torch.mm(m_out, evecs[m_name][1])
+        diags[m_name] += torch.mm(gy_kfe.t(), last_x_kfe[m_name]).view(-1) / data_len
+
+    for m_name, module in model.model.named_modules():
+        if len(list(module.children())) == 0 and len(list(module.parameters())) > 0:
+            layer_requires_grad = [param.requires_grad for param in module.parameters()]
+            if any(layer_requires_grad):
+                if isinstance(module, nn.Linear):
+                    has_bias = module.bias is not None
+                    sG = module.out_features
+                    sA = module.in_features + int(has_bias)
+                    diags[m_name] = torch.zeros((sA * sG), device=model.device)
+                    hooks.append(
+                        module.register_forward_hook(
+                            partial(input_hook, with_bias=has_bias, m_name=m_name)
+                        )
+                    )
+                    hooks.append(
+                        module.register_full_backward_hook(
+                            partial(grad_hook, m_name=m_name)
+                        )
+                    )
                 elif isinstance(module, nn.Conv2d):
                     pass
                 else:
@@ -468,10 +541,10 @@ def get_kfac_blocks(
     for hook in hooks:
         hook.remove()
 
-    return forward_x, grad_y
+    return diags
 
 
-def get_kfac_representation(loss_fn, model, data_loader):
+def get_ekfac_representation(loss_fn, model, data_loader, update_diag=True):
     """
     Get KFAC representation of the loss function for the given model and data.
 
@@ -490,7 +563,9 @@ def get_kfac_representation(loss_fn, model, data_loader):
         evals_a, evecs_a = torch.linalg.eigh(forward_x[key])
         evals_g, evecs_g = torch.linalg.eigh(grad_y[key])
         evecs[key] = (evecs_a, evecs_g)
-        diags[key] = torch.kron(evals_a.view(-1, 1), evals_g.view(-1, 1))
+        diags[key] = torch.kron(evals_g.view(-1, 1), evals_a.view(-1, 1))
+    if update_diag:
+        diags = get_updated_diag(loss_fn, model, data_loader, evecs)
     return evecs, diags
 
 
@@ -831,7 +906,7 @@ def solve_ekfac(
     b: torch.Tensor,
     hessian_perturbation: float = 0.0,
     update_diag: bool = True,
-    local_implemetation: bool = False,
+    local_implemetation: bool = True,
     on_layers: Optional[Sequence[str]] = None,
 ) -> InverseHvpResult:
 
@@ -845,10 +920,32 @@ def solve_ekfac(
             )
             return torch.sum(log_probs_ * probs_.detach() ** 0.5)
 
-        kfac_blocks = get_kfac_representation(batch_loss_fn, model, training_data)
+        evecs, diags = get_ekfac_representation(
+            batch_loss_fn, model, training_data, update_diag=update_diag
+        )
+        inv_diags = {i: 1.0 / (d + hessian_perturbation) for i, d in diags.items()}
+        x = b.clone()
+        start_idx = 0
+        for layer_id in inv_diags.keys():
+            evecs_a, evecs_g = evecs[layer_id]
+            diag = inv_diags[layer_id]
+            kfe_layer = torch.cat(
+                [
+                    torch.kron(evecs_g, evecs_a[:-1, :]),
+                    torch.kron(evecs_g.contiguous(), evecs_a[-1:, :]),
+                ],
+                dim=0,
+            )
+            layer_block = torch.mm(
+                kfe_layer, torch.mm(torch.diag(diag.view(-1)), kfe_layer.t())
+            ).to(model.device)
+            end_idx = start_idx + diag.shape[0]
+            x[:, start_idx:end_idx] = b[:, start_idx:end_idx] @ layer_block
+            start_idx = end_idx
+        info = {"hessian_repr": (evecs, diags), "x": x}
     else:
 
-        def batch_loss_fn(d: Tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
+        def batch_loss_fn(*d) -> torch.Tensor:
             probs_ = torch.softmax(model.model(d[0].to(model.device)), dim=1)
             log_probs_ = torch.log(probs_)
             log_probs_ = torch.where(
@@ -911,7 +1008,7 @@ def solve_ekfac(
                 kfe_layer, torch.mm(torch.diag(diag.view(-1)), kfe_layer.t())
             ).to(model.device)
             x[:, start : start + sAG] = b[:, start : start + sAG] @ layer_block
-    info = {"hessian_repr": hessian_repr}
+        info = {"hessian_repr": hessian_repr.data, "x": x}
     return InverseHvpResult(x=x, info=info)
 
 
