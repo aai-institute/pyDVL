@@ -8,6 +8,7 @@ from sklearn.utils import Bunch
 
 from pydvl.parallel.config import ParallelConfig
 from pydvl.utils import Dataset, SupervisedModel, Utility
+from pydvl.utils.caching import InMemoryCacheBackend
 from pydvl.utils.status import Status
 from pydvl.value import ValuationResult
 from pydvl.value.shapley.naive import combinatorial_exact_shapley
@@ -134,3 +135,10 @@ def linear_shapley(cache, linear_dataset, scorer, n_jobs):
 @pytest.fixture(scope="module")
 def parallel_config():
     yield ParallelConfig(backend="joblib", n_cpus_local=num_workers(), wait_timeout=0.1)
+
+
+@pytest.fixture()
+def cache_backend():
+    cache = InMemoryCacheBackend()
+    yield cache
+    cache.clear()

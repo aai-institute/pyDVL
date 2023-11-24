@@ -51,7 +51,7 @@ class Test:
 
 
 @pytest.fixture(params=["in-memory", "disk", "memcached"])
-def cache(request):
+def cache_backend(request):
     backend: str = request.param
     if backend == "in-memory":
         cache = InMemoryCacheBackend()
@@ -128,8 +128,8 @@ def test_cached_func_hash_arguments_of_method():
     assert hash1 == hash2
 
 
-def test_single_job(cache):
-    wrapped_foo = cache.wrap(foo)
+def test_single_job(cache_backend):
+    wrapped_foo = cache_backend.wrap(foo)
 
     n = 1000
     wrapped_foo(np.arange(n))
@@ -148,9 +148,9 @@ def test_memcached_failed_connection():
         MemcachedCacheBackend(config)
 
 
-def test_cache_time_threshold(cache):
+def test_cache_time_threshold(cache_backend):
     cached_func_config = CachedFuncConfig(time_threshold=1.0)
-    wrapped_foo = cache.wrap(foo, cached_func_config=cached_func_config)
+    wrapped_foo = cache_backend.wrap(foo, cached_func_config=cached_func_config)
 
     n = 1000
     indices = np.arange(n)
@@ -165,12 +165,12 @@ def test_cache_time_threshold(cache):
     assert misses_after > misses_before
 
 
-def test_cache_ignore_args(cache):
+def test_cache_ignore_args(cache_backend):
     # Note that we typically do NOT want to ignore run_id
     cached_func_config = CachedFuncConfig(
         ignore_args=["job_id"],
     )
-    wrapped_foo = cache.wrap(foo, cached_func_config=cached_func_config)
+    wrapped_foo = cache_backend.wrap(foo, cached_func_config=cached_func_config)
 
     n = 1000
     indices = np.arange(n)
@@ -182,8 +182,8 @@ def test_cache_ignore_args(cache):
     assert hits_after > hits_before
 
 
-def test_parallel_jobs(cache, parallel_config):
-    if not isinstance(cache, MemcachedCacheBackend):
+def test_parallel_jobs(cache_backend, parallel_config):
+    if not isinstance(cache_backend, MemcachedCacheBackend):
         pytest.skip("Only running this test with MemcachedCacheBackend")
     if parallel_config.backend != "joblib":
         pytest.skip("We don't have to test this with all parallel backends")
@@ -192,11 +192,11 @@ def test_parallel_jobs(cache, parallel_config):
     cached_func_config = CachedFuncConfig(
         ignore_args=["job_id", "run_id"],
     )
-    wrapped_foo = cache.wrap(foo, cached_func_config=cached_func_config)
+    wrapped_foo = cache_backend.wrap(foo, cached_func_config=cached_func_config)
 
     n = 1234
     n_runs = 10
-    hits_before = cache.client.stats()[b"get_hits"]
+    hits_before = cache_backend.client.stats()[b"get_hits"]
 
     map_reduce_job = MapReduceJob(
         np.arange(n), wrapped_foo, np.sum, n_jobs=4, config=parallel_config
@@ -215,12 +215,12 @@ def test_parallel_jobs(cache, parallel_config):
     assert hits_after - hits_before >= n_runs - 2, wrapped_foo.stats
 
 
-def test_repeated_training(cache, worker_id: str):
+def test_repeated_training(cache_backend, worker_id: str):
     cached_func_config = CachedFuncConfig(
         allow_repeated_evaluations=True,
         rtol_stderr=0.01,
     )
-    wrapped_foo = cache.wrap(
+    wrapped_foo = cache_backend.wrap(
         foo_with_random,
         cached_func_config=cached_func_config,
     )
@@ -235,12 +235,12 @@ def test_repeated_training(cache, worker_id: str):
     assert wrapped_foo.stats.sets < wrapped_foo.stats.hits
 
 
-def test_faster_with_repeated_training(cache, worker_id: str):
+def test_faster_with_repeated_training(cache_backend, worker_id: str):
     cached_func_config = CachedFuncConfig(
         allow_repeated_evaluations=True,
         rtol_stderr=0.1,
     )
-    wrapped_foo = cache.wrap(
+    wrapped_foo = cache_backend.wrap(
         foo_with_random_and_sleep,
         cached_func_config=cached_func_config,
     )
@@ -271,7 +271,9 @@ def test_faster_with_repeated_training(cache, worker_id: str):
 @pytest.mark.parametrize("n, atol", [(10, 5), (20, 10)])
 @pytest.mark.parametrize("n_jobs", [1, 2])
 @pytest.mark.parametrize("n_runs", [20])
-def test_parallel_repeated_training(cache, n, atol, n_jobs, n_runs, parallel_config):
+def test_parallel_repeated_training(
+    cache_backend, n, atol, n_jobs, n_runs, parallel_config
+):
     if parallel_config.backend != "joblib":
         pytest.skip("We don't have to test this with all parallel backends")
 
@@ -284,7 +286,7 @@ def test_parallel_repeated_training(cache, n, atol, n_jobs, n_runs, parallel_con
         rtol_stderr=0.01,
         ignore_args=["job_id", "run_id"],
     )
-    wrapped_map_func = cache.wrap(
+    wrapped_map_func = cache_backend.wrap(
         map_func,
         cached_func_config=cached_func_config,
     )

@@ -64,7 +64,7 @@ def test_utility_with_cache(linear_dataset):
         model=LinearRegression(),
         data=linear_dataset,
         scorer=Scorer("r2"),
-        cache=InMemoryCacheBackend(),
+        cache_backend=InMemoryCacheBackend(),
     )
     subsets = list(powerset(u.data.indices))
 
@@ -89,7 +89,7 @@ def test_utility_serialization(linear_dataset, use_cache):
         model=LinearRegression(),
         data=linear_dataset,
         scorer=Scorer("r2"),
-        cache=cache,
+        cache_backend=cache,
     )
     u_unpickled = pickle.loads(pickle.dumps(u))
     assert type(u.model) == type(u_unpickled.model)
