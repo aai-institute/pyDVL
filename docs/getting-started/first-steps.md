@@ -34,15 +34,15 @@ by browsing our worked-out examples illustrating pyDVL's capabilities either:
   have to install jupyter first manually since it's not a dependency of the
   library.
 
-# Advanced usage
+## Advanced usage
 
 Besides the dos and don'ts of data valuation itself, which are the subject of
 the examples and the documentation of each method, there are two main things to
 keep in mind when using pyDVL.
 
-## Caching
+### Caching
 
-PyDVL can cache the computation of the utility function
+PyDVL can cache (memoize) the computation of the utility function
 and speed up some computations for data valuation.
 It is however disabled by default.
 When it is enabled it takes into account the data indices passed as argument
@@ -58,7 +58,7 @@ the same utility function computation, is very low. However, it can be very
 useful when comparing methods that use the same utility function, or when
 running multiple experiments with the same data.
 
-pyDVL supports different caching backends:
+pyDVL supports 3 different caching backends:
 
 - [InMemoryCacheBackend][pydvl.utils.caching.memory.InMemoryCacheBackend]:
   an in-memory cache backend that uses a dictionary to store and retrieve
@@ -85,7 +85,7 @@ pyDVL supports different caching backends:
     Continue reading about the cache in the documentation
     for the [caching package][pydvl.utils.caching].
 
-### Setting up the Memcached cache
+#### Setting up the Memcached cache
 
 [Memcached](https://memcached.org/) is an in-memory key-value store accessible
 over the network. pyDVL can use it to cache the computation of the utility function
@@ -108,7 +108,7 @@ To run memcached inside a container in daemon mode instead, use:
 docker container run -d --rm -p 11211:11211 memcached:latest
 ```
 
-## Parallelization
+### Parallelization
 
 pyDVL uses [joblib](https://joblib.readthedocs.io/en/latest/) for local
 parallelization (within one machine) and supports using
@@ -125,7 +125,7 @@ will typically make a copy of the whole model and dataset to each worker, even
 if the re-training only happens on a subset of the data. This means that you
 should make sure that each worker has enough memory to handle the whole dataset.
 
-### Ray
+#### Ray
 
 Please follow the instructions in Ray's documentation to set up a cluster.
 Once you have a running cluster, you can use it by passing the address
