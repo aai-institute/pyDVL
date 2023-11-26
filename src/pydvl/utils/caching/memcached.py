@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 import socket
 import uuid
@@ -7,9 +5,14 @@ import warnings
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional, Tuple
 
-from pymemcache import MemcacheUnexpectedCloseError
-from pymemcache.client import Client, RetryingClient
-from pymemcache.serde import PickleSerde
+try:
+    from pymemcache import MemcacheUnexpectedCloseError
+    from pymemcache.client import Client, RetryingClient
+    from pymemcache.serde import PickleSerde
+
+    PYMEMCACHE_INSTALLED = True
+except ImportError:
+    PYMEMCACHE_INSTALLED = False
 
 from .base import CacheBackend
 
@@ -100,6 +103,11 @@ class MemcachedCacheBackend(CacheBackend):
         Args:
             config: Memcached client configuration.
         """
+        if not PYMEMCACHE_INSTALLED:
+            raise ModuleNotFoundError(
+                "Cannot use MemcachedCacheBackend because pymemcache was not installed. "
+                "Make sure to install pyDVL using `pip install pyDVL[memcached]`"
+            )
         super().__init__()
         self.config = config
         self.client = self._connect(self.config)

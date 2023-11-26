@@ -1,6 +1,6 @@
 """Caching of functions.
 
-pyDVL caches utility values to allow reusing previously computed evaluations.
+pyDVL caches (memoizes) utility values to allow reusing previously computed evaluations.
 
 !!! Warning
     Function evaluations are cached with a key based on the function's signature
@@ -82,13 +82,8 @@ functions distinct to the eyes of the cache. This can be avoided with the use of
 [ignore_args][pydvl.utils.config.MemcachedConfig] in the configuration.
 
 """
-
 from .base import *
 from .config import *
 from .disk import *
+from .memcached import *
 from .memory import *
-
-try:
-    from .memcached import *
-except ImportError:
-    pass
