@@ -117,8 +117,12 @@ def linear_shapley(cache, linear_dataset, scorer, n_jobs):
     args_hash = cache.hash_arguments(linear_dataset, scorer, n_jobs)
     u_cache_key = f"linear_shapley_u_{args_hash}"
     exact_values_cache_key = f"linear_shapley_exact_values_{args_hash}"
-    u = cache.get(u_cache_key, None)
-    exact_values = cache.get(exact_values_cache_key, None)
+    try:
+        u = cache.get(u_cache_key, None)
+        exact_values = cache.get(exact_values_cache_key, None)
+    except Exception:
+        cache.clear_cache(cache._cachedir)
+        raise
 
     if u is None:
         u = Utility(
