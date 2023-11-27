@@ -139,7 +139,7 @@ def test_get_hvp_function(model_data, tol: float, use_avg: bool, batch_size: int
     data_loader = DataLoader(TensorDataset(x, y), batch_size=batch_size)
 
     Hvp_autograd = get_hvp_function(
-        torch_model, mse_loss, data_loader, use_hessian_avg=use_avg
+        torch_model, mse_loss, data_loader, use_average=use_avg
     )(vec)
 
     assert torch.allclose(Hvp_autograd, H_analytical @ vec, rtol=tol)

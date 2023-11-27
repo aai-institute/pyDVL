@@ -51,15 +51,16 @@ def test_hvp(model_data, tol: float):
 
 
 @pytest.mark.torch
+@pytest.mark.parametrize("precompute_grad", [True, False], ids=["precomputed_grad", "no_precomputed_grad"])
 @pytest.mark.parametrize(
-    "use_avg, tol", [(True, 1e-5), (False, 1e-5)], ids=["avg", "full"]
+    "use_avg", [True, False], ids=["avg", "full"]
 )
 @pytest.mark.parametrize(
     "model_data, batch_size",
     [(astuple(tp.model_params), tp.batch_size) for tp in test_parameters],
     indirect=["model_data"],
 )
-def test_get_hvp_function(model_data, tol: float, use_avg: bool, batch_size: int):
+def test_get_hvp_function(model_data, precompute_grad: bool,  use_avg: bool, batch_size: int):
     torch_model, x, y, vec, H_analytical = model_data
     data_loader = DataLoader(TensorDataset(x, y), batch_size=batch_size)
 
@@ -67,10 +68,11 @@ def test_get_hvp_function(model_data, tol: float, use_avg: bool, batch_size: int
         torch_model,
         mse_loss,
         data_loader,
-        use_hessian_avg=use_avg,
+        precompute_grad=precompute_grad,
+        use_average=use_avg,
     )(vec)
 
-    assert torch.allclose(Hvp_autograd, H_analytical @ vec, rtol=tol)
+    assert torch.allclose(Hvp_autograd, H_analytical @ vec)
 
 
 @pytest.mark.torch

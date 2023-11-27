@@ -401,7 +401,7 @@ def model_hessian_low_rank(
             instance that contains the top (up until rank_estimate) eigenvalues
             and corresponding eigenvectors of the Hessian.
     """
-    raw_hvp = get_hvp_function(model, loss, training_data, use_hessian_avg=True)
+    raw_hvp = get_hvp_function(model, loss, training_data, use_average=True)
     num_params = sum([p.numel() for p in model.parameters() if p.requires_grad])
     device = next(model.parameters()).device
     return lanzcos_low_rank_hessian_approx(
@@ -647,7 +647,7 @@ def solve_cg(
     stopping_val = max([rtol**2 * y_norm, atol**2])
 
     x = x0
-    p = r = (b - hvp(x)).squeeze().type(torch.float64)
+    p = r = (b - hvp(x)).squeeze()
     gamma = torch.sum(torch.matmul(r, r)).item()
     optimal = False
 

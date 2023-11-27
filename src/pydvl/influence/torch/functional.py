@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Callable, Dict
 
 import torch
@@ -198,7 +199,8 @@ def get_hvp_function(
     model: torch.nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     data_loader: DataLoader,
-    use_hessian_avg: bool = True,
+    precompute_grad: bool = True,
+    use_average: bool = True,
     reverse_only: bool = True,
     track_gradients: bool = False,
 ) -> Callable[[torch.Tensor], torch.Tensor]:
@@ -213,13 +215,16 @@ def get_hvp_function(
         data_loader: A DataLoader instance that provides batches of data for calculating the Hessian-vector product.
             Each batch from the DataLoader is assumed to return a tuple where the first element
             is the model's input and the second element is the target output.
-        use_hessian_avg: If True, the returned function uses batch-wise Hessian computation via
+        precompute_grad: If True, the full data gradient is precomputed and kept in memory, which can speed up
+            the hessian vector product computation. Set this to False, if you can't afford to keep an additional
+            parameter-sized vector in memory.
+        use_average: If True, the returned function uses batch-wise computation via
             [batch_loss_function][pydvl.influence.torch.functional.batch_loss_function] and averages the results.
             If False, the function uses backpropagation on the full
             [empirical_loss_function][pydvl.influence.torch.functional.empirical_loss_function],
             which is more accurate than averaging the batch hessians, but probably has a way higher memory usage.
         reverse_only: Whether to use only reverse-mode autodiff (True, default) or
-            both forward- and reverse-mode autodiff (False).
+            both forward- and reverse-mode autodiff (False). Ignored if precompute_grad is True.
         track_gradients: Whether to track gradients for the resulting tensor of the hessian vector
             products (False, default).
 
@@ -227,6 +232,52 @@ def get_hvp_function(
         A function that takes a single argument, a vector, and returns the product of the Hessian of the `loss`
             function with respect to the `model`'s parameters and the input vector.
     """
+
+    if precompute_grad:
+
+        model_params = {
+            k: p
+            for k, p in model.named_parameters()
+            if p.requires_grad
+        }
+
+        if use_average:
+            model_dtype = next(p.dtype for p in model.parameters() if p.requires_grad)
+            total_grad_xy = torch.empty(0, dtype=model_dtype)
+            total_points = 0
+            grad_func = torch.func.grad(batch_loss_function(model, loss))
+            for x, y in data_loader:
+                grad_xy = grad_func(model_params, to_model_device(x, model), to_model_device(y, model))
+                grad_xy = flatten_dimensions(grad_xy.values())
+                if total_grad_xy.nelement() == 0:
+                    total_grad_xy = torch.zeros_like(grad_xy)
+                total_grad_xy += grad_xy * len(x)
+                total_points += len(x)
+            total_grad_xy /= total_points
+        else:
+            total_grad_xy = torch.func.grad(empirical_loss_function(model, loss, data_loader))(model_params)
+            total_grad_xy = flatten_dimensions(total_grad_xy.values())
+
+        def precomputed_grads_hvp_function(precomputed_grads: torch.Tensor, vec: torch.Tensor) -> torch.Tensor:
+            vec = to_model_device(vec, model)
+            if vec.ndim == 1:
+                vec = vec.unsqueeze(0)
+
+            z = (precomputed_grads * torch.autograd.Variable(vec)).sum(dim=1)
+
+            mvp = []
+            for i in range(len(z)):
+                mvp.append(
+                    flatten_dimensions(torch.autograd.grad(z[i], list(model_params.values()), retain_graph=True))
+                )
+            result = torch.stack([arr.contiguous().view(-1) for arr in mvp])
+
+            if not track_gradients:
+                result = result.detach()
+
+            return result
+
+        return partial(precomputed_grads_hvp_function, total_grad_xy)
 
     def hvp_function(vec: torch.Tensor) -> torch.Tensor:
         params = {
@@ -245,9 +296,9 @@ def get_hvp_function(
         avg_hessian = to_model_device(torch.zeros_like(vec), model)
         b_hvp = get_batch_hvp(model, loss, reverse_only)
         params = {
-            k: to_model_device(p, model)
+            k: p
             if track_gradients
-            else to_model_device(p.detach(), model)
+            else p.detach()
             for k, p in model.named_parameters()
             if p.requires_grad
         }
@@ -257,7 +308,7 @@ def get_hvp_function(
 
         return avg_hessian / float(num_batches)
 
-    return avg_hvp_function if use_hessian_avg else hvp_function
+    return avg_hvp_function if use_average else hvp_function
 
 
 def get_hessian(
