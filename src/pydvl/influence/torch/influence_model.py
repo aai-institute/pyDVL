@@ -8,6 +8,7 @@ from torch import nn as nn
 from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
+from ...utils.progress import log_duration
 from ..base_influence_model import (
     Influence,
     InfluenceType,
@@ -64,11 +65,13 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
     def model_params(self):
         return self._model_params
 
+    @log_duration
     def _loss_grad(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         grads = per_sample_gradient(self.model, self.loss)(self.model_params, x, y)
         shape = (x.shape[0], -1)
         return flatten_dimensions(grads.values(), shape=shape)
 
+    @log_duration
     def _flat_loss_mixed_grad(self, x: torch.Tensor, y: torch.Tensor):
         mixed_grads = per_sample_mixed_derivative(self.model, self.loss)(
             self.model_params, x, y
@@ -218,6 +221,7 @@ class DirectInfluence(TorchInfluence):
             else get_hessian(model, loss, train_dataloader)
         )
 
+    @log_duration
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
         return torch.linalg.solve(
             self.hessian.to(self.model_device)
@@ -279,6 +283,7 @@ class BatchCgInfluence(TorchInfluence):
         self.hessian_regularization = hessian_regularization
         self.train_dataloader = train_dataloader
 
+    @log_duration
     def values(
         self,
         x_test: torch.Tensor,
@@ -313,6 +318,7 @@ class BatchCgInfluence(TorchInfluence):
         """
         return super().values(x_test, y_test, x, y, influence_type=influence_type)
 
+    @log_duration
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
         if len(self.train_dataloader) == 0:
             raise ValueError("Training dataloader must not be empty.")
@@ -395,6 +401,7 @@ class LissaInfluence(TorchInfluence):
         self.dampen = dampen
         self.train_dataloader = train_dataloader
 
+    @log_duration
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
 
         h_estimate = self.h0 if self.h0 is not None else torch.clone(rhs)
@@ -571,6 +578,7 @@ class ArnoldiInfluence(TorchInfluence):
             raise UnSupportedInfluenceTypeException(influence_type)
         return values
 
+    @log_duration
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
 
         regularized_eigenvalues = (
