@@ -129,7 +129,7 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
                 values = self.up_weighting(factor, x, y)
             else:
                 factor = self.factors(x, y)
-                values = self.up_weighting(factor, x_test, y_test)
+                values = self.up_weighting(factor, x_test, y_test).T
         elif influence_type == InfluenceType.Perturbation:
             factor = self.factors(x_test, y_test)
             values = self.perturbation(factor, x, y)
