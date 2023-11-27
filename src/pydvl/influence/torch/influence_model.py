@@ -11,7 +11,6 @@ from ...utils import maybe_progress
 from .. import InfluenceType
 from ..base_influence_model import Influence
 from ..inversion import InfluenceRegistry, InversionMethod
-from ..twice_differentiable import InverseHvpResult
 from .functional import (
     get_batch_hvp,
     get_hessian,
@@ -232,6 +231,25 @@ class DirectInfluence(TorchInfluence):
 
 
 class BatchCgInfluence(TorchInfluence):
+    r"""
+    Given a model and training data, it uses conjugate gradient to calculate the
+    inverse of the Hessian Vector Product. More precisely, it finds x such that \(Hx =
+    b\), with \(H\) being the model hessian. For more info, see
+    [Wikipedia](https://en.wikipedia.org/wiki/Conjugate_gradient_method).
+
+    Args:
+        model: instance of [torch.nn.Module][torch.nn.Module].
+        A callable that takes the model's output and target as input and returns the scalar loss.
+        train_dataloader: A DataLoader containing the training data.
+        hessian_regularization: Regularization of the hessian.
+        x0: Initial guess for hvp. If None, defaults to b.
+        rtol: Maximum relative tolerance of result.
+        atol: Absolute tolerance of result.
+        maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
+        progress: If True, display progress bars.
+
+    """
+
     def __init__(
         self,
         model: nn.Module,
@@ -252,6 +270,40 @@ class BatchCgInfluence(TorchInfluence):
         self.x0 = x0
         self.hessian_regularization = hessian_regularization
         self.train_dataloader = train_dataloader
+
+    def values(
+        self,
+        x_test: torch.Tensor,
+        y_test: torch.Tensor,
+        x: Optional[torch.Tensor] = None,
+        y: Optional[torch.Tensor] = None,
+        influence_type: InfluenceType = InfluenceType.Up,
+    ) -> torch.Tensor:
+        r"""
+        Compute approximation of
+
+        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})), \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle, \]
+
+        for the case of up-weighting influence, resp.
+
+        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})), \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the perturbation type influence case. The approximate action of $H^{-1}$ is achieved via the
+        [conjugate gradient method](https://en.wikipedia.org/wiki/Conjugate_gradient_method).
+
+        Args:
+            x_test: model input to use in the gradient computations of $H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}}))$
+            y_test: label tensor to compute gradients
+            x: optional model input to use in the gradient computations $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+               resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$, if None, use $x=x_{\text{test}}$
+            y: optional label tensor to compute gradients
+            influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
+
+        Returns:
+            [torch.nn.Tensor][torch.nn.Tensor] representing the element-wise scalar products for the provided batch.
+
+        """
+        return super().values(x_test, y_test, x, y, influence_type=influence_type)
 
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
         if len(self.train_dataloader) == 0:
@@ -287,7 +339,7 @@ class BatchCgInfluence(TorchInfluence):
 
 
 class LissaInfluence(TorchInfluence):
-    """
+    r"""
     Uses LISSA, Linear time Stochastic Second-Order Algorithm, to iteratively
     approximate the inverse Hessian. More precisely, it finds x s.t. \(Hx = b\),
     with \(H\) being the model's second derivative wrt. the parameters.
