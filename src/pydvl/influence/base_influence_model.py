@@ -19,6 +19,14 @@ class InfluenceType(str, Enum):
     Perturbation = "perturbation"
 
 
+class UnSupportedInfluenceTypeException(ValueError):
+    def __init__(self, influence_type: str):
+        super().__init__(
+            f"Provided {influence_type=} is not supported. Choose one of InfluenceType.Up "
+            f"and InfluenceType.Perturbation"
+        )
+
+
 """Type variable for tensors, i.e. sequences of numbers"""
 TensorType = TypeVar("TensorType", bound=Collection)
 

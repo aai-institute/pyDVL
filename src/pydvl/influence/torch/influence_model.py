@@ -8,8 +8,11 @@ from torch import nn as nn
 from torch.utils.data import DataLoader
 
 from ...utils import maybe_progress
-from .. import InfluenceType
-from ..base_influence_model import Influence
+from ..base_influence_model import (
+    Influence,
+    InfluenceType,
+    UnSupportedInfluenceTypeException,
+)
 from ..inversion import InfluenceRegistry, InversionMethod
 from .functional import (
     get_batch_hvp,
@@ -96,7 +99,9 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
             )
 
         if y is None:
-            raise ValueError()  # TODO: error message
+            raise ValueError(
+                "Providing model input x without providing labels y is not supported"
+            )
 
         return self._non_symmetric_values(
             x_test.to(self.model_device),
@@ -115,16 +120,18 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
         influence_type: InfluenceType = InfluenceType.Up,
     ):
 
-        if influence_type is InfluenceType.Up:
+        if influence_type == InfluenceType.Up:
             if x_test.shape[0] <= x.shape[0]:
                 factor = self.factors(x_test, y_test)
                 values = self.up_weighting(factor, x, y)
             else:
                 factor = self.factors(x, y)
                 values = self.up_weighting(factor, x_test, y_test)
-        else:
+        elif influence_type == InfluenceType.Perturbation:
             factor = self.factors(x_test, y_test)
             values = self.perturbation(factor, x, y)
+        else:
+            raise UnSupportedInfluenceTypeException(influence_type)
         return values
 
     def _symmetric_values(
@@ -134,11 +141,12 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
         grad = self._loss_grad(x, y)
         fac = self._solve_hvp(grad)
 
-        if influence_type is InfluenceType.Up:
+        if influence_type == InfluenceType.Up:
             values = fac @ grad.T
-        else:
+        elif influence_type == InfluenceType.Perturbation:
             values = self.perturbation(fac, x, y)
-
+        else:
+            raise UnSupportedInfluenceTypeException(influence_type)
         return values
 
     def up_weighting(
@@ -517,12 +525,12 @@ class ArnoldiInfluence(TorchInfluence):
         self,
         x_test: torch.Tensor,
         y_test: torch.Tensor,
-        x: Optional[torch.Tensor] = None,
-        y: Optional[torch.Tensor] = None,
+        x: torch.Tensor,
+        y: torch.Tensor,
         influence_type: InfluenceType = InfluenceType.Up,
     ) -> torch.Tensor:
 
-        if influence_type is InfluenceType.Up:
+        if influence_type == InfluenceType.Up:
             mjp = matrix_jacobian_product(
                 self.model, self.loss, self.low_rank_representation.projections.T
             )
@@ -536,17 +544,18 @@ class ArnoldiInfluence(TorchInfluence):
                 self.model_params, x, y
             )
             values = torch.einsum("ij, ik -> jk", left, right)
-        else:
+        elif influence_type == InfluenceType.Perturbation:
             factors = self.factors(x_test, y_test)
             values = self.perturbation(factors, x, y)
-
+        else:
+            raise UnSupportedInfluenceTypeException(influence_type)
         return values
 
     def _symmetric_values(
         self, x: torch.Tensor, y: torch.Tensor, influence_type: InfluenceType
     ) -> torch.Tensor:
 
-        if influence_type is InfluenceType.Up:
+        if influence_type == InfluenceType.Up:
             left = matrix_jacobian_product(
                 self.model, self.loss, self.low_rank_representation.projections.T
             )(self.model_params, x, y)
@@ -555,10 +564,11 @@ class ArnoldiInfluence(TorchInfluence):
             )
             right = torch.diag_embed(1.0 / regularized_eigenvalues) @ left
             values = torch.einsum("ij, ik -> jk", left, right)
-        else:
+        elif influence_type == InfluenceType.Perturbation:
             factors = self.factors(x, y)
             values = self.perturbation(factors, x, y)
-
+        else:
+            raise UnSupportedInfluenceTypeException(influence_type)
         return values
 
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
