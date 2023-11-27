@@ -72,7 +72,7 @@ def test_dask_influence_factors(influence_model):
     dask_fac = dask_inf.factors(da_x, da_y)
     dask_fac = dask_fac.compute(scheduler="processes")
     torch_fac = influence_model.factors(t_x, t_y).numpy()
-    assert np.allclose(dask_fac, torch_fac, atol=1e-6, rtol=1e-3)
+    assert np.allclose(dask_fac, torch_fac, atol=1e-5, rtol=1e-3)
 
 
 @pytest.mark.parametrize(

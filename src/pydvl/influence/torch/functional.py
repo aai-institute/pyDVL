@@ -235,11 +235,7 @@ def get_hvp_function(
 
     if precompute_grad:
 
-        model_params = {
-            k: p
-            for k, p in model.named_parameters()
-            if p.requires_grad
-        }
+        model_params = {k: p for k, p in model.named_parameters() if p.requires_grad}
 
         if use_average:
             model_dtype = next(p.dtype for p in model.parameters() if p.requires_grad)
@@ -247,7 +243,9 @@ def get_hvp_function(
             total_points = 0
             grad_func = torch.func.grad(batch_loss_function(model, loss))
             for x, y in data_loader:
-                grad_xy = grad_func(model_params, to_model_device(x, model), to_model_device(y, model))
+                grad_xy = grad_func(
+                    model_params, to_model_device(x, model), to_model_device(y, model)
+                )
                 grad_xy = flatten_dimensions(grad_xy.values())
                 if total_grad_xy.nelement() == 0:
                     total_grad_xy = torch.zeros_like(grad_xy)
@@ -255,10 +253,14 @@ def get_hvp_function(
                 total_points += len(x)
             total_grad_xy /= total_points
         else:
-            total_grad_xy = torch.func.grad(empirical_loss_function(model, loss, data_loader))(model_params)
+            total_grad_xy = torch.func.grad(
+                empirical_loss_function(model, loss, data_loader)
+            )(model_params)
             total_grad_xy = flatten_dimensions(total_grad_xy.values())
 
-        def precomputed_grads_hvp_function(precomputed_grads: torch.Tensor, vec: torch.Tensor) -> torch.Tensor:
+        def precomputed_grads_hvp_function(
+            precomputed_grads: torch.Tensor, vec: torch.Tensor
+        ) -> torch.Tensor:
             vec = to_model_device(vec, model)
             if vec.ndim == 1:
                 vec = vec.unsqueeze(0)
@@ -268,7 +270,11 @@ def get_hvp_function(
             mvp = []
             for i in range(len(z)):
                 mvp.append(
-                    flatten_dimensions(torch.autograd.grad(z[i], list(model_params.values()), retain_graph=True))
+                    flatten_dimensions(
+                        torch.autograd.grad(
+                            z[i], list(model_params.values()), retain_graph=True
+                        )
+                    )
                 )
             result = torch.stack([arr.contiguous().view(-1) for arr in mvp])
 
@@ -296,9 +302,7 @@ def get_hvp_function(
         avg_hessian = to_model_device(torch.zeros_like(vec), model)
         b_hvp = get_batch_hvp(model, loss, reverse_only)
         params = {
-            k: p
-            if track_gradients
-            else p.detach()
+            k: p if track_gradients else p.detach()
             for k, p in model.named_parameters()
             if p.requires_grad
         }

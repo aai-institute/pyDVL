@@ -51,16 +51,18 @@ def test_hvp(model_data, tol: float):
 
 
 @pytest.mark.torch
-@pytest.mark.parametrize("precompute_grad", [True, False], ids=["precomputed_grad", "no_precomputed_grad"])
 @pytest.mark.parametrize(
-    "use_avg", [True, False], ids=["avg", "full"]
+    "precompute_grad", [True, False], ids=["precomputed_grad", "no_precomputed_grad"]
 )
+@pytest.mark.parametrize("use_avg", [True, False], ids=["avg", "full"])
 @pytest.mark.parametrize(
     "model_data, batch_size",
     [(astuple(tp.model_params), tp.batch_size) for tp in test_parameters],
     indirect=["model_data"],
 )
-def test_get_hvp_function(model_data, precompute_grad: bool,  use_avg: bool, batch_size: int):
+def test_get_hvp_function(
+    model_data, precompute_grad: bool, use_avg: bool, batch_size: int
+):
     torch_model, x, y, vec, H_analytical = model_data
     data_loader = DataLoader(TensorDataset(x, y), batch_size=batch_size)
 
