@@ -214,7 +214,7 @@ class DirectInfluence(TorchInfluence):
             )
 
         super().__init__(model, loss)
-        self.hessian_perturbation = hessian_regularization
+        self.hessian_regularization = hessian_regularization
         self.hessian = (
             hessian
             if hessian is not None
@@ -225,7 +225,7 @@ class DirectInfluence(TorchInfluence):
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
         return torch.linalg.solve(
             self.hessian.to(self.model_device)
-            + self.hessian_perturbation
+            + self.hessian_regularization
             * torch.eye(self.num_parameters, device=self.model_device),
             rhs.T.to(self.model_device),
         ).T
