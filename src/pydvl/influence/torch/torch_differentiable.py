@@ -424,6 +424,48 @@ def model_hessian_low_rank(
     )
 
 
+def get_layer_kfac_hooks(m_name, module, forward_x, grad_y):
+    if isinstance(module, nn.Linear):
+        with_bias = module.bias is not None
+
+        def input_hook(m, x, y):
+            x = x[0]
+            if with_bias:
+                x = torch.cat(
+                    (x, torch.ones((x.shape[0], 1), device=module.weight.device)), dim=1
+                )
+            forward_x[m_name] += torch.mm(x.t(), x)
+
+        def grad_hook(m, m_grad, m_out):
+            m_out = m_out[0]
+            grad_y[m_name] += torch.mm(m_out.t(), m_out)
+
+    elif isinstance(module, nn.Conv2d):
+        pass
+
+    else:
+        raise NotImplementedError(
+            f"Only Linear and Conv2d layers are supported, but found module {module} requiring grad."
+        )
+    return input_hook, grad_hook
+
+
+def init_layer_kfac_blocks(module):
+    if isinstance(module, nn.Linear):
+        with_bias = module.bias is not None
+        sG = module.out_features
+        sA = module.in_features + int(with_bias)
+        forward_x_layer = torch.zeros((sA, sA), device=module.weight.device)
+        grad_y_layer = torch.zeros((sG, sG), device=module.weight.device)
+    elif isinstance(module, nn.Conv2d):
+        pass
+    else:
+        raise NotImplementedError(
+            f"Only Linear and Conv2d layers are supported, but found module {module} requiring grad."
+        )
+    return forward_x_layer, grad_y_layer
+
+
 def get_kfac_blocks(
     empirical_loss_fn: Callable[[torch.Tensor], torch.Tensor],
     model: TorchTwiceDifferentiable,
@@ -434,56 +476,72 @@ def get_kfac_blocks(
     hooks = []
     data_len = len(data_loader.sampler)
 
-    def input_hook(m, x, y, m_name, with_bias=True):
-        x = x[0]
-        if with_bias:
-            x = torch.cat((x, torch.ones((x.shape[0], 1), device=model.device)), dim=1)
-        forward_x[m_name] += torch.mm(x.t(), x)
-
-    def grad_hook(m, m_grad, m_out, m_name):
-        m_out = m_out[0]
-        grad_y[m_name] += torch.mm(m_out.t(), m_out)
-
     for m_name, module in model.model.named_modules():
         if len(list(module.children())) == 0 and len(list(module.parameters())) > 0:
             layer_requires_grad = [param.requires_grad for param in module.parameters()]
             if any(layer_requires_grad):
-                if isinstance(module, nn.Linear):
-                    has_bias = module.bias is not None
-                    sG = module.out_features
-                    sA = module.in_features + int(has_bias)
-                    forward_x[m_name] = torch.zeros((sA, sA), device=model.device)
-                    grad_y[m_name] = torch.zeros((sG, sG), device=model.device)
-                    hooks.append(
-                        module.register_forward_hook(
-                            partial(input_hook, with_bias=has_bias, m_name=m_name)
-                        )
-                    )
-                    hooks.append(
-                        module.register_full_backward_hook(
-                            partial(grad_hook, m_name=m_name)
-                        )
-                    )
-                elif isinstance(module, nn.Conv2d):
-                    pass
-                else:
-                    raise NotImplementedError(
-                        f"Only Linear and Conv2d layers are supported, but found module {m_name} requiring grad."
-                    )
+                forward_x[m_name], grad_y[m_name] = init_layer_kfac_blocks(module)
+                layer_input_hook, layer_grad_hook = get_layer_kfac_hooks(
+                    m_name, module, forward_x, grad_y
+                )
+                hooks.append(module.register_forward_hook(layer_input_hook))
+                hooks.append(module.register_full_backward_hook(layer_grad_hook))
+
     for x, _ in data_loader:
-        model.model.zero_grad()
         pred_y = model.model(x)
         loss = empirical_loss_fn(pred_y)
         loss.backward()
-
-    for hook in hooks:
-        hook.remove()
 
     for key in forward_x.keys():
         forward_x[key] /= data_len
         grad_y[key] /= data_len
 
+    for hook in hooks:
+        hook.remove()
+
     return forward_x, grad_y
+
+
+def init_layer_diag(module):
+    if isinstance(module, nn.Linear):
+        with_bias = module.bias is not None
+        sG = module.out_features
+        sA = module.in_features + int(with_bias)
+        layer_diag = torch.zeros((sA * sG), device=module.weight.device)
+    elif isinstance(module, nn.Conv2d):
+        pass
+    else:
+        raise NotImplementedError(
+            f"Only Linear and Conv2d layers are supported, but found module {module} requiring grad."
+        )
+    return layer_diag
+
+
+def get_layer_diag_hooks(m_name, module, last_x_kfe, diags, evecs):
+    if isinstance(module, nn.Linear):
+        with_bias = module.bias is not None
+
+        def input_hook(m, x, y):
+            x = x[0]
+            if with_bias:
+                x = torch.cat(
+                    (x, torch.ones((x.shape[0], 1), device=module.weight.device)), dim=1
+                )
+            last_x_kfe[m_name] = torch.mm(x, evecs[m_name][0])
+
+        def grad_hook(m, m_grad, m_out):
+            m_out = m_out[0]
+            gy_kfe = torch.mm(m_out, evecs[m_name][1])
+            diags[m_name] += torch.mm(gy_kfe.t() ** 2, last_x_kfe[m_name] ** 2).view(-1)
+
+    elif isinstance(module, nn.Conv2d):
+        pass
+
+    else:
+        raise NotImplementedError(
+            f"Only Linear and Conv2d layers are supported, but found module {module} requiring grad."
+        )
+    return input_hook, grad_hook
 
 
 def get_updated_diag(
@@ -493,50 +551,27 @@ def get_updated_diag(
     evecs,
 ):
     diags = {}
-    hooks = []
     last_x_kfe = {}
+    hooks = []
     data_len = len(data_loader.sampler)
-
-    def input_hook(m, x, y, m_name, with_bias=True):
-        x = x[0]
-        if with_bias:
-            x = torch.cat((x, torch.ones((x.shape[0], 1), device=model.device)), dim=1)
-        last_x_kfe[m_name] = torch.mm(x, evecs[m_name][0]) / data_len
-
-    def grad_hook(m, m_grad, m_out, m_name):
-        m_out = m_out[0]
-        gy_kfe = torch.mm(m_out, evecs[m_name][1])
-        diags[m_name] += torch.mm(gy_kfe.t(), last_x_kfe[m_name]).view(-1) / data_len
 
     for m_name, module in model.model.named_modules():
         if len(list(module.children())) == 0 and len(list(module.parameters())) > 0:
             layer_requires_grad = [param.requires_grad for param in module.parameters()]
             if any(layer_requires_grad):
-                if isinstance(module, nn.Linear):
-                    has_bias = module.bias is not None
-                    sG = module.out_features
-                    sA = module.in_features + int(has_bias)
-                    diags[m_name] = torch.zeros((sA * sG), device=model.device)
-                    hooks.append(
-                        module.register_forward_hook(
-                            partial(input_hook, with_bias=has_bias, m_name=m_name)
-                        )
-                    )
-                    hooks.append(
-                        module.register_full_backward_hook(
-                            partial(grad_hook, m_name=m_name)
-                        )
-                    )
-                elif isinstance(module, nn.Conv2d):
-                    pass
-                else:
-                    raise NotImplementedError(
-                        f"Only Linear and Conv2d layers are supported, but found module {m_name} requiring grad."
-                    )
+                diags[m_name] = init_layer_diag(module)
+                input_hook, grad_hook = get_layer_diag_hooks(
+                    m_name, module, last_x_kfe, diags, evecs
+                )
+                hooks.append(module.register_forward_hook(input_hook))
+                hooks.append(module.register_full_backward_hook(grad_hook))
     for x, _ in data_loader:
         pred_y = model.model(x)
         loss = empirical_loss_fn(pred_y)
         loss.backward()
+
+    for key in diags.keys():
+        diags[key] /= data_len
 
     for hook in hooks:
         hook.remove()
@@ -942,6 +977,7 @@ def solve_ekfac(
             end_idx = start_idx + diag.shape[0]
             x[:, start_idx:end_idx] = b[:, start_idx:end_idx] @ layer_block
             start_idx = end_idx
+        x.detach_()
         info = {"hessian_repr": (evecs, diags), "x": x}
     else:
 
