@@ -1,16 +1,36 @@
-from itertools import groupby
+from math import prod
 from typing import Any, Callable, Optional, Tuple
 
 import distributed
 import numpy as np
 from dask import array as da
+from dask import delayed
 from numpy.typing import NDArray
 
-from .. import InfluenceType
-from ..base_influence_model import Influence
-from ..twice_differentiable import InverseHvpResult
+from ..base_influence_model import (
+    Influence,
+    InfluenceType,
+    UnSupportedInfluenceTypeException,
+)
 
 __all__ = ["DaskInfluence"]
+
+
+class DimensionChunksException(ValueError):
+    def __init__(self, chunks: Tuple[Tuple[int, ...], ...]):
+        msg = (
+            f"Array must be un-chunked in every dimension but the first, got {chunks=}"
+        )
+        super().__init__(msg)
+
+
+class UnalignedChunksException(ValueError):
+    def __init__(self, chunk_sizes_x: Tuple[int, ...], chunk_sizes_y: Tuple[int, ...]):
+        msg = (
+            f"Arrays x and y must have the same chunking in the first dimension, got {chunk_sizes_x=} "
+            f"and {chunk_sizes_y=}"
+        )
+        super().__init__(msg)
 
 
 class DaskInfluence(Influence[da.Array]):
@@ -48,40 +68,19 @@ class DaskInfluence(Influence[da.Array]):
     @staticmethod
     def _validate_un_chunked(x: da.Array):
         if any([len(c) > 1 for c in x.chunks[1:]]):
-            raise ValueError("Array must be un-chunked in ever dimension but the first")
+            raise DimensionChunksException(x.chunks)
 
     @staticmethod
     def _validate_aligned_chunking(x: da.Array, y: da.Array):
         if x.chunks[0] != y.chunks[0]:
-            raise ValueError(
-                "x and y must have the same chunking in the first dimension"
-            )
-
-    @staticmethod
-    def _get_chunk_indices(
-        chunk_sizes: Tuple[int, ...], aggregate_same_chunk_size: bool = False
-    ) -> Tuple[Tuple[int, int], ...]:
-        indices = []
-        start = 0
-
-        if aggregate_same_chunk_size:
-            for value, group in groupby(chunk_sizes):
-                length = sum(group)
-                indices.append((start, start + length))
-                start += length
-        else:
-            for value in chunk_sizes:
-                indices.append((start, start + value))
-                start += value
-
-        return tuple(indices)
+            raise UnalignedChunksException(x.chunks[0], y.chunks[0])
 
     def factors(self, x: da.Array, y: da.Array) -> da.Array:
-        """
+        r"""
         Compute the expression
-        $$
-        H^{-1}\nabla_{theta} \ell(y, f_{\theta}(x))
-        $$
+
+        \[ H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x)) \]
+
         where the gradient are computed for the chunks of $(x, y)$.
 
         Args:
@@ -103,38 +102,35 @@ class DaskInfluence(Influence[da.Array]):
             factors = model.factors(self.from_numpy(x_numpy), self.from_numpy(y_numpy))
             return self.to_numpy(factors)
 
-        def block_func(x_block: da.Array, y_block: NDArray):
-            chunk_size = x.chunks[0][0]
-            return da.map_blocks(
-                func,
-                x_block,
-                y_block,
-                self.influence_model,
-                dtype=x_block.dtype,
-                chunks=(chunk_size, self.num_parameters),
+        chunks = []
+        for x_chunk, y_chunk, chunk_size in zip(
+            x.to_delayed(), y.to_delayed(), x.chunks[0]
+        ):
+            chunk_shape = (chunk_size, self.num_parameters)
+            chunk_array = da.from_delayed(
+                delayed(func)(
+                    x_chunk.squeeze().tolist(),
+                    y_chunk.squeeze().tolist(),
+                    self.influence_model,
+                ),
+                dtype=x.dtype,
+                shape=chunk_shape,
             )
+            chunks.append(chunk_array)
 
-        return da.concatenate(
-            [
-                block_func(x[start:stop], y[start:stop])
-                for (start, stop) in self._get_chunk_indices(
-                    x.chunks[0], aggregate_same_chunk_size=True
-                )
-            ],
-            axis=0,
-        )
+        return da.concatenate(chunks)
 
     def up_weighting(
         self, z_test_factors: da.Array, x: da.Array, y: da.Array
     ) -> da.Array:
-        """
+        r"""
         Computation of
-        $$
-        \langle z_test_factors, \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        $$
+
+        \[ \langle z_{\text{test_factors}}, \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
         where the gradients are computed chunk-wise for the chunks of $(x, y)$.
         Args:
-            z_test_factors: pre-computed array, approximating $H^{-1}\nabla_{\theta} \ell(y_{test}, f_{\theta}(x_{test}))$
+            z_test_factors: pre-computed array, approximating $H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}}))$
             x: model input to use in the gradient computations
             y: label tensor to compute gradients
 
@@ -157,31 +153,47 @@ class DaskInfluence(Influence[da.Array]):
             )
             return self.to_numpy(ups)
 
-        return da.blockwise(
-            func,
-            "ij",
-            z_test_factors,
-            "ik",
-            x,
-            "jn",
-            y,
-            "jm",
-            model=self.influence_model,
-            concatenate=True,
-            dtype=x.dtype,
-        )
+        blocks = []
+
+        for z_test_chunk, z_test_chunk_size in zip(
+            z_test_factors.to_delayed(), z_test_factors.chunks[0]
+        ):
+            row = []
+            for x_chunk, y_chunk, chunk_size in zip(
+                x.to_delayed(), y.to_delayed(), x.chunks[0]
+            ):
+                block_shape = (z_test_chunk_size, chunk_size)
+
+                block_array = da.from_delayed(
+                    delayed(func)(
+                        z_test_chunk.squeeze().tolist(),
+                        x_chunk.squeeze().tolist(),
+                        y_chunk.squeeze().tolist(),
+                        self.influence_model,
+                    ),
+                    shape=block_shape,
+                    dtype=z_test_factors.dtype,
+                )
+
+                row.append(block_array)
+            blocks.append(row)
+
+        values_array = da.block(blocks)
+
+        return values_array
 
     def perturbation(
         self, z_test_factors: da.Array, x: da.Array, y: da.Array
     ) -> da.Array:
-        """
+        r"""
         Computation of
-        $$
-        \langle z_test_factors, \nabla_x \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        $$
-        where the gradients are computed chunk-wise for the chunks of $z_test_factors$  and $(x, y)$.
+
+        \[ \langle z_{\text{test_factors}}, \nabla_x \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        where the gradients are computed chunk-wise for the chunks of $z_{\text{test_factors}}$  and $(x, y)$.
+
         Args:
-            z_test_factors: pre-computed array, approximating $H^{-1}\nabla_{\theta} \ell(y_{test}, f_{\theta}(x_{test}))$
+            z_test_factors: pre-computed array, approximating $H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}}))$
             x: model input to use in the gradient computations
             y: label tensor to compute gradients
 
@@ -205,20 +217,40 @@ class DaskInfluence(Influence[da.Array]):
             )
             return self.to_numpy(ups)
 
-        return da.blockwise(
-            func,
-            "ijb",
-            z_test_factors,
-            "ik",
-            x,
-            "jb",
-            y,
-            "jm",
-            model=self.influence_model,
-            concatenate=True,
-            align_arrays=True,
-            dtype=x.dtype,
-        )
+        un_chunked_x_length = prod([s[0] for s in x.chunks[1:]])
+        x_chunk_sizes = x.chunks[0]
+        z_test_chunk_sizes = z_test_factors.chunks[0]
+        blocks = []
+
+        for z_test_chunk, z_test_chunk_size in zip(
+            z_test_factors.to_delayed(), z_test_chunk_sizes
+        ):
+            row = []
+            for x_chunk, y_chunk, chunk_size in zip(
+                x.to_delayed(), y.to_delayed(), x_chunk_sizes
+            ):
+                block_shape = (z_test_chunk_size, chunk_size, un_chunked_x_length)
+
+                block_array = da.from_delayed(
+                    delayed(func)(
+                        z_test_chunk.squeeze().tolist(),
+                        x_chunk.squeeze().tolist(),
+                        y_chunk.squeeze().tolist(),
+                        self.influence_model,
+                    ),
+                    shape=block_shape,
+                    dtype=z_test_factors.dtype,
+                )
+
+                block_array = block_array.transpose(2, 0, 1)
+
+                row.append(block_array)
+            blocks.append(row)
+
+        values_array = da.block(blocks)
+        values_array = values_array.transpose(1, 2, 0)
+
+        return values_array
 
     def values(
         self,
@@ -228,30 +260,28 @@ class DaskInfluence(Influence[da.Array]):
         y: Optional[da.Array] = None,
         influence_type: InfluenceType = InfluenceType.Up,
     ) -> da.Array:
-        """
+        r"""
         Compute approximation of
-        $$
-        \langle H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test})), \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        $$
+
+        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})), \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
         for the case of up-weighting influence, resp.
-        $$
-        \langle H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test})), \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        $$
+
+        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})), \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
         for the perturbation type influence case. The computation is done block-wise for the chunks of the provided dask
         arrays.
 
         Args:
-            x_test: model input to use in the gradient computations of $H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test}))$
+            x_test: model input to use in the gradient computations of $H^{-1}\nabla_{\theta} \ell(y_{test}, f_{\theta}(x_{test}))$
             y_test: label tensor to compute gradients
-            x: optional model input to use in the gradient computations $\nabla_{theta}\ell(y, f_{\theta}(x))$, resp. $\nabla_{x}\nabla_{theta}\ell(y, f_{\theta}(x))$, if None,
-                use $x=x_{test}$
+            x: optional model input to use in the gradient computations $\nabla_{\theta}\ell(y, f_{\theta}(x))$, resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$, if None,
+                use $x=x_{\text{test}}$
             y: optional label tensor to compute gradients
             influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
 
         Returns:
-            Container object of type [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult] with a
             [dask.array.Array][dask.array.Array] representing the element-wise scalar products for the provided batch.
-            Retrieval of batch inversion information is not yet implemented.
 
         """
 
@@ -284,23 +314,48 @@ class DaskInfluence(Influence[da.Array]):
             )
             return self.to_numpy(values)
 
-        resulting_shape = "ij" if influence_type is InfluenceType.Up else "ijk"
-        return da.blockwise(
-            func,
-            resulting_shape,
-            x_test,
-            "ik",
-            y_test,
-            "im",
-            x,
-            "jk",
-            y,
-            "jm",
-            model=self.influence_model,
-            concatenate=True,
-            dtype=x.dtype,
-            align_arrays=True,
-        )
+        un_chunked_x_length = prod([s[0] for s in x_test.chunks[1:]])
+        x_test_chunk_sizes = x_test.chunks[0]
+        x_chunk_sizes = x.chunks[0]
+        blocks = []
+        for x_test_chunk, y_test_chunk, test_chunk_size in zip(
+            x_test.to_delayed(), y_test.to_delayed(), x_test_chunk_sizes
+        ):
+            row = []
+            for x_chunk, y_chunk, chunk_size in zip(
+                x.to_delayed(), y.to_delayed(), x_chunk_sizes
+            ):
+                if influence_type == InfluenceType.Up:
+                    block_shape = (test_chunk_size, chunk_size)
+                elif influence_type == InfluenceType.Perturbation:
+                    block_shape = (test_chunk_size, chunk_size, un_chunked_x_length)
+                else:
+                    raise UnSupportedInfluenceTypeException(influence_type)
+
+                block_array = da.from_delayed(
+                    delayed(func)(
+                        x_test_chunk.squeeze().tolist(),
+                        y_test_chunk.squeeze().tolist(),
+                        x_chunk.squeeze().tolist(),
+                        y_chunk.squeeze().tolist(),
+                        self.influence_model,
+                    ),
+                    shape=block_shape,
+                    dtype=x_test.dtype,
+                )
+
+                if influence_type == InfluenceType.Perturbation:
+                    block_array = block_array.transpose(2, 0, 1)
+
+                row.append(block_array)
+            blocks.append(row)
+
+        values_array = da.block(blocks)
+
+        if influence_type == InfluenceType.Perturbation:
+            values_array = values_array.transpose(1, 2, 0)
+
+        return values_array
 
     @staticmethod
     def _get_client() -> Optional[distributed.Client]:
