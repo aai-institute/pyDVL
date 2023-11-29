@@ -1019,93 +1019,22 @@ def solve_ekfac(
     b: torch.Tensor,
     hessian_perturbation: float = 0.0,
     update_diag: bool = True,
-    local_implemetation: bool = True,
-    on_layers: Optional[Sequence[str]] = None,
 ) -> InverseHvpResult:
-
-    if local_implemetation:
-
-        def batch_loss_fn(model_output: torch.Tensor) -> torch.Tensor:
-            probs_ = torch.softmax(model_output, dim=1)
-            log_probs_ = torch.log(probs_)
-            log_probs_ = torch.where(
-                torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
-            )
-            return torch.sum(log_probs_ * probs_.detach() ** 0.5)
-
-        ekfac_representation = get_ekfac_representation(
-            batch_loss_fn, model, training_data, update_diag=update_diag
+    def batch_loss_fn(model_output: torch.Tensor) -> torch.Tensor:
+        probs_ = torch.softmax(model_output, dim=1)
+        log_probs_ = torch.log(probs_)
+        log_probs_ = torch.where(
+            torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
         )
-        x = solve_ekfac_ihvp(
-            ekfac_representation, b, hessian_perturbation=hessian_perturbation
-        )
-        info = {"hessian_repr": ekfac_representation}
-    else:
+        return torch.sum(log_probs_ * probs_.detach() ** 0.5)
 
-        def batch_loss_fn(*d) -> torch.Tensor:
-            probs_ = torch.softmax(model.model(d[0].to(model.device)), dim=1)
-            log_probs_ = torch.log(probs_)
-            log_probs_ = torch.where(
-                torch.isfinite(log_probs_), log_probs_, torch.zeros_like(log_probs_)
-            )
-            return torch.sum(log_probs_ * probs_.detach() ** 0.5, axis=1)
-
-        active_layers = LayerCollection()
-        for name, module in model.model.named_modules():
-            if on_layers is None:
-                if (
-                    len(list(module.children())) == 0
-                    and len(list(module.parameters())) > 0
-                ):
-                    layer_requires_grad = [
-                        param.requires_grad for param in module.parameters()
-                    ]
-                    if any(layer_requires_grad):
-                        active_layers.add_layer(
-                            "%s.%s" % (name, str(module)),
-                            LayerCollection._module_to_layer(module),
-                        )
-            elif name in on_layers:
-                active_layers.add_layer(
-                    "%s.%s" % (name, str(module)),
-                    LayerCollection._module_to_layer(module),
-                )
-
-        hessian_repr: PMatEKFAC = FIM(
-            model.model,
-            training_data,
-            representation=PMatEKFAC,
-            n_output=1,
-            function=batch_loss_fn,
-            # HACK: in order to pass the correct function,
-            # we need to set this to "regression", even though we are doing classification.
-            # Maybe open issue in nngeometry
-            variant="regression",
-            layer_collection=active_layers,
-        )
-
-        if update_diag:
-            hessian_repr.update_diag(training_data)
-        x = b.clone()
-        try:
-            inverse_hessian_repr = hessian_repr.inverse(regul=hessian_perturbation)
-        except Exception as e:
-            raise RuntimeError(
-                "Exception encountered, possibly due to the Hessian being singular. "
-                f"Consider increasing the parameter 'hessian_perturbation' (currently: {hessian_perturbation}). \n{e}"
-            )
-        _, diags = inverse_hessian_repr.data
-        kfe_layers = inverse_hessian_repr.get_KFE()
-        for layer_id in inverse_hessian_repr.generator.layer_collection.layers.keys():
-            diag = diags[layer_id]
-            start = inverse_hessian_repr.generator.layer_collection.p_pos[layer_id]
-            sAG = diag.numel()
-            kfe_layer = kfe_layers[layer_id]
-            layer_block = torch.mm(
-                kfe_layer, torch.mm(torch.diag(diag.view(-1)), kfe_layer.t())
-            ).to(model.device)
-            x[:, start : start + sAG] = b[:, start : start + sAG] @ layer_block
-        info = {"hessian_repr": hessian_repr.data, "x": x}
+    ekfac_representation = get_ekfac_representation(
+        batch_loss_fn, model, training_data, update_diag=update_diag
+    )
+    x = solve_ekfac_ihvp(
+        ekfac_representation, b, hessian_perturbation=hessian_perturbation
+    )
+    info = {"hessian_repr": ekfac_representation}
     return InverseHvpResult(x=x, info=info)
 
 
