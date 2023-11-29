@@ -59,6 +59,8 @@ class DaskInfluence(Influence[da.Array]):
         client = self._get_client()
         if client is not None:
             self.influence_model = client.scatter(influence_model, broadcast=True)
+        else:
+            self.influence_model = delayed(influence_model)
 
     @property
     def num_parameters(self):
