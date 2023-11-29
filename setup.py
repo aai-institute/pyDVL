@@ -23,7 +23,7 @@ setup(
     tests_require=["pytest"],
     extras_require={
         "cupy": ["cupy-cuda11x>=12.1.0"],
-        "influence": ["torch>=2.0.0", "nngeometry=0.3"],
+        "influence": ["torch>=2.0.0"],
         "ray": ["ray>=0.8"],
     },
     author="appliedAI Institute gGmbH",
