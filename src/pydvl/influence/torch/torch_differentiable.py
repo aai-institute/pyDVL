@@ -444,8 +444,9 @@ def get_layer_kfac_hooks(m_name, module, forward_x, grad_y):
         pass
 
     else:
+        supported_layers = ["Linear", "Conv2d"]
         raise NotImplementedError(
-            f"Only Linear and Conv2d layers are supported, but found module {module} requiring grad."
+            f"Only {supported_layers} layers are supported, but found module {module} requiring grad."
         )
     return input_hook, grad_hook
 
@@ -538,8 +539,9 @@ def get_layer_diag_hooks(m_name, module, last_x_kfe, diags, evecs):
         pass
 
     else:
+        supported_layers = ["Linear", "Conv2d"]
         raise NotImplementedError(
-            f"Only Linear and Conv2d layers are supported, but found module {module} requiring grad."
+            f"Only {supported_layers} layers are supported, but found module {module} requiring grad."
         )
     return input_hook, grad_hook
 
@@ -602,6 +604,36 @@ def get_ekfac_representation(loss_fn, model, data_loader, update_diag=True):
     if update_diag:
         diags = get_updated_diag(loss_fn, model, data_loader, evecs)
     return evecs, diags
+
+
+def solve_ekfac_ihvp(evecs, diags, b, hessian_perturbation=0.0):
+    x = b.clone()
+    start_idx = 0
+    for layer_id in diags.keys():
+        evecs_a, evecs_g = evecs[layer_id]
+        diag = diags[layer_id]
+        end_idx = start_idx + diag.shape[0]
+        b_trial = b[:, start_idx : end_idx - evecs_g.shape[0]].reshape(
+            b.shape[0], evecs_g.shape[0], -1
+        )
+        bias_v = b[:, end_idx - evecs_g.shape[0] : end_idx]
+        b_trial = torch.cat([b_trial, bias_v.unsqueeze(2)], dim=2)
+        v_kfe = torch.einsum(
+            "bij,jk->bik", torch.einsum("ij,bjk->bik", evecs_g.t(), b_trial), evecs_a
+        )
+        inv_diag = 1 / (
+            diags[layer_id].reshape(*v_kfe.shape[1:]) + hessian_perturbation
+        )
+        inv_kfe = torch.einsum("bij,ij->bij", v_kfe, inv_diag)
+        inv = torch.einsum(
+            "bij,jk->bik", torch.einsum("ij,bjk->bik", evecs_g, inv_kfe), evecs_a.t()
+        )
+        x[:, start_idx:end_idx] = torch.cat(
+            [inv[:, :, :-1].reshape(b.shape[0], -1), inv[:, :, -1]], dim=1
+        )
+        start_idx = end_idx
+    x.detach_()
+    return x
 
 
 class TorchTensorUtilities(TensorUtilities[torch.Tensor, TorchTwiceDifferentiable]):
@@ -958,26 +990,7 @@ def solve_ekfac(
         evecs, diags = get_ekfac_representation(
             batch_loss_fn, model, training_data, update_diag=update_diag
         )
-        inv_diags = {i: 1.0 / (d + hessian_perturbation) for i, d in diags.items()}
-        x = b.clone()
-        start_idx = 0
-        for layer_id in inv_diags.keys():
-            evecs_a, evecs_g = evecs[layer_id]
-            diag = inv_diags[layer_id]
-            kfe_layer = torch.cat(
-                [
-                    torch.kron(evecs_g, evecs_a[:-1, :]),
-                    torch.kron(evecs_g.contiguous(), evecs_a[-1:, :]),
-                ],
-                dim=0,
-            )
-            layer_block = torch.mm(
-                kfe_layer, torch.mm(torch.diag(diag.view(-1)), kfe_layer.t())
-            ).to(model.device)
-            end_idx = start_idx + diag.shape[0]
-            x[:, start_idx:end_idx] = b[:, start_idx:end_idx] @ layer_block
-            start_idx = end_idx
-        x.detach_()
+        x = solve_ekfac_ihvp(evecs, diags, b, hessian_perturbation=hessian_perturbation)
         info = {"hessian_repr": (evecs, diags), "x": x}
     else:
 
