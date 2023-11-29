@@ -10,6 +10,7 @@ models, as introduced in (Koh and Liang, 2017)[^1].
 """
 import logging
 from copy import deepcopy
+from functools import partial
 from typing import Any, Callable, Dict, Generator, Optional, Type
 
 from ..utils import maybe_progress
@@ -83,7 +84,7 @@ def compute_influence_factors(
         ):
             yield influence.factors(x_test, y_test)
 
-    return cat(list(factors_gen()))
+    return InverseHvpResult(cat(list(factors_gen())), {})
 
 
 def compute_influences_up(
@@ -228,7 +229,7 @@ def compute_influences(
     hessian_regularization: float = 0.0,
     progress: bool = False,
     **kwargs: Any,
-) -> TensorType:  # type: ignore # ToDO fix typing
+) -> InverseHvpResult:
     r"""
     Calculates the influence of each input data point on the specified test points.
 
@@ -280,10 +281,8 @@ def compute_influences(
         type(differentiable_model), inversion_method
     )(differentiable_model, training_data, hessian_regularization, **kwargs)
 
-    influence_function = (
-        influence.up_weighting
-        if influence_type is InfluenceType.Up
-        else influence.perturbation
+    influence_function = partial(
+        influence.values_from_factors, influence_type=influence_type
     )
 
     def values_gen() -> Generator[TensorType, None, None]:
@@ -296,6 +295,6 @@ def compute_influences(
         differentiable_model
     )
     cat = tensor_util.cat
-    values = cat(list(values_gen()), dim=1)
+    values = cat([t for t in values_gen()], dim=1)  # type:ignore
 
-    return values
+    return InverseHvpResult(values, {})

@@ -163,7 +163,14 @@ class DaskInfluence(Influence[da.Array]):
         self._validate_un_chunked(y_test)
 
         if (x is None) != (y is None):
-            raise ValueError()  # ToDO error message
+            if x is None:
+                raise ValueError(
+                    "Providing labels y without providing model input x is not supported"
+                )
+            if y is None:
+                raise ValueError(
+                    "Providing model input x without labels y is not supported"
+                )
         elif x is not None:
             self._validate_aligned_chunking(x, y)
             self._validate_un_chunked(x)
@@ -191,12 +198,14 @@ class DaskInfluence(Influence[da.Array]):
         x_test_chunk_sizes = x_test.chunks[0]
         x_chunk_sizes = x.chunks[0]
         blocks = []
+        block_shape: Tuple[int, ...]
+
         for x_test_chunk, y_test_chunk, test_chunk_size in zip(
             x_test.to_delayed(), y_test.to_delayed(), x_test_chunk_sizes
         ):
             row = []
             for x_chunk, y_chunk, chunk_size in zip(
-                x.to_delayed(), y.to_delayed(), x_chunk_sizes
+                x.to_delayed(), y.to_delayed(), x_chunk_sizes  # type:ignore
             ):
                 if influence_type == InfluenceType.Up:
                     block_shape = (test_chunk_size, chunk_size)
@@ -280,6 +289,7 @@ class DaskInfluence(Influence[da.Array]):
         x_chunk_sizes = x.chunks[0]
         z_test_chunk_sizes = z_test_factors.chunks[0]
         blocks = []
+        block_shape: Tuple[int, ...]
 
         for z_test_chunk, z_test_chunk_size in zip(
             z_test_factors.to_delayed(), z_test_chunk_sizes
