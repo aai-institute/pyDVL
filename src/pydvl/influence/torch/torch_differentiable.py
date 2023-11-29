@@ -16,7 +16,17 @@ influence of a training point on the model.
 import logging
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Generator, List, Literal, Optional, Sequence, Tuple, Union
+from typing import (
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import torch
 import torch.nn as nn
@@ -424,6 +434,30 @@ def model_hessian_low_rank(
     )
 
 
+@dataclass(frozen=True)
+class EkfacRepresentation:
+    r"""
+    Container class for the EKFAC representation of the Hessian matrix of a scalar-valued function.
+
+    Args:
+        evecs: A dictionary containing the eigenvectors of the Hessian matrix.
+        diags: A dictionary containing the diagonal elements of the Hessian matrix.
+    """
+    layer_names: Tuple[str]
+    layers_module: Tuple[torch.nn.Module]
+    evecs_a: Tuple[torch.Tensor]
+    evecs_g: Tuple[torch.Tensor]
+    diags: Tuple[torch.Tensor]
+
+    def __iter__(self):
+        return iter(
+            zip(
+                self.layer_names,
+                zip(self.layers_module, self.evecs_g, self.evecs_a, self.diags),
+            )
+        )
+
+
 def get_layer_kfac_hooks(m_name, module, forward_x, grad_y):
     if isinstance(module, nn.Linear):
         with_bias = module.bias is not None
@@ -470,6 +504,7 @@ def init_layer_kfac_blocks(module):
 def get_kfac_blocks(
     empirical_loss_fn: Callable[[torch.Tensor], torch.Tensor],
     model: TorchTwiceDifferentiable,
+    active_layers: Dict[str, torch.nn.Module],
     data_loader: DataLoader,
 ):
     forward_x = {}
@@ -477,16 +512,13 @@ def get_kfac_blocks(
     hooks = []
     data_len = len(data_loader.sampler)
 
-    for m_name, module in model.model.named_modules():
-        if len(list(module.children())) == 0 and len(list(module.parameters())) > 0:
-            layer_requires_grad = [param.requires_grad for param in module.parameters()]
-            if any(layer_requires_grad):
-                forward_x[m_name], grad_y[m_name] = init_layer_kfac_blocks(module)
-                layer_input_hook, layer_grad_hook = get_layer_kfac_hooks(
-                    m_name, module, forward_x, grad_y
-                )
-                hooks.append(module.register_forward_hook(layer_input_hook))
-                hooks.append(module.register_full_backward_hook(layer_grad_hook))
+    for m_name, module in active_layers.items():
+        forward_x[m_name], grad_y[m_name] = init_layer_kfac_blocks(module)
+        layer_input_hook, layer_grad_hook = get_layer_kfac_hooks(
+            m_name, module, forward_x, grad_y
+        )
+        hooks.append(module.register_forward_hook(layer_input_hook))
+        hooks.append(module.register_full_backward_hook(layer_grad_hook))
 
     for x, _ in data_loader:
         pred_y = model.model(x)
@@ -518,7 +550,7 @@ def init_layer_diag(module):
     return layer_diag
 
 
-def get_layer_diag_hooks(m_name, module, last_x_kfe, diags, evecs):
+def get_layer_diag_hooks(m_name, module, last_x_kfe, diags, evecs_a, evecs_g):
     if isinstance(module, nn.Linear):
         with_bias = module.bias is not None
 
@@ -528,11 +560,11 @@ def get_layer_diag_hooks(m_name, module, last_x_kfe, diags, evecs):
                 x = torch.cat(
                     (x, torch.ones((x.shape[0], 1), device=module.weight.device)), dim=1
                 )
-            last_x_kfe[m_name] = torch.mm(x, evecs[m_name][0])
+            last_x_kfe[m_name] = torch.mm(x, evecs_a[m_name])
 
         def grad_hook(m, m_grad, m_out):
             m_out = m_out[0]
-            gy_kfe = torch.mm(m_out, evecs[m_name][1])
+            gy_kfe = torch.mm(m_out, evecs_g[m_name])
             diags[m_name] += torch.mm(gy_kfe.t() ** 2, last_x_kfe[m_name] ** 2).view(-1)
 
     elif isinstance(module, nn.Conv2d):
@@ -549,24 +581,23 @@ def get_layer_diag_hooks(m_name, module, last_x_kfe, diags, evecs):
 def get_updated_diag(
     empirical_loss_fn: Callable[[torch.Tensor], torch.Tensor],
     model: TorchTwiceDifferentiable,
+    active_layers: Dict[str, torch.nn.Module],
     data_loader: DataLoader,
-    evecs,
+    evecs_a: Dict[str, torch.Tensor],
+    evecs_g: Dict[str, torch.Tensor],
 ):
     diags = {}
     last_x_kfe = {}
     hooks = []
     data_len = len(data_loader.sampler)
 
-    for m_name, module in model.model.named_modules():
-        if len(list(module.children())) == 0 and len(list(module.parameters())) > 0:
-            layer_requires_grad = [param.requires_grad for param in module.parameters()]
-            if any(layer_requires_grad):
-                diags[m_name] = init_layer_diag(module)
-                input_hook, grad_hook = get_layer_diag_hooks(
-                    m_name, module, last_x_kfe, diags, evecs
-                )
-                hooks.append(module.register_forward_hook(input_hook))
-                hooks.append(module.register_full_backward_hook(grad_hook))
+    for m_name, module in active_layers.items():
+        diags[m_name] = init_layer_diag(module)
+        input_hook, grad_hook = get_layer_diag_hooks(
+            m_name, module, last_x_kfe, diags, evecs_a, evecs_g
+        )
+        hooks.append(module.register_forward_hook(input_hook))
+        hooks.append(module.register_full_backward_hook(grad_hook))
     for x, _ in data_loader:
         pred_y = model.model(x)
         loss = empirical_loss_fn(pred_y)
@@ -593,37 +624,52 @@ def get_ekfac_representation(loss_fn, model, data_loader, update_diag=True):
     Returns:
         TODO
     """
-    forward_x, grad_y = get_kfac_blocks(loss_fn, model, data_loader)
-    evecs = {}
-    diags = {}
-    for key in forward_x.keys():
+    active_layers = {}
+    for m_name, module in model.model.named_modules():
+        if len(list(module.children())) == 0 and len(list(module.parameters())) > 0:
+            layer_requires_grad = [param.requires_grad for param in module.parameters()]
+            if any(layer_requires_grad):
+                active_layers[m_name] = module
+    forward_x, grad_y = get_kfac_blocks(loss_fn, model, active_layers, data_loader)
+    layers_evecs_a = {}
+    layers_evect_g = {}
+    layers_diags = {}
+    for key in active_layers.keys():
         evals_a, evecs_a = torch.linalg.eigh(forward_x[key])
         evals_g, evecs_g = torch.linalg.eigh(grad_y[key])
-        evecs[key] = (evecs_a, evecs_g)
-        diags[key] = torch.kron(evals_g.view(-1, 1), evals_a.view(-1, 1))
+        layers_evecs_a[key] = evecs_a
+        layers_evect_g[key] = evecs_g
+        layers_diags[key] = torch.kron(evals_g.view(-1, 1), evals_a.view(-1, 1))
     if update_diag:
-        diags = get_updated_diag(loss_fn, model, data_loader, evecs)
-    return evecs, diags
+        layers_diags = get_updated_diag(
+            loss_fn, model, active_layers, data_loader, layers_evecs_a, layers_evect_g
+        )
+    ekfac_representation = EkfacRepresentation(
+        tuple(active_layers.keys()),
+        tuple(active_layers.values()),
+        tuple(layers_evect_g.values()),
+        tuple(layers_evecs_a.values()),
+        tuple(layers_diags.values()),
+    )
+    return ekfac_representation
 
 
-def solve_ekfac_ihvp(evecs, diags, b, hessian_perturbation=0.0):
+def solve_ekfac_ihvp(
+    ekfac_representation: EkfacRepresentation, b, hessian_perturbation=0.0
+):
     x = b.clone()
     start_idx = 0
-    for layer_id in diags.keys():
-        evecs_a, evecs_g = evecs[layer_id]
-        diag = diags[layer_id]
+    for _, (_, evecs_a, evecs_g, diag) in ekfac_representation:
         end_idx = start_idx + diag.shape[0]
-        b_trial = b[:, start_idx : end_idx - evecs_g.shape[0]].reshape(
+        b_layer = b[:, start_idx : end_idx - evecs_g.shape[0]].reshape(
             b.shape[0], evecs_g.shape[0], -1
         )
-        bias_v = b[:, end_idx - evecs_g.shape[0] : end_idx]
-        b_trial = torch.cat([b_trial, bias_v.unsqueeze(2)], dim=2)
+        bias_layer_b = b[:, end_idx - evecs_g.shape[0] : end_idx]
+        b_layer = torch.cat([b_layer, bias_layer_b.unsqueeze(2)], dim=2)
         v_kfe = torch.einsum(
-            "bij,jk->bik", torch.einsum("ij,bjk->bik", evecs_g.t(), b_trial), evecs_a
+            "bij,jk->bik", torch.einsum("ij,bjk->bik", evecs_g.t(), b_layer), evecs_a
         )
-        inv_diag = 1 / (
-            diags[layer_id].reshape(*v_kfe.shape[1:]) + hessian_perturbation
-        )
+        inv_diag = 1 / (diag.reshape(*v_kfe.shape[1:]) + hessian_perturbation)
         inv_kfe = torch.einsum("bij,ij->bij", v_kfe, inv_diag)
         inv = torch.einsum(
             "bij,jk->bik", torch.einsum("ij,bjk->bik", evecs_g, inv_kfe), evecs_a.t()
@@ -987,11 +1033,13 @@ def solve_ekfac(
             )
             return torch.sum(log_probs_ * probs_.detach() ** 0.5)
 
-        evecs, diags = get_ekfac_representation(
+        ekfac_representation = get_ekfac_representation(
             batch_loss_fn, model, training_data, update_diag=update_diag
         )
-        x = solve_ekfac_ihvp(evecs, diags, b, hessian_perturbation=hessian_perturbation)
-        info = {"hessian_repr": (evecs, diags), "x": x}
+        x = solve_ekfac_ihvp(
+            ekfac_representation, b, hessian_perturbation=hessian_perturbation
+        )
+        info = {"hessian_repr": ekfac_representation}
     else:
 
         def batch_loss_fn(*d) -> torch.Tensor:
