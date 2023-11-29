@@ -242,7 +242,7 @@ def get_hvp_function(
             total_grad_xy = torch.empty(0, dtype=model_dtype)
             total_points = 0
             grad_func = torch.func.grad(batch_loss_function(model, loss))
-            for x, y in data_loader:
+            for x, y in iter(data_loader):
                 grad_xy = grad_func(
                     model_params, to_model_device(x, model), to_model_device(y, model)
                 )
@@ -516,8 +516,6 @@ def per_sample_mixed_derivative(
     Args:
         model: The PyTorch model for which the mixed derivatives are computed.
         loss: A callable that computes the loss.
-        g: Matrix for which the product with the Jacobian will be computed. The shape of this matrix
-           should be consistent with the shape of the mixed jacobian.
 
     Returns:
         A callable that takes a dictionary of model inputs, the model's input, and the labels.

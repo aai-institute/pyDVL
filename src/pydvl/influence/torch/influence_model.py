@@ -1,5 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from math import prod
 from typing import Callable, Optional
 
@@ -327,7 +328,7 @@ class BatchCgInfluence(TorchInfluence):
         if len(self.train_dataloader) == 0:
             raise ValueError("Training dataloader must not be empty.")
 
-        hvp = get_hvp_function(self.model, self.loss, self.train_dataloader)
+        hvp = get_hvp_function(self.model, self.loss, deepcopy(self.train_dataloader))
         reg_hvp = lambda v: hvp(v) + self.hessian_regularization * v.type(rhs.dtype)
         batch_cg = torch.zeros_like(rhs)
 
