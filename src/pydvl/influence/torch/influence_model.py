@@ -122,17 +122,22 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
         y: torch.Tensor,
         influence_type: InfluenceType = InfluenceType.Up,
     ):
-
         if influence_type == InfluenceType.Up:
             if x_test.shape[0] <= x.shape[0]:
                 factor = self.factors(x_test, y_test)
-                values = self.up_weighting(factor, x, y)
+                values = self.values_from_factors(
+                    factor, x, y, influence_type=influence_type
+                )
             else:
                 factor = self.factors(x, y)
-                values = self.up_weighting(factor, x_test, y_test).T
+                values = self.values_from_factors(
+                    factor, x_test, y_test, influence_type=influence_type
+                ).T
         elif influence_type == InfluenceType.Perturbation:
             factor = self.factors(x_test, y_test)
-            values = self.perturbation(factor, x, y)
+            values = self.values_from_factors(
+                factor, x, y, influence_type=influence_type
+            )
         else:
             raise UnSupportedInfluenceTypeException(influence_type)
         return values
@@ -147,43 +152,39 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
         if influence_type == InfluenceType.Up:
             values = fac @ grad.T
         elif influence_type == InfluenceType.Perturbation:
-            values = self.perturbation(fac, x, y)
+            values = self.values_from_factors(fac, x, y, influence_type=influence_type)
         else:
             raise UnSupportedInfluenceTypeException(influence_type)
         return values
-
-    def up_weighting(
-        self,
-        z_test_factors: torch.Tensor,
-        x: torch.Tensor,
-        y: torch.Tensor,
-    ) -> torch.Tensor:
-
-        return (
-            z_test_factors
-            @ self._loss_grad(x.to(self.model_device), y.to(self.model_device)).T
-        )
-
-    def perturbation(
-        self,
-        z_test_factors: torch.Tensor,
-        x: torch.Tensor,
-        y: torch.Tensor,
-    ) -> torch.Tensor:
-
-        return torch.einsum(
-            "ia,jba->ijb",
-            z_test_factors,
-            self._flat_loss_mixed_grad(
-                x.to(self.model_device), y.to(self.model_device)
-            ),
-        )
 
     def factors(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
 
         return self._solve_hvp(
             self._loss_grad(x.to(self.model_device), y.to(self.model_device))
         )
+
+    def values_from_factors(
+        self,
+        z_test_factors: torch.Tensor,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        influence_type: InfluenceType = InfluenceType.Up,
+    ) -> torch.Tensor:
+        if influence_type == InfluenceType.Up:
+            return (
+                z_test_factors
+                @ self._loss_grad(x.to(self.model_device), y.to(self.model_device)).T
+            )
+        elif influence_type == InfluenceType.Perturbation:
+            return torch.einsum(
+                "ia,jba->ijb",
+                z_test_factors,
+                self._flat_loss_mixed_grad(
+                    x.to(self.model_device), y.to(self.model_device)
+                ),
+            )
+        else:
+            raise UnSupportedInfluenceTypeException(influence_type)
 
     @abstractmethod
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
@@ -295,17 +296,20 @@ class BatchCgInfluence(TorchInfluence):
         r"""
         Compute approximation of
 
-        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})), \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle, \]
+        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
+            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle, \]
 
         for the case of up-weighting influence, resp.
 
-        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})), \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
+            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
 
         for the perturbation type influence case. The approximate action of $H^{-1}$ is achieved via the
         [conjugate gradient method](https://en.wikipedia.org/wiki/Conjugate_gradient_method).
 
         Args:
-            x_test: model input to use in the gradient computations of $H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}}))$
+            x_test: model input to use in the gradient computations of $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
+                f_{\theta}(x_{\text{test}}))$
             y_test: label tensor to compute gradients
             x: optional model input to use in the gradient computations $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$, if None, use $x=x_{\text{test}}$
@@ -364,12 +368,12 @@ class LissaInfluence(TorchInfluence):
     where \(I\) is the identity matrix, \(d\) is a dampening term and \(s\) a scaling
     factor that are applied to help convergence. For details, see
     (Koh and Liang, 2017)<sup><a href="#koh_liang_2017">1</a></sup> and the original paper
-    (Agarwal et. al.)<sup><a href="#agarwal_secondorder_2017">2</a></sup>.
+    (Agarwal et al.)<sup><a href="#agarwal_secondorder_2017">2</a></sup>.
 
     Args:
         model: instance of [torch.nn.Module][torch.nn.Module].
-        training_data: A DataLoader containing the training data.
-        hessian_perturbation: Regularization of the hessian.
+        train_dataloader: A DataLoader containing the training data.
+        hessian_regularization: Regularization of the hessian.
         maxiter: Maximum number of iterations.
         dampen: Dampening factor, defaults to 0 for no dampening.
         scale: Scaling factor, defaults to 10.
@@ -553,7 +557,9 @@ class ArnoldiInfluence(TorchInfluence):
             values = torch.einsum("ij, ik -> jk", left, right)
         elif influence_type == InfluenceType.Perturbation:
             factors = self.factors(x_test, y_test)
-            values = self.perturbation(factors, x, y)
+            values = self.values_from_factors(
+                factors, x, y, influence_type=influence_type
+            )
         else:
             raise UnSupportedInfluenceTypeException(influence_type)
         return values
@@ -573,7 +579,9 @@ class ArnoldiInfluence(TorchInfluence):
             values = torch.einsum("ij, ik -> jk", left, right)
         elif influence_type == InfluenceType.Perturbation:
             factors = self.factors(x, y)
-            values = self.perturbation(factors, x, y)
+            values = self.values_from_factors(
+                factors, x, y, influence_type=influence_type
+            )
         else:
             raise UnSupportedInfluenceTypeException(influence_type)
         return values

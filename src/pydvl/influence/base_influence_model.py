@@ -43,58 +43,12 @@ class Influence(Generic[TensorType], ABC):
         """Number of trainable parameters of the underlying model"""
 
     @abstractmethod
-    def up_weighting(
-        self,
-        z_test_factors: TensorType,
-        x: TensorType,
-        y: TensorType,
-    ) -> TensorType:
-        r"""
-        Overwrite this method to implement the computation of
-        $$
-        \langle z_test_factors, \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        $$
-        where the gradient is meant to be per sample of the batch $(x, y)$.
-        Args:
-            z_test_factors: pre-computed array, approximating $H^{-1}\nabla_{\theta} \ell(y_{test}, f_{\theta}(x_{test}))$
-            x: model input to use in the gradient computations
-            y: label tensor to compute gradients
-
-        Returns:
-            Tensor representing the element-wise scalar product of the provided batch
-
-        """
-
-    @abstractmethod
-    def perturbation(
-        self,
-        z_test_factors: TensorType,
-        x: TensorType,
-        y: TensorType,
-    ) -> TensorType:
-        r"""
-        Overwrite this method to implement the computation of
-        $$
-        \langle z_test_factors, \nabla_x \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        $$
-        where the gradient is meant to be per sample of the batch $(x, y)$.
-        Args:
-            z_test_factors: pre-computed array, approximating $H^{-1}\nabla_{\theta} \ell(y_{test}, f_{\theta}(x_{test}))$
-            x: model input to use in the gradient computations
-            y: label tensor to compute gradients
-
-        Returns:
-            Tensor representing the element-wise scalar product for the provided batch
-
-        """
-
-    @abstractmethod
     def factors(self, x: TensorType, y: TensorType) -> TensorType:
         r"""
         Overwrite this method to implement the approximation of
-        $$
-        H^{-1}\nabla_{theta} \ell(y, f_{\theta}(x))
-        $$
+        \[
+        H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x))
+        \]
         where the gradient is meant to be per sample of the batch $(x, y)$.
 
         Args:
@@ -117,22 +71,61 @@ class Influence(Generic[TensorType], ABC):
     ) -> TensorType:
         r"""
         Overwrite this method to implement the approximation of
-        $$
-        \langle H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test})), \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        $$
+
+        \[
+        \langle H^{-1}\nabla_{theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
+            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
+        \]
+
         for the case of up-weighting influence, resp.
-        $$
-        \langle H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test})), \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        $$
+
+        \[
+        \langle H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test})),
+            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
+        \]
+
         for the perturbation type influence case.
 
         Args:
-            x_test: model input to use in the gradient computations of $H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test}))$
+            x_test: model input to use in the gradient computations
+                of $H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test}))$
             y_test: label tensor to compute gradients
-            x: optional model input to use in the gradient computations $\nabla_{theta}\ell(y, f_{\theta}(x))$, resp. $\nabla_{x}\nabla_{theta}\ell(y, f_{\theta}(x))$, if None,
-                use $x=x_{test}$
+            x: optional model input to use in the gradient computations $\nabla_{theta}\ell(y, f_{\theta}(x))$,
+                resp. $\nabla_{x}\nabla_{theta}\ell(y, f_{\theta}(x))$, if None, use $x=x_{test}$
             y: optional label tensor to compute gradients
             influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
+
+        Returns:
+            Tensor representing the element-wise scalar products for the provided batch
+
+        """
+
+    @abstractmethod
+    def values_from_factors(
+        self,
+        z_test_factors: TensorType,
+        x: TensorType,
+        y: TensorType,
+        influence_type: InfluenceType = InfluenceType.Up,
+    ) -> TensorType:
+        r"""
+        Overwrite this method to implement the computation of
+        \[
+        \langle z_{\text{test_factors}}, \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
+        \]
+        for the case of up-weighting influence, resp.
+        \[
+        \langle z_{\text{test_factors}}, \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
+        \]
+        for the perturbation type influence case. The gradient is meant to be per sample of the batch $(x, y)$.
+
+        Args:
+             z_test_factors: pre-computed array, approximating
+                $H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}}))$
+             x: optional model input to use in the gradient computations $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$, if None, use $x=x_{\text{test}}$
+             y: optional label tensor to compute gradients
+             influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
 
         Returns:
             Tensor representing the element-wise scalar products for the provided batch

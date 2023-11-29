@@ -143,20 +143,13 @@ def test_dask_influence_nn(influence_type):
         rtol=1e-3,
     )
 
-    if influence_type == InfluenceType.Up:
-        torch_values_from_factors = inf_model.up_weighting(
-            torch_factors, x_train, y_train
-        )
-        da_values_from_factors = dask_influence.up_weighting(
-            da_factors, da_x_train, da_y_train
-        )
-    else:
-        torch_values_from_factors = inf_model.perturbation(
-            torch_factors, x_train, y_train
-        )
-        da_values_from_factors = dask_influence.perturbation(
-            da_factors, da_x_train, da_y_train
-        )
+    torch_values_from_factors = inf_model.values_from_factors(
+        torch_factors, x_train, y_train, influence_type=influence_type
+    )
+
+    da_values_from_factors = dask_influence.values_from_factors(
+        da_factors, da_x_train, da_y_train, influence_type=influence_type
+    )
 
     assert np.allclose(
         da_values_from_factors.compute(scheduler="synchronous"),

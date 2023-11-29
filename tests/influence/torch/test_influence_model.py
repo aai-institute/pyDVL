@@ -442,25 +442,21 @@ def test_influences_arnoldi(
     ).numpy()
 
     low_rank_factors = arnoldi_influence.factors(x_test, y_test)
+    assert np.allclose(
+        direct_factors, arnoldi_influence.factors(x_train, y_train).numpy()
+    )
 
-    if test_case.influence_type is InfluenceType.Perturbation:
-        low_rank_values_from_factors = arnoldi_influence.perturbation(
-            low_rank_factors, x_train, y_train
-        ).numpy()
-    else:
-        low_rank_values_from_factors = arnoldi_influence.up_weighting(
-            low_rank_factors, x_train, y_train
-        ).numpy()
+    if test_case.influence_type is InfluenceType.Up:
         low_rank_influence_transpose = arnoldi_influence.values(
             x_train, y_train, x_test, y_test, influence_type=test_case.influence_type
         ).numpy()
         assert np.allclose(
             low_rank_influence_transpose, low_rank_influence.swapaxes(0, 1)
         )
-        assert np.allclose(
-            direct_factors, arnoldi_influence.factors(x_train, y_train).numpy()
-        )
 
+    low_rank_values_from_factors = arnoldi_influence.values_from_factors(
+        low_rank_factors, x_train, y_train, influence_type=test_case.influence_type
+    ).numpy()
     assert np.allclose(direct_influence, low_rank_influence)
     assert np.allclose(direct_sym_influence, sym_low_rank_influence)
     assert np.allclose(low_rank_influence, low_rank_values_from_factors)
