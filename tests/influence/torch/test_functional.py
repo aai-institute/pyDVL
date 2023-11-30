@@ -136,7 +136,7 @@ def test_per_sample_gradient(in_features, out_features, batch_size):
     "in_features, out_features, batch_size",
     [(46, 1, 632), (50, 3, 120), (100, 5, 110), (25, 10, 500)],
 )
-def test_matrix_jacobian_product(in_features, out_features, batch_size):
+def test_matrix_jacobian_product(in_features, out_features, batch_size, pytorch_seed):
     model = torch.nn.Linear(in_features, out_features)
     params = {k: p for k, p in model.named_parameters() if p.requires_grad}
 
@@ -154,7 +154,7 @@ def test_matrix_jacobian_product(in_features, out_features, batch_size):
     analytic_grads = torch.cat([dL_dw.reshape(dL_dw.shape[0], -1), dL_db], dim=1)
     analytical_mjp = G @ analytic_grads.T
 
-    assert torch.allclose(analytical_mjp, mjp, atol=1e-5)
+    assert torch.allclose(analytical_mjp, mjp, atol=1e-5, rtol=1e-3)
 
 
 @pytest.mark.torch

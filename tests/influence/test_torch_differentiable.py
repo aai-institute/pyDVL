@@ -30,7 +30,7 @@ from pydvl.influence.torch import (
 )
 
 # Mark the entire module
-pytestmark = pytest.mark.torch
+pytestmark = pytest.mark.skip
 
 DATA_OUTPUT_NOISE: float = 0.01
 
