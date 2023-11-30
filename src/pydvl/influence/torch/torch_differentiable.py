@@ -20,6 +20,7 @@ from typing import (
     Callable,
     Dict,
     Generator,
+    Iterable,
     List,
     Literal,
     Optional,
@@ -448,11 +449,11 @@ class EkfacRepresentation:
         evecs_g: The g eigenvectors of the ekfac representation.
         diags: The diagonal elements of the factorized Hessian matrix.
     """
-    layer_names: Tuple[str]
-    layers_module: Tuple[torch.nn.Module]
-    evecs_a: Tuple[torch.Tensor]
-    evecs_g: Tuple[torch.Tensor]
-    diags: Tuple[torch.Tensor, ...]
+    layer_names: Iterable[str]
+    layers_module: Iterable[torch.nn.Module]
+    evecs_a: Iterable[torch.Tensor]
+    evecs_g: Iterable[torch.Tensor]
+    diags: Iterable[torch.Tensor]
 
     def __iter__(self):
         return iter(
@@ -721,7 +722,7 @@ def get_ekfac_representation(
         A [EkfacRepresentation][pydvl.influence.torch.torch_differentiable.EkfacRepresentation] instance
         that contains the eigenvectors and eigenvalues of the KFAC representation of the Hessian.
     """
-    active_layers = {}
+    active_layers: Dict[str, torch.nn.Module] = {}
     for m_name, module in model.model.named_modules():
         if len(list(module.children())) == 0 and len(list(module.parameters())) > 0:
             layer_requires_grad = [param.requires_grad for param in module.parameters()]
@@ -744,14 +745,19 @@ def get_ekfac_representation(
         layers_diags[key] = torch.kron(evals_g.view(-1, 1), evals_a.view(-1, 1))
     if update_diag:
         layers_diags = get_updated_diag(
-            loss_fn, model, active_layers, training_data, layers_evecs_a, layers_evect_g
+            loss_fn,
+            model,
+            active_layers,
+            training_data,
+            layers_evecs_a,
+            layers_evect_g,
         )
     ekfac_representation = EkfacRepresentation(
-        tuple(active_layers.keys()),
-        tuple(active_layers.values()),
-        tuple(layers_evect_g.values()),
-        tuple(layers_evecs_a.values()),
-        tuple(layers_diags.values()),
+        active_layers.keys(),
+        active_layers.values(),
+        layers_evect_g.values(),
+        layers_evecs_a.values(),
+        layers_diags.values(),
     )
     return ekfac_representation
 
