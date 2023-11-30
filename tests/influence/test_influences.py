@@ -302,7 +302,11 @@ def direct_influence(model_and_data, test_case: TestCase):
         [InversionMethod.Cg, {}, 1e-1],
         [InversionMethod.Lissa, {"maxiter": 6000, "scale": 100}, 0.3],
     ],
-    ids=[inv.value for inv in InversionMethod if inv is not InversionMethod.Arnoldi],
+    ids=[
+        inv.value
+        for inv in InversionMethod
+        if inv not in [InversionMethod.Arnoldi, InversionMethod.Ekfac]
+    ],
 )
 def test_influence_linear_model(
     influence_type: InfluenceType,
