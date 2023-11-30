@@ -27,8 +27,6 @@ __all__ = [
     "compute_influences",
     "InfluenceType",
     "compute_influence_factors",
-    "compute_influences_up",
-    "compute_influences_pert",
 ]
 
 logger = logging.getLogger(__name__)
