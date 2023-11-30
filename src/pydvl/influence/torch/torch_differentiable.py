@@ -32,10 +32,6 @@ from typing import (
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from nngeometry.layercollection import LayerCollection
-from nngeometry.metrics import FIM
-from nngeometry.object import PMatEKFAC
-from numpy import isin
 from numpy.typing import NDArray
 from scipy.sparse.linalg import ArpackNoConvergence
 from torch import autograd
