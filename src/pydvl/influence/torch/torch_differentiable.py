@@ -437,17 +437,22 @@ def model_hessian_low_rank(
 @dataclass(frozen=True)
 class EkfacRepresentation:
     r"""
-    Container class for the EKFAC representation of the Hessian matrix of a scalar-valued function.
+    Container class for the EKFAC representation of the Hessian.
+    It can be iterated over to get the layers names and their corresponding module,
+    eigenvectors and diagonal elements of the factorized Hessian matrix.
 
     Args:
-        evecs: A dictionary containing the eigenvectors of the Hessian matrix.
-        diags: A dictionary containing the diagonal elements of the Hessian matrix.
+        layer_names: Names of the layers.
+        layers_module: The layers.
+        evecs_a: The a eigenvectors of the ekfac representation.
+        evecs_g: The g eigenvectors of the ekfac representation.
+        diags: The diagonal elements of the factorized Hessian matrix.
     """
     layer_names: Tuple[str]
     layers_module: Tuple[torch.nn.Module]
     evecs_a: Tuple[torch.Tensor]
     evecs_g: Tuple[torch.Tensor]
-    diags: Tuple[torch.Tensor]
+    diags: Tuple[torch.Tensor, ...]
 
     def __iter__(self):
         return iter(
@@ -458,7 +463,25 @@ class EkfacRepresentation:
         )
 
 
-def get_layer_kfac_hooks(m_name, module, forward_x, grad_y):
+def get_layer_kfac_hooks(
+    m_name: str,
+    module: torch.nn.Module,
+    forward_x: Dict[str, torch.Tensor],
+    grad_y: Dict[str, torch.Tensor],
+) -> Tuple[Callable, Callable]:
+    """
+    Returns the input and grad hooks for a given layer.
+
+    Args:
+        m_name: Name of the layer.
+        module: The layer.
+        forward_x: Dictionary that stores the KFAC blocks of the Hessian matrix. Initially empty.
+        grad_y: Dictionary that stores the KFAC blocks of the Hessian matrix. Initially empty.
+
+    Returns:
+        The hooks for the forward and backward pass of the layer. Each is used to update
+        the KFAC blocks of the Hessian matrix.
+    """
     if isinstance(module, nn.Linear):
         with_bias = module.bias is not None
 
@@ -474,29 +497,36 @@ def get_layer_kfac_hooks(m_name, module, forward_x, grad_y):
             m_out = m_out[0]
             grad_y[m_name] += torch.mm(m_out.t(), m_out)
 
-    elif isinstance(module, nn.Conv2d):
-        pass
-
     else:
-        supported_layers = ["Linear", "Conv2d"]
         raise NotImplementedError(
-            f"Only {supported_layers} layers are supported, but found module {module} requiring grad."
+            f"Only Linear layers are supported, but found module {module} requiring grad."
         )
     return input_hook, grad_hook
 
 
-def init_layer_kfac_blocks(module):
+def init_layer_kfac_blocks(
+    module: torch.nn.Module,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Given the module, it initialises the KFAC blocks of the Hessian matrix
+    to zero. These are used to accumulate the KFAC blocks of the Hessian matrix
+    during the forward and backward pass of the layer.
+
+    Args:
+        module: The layer.
+
+    Returns:
+        Two tensors of zeros with the shape of the KFAC blocks of the Hessian matrix.
+    """
     if isinstance(module, nn.Linear):
         with_bias = module.bias is not None
         sG = module.out_features
         sA = module.in_features + int(with_bias)
         forward_x_layer = torch.zeros((sA, sA), device=module.weight.device)
         grad_y_layer = torch.zeros((sG, sG), device=module.weight.device)
-    elif isinstance(module, nn.Conv2d):
-        pass
     else:
         raise NotImplementedError(
-            f"Only Linear and Conv2d layers are supported, but found module {module} requiring grad."
+            f"Only Linear layers are supported, but found module {module} requiring grad."
         )
     return forward_x_layer, grad_y_layer
 
@@ -506,11 +536,26 @@ def get_kfac_blocks(
     model: TorchTwiceDifferentiable,
     active_layers: Dict[str, torch.nn.Module],
     data_loader: DataLoader,
-):
+) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+    """
+    Returns the KFAC blocks of the Hessian, one calculated from the forward pass and one
+    from the backward pass. The result for each layer is stored in a dictionary.
+
+    Args:
+        empirical_loss_fn: empirical loss function, typically the cross entropy loss
+            calculated over the output of the model without any labels.
+        model: A model wrapped in the TwiceDifferentiable interface.
+        active_layers: Dictionary containing all the layers that require grad.
+        data_loader: A DataLoader containing the training data.
+
+    Returns:
+        Two dictionaries containing the KFAC blocks of the Hessian, one calculated from the forward pass and one
+        from the backward pass.
+    """
     forward_x = {}
     grad_y = {}
     hooks = []
-    data_len = len(data_loader.sampler)
+    data_len = 0
 
     for m_name, module in active_layers.items():
         forward_x[m_name], grad_y[m_name] = init_layer_kfac_blocks(module)
@@ -521,6 +566,7 @@ def get_kfac_blocks(
         hooks.append(module.register_full_backward_hook(layer_grad_hook))
 
     for x, _ in data_loader:
+        data_len += x.shape[0]
         pred_y = model.model(x)
         loss = empirical_loss_fn(pred_y)
         loss.backward()
@@ -535,22 +581,54 @@ def get_kfac_blocks(
     return forward_x, grad_y
 
 
-def init_layer_diag(module):
+def init_layer_diag(module: torch.nn.Module) -> torch.Tensor:
+    """
+    Given the module, it initialises the diagonal elements of the factorized Hessian matrix
+    to zero. This is used to accumulate the diagonal elements of the factorized Hessian matrix
+    during the forward and backward pass of the layer.
+
+    Args:
+        module: The layer.
+
+    Returns:
+        A tensor of zeros with the shape of the diagonal elements of the factorized Hessian matrix.
+    """
     if isinstance(module, nn.Linear):
         with_bias = module.bias is not None
         sG = module.out_features
         sA = module.in_features + int(with_bias)
         layer_diag = torch.zeros((sA * sG), device=module.weight.device)
-    elif isinstance(module, nn.Conv2d):
-        pass
     else:
         raise NotImplementedError(
-            f"Only Linear and Conv2d layers are supported, but found module {module} requiring grad."
+            f"Only Linear layers are supported, but found module {module} requiring grad."
         )
     return layer_diag
 
 
-def get_layer_diag_hooks(m_name, module, last_x_kfe, diags, evecs_a, evecs_g):
+def get_layer_diag_hooks(
+    m_name: str,
+    module: torch.nn.Module,
+    last_x_kfe: Dict[str, torch.Tensor],
+    diags: Dict[str, torch.Tensor],
+    evecs_a: Dict[str, torch.Tensor],
+    evecs_g: Dict[str, torch.Tensor],
+) -> Tuple[Callable, Callable]:
+    """
+    Returns the input and grad hooks for updating the diagonal for a given layer.
+
+    Args:
+        m_name: Name of the layer.
+        module: The layer.
+        last_x_kfe: Dictionary that stores the last input to the layer. Initially empty.
+        diags: Dictionary containing the diagonal elements of the factorized Hessian matrix.
+            Initially empty.
+        evecs_a: Dictionary containing the a eigenvectors of the ekfac representation.
+        evecs_g: Dictionary containing the g eigenvectors of the ekfac representation.
+
+    Returns:
+        The hooks for the forward and backward pass of the layer. Each is used to update
+        the diagonal of the factorized Hessian matrix.
+    """
     if isinstance(module, nn.Linear):
         with_bias = module.bias is not None
 
@@ -567,13 +645,9 @@ def get_layer_diag_hooks(m_name, module, last_x_kfe, diags, evecs_a, evecs_g):
             gy_kfe = torch.mm(m_out, evecs_g[m_name])
             diags[m_name] += torch.mm(gy_kfe.t() ** 2, last_x_kfe[m_name] ** 2).view(-1)
 
-    elif isinstance(module, nn.Conv2d):
-        pass
-
     else:
-        supported_layers = ["Linear", "Conv2d"]
         raise NotImplementedError(
-            f"Only {supported_layers} layers are supported, but found module {module} requiring grad."
+            f"Only Linear layers are supported, but found module {module} requiring grad."
         )
     return input_hook, grad_hook
 
@@ -585,11 +659,25 @@ def get_updated_diag(
     data_loader: DataLoader,
     evecs_a: Dict[str, torch.Tensor],
     evecs_g: Dict[str, torch.Tensor],
-):
+) -> Dict[str, torch.Tensor]:
+    """
+    Returns the updated diagonal elements of the factorized Hessian matrix.
+
+    Args:
+        empirical_loss_fn: empirical loss function.
+        model: A model wrapped in the TwiceDifferentiable interface.
+        active_layers: Dictionary containing the active layers of the model.
+        data_loader: A DataLoader containing the training data.
+        evecs_a: Dictionary containing the a eigenvectors of the ekfac representation.
+        evecs_g: Dictionary containing the g eigenvectors of the ekfac representation.
+
+    Returns:
+        The updated diagonal elements of the factorized Hessian matrix.
+    """
     diags = {}
-    last_x_kfe = {}
+    last_x_kfe: Dict[str, torch.Tensor] = {}
     hooks = []
-    data_len = len(data_loader.sampler)
+    data_len = 0
 
     for m_name, module in active_layers.items():
         diags[m_name] = init_layer_diag(module)
@@ -599,6 +687,7 @@ def get_updated_diag(
         hooks.append(module.register_forward_hook(input_hook))
         hooks.append(module.register_full_backward_hook(grad_hook))
     for x, _ in data_loader:
+        data_len += x.shape[0]
         pred_y = model.model(x)
         loss = empirical_loss_fn(pred_y)
         loss.backward()
@@ -612,25 +701,38 @@ def get_updated_diag(
     return diags
 
 
-def get_ekfac_representation(loss_fn, model, data_loader, update_diag=True):
+def get_ekfac_representation(
+    loss_fn: Callable[[torch.Tensor], torch.Tensor],
+    model: TorchTwiceDifferentiable,
+    training_data: DataLoader,
+    update_diag: bool = True,
+) -> EkfacRepresentation:
     """
-    Get KFAC representation of the loss function for the given model and data.
+    Returns the KFAC representation of the loss function for the given model and data.
 
     Args:
-        loss_fn: Loss function.
-        model: Model.
-        data_loader: Data loader.
+        loss_fn: empirical loss function.
+        model: A model wrapped in the TwiceDifferentiable interface.
+        data_loader: A DataLoader containing the training data.
+        update_diag: If True, the diagonal elements of the KFAC representation are fitted
+            to better match those of the Hessian.
 
     Returns:
-        TODO
+        A [EkfacRepresentation][pydvl.influence.torch.torch_differentiable.EkfacRepresentation] instance
+        that contains the eigenvectors and eigenvalues of the KFAC representation of the Hessian.
     """
     active_layers = {}
     for m_name, module in model.model.named_modules():
         if len(list(module.children())) == 0 and len(list(module.parameters())) > 0:
             layer_requires_grad = [param.requires_grad for param in module.parameters()]
-            if any(layer_requires_grad):
+            if all(layer_requires_grad):
                 active_layers[m_name] = module
-    forward_x, grad_y = get_kfac_blocks(loss_fn, model, active_layers, data_loader)
+            elif any(layer_requires_grad):
+                raise RuntimeError(
+                    f"Layer {m_name} has some parameters that require grad and some that do not."
+                    f"This is not supported. Please set all parameters of the layer to require grad."
+                )
+    forward_x, grad_y = get_kfac_blocks(loss_fn, model, active_layers, training_data)
     layers_evecs_a = {}
     layers_evect_g = {}
     layers_diags = {}
@@ -642,7 +744,7 @@ def get_ekfac_representation(loss_fn, model, data_loader, update_diag=True):
         layers_diags[key] = torch.kron(evals_g.view(-1, 1), evals_a.view(-1, 1))
     if update_diag:
         layers_diags = get_updated_diag(
-            loss_fn, model, active_layers, data_loader, layers_evecs_a, layers_evect_g
+            loss_fn, model, active_layers, training_data, layers_evecs_a, layers_evect_g
         )
     ekfac_representation = EkfacRepresentation(
         tuple(active_layers.keys()),
@@ -655,8 +757,21 @@ def get_ekfac_representation(loss_fn, model, data_loader, update_diag=True):
 
 
 def solve_ekfac_ihvp(
-    ekfac_representation: EkfacRepresentation, b, hessian_perturbation=0.0
-):
+    ekfac_representation: EkfacRepresentation,
+    b: torch.Tensor,
+    hessian_perturbation: float = 0.0,
+) -> torch.Tensor:
+    """
+    Solves the inverse Hessian vector product using the EKFAC representation.
+
+    Args:
+        ekfac_representation: EKFAC representation of the Hessian
+        b: A matrix, the right hand side of the equation \(Hx = b\).
+        hessian_perturbation: Regularization of the hessian.
+
+    Returns:
+        A matrix x such that \(Hx = b\).
+    """
     x = b.clone()
     start_idx = 0
     for _, (_, evecs_a, evecs_g, diag) in ekfac_representation:
