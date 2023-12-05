@@ -7,7 +7,7 @@ from dask import array as da
 from dask import delayed
 from numpy.typing import NDArray
 
-from ..base_influence_model import (
+from pydvl.influence.base_influence_model import (
     InfluenceFunctionModel,
     InfluenceType,
     UnSupportedInfluenceTypeException,

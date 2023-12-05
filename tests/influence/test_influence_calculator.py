@@ -5,14 +5,13 @@ import torch
 from distributed import Client
 from torch.utils.data import DataLoader, TensorDataset
 
-from pydvl.influence import InfluenceType
+from pydvl.influence import InfluenceType, DaskInfluenceCalculator
 from pydvl.influence.base_influence_model import UnSupportedInfluenceTypeException
-from pydvl.influence.dask import DaskInfluenceCalculator
-from pydvl.influence.dask.influence_calculator import (
+from pydvl.influence.influence_calculator import (
     DimensionChunksException,
     UnalignedChunksException,
 )
-from pydvl.influence.torch.influence_model import (
+from pydvl.influence.torch import (
     ArnoldiInfluence,
     BatchCgInfluence,
     DirectInfluence,
