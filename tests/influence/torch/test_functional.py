@@ -6,10 +6,6 @@ from tests.influence.conftest import (
     linear_mixed_second_derivative_analytical,
     linear_model,
 )
-from tests.influence.test_torch_differentiable import (
-    DATA_OUTPUT_NOISE,
-    linear_mvp_model,
-)
 
 torch = pytest.importorskip("torch")
 import numpy as np
@@ -28,6 +24,7 @@ from pydvl.influence.torch.functional import (
 )
 from pydvl.influence.torch.util import align_structure, flatten_dimensions
 
+from .conftest import DATA_OUTPUT_NOISE, linear_mvp_model
 from .test_util import model_data, test_parameters
 
 
@@ -165,7 +162,7 @@ def test_matrix_jacobian_product(in_features, out_features, batch_size, pytorch_
 def test_mixed_derivatives(in_features, out_features, train_set_size):
     A, b = linear_model((out_features, in_features), 5)
     loss = torch.nn.functional.mse_loss
-    model = linear_mvp_model(A, b).model
+    model = linear_mvp_model(A, b)
 
     data_model = lambda x: np.random.normal(x @ A.T + b, DATA_OUTPUT_NOISE)
     train_x = np.random.uniform(size=[train_set_size, in_features])

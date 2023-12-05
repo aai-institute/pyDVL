@@ -5,6 +5,17 @@ from numpy.typing import NDArray
 from torch.optim import LBFGS
 from torch.utils.data import DataLoader
 
+DATA_OUTPUT_NOISE: float = 0.01
+
+
+def linear_mvp_model(A, b):
+    output_dimension, input_dimension = tuple(A.shape)
+    model = torch.nn.Linear(input_dimension, output_dimension)
+    model.eval()
+    model.weight.data = torch.as_tensor(A)
+    model.bias.data = torch.as_tensor(b)
+    return model
+
 
 def minimal_training(
     model: torch.nn.Module,

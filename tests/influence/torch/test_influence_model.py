@@ -22,7 +22,6 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence import InfluenceType
-from pydvl.influence.torch import model_hessian_low_rank
 from tests.influence.conftest import (
     add_noise_to_linear_model,
     analytical_linear_influences,
