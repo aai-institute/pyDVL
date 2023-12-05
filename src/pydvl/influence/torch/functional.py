@@ -1,7 +1,12 @@
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional, Tuple
 
 import torch
+from scipy.sparse.linalg import ArpackNoConvergence
 from torch.func import functional_call, grad, jvp, vjp
 from torch.utils.data import DataLoader
 
@@ -10,11 +15,16 @@ from .util import align_structure, align_with_model, flatten_dimensions, to_mode
 __all__ = [
     "get_hvp_function",
     "get_hessian",
+    "get_batch_hvp",
     "per_sample_loss",
     "per_sample_gradient",
     "matrix_jacobian_product",
     "per_sample_mixed_derivative",
+    "model_hessian_low_rank",
+    "LowRankProductRepresentation",
 ]
+
+logger = logging.getLogger(__name__)
 
 
 def hvp(
@@ -537,3 +547,221 @@ def per_sample_mixed_derivative(
         in_dims=(None, 0, 0),
     )
     return per_samp_mix_derivative
+
+
+@dataclass
+class LowRankProductRepresentation:
+    r"""
+    Representation of a low rank product of the form \(H = V D V^T\),
+    where D is a diagonal matrix and V is orthogonal.
+
+    Args:
+        eigen_vals: Diagonal of D.
+        projections: The matrix V.
+    """
+
+    eigen_vals: torch.Tensor
+    projections: torch.Tensor
+
+    @property
+    def device(self) -> torch.device:
+        return (
+            self.eigen_vals.device
+            if hasattr(self.eigen_vals, "device")
+            else torch.device("cpu")
+        )
+
+    def to(self, device: torch.device):
+        """
+        Move the representing tensors to a device
+        """
+        return LowRankProductRepresentation(
+            self.eigen_vals.to(device), self.projections.to(device)
+        )
+
+    def __post_init__(self):
+        if self.eigen_vals.device != self.projections.device:
+            raise ValueError("eigen_vals and projections must be on the same device.")
+
+
+def lanzcos_low_rank_hessian_approx(
+    hessian_vp: Callable[[torch.Tensor], torch.Tensor],
+    matrix_shape: Tuple[int, int],
+    hessian_perturbation: float = 0.0,
+    rank_estimate: int = 10,
+    krylov_dimension: Optional[int] = None,
+    tol: float = 1e-6,
+    max_iter: Optional[int] = None,
+    device: Optional[torch.device] = None,
+    eigen_computation_on_gpu: bool = False,
+    torch_dtype: Optional[torch.dtype] = None,
+) -> LowRankProductRepresentation:
+    r"""
+    Calculates a low-rank approximation of the Hessian matrix of a scalar-valued
+    function using the implicitly restarted Lanczos algorithm, i.e.:
+
+    \[ H_{\text{approx}} = V D V^T\]
+
+    where \(D\) is a diagonal matrix with the top (in absolute value) `rank_estimate` eigenvalues of the Hessian
+    and \(V\) contains the corresponding eigenvectors.
+
+    Args:
+        hessian_vp: A function that takes a vector and returns the product of
+            the Hessian of the loss function.
+        matrix_shape: The shape of the matrix, represented by the hessian vector
+            product.
+        hessian_perturbation: Regularization parameter added to the
+            Hessian-vector product for numerical stability.
+        rank_estimate: The number of eigenvalues and corresponding eigenvectors
+            to compute. Represents the desired rank of the Hessian approximation.
+        krylov_dimension: The number of Krylov vectors to use for the Lanczos
+            method. If not provided, it defaults to
+            \( \min(\text{model.num_parameters}, \max(2 \times \text{rank_estimate} + 1, 20)) \).
+        tol: The stopping criteria for the Lanczos algorithm, which stops when
+            the difference in the approximated eigenvalue is less than `tol`.
+            Defaults to 1e-6.
+        max_iter: The maximum number of iterations for the Lanczos method. If
+            not provided, it defaults to \( 10 \cdot \text{model.num_parameters}\).
+        device: The device to use for executing the hessian vector product.
+        eigen_computation_on_gpu: If True, tries to execute the eigen pair
+            approximation on the provided device via [cupy](https://cupy.dev/)
+            implementation. Ensure that either your model is small enough, or you
+            use a small rank_estimate to fit your device's memory. If False, the
+            eigen pair approximation is executed on the CPU with scipy's wrapper to
+            ARPACK.
+        torch_dtype: If not provided, the current torch default dtype is used for
+            conversion to torch.
+
+    Returns:
+        A [LowRankProductRepresentation][pydvl.influence.torch.torch_differentiable.LowRankProductRepresentation]
+            instance that contains the top (up until rank_estimate) eigenvalues
+            and corresponding eigenvectors of the Hessian.
+    """
+
+    torch_dtype = torch.get_default_dtype() if torch_dtype is None else torch_dtype
+
+    if eigen_computation_on_gpu:
+        try:
+            import cupy as cp
+            from cupyx.scipy.sparse.linalg import LinearOperator, eigsh
+            from torch.utils.dlpack import from_dlpack, to_dlpack
+        except ImportError as e:
+            raise ImportError(
+                f"Try to install missing dependencies or set eigen_computation_on_gpu to False: {e}"
+            )
+
+        if device is None:
+            raise ValueError(
+                "Without setting an explicit device, cupy is not supported"
+            )
+
+        def to_torch_conversion_function(x: cp.NDArray) -> torch.Tensor:
+            return from_dlpack(x.toDlpack()).to(torch_dtype)
+
+        def mv(x):
+            x = to_torch_conversion_function(x)
+            y = hessian_vp(x) + hessian_perturbation * x
+            return cp.from_dlpack(to_dlpack(y))
+
+    else:
+        from scipy.sparse.linalg import LinearOperator, eigsh
+
+        def mv(x):
+            x_torch = torch.as_tensor(x, device=device, dtype=torch_dtype)
+            y = (
+                (hessian_vp(x_torch) + hessian_perturbation * x_torch)
+                .detach()
+                .cpu()
+                .numpy()
+            )
+            return y
+
+        to_torch_conversion_function = partial(torch.as_tensor, dtype=torch_dtype)
+
+    try:
+        eigen_vals, eigen_vecs = eigsh(
+            LinearOperator(matrix_shape, matvec=mv),
+            k=rank_estimate,
+            maxiter=max_iter,
+            tol=tol,
+            ncv=krylov_dimension,
+            return_eigenvectors=True,
+        )
+
+    except ArpackNoConvergence as e:
+        logger.warning(
+            f"ARPACK did not converge for parameters {max_iter=}, {tol=}, {krylov_dimension=}, "
+            f"{rank_estimate=}. \n Returning the best approximation found so far. Use those with care or "
+            f"modify parameters.\n Original error: {e}"
+        )
+
+        eigen_vals, eigen_vecs = e.eigenvalues, e.eigenvectors
+
+    eigen_vals = to_torch_conversion_function(eigen_vals)
+    eigen_vecs = to_torch_conversion_function(eigen_vecs)
+
+    return LowRankProductRepresentation(eigen_vals, eigen_vecs)
+
+
+def model_hessian_low_rank(
+    model: torch.nn.Module,
+    loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    training_data: DataLoader,
+    hessian_perturbation: float = 0.0,
+    rank_estimate: int = 10,
+    krylov_dimension: Optional[int] = None,
+    tol: float = 1e-6,
+    max_iter: Optional[int] = None,
+    eigen_computation_on_gpu: bool = False,
+) -> LowRankProductRepresentation:
+    r"""
+    Calculates a low-rank approximation of the Hessian matrix of the model's loss function using the implicitly
+    restarted Lanczos algorithm, i.e.
+
+    \[ H_{\text{approx}} = V D V^T\]
+
+    where \(D\) is a diagonal matrix with the top (in absolute value) `rank_estimate` eigenvalues of the Hessian
+    and \(V\) contains the corresponding eigenvectors.
+
+
+    Args:
+        model: A PyTorch model instance. The Hessian will be calculated with respect to this model's parameters.
+        loss : A callable that computes the loss.
+        training_data: A DataLoader instance that provides the model's training data.
+            Used in calculating the Hessian-vector products.
+        hessian_perturbation: Optional regularization parameter added to the Hessian-vector product
+            for numerical stability.
+        rank_estimate: The number of eigenvalues and corresponding eigenvectors to compute.
+            Represents the desired rank of the Hessian approximation.
+        krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
+            If not provided, it defaults to min(model.num_parameters, max(2*rank_estimate + 1, 20)).
+        tol: The stopping criteria for the Lanczos algorithm, which stops when the difference
+            in the approximated eigenvalue is less than `tol`. Defaults to 1e-6.
+        max_iter: The maximum number of iterations for the Lanczos method. If not provided, it defaults to
+            10*model.num_parameters.
+        eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation on the provided
+            device via cupy implementation.
+            Make sure, that either your model is small enough or you use a
+            small rank_estimate to fit your device's memory.
+            If False, the eigen pair approximation is executed on the CPU by scipy wrapper to
+            ARPACK.
+
+    Returns:
+        A [LowRankProductRepresentation][pydvl.influence.torch.torch_differentiable.LowRankProductRepresentation]
+            instance that contains the top (up until rank_estimate) eigenvalues
+            and corresponding eigenvectors of the Hessian.
+    """
+    raw_hvp = get_hvp_function(model, loss, training_data, use_average=True)
+    num_params = sum([p.numel() for p in model.parameters() if p.requires_grad])
+    device = next(model.parameters()).device
+    return lanzcos_low_rank_hessian_approx(
+        hessian_vp=raw_hvp,
+        matrix_shape=(num_params, num_params),
+        hessian_perturbation=hessian_perturbation,
+        rank_estimate=rank_estimate,
+        krylov_dimension=krylov_dimension,
+        tol=tol,
+        max_iter=max_iter,
+        device=device,
+        eigen_computation_on_gpu=eigen_computation_on_gpu,
+    )

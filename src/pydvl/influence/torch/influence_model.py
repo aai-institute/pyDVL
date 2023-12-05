@@ -9,25 +9,21 @@ import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
-from ...utils import maybe_progress
-from ...utils.progress import log_duration
+from ...utils import log_duration, maybe_progress
 from ..base_influence_model import (
     InfluenceFunctionModel,
     InfluenceType,
     UnSupportedInfluenceTypeException,
 )
 from .functional import (
+    LowRankProductRepresentation,
     get_batch_hvp,
     get_hessian,
     get_hvp_function,
     matrix_jacobian_product,
+    model_hessian_low_rank,
     per_sample_gradient,
     per_sample_mixed_derivative,
-)
-from .torch_differentiable import (
-    LowRankProductRepresentation,
-    model_hessian_low_rank,
-    solve_cg,
 )
 from .util import flatten_dimensions
 
@@ -332,7 +328,7 @@ class BatchCgInfluence(TorchInfluenceFunctionModel):
             x: optional model input to use in the gradient computations $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$, if None, use $x=x_{\text{test}}$
             y: optional label tensor to compute gradients
-            influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
+            influence_type: enum value of [InfluenceType][pydvl.influence.base_influence_model.InfluenceType]
 
         Returns:
             [torch.nn.Tensor][torch.nn.Tensor] representing the element-wise scalar products for the provided batch.
@@ -352,7 +348,7 @@ class BatchCgInfluence(TorchInfluenceFunctionModel):
         for idx, bi in enumerate(
             maybe_progress(rhs, self.progress, desc="Conjugate gradient")
         ):
-            batch_result, batch_info = solve_cg(
+            batch_result = self.solve_cg(
                 reg_hvp,
                 bi,
                 x0=self.x0,
@@ -372,6 +368,59 @@ class BatchCgInfluence(TorchInfluenceFunctionModel):
         }
         self._model_device = device
         return self
+
+    @staticmethod
+    def solve_cg(
+        hvp: Callable[[torch.Tensor], torch.Tensor],
+        b: torch.Tensor,
+        *,
+        x0: Optional[torch.Tensor] = None,
+        rtol: float = 1e-7,
+        atol: float = 1e-7,
+        maxiter: Optional[int] = None,
+    ) -> torch.Tensor:
+        r"""
+        Conjugate gradient solver for the Hessian vector product.
+
+        Args:
+            hvp: A callable Hvp, operating with tensors of size N.
+            b: A vector or matrix, the right hand side of the equation \(Hx = b\).
+            x0: Initial guess for hvp.
+            rtol: Maximum relative tolerance of result.
+            atol: Absolute tolerance of result.
+            maxiter: Maximum number of iterations. If None, defaults to 10*len(b).
+
+        Returns:
+            Instance of [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult],
+                with a vector x, solution of \(Ax=b\), and a dictionary containing
+                information about the convergence of CG.
+        """
+
+        if x0 is None:
+            x0 = torch.clone(b)
+        if maxiter is None:
+            maxiter = len(b) * 10
+
+        y_norm = torch.sum(torch.matmul(b, b)).item()
+        stopping_val = max([rtol**2 * y_norm, atol**2])
+
+        x = x0
+        p = r = (b - hvp(x)).squeeze()
+        gamma = torch.sum(torch.matmul(r, r)).item()
+
+        for k in range(maxiter):
+            if gamma < stopping_val:
+                break
+            Ap = hvp(p).squeeze()
+            alpha = gamma / torch.sum(torch.matmul(p, Ap)).item()
+            x += alpha * p
+            r -= alpha * Ap
+            gamma_ = torch.sum(torch.matmul(r, r)).item()
+            beta = gamma_ / gamma
+            gamma = gamma_
+            p = r + beta * p
+
+        return x
 
 
 class LissaInfluence(TorchInfluenceFunctionModel):
@@ -535,7 +584,6 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
         self.max_iter = max_iter
         self.krylov_dimension = krylov_dimension
         self.eigen_computation_on_gpu = eigen_computation_on_gpu
-        # self.low_rank_representation = None
 
     @property
     def is_fitted(self):

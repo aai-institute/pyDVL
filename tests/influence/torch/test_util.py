@@ -10,8 +10,11 @@ from numpy.typing import NDArray
 from torch.nn.functional import mse_loss
 from torch.utils.data import DataLoader, TensorDataset
 
-from pydvl.influence.torch.functional import get_batch_hvp, get_hvp_function
-from pydvl.influence.torch.torch_differentiable import lanzcos_low_rank_hessian_approx
+from pydvl.influence.torch.functional import (
+    get_batch_hvp,
+    get_hvp_function,
+    lanzcos_low_rank_hessian_approx,
+)
 from pydvl.influence.torch.util import (
     TorchTensorContainerType,
     align_structure,

@@ -13,7 +13,7 @@ from typing import Iterable, Iterator, Union
 
 from tqdm.auto import tqdm
 
-__all__ = ["maybe_progress"]
+__all__ = ["maybe_progress", "log_duration"]
 
 logger = logging.getLogger(__name__)
 
