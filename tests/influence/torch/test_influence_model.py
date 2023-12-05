@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+from pydvl.influence.base_influence_model import NotFittedException
 from pydvl.influence.torch.influence_model import (
     ArnoldiInfluence,
     BatchCgInfluence,
@@ -429,7 +430,17 @@ def test_influences_arnoldi(
         loss,
         hessian_regularization=test_case.hessian_reg,
         rank_estimate=num_parameters - 1,
-    ).fit(train_dataloader)
+    )
+
+    with pytest.raises(NotFittedException):
+        arnoldi_influence.influences(
+            x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
+        )
+
+    with pytest.raises(NotFittedException):
+        arnoldi_influence.influence_factors(x_test, y_test)
+
+    arnoldi_influence = arnoldi_influence.fit(train_dataloader)
 
     low_rank_influence = arnoldi_influence.influences(
         x_test, y_test, x_train, y_train, influence_type=test_case.influence_type

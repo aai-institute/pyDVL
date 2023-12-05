@@ -77,7 +77,7 @@ class TorchInfluenceFunctionModel(
         shape = (x.shape[0], prod(x.shape[1:]), -1)
         return flatten_dimensions(mixed_grads.values(), shape=shape)
 
-    def influences(
+    def _influences(
         self,
         x_test: torch.Tensor,
         y_test: torch.Tensor,
@@ -162,7 +162,7 @@ class TorchInfluenceFunctionModel(
             raise UnSupportedInfluenceTypeException(influence_type)
         return values
 
-    def influence_factors(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def _influence_factors(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
 
         if not self.is_fitted:
             raise ValueError(
@@ -223,7 +223,10 @@ class DirectInfluence(TorchInfluenceFunctionModel):
 
     @property
     def is_fitted(self):
-        return self.hessian is not None
+        try:
+            return self.hessian is not None
+        except AttributeError:
+            return False
 
     def fit(self, data_loader: DataLoader) -> DirectInfluence:
         self.hessian = get_hessian(self.model, self.loss, data_loader)
@@ -292,7 +295,10 @@ class BatchCgInfluence(TorchInfluenceFunctionModel):
 
     @property
     def is_fitted(self):
-        return self.train_dataloader is not None
+        try:
+            return self.train_dataloader is not None
+        except AttributeError:
+            return False
 
     def fit(self, data_loader: DataLoader) -> BatchCgInfluence:
         self.train_dataloader = data_loader
@@ -473,7 +479,10 @@ class LissaInfluence(TorchInfluenceFunctionModel):
 
     @property
     def is_fitted(self):
-        return self.train_dataloader is not None
+        try:
+            return self.train_dataloader is not None
+        except AttributeError:
+            return False
 
     def fit(self, data_loader: DataLoader) -> LissaInfluence:
         self.train_dataloader = data_loader
@@ -587,7 +596,10 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
 
     @property
     def is_fitted(self):
-        return self.low_rank_representation is not None
+        try:
+            return self.low_rank_representation is not None
+        except AttributeError:
+            return False
 
     def fit(self, data_loader: DataLoader) -> ArnoldiInfluence:
         low_rank_representation = model_hessian_low_rank(

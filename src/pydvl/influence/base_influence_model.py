@@ -27,6 +27,14 @@ class UnSupportedInfluenceTypeException(ValueError):
         )
 
 
+class NotFittedException(ValueError):
+    def __init__(self):
+        super().__init__(
+            f"Objects of type InfluenceFunctionModel must be fitted before calling influence methods. "
+            f"Call method fit with appropriate input."
+        )
+
+
 """Type variable for tensors, i.e. sequences of numbers"""
 TensorType = TypeVar("TensorType", bound=Collection)
 DataLoaderType = TypeVar("DataLoaderType", bound=Iterable)
@@ -60,8 +68,13 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
 
         """
 
-    @abstractmethod
     def influence_factors(self, x: TensorType, y: TensorType) -> TensorType:
+        if not self.is_fitted:
+            raise NotFittedException()
+        return self._influence_factors(x, y)
+
+    @abstractmethod
+    def _influence_factors(self, x: TensorType, y: TensorType) -> TensorType:
         r"""
         Overwrite this method to implement the approximation of
         \[
@@ -78,8 +91,20 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
 
         """
 
-    @abstractmethod
     def influences(
+        self,
+        x_test: TensorType,
+        y_test: TensorType,
+        x: Optional[TensorType] = None,
+        y: Optional[TensorType] = None,
+        influence_type: InfluenceType = InfluenceType.Up,
+    ) -> TensorType:
+        if not self.is_fitted:
+            raise NotFittedException()
+        return self._influences(x_test, y_test, x, y, influence_type)
+
+    @abstractmethod
+    def _influences(
         self,
         x_test: TensorType,
         y_test: TensorType,
