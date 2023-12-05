@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
-from copy import deepcopy
 from math import prod
 from typing import Callable, Optional
 
@@ -11,11 +12,10 @@ from torch.utils.data import DataLoader
 from ...utils import maybe_progress
 from ...utils.progress import log_duration
 from ..base_influence_model import (
-    Influence,
+    InfluenceFunctionModel,
     InfluenceType,
     UnSupportedInfluenceTypeException,
 )
-from ..inversion import InfluenceRegistry, InversionMethod
 from .functional import (
     get_batch_hvp,
     get_hessian,
@@ -26,7 +26,6 @@ from .functional import (
 )
 from .torch_differentiable import (
     LowRankProductRepresentation,
-    TorchTwiceDifferentiable,
     model_hessian_low_rank,
     solve_cg,
 )
@@ -35,7 +34,9 @@ from .util import flatten_dimensions
 logger = logging.getLogger(__name__)
 
 
-class TorchInfluence(Influence[torch.Tensor], ABC):
+class TorchInfluenceFunctionModel(
+    InfluenceFunctionModel[torch.Tensor, DataLoader], ABC
+):
     def __init__(
         self,
         model: nn.Module,
@@ -80,7 +81,7 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
         shape = (x.shape[0], prod(x.shape[1:]), -1)
         return flatten_dimensions(mixed_grads.values(), shape=shape)
 
-    def values(
+    def influences(
         self,
         x_test: torch.Tensor,
         y_test: torch.Tensor,
@@ -88,6 +89,11 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
         y: Optional[torch.Tensor] = None,
         influence_type: InfluenceType = InfluenceType.Up,
     ) -> torch.Tensor:
+
+        if not self.is_fitted:
+            raise ValueError(
+                "Instance must be fitted before calling influence methods on it"
+            )
 
         if x is None:
 
@@ -125,18 +131,18 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
     ):
         if influence_type == InfluenceType.Up:
             if x_test.shape[0] <= x.shape[0]:
-                factor = self.factors(x_test, y_test)
-                values = self.values_from_factors(
+                factor = self.influence_factors(x_test, y_test)
+                values = self.influences_from_factors(
                     factor, x, y, influence_type=influence_type
                 )
             else:
-                factor = self.factors(x, y)
-                values = self.values_from_factors(
+                factor = self.influence_factors(x, y)
+                values = self.influences_from_factors(
                     factor, x_test, y_test, influence_type=influence_type
                 ).T
         elif influence_type == InfluenceType.Perturbation:
-            factor = self.factors(x_test, y_test)
-            values = self.values_from_factors(
+            factor = self.influence_factors(x_test, y_test)
+            values = self.influences_from_factors(
                 factor, x, y, influence_type=influence_type
             )
         else:
@@ -153,18 +159,25 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
         if influence_type == InfluenceType.Up:
             values = fac @ grad.T
         elif influence_type == InfluenceType.Perturbation:
-            values = self.values_from_factors(fac, x, y, influence_type=influence_type)
+            values = self.influences_from_factors(
+                fac, x, y, influence_type=influence_type
+            )
         else:
             raise UnSupportedInfluenceTypeException(influence_type)
         return values
 
-    def factors(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def influence_factors(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+
+        if not self.is_fitted:
+            raise ValueError(
+                "Instance must be fitted before calling influence methods on it"
+            )
 
         return self._solve_hvp(
             self._loss_grad(x.to(self.model_device), y.to(self.model_device))
         )
 
-    def values_from_factors(
+    def influences_from_factors(
         self,
         z_test_factors: torch.Tensor,
         x: torch.Tensor,
@@ -192,13 +205,12 @@ class TorchInfluence(Influence[torch.Tensor], ABC):
         pass
 
 
-class DirectInfluence(TorchInfluence):
+class DirectInfluence(TorchInfluenceFunctionModel):
     r"""
     Given a model and training data, it finds x such that \(Hx = b\), with \(H\) being the model hessian.
 
     Args:
         model: instance of [torch.nn.Module][torch.nn.Module].
-        train_dataloader: A DataLoader containing the training data.
         hessian_regularization: Regularization of the hessian.
     """
 
@@ -207,21 +219,19 @@ class DirectInfluence(TorchInfluence):
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         hessian_regularization: float,
-        hessian: torch.Tensor = None,
-        train_dataloader: DataLoader = None,
     ):
-        if hessian is None and train_dataloader is None:
-            raise ValueError(
-                f"Either provide a pre-computed hessian or a data_loader to compute the hessian"
-            )
-
         super().__init__(model, loss)
         self.hessian_regularization = hessian_regularization
-        self.hessian = (
-            hessian
-            if hessian is not None
-            else get_hessian(model, loss, train_dataloader)
-        )
+
+    hessian: torch.Tensor
+
+    @property
+    def is_fitted(self):
+        return self.hessian is not None
+
+    def fit(self, data_loader: DataLoader) -> DirectInfluence:
+        self.hessian = get_hessian(self.model, self.loss, data_loader)
+        return self
 
     @log_duration
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
@@ -244,7 +254,7 @@ class DirectInfluence(TorchInfluence):
         return self
 
 
-class BatchCgInfluence(TorchInfluence):
+class BatchCgInfluence(TorchInfluenceFunctionModel):
     r"""
     Given a model and training data, it uses conjugate gradient to calculate the
     inverse of the Hessian Vector Product. More precisely, it finds x such that \(Hx =
@@ -254,7 +264,6 @@ class BatchCgInfluence(TorchInfluence):
     Args:
         model: instance of [torch.nn.Module][torch.nn.Module].
         A callable that takes the model's output and target as input and returns the scalar loss.
-        train_dataloader: A DataLoader containing the training data.
         hessian_regularization: Regularization of the hessian.
         x0: Initial guess for hvp. If None, defaults to b.
         rtol: Maximum relative tolerance of result.
@@ -268,7 +277,6 @@ class BatchCgInfluence(TorchInfluence):
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        train_dataloader: DataLoader,
         hessian_regularization: float,
         x0: Optional[torch.Tensor] = None,
         rtol: float = 1e-7,
@@ -283,10 +291,19 @@ class BatchCgInfluence(TorchInfluence):
         self.rtol = rtol
         self.x0 = x0
         self.hessian_regularization = hessian_regularization
-        self.train_dataloader = train_dataloader
+
+    train_dataloader: DataLoader
+
+    @property
+    def is_fitted(self):
+        return self.train_dataloader is not None
+
+    def fit(self, data_loader: DataLoader) -> BatchCgInfluence:
+        self.train_dataloader = data_loader
+        return self
 
     @log_duration
-    def values(
+    def influences(
         self,
         x_test: torch.Tensor,
         y_test: torch.Tensor,
@@ -321,7 +338,7 @@ class BatchCgInfluence(TorchInfluence):
             [torch.nn.Tensor][torch.nn.Tensor] representing the element-wise scalar products for the provided batch.
 
         """
-        return super().values(x_test, y_test, x, y, influence_type=influence_type)
+        return super().influences(x_test, y_test, x, y, influence_type=influence_type)
 
     @log_duration
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
@@ -357,7 +374,7 @@ class BatchCgInfluence(TorchInfluence):
         return self
 
 
-class LissaInfluence(TorchInfluence):
+class LissaInfluence(TorchInfluenceFunctionModel):
     r"""
     Uses LISSA, Linear time Stochastic Second-Order Algorithm, to iteratively
     approximate the inverse Hessian. More precisely, it finds x s.t. \(Hx = b\),
@@ -373,7 +390,6 @@ class LissaInfluence(TorchInfluence):
 
     Args:
         model: instance of [torch.nn.Module][torch.nn.Module].
-        train_dataloader: A DataLoader containing the training data.
         hessian_regularization: Regularization of the hessian.
         maxiter: Maximum number of iterations.
         dampen: Dampening factor, defaults to 0 for no dampening.
@@ -387,7 +403,6 @@ class LissaInfluence(TorchInfluence):
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        train_dataloader: DataLoader,
         hessian_regularization: float,
         maxiter: int = 1000,
         dampen: float = 0.0,
@@ -404,7 +419,16 @@ class LissaInfluence(TorchInfluence):
         self.h0 = h0
         self.scale = scale
         self.dampen = dampen
-        self.train_dataloader = train_dataloader
+
+    train_dataloader: DataLoader
+
+    @property
+    def is_fitted(self):
+        return self.train_dataloader is not None
+
+    def fit(self, data_loader: DataLoader) -> LissaInfluence:
+        self.train_dataloader = data_loader
+        return self
 
     @log_duration
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
@@ -461,7 +485,7 @@ class LissaInfluence(TorchInfluence):
         return h_estimate / self.scale
 
 
-class ArnoldiInfluence(TorchInfluence):
+class ArnoldiInfluence(TorchInfluenceFunctionModel):
     r"""
     Solves the linear system Hx = b, where H is the Hessian of the model's loss function and b is the given
     right-hand side vector.
@@ -476,19 +500,12 @@ class ArnoldiInfluence(TorchInfluence):
     Args:
         model: Instance of [torch.nn.Module][torch.nn.Module].
             The Hessian will be calculated with respect to this model's parameters.
-        train_dataloader: A DataLoader instance that provides the model's training data.
-            Used in calculating the Hessian-vector products.
         hessian_regularization: Optional regularization parameter added to the Hessian-vector
             product for numerical stability.
         rank_estimate: The number of eigenvalues and corresponding eigenvectors to compute.
             Represents the desired rank of the Hessian approximation.
         krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
             Defaults to min(model's number of parameters, max(2 times rank_estimate + 1, 20)).
-        low_rank_representation: An instance of
-            [LowRankProductRepresentation][pydvl.influence.torch.torch_differentiable.LowRankProductRepresentation]
-            containing a previously computed low-rank representation of the Hessian. If provided, all other parameters
-            are ignored; otherwise, a new low-rank representation is computed
-            using provided parameters.
         tol: The stopping criteria for the Lanczos algorithm.
             Ignored if `low_rank_representation` is provided.
         max_iter: The maximum number of iterations for the Lanczos method.
@@ -497,13 +514,12 @@ class ArnoldiInfluence(TorchInfluence):
             via a cupy implementation. Ensure the model size or rank_estimate is appropriate for device memory.
             If False, the eigen pair approximation is executed on the CPU by the scipy wrapper to ARPACK.
     """
+    low_rank_representation: LowRankProductRepresentation
 
     def __init__(
         self,
         model,
         loss,
-        low_rank_representation: Optional[LowRankProductRepresentation] = None,
-        train_dataloader: DataLoader = None,
         hessian_regularization: float = 0.0,
         rank_estimate: int = 10,
         krylov_dimension: Optional[int] = None,
@@ -511,27 +527,34 @@ class ArnoldiInfluence(TorchInfluence):
         max_iter: Optional[int] = None,
         eigen_computation_on_gpu: bool = False,
     ):
-        if low_rank_representation is None and train_dataloader is None:
-            raise ValueError(
-                f"Either provide a pre-computed hessian or a data_loader to compute the hessian"
-            )
-
-        if low_rank_representation is None:
-            low_rank_representation = model_hessian_low_rank(
-                model,
-                loss,
-                train_dataloader,
-                hessian_perturbation=0.0,  # regularization is applied, when computing values
-                rank_estimate=rank_estimate,
-                krylov_dimension=krylov_dimension,
-                tol=tol,
-                max_iter=max_iter,
-                eigen_computation_on_gpu=eigen_computation_on_gpu,
-            )
 
         super().__init__(model, loss)
-        self.low_rank_representation = low_rank_representation.to(self.model_device)
         self.hessian_regularization = hessian_regularization
+        self.rank_estimate = rank_estimate
+        self.tol = tol
+        self.max_iter = max_iter
+        self.krylov_dimension = krylov_dimension
+        self.eigen_computation_on_gpu = eigen_computation_on_gpu
+        # self.low_rank_representation = None
+
+    @property
+    def is_fitted(self):
+        return self.low_rank_representation is not None
+
+    def fit(self, data_loader: DataLoader) -> ArnoldiInfluence:
+        low_rank_representation = model_hessian_low_rank(
+            self.model,
+            self.loss,
+            data_loader,
+            hessian_perturbation=0.0,  # regularization is applied, when computing values
+            rank_estimate=self.rank_estimate,
+            krylov_dimension=self.krylov_dimension,
+            tol=self.tol,
+            max_iter=self.max_iter,
+            eigen_computation_on_gpu=self.eigen_computation_on_gpu,
+        )
+        self.low_rank_representation = low_rank_representation.to(self.model_device)
+        return self
 
     def _non_symmetric_values(
         self,
@@ -557,8 +580,8 @@ class ArnoldiInfluence(TorchInfluence):
             )
             values = torch.einsum("ij, ik -> jk", left, right)
         elif influence_type == InfluenceType.Perturbation:
-            factors = self.factors(x_test, y_test)
-            values = self.values_from_factors(
+            factors = self.influence_factors(x_test, y_test)
+            values = self.influences_from_factors(
                 factors, x, y, influence_type=influence_type
             )
         else:
@@ -579,8 +602,8 @@ class ArnoldiInfluence(TorchInfluence):
             right = torch.diag_embed(1.0 / regularized_eigenvalues) @ left
             values = torch.einsum("ij, ik -> jk", left, right)
         elif influence_type == InfluenceType.Perturbation:
-            factors = self.factors(x, y)
-            values = self.values_from_factors(
+            factors = self.influence_factors(x, y)
+            values = self.influences_from_factors(
                 factors, x, y, influence_type=influence_type
             )
         else:
@@ -605,67 +628,3 @@ class ArnoldiInfluence(TorchInfluence):
         return ArnoldiInfluence(
             self.model.to(device), self.loss, self.low_rank_representation.to(device)
         )
-
-
-@InfluenceRegistry.register(TorchTwiceDifferentiable, InversionMethod.Direct)
-def direct_factory(
-    twice_differentiable: TorchTwiceDifferentiable,
-    data_loader: DataLoader,
-    hessian_regularization: float,
-    **kwargs,
-):
-    return DirectInfluence(
-        twice_differentiable.model,
-        twice_differentiable.loss,
-        train_dataloader=data_loader,
-        hessian_regularization=hessian_regularization,
-        **kwargs,
-    )
-
-
-@InfluenceRegistry.register(TorchTwiceDifferentiable, InversionMethod.Cg)
-def cg_factory(
-    twice_differentiable: TorchTwiceDifferentiable,
-    data_loader: DataLoader,
-    hessian_regularization: float,
-    **kwargs,
-):
-    return BatchCgInfluence(
-        twice_differentiable.model,
-        twice_differentiable.loss,
-        train_dataloader=data_loader,
-        hessian_regularization=hessian_regularization,
-        **kwargs,
-    )
-
-
-@InfluenceRegistry.register(TorchTwiceDifferentiable, InversionMethod.Lissa)
-def lissa_factory(
-    twice_differentiable: TorchTwiceDifferentiable,
-    data_loader: DataLoader,
-    hessian_regularization: float,
-    **kwargs,
-):
-    return LissaInfluence(
-        twice_differentiable.model,
-        twice_differentiable.loss,
-        train_dataloader=data_loader,
-        hessian_regularization=hessian_regularization,
-        **kwargs,
-    )
-
-
-@InfluenceRegistry.register(TorchTwiceDifferentiable, InversionMethod.Arnoldi)
-def arnoldi_factory(
-    twice_differentiable: TorchTwiceDifferentiable,
-    data_loader: DataLoader,
-    hessian_regularization: float,
-    **kwargs,
-):
-    return ArnoldiInfluence(
-        twice_differentiable.model,
-        twice_differentiable.loss,
-        train_dataloader=data_loader,
-        hessian_regularization=hessian_regularization,
-        **kwargs,
-    )

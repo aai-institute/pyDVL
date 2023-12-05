@@ -3,10 +3,6 @@ from .influence_model import (
     BatchCgInfluence,
     DirectInfluence,
     LissaInfluence,
-    arnoldi_factory,
-    cg_factory,
-    direct_factory,
-    lissa_factory,
 )
 from .torch_differentiable import (
     TorchTwiceDifferentiable,

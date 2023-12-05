@@ -8,12 +8,12 @@ from dask import delayed
 from numpy.typing import NDArray
 
 from ..base_influence_model import (
-    Influence,
+    InfluenceFunctionModel,
     InfluenceType,
     UnSupportedInfluenceTypeException,
 )
 
-__all__ = ["DaskInfluence"]
+__all__ = ["DaskInfluenceCalculator"]
 
 
 class DimensionChunksException(ValueError):
@@ -33,13 +33,15 @@ class UnalignedChunksException(ValueError):
         super().__init__(msg)
 
 
-class DaskInfluence(Influence[da.Array]):
+class DaskInfluenceCalculator:
     """
     Compute influences over dask.Array collections. Depends on a batch computation model
-    of type [Influence][pydvl.influence.twice_differentiable.Influence]. In addition, provide transformations
-    from and to numpy, corresponding to the tensor types of the batch computation model.
+    of type [InfluenceFunctionModel][pydvl.influence.base_influence_mode.InfluenceFunctionModel].
+    In addition, provide transformations from and to numpy,
+    corresponding to the tensor types of the batch computation model.
     Args:
-        influence_model: instance of type [Influence][pydvl.influence.twice_differentiable.Influence], defines the
+        influence_model: instance of type
+            [InfluenceFunctionModel][pydvl.influence.base_influence_mode.InfluenceFunctionModel], defines the
             batch-wise computation model
         to_numpy: transformation for turning the tensor type output of a batch computation into a numpy array
         from_numpy: transformation for turning numpy arrays into the correct tensor type to apply the batch
@@ -48,7 +50,7 @@ class DaskInfluence(Influence[da.Array]):
 
     def __init__(
         self,
-        influence_model: Influence,
+        influence_model: InfluenceFunctionModel,
         to_numpy: Callable[[Any], np.ndarray],
         from_numpy: Callable[[np.ndarray], Any],
     ):
@@ -77,7 +79,7 @@ class DaskInfluence(Influence[da.Array]):
         if x.chunks[0] != y.chunks[0]:
             raise UnalignedChunksException(x.chunks[0], y.chunks[0])
 
-    def factors(self, x: da.Array, y: da.Array) -> da.Array:
+    def influence_factors(self, x: da.Array, y: da.Array) -> da.Array:
         r"""
         Compute the expression
 
@@ -100,8 +102,10 @@ class DaskInfluence(Influence[da.Array]):
         self._validate_un_chunked(x)
         self._validate_un_chunked(y)
 
-        def func(x_numpy: NDArray, y_numpy: NDArray, model: Influence):
-            factors = model.factors(self.from_numpy(x_numpy), self.from_numpy(y_numpy))
+        def func(x_numpy: NDArray, y_numpy: NDArray, model: InfluenceFunctionModel):
+            factors = model.influence_factors(
+                self.from_numpy(x_numpy), self.from_numpy(y_numpy)
+            )
             return self.to_numpy(factors)
 
         chunks = []
@@ -122,7 +126,7 @@ class DaskInfluence(Influence[da.Array]):
 
         return da.concatenate(chunks)
 
-    def values(
+    def influences(
         self,
         x_test: da.Array,
         y_test: da.Array,
@@ -183,9 +187,9 @@ class DaskInfluence(Influence[da.Array]):
             y_test_numpy: NDArray,
             x_numpy: NDArray,
             y_numpy: NDArray,
-            model: Influence,
+            model: InfluenceFunctionModel,
         ):
-            values = model.values(
+            values = model.influences(
                 self.from_numpy(x_test_numpy),
                 self.from_numpy(y_test_numpy),
                 self.from_numpy(x_numpy),
@@ -239,7 +243,7 @@ class DaskInfluence(Influence[da.Array]):
 
         return values_array
 
-    def values_from_factors(
+    def influences_from_factors(
         self,
         z_test_factors: da.Array,
         x: da.Array,
@@ -275,9 +279,12 @@ class DaskInfluence(Influence[da.Array]):
         self._validate_un_chunked(z_test_factors)
 
         def func(
-            z_test_numpy: NDArray, x_numpy: NDArray, y_numpy: NDArray, model: Influence
+            z_test_numpy: NDArray,
+            x_numpy: NDArray,
+            y_numpy: NDArray,
+            model: InfluenceFunctionModel,
         ):
-            ups = model.values_from_factors(
+            ups = model.influences_from_factors(
                 self.from_numpy(z_test_numpy),
                 self.from_numpy(x_numpy),
                 self.from_numpy(y_numpy),

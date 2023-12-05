@@ -186,43 +186,46 @@ def model_and_data(
 
 
 @fixture
-def direct_influence(model_and_data, test_case: TestCase) -> NDArray:
+def direct_influence_function_model(model_and_data, test_case: TestCase):
     model, loss, x_train, y_train, x_test, y_test = model_and_data
     train_dataloader = DataLoader(
         TensorDataset(x_train, y_train), batch_size=test_case.batch_size
     )
-    direct_influence = DirectInfluence(
-        model, loss, test_case.hessian_reg, train_dataloader=train_dataloader
-    )
-    return direct_influence.values(
+    return DirectInfluence(model, loss, test_case.hessian_reg).fit(train_dataloader)
+
+
+@fixture
+def direct_influences(
+    direct_influence_function_model: DirectInfluence,
+    model_and_data,
+    test_case: TestCase,
+) -> NDArray:
+    model, loss, x_train, y_train, x_test, y_test = model_and_data
+    return direct_influence_function_model.influences(
         x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
     ).numpy()
 
 
 @fixture
-def direct_sym_influence(model_and_data, test_case: TestCase) -> NDArray:
+def direct_sym_influences(
+    direct_influence_function_model: DirectInfluence,
+    model_and_data,
+    test_case: TestCase,
+) -> NDArray:
     model, loss, x_train, y_train, x_test, y_test = model_and_data
-    train_dataloader = DataLoader(
-        TensorDataset(x_train, y_train), batch_size=test_case.batch_size
-    )
-    direct_influence = DirectInfluence(
-        model, loss, test_case.hessian_reg, train_dataloader=train_dataloader
-    )
-    return direct_influence.values(
+    return direct_influence_function_model.influences(
         x_train, y_train, influence_type=test_case.influence_type
     ).numpy()
 
 
 @fixture
-def direct_factors(model_and_data, test_case: TestCase) -> NDArray:
+def direct_factors(
+    direct_influence_function_model: DirectInfluence,
+    model_and_data,
+    test_case: TestCase,
+) -> NDArray:
     model, loss, x_train, y_train, x_test, y_test = model_and_data
-    train_dataloader = DataLoader(
-        TensorDataset(x_train, y_train), batch_size=test_case.batch_size
-    )
-    direct_influence = DirectInfluence(
-        model, loss, test_case.hessian_reg, train_dataloader=train_dataloader
-    )
-    return direct_influence.factors(x_train, y_train).numpy()
+    return direct_influence_function_model.influence_factors(x_train, y_train).numpy()
 
 
 @pytest.mark.parametrize(
@@ -240,25 +243,26 @@ def direct_factors(model_and_data, test_case: TestCase) -> NDArray:
     [
         [
             lambda model, loss, train_dataLoader, hessian_reg: BatchCgInfluence(
-                model, loss, train_dataLoader, hessian_regularization=hessian_reg
-            ),
+                model, loss, hessian_regularization=hessian_reg
+            ).fit(train_dataLoader),
             1e-1,
         ],
         [
             lambda model, loss, train_dataLoader, hessian_reg: LissaInfluence(
                 model,
                 loss,
-                train_dataLoader,
-                hessian_regularization=hessian_reg,
+                hessian_reg,
                 maxiter=6000,
                 scale=100,
-            ),
+            ).fit(train_dataLoader),
             0.3,
         ],
         [
             lambda model, loss, train_dataLoader, hessian_reg: DirectInfluence(
-                model, loss, hessian_reg, train_dataloader=train_dataLoader
-            ),
+                model,
+                loss,
+                hessian_reg,
+            ).fit(train_dataLoader),
             1e-4,
         ],
     ],
@@ -306,15 +310,15 @@ def test_influence_linear_model(
 
     x_train, y_train = tuple(map(torch.from_numpy, train_data))
     x_test, y_test = tuple(map(torch.from_numpy, test_data))
-    influence_values = influence.values(
+    influence_values = influence.influences(
         x_test, y_test, x_train, y_train, influence_type=influence_type
     ).numpy()
-    sym_influence_values = influence.values(
+    sym_influence_values = influence.influences(
         x_train, y_train, x_train, y_train, influence_type=influence_type
     ).numpy()
 
     with pytest.raises(ValueError):
-        influence.values(x_test, y_test, x=x_train, influence_type=influence_type)
+        influence.influences(x_test, y_test, x=x_train, influence_type=influence_type)
 
     def upper_quantile_equivalence(
         approx_inf: NDArray, analytical_inf: NDArray, quantile: float
@@ -339,16 +343,15 @@ def test_influence_linear_model(
     "influence_factory",
     [
         lambda model, loss, train_dataLoader, hessian_reg: BatchCgInfluence(
-            model, loss, train_dataLoader, hessian_regularization=hessian_reg
-        ),
+            model, loss, hessian_regularization=hessian_reg
+        ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: LissaInfluence(
             model,
             loss,
-            train_dataLoader,
             hessian_regularization=hessian_reg,
             maxiter=150,
             scale=10000,
-        ),
+        ).fit(train_dataLoader),
     ],
     ids=["cg", "lissa"],
 )
@@ -362,7 +365,7 @@ def test_influences_nn(
         torch.Tensor,
         torch.Tensor,
     ],
-    direct_influence,
+    direct_influences,
     influence_factory,
 ):
     model, loss, x_train, y_train, x_test, y_test = model_and_data
@@ -373,13 +376,13 @@ def test_influences_nn(
     influence_model = influence_factory(
         model, loss, train_dataloader, test_case.hessian_reg
     )
-    approx_influences = influence_model.values(
+    approx_influences = influence_model.influences(
         x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
     ).numpy()
 
     assert not np.any(np.isnan(approx_influences))
 
-    assert np.allclose(approx_influences, direct_influence, rtol=1e-1)
+    assert np.allclose(approx_influences, direct_influences, rtol=1e-1)
 
     if test_case.influence_type == InfluenceType.Up:
         assert approx_influences.shape == (
@@ -397,7 +400,7 @@ def test_influences_nn(
     # check that influences are not all constant
     assert not np.all(approx_influences == approx_influences.item(0))
 
-    assert np.allclose(approx_influences, direct_influence, rtol=1e-1)
+    assert np.allclose(approx_influences, direct_influences, rtol=1e-1)
 
 
 def test_influences_arnoldi(
@@ -410,8 +413,8 @@ def test_influences_arnoldi(
         torch.Tensor,
         torch.Tensor,
     ],
-    direct_influence,
-    direct_sym_influence,
+    direct_influences,
+    direct_sym_influences,
     direct_factors,
 ):
     model, loss, x_train, y_train, x_test, y_test = model_and_data
@@ -425,67 +428,43 @@ def test_influences_arnoldi(
     arnoldi_influence = ArnoldiInfluence(
         model,
         loss,
-        train_dataloader=train_dataloader,
         hessian_regularization=test_case.hessian_reg,
         rank_estimate=num_parameters - 1,
-    )
+    ).fit(train_dataloader)
 
-    with pytest.raises(ValueError):
-        ArnoldiInfluence(model, loss)
-
-    low_rank_influence = arnoldi_influence.values(
+    low_rank_influence = arnoldi_influence.influences(
         x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
     ).numpy()
 
-    sym_low_rank_influence = arnoldi_influence.values(
+    sym_low_rank_influence = arnoldi_influence.influences(
         x_train, y_train, influence_type=test_case.influence_type
     ).numpy()
 
-    low_rank_factors = arnoldi_influence.factors(x_test, y_test)
+    low_rank_factors = arnoldi_influence.influence_factors(x_test, y_test)
     assert np.allclose(
-        direct_factors, arnoldi_influence.factors(x_train, y_train).numpy()
+        direct_factors, arnoldi_influence.influence_factors(x_train, y_train).numpy()
     )
 
     if test_case.influence_type is InfluenceType.Up:
-        low_rank_influence_transpose = arnoldi_influence.values(
+        low_rank_influence_transpose = arnoldi_influence.influences(
             x_train, y_train, x_test, y_test, influence_type=test_case.influence_type
         ).numpy()
         assert np.allclose(
             low_rank_influence_transpose, low_rank_influence.swapaxes(0, 1)
         )
 
-    low_rank_values_from_factors = arnoldi_influence.values_from_factors(
+    low_rank_values_from_factors = arnoldi_influence.influences_from_factors(
         low_rank_factors, x_train, y_train, influence_type=test_case.influence_type
     ).numpy()
-    assert np.allclose(direct_influence, low_rank_influence)
-    assert np.allclose(direct_sym_influence, sym_low_rank_influence)
+    assert np.allclose(direct_influences, low_rank_influence)
+    assert np.allclose(direct_sym_influences, sym_low_rank_influence)
     assert np.allclose(low_rank_influence, low_rank_values_from_factors)
 
     with pytest.raises(ValueError):
-        arnoldi_influence.values(
+        arnoldi_influence.influences(
             x_test, y_test, x=x_train, influence_type=test_case.influence_type
         )
     with pytest.raises(ValueError):
-        arnoldi_influence.values(
+        arnoldi_influence.influences(
             x_test, y_test, y=y_train, influence_type=test_case.influence_type
         )
-
-    precomputed_low_rank = model_hessian_low_rank(
-        model,
-        loss,
-        training_data=train_dataloader,
-        hessian_perturbation=0.0,
-        rank_estimate=num_parameters - 1,
-    )
-    arnoldi_influence = ArnoldiInfluence(
-        model,
-        loss,
-        low_rank_representation=precomputed_low_rank,
-        hessian_regularization=test_case.hessian_reg,
-        rank_estimate=num_parameters - 1,
-    )
-    precomputed_low_rank_influence = arnoldi_influence.values(
-        x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
-    ).numpy()
-
-    assert np.allclose(direct_influence, precomputed_low_rank_influence)

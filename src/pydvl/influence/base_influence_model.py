@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Collection, Generic, Optional, TypeVar
+from typing import Collection, Generic, Iterable, Optional, TypeVar
 
 
 class InfluenceType(str, Enum):
@@ -29,9 +29,10 @@ class UnSupportedInfluenceTypeException(ValueError):
 
 """Type variable for tensors, i.e. sequences of numbers"""
 TensorType = TypeVar("TensorType", bound=Collection)
+DataLoaderType = TypeVar("DataLoaderType", bound=Iterable)
 
 
-class Influence(Generic[TensorType], ABC):
+class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
     """
     Generic abstract base class for computing influence related quantities. For a specific influence algorithm and
     tensor framework, inherit from this base class
@@ -42,8 +43,25 @@ class Influence(Generic[TensorType], ABC):
     def num_parameters(self):
         """Number of trainable parameters of the underlying model"""
 
+    @property
     @abstractmethod
-    def factors(self, x: TensorType, y: TensorType) -> TensorType:
+    def is_fitted(self):
+        """Overwrite this, to expose the fitting status of the instance."""
+
+    @abstractmethod
+    def fit(self, data_loader: DataLoaderType):
+        """
+        Overwrite this method to fit the influence function model to training data, e.g. pre-compute hessian matrix
+        or matrix decompositions
+        Args:
+            data_loader:
+
+        Returns:
+
+        """
+
+    @abstractmethod
+    def influence_factors(self, x: TensorType, y: TensorType) -> TensorType:
         r"""
         Overwrite this method to implement the approximation of
         \[
@@ -61,7 +79,7 @@ class Influence(Generic[TensorType], ABC):
         """
 
     @abstractmethod
-    def values(
+    def influences(
         self,
         x_test: TensorType,
         y_test: TensorType,
@@ -101,7 +119,7 @@ class Influence(Generic[TensorType], ABC):
         """
 
     @abstractmethod
-    def values_from_factors(
+    def influences_from_factors(
         self,
         z_test_factors: TensorType,
         x: TensorType,

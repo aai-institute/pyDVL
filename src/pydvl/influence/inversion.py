@@ -13,7 +13,7 @@ __all__ = [
     "InversionRegistry",
 ]
 
-from .base_influence_model import Influence, TensorType
+from .base_influence_model import InfluenceFunctionModel, TensorType
 from .twice_differentiable import DataLoaderType, InverseHvpResult, TwiceDifferentiable
 
 logger = logging.getLogger(__name__)
@@ -205,7 +205,9 @@ class InfluenceRegistry:
 
     registry: Dict[
         Tuple[Type[TwiceDifferentiable], InversionMethod],
-        Callable[[TwiceDifferentiable, DataLoaderType, float, Any], Influence],
+        Callable[
+            [TwiceDifferentiable, DataLoaderType, float, Any], InfluenceFunctionModel
+        ],
     ] = {}
 
     @classmethod
@@ -230,7 +232,9 @@ class InfluenceRegistry:
     @classmethod
     def get(
         cls, model_type: Type[TwiceDifferentiable], inversion_method: InversionMethod
-    ) -> Callable[[TwiceDifferentiable, DataLoaderType, float, Any], Influence]:
+    ) -> Callable[
+        [TwiceDifferentiable, DataLoaderType, float, Any], InfluenceFunctionModel
+    ]:
         key = (model_type, inversion_method)
         method = cls.registry.get(key, None)
         if method is None:

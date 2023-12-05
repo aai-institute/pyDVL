@@ -82,7 +82,7 @@ def compute_influence_factors(
         for x_test, y_test in maybe_progress(
             test_data, progress, desc="Batch test factors"
         ):
-            yield influence.factors(x_test, y_test)
+            yield influence.influence_factors(x_test, y_test)
 
     return InverseHvpResult(cat(list(factors_gen())), {})
 
@@ -282,7 +282,7 @@ def compute_influences(
     )(differentiable_model, training_data, hessian_regularization, **kwargs)
 
     influence_function = partial(
-        influence.values_from_factors, influence_type=influence_type
+        influence.influences_from_factors, influence_type=influence_type
     )
 
     def values_gen() -> Generator[TensorType, None, None]:

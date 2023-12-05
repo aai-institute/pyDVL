@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence import InfluenceType
 from pydvl.influence.base_influence_model import UnSupportedInfluenceTypeException
-from pydvl.influence.dask import DaskInfluence
+from pydvl.influence.dask import DaskInfluenceCalculator
 from pydvl.influence.dask.influence_model import (
     DimensionChunksException,
     UnalignedChunksException,
@@ -25,17 +25,16 @@ from tests.influence.torch.test_influence_model import model_and_data, test_case
     "influence_factory",
     [
         lambda model, loss, train_dataLoader, hessian_reg: BatchCgInfluence(
-            model, loss, train_dataLoader, hessian_regularization=hessian_reg
-        ),
+            model, loss, train_dataLoader
+        ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: DirectInfluence(
-            model, loss, hessian_reg, train_dataloader=train_dataLoader
-        ),
+            model, loss, hessian_reg
+        ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: ArnoldiInfluence(
             model,
             loss,
-            train_dataloader=train_dataLoader,
             hessian_regularization=hessian_reg,
-        ),
+        ).fit(train_dataLoader),
     ],
     ids=["cg", "direct", "arnoldi"],
 )
@@ -54,17 +53,16 @@ def influence_model(model_and_data, test_case, influence_factory):
     "influence_factory",
     [
         lambda model, loss, train_dataLoader, hessian_reg: BatchCgInfluence(
-            model, loss, train_dataLoader, hessian_regularization=hessian_reg
-        ),
+            model, loss, hessian_reg
+        ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: DirectInfluence(
-            model, loss, hessian_reg, train_dataloader=train_dataLoader
-        ),
+            model, loss, hessian_reg
+        ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: ArnoldiInfluence(
             model,
             loss,
-            train_dataloader=train_dataLoader,
             hessian_regularization=hessian_reg,
-        ),
+        ).fit(train_dataLoader),
     ],
     ids=["cg", "direct", "arnoldi"],
 )
@@ -89,15 +87,15 @@ def test_dask_influence_factors(influence_factory, test_case, model_and_data):
     influence_model = influence_factory(
         model, test_case.loss, train_dataloader, test_case.hessian_reg
     )
-    dask_inf = DaskInfluence(
+    dask_inf = DaskInfluenceCalculator(
         influence_model, lambda t: t.numpy(), lambda t: torch.from_numpy(t)
     )
-    dask_fac = dask_inf.factors(da_x_train, da_y_train)
+    dask_fac = dask_inf.influence_factors(da_x_train, da_y_train)
     dask_fac = dask_fac.compute(scheduler="synchronous")
-    torch_fac = influence_model.factors(x_train, y_train).numpy()
+    torch_fac = influence_model.influence_factors(x_train, y_train).numpy()
     assert np.allclose(dask_fac, torch_fac, atol=1e-5, rtol=1e-3)
 
-    dask_val = dask_inf.values(
+    dask_val = dask_inf.influences(
         da_x_test,
         da_y_test,
         da_x_train,
@@ -105,7 +103,7 @@ def test_dask_influence_factors(influence_factory, test_case, model_and_data):
         influence_type=test_case.influence_type,
     )
     dask_val = dask_val.compute(scheduler="synchronous")
-    torch_val = influence_model.values(
+    torch_val = influence_model.influences(
         x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
     ).numpy()
     assert np.allclose(dask_val, torch_val, atol=1e-5, rtol=1e-3)
@@ -136,15 +134,14 @@ def test_dask_influence_nn(model_and_data, test_case):
         model,
         test_case.loss,
         hessian_regularization=test_case.hessian_reg,
-        train_dataloader=train_dataloader,
-    )
+    ).fit(train_dataloader)
 
-    dask_influence = DaskInfluence(
+    dask_influence = DaskInfluenceCalculator(
         inf_model, lambda x: x.numpy(), lambda x: torch.from_numpy(x)
     )
 
-    da_factors = dask_influence.factors(da_x_test, da_y_test)
-    torch_factors = inf_model.factors(x_test, y_test)
+    da_factors = dask_influence.influence_factors(da_x_test, da_y_test)
+    torch_factors = inf_model.influence_factors(x_test, y_test)
     assert np.allclose(
         da_factors.compute(scheduler="synchronous"),
         torch_factors.numpy(),
@@ -152,11 +149,11 @@ def test_dask_influence_nn(model_and_data, test_case):
         rtol=1e-3,
     )
 
-    torch_values_from_factors = inf_model.values_from_factors(
+    torch_values_from_factors = inf_model.influences_from_factors(
         torch_factors, x_train, y_train, influence_type=test_case.influence_type
     )
 
-    da_values_from_factors = dask_influence.values_from_factors(
+    da_values_from_factors = dask_influence.influences_from_factors(
         da_factors, da_x_train, da_y_train, influence_type=test_case.influence_type
     )
 
@@ -167,28 +164,28 @@ def test_dask_influence_nn(model_and_data, test_case):
         rtol=1e-3,
     )
 
-    da_values = dask_influence.values(
+    da_values = dask_influence.influences(
         da_x_test,
         da_y_test,
         da_x_train,
         da_y_train,
         influence_type=test_case.influence_type,
     ).compute(scheduler="synchronous")
-    torch_values = inf_model.values(
+    torch_values = inf_model.influences(
         x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
     )
     assert np.allclose(da_values, torch_values.numpy(), atol=1e-6, rtol=1e-3)
 
-    da_sym_values = dask_influence.values(
+    da_sym_values = dask_influence.influences(
         da_x_train, da_y_train, influence_type=test_case.influence_type
     ).compute(scheduler="synchronous")
-    torch_sym_values = inf_model.values(
+    torch_sym_values = inf_model.influences(
         x_train, y_train, influence_type=test_case.influence_type
     )
     assert np.allclose(da_sym_values, torch_sym_values.numpy(), atol=1e-6, rtol=1e-3)
 
     with pytest.raises(UnSupportedInfluenceTypeException):
-        dask_influence.values(
+        dask_influence.influences(
             da_x_test,
             da_y_test,
             da_x_train,
@@ -197,18 +194,20 @@ def test_dask_influence_nn(model_and_data, test_case):
         )
 
     with pytest.raises(ValueError):
-        dask_influence.values(da_x_test, da_y_test, da_x_train)
+        dask_influence.influences(da_x_test, da_y_test, da_x_train)
 
     with pytest.raises(ValueError):
-        dask_influence.values(da_x_test, da_y_test, x=None, y=da_y_train)
+        dask_influence.influences(da_x_test, da_y_test, x=None, y=da_y_train)
 
     # test distributed scheduler
     if test_case.influence_type == InfluenceType.Up:
         with Client(threads_per_worker=1):
-            dask_influence_client = DaskInfluence(
+            dask_influence_client = DaskInfluenceCalculator(
                 inf_model, lambda x: x.numpy(), lambda x: torch.from_numpy(x)
             )
-            da_factors_client = dask_influence_client.factors(da_x_test, da_y_test)
+            da_factors_client = dask_influence_client.influence_factors(
+                da_x_test, da_y_test
+            )
             np.allclose(torch_factors.numpy(), da_factors_client.compute())
 
     with pytest.raises(DimensionChunksException):
@@ -218,7 +217,7 @@ def test_dask_influence_nn(model_and_data, test_case):
         da_y_test_wrong_chunks = da.from_array(
             y_test.numpy(), chunks=(4, *[1 for _ in y_test.shape[1:]])
         )
-        dask_influence.factors(da_x_test_wrong_chunks, da_y_test_wrong_chunks)
+        dask_influence.influence_factors(da_x_test_wrong_chunks, da_y_test_wrong_chunks)
 
     with pytest.raises(UnalignedChunksException):
         da_x_test_unaligned_chunks = da.from_array(
@@ -227,4 +226,6 @@ def test_dask_influence_nn(model_and_data, test_case):
         da_y_test_unaligned_chunks = da.from_array(
             y_test.numpy(), chunks=(3, *[-1 for _ in y_test.shape[1:]])
         )
-        dask_influence.factors(da_x_test_unaligned_chunks, da_y_test_unaligned_chunks)
+        dask_influence.influence_factors(
+            da_x_test_unaligned_chunks, da_y_test_unaligned_chunks
+        )
