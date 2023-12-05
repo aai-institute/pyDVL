@@ -1,1 +1,1 @@
-from .influence_model import DaskInfluenceCalculator
+from .influence_calculator import DaskInfluenceCalculator

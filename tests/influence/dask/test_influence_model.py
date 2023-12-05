@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from pydvl.influence import InfluenceType
 from pydvl.influence.base_influence_model import UnSupportedInfluenceTypeException
 from pydvl.influence.dask import DaskInfluenceCalculator
-from pydvl.influence.dask.influence_model import (
+from pydvl.influence.dask.influence_calculator import (
     DimensionChunksException,
     UnalignedChunksException,
 )
