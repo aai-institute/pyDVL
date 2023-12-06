@@ -1,3 +1,27 @@
+"""
+This module provides methods for efficiently compute tensors related to first and second order derivatives
+of torch models, using functionality from [torch.func](https://pytorch.org/docs/stable/func.html).
+To indicate higher-order functions, i.e. functions which return functions, we use the naming convention
+`create_**_function`.
+
+In particular, the module contains functionality for
+
+* Sample, batch-wise and empirical loss functions:
+    * [create_per_sample_loss_function][pydvl.influence.torch.functional.create_per_sample_loss_function]
+    * [create_batch_loss_function][pydvl.influence.torch.functional.create_batch_loss_function]
+    * [create_empirical_loss_function][pydvl.influence.torch.functional.create_empirical_loss_function]
+* Per sample gradient and jacobian product functions:
+    * [create_per_sample_gradient_function][pydvl.influence.torch.functional.create_per_sample_gradient_function]
+    * [create_per_sample_mixed_derivative_function][pydvl.influence.torch.functional.create_per_sample_mixed_derivative_function]
+    * [create_matrix_jacobian_product_function][pydvl.influence.torch.functional.create_matrix_jacobian_product_function]
+* Hessian, low rank approximation of Hessian and Hessian vector products:
+    * [hvp][pydvl.influence.torch.functional.hvp]
+    * [create_hvp_function][pydvl.influence.torch.functional.create_hvp_function]
+    * [create_batch_hvp_function][pydvl.influence.torch.functional.create_batch_hvp_function]
+    * [hessian][pydvl.influence.torch.functional.hessian]
+    * [model_hessian_low_rank][pydvl.influence.torch.functional.model_hessian_low_rank]
+"""
+
 from __future__ import annotations
 
 import logging
@@ -13,13 +37,13 @@ from torch.utils.data import DataLoader
 from .util import align_structure, align_with_model, flatten_dimensions, to_model_device
 
 __all__ = [
-    "get_hvp_function",
-    "get_hessian",
-    "get_batch_hvp",
-    "per_sample_loss",
-    "per_sample_gradient",
-    "matrix_jacobian_product",
-    "per_sample_mixed_derivative",
+    "create_hvp_function",
+    "hessian",
+    "create_batch_hvp_function",
+    "create_per_sample_loss_function",
+    "create_per_sample_gradient_function",
+    "create_matrix_jacobian_product_function",
+    "create_per_sample_mixed_derivative_function",
     "model_hessian_low_rank",
     "LowRankProductRepresentation",
 ]
@@ -73,20 +97,20 @@ def hvp(
     return output
 
 
-def get_batch_hvp(
+def create_batch_hvp_function(
     model: torch.nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     reverse_only: bool = True,
 ) -> Callable[
     [Dict[str, torch.Tensor], torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor
 ]:
-    """
-    Creates a function to compute the batch-wise Hessian-vector product (HVP) for a given model and loss function.
+    r"""
+    Creates a function to compute Hessian-vector product (HVP) for a given model and loss function, where the
+    Hessian information is computed for a provided batch.
 
-    This function takes a PyTorch model, a loss function, and optional boolean parameters. It returns a callable
+    This function takes a PyTorch model, a loss function, and an optional boolean parameter. It returns a callable
     that computes the Hessian-vector product for batches of input data and a given vector. The computation can be
-    performed in reverse mode only, based on the `reverse_only` parameter. Additionally, the function allows
-    detaching of the model's parameters from the current computation graph based on the `detach` parameter.
+    performed in reverse mode only, based on the `reverse_only` parameter.
 
     Args:
         model: The PyTorch model for which the Hessian-vector product is to be computed.
@@ -100,13 +124,14 @@ def get_batch_hvp(
         objects - input data (x), target data (y), and a vector (vec) - and returns the Hessian-vector product as a
         torch.Tensor.
 
-    Example Usage:
+    ??? Example
+        ```python
         # Assume `model` is a PyTorch model and `loss_fn` is a loss function.
         b_hvp_function = batch_hvp(model, loss_fn)
 
         # `x_batch`, `y_batch` are batches of input and target data, and `vec` is a vector.
         hvp_result = b_hvp_function(x_batch, y_batch, vec)
-
+        ```
     Note:
         The returned function internally manages model parameters based on the `detach` argument. When `detach` is
         True, it detaches the parameters from the computation graph which can be beneficial for reducing memory usage
@@ -121,7 +146,7 @@ def get_batch_hvp(
     ):
         return flatten_dimensions(
             hvp(
-                lambda p: batch_loss_function(model, loss)(p, x, y),
+                lambda p: create_batch_loss_function(model, loss)(p, x, y),
                 params,
                 align_structure(params, vec),
                 reverse_only=reverse_only,
@@ -131,7 +156,7 @@ def get_batch_hvp(
     return b_hvp
 
 
-def empirical_loss_function(
+def create_empirical_loss_function(
     model: torch.nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     data_loader: DataLoader,
@@ -140,9 +165,7 @@ def empirical_loss_function(
     Creates a function to compute the empirical loss of a given model on a given dataset.
     If we denote the model parameters with \( \theta \), the resulting function approximates:
 
-    $$
-    f(\theta) \coloneqq \frac{1}{N}\sum_{i=1}^N \operatorname{loss}(y_i, \operatorname{model}(\theta, x_i))
-    $$
+    \[ f(\theta) = \frac{1}{N}\sum_{i=1}^N \operatorname{loss}(y_i, \operatorname{model}(\theta, x_i)) \]
 
     for a loss function $\operatorname{loss}$ and a model $\operatorname{model}$ with model parameters $\theta$,
     where $N$ is the number of all elements provided by the data_loader.
@@ -176,14 +199,14 @@ def empirical_loss_function(
     return empirical_loss
 
 
-def batch_loss_function(
+def create_batch_loss_function(
     model: torch.nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
 ) -> Callable[[Dict[str, torch.Tensor], torch.Tensor, torch.Tensor], torch.Tensor]:
     r"""
     Creates a function to compute the loss of a given model on a given batch of data, i.e. the function
 
-    \[f(\theta, x, y) \coloneqq \frac{1}{N} \sum_{i=1}^N\operatorname{loss}(\operatorname{model}(\theta, x_i), y_i)\]
+    \[f(\theta, x, y) = \frac{1}{N} \sum_{i=1}^N\operatorname{loss}(\operatorname{model}(\theta, x_i), y_i)\]
 
     for a loss function $\operatorname{loss}$ and a model $\operatorname{model}$ with model parameters $\theta$,
     where $N$ is the number of elements in the batch.
@@ -205,7 +228,7 @@ def batch_loss_function(
     return batch_loss
 
 
-def get_hvp_function(
+def create_hvp_function(
     model: torch.nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     data_loader: DataLoader,
@@ -251,7 +274,7 @@ def get_hvp_function(
             model_dtype = next(p.dtype for p in model.parameters() if p.requires_grad)
             total_grad_xy = torch.empty(0, dtype=model_dtype)
             total_points = 0
-            grad_func = torch.func.grad(batch_loss_function(model, loss))
+            grad_func = torch.func.grad(create_batch_loss_function(model, loss))
             for x, y in iter(data_loader):
                 grad_xy = grad_func(
                     model_params, to_model_device(x, model), to_model_device(y, model)
@@ -264,7 +287,7 @@ def get_hvp_function(
             total_grad_xy /= total_points
         else:
             total_grad_xy = torch.func.grad(
-                empirical_loss_function(model, loss, data_loader)
+                create_empirical_loss_function(model, loss, data_loader)
             )(model_params)
             total_grad_xy = flatten_dimensions(total_grad_xy.values())
 
@@ -302,7 +325,7 @@ def get_hvp_function(
             if p.requires_grad
         }
         v = align_structure(params, vec)
-        empirical_loss = empirical_loss_function(model, loss, data_loader)
+        empirical_loss = create_empirical_loss_function(model, loss, data_loader)
         return flatten_dimensions(
             hvp(empirical_loss, params, v, reverse_only=reverse_only).values()
         )
@@ -310,7 +333,7 @@ def get_hvp_function(
     def avg_hvp_function(vec: torch.Tensor) -> torch.Tensor:
         num_batches = len(data_loader)
         avg_hessian = to_model_device(torch.zeros_like(vec), model)
-        b_hvp = get_batch_hvp(model, loss, reverse_only)
+        b_hvp = create_batch_hvp_function(model, loss, reverse_only)
         params = {
             k: p if track_gradients else p.detach()
             for k, p in model.named_parameters()
@@ -325,7 +348,7 @@ def get_hvp_function(
     return avg_hvp_function if use_average else hvp_function
 
 
-def get_hessian(
+def hessian(
     model: torch.nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     data_loader: DataLoader,
@@ -364,7 +387,7 @@ def get_hessian(
         hessian = to_model_device(
             torch.zeros((num_parameters, num_parameters), dtype=model_dtype), model
         )
-        blf = batch_loss_function(model, loss)
+        blf = create_batch_loss_function(model, loss)
 
         def flat_input_batch_loss_function(
             p: torch.Tensor, t_x: torch.Tensor, t_y: torch.Tensor
@@ -380,7 +403,7 @@ def get_hessian(
     else:
 
         def flat_input_empirical_loss(p: torch.Tensor):
-            return empirical_loss_function(model, loss, data_loader)(
+            return create_empirical_loss_function(model, loss, data_loader)(
                 align_with_model(p, model)
             )
 
@@ -391,16 +414,14 @@ def get_hessian(
     return hessian
 
 
-def per_sample_loss(
+def create_per_sample_loss_function(
     model: torch.nn.Module, loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
 ) -> Callable[[Dict[str, torch.Tensor], torch.Tensor, torch.Tensor], torch.Tensor]:
-    """
+    r"""
     Generates a function to compute per-sample losses using PyTorch's vmap, i.e. the vector-valued function
 
-    $$
-    f(\theta, x, y)  \coloneqq (\operatorname{loss}(\operatorname{model}(\theta, x_1), y_1), \dots,
-    \operatorname{loss}(\operatorname{model}(\theta, x_N), y_N)),
-    $$
+    \[ f(\theta, x, y)  = (\operatorname{loss}(\operatorname{model}(\theta, x_1), y_1), \dots,
+    \operatorname{loss}(\operatorname{model}(\theta, x_N), y_N)), \]
 
     for a loss function $\operatorname{loss}$ and a model $\operatorname{model}$ with model parameters $\theta$,
     where $N$ is the number of elements in the batch.
@@ -429,19 +450,18 @@ def per_sample_loss(
     return vmap_loss
 
 
-def per_sample_gradient(
+def create_per_sample_gradient_function(
     model: torch.nn.Module, loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
 ) -> Callable[
     [Dict[str, torch.Tensor], torch.Tensor, torch.Tensor], Dict[str, torch.Tensor]
 ]:
-    """
+    r"""
     Generates a function to computes the per-sample gradient of the loss with respect to the model's parameters, i.e.
     the tensor-valued function
 
-    $$
-    f(\theta, x, y) \coloneqq (\nabla_{\theta}\operatorname{loss}(\operatorname{model}(\theta, x_1), y_1), \dots,
-    \nabla_{\theta}\operatorname{loss}(\operatorname{model}(\theta, x_N), y_N)
-    $$
+
+    \[ f(\theta, x, y) = (\nabla_{\theta}\operatorname{loss}(\operatorname{model}(\theta, x_1), y_1), \dots,
+    \nabla_{\theta}\operatorname{loss}(\operatorname{model}(\theta, x_N), y_N) \]
 
     for a loss function $\operatorname{loss}$ and a model $\operatorname{model}$ with model parameters $\theta$,
     where $N$ is the number of elements in the batch.
@@ -460,21 +480,21 @@ def per_sample_gradient(
 
     per_sample_grad: Callable[
         [Dict[str, torch.Tensor], torch.Tensor, torch.Tensor], Dict[str, torch.Tensor]
-    ] = torch.func.jacrev(per_sample_loss(model, loss))
+    ] = torch.func.jacrev(create_per_sample_loss_function(model, loss))
     return per_sample_grad
 
 
-def matrix_jacobian_product(
+def create_matrix_jacobian_product_function(
     model: torch.nn.Module,
     loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     g: torch.Tensor,
 ) -> Callable[[Dict[str, torch.Tensor], torch.Tensor, torch.Tensor], torch.Tensor]:
-    """
+    r"""
     Generates a function to computes the matrix-Jacobian product (MJP) of the per-sample loss with respect
     to the model's parameters, i.e. the function
-    \[
-    f(\theta, x, y) \coloneqg g @ (\nabla_{\theta}\operatorname{loss}(\operatorname{model}(\theta, x_i), y_i))_i^T
-    \]
+
+    \[ f(\theta, x, y) = g \, @ \, (\nabla_{\theta}\operatorname{loss}(\operatorname{model}(\theta, x_i), y_i))_i^T \]
+
     for a loss function $\operatorname{loss}$ and a model $\operatorname{model}$ with model parameters $\theta$.
 
     Args:
@@ -497,7 +517,7 @@ def matrix_jacobian_product(
         _g: torch.Tensor,
     ):
         return torch.func.jvp(
-            lambda p: per_sample_loss(model, loss)(p, x, y),
+            lambda p: create_per_sample_loss_function(model, loss)(p, x, y),
             (params,),
             (align_with_model(_g, model),),
         )[1]
@@ -510,17 +530,17 @@ def matrix_jacobian_product(
     return full_jvp
 
 
-def per_sample_mixed_derivative(
+def create_per_sample_mixed_derivative_function(
     model: torch.nn.Module, loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
 ) -> Callable[
     [Dict[str, torch.Tensor], torch.Tensor, torch.Tensor], Dict[str, torch.Tensor]
 ]:
-    """
+    r"""
     Generates a function to computes the mixed derivatives, of the per-sample loss with respect
     to the model parameters and the input, i.e. the function
-    \[
-    f(\theta, x, y) \coloneqg \nabla_{\theta}\nabla_{x}$\operatorname{loss}$(\operatorname{model}(\theta, x), y)
-    \]
+
+    \[ f(\theta, x, y) = \nabla_{\theta}\nabla_{x}\operatorname{loss}(\operatorname{model}(\theta, x), y) \]
+
     for a loss function $\operatorname{loss}$ and a model $\operatorname{model}$ with model parameters $\theta$.
 
     Args:
@@ -747,11 +767,11 @@ def model_hessian_low_rank(
             ARPACK.
 
     Returns:
-        A [LowRankProductRepresentation][pydvl.influence.torch.torch_differentiable.LowRankProductRepresentation]
+        A [LowRankProductRepresentation][pydvl.influence.torch.functional.LowRankProductRepresentation]
             instance that contains the top (up until rank_estimate) eigenvalues
             and corresponding eigenvectors of the Hessian.
     """
-    raw_hvp = get_hvp_function(model, loss, training_data, use_average=True)
+    raw_hvp = create_hvp_function(model, loss, training_data, use_average=True)
     num_params = sum([p.numel() for p in model.parameters() if p.requires_grad])
     device = next(model.parameters()).device
     return lanzcos_low_rank_hessian_approx(

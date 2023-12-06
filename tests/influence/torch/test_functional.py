@@ -14,13 +14,13 @@ from torch.nn.functional import mse_loss
 from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence.torch.functional import (
-    batch_loss_function,
-    get_hessian,
-    get_hvp_function,
+    create_batch_loss_function,
+    create_hvp_function,
+    create_matrix_jacobian_product_function,
+    create_per_sample_gradient_function,
+    create_per_sample_mixed_derivative_function,
+    hessian,
     hvp,
-    matrix_jacobian_product,
-    per_sample_gradient,
-    per_sample_mixed_derivative,
 )
 from pydvl.influence.torch.util import align_structure, flatten_dimensions
 
@@ -39,7 +39,7 @@ def test_hvp(model_data, tol: float):
 
     params = dict(torch_model.named_parameters())
 
-    f = batch_loss_function(torch_model, torch.nn.functional.mse_loss)
+    f = create_batch_loss_function(torch_model, torch.nn.functional.mse_loss)
 
     Hvp_autograd = hvp(lambda p: f(p, x, y), params, align_structure(params, vec))
 
@@ -63,7 +63,7 @@ def test_get_hvp_function(
     torch_model, x, y, vec, H_analytical = model_data
     data_loader = DataLoader(TensorDataset(x, y), batch_size=batch_size)
 
-    Hvp_autograd = get_hvp_function(
+    Hvp_autograd = create_hvp_function(
         torch_model,
         mse_loss,
         data_loader,
@@ -92,7 +92,7 @@ def test_get_hessian(
     torch_model, x, y, _, H_analytical = model_data
     data_loader = DataLoader(TensorDataset(x, y), batch_size=batch_size)
 
-    Hvp_autograd = get_hessian(
+    Hvp_autograd = hessian(
         torch_model,
         mse_loss,
         data_loader,
@@ -114,7 +114,7 @@ def test_per_sample_gradient(in_features, out_features, batch_size):
     x = torch.randn(batch_size, in_features, requires_grad=True)
     y = torch.randn(batch_size, out_features)
     params = {k: p.detach() for k, p in model.named_parameters() if p.requires_grad}
-    gradients = per_sample_gradient(model, loss)(params, x, y)
+    gradients = create_per_sample_gradient_function(model, loss)(params, x, y)
 
     # Compute analytical gradients
     y_pred = model(x)
@@ -142,7 +142,9 @@ def test_matrix_jacobian_product(in_features, out_features, batch_size, pytorch_
     y_pred = model(x)
 
     G = torch.randn((10, out_features * (in_features + 1)))
-    mjp = matrix_jacobian_product(model, torch.nn.functional.mse_loss, G)(params, x, y)
+    mjp = create_matrix_jacobian_product_function(
+        model, torch.nn.functional.mse_loss, G
+    )(params, x, y)
 
     dL_dw = torch.vmap(
         lambda r, s, t: 2 / float(out_features) * (s - t).view(-1, 1) @ r.view(1, -1)
@@ -179,9 +181,9 @@ def test_mixed_derivatives(in_features, out_features, train_set_size):
     torch_train_x = torch.as_tensor(train_x)
     torch_train_y = torch.as_tensor(train_y)
 
-    functorch_mixed_derivatives = per_sample_mixed_derivative(model, loss)(
-        params, torch_train_x, torch_train_y
-    )
+    functorch_mixed_derivatives = create_per_sample_mixed_derivative_function(
+        model, loss
+    )(params, torch_train_x, torch_train_y)
     shape = (torch_train_x.shape[0], torch_train_x.shape[1], -1)
     flat_functorch_mixed_derivatives = flatten_dimensions(
         functorch_mixed_derivatives.values(), shape=shape

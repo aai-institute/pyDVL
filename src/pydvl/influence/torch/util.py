@@ -1,23 +1,13 @@
 import logging
 import math
 from functools import partial
-from typing import (
-    Any,
-    Collection,
-    Dict,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Collection, Dict, Iterable, List, Mapping, Optional, Tuple, Union
 
 import dask
 import numpy as np
 import torch
 from dask import array as da
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, TensorDataset
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +16,6 @@ __all__ = [
     "reshape_vector_to_tensors",
     "TorchTensorContainerType",
     "align_structure",
-    "as_tensor",
     "align_with_model",
     "flatten_dimensions",
 ]
@@ -166,23 +155,6 @@ def align_structure(
     return tangent_dict
 
 
-def as_tensor(a: Any, warn=True, **kwargs) -> torch.Tensor:
-    """
-    Converts an array into a torch tensor.
-
-    Args:
-        a: Array to convert to tensor.
-        warn: If True, warns that `a` will be converted.
-
-    Returns:
-        A torch tensor converted from the input array.
-    """
-
-    if warn and not isinstance(a, torch.Tensor):
-        logger.warning("Converting tensor to type torch.Tensor.")
-    return torch.as_tensor(a, **kwargs)
-
-
 def align_with_model(x: TorchTensorContainerType, model: torch.nn.Module):
     """
     Aligns an input to the model's parameter structure, i.e. transforms it into a dict with the same keys as
@@ -225,7 +197,8 @@ def flatten_dimensions(
         A single tensor resulting from the concatenation of the input tensors,
         each either flattened or reshaped as specified.
 
-    Examples:
+    ??? Example
+        ```pycon
         >>> tensors = [torch.tensor([[1, 2], [3, 4]]), torch.tensor([[5, 6], [7, 8]])]
         >>> flatten_dimensions(tensors)
         tensor([1, 2, 3, 4, 5, 6, 7, 8])
@@ -235,6 +208,7 @@ def flatten_dimensions(
                 [3, 4],
                 [5, 6],
                 [7, 8]])
+        ```
     """
     return torch.cat(
         [t.reshape(-1) if shape is None else t.reshape(*shape) for t in tensors],
@@ -252,13 +226,24 @@ def torch_dataset_to_dask_array(
     Construct tuple of dask arrays from a PyTorch dataset, using dask.delayed
 
     Args:
-        dataset: A thread-safe PyTorch dataset
+        dataset: A PyTorch [dataset][torch.utils.data.Dataset]
         chunk_size: The size of the chunks for the resulting Dask arrays.
-        total_size:
-        resulting_dtype:
+        total_size: If the dataset does not implement len, provide the length via this parameter. If None
+            the length of the dataset is inferred via accessing the dataset once.
+        resulting_dtype: The dtype of the resulting [dask.array.Array][dask.array.Array]
+
+    ??? Example
+        ```python
+        import torch
+        from torch.utils.data import TensorDataset
+        x = torch.rand((20, 3))
+        y = torch.rand((20, 1))
+        dataset = TensorDataset(x, y)
+        da_x, da_y = torch_dataset_to_dask_array(dataset, 4)
+        ```
 
     Returns:
-        Tuple[da.Array, ...]: Tuple of Dask arrays corresponding to each tensor in the dataset.
+        Tuple of Dask arrays corresponding to each tensor in the dataset.
     """
 
     def _infer_data_len(d_set: Dataset):

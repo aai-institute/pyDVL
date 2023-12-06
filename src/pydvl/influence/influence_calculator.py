@@ -36,12 +36,12 @@ class UnalignedChunksException(ValueError):
 class DaskInfluenceCalculator:
     """
     Compute influences over dask.Array collections. Depends on a batch computation model
-    of type [InfluenceFunctionModel][pydvl.influence.base_influence_mode.InfluenceFunctionModel].
+    of type [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel].
     In addition, provide transformations from and to numpy,
     corresponding to the tensor types of the batch computation model.
     Args:
         influence_model: instance of type
-            [InfluenceFunctionModel][pydvl.influence.base_influence_mode.InfluenceFunctionModel], defines the
+            [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel], defines the
             batch-wise computation model
         to_numpy: transformation for turning the tensor type output of a batch computation into a numpy array
         from_numpy: transformation for turning numpy arrays into the correct tensor type to apply the batch
@@ -92,9 +92,8 @@ class DaskInfluenceCalculator:
             y: label tensor to compute gradients
 
         Returns:
-            Container object of type [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult] with a
-            tensor representing the element-wise inverse Hessian matrix vector products for the provided batch.
-            Retrieval of batch inversion information is not yet implemented.
+            [dask.array.Array][dask.array.Array] representing the element-wise inverse Hessian matrix vector
+                products for the provided batch.
 
         """
 
@@ -149,13 +148,13 @@ class DaskInfluenceCalculator:
         arrays.
 
         Args:
-            x_test: model input to use in the gradient computations of $H^{-1}\nabla_{\theta} \ell(y_{test},
-                f_{\theta}(x_{test}))$
+            x_test: model input to use in the gradient computations of $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
+                f_{\theta}(x_{\text{test}}))$
             y_test: label tensor to compute gradients
             x: optional model input to use in the gradient computations $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$, if None, use $x=x_{\text{test}}$
             y: optional label tensor to compute gradients
-            influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
+            influence_type: enum value of [InfluenceType][pydvl.influence.base_influence_model.InfluenceType]
 
         Returns:
             [dask.array.Array][dask.array.Array] representing the element-wise scalar products for the provided batch.
@@ -252,13 +251,13 @@ class DaskInfluenceCalculator:
     ) -> da.Array:
         r"""
         Computation of
-        \[
-        \langle z_{\text{test_factors}}, \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        \]
+
+        \[ \langle z_{\text{test_factors}}, \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
         for the case of up-weighting influence, resp.
-        \[
-        \langle z_{\text{test_factors}}, \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        \]
+
+        \[ \langle z_{\text{test_factors}}, \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
         for the perturbation type influence case. The gradient is meant to be per sample of the batch $(x, y)$.
 
         Args:

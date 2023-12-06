@@ -17,13 +17,13 @@ from ..base_influence_model import (
 )
 from .functional import (
     LowRankProductRepresentation,
-    get_batch_hvp,
-    get_hessian,
-    get_hvp_function,
-    matrix_jacobian_product,
+    create_batch_hvp_function,
+    create_hvp_function,
+    create_matrix_jacobian_product_function,
+    create_per_sample_gradient_function,
+    create_per_sample_mixed_derivative_function,
+    hessian,
     model_hessian_low_rank,
-    per_sample_gradient,
-    per_sample_mixed_derivative,
 )
 from .util import flatten_dimensions
 
@@ -65,15 +65,17 @@ class TorchInfluenceFunctionModel(
 
     @log_duration
     def _loss_grad(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        grads = per_sample_gradient(self.model, self.loss)(self.model_params, x, y)
+        grads = create_per_sample_gradient_function(self.model, self.loss)(
+            self.model_params, x, y
+        )
         shape = (x.shape[0], -1)
         return flatten_dimensions(grads.values(), shape=shape)
 
     @log_duration
     def _flat_loss_mixed_grad(self, x: torch.Tensor, y: torch.Tensor):
-        mixed_grads = per_sample_mixed_derivative(self.model, self.loss)(
-            self.model_params, x, y
-        )
+        mixed_grads = create_per_sample_mixed_derivative_function(
+            self.model, self.loss
+        )(self.model_params, x, y)
         shape = (x.shape[0], prod(x.shape[1:]), -1)
         return flatten_dimensions(mixed_grads.values(), shape=shape)
 
@@ -229,8 +231,46 @@ class DirectInfluence(TorchInfluenceFunctionModel):
             return False
 
     def fit(self, data_loader: DataLoader) -> DirectInfluence:
-        self.hessian = get_hessian(self.model, self.loss, data_loader)
+        self.hessian = hessian(self.model, self.loss, data_loader)
         return self
+
+    @log_duration
+    def influences(
+        self,
+        x_test: torch.Tensor,
+        y_test: torch.Tensor,
+        x: Optional[torch.Tensor] = None,
+        y: Optional[torch.Tensor] = None,
+        influence_type: InfluenceType = InfluenceType.Up,
+    ) -> torch.Tensor:
+        r"""
+        Compute approximation of
+
+        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
+            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle, \]
+
+        for the case of up-weighting influence, resp.
+
+        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
+            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the perturbation type influence case. The action of $H^{-1}$ is achieved via a direct solver using
+        [torch.linalg.solve][torch.linalg.solve].
+
+        Args:
+            x_test: model input to use in the gradient computations of $H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
+                f_{\theta}(x_{\text{test}}))$
+            y_test: label tensor to compute gradients
+            x: optional model input to use in the gradient computations $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+               resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$, if None, use $x=x_{\text{test}}$
+            y: optional label tensor to compute gradients
+            influence_type: enum value of [InfluenceType][pydvl.influence.base_influence_model.InfluenceType]
+
+        Returns:
+            [torch.nn.Tensor][torch.nn.Tensor] representing the element-wise scalar products for the provided batch.
+
+        """
+        return super().influences(x_test, y_test, x, y, influence_type=influence_type)
 
     @log_duration
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
@@ -347,14 +387,14 @@ class BatchCgInfluence(TorchInfluenceFunctionModel):
         if len(self.train_dataloader) == 0:
             raise ValueError("Training dataloader must not be empty.")
 
-        hvp = get_hvp_function(self.model, self.loss, self.train_dataloader)
+        hvp = create_hvp_function(self.model, self.loss, self.train_dataloader)
         reg_hvp = lambda v: hvp(v) + self.hessian_regularization * v.type(rhs.dtype)
         batch_cg = torch.zeros_like(rhs)
 
         for idx, bi in enumerate(
             maybe_progress(rhs, self.progress, desc="Conjugate gradient")
         ):
-            batch_result = self.solve_cg(
+            batch_result = self._solve_cg(
                 reg_hvp,
                 bi,
                 x0=self.x0,
@@ -376,7 +416,7 @@ class BatchCgInfluence(TorchInfluenceFunctionModel):
         return self
 
     @staticmethod
-    def solve_cg(
+    def _solve_cg(
         hvp: Callable[[torch.Tensor], torch.Tensor],
         b: torch.Tensor,
         *,
@@ -518,7 +558,8 @@ class LissaInfluence(TorchInfluenceFunctionModel):
             k: p.detach() for k, p in self.model.named_parameters() if p.requires_grad
         }
         b_hvp = torch.vmap(
-            get_batch_hvp(self.model, self.loss), in_dims=(None, None, None, 0)
+            create_batch_hvp_function(self.model, self.loss),
+            in_dims=(None, None, None, 0),
         )
         for _ in maybe_progress(range(self.maxiter), self.progress, desc="Lissa"):
             x, y = next(iter(shuffled_training_data))
@@ -626,7 +667,7 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
     ) -> torch.Tensor:
 
         if influence_type == InfluenceType.Up:
-            mjp = matrix_jacobian_product(
+            mjp = create_matrix_jacobian_product_function(
                 self.model, self.loss, self.low_rank_representation.projections.T
             )
             left = mjp(self.model_params, x_test, y_test)
@@ -653,7 +694,7 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
     ) -> torch.Tensor:
 
         if influence_type == InfluenceType.Up:
-            left = matrix_jacobian_product(
+            left = create_matrix_jacobian_product_function(
                 self.model, self.loss, self.low_rank_representation.projections.T
             )(self.model_params, x, y)
             regularized_eigenvalues = (

@@ -136,7 +136,7 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
             x: optional model input to use in the gradient computations $\nabla_{theta}\ell(y, f_{\theta}(x))$,
                 resp. $\nabla_{x}\nabla_{theta}\ell(y, f_{\theta}(x))$, if None, use $x=x_{test}$
             y: optional label tensor to compute gradients
-            influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
+            influence_type: enum value of [InfluenceType][pydvl.influence.base_influence_model.InfluenceType]
 
         Returns:
             Tensor representing the element-wise scalar products for the provided batch
@@ -153,13 +153,13 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
     ) -> TensorType:
         r"""
         Overwrite this method to implement the computation of
-        \[
-        \langle z_{\text{test_factors}}, \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        \]
+
+        \[ \langle z_{\text{test_factors}}, \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
         for the case of up-weighting influence, resp.
-        \[
-        \langle z_{\text{test_factors}}, \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        \]
+
+        \[ \langle z_{\text{test_factors}}, \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
         for the perturbation type influence case. The gradient is meant to be per sample of the batch $(x, y)$.
 
         Args:

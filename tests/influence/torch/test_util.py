@@ -11,8 +11,8 @@ from torch.nn.functional import mse_loss
 from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence.torch.functional import (
-    get_batch_hvp,
-    get_hvp_function,
+    create_batch_hvp_function,
+    create_hvp_function,
     lanzcos_low_rank_hessian_approx,
 )
 from pydvl.influence.torch.util import (
@@ -122,7 +122,7 @@ def test_batch_hvp(model_data, tol: float):
     model_params = {
         k: v.detach() for k, v in torch_model.named_parameters() if v.requires_grad
     }
-    Hvp_autograd = get_batch_hvp(torch_model, torch.nn.functional.mse_loss)(
+    Hvp_autograd = create_batch_hvp_function(torch_model, torch.nn.functional.mse_loss)(
         model_params, x, y, vec
     )
     assert torch.allclose(Hvp_autograd, H_analytical @ vec, rtol=tol)
@@ -141,7 +141,7 @@ def test_get_hvp_function(model_data, tol: float, use_avg: bool, batch_size: int
     torch_model, x, y, vec, H_analytical = model_data
     data_loader = DataLoader(TensorDataset(x, y), batch_size=batch_size)
 
-    Hvp_autograd = get_hvp_function(
+    Hvp_autograd = create_hvp_function(
         torch_model, mse_loss, data_loader, use_average=use_avg
     )(vec)
 
