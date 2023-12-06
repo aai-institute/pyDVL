@@ -320,9 +320,9 @@ def torch_dataset_to_dask_array(
     chunk_indices = [
         (i, min(i + chunk_size, num_samples)) for i in range(0, num_samples, chunk_size)
     ]
-
+    delayed_dataset = dask.delayed(dataset)
     delayed_chunks = [
-        dask.delayed(partial(_get_chunk, start, stop))(dataset)
+        dask.delayed(partial(_get_chunk, start, stop))(delayed_dataset)
         for (start, stop) in chunk_indices
     ]
 
