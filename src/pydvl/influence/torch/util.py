@@ -7,7 +7,11 @@ import dask
 import numpy as np
 import torch
 from dask import array as da
+from numpy._typing import NDArray
 from torch.utils.data import Dataset, TensorDataset
+
+from pydvl.influence.base_influence_model import TensorType
+from pydvl.influence.influence_calculator import NumpyConverter
 
 logger = logging.getLogger(__name__)
 
@@ -327,3 +331,33 @@ def torch_dataset_to_dask_array(
     return tuple(
         da.concatenate(array_list) for array_list in delayed_arrays_dict.values()
     )
+
+
+class TorchNumpyConverter(NumpyConverter[torch.Tensor]):
+    """
+    Helper class for converting between [torch.Tensor][torch.Tensor] and [numpy.ndarray][numpy.ndarray]
+
+    Args:
+        device: Optional device parameter to move the resulting torch tensors to the specified device
+
+    """
+
+    def __init__(self, device: Optional[torch.device] = None):
+        self.device = device
+
+    def to_numpy(self, x: torch.Tensor) -> NDArray:
+        """
+        Convert a detached [torch.Tensor][torch.Tensor] to [numpy.ndarray][numpy.ndarray]
+        """
+        arr: NDArray = x.cpu().numpy()
+        return arr
+
+    def from_numpy(self, x: NDArray) -> torch.Tensor:
+        """
+        Convert a [numpy.ndarray][numpy.ndarray] to [torch.Tensor][torch.Tensor] and optionally move it to a provided
+        device
+        """
+        t = torch.from_numpy(x)
+        if self.device is not None:
+            t = t.to(self.device)
+        return t

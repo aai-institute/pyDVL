@@ -1,5 +1,6 @@
+from abc import ABC, abstractmethod
 from math import prod
-from typing import Any, Callable, Optional, Tuple
+from typing import Any, Callable, Generic, Optional, Tuple
 
 import distributed
 import numpy as np
@@ -7,9 +8,10 @@ from dask import array as da
 from dask import delayed
 from numpy.typing import NDArray
 
-from pydvl.influence.base_influence_model import (
+from .base_influence_model import (
     InfluenceFunctionModel,
     InfluenceType,
+    TensorType,
     UnSupportedInfluenceTypeException,
 )
 
@@ -33,6 +35,20 @@ class UnalignedChunksException(ValueError):
         super().__init__(msg)
 
 
+class NumpyConverter(Generic[TensorType], ABC):
+    """
+    Base class for converting TensorType objects into numpy arrays and vice versa.
+    """
+
+    @abstractmethod
+    def to_numpy(self, x: TensorType) -> NDArray:
+        """Overwrite this method for converting a TensorType object into a numpy array"""
+
+    @abstractmethod
+    def from_numpy(self, x: NDArray) -> TensorType:
+        """Overwrite this method for converting a numpy array into a TensorType object"""
+
+
 class DaskInfluenceCalculator:
     """
     Compute influences over dask.Array collections. Depends on a batch computation model
@@ -40,29 +56,28 @@ class DaskInfluenceCalculator:
     In addition, provide transformations from and to numpy,
     corresponding to the tensor types of the batch computation model.
     Args:
-        influence_model: instance of type
+        influence_function_model: instance of type
             [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel], defines the
             batch-wise computation model
-        to_numpy: transformation for turning the tensor type output of a batch computation into a numpy array
-        from_numpy: transformation for turning numpy arrays into the correct tensor type to apply the batch
-            computation model
+        numpy_converter: instance of type [NumpyConverter][pydvl.influence.influence_calculator.NumpyConverter], used to
+            convert between numpy arrays and TensorType objects needed to use the underlying model
     """
 
     def __init__(
         self,
-        influence_model: InfluenceFunctionModel,
-        to_numpy: Callable[[Any], np.ndarray],
-        from_numpy: Callable[[np.ndarray], Any],
+        influence_function_model: InfluenceFunctionModel,
+        numpy_converter: NumpyConverter,
     ):
-        self.from_numpy = from_numpy
-        self.to_numpy = to_numpy
-        self._num_parameters = influence_model.num_parameters
-        self.influence_model = influence_model
+        self._num_parameters = influence_function_model.num_parameters
+        self.influence_function_model = influence_function_model
+        self.numpy_converter = numpy_converter
         client = self._get_client()
         if client is not None:
-            self.influence_model = client.scatter(influence_model, broadcast=True)
+            self.influence_function_model = client.scatter(
+                influence_function_model, broadcast=True
+            )
         else:
-            self.influence_model = delayed(influence_model)
+            self.influence_function_model = delayed(influence_function_model)
 
     @property
     def num_parameters(self):
@@ -103,9 +118,10 @@ class DaskInfluenceCalculator:
 
         def func(x_numpy: NDArray, y_numpy: NDArray, model: InfluenceFunctionModel):
             factors = model.influence_factors(
-                self.from_numpy(x_numpy), self.from_numpy(y_numpy)
+                self.numpy_converter.from_numpy(x_numpy),
+                self.numpy_converter.from_numpy(y_numpy),
             )
-            return self.to_numpy(factors)
+            return self.numpy_converter.to_numpy(factors)
 
         chunks = []
         for x_chunk, y_chunk, chunk_size in zip(
@@ -116,7 +132,7 @@ class DaskInfluenceCalculator:
                 delayed(func)(
                     x_chunk.squeeze().tolist(),
                     y_chunk.squeeze().tolist(),
-                    self.influence_model,
+                    self.influence_function_model,
                 ),
                 dtype=x.dtype,
                 shape=chunk_shape,
@@ -189,13 +205,13 @@ class DaskInfluenceCalculator:
             model: InfluenceFunctionModel,
         ):
             values = model.influences(
-                self.from_numpy(x_test_numpy),
-                self.from_numpy(y_test_numpy),
-                self.from_numpy(x_numpy),
-                self.from_numpy(y_numpy),
+                self.numpy_converter.from_numpy(x_test_numpy),
+                self.numpy_converter.from_numpy(y_test_numpy),
+                self.numpy_converter.from_numpy(x_numpy),
+                self.numpy_converter.from_numpy(y_numpy),
                 influence_type,
             )
-            return self.to_numpy(values)
+            return self.numpy_converter.to_numpy(values)
 
         un_chunked_x_length = prod([s[0] for s in x_test.chunks[1:]])
         x_test_chunk_sizes = x_test.chunks[0]
@@ -223,7 +239,7 @@ class DaskInfluenceCalculator:
                         y_test_chunk.squeeze().tolist(),
                         x_chunk.squeeze().tolist(),
                         y_chunk.squeeze().tolist(),
-                        self.influence_model,
+                        self.influence_function_model,
                     ),
                     shape=block_shape,
                     dtype=x_test.dtype,
@@ -284,12 +300,12 @@ class DaskInfluenceCalculator:
             model: InfluenceFunctionModel,
         ):
             ups = model.influences_from_factors(
-                self.from_numpy(z_test_numpy),
-                self.from_numpy(x_numpy),
-                self.from_numpy(y_numpy),
+                self.numpy_converter.from_numpy(z_test_numpy),
+                self.numpy_converter.from_numpy(x_numpy),
+                self.numpy_converter.from_numpy(y_numpy),
                 influence_type=influence_type,
             )
-            return self.to_numpy(ups)
+            return self.numpy_converter.to_numpy(ups)
 
         un_chunked_x_length = prod([s[0] for s in x.chunks[1:]])
         x_chunk_sizes = x.chunks[0]
@@ -316,7 +332,7 @@ class DaskInfluenceCalculator:
                         z_test_chunk.squeeze().tolist(),
                         x_chunk.squeeze().tolist(),
                         y_chunk.squeeze().tolist(),
-                        self.influence_model,
+                        self.influence_function_model,
                     ),
                     shape=block_shape,
                     dtype=z_test_factors.dtype,

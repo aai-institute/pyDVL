@@ -12,6 +12,7 @@ from pydvl.influence.influence_calculator import (
     UnalignedChunksException,
 )
 from pydvl.influence.torch import ArnoldiInfluence, BatchCgInfluence, DirectInfluence
+from pydvl.influence.torch.util import TorchNumpyConverter
 from tests.influence.torch.test_influence_model import model_and_data, test_case
 
 
@@ -82,9 +83,8 @@ def test_dask_influence_factors(influence_factory, test_case, model_and_data):
     influence_model = influence_factory(
         model, test_case.loss, train_dataloader, test_case.hessian_reg
     )
-    dask_inf = DaskInfluenceCalculator(
-        influence_model, lambda t: t.numpy(), lambda t: torch.from_numpy(t)
-    )
+    numpy_converter = TorchNumpyConverter()
+    dask_inf = DaskInfluenceCalculator(influence_model, numpy_converter)
     dask_fac = dask_inf.influence_factors(da_x_train, da_y_train)
     dask_fac = dask_fac.compute(scheduler="synchronous")
     torch_fac = influence_model.influence_factors(x_train, y_train).numpy()
@@ -131,9 +131,8 @@ def test_dask_influence_nn(model_and_data, test_case):
         hessian_regularization=test_case.hessian_reg,
     ).fit(train_dataloader)
 
-    dask_influence = DaskInfluenceCalculator(
-        inf_model, lambda x: x.numpy(), lambda x: torch.from_numpy(x)
-    )
+    numpy_converter = TorchNumpyConverter()
+    dask_influence = DaskInfluenceCalculator(inf_model, numpy_converter)
 
     da_factors = dask_influence.influence_factors(da_x_test, da_y_test)
     torch_factors = inf_model.influence_factors(x_test, y_test)
@@ -197,9 +196,8 @@ def test_dask_influence_nn(model_and_data, test_case):
     # test distributed scheduler
     if test_case.influence_type == InfluenceType.Up:
         with Client(threads_per_worker=1):
-            dask_influence_client = DaskInfluenceCalculator(
-                inf_model, lambda x: x.numpy(), lambda x: torch.from_numpy(x)
-            )
+            numpy_converter = TorchNumpyConverter()
+            dask_influence_client = DaskInfluenceCalculator(inf_model, numpy_converter)
             da_factors_client = dask_influence_client.influence_factors(
                 da_x_test, da_y_test
             )
