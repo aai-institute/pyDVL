@@ -182,99 +182,41 @@ as done in [@koh_understanding_2017].
 
 ## Computation
 
-The main entry point of the library for influence calculation is
-[compute_influences][pydvl.influence.general.compute_influences]. Given a
-pre-trained pytorch model with a loss, first an instance of
-[TorchTwiceDifferentiable][pydvl.influence.torch.torch_differentiable.TorchTwiceDifferentiable]
-needs to be created:
+The main abstraction of the library for influence calculation is
+[InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel]. 
+On implementations of this abstraction, you can call the method `influences`
+to compute influences. We provide implementations to use with pytorch model in
+[pydvl.influence.torch][pydvl.influence.torch.influence_model]
+
+Given a pre-trained pytorch model and a loss, a basic example would look like
 
 ```python
-from pydvl.influence import TorchTwiceDifferentiable
-wrapped_model = TorchTwiceDifferentiable(model, loss, device)
-```
-
-The device specifies where influence calculation will be run. 
-
-Given training and test data loaders, the influence of each training point on
-each test point can be calculated via:
-
-```python
-from pydvl.influence import compute_influences
 from torch.utils.data import DataLoader
-training_data_loader = DataLoader(...)
-test_data_loader = DataLoader(...)
-compute_influences(
-   wrapped_model,
-   training_data_loader,
-   test_data_loader,
-)
-```
+from pydvl.influence.torch import DirectInfluence
 
-The result is a tensor with one row per test point and one column per training
-point. Thus, each entry $(i, j)$ represents the influence of training point $j$
-on test point $i$. A large positive influence indicates that training point $j$
+training_data_loader = DataLoader(...)
+if_model = DirectInfluence(model, loss)
+if_model = if_model.fit(training_data_loader)
+
+influences = if_model.influences(x_test, y_test, x, y)
+```
+for batches $z_{\text{test}} = (x_{\text{test}}, y_{\text{test}})$ and
+$z = (x, y)$ of data. The result is a tensor with one row per test point in 
+$z_{\text{test}}$ and one column per point in $z$. 
+Thus, each entry $(i, j)$ represents the influence of training point $z[j]$
+on test point $z_{\text{test}}[i]$.
+
+!!! Warning
+    Compared to the mathematical definitions above, we switch the ordering
+    of $z$ and $z_{\text{test}}$, in order to make the input ordering consistent
+    with the dimensions of the resulting tensor. More concrete if the first
+    dimension of $z_{\text{test}}$ is $N$ and that of $z$, the resulting tensor
+    is of shape $N \times M$
+
+A large positive influence indicates that training point $j$
 tends to improve the performance of the model on test point $i$, and vice versa,
 a large negative influence indicates that training point $j$ tends to worsen the
 performance of the model on test point $i$.
-
-### Perturbation influences
-
-The method of empirical influence computation can be selected in
-[compute_influences][pydvl.influence.general.compute_influences] with the
-parameter `influence_type`:
-
-```python
-from pydvl.influence import compute_influences
-compute_influences(
-   wrapped_model,
-   training_data_loader,
-   test_data_loader,
-   influence_type="perturbation",
-)
-```
-
-The result is a tensor with at least three dimensions. The first two dimensions
-are the same as in the case of `influence_type=up` case, i.e. one row per test
-point and one column per training point. The remaining dimensions are the same
-as the number of input features in the data. Therefore, each entry in the tensor
-represents the influence of each feature of each training point on each test
-point.
-
-### Approximate matrix inversion
-
-In almost every practical application it is not possible to construct, even less
-invert the complete Hessian in memory. pyDVL offers several approximate
-algorithms to invert it by setting the parameter `inversion_method` of
-[compute_influences][pydvl.influence.general.compute_influences].
-
-```python
-from pydvl.influence import compute_influences
-compute_influences(
-   wrapped_model,
-   training_data_loader,
-   test_data_loader,
-   inversion_method="cg"
-)
-```
-
-Each inversion method has its own set of parameters that can be tuned to improve
-the final result. These parameters can be passed directly to
-[compute_influences][pydvl.influence.general.compute_influences] as keyword
-arguments. For example, the following code sets the maximum number of iterations
-for conjugate gradient to $100$ and the minimum relative error to $0.01$:
-
-```python
-from pydvl.influence import compute_influences
-compute_influences(
-   wrapped_model,
-   training_data_loader,
-   test_data_loader,
-   inversion_method="cg",
-   hessian_regularization=1e-4,
-   maxiter=100,
-   rtol=0.01
-)
-```
 
 ### Hessian regularization
 
@@ -288,97 +230,46 @@ problems, but most are not.
 
 To circumvent this problem, many approximate methods can be implemented. The
 simplest adds a small *hessian perturbation term*, i.e. $H_{\hat{\theta}} +
-\lambda \mathbb{I}$, with $\mathbb{I}$ being the identity matrix. This standard
+\lambda \mathbb{I}$, with $\mathbb{I}$ being the identity matrix. 
+
+```python
+from torch.utils.data import DataLoader
+from pydvl.influence.torch import DirectInfluence
+
+training_data_loader = DataLoader(...)
+if_model = DirectInfluence(model, loss, hessian_regularization=0.01)
+```
+
+This standard
 trick ensures that the eigenvalues of $H_{\hat{\theta}}$ are bounded away from
 zero and therefore the matrix is invertible. In order for this regularization
 not to corrupt the outcome too much, the parameter $\lambda$ should be as small
 as possible while still allowing a reliable inversion of $H_{\hat{\theta}} +
 \lambda \mathbb{I}$.
 
-```python
-from pydvl.influence import compute_influences
-compute_influences(
-   wrapped_model,
-   training_data_loader,
-   test_data_loader,
-   inversion_method="cg",
-   hessian_regularization=1e-4
-)
-```
+### Perturbation influences
 
-### Influence factors
-
-The [compute_influences][pydvl.influence.general.compute_influences]
-method offers a fast way to obtain the influence scores given a model
-and a dataset. Nevertheless, it is often more convenient
-to inspect and save some of the intermediate results of
-influence calculation for later use.
-
-The influence factors(refer to
-[the previous section](#approximating-the-influence-of-a-point) for a definition)
-are typically the most computationally demanding part of influence calculation.
-They can be obtained via the
-[compute_influence_factors][pydvl.influence.general.compute_influence_factors]
-function, saved, and later used for influence calculation
-on different subsets of the training dataset.
+The method of empirical influence computation can be selected with the
+parameter `influence_type`:
 
 ```python
-from pydvl.influence import compute_influence_factors
-influence_factors = compute_influence_factors(
-   wrapped_model,
-   training_data_loader,
-   test_data_loader,
-   inversion_method="cg"
-)
+from pydvl.influence import InfluenceType
+influences = if_model.influences(x_test, y_test, x, y, influence_type=InfluenceType.Perturbation)
 ```
+The result is a tensor with at least three dimensions. The first two dimensions
+are the same as in the case of `influence_type=InfluenceType.Up` case, i.e. one row per test
+point and one column per training point. The remaining dimensions are the same
+as the number of input features in the data. Therefore, each entry in the tensor
+represents the influence of each feature of each training point on each test
+point.
 
-The result is an object of type 
-[InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult],
-which holds the calculated influence factors (`influence_factors.x`) and a
-dictionary with the info on the inversion process (`influence_factors.info`).
+### Approximate matrix inversion
 
-## Methods for inverse HVP calculation
+In almost every practical application it is not possible to construct, even less
+invert the complete Hessian in memory. pyDVL offers several implementations, which do not compute
+the full Hessian (in contrast to [DirectInfluence][pydvl.influence.torch.influence_model.DirectInfluence]).
 
-In order to calculate influence values, pydvl implements several methods for the
-calculation of the inverse Hessian vector product (iHVP). More precisely, given
-a model, training data and a tensor $b$, the function
-[solve_hvp][pydvl.influence.inversion.solve_hvp]
-will find $x$ such that $H x = b$, with $H$ is the hessian of model.
-
-Many different inversion methods can be selected via the parameter
-`inversion_method` of
-[compute_influences][pydvl.influence.general.compute_influences].
-
-The following subsections will offer more detailed explanations for each method.
-
-### Direct inversion
-
-With `inversion_method = "direct"` pyDVL will calculate the inverse Hessian
-using the direct matrix inversion. This means that the Hessian will first be
-explicitly created and then inverted. This method is the most accurate, but also
-the most computationally demanding. It is therefore not recommended for large
-datasets or models with many parameters.
-
-```python
-import torch
-from pydvl.influence.inversion import solve_hvp
-b = torch.Tensor(...)
-solve_hvp(
-   "direct",
-   wrapped_model,
-   training_data_loader,
-   b,
-)
-```
-
-The result, an object of type 
-[InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult],
-which holds two objects: `influence_factors.x` and `influence_factors.info`.
-The first one is the inverse Hessian vector product, while the second one is a
-dictionary with the info on the inversion process. For this method, the info
-consists of the Hessian matrix itself.
-
-### Conjugate Gradient
+#### Conjugate Gradient
 
 This classical procedure for solving linear systems of equations is an iterative
 method that does not require the explicit inversion of the Hessian. Instead, it
@@ -388,36 +279,26 @@ much slower to converge than the direct inversion method and not as accurate.
 More info on the theory of conjugate gradient can be found on
 [Wikipedia](https://en.wikipedia.org/wiki/Conjugate_gradient_method).
 
-In pyDVL, you can select conjugate gradient with `inversion_method = "cg"`, like
-this:
-
 ```python
-from pydvl.influence.inversion import solve_hvp
-solve_hvp(
-   "cg",
-   wrapped_model,
-   training_data_loader,
-   b,
-   x0=None,
-   rtol=1e-7,
-   atol=1e-7,
-   maxiter=None,
+from pydvl.influence.torch import CgInfluence
+
+if_model = CgInfluence(
+    model,
+    loss,
+    hessian_regularization=0.0,
+    x0=None,
+    rtol=1e-7,
+    atol=1e-7,
+    maxiter=None,
 )
 ```
 
-The additional optional parameters `x0`, `rtol`, `atol`, and `maxiter` are passed
-to the [solve_batch_cg][pydvl.influence.torch.torch_differentiable.solve_batch_cg]
-function, and are respecively the initial guess for the solution, the relative
+The additional optional parameters `x0`, `rtol`, `atol`, and `maxiter` are 
+respectively the initial guess for the solution, the relative
 tolerance, the absolute tolerance, and the maximum number of iterations.
 
-The resulting
-[InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult] holds
-the solution of the iHVP, `influence_factors.x`, and some info on the inversion
-process `influence_factors.info`. More specifically, for each batch this will
-contain the number of iterations, a boolean indicating if the inversion
-converged, and the residual of the inversion.
 
-### Linear time Stochastic Second-Order Approximation (LiSSA)
+#### Linear time Stochastic Second-Order Approximation (LiSSA)
 
 The LiSSA method is a stochastic approximation of the inverse Hessian vector
 product. Compared to [conjugate gradient](#conjugate-gradient)
@@ -433,15 +314,13 @@ for the convergence of the method and they need to be chosen carefully, and I
 is the identity matrix. More info on the theory of LiSSA can be found in the 
 original paper [@agarwal_secondorder_2017].
 
-In pyDVL, you can select LiSSA with `inversion_method = "lissa"`, like this:
 
 ```python
-from pydvl.influence.inversion import solve_hvp
-solve_hvp(
-   "lissa",
-   wrapped_model,
-   training_data_loader,
-   b,
+from pydvl.influence.torch import LissaInfluence
+if_model = LissaInfluence(
+   model,
+   loss,
+   hessian_regularization=0.0 
    maxiter=1000,
    dampen=0.0,
    scale=10.0,
@@ -451,18 +330,12 @@ solve_hvp(
 ```
 
 with the additional optional parameters `maxiter`, `dampen`, `scale`, `h0`, and
-`rtol`, which are passed to the
-[solve_lissa][pydvl.influence.torch.torch_differentiable.solve_lissa] function,
+`rtol`, 
 being the maximum number of iterations, the dampening factor, the scaling
 factor, the initial guess for the solution and the relative tolerance,
 respectively.
 
-The resulting [InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult]
-holds the solution of the iHVP, `influence_factors.x`, and,
-within `influence_factors.info`, the maximum percentage error
-and the mean percentage error of the approximation.
-
-### Arnoldi solver
+#### Arnoldi
 
 The [Arnoldi method](https://en.wikipedia.org/wiki/Arnoldi_iteration) is a
 Krylov subspace method for approximating dominating eigenvalues and
@@ -477,25 +350,95 @@ where \(D\) is a diagonal matrix with the top (in absolute value) eigenvalues of
 the Hessian and \(V\) contains the corresponding eigenvectors. See also
 [@schioppa_scaling_2021].
 
-In pyDVL, you can use Arnoldi with `inversion_method = "arnoldi"`, as follows:
-
 ```python
-from pydvl.influence.inversion import solve_hvp
-solve_hvp(
-    "arnoldi",
-    wrapped_model,
-    training_data_loader,
-    b,
-    hessian_perturbation=0.0,
+from pydvl.influence.torch import ArnoldiInfluence
+if_model = ArnoldiInfluence
+    model,
+    loss,
+    hessian_regularization=0.0,
     rank_estimate=10,
     tol=1e-6,
-    eigen_computation_on_gpu=False 
 )
 ```
 
-For the parameters, check
-[solve_arnoldi][pydvl.influence.torch.torch_differentiable.solve_arnoldi]. The
-resulting
-[InverseHvpResult][pydvl.influence.twice_differentiable.InverseHvpResult] holds
-the solution of the iHVP, `influence_factors.x`, and, within
-`influence_factors.info`, the computed eigenvalues and eigenvectors.
+### Influence factors
+
+The influence factors(refer to
+[the previous section](#approximating-the-influence-of-a-point) for a definition)
+are typically the most computationally demanding part of influence calculation.
+They can be obtained via calling the `influence_factors` method, saved, and later used for influence calculation
+on different subsets of the training dataset.
+
+```python
+influence_factors = if_model.influence_factors(x_test, y_test)
+influences = if_model.influences_from_factors(influence_factors, x, y)
+```
+
+### Scaling computation
+
+The implementations of [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel]
+provide a convenient way to calculate influences for
+in memory tensors. Nevertheless, there is a need for computing the influences on batches of data. This might
+happen, if your input data does not fit into memory (e.g. it is very high-dimensional) or for large models
+the derivative computations exceed your memory or any combinations of these.
+
+In case, you can expect the resulting tensor to fit into memory, the simplest way is to use a double for-loop
+to iterate over the batches and collect them. pyDVL provide the simple convenience class 
+[SequentialInfluenceCalculator][pydvl.influence.influence_calculator] to do this
+
+```python
+from pydvl.influence import SequentialInfluenceCalculator
+from pydvl.influence.torch.util import TorchCatAggregator
+from pydvl.influence.torch import CgInfluence
+
+if_model = CgInfluence(model, loss, hessian_regularization=0.01)
+if_model = if_model.fit(train_dataloader)
+
+seq_calc = SequentialInfluenceCalculator(if_model, block_aggregator=TorchCatAggregator())
+
+influences = seq_calc.influences(test_dataloader, train_dataloader)
+# influences is the full tensor for all combinations of the two loaders
+```
+In cases, where the resulting tensors are too large to fit into memory, you might want to write it block-wise
+to disk. The wrapper class [DaskInfluenceCalculator][pydvl.influence.influence_calculator.DaskInfluenceCalculator]
+provides this functionality using [dask](https://docs.dask.org/en/stable/) in combination with 
+[zarr](https://zarr.readthedocs.io/en/stable/).
+
+```python
+from torch.utils.data import Dataset, DataLoader
+from pydvl.influence import DaskInfluenceCalculator
+from pydvl.influence.torch import CgInfluence
+from pydvl.influence.torch.util import torch_dataset_to_dask_array, TorchNumpyConverter
+from distributed import Client
+
+train_data_set: Dataset = LargeDataSet(...) # Possible some out of memory large Dataset
+test_data_set: Dataset = LargeDataSet(...) # Possible some out of memory large Dataset
+
+train_dataloader = DataLoader(train_data_set)
+if_model = CgInfluence(model, loss, hessian_regularization=0.01)
+if_model = if_model.fit(train_dataloader)
+
+# wrap your input data into dask arrays
+chunk_size = 10
+da_x, da_y = torch_dataset_to_dask_array(train_data_set, chunk_size=chunk_size)
+da_x_test, da_y_test = torch_dataset_to_dask_array(test_data_set, chunk_size=chunk_size)
+
+client = Client(threads_per_worker=1)  # use only one thread for scheduling, due to non-thread safety of some torch operations
+
+da_calc = DaskInfluenceCalculator(if_model, numpy_converter=TorchNumpyConverter())
+da_influences = da_calc.influences(da_x_test, da_y_test, da_x, da_y)
+# da_influences is a dask.array.Array
+
+da_to_disk_delayed = da_influences.to_zarr("path/or/url")
+
+```
+In case, you need to stick to a sequential processing, set `n_workers` accordingly
+```python
+client = Client(n_workers=1, threads_per_worker=1) 
+```
+
+!!! Warning
+    Make sure, you set `threads_per_worker=1`, due to some torch.autograd functions not being thread-safe
+
+
+
