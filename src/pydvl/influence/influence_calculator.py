@@ -222,7 +222,7 @@ class DaskInfluenceCalculator:
             )
             return self.numpy_converter.to_numpy(values)
 
-        un_chunked_x_length = prod([s[0] for s in x_test.chunks[1:]])
+        un_chunked_x_shapes = [s[0] for s in x_test.chunks[1:]]
         x_test_chunk_sizes = x_test.chunks[0]
         x_chunk_sizes = x.chunks[0]
         blocks = []
@@ -238,7 +238,7 @@ class DaskInfluenceCalculator:
                 if influence_type == InfluenceType.Up:
                     block_shape = (test_chunk_size, chunk_size)
                 elif influence_type == InfluenceType.Perturbation:
-                    block_shape = (test_chunk_size, chunk_size, un_chunked_x_length)
+                    block_shape = (test_chunk_size, chunk_size, *un_chunked_x_shapes)
                 else:
                     raise UnSupportedInfluenceTypeException(influence_type)
 
@@ -255,7 +255,9 @@ class DaskInfluenceCalculator:
                 )
 
                 if influence_type == InfluenceType.Perturbation:
-                    block_array = block_array.transpose(2, 0, 1)
+                    num_dims = block_array.ndim
+                    new_order = tuple(range(2, num_dims)) + (0, 1)
+                    block_array = block_array.transpose(new_order)
 
                 row.append(block_array)
             blocks.append(row)
@@ -263,7 +265,9 @@ class DaskInfluenceCalculator:
         values_array = da.block(blocks)
 
         if influence_type == InfluenceType.Perturbation:
-            values_array = values_array.transpose(1, 2, 0)
+            num_dims = values_array.ndim
+            new_order = (num_dims - 2, num_dims - 1) + tuple(range(num_dims - 2))
+            values_array = values_array.transpose(new_order)
 
         return values_array
 
@@ -316,7 +320,7 @@ class DaskInfluenceCalculator:
             )
             return self.numpy_converter.to_numpy(ups)
 
-        un_chunked_x_length = prod([s[0] for s in x.chunks[1:]])
+        un_chunked_x_shape = [s[0] for s in x.chunks[1:]]
         x_chunk_sizes = x.chunks[0]
         z_test_chunk_sizes = z_test_factors.chunks[0]
         blocks = []
@@ -330,7 +334,7 @@ class DaskInfluenceCalculator:
                 x.to_delayed(), y.to_delayed(), x_chunk_sizes
             ):
                 if influence_type == InfluenceType.Perturbation:
-                    block_shape = (z_test_chunk_size, chunk_size, un_chunked_x_length)
+                    block_shape = (z_test_chunk_size, chunk_size, *un_chunked_x_shape)
                 elif influence_type == InfluenceType.Up:
                     block_shape = (z_test_chunk_size, chunk_size)
                 else:
@@ -348,7 +352,9 @@ class DaskInfluenceCalculator:
                 )
 
                 if influence_type == InfluenceType.Perturbation:
-                    block_array = block_array.transpose(2, 0, 1)
+                    num_dims = block_array.ndim
+                    new_order = tuple(range(2, num_dims)) + (0, 1)
+                    block_array = block_array.transpose(*new_order)
 
                 row.append(block_array)
             blocks.append(row)
@@ -356,7 +362,9 @@ class DaskInfluenceCalculator:
         values_array = da.block(blocks)
 
         if influence_type == InfluenceType.Perturbation:
-            values_array = values_array.transpose(1, 2, 0)
+            num_dims = values_array.ndim
+            new_order = (num_dims - 2, num_dims - 1) + tuple(range(num_dims - 2))
+            values_array = values_array.transpose(*new_order)
 
         return values_array
 

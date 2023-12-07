@@ -76,7 +76,7 @@ class TorchInfluenceFunctionModel(
         mixed_grads = create_per_sample_mixed_derivative_function(
             self.model, self.loss
         )(self.model_params, x, y)
-        shape = (x.shape[0], prod(x.shape[1:]), -1)
+        shape = (*x.shape, -1)
         return flatten_dimensions(mixed_grads.values(), shape=shape)
 
     def _influences(
@@ -189,7 +189,7 @@ class TorchInfluenceFunctionModel(
             )
         elif influence_type == InfluenceType.Perturbation:
             return torch.einsum(
-                "ia,jba->ijb",
+                "ia,j...a->ij...",
                 z_test_factors,
                 self._flat_loss_mixed_grad(
                     x.to(self.model_device), y.to(self.model_device)

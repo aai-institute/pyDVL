@@ -394,7 +394,7 @@ def test_influences_nn(
         assert approx_influences.shape == (
             test_case.test_data_len,
             test_case.train_data_len,
-            prod(test_case.input_dim),
+            *test_case.input_dim,
         )
 
     # check that influences are not all constant
