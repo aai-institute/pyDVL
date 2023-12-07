@@ -1,7 +1,17 @@
 import logging
 import math
 from functools import partial
-from typing import Collection, Dict, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import (
+    Collection,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import dask
 import numpy as np
@@ -11,7 +21,7 @@ from numpy._typing import NDArray
 from torch.utils.data import Dataset, TensorDataset
 
 from pydvl.influence.base_influence_model import TensorType
-from pydvl.influence.influence_calculator import NumpyConverter
+from pydvl.influence.influence_calculator import BlockAggregator, NumpyConverter
 
 logger = logging.getLogger(__name__)
 
@@ -361,3 +371,36 @@ class TorchNumpyConverter(NumpyConverter[torch.Tensor]):
         if self.device is not None:
             t = t.to(self.device)
         return t
+
+
+class TorchCatAggregator(BlockAggregator):
+    """
+    Collect tensors from a generator into a single tensor
+    """
+
+    def aggregate_nested(
+        self, tensors: Generator[Generator[torch.Tensor, None, None], None, None]
+    ) -> torch.Tensor:
+        """
+
+        Args:
+            tensors: generator providing blocks
+
+        Returns:
+            A single tensor, which is build from the blocks
+
+        """
+        return torch.cat(
+            list(map(lambda tensor_gen: torch.cat(list(tensor_gen), dim=1), tensors))
+        )
+
+    def aggregate(self, tensors: Generator[torch.Tensor, None, None]) -> torch.Tensor:
+        """
+        Collect tensors from a single level generator into a single tensor
+        Args:
+            tensors: generator providing blocks
+
+        Returns:
+
+        """
+        return torch.cat(list(tensors))

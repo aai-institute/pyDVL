@@ -9,10 +9,11 @@ from pydvl.influence import DaskInfluenceCalculator, InfluenceType
 from pydvl.influence.base_influence_model import UnSupportedInfluenceTypeException
 from pydvl.influence.influence_calculator import (
     DimensionChunksException,
+    SequentialInfluenceCalculator,
     UnalignedChunksException,
 )
 from pydvl.influence.torch import ArnoldiInfluence, BatchCgInfluence, DirectInfluence
-from pydvl.influence.torch.util import TorchNumpyConverter
+from pydvl.influence.torch.util import TorchCatAggregator, TorchNumpyConverter
 from tests.influence.torch.test_influence_model import model_and_data, test_case
 
 
@@ -222,3 +223,51 @@ def test_dask_influence_nn(model_and_data, test_case):
         dask_influence.influence_factors(
             da_x_test_unaligned_chunks, da_y_test_unaligned_chunks
         )
+
+
+def test_sequential_in_memory_calculator(model_and_data, test_case):
+    model, loss, x_train, y_train, x_test, y_test = model_and_data
+    train_dataloader = DataLoader(
+        TensorDataset(x_train, y_train), batch_size=test_case.batch_size
+    )
+    test_dataloader = DataLoader(
+        TensorDataset(x_test, y_test), batch_size=test_case.batch_size
+    )
+
+    inf_model = ArnoldiInfluence(
+        model,
+        test_case.loss,
+        hessian_regularization=test_case.hessian_reg,
+    ).fit(train_dataloader)
+
+    block_aggregator = TorchCatAggregator()
+    seq_calculator = SequentialInfluenceCalculator(inf_model, block_aggregator)
+
+    seq_factors = seq_calculator.influence_factors(test_dataloader)
+    torch_factors = inf_model.influence_factors(x_test, y_test)
+
+    assert torch.allclose(seq_factors, torch_factors, atol=1e-6)
+
+    torch_values_from_factors = inf_model.influences_from_factors(
+        torch_factors, x_train, y_train, influence_type=test_case.influence_type
+    )
+
+    seq_factors_data_loader = DataLoader(
+        TensorDataset(seq_factors), batch_size=test_case.batch_size
+    )
+
+    seq_values_from_factors = seq_calculator.influences_from_factors(
+        seq_factors_data_loader,
+        train_dataloader,
+        influence_type=test_case.influence_type,
+    )
+
+    assert torch.allclose(seq_values_from_factors, torch_values_from_factors, atol=1e-6)
+
+    da_values = seq_calculator.influences(
+        test_dataloader, train_dataloader, influence_type=test_case.influence_type
+    )
+    torch_values = inf_model.influences(
+        x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
+    )
+    assert torch.allclose(da_values, torch_values, atol=1e-6)

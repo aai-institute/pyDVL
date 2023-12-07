@@ -1,9 +1,18 @@
 from abc import ABC, abstractmethod
 from math import prod
-from typing import Any, Callable, Generic, Optional, Tuple
+from typing import (
+    Callable,
+    Generator,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+)
 
 import distributed
-import numpy as np
+import zarr
 from dask import array as da
 from dask import delayed
 from numpy.typing import NDArray
@@ -357,3 +366,182 @@ class DaskInfluenceCalculator:
             return distributed.get_client()
         except ValueError:
             return None
+
+
+class BlockAggregator(Generic[TensorType], ABC):
+    @abstractmethod
+    def aggregate_nested(
+        self, tensors: Generator[Generator[TensorType, None, None], None, None]
+    ):
+        """Overwrite this method to aggregate provided blocks into a single tensor"""
+
+    @abstractmethod
+    def aggregate(self, tensors: Generator[TensorType, None, None]):
+        """Overwrite this method to aggregate provided list of tensors into a single tensor"""
+
+
+class ListAggregator(BlockAggregator):
+    def aggregate_nested(
+        self, tensors: Generator[Generator[TensorType, None, None], None, None]
+    ):
+        return [list(tensor_gen) for tensor_gen in tensors]
+
+    def aggregate(self, tensors: Generator[TensorType, None, None]):
+        return [t for t in tensors]
+
+
+class SequentialInfluenceCalculator:
+    """
+    Simple wrapper class to process batches of data sequentially. Depends on a batch computation model
+    of type [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel].
+
+    Args:
+    influence_function_model: instance of type
+        [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel], defines the
+        batch-wise computation model
+    block_aggregator: optional instance of type [BlockAggregator][pydvl.influence.influence_calculator.BlockAggregator],
+        used to collect and aggregate the tensors from the sequential process. If None, tensors are collected into
+        list structures
+    """
+
+    def __init__(
+        self,
+        influence_function_model: InfluenceFunctionModel,
+        block_aggregator: Optional[BlockAggregator] = None,
+    ):
+        self.block_aggregator = (
+            block_aggregator if block_aggregator is not None else ListAggregator()
+        )
+        self.influence_function_model = influence_function_model
+
+    def _influence_factors_gen(
+        self, data_iterable: Iterable[Tuple[TensorType, TensorType]]
+    ) -> Generator[TensorType, None, None]:
+        for x, y in iter(data_iterable):
+            yield self.influence_function_model.influence_factors(x, y)
+
+    def influence_factors(
+        self,
+        data_iterable: Iterable[Tuple[TensorType, TensorType]],
+    ) -> TensorType:
+        r"""
+        Compute the expression
+
+        \[ H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x)) \]
+
+        where the gradient are computed for the chunks $(x, y)$ of the data_iterable in a sequential manner and
+        aggregated into a single tensor.
+
+        Args:
+            data_iterable:
+
+        Returns:
+            Tensor representing the element-wise inverse Hessian matrix vector
+                products for the provided batch.
+
+        """
+        tensors_gen = self._influence_factors_gen(data_iterable)
+        t: TensorType = self.block_aggregator.aggregate(tensors_gen)
+        return t
+
+    def _influences_gen(
+        self,
+        test_data_iterable: Iterable[Tuple[TensorType, TensorType]],
+        train_data_iterable: Iterable[Tuple[TensorType, TensorType]],
+        influence_type: InfluenceType,
+    ) -> Generator[Generator[TensorType, None, None], None, None]:
+
+        for x_test, y_test in iter(test_data_iterable):
+            yield (
+                self.influence_function_model.influences(
+                    x_test, y_test, x, y, influence_type
+                )
+                for x, y in iter(train_data_iterable)
+            )
+
+    def influences(
+        self,
+        test_data_iterable: Iterable[Tuple[TensorType, TensorType]],
+        train_data_iterable: Iterable[Tuple[TensorType, TensorType]],
+        influence_type: InfluenceType = InfluenceType.Up,
+    ) -> TensorType:
+        r"""
+        Compute approximation of
+
+        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}},
+        f_{\theta}(x_{\text{test}})), \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the case of up-weighting influence, resp.
+
+        \[ \langle H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
+        \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the perturbation type influence case. The computation is done block-wise for the chunks of the provided
+        data iterables and aggregated into a single tensor in memory.
+
+        Args:
+
+            test_data_iterable:
+            train_data_iterable:
+            influence_type: enum value of [InfluenceType][pydvl.influence.base_influence_model.InfluenceType]
+
+        Returns:
+            Tensor representing the element-wise scalar products for the provided batch.
+
+        """
+        nested_tensor_gen = self._influences_gen(
+            test_data_iterable, train_data_iterable, influence_type
+        )
+
+        t: TensorType = self.block_aggregator.aggregate_nested(nested_tensor_gen)
+        return t
+
+    def _influences_from_factors_gen(
+        self,
+        z_test_factors: Iterable[TensorType],
+        train_data_iterable: Iterable[Tuple[TensorType, TensorType]],
+        influence_type: InfluenceType,
+    ):
+
+        for z_test_factor in iter(z_test_factors):
+            if isinstance(z_test_factor, list) or isinstance(z_test_factor, tuple):
+                z_test_factor = z_test_factor[0]
+            yield (
+                self.influence_function_model.influences_from_factors(
+                    z_test_factor, x, y, influence_type
+                )
+                for x, y in iter(train_data_iterable)
+            )
+
+    def influences_from_factors(
+        self,
+        z_test_factors: Iterable[TensorType],
+        train_data_iterable: Iterable[Tuple[TensorType, TensorType]],
+        influence_type: InfluenceType = InfluenceType.Up,
+    ) -> TensorType:
+        r"""
+        Computation of
+
+        \[ \langle z_{\text{test_factors}}, \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the case of up-weighting influence, resp.
+
+        \[ \langle z_{\text{test_factors}}, \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the perturbation type influence case. The gradient is meant to be per sample of the batch $(x, y)$.
+
+        Args:
+            z_test_factors: pre-computed iterable of tensors, approximating
+                $H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}}))$
+            train_data_iterable:
+            influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
+
+        Returns:
+          Tensor representing the element-wise scalar product of the provided batch
+
+        """
+        nested_tensor_gen = self._influences_from_factors_gen(
+            z_test_factors, train_data_iterable, influence_type
+        )
+        t: TensorType = self.block_aggregator.aggregate_nested(nested_tensor_gen)
+        return t
