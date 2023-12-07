@@ -1,6 +1,6 @@
 from .influence_model import (
     ArnoldiInfluence,
-    BatchCgInfluence,
+    CgInfluence,
     DirectInfluence,
     LissaInfluence,
 )

@@ -231,6 +231,14 @@ class DirectInfluence(TorchInfluenceFunctionModel):
             return False
 
     def fit(self, data_loader: DataLoader) -> DirectInfluence:
+        """
+        Compute the hessian matrix based on a provided dataloader
+        Args:
+            data_loader: Instance of [torch.util.data.Dataloader][torch.util.data.Dataloader] providing
+
+        Returns:
+
+        """
         self.hessian = hessian(self.model, self.loss, data_loader)
         return self
 
@@ -293,7 +301,7 @@ class DirectInfluence(TorchInfluenceFunctionModel):
         return self
 
 
-class BatchCgInfluence(TorchInfluenceFunctionModel):
+class CgInfluence(TorchInfluenceFunctionModel):
     r"""
     Given a model and training data, it uses conjugate gradient to calculate the
     inverse of the Hessian Vector Product. More precisely, it finds x such that \(Hx =
@@ -340,7 +348,7 @@ class BatchCgInfluence(TorchInfluenceFunctionModel):
         except AttributeError:
             return False
 
-    def fit(self, data_loader: DataLoader) -> BatchCgInfluence:
+    def fit(self, data_loader: DataLoader) -> CgInfluence:
         self.train_dataloader = data_loader
         return self
 

@@ -6,4 +6,4 @@ In particular, the package structure and basic API will probably change.
 
 """
 from .base_influence_model import InfluenceType
-from .influence_calculator import DaskInfluenceCalculator
+from .influence_calculator import DaskInfluenceCalculator, SequentialInfluenceCalculator

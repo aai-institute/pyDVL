@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 from pydvl.influence.base_influence_model import NotFittedException
 from pydvl.influence.torch.influence_model import (
     ArnoldiInfluence,
-    BatchCgInfluence,
+    CgInfluence,
     DirectInfluence,
     LissaInfluence,
 )
@@ -242,7 +242,7 @@ def direct_factors(
     ["influence_factory", "rtol"],
     [
         [
-            lambda model, loss, train_dataLoader, hessian_reg: BatchCgInfluence(
+            lambda model, loss, train_dataLoader, hessian_reg: CgInfluence(
                 model, loss, hessian_regularization=hessian_reg
             ).fit(train_dataLoader),
             1e-1,
@@ -342,7 +342,7 @@ def test_influence_linear_model(
 @parametrize(
     "influence_factory",
     [
-        lambda model, loss, train_dataLoader, hessian_reg: BatchCgInfluence(
+        lambda model, loss, train_dataLoader, hessian_reg: CgInfluence(
             model, loss, hessian_regularization=hessian_reg
         ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: LissaInfluence(

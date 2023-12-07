@@ -12,7 +12,7 @@ from pydvl.influence.influence_calculator import (
     SequentialInfluenceCalculator,
     UnalignedChunksException,
 )
-from pydvl.influence.torch import ArnoldiInfluence, BatchCgInfluence, DirectInfluence
+from pydvl.influence.torch import ArnoldiInfluence, CgInfluence, DirectInfluence
 from pydvl.influence.torch.util import TorchCatAggregator, TorchNumpyConverter
 from tests.influence.torch.test_influence_model import model_and_data, test_case
 
@@ -21,7 +21,7 @@ from tests.influence.torch.test_influence_model import model_and_data, test_case
 @pytest.mark.parametrize(
     "influence_factory",
     [
-        lambda model, loss, train_dataLoader, hessian_reg: BatchCgInfluence(
+        lambda model, loss, train_dataLoader, hessian_reg: CgInfluence(
             model, loss, train_dataLoader
         ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: DirectInfluence(
@@ -49,7 +49,7 @@ def influence_model(model_and_data, test_case, influence_factory):
 @pytest.mark.parametrize(
     "influence_factory",
     [
-        lambda model, loss, train_dataLoader, hessian_reg: BatchCgInfluence(
+        lambda model, loss, train_dataLoader, hessian_reg: CgInfluence(
             model, loss, hessian_reg
         ).fit(train_dataLoader),
         lambda model, loss, train_dataLoader, hessian_reg: DirectInfluence(
