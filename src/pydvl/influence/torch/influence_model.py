@@ -216,7 +216,7 @@ class DirectInfluence(TorchInfluenceFunctionModel):
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        hessian_regularization: float,
+        hessian_regularization: float = 0.0,
     ):
         super().__init__(model, loss)
         self.hessian_regularization = hessian_regularization
@@ -316,7 +316,7 @@ class BatchCgInfluence(TorchInfluenceFunctionModel):
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        hessian_regularization: float,
+        hessian_regularization: float = 0.0,
         x0: Optional[torch.Tensor] = None,
         rtol: float = 1e-7,
         atol: float = 1e-7,
@@ -498,7 +498,7 @@ class LissaInfluence(TorchInfluenceFunctionModel):
         self,
         model: nn.Module,
         loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        hessian_regularization: float,
+        hessian_regularization: float = 0.0,
         maxiter: int = 1000,
         dampen: float = 0.0,
         scale: float = 10.0,
