@@ -12,7 +12,6 @@ from typing import (
 )
 
 import distributed
-import zarr
 from dask import array as da
 from dask import delayed
 from numpy.typing import NDArray

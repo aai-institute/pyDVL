@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from math import prod
 from typing import Callable, Optional
 
 import torch
