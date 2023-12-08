@@ -186,7 +186,8 @@ The main abstraction of the library for influence calculation is
 [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel]. 
 On implementations of this abstraction, you can call the method `influences`
 to compute influences. We provide implementations to use with pytorch model in
-[pydvl.influence.torch][pydvl.influence.torch.influence_model]
+[pydvl.influence.torch][pydvl.influence.torch.influence_model]. For detailed information on available
+implementations see the documentation in [InfluenceFunctionModel](influence_function_model.md).
 
 Given a pre-trained pytorch model and a loss, a basic example would look like
 
@@ -263,103 +264,6 @@ as the number of input features in the data. Therefore, each entry in the tensor
 represents the influence of each feature of each training point on each test
 point.
 
-### Approximate matrix inversion
-
-In almost every practical application it is not possible to construct, even less
-invert the complete Hessian in memory. pyDVL offers several implementations, which do not compute
-the full Hessian (in contrast to [DirectInfluence][pydvl.influence.torch.influence_model.DirectInfluence]).
-
-#### Conjugate Gradient
-
-This classical procedure for solving linear systems of equations is an iterative
-method that does not require the explicit inversion of the Hessian. Instead, it
-only requires the calculation of Hessian-vector products, making it a good
-choice for large datasets or models with many parameters. It is nevertheless
-much slower to converge than the direct inversion method and not as accurate.
-More info on the theory of conjugate gradient can be found on
-[Wikipedia](https://en.wikipedia.org/wiki/Conjugate_gradient_method).
-
-```python
-from pydvl.influence.torch import CgInfluence
-
-if_model = CgInfluence(
-    model,
-    loss,
-    hessian_regularization=0.0,
-    x0=None,
-    rtol=1e-7,
-    atol=1e-7,
-    maxiter=None,
-)
-```
-
-The additional optional parameters `x0`, `rtol`, `atol`, and `maxiter` are 
-respectively the initial guess for the solution, the relative
-tolerance, the absolute tolerance, and the maximum number of iterations.
-
-
-#### Linear time Stochastic Second-Order Approximation (LiSSA)
-
-The LiSSA method is a stochastic approximation of the inverse Hessian vector
-product. Compared to [conjugate gradient](#conjugate-gradient)
-it is faster but less accurate and typically suffers from instability.
-
-In order to find the solution of the HVP, LiSSA iteratively approximates the
-inverse of the Hessian matrix with the following update:
-
-$$H^{-1}_{j+1} b = b + (I - d) \ H - \frac{H^{-1}_j b}{s},$$
-
-where $d$ and $s$ are a dampening and a scaling factor, which are essential
-for the convergence of the method and they need to be chosen carefully, and I 
-is the identity matrix. More info on the theory of LiSSA can be found in the 
-original paper [@agarwal_secondorder_2017].
-
-
-```python
-from pydvl.influence.torch import LissaInfluence
-if_model = LissaInfluence(
-   model,
-   loss,
-   hessian_regularization=0.0 
-   maxiter=1000,
-   dampen=0.0,
-   scale=10.0,
-   h0=None,
-   rtol=1e-4,
-)
-```
-
-with the additional optional parameters `maxiter`, `dampen`, `scale`, `h0`, and
-`rtol`, 
-being the maximum number of iterations, the dampening factor, the scaling
-factor, the initial guess for the solution and the relative tolerance,
-respectively.
-
-#### Arnoldi
-
-The [Arnoldi method](https://en.wikipedia.org/wiki/Arnoldi_iteration) is a
-Krylov subspace method for approximating dominating eigenvalues and
-eigenvectors. Under a low rank assumption on the Hessian at a minimizer (which
-is typically observed for deep neural networks), this approximation captures the
-essential action of the Hessian. More concretely, for $Hx=b$ the solution is
-approximated by
-
-\[x \approx V D^{-1} V^T b\]
-
-where \(D\) is a diagonal matrix with the top (in absolute value) eigenvalues of
-the Hessian and \(V\) contains the corresponding eigenvectors. See also
-[@schioppa_scaling_2021].
-
-```python
-from pydvl.influence.torch import ArnoldiInfluence
-if_model = ArnoldiInfluence
-    model,
-    loss,
-    hessian_regularization=0.0,
-    rank_estimate=10,
-    tol=1e-6,
-)
-```
 
 ### Influence factors
 
@@ -374,71 +278,6 @@ influence_factors = if_model.influence_factors(x_test, y_test)
 influences = if_model.influences_from_factors(influence_factors, x, y)
 ```
 
-### Scaling computation
-
-The implementations of [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel]
-provide a convenient way to calculate influences for
-in memory tensors. Nevertheless, there is a need for computing the influences on batches of data. This might
-happen, if your input data does not fit into memory (e.g. it is very high-dimensional) or for large models
-the derivative computations exceed your memory or any combinations of these.
-
-In case, you can expect the resulting tensor to fit into memory, the simplest way is to use a double for-loop
-to iterate over the batches and collect them. pyDVL provide the simple convenience class 
-[SequentialInfluenceCalculator][pydvl.influence.influence_calculator] to do this
-
-```python
-from pydvl.influence import SequentialInfluenceCalculator
-from pydvl.influence.torch.util import TorchCatAggregator
-from pydvl.influence.torch import CgInfluence
-
-if_model = CgInfluence(model, loss, hessian_regularization=0.01)
-if_model = if_model.fit(train_dataloader)
-
-seq_calc = SequentialInfluenceCalculator(if_model, block_aggregator=TorchCatAggregator())
-
-influences = seq_calc.influences(test_dataloader, train_dataloader)
-# influences is the full tensor for all combinations of the two loaders
-```
-In cases, where the resulting tensors are too large to fit into memory, you might want to write it block-wise
-to disk. The wrapper class [DaskInfluenceCalculator][pydvl.influence.influence_calculator.DaskInfluenceCalculator]
-provides this functionality using [dask](https://docs.dask.org/en/stable/) in combination with 
-[zarr](https://zarr.readthedocs.io/en/stable/).
-
-```python
-from torch.utils.data import Dataset, DataLoader
-from pydvl.influence import DaskInfluenceCalculator
-from pydvl.influence.torch import CgInfluence
-from pydvl.influence.torch.util import torch_dataset_to_dask_array, TorchNumpyConverter
-from distributed import Client
-
-train_data_set: Dataset = LargeDataSet(...) # Possible some out of memory large Dataset
-test_data_set: Dataset = LargeDataSet(...) # Possible some out of memory large Dataset
-
-train_dataloader = DataLoader(train_data_set)
-if_model = CgInfluence(model, loss, hessian_regularization=0.01)
-if_model = if_model.fit(train_dataloader)
-
-# wrap your input data into dask arrays
-chunk_size = 10
-da_x, da_y = torch_dataset_to_dask_array(train_data_set, chunk_size=chunk_size)
-da_x_test, da_y_test = torch_dataset_to_dask_array(test_data_set, chunk_size=chunk_size)
-
-client = Client(threads_per_worker=1)  # use only one thread for scheduling, due to non-thread safety of some torch operations
-
-da_calc = DaskInfluenceCalculator(if_model, numpy_converter=TorchNumpyConverter())
-da_influences = da_calc.influences(da_x_test, da_y_test, da_x, da_y)
-# da_influences is a dask.array.Array
-
-da_to_disk_delayed = da_influences.to_zarr("path/or/url")
-
-```
-In case, you need to stick to a sequential processing, set `n_workers` accordingly
-```python
-client = Client(n_workers=1, threads_per_worker=1) 
-```
-
-!!! Warning
-    Make sure, you set `threads_per_worker=1`, due to some torch.autograd functions not being thread-safe
 
 
 
