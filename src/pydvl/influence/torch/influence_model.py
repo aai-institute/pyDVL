@@ -39,7 +39,7 @@ class TorchInfluenceFunctionModel(
     ):
         self.loss = loss
         self.model = model
-        self._num_parameters = sum(
+        self._n_parameters = sum(
             [p.numel() for p in model.parameters() if p.requires_grad]
         )
         self._model_device = next(
@@ -51,8 +51,8 @@ class TorchInfluenceFunctionModel(
         super().__init__()
 
     @property
-    def num_parameters(self):
-        return self._num_parameters
+    def n_parameters(self):
+        return self._n_parameters
 
     @property
     def model_device(self):
@@ -284,7 +284,7 @@ class DirectInfluence(TorchInfluenceFunctionModel):
         return torch.linalg.solve(
             self.hessian.to(self.model_device)
             + self.hessian_regularization
-            * torch.eye(self.num_parameters, device=self.model_device),
+            * torch.eye(self.n_parameters, device=self.model_device),
             rhs.T.to(self.model_device),
         ).T
 

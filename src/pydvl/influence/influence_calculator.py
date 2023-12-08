@@ -53,7 +53,7 @@ class DaskInfluenceCalculator:
         influence_function_model: InfluenceFunctionModel,
         numpy_converter: NumpyConverter,
     ):
-        self._num_parameters = influence_function_model.num_parameters
+        self._n_parameters = influence_function_model.n_parameters
         self.influence_function_model = influence_function_model
         self.numpy_converter = numpy_converter
         client = self._get_client()
@@ -65,9 +65,9 @@ class DaskInfluenceCalculator:
             self.influence_function_model = delayed(influence_function_model)
 
     @property
-    def num_parameters(self):
+    def n_parameters(self):
         """Number of trainable parameters of the underlying model used in the batch computation"""
-        return self._num_parameters
+        return self._n_parameters
 
     @staticmethod
     def _validate_un_chunked(x: da.Array):
@@ -112,7 +112,7 @@ class DaskInfluenceCalculator:
         for x_chunk, y_chunk, chunk_size in zip(
             x.to_delayed(), y.to_delayed(), x.chunks[0]
         ):
-            chunk_shape = (chunk_size, self.num_parameters)
+            chunk_shape = (chunk_size, self.n_parameters)
             chunk_array = da.from_delayed(
                 delayed(func)(
                     x_chunk.squeeze().tolist(),
@@ -231,8 +231,8 @@ class DaskInfluenceCalculator:
                 )
 
                 if influence_type == InfluenceType.Perturbation:
-                    num_dims = block_array.ndim
-                    new_order = tuple(range(2, num_dims)) + (0, 1)
+                    n_dims = block_array.ndim
+                    new_order = tuple(range(2, n_dims)) + (0, 1)
                     block_array = block_array.transpose(new_order)
 
                 row.append(block_array)
@@ -241,8 +241,8 @@ class DaskInfluenceCalculator:
         values_array = da.block(blocks)
 
         if influence_type == InfluenceType.Perturbation:
-            num_dims = values_array.ndim
-            new_order = (num_dims - 2, num_dims - 1) + tuple(range(num_dims - 2))
+            n_dims = values_array.ndim
+            new_order = (n_dims - 2, n_dims - 1) + tuple(range(n_dims - 2))
             values_array = values_array.transpose(new_order)
 
         return values_array
@@ -328,8 +328,8 @@ class DaskInfluenceCalculator:
                 )
 
                 if influence_type == InfluenceType.Perturbation:
-                    num_dims = block_array.ndim
-                    new_order = tuple(range(2, num_dims)) + (0, 1)
+                    n_dims = block_array.ndim
+                    new_order = tuple(range(2, n_dims)) + (0, 1)
                     block_array = block_array.transpose(*new_order)
 
                 row.append(block_array)
@@ -338,8 +338,8 @@ class DaskInfluenceCalculator:
         values_array = da.block(blocks)
 
         if influence_type == InfluenceType.Perturbation:
-            num_dims = values_array.ndim
-            new_order = (num_dims - 2, num_dims - 1) + tuple(range(num_dims - 2))
+            n_dims = values_array.ndim
+            new_order = (n_dims - 2, n_dims - 1) + tuple(range(n_dims - 2))
             values_array = values_array.transpose(*new_order)
 
         return values_array

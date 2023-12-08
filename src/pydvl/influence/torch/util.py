@@ -264,14 +264,14 @@ def torch_dataset_to_dask_array(
 
     def _infer_data_len(d_set: Dataset):
         try:
-            num_data = len(d_set)
-            if total_size is not None and num_data != total_size:
+            n_data = len(d_set)
+            if total_size is not None and n_data != total_size:
                 raise ValueError(
-                    f"The number of samples in the dataset ({num_data}), derived from calling ´len´, "
+                    f"The number of samples in the dataset ({n_data}), derived from calling ´len´, "
                     f"does not match the provided total number of samples ({total_size}). Call"
                     f"the function without total_size."
                 )
-            return num_data
+            return n_data
         except TypeError as e:
             err_msg = f"Could not infer the number of samples in the dataset from calling ´len´. Original error: {e}."
             if total_size is not None:
@@ -317,9 +317,9 @@ def torch_dataset_to_dask_array(
             ]
             return tuple(map(torch.stack, nested_tensor_list))
 
-    num_samples = _infer_data_len(dataset)
+    n_samples = _infer_data_len(dataset)
     chunk_indices = [
-        (i, min(i + chunk_size, num_samples)) for i in range(0, num_samples, chunk_size)
+        (i, min(i + chunk_size, n_samples)) for i in range(0, n_samples, chunk_size)
     ]
     delayed_dataset = dask.delayed(dataset)
     delayed_chunks = [

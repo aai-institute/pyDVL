@@ -331,7 +331,7 @@ def create_hvp_function(
         )
 
     def avg_hvp_function(vec: torch.Tensor) -> torch.Tensor:
-        num_batches = len(data_loader)
+        n_batches = len(data_loader)
         avg_hessian = to_model_device(torch.zeros_like(vec), model)
         b_hvp = create_batch_hvp_function(model, loss, reverse_only)
         params = {
@@ -343,7 +343,7 @@ def create_hvp_function(
             x, y = to_model_device(x, model), to_model_device(y, model)
             avg_hessian += b_hvp(params, x, y, to_model_device(vec, model))
 
-        return avg_hessian / float(num_batches)
+        return avg_hessian / float(n_batches)
 
     return avg_hvp_function if use_average else hvp_function
 
@@ -369,7 +369,7 @@ def hessian(
 
     Returns:
         A tensor representing the Hessian matrix. The shape of the tensor will be
-        [num_parameters, num_parameters], where num_parameters is the number of trainable
+        [n_parameters, n_parameters], where n_parameters is the number of trainable
         parameters in the model.
     """
 
@@ -378,14 +378,14 @@ def hessian(
         for k, p in model.named_parameters()
         if p.requires_grad
     }
-    num_parameters = sum([p.numel() for p in params.values()])
+    n_parameters = sum([p.numel() for p in params.values()])
     model_dtype = next((p.dtype for p in params.values()))
 
     flat_params = flatten_dimensions(params.values())
 
     if use_hessian_avg:
         hessian = to_model_device(
-            torch.zeros((num_parameters, num_parameters), dtype=model_dtype), model
+            torch.zeros((n_parameters, n_parameters), dtype=model_dtype), model
         )
         blf = create_batch_loss_function(model, loss)
 
@@ -636,12 +636,12 @@ def lanzcos_low_rank_hessian_approx(
             to compute. Represents the desired rank of the Hessian approximation.
         krylov_dimension: The number of Krylov vectors to use for the Lanczos
             method. If not provided, it defaults to
-            \( \min(\text{model.num_parameters}, \max(2 \times \text{rank_estimate} + 1, 20)) \).
+            \( \min(\text{model.n_parameters}, \max(2 \times \text{rank_estimate} + 1, 20)) \).
         tol: The stopping criteria for the Lanczos algorithm, which stops when
             the difference in the approximated eigenvalue is less than `tol`.
             Defaults to 1e-6.
         max_iter: The maximum number of iterations for the Lanczos method. If
-            not provided, it defaults to \( 10 \cdot \text{model.num_parameters}\).
+            not provided, it defaults to \( 10 \cdot \text{model.n_parameters}\).
         device: The device to use for executing the hessian vector product.
         eigen_computation_on_gpu: If True, tries to execute the eigen pair
             approximation on the provided device via [cupy](https://cupy.dev/)
@@ -754,11 +754,11 @@ def model_hessian_low_rank(
         rank_estimate: The number of eigenvalues and corresponding eigenvectors to compute.
             Represents the desired rank of the Hessian approximation.
         krylov_dimension: The number of Krylov vectors to use for the Lanczos method.
-            If not provided, it defaults to min(model.num_parameters, max(2*rank_estimate + 1, 20)).
+            If not provided, it defaults to min(model.n_parameters, max(2*rank_estimate + 1, 20)).
         tol: The stopping criteria for the Lanczos algorithm, which stops when the difference
             in the approximated eigenvalue is less than `tol`. Defaults to 1e-6.
         max_iter: The maximum number of iterations for the Lanczos method. If not provided, it defaults to
-            10*model.num_parameters.
+            10*model.n_parameters.
         eigen_computation_on_gpu: If True, tries to execute the eigen pair approximation on the provided
             device via cupy implementation.
             Make sure, that either your model is small enough or you use a
@@ -772,11 +772,11 @@ def model_hessian_low_rank(
             and corresponding eigenvectors of the Hessian.
     """
     raw_hvp = create_hvp_function(model, loss, training_data, use_average=True)
-    num_params = sum([p.numel() for p in model.parameters() if p.requires_grad])
+    n_params = sum([p.numel() for p in model.parameters() if p.requires_grad])
     device = next(model.parameters()).device
     return lanzcos_low_rank_hessian_approx(
         hessian_vp=raw_hvp,
-        matrix_shape=(num_params, num_params),
+        matrix_shape=(n_params, n_params),
         hessian_perturbation=hessian_perturbation,
         rank_estimate=rank_estimate,
         krylov_dimension=krylov_dimension,

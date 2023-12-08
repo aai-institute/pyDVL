@@ -48,7 +48,7 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
 
     @property
     @abstractmethod
-    def num_parameters(self):
+    def n_parameters(self):
         """Number of trainable parameters of the underlying model"""
 
     @property
