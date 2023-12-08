@@ -1,3 +1,6 @@
+import shutil
+import uuid
+
 import dask.array as da
 import numpy as np
 import pytest
@@ -225,7 +228,7 @@ def test_dask_influence_nn(model_and_data, test_case):
         )
 
 
-def test_sequential_in_memory_calculator(model_and_data, test_case):
+def test_sequential_calculator(model_and_data, test_case):
     model, loss, x_train, y_train, x_test, y_test = model_and_data
     train_dataloader = DataLoader(
         TensorDataset(x_train, y_train), batch_size=test_case.batch_size
@@ -241,12 +244,19 @@ def test_sequential_in_memory_calculator(model_and_data, test_case):
     ).fit(train_dataloader)
 
     block_aggregator = TorchCatAggregator()
-    seq_calculator = SequentialInfluenceCalculator(inf_model, block_aggregator)
+    seq_calculator = SequentialInfluenceCalculator(inf_model)
 
-    seq_factors = seq_calculator.influence_factors(test_dataloader)
+    seq_factors_lazy_array = seq_calculator.influence_factors(test_dataloader)
+    seq_factors = seq_factors_lazy_array.compute(block_aggregator)
+
     torch_factors = inf_model.influence_factors(x_test, y_test)
-
+    zarr_factors_path = str(uuid.uuid4())
+    seq_factors_from_zarr = seq_factors_lazy_array.to_zarr(
+        zarr_factors_path, TorchNumpyConverter(), return_stored=True
+    )
     assert torch.allclose(seq_factors, torch_factors, atol=1e-6)
+    assert np.allclose(torch_factors.numpy(), seq_factors_from_zarr, atol=1e-6)
+    shutil.rmtree(zarr_factors_path)
 
     torch_values_from_factors = inf_model.influences_from_factors(
         torch_factors, x_train, y_train, influence_type=test_case.influence_type
@@ -256,18 +266,37 @@ def test_sequential_in_memory_calculator(model_and_data, test_case):
         TensorDataset(seq_factors), batch_size=test_case.batch_size
     )
 
-    seq_values_from_factors = seq_calculator.influences_from_factors(
+    seq_values_from_factors_lazy_array = seq_calculator.influences_from_factors(
         seq_factors_data_loader,
         train_dataloader,
         influence_type=test_case.influence_type,
     )
+    seq_values_from_factors = seq_values_from_factors_lazy_array.compute(
+        block_aggregator
+    )
+    zarr_values_from_factors_path = str(uuid.uuid4())
+    seq_values_from_factors_from_zarr = seq_values_from_factors_lazy_array.to_zarr(
+        zarr_values_from_factors_path, TorchNumpyConverter(), return_stored=True
+    )
 
     assert torch.allclose(seq_values_from_factors, torch_values_from_factors, atol=1e-6)
+    assert np.allclose(
+        seq_values_from_factors_from_zarr, torch_values_from_factors.numpy(), atol=1e-6
+    )
+    shutil.rmtree(zarr_values_from_factors_path)
 
-    da_values = seq_calculator.influences(
+    seq_values_lazy_array = seq_calculator.influences(
         test_dataloader, train_dataloader, influence_type=test_case.influence_type
     )
+    seq_values = seq_values_lazy_array.compute(block_aggregator)
+    zarr_values_path = str(uuid.uuid4())
+    seq_values_from_zarr = seq_values_lazy_array.to_zarr(
+        zarr_values_path, TorchNumpyConverter(), return_stored=True
+    )
+
     torch_values = inf_model.influences(
         x_test, y_test, x_train, y_train, influence_type=test_case.influence_type
     )
-    assert torch.allclose(da_values, torch_values, atol=1e-6)
+    assert torch.allclose(seq_values, torch_values, atol=1e-6)
+    assert np.allclose(seq_values_from_zarr, torch_values.numpy(), atol=1e-6)
+    shutil.rmtree(zarr_values_path)

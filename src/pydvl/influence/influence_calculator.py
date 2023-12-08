@@ -1,21 +1,12 @@
-from abc import ABC, abstractmethod
-from math import prod
-from typing import (
-    Callable,
-    Generator,
-    Generic,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    TypeVar,
-)
+from functools import partial
+from typing import Generator, Iterable, Optional, Tuple
 
 import distributed
 from dask import array as da
 from dask import delayed
 from numpy.typing import NDArray
 
+from .array import NumpyConverter, OneDimChunkedLazyArray, TwoDimChunkedLazyArray
 from .base_influence_model import (
     InfluenceFunctionModel,
     InfluenceType,
@@ -41,20 +32,6 @@ class UnalignedChunksException(ValueError):
             f"and {chunk_sizes_y=}"
         )
         super().__init__(msg)
-
-
-class NumpyConverter(Generic[TensorType], ABC):
-    """
-    Base class for converting TensorType objects into numpy arrays and vice versa.
-    """
-
-    @abstractmethod
-    def to_numpy(self, x: TensorType) -> NDArray:
-        """Overwrite this method for converting a TensorType object into a numpy array"""
-
-    @abstractmethod
-    def from_numpy(self, x: NDArray) -> TensorType:
-        """Overwrite this method for converting a numpy array into a TensorType object"""
 
 
 class DaskInfluenceCalculator:
@@ -375,28 +352,6 @@ class DaskInfluenceCalculator:
             return None
 
 
-class BlockAggregator(Generic[TensorType], ABC):
-    @abstractmethod
-    def aggregate_nested(
-        self, tensors: Generator[Generator[TensorType, None, None], None, None]
-    ):
-        """Overwrite this method to aggregate provided blocks into a single tensor"""
-
-    @abstractmethod
-    def aggregate(self, tensors: Generator[TensorType, None, None]):
-        """Overwrite this method to aggregate provided list of tensors into a single tensor"""
-
-
-class ListAggregator(BlockAggregator):
-    def aggregate_nested(
-        self, tensors: Generator[Generator[TensorType, None, None], None, None]
-    ):
-        return [list(tensor_gen) for tensor_gen in tensors]
-
-    def aggregate(self, tensors: Generator[TensorType, None, None]):
-        return [t for t in tensors]
-
-
 class SequentialInfluenceCalculator:
     """
     Simple wrapper class to process batches of data sequentially. Depends on a batch computation model
@@ -414,11 +369,7 @@ class SequentialInfluenceCalculator:
     def __init__(
         self,
         influence_function_model: InfluenceFunctionModel,
-        block_aggregator: Optional[BlockAggregator] = None,
     ):
-        self.block_aggregator = (
-            block_aggregator if block_aggregator is not None else ListAggregator()
-        )
         self.influence_function_model = influence_function_model
 
     def _influence_factors_gen(
@@ -430,7 +381,7 @@ class SequentialInfluenceCalculator:
     def influence_factors(
         self,
         data_iterable: Iterable[Tuple[TensorType, TensorType]],
-    ) -> TensorType:
+    ) -> OneDimChunkedLazyArray:
         r"""
         Compute the expression
 
@@ -447,9 +398,8 @@ class SequentialInfluenceCalculator:
                 products for the provided batch.
 
         """
-        tensors_gen = self._influence_factors_gen(data_iterable)
-        t: TensorType = self.block_aggregator.aggregate(tensors_gen)
-        return t
+        tensors_gen_factory = partial(self._influence_factors_gen, data_iterable)
+        return OneDimChunkedLazyArray(tensors_gen_factory)
 
     def _influences_gen(
         self,
@@ -471,7 +421,7 @@ class SequentialInfluenceCalculator:
         test_data_iterable: Iterable[Tuple[TensorType, TensorType]],
         train_data_iterable: Iterable[Tuple[TensorType, TensorType]],
         influence_type: InfluenceType = InfluenceType.Up,
-    ) -> TensorType:
+    ) -> TwoDimChunkedLazyArray:
         r"""
         Compute approximation of
 
@@ -496,12 +446,14 @@ class SequentialInfluenceCalculator:
             Tensor representing the element-wise scalar products for the provided batch.
 
         """
-        nested_tensor_gen = self._influences_gen(
-            test_data_iterable, train_data_iterable, influence_type
+        nested_tensor_gen_factory = partial(
+            self._influences_gen,
+            test_data_iterable,
+            train_data_iterable,
+            influence_type,
         )
 
-        t: TensorType = self.block_aggregator.aggregate_nested(nested_tensor_gen)
-        return t
+        return TwoDimChunkedLazyArray(nested_tensor_gen_factory)
 
     def _influences_from_factors_gen(
         self,
@@ -525,7 +477,7 @@ class SequentialInfluenceCalculator:
         z_test_factors: Iterable[TensorType],
         train_data_iterable: Iterable[Tuple[TensorType, TensorType]],
         influence_type: InfluenceType = InfluenceType.Up,
-    ) -> TensorType:
+    ) -> TwoDimChunkedLazyArray:
         r"""
         Computation of
 
@@ -547,8 +499,10 @@ class SequentialInfluenceCalculator:
           Tensor representing the element-wise scalar product of the provided batch
 
         """
-        nested_tensor_gen = self._influences_from_factors_gen(
-            z_test_factors, train_data_iterable, influence_type
+        nested_tensor_gen = partial(
+            self._influences_from_factors_gen,
+            z_test_factors,
+            train_data_iterable,
+            influence_type,
         )
-        t: TensorType = self.block_aggregator.aggregate_nested(nested_tensor_gen)
-        return t
+        return TwoDimChunkedLazyArray(nested_tensor_gen)

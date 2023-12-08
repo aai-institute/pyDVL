@@ -17,11 +17,10 @@ import dask
 import numpy as np
 import torch
 from dask import array as da
-from numpy._typing import NDArray
-from torch.utils.data import Dataset, TensorDataset
+from numpy.typing import NDArray
+from torch.utils.data import Dataset
 
-from pydvl.influence.base_influence_model import TensorType
-from pydvl.influence.influence_calculator import BlockAggregator, NumpyConverter
+from ..array import BlockAggregator, NumpyConverter
 
 logger = logging.getLogger(__name__)
 
@@ -56,20 +55,23 @@ def reshape_vector_to_tensors(
     """
     Reshape a 1D tensor into multiple tensors with specified shapes.
 
-    This function takes a 1D tensor (input_vector) and reshapes it into a series of tensors with shapes given by 'target_shapes'.
-    The reshaped tensors are returned as a tuple in the same order as their corresponding shapes.
+    This function takes a 1D tensor (input_vector) and reshapes it into a series of tensors with shapes given by
+    'target_shapes'. The reshaped tensors are returned as a tuple in the same order as their corresponding shapes.
 
-    Note: The total number of elements in 'input_vector' must be equal to the sum of the products of the shapes in 'target_shapes'.
+    Note: The total number of elements in 'input_vector' must be equal to the sum of the products of the shapes
+        in 'target_shapes'.
 
     Args:
         input_vector: The 1D tensor to be reshaped. Must be 1D.
-        target_shapes: An iterable of tuples. Each tuple defines the shape of a tensor to be reshaped from the 'input_vector'.
+        target_shapes: An iterable of tuples. Each tuple defines the shape of a tensor to be reshaped from the
+            'input_vector'.
 
     Returns:
         A tuple of reshaped tensors.
 
     Raises:
-        ValueError: If 'input_vector' is not a 1D tensor or if the total number of elements in 'input_vector' does not match the sum of the products of the shapes in 'target_shapes'.
+        ValueError: If 'input_vector' is not a 1D tensor or if the total number of elements in 'input_vector' does not
+            match the sum of the products of the shapes in 'target_shapes'.
     """
 
     if input_vector.dim() != 1:
