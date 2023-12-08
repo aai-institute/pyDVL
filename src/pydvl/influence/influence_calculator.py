@@ -1,3 +1,16 @@
+"""
+This module provides functionality for calculating influences for large amount of data. The computation
+is based on a chunk computation model in the form of an instance of
+[InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel], which is mapped
+over collection of chunks.
+
+Classes:
+    DaskInfluenceCalculator: Core class for computing influences over dask.Array collections.
+    SequentialInfluenceCalculator: A class for sequential processing of influence calculations.
+
+"""
+
+
 from functools import partial
 from typing import Generator, Iterable, Optional, Tuple
 
@@ -14,7 +27,7 @@ from .base_influence_model import (
     UnSupportedInfluenceTypeException,
 )
 
-__all__ = ["DaskInfluenceCalculator"]
+__all__ = ["DaskInfluenceCalculator", "SequentialInfluenceCalculator"]
 
 
 class DimensionChunksException(ValueError):
@@ -46,6 +59,20 @@ class DaskInfluenceCalculator:
             batch-wise computation model
         numpy_converter: instance of type [NumpyConverter][pydvl.influence.influence_calculator.NumpyConverter], used to
             convert between numpy arrays and TensorType objects needed to use the underlying model
+
+    !!! Warning
+        Make sure, you set `threads_per_worker=1`, when using the distributed scheduler for computing
+        if your implementation of [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel]
+        is not thread-safe. If you do not use the distributed scheduler,
+        choose the `processes` single machine scheduler
+        ```python
+        client = Client(threads_per_worker=1)
+        # or
+        da_influences.compute(scheduler="processes")
+        ```
+        For details on dask schedulers see the [official documentation](https://docs.dask.org/en/stable/scheduling.html).
+
+
     """
 
     def __init__(
