@@ -61,11 +61,12 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
         """
         Overwrite this method to fit the influence function model to training data, e.g. pre-compute hessian matrix
         or matrix decompositions
+
         Args:
             data_loader:
 
         Returns:
-
+            The fitted instance
         """
 
     def influence_factors(self, x: TensorType, y: TensorType) -> TensorType:
@@ -77,9 +78,9 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
     def _influence_factors(self, x: TensorType, y: TensorType) -> TensorType:
         r"""
         Overwrite this method to implement the approximation of
-        \[
-        H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x))
-        \]
+
+        \[ H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x)) \]
+
         where the gradient is meant to be per sample of the batch $(x, y)$.
 
         Args:
@@ -115,17 +116,13 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
         r"""
         Overwrite this method to implement the approximation of
 
-        \[
-        \langle H^{-1}\nabla_{theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
-            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        \]
+        \[ \langle H^{-1}\nabla_{theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
+            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
 
         for the case of up-weighting influence, resp.
 
-        \[
-        \langle H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test})),
-            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
-        \]
+        \[ \langle H^{-1}\nabla_{theta} \ell(y_{test}, f_{\theta}(x_{test})),
+            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
 
         for the perturbation type influence case.
 
@@ -165,9 +162,9 @@ class InfluenceFunctionModel(Generic[TensorType, DataLoaderType], ABC):
         Args:
              z_test_factors: pre-computed array, approximating
                 $H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}}))$
-             x: optional model input to use in the gradient computations $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+             x: model input to use in the gradient computations $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
                  resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$, if None, use $x=x_{\text{test}}$
-             y: optional label tensor to compute gradients
+             y: label tensor to compute gradients
              influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
 
         Returns:

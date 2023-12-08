@@ -32,6 +32,10 @@ logger = logging.getLogger(__name__)
 class TorchInfluenceFunctionModel(
     InfluenceFunctionModel[torch.Tensor, DataLoader], ABC
 ):
+    """
+    Abstract base class for influence computation related to torch models
+    """
+
     def __init__(
         self,
         model: nn.Module,
@@ -77,6 +81,49 @@ class TorchInfluenceFunctionModel(
         )(self.model_params, x, y)
         shape = (*x.shape, -1)
         return flatten_dimensions(mixed_grads.values(), shape=shape)
+
+    def influences(
+        self,
+        x_test: torch.Tensor,
+        y_test: torch.Tensor,
+        x: Optional[torch.Tensor] = None,
+        y: Optional[torch.Tensor] = None,
+        influence_type: InfluenceType = InfluenceType.Up,
+    ) -> torch.Tensor:
+        r"""
+        Compute the approximation of
+
+        \[
+        \langle H^{-1}\nabla_{theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
+            \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
+        \]
+
+        for the case of up-weighting influence, resp.
+
+        \[
+        \langle H^{-1}\nabla_{theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}})),
+            \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle
+        \]
+
+        for the perturbation type influence case.
+
+        Args:
+            x_test: model input to use in the gradient computations
+                of $H^{-1}\nabla_{theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}}))$
+            y_test: label tensor to compute gradients
+            x: optional model input to use in the gradient computations $\nabla_{theta}\ell(y, f_{\theta}(x))$,
+                resp. $\nabla_{x}\nabla_{theta}\ell(y, f_{\theta}(x))$, if None, use $x=x_{\text{test}}$
+            y: optional label tensor to compute gradients
+            influence_type: enum value of [InfluenceType][pydvl.influence.base_influence_model.InfluenceType]
+
+        Returns:
+            Tensor representing the element-wise scalar products for the provided batch
+
+        """
+        t: torch.Tensor = super().influences(
+            x_test, y_test, x, y, influence_type=influence_type
+        )
+        return t
 
     def _influences(
         self,
@@ -163,6 +210,24 @@ class TorchInfluenceFunctionModel(
             raise UnSupportedInfluenceTypeException(influence_type)
         return values
 
+    def influence_factors(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        r"""
+        Compute approximation of
+
+        \[ H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x)) \]
+
+        where the gradient is meant to be per sample of the batch $(x, y)$.
+
+        Args:
+            x: model input to use in the gradient computations
+            y: label tensor to compute gradients
+
+        Returns:
+            Tensor representing the element-wise inverse Hessian matrix vector products
+
+        """
+        return super().influence_factors(x, y)
+
     def _influence_factors(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
 
         if not self.is_fitted:
@@ -181,6 +246,29 @@ class TorchInfluenceFunctionModel(
         y: torch.Tensor,
         influence_type: InfluenceType = InfluenceType.Up,
     ) -> torch.Tensor:
+        r"""
+        Computation of
+
+        \[ \langle z_{\text{test_factors}}, \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the case of up-weighting influence, resp.
+
+        \[ \langle z_{\text{test_factors}}, \nabla_{x} \nabla_{\theta} \ell(y, f_{\theta}(x)) \rangle \]
+
+        for the perturbation type influence case. The gradient is meant to be per sample of the batch $(x, y)$.
+
+        Args:
+             z_test_factors: pre-computed tensor, approximating
+                $H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}}))$
+             x: model input to use in the gradient computations $\nabla_{\theta}\ell(y, f_{\theta}(x))$,
+                 resp. $\nabla_{x}\nabla_{\theta}\ell(y, f_{\theta}(x))$
+             y: label tensor to compute gradients
+             influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
+
+        Returns:
+            Tensor representing the element-wise scalar products for the provided batch
+
+        """
         if influence_type == InfluenceType.Up:
             return (
                 z_test_factors
@@ -232,11 +320,12 @@ class DirectInfluence(TorchInfluenceFunctionModel):
     def fit(self, data_loader: DataLoader) -> DirectInfluence:
         """
         Compute the hessian matrix based on a provided dataloader
+
         Args:
-            data_loader: Instance of [torch.util.data.Dataloader][torch.util.data.Dataloader] providing
+            data_loader: Instance of [torch.utils.data.Dataloader][torch.utils.data.Dataloader]
 
         Returns:
-
+            The fitted instance
         """
         self.hessian = hessian(self.model, self.loss, data_loader)
         return self
@@ -650,6 +739,20 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
             return False
 
     def fit(self, data_loader: DataLoader) -> ArnoldiInfluence:
+        r"""
+        Fitting corresponds to the computation of the low rank decomposition
+
+        \[ V D^{-1} V^T \]
+
+        of the Hessian defined by the provided data loader.
+
+        Args:
+            data_loader: Instance of [torch.utils.data.Dataloader][torch.utils.data.Dataloader]
+
+        Returns:
+            The fitted instance
+
+        """
         low_rank_representation = model_hessian_low_rank(
             self.model,
             self.loss,
