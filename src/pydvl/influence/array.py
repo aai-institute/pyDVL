@@ -151,7 +151,7 @@ class OneDimChunkedLazyArray(LazyArray):
     def _new_shape_according_to_block(
         block: NDArray,
         current_row_idx: int,
-    ) -> Tuple[int, ...]:
+    ):
         return (current_row_idx + block.shape[0],) + block.shape[1:]
 
     @staticmethod
@@ -269,7 +269,7 @@ class TwoDimChunkedLazyArray(LazyArray):
         block: NDArray,
         current_row_idx: int,
         current_col_idx: int,
-    ) -> Tuple[int, ...]:
+    ):
         return (
             max(current_row_idx + block.shape[0], zarr_array.shape[0]),
             max(current_col_idx + block.shape[1], zarr_array.shape[1]),
