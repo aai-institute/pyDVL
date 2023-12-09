@@ -140,6 +140,12 @@ def test_single_job(cache_backend):
     assert hits_after > hits_before
 
 
+def test_without_pymemcache(mocker):
+    mocker.patch("pydvl.utils.caching.memcached.PYMEMCACHE_INSTALLED", False)
+    with pytest.raises(ModuleNotFoundError):
+        MemcachedCacheBackend()
+
+
 def test_memcached_failed_connection():
     from pydvl.utils import MemcachedClientConfig
 
