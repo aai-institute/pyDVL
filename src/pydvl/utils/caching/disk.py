@@ -1,5 +1,6 @@
 import os
 import shutil
+import tempfile
 from pathlib import Path
 from typing import Any, Optional, Union
 
@@ -10,8 +11,6 @@ from pydvl.utils.caching.base import CacheBackend
 __all__ = ["DiskCacheBackend"]
 
 PICKLE_VERSION = 5  # python >= 3.8
-
-DEFAULT_CACHE_DIR = Path().home() / ".pydvl_cache/disk"
 
 
 class DiskCacheBackend(CacheBackend):
@@ -65,15 +64,18 @@ class DiskCacheBackend(CacheBackend):
 
     def __init__(
         self,
-        cache_dir: Union[os.PathLike, str] = DEFAULT_CACHE_DIR,
+        cache_dir: Optional[Union[os.PathLike, str]] = None,
     ) -> None:
         """Initialize the disk cache backend.
 
         Args:
             cache_dir: Base directory for cache storage.
-                By default, this is set to `~/.pydvl_cache/disk`
+                If not provided, this defaults to a newly created
+                temporary directory.
         """
         super().__init__()
+        if cache_dir is None:
+            cache_dir = tempfile.mkdtemp(prefix="pydvl")
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(exist_ok=True, parents=True)
 
