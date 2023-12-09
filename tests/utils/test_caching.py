@@ -1,4 +1,5 @@
 import logging
+import pickle
 import tempfile
 from time import sleep, time
 from typing import Optional
@@ -126,6 +127,17 @@ def test_cached_func_hash_arguments_of_method():
     obj.value += 1
     hash2 = CachedFunc._hash_arguments(obj.foo, [], tuple(), {})
     assert hash1 == hash2
+
+
+def test_cache_backend_serialization(cache_backend):
+    value = 16.8
+    cache_backend.set("key", value)
+    deserialized_cache_backend = pickle.loads(pickle.dumps(cache_backend))
+    assert deserialized_cache_backend.get("key") == value
+    if isinstance(cache_backend, InMemoryCacheBackend):
+        assert cache_backend.cached_values == deserialized_cache_backend.cached_values
+    elif isinstance(cache_backend, DiskCacheBackend):
+        assert cache_backend.cache_dir == deserialized_cache_backend.cache_dir
 
 
 def test_single_job(cache_backend):
