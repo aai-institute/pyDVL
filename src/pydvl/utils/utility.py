@@ -136,7 +136,7 @@ class Utility:
         catch_errors: bool = True,
         show_warnings: bool = False,
         cache_backend: Optional[CacheBackend] = None,
-        cached_func_options: CachedFuncConfig = CachedFuncConfig(),
+        cached_func_options: Optional[CachedFuncConfig] = None,
         clone_before_fit: bool = True,
     ):
         self.model = self._clone_model(model)
@@ -150,6 +150,8 @@ class Utility:
         self.catch_errors = catch_errors
         self.show_warnings = show_warnings
         self.cache = cache_backend
+        if cached_func_options is None:
+            cached_func_options = CachedFuncConfig()
         self.cached_func_options = cached_func_options
         self.clone_before_fit = clone_before_fit
         self._initialize_utility_wrapper()
