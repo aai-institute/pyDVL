@@ -64,7 +64,7 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
 
 
 def _combinatorial_exact_shapley(
-    indices: NDArray, u: Utility, progress: bool
+    indices: NDArray[np.int_], u: Utility, progress: bool
 ) -> NDArray:
     """Helper function for
     [combinatorial_exact_shapley()][pydvl.value.shapley.naive.combinatorial_exact_shapley].
@@ -85,7 +85,7 @@ def _combinatorial_exact_shapley(
             total=2 ** (n - 1),
             position=0,
         ):
-            local_values[i] += (u({i}.union(s)) - u(s)) / math.comb(n - 1, len(s))
+            local_values[i] += (u({i}.union(s)) - u(s)) / math.comb(n - 1, len(s))  # type: ignore
     return local_values / n
 
 

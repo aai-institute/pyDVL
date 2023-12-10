@@ -115,6 +115,6 @@ def lc_prepare_problem(u: Utility, progress: bool = False) -> LeastCoreProblem:
         indices: NDArray[np.bool_] = np.zeros(n, dtype=bool)
         indices[list(subset)] = True
         A_lb[i, indices] = 1
-        utility_values[i] = u(subset)
+        utility_values[i] = u(subset)  # type: ignore
 
     return LeastCoreProblem(utility_values, A_lb)
