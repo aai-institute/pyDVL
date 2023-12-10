@@ -13,7 +13,8 @@ from copy import deepcopy
 from enum import Enum
 from typing import Any, Callable, Dict, Generator, Optional, Type
 
-from ..utils import maybe_progress
+from tqdm.auto import tqdm
+
 from .inversion import InversionMethod, solve_hvp
 from .twice_differentiable import (
     DataLoaderType,
@@ -93,8 +94,8 @@ def compute_influence_factors(
     cat = tensor_util.cat
 
     def test_grads() -> Generator[TensorType, None, None]:
-        for x_test, y_test in maybe_progress(
-            test_data, progress, desc="Batch Test Gradients"
+        for x_test, y_test in tqdm(
+            test_data, disable=not progress, desc="Batch Test Gradients"
         ):
             yield stack(
                 [
@@ -167,8 +168,8 @@ def compute_influences_up(
     einsum = tensor_util.einsum
 
     def train_grads() -> Generator[TensorType, None, None]:
-        for x, y in maybe_progress(
-            input_data, progress, desc="Batch Split Input Gradients"
+        for x, y in tqdm(
+            input_data, disable=not progress, desc="Batch Split Input Gradients"
         ):
             yield stack(
                 [model.grad(inpt, target) for inpt, target in zip(unsqueeze(x, 1), y)]
@@ -232,9 +233,9 @@ def compute_influences_pert(
     shape = tensor_util.shape
 
     all_pert_influences = []
-    for x, y in maybe_progress(
+    for x, y in tqdm(
         input_data,
-        progress,
+        disable=not progress,
         desc="Batch Influence Perturbation",
     ):
         for i in range(len(x)):

@@ -12,9 +12,9 @@ from torch.optim import Adam, Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 from torchvision.models import ResNet18_Weights, resnet18
+from tqdm.auto import tqdm
 
 from pydvl.influence.torch import as_tensor
-from pydvl.utils import maybe_progress
 
 from .types import Losses
 
@@ -124,7 +124,7 @@ def fit_torch_model(
     train_loss = []
     val_loss = []
 
-    for epoch in maybe_progress(range(num_epochs), progress, desc="Model fitting"):
+    for epoch in tqdm(range(num_epochs), disable=not progress, desc="Model fitting"):
         batch_loss = []
         for train_batch in training_data:
             batch_x, batch_y = train_batch

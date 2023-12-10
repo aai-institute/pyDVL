@@ -25,8 +25,8 @@ from scipy.sparse.linalg import ArpackNoConvergence
 from torch import autograd
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 
-from ...utils import maybe_progress
 from ..inversion import InversionMethod, InversionRegistry
 from ..twice_differentiable import (
     InverseHvpResult,
@@ -192,7 +192,7 @@ class TorchTwiceDifferentiable(TwiceDifferentiable[torch.Tensor]):
         z = (grad_xy * Variable(v)).sum(dim=1)
 
         mvp = []
-        for i in maybe_progress(range(len(z)), progress, desc="MVP"):
+        for i in tqdm(range(len(z)), disable=not progress, desc="MVP"):
             mvp.append(
                 flatten_tensors_to_vector(
                     autograd.grad(z[i], backprop_on, retain_graph=True)
@@ -578,7 +578,7 @@ def solve_batch_cg(
     total_grad_xy = torch.empty(0)
     total_points = 0
 
-    for x, y in maybe_progress(training_data, progress, desc="Batch Train Gradients"):
+    for x, y in tqdm(training_data, disable=not progress, desc="Batch Train Gradients"):
         grad_xy = model.grad(x, y, create_graph=True)
         if total_grad_xy.nelement() == 0:
             total_grad_xy = torch.zeros_like(grad_xy)
@@ -592,7 +592,7 @@ def solve_batch_cg(
     batch_cg = torch.zeros_like(b)
     info = {}
 
-    for idx, bi in enumerate(maybe_progress(b, progress, desc="Conjugate gradient")):
+    for idx, bi in enumerate(tqdm(b, disable=not progress, desc="Conjugate gradient")):
         batch_result, batch_info = solve_cg(
             reg_hvp, bi, x0=x0, rtol=rtol, atol=atol, maxiter=maxiter
         )
@@ -724,7 +724,7 @@ def solve_lissa(
         """
         return b + (1 - dampen) * h - reg_hvp(h) / scale
 
-    for _ in maybe_progress(range(maxiter), progress, desc="Lissa"):
+    for _ in tqdm(range(maxiter), disable=not progress, desc="Lissa"):
         x, y = next(iter(shuffled_training_data))
         grad_xy = model.grad(x, y, create_graph=True)
         reg_hvp = (

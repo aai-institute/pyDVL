@@ -5,9 +5,10 @@ from typing import List
 
 import numpy as np
 from numpy.typing import NDArray
+from tqdm.auto import tqdm
 
 from pydvl.parallel import MapReduceJob, ParallelConfig
-from pydvl.utils import Utility, maybe_progress, powerset
+from pydvl.utils import Utility, powerset
 from pydvl.utils.status import Status
 from pydvl.value.result import ValuationResult
 
@@ -44,9 +45,9 @@ def permutation_exact_shapley(u: Utility, *, progress: bool = True) -> Valuation
         )
 
     values = np.zeros(n)
-    for p in maybe_progress(
+    for p in tqdm(
         permutations(u.data.indices),
-        progress,
+        disable=not progress,
         desc="Permutation",
         total=math.factorial(n),
     ):
@@ -77,9 +78,9 @@ def _combinatorial_exact_shapley(
         subset: NDArray[np.int_] = np.setxor1d(
             u.data.indices, [i], assume_unique=True
         ).astype(np.int_)
-        for s in maybe_progress(
+        for s in tqdm(
             powerset(subset),
-            progress,
+            disable=not progress,
             desc=f"Index {i}",
             total=2 ** (n - 1),
             position=0,

@@ -54,7 +54,7 @@ import numpy as np
 from deprecate import deprecated
 from numpy.random import SeedSequence
 from numpy.typing import NDArray
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from pydvl.parallel import (
     CancellationPolicy,
