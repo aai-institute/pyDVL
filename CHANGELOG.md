@@ -3,10 +3,30 @@
 
 ## Unreleased
 
+### Added
+- New influence function interface `InfluenceFunctionModel`
+- Data parallel computation with `DaskInfluenceCalculator`
+  [PR #26](https://github.com/aai-institute/pyDVL/issues/26)
+- Sequential batch-wise computation and write to disk with `SequentialInfluenceCalculator` 
+  [PR #377](https://github.com/aai-institute/pyDVL/issues/377)
+- Adapt notebooks to new influence abstractions
+  [PR #430](https://github.com/aai-institute/pyDVL/issues/430)
+
 ### Changed
 
 - Simplify and improve tests, add CodeCov code coverage
   [PR #429](https://github.com/aai-institute/pyDVL/pull/429)
+- 
+- **Breaking Changes**
+  - Removed `compute_influences` and all related code.
+    Replaced by new `InfluenceFunctionModel` interface. Removed modules:
+    - influence.general
+    - influence.inversion
+    - influence.twice_differentiable
+    - influence.torch.torch_differentiable
+
+### Fixed
+- Import bug in README [PR #457](https://github.com/aai-institute/pyDVL/issues/457)
 
 ## 0.7.1 - 🆕 New methods, bug fixes and improvements for local tests 🐞🧪
 
