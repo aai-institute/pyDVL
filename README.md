@@ -40,7 +40,7 @@ pyDVL focuses on model-dependent methods.
 
 <div style="text-align: center;">
     <img
-        width="90%"
+        width="70%"
         src="docs/value/img/mclc-best-removal-10k-natural.svg"
         alt="best sample removal"
     />
@@ -57,7 +57,7 @@ of training samples over individual test points.
 
 <div style="text-align: center;">
     <img
-        width="90%"
+        width="70%"
         src="docs/assets/influence_functions_example.png"
         alt="best sample removal"
     />
@@ -278,9 +278,9 @@ contributions](CONTRIBUTING.md).
 
 # Papers
 
-## Data Valuation
-
 We currently implement the following papers:
+
+## Data Valuation
 
 - Castro, Javier, Daniel Gómez, and Juan Tejada. [Polynomial Calculation of the
   Shapley Value Based on Sampling](https://doi.org/10.1016/j.cor.2008.04.004).
@@ -327,8 +327,6 @@ We currently implement the following papers:
   New Orleans, Louisiana, USA, 2022.
 
 ## Influence Functions
-
-We currently implement the following papers:
 
 - Koh, Pang Wei, and Percy Liang. [Understanding Black-Box Predictions via
   Influence Functions](http://proceedings.mlr.press/v70/koh17a.html). In
