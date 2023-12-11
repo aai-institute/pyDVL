@@ -46,7 +46,7 @@ pyDVL focuses on model-dependent methods.
     />
     <p style="text-align: center;">
         Comparison of different data valuation methods
-        <br> on best sample removal.
+        on best sample removal.
     </p>
 </div>
 
@@ -57,13 +57,13 @@ of training samples over individual test points.
 
 <div style="text-align: center;">
     <img
-        width="80%"
+        width="90%"
         src="docs/assets/influence_functions_example.png"
         alt="best sample removal"
     />
     <p style="text-align: center;">
         Influences of input points with corrupted data.
-        <br>Highlighted points have flipped labels.
+        Highlighted points have flipped labels.
     </p>
 </div>
 
