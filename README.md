@@ -88,7 +88,6 @@ For influence computation, follow these steps:
    import torch
    from torch import nn
    from torch.utils.data import DataLoader, TensorDataset
-   from pydvl.reporting.plots import plot_influence_distribution
    from pydvl.influence import compute_influences, InversionMethod
    from pydvl.influence.torch import TorchTwiceDifferentiable
    ```
@@ -152,14 +151,6 @@ For influence computation, follow these steps:
    that contains at index `(i, j`) the influence of training sample `i` on
    test sample `j`.
 
-7. Visualize the results.
-
-   ```python
-   plot_influence_distribution(influences, index=1, title_extra="Example")
-   ```
-   
-   ![Influence Functions Example](docs/assets/influence_functions_example.svg)
-
    The higher the absolute value of the influence of a training sample
    on a test sample, the more influential it is for the chosen test sample, model
    and data loaders. The sign of the influence determines whether it is 
@@ -178,7 +169,6 @@ The steps required to compute data values for your samples are:
    import matplotlib.pyplot as plt
    from sklearn.datasets import load_breast_cancer
    from sklearn.linear_model import LogisticRegression
-   from pydvl.reporting.plots import plot_shapley
    from pydvl.utils import Dataset, Scorer, Utility
    from pydvl.value import (
       compute_shapley_values,
@@ -232,18 +222,14 @@ The steps required to compute data values for your samples are:
    The result is a variable of type `ValuationResult` that contains
    the indices and their values as well as other attributes.
 
-6. Convert the valuation result to a dataframe and visualize the values.
+   The higher the value for an index, the more important it is for the chosen
+   model, dataset and scorer.
+
+6. (Optional) Convert the valuation result to a dataframe and analyze and visualize the values.
 
    ```python
    df = values.to_dataframe(column="data_value")
-   plot_shapley(df, title="Data Valuation Example", xlabel="Index", ylabel="Value")
-   plt.show()
    ```
-   
-   ![Data Valuation Example Plot](docs/assets/data_valuation_example.svg)
-   
-   The higher the value for an index, the more important it is for the chosen
-   model, dataset and scorer.
 
 ## Caching
 
