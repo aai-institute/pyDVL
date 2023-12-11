@@ -259,21 +259,6 @@ The steps required to compute data values for your samples are:
    df = values.to_dataframe(column="data_value")
    ```
 
-## Caching
-
-pyDVL offers the possibility to cache certain results and
-speed up computation. It uses [Memcached](https://memcached.org/) For that.
-
-You can run it either locally or, using
-[Docker](https://www.docker.com/):
-
-```shell
-docker container run --rm -p 11211:11211 --name pydvl-cache -d memcached:latest
-```
-
-You can read more in the
-[documentation](https://pydvl.org/stable/getting-started/first-steps/#caching).
-
 # Contributing
 
 Please open new issues for bugs, feature requests and extensions. You can read
