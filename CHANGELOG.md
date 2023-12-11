@@ -14,6 +14,8 @@
 
 ### Changed
 
+- Improve readme and explain better the examples
+  [PR #465](https://github.com/aai-institute/pyDVL/pull/465)
 - Simplify and improve tests, add CodeCov code coverage
   [PR #429](https://github.com/aai-institute/pyDVL/pull/429)
 - 
