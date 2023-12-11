@@ -124,7 +124,6 @@ For influence computation, follow these steps:
 3. For small input data call influence method on the fitted instance. For larger data, wrap the model into a
    calculator and call methods on the calculator.
 
-Using the conjugate gradient algorithm, this would look like:
 ```python
 import torch
 from torch import nn
