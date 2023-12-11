@@ -38,9 +38,10 @@ performance or outcome of some model trained on it. Some concepts of
 value depend on a specific model of interest, while others are model-agnostic.
 pyDVL focuses on model-dependent methods.
 
-<figure style="display: inline-block;">
+<div style="text-align: center;">
+<figure>
     <img
-        style="vertical-align: top; margin: auto;"
+        width="90%"
         src="docs/value/img/mclc-best-removal-10k-natural.svg"
         alt="best sample removal"
     />
@@ -49,15 +50,17 @@ pyDVL focuses on model-dependent methods.
         <br> on best sample removal.
     </figcaption>
 </figure>
+</div>
 
 The **Influence Function** is an infinitesimal measure of the effect that single
 training points have over the parameters of a model, or any function thereof.
 In particular, in machine learning they are also used to compute the effect
 of training samples over individual test points.
 
-<figure style="display: inline-block;">
+<div style="text-align: center;">
+<figure>
     <img
-        style="vertical-align: top; margin: auto;"
+        width="80%"
         src="docs/assets/influence_functions_example.png"
         alt="best sample removal"
     />
@@ -66,6 +69,7 @@ of training samples over individual test points.
         <br>Highlighted points have flipped labels.
     </figcaption>
 </figure>
+</div>
 
 # Installation
 
