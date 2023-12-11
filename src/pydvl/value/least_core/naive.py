@@ -104,10 +104,10 @@ def lc_prepare_problem(u: Utility, progress: bool = False) -> LeastCoreProblem:
 
     logger.debug("Iterating over all subsets")
     utility_values = np.zeros(powerset_size)
-    for i, subset in enumerate(
+    for i, subset in enumerate(  # type: ignore
         tqdm(
             powerset(u.data.indices),
-            display=progress,
+            disable=not progress,
             total=powerset_size - 1,
             position=0,
         )

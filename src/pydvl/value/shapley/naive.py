@@ -78,7 +78,7 @@ def _combinatorial_exact_shapley(
         subset: NDArray[np.int_] = np.setxor1d(
             u.data.indices, [i], assume_unique=True
         ).astype(np.int_)
-        for s in tqdm(
+        for s in tqdm(  # type: ignore
             powerset(subset),
             disable=not progress,
             desc=f"Index {i}",
