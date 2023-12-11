@@ -19,18 +19,22 @@ from dask import array as da
 from dask import delayed
 from numpy.typing import NDArray
 
-from .array import NumpyConverter, OneDimChunkedLazyArray, TwoDimChunkedLazyArray
+from .array import (
+    NumpyConverter,
+    OneDimChunkedLazyArrayProvider,
+    TwoDimChunkedLazyArrayProvider,
+)
 from .base_influence_model import (
     InfluenceFunctionModel,
     InfluenceType,
     TensorType,
-    UnSupportedInfluenceTypeException,
+    UnsupportedInfluenceTypeException,
 )
 
 __all__ = ["DaskInfluenceCalculator", "SequentialInfluenceCalculator"]
 
 
-class DimensionChunksException(ValueError):
+class InvalidDimensionChunksError(ValueError):
     def __init__(self, chunks: Tuple[Tuple[int, ...], ...]):
         msg = (
             f"Array must be un-chunked in every dimension but the first, got {chunks=}"
@@ -38,7 +42,7 @@ class DimensionChunksException(ValueError):
         super().__init__(msg)
 
 
-class UnalignedChunksException(ValueError):
+class UnalignedChunksError(ValueError):
     def __init__(self, chunk_sizes_x: Tuple[int, ...], chunk_sizes_y: Tuple[int, ...]):
         msg = (
             f"Arrays x and y must have the same chunking in the first dimension, got {chunk_sizes_x=} "
@@ -49,19 +53,24 @@ class UnalignedChunksException(ValueError):
 
 class DaskInfluenceCalculator:
     """
-    Compute influences over dask.Array collections. Depends on a batch computation model
-    of type [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel].
-    In addition, provide transformations from and to numpy,
-    corresponding to the tensor types of the batch computation model.
+    This class is designed to compute influences over [dask.array.Array][dask.array.Array] collections,
+    leveraging the capabilities of Dask for distributed computing and parallel processing.
+    It requires an influence computation model
+    of type [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel],
+    which defines how influences are computed on a chunk of data.
+    Essentially, this class functions by mapping the influence
+    function model across the various chunks of a [dask.array.Array][dask.array.Array] collection.
+
     Args:
         influence_function_model: instance of type
-            [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel], defines the
-            batch-wise computation model
-        numpy_converter: instance of type [NumpyConverter][pydvl.influence.influence_calculator.NumpyConverter], used to
-            convert between numpy arrays and TensorType objects needed to use the underlying model
+            [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel], that
+            specifies the computation logic for influence on data chunks. It's a pivotal part of the
+            calculator, determining how influence is computed and applied across the data array.
+        numpy_converter: A utility for converting numpy arrays to TensorType objects,
+            facilitating the interaction between numpy arrays and the influence function model.
 
     !!! Warning
-        Make sure, you set `threads_per_worker=1`, when using the distributed scheduler for computing
+        Make sure to set `threads_per_worker=1`, when using the distributed scheduler for computing,
         if your implementation of [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel]
         is not thread-safe. If you do not use the distributed scheduler,
         choose the `processes` single machine scheduler
@@ -72,6 +81,35 @@ class DaskInfluenceCalculator:
         ```
         For details on dask schedulers see the [official documentation](https://docs.dask.org/en/stable/scheduling.html).
 
+    Example:
+        ```python
+        from torch.utils.data import Dataset, DataLoader
+        from pydvl.influence import DaskInfluenceCalculator
+        from pydvl.influence.torch import CgInfluence
+        from pydvl.influence.torch.util import torch_dataset_to_dask_array, TorchNumpyConverter
+        from distributed import Client
+
+        train_data_set: Dataset = LargeDataSet(...) # Possible some out of memory large Dataset
+        test_data_set: Dataset = LargeDataSet(...) # Possible some out of memory large Dataset
+
+        train_dataloader = DataLoader(train_data_set)
+        if_model = CgInfluence(model, loss, hessian_regularization=0.01)
+        if_model = if_model.fit(train_dataloader)
+
+        # wrap your input data into dask arrays
+        chunk_size = 10
+        da_x, da_y = torch_dataset_to_dask_array(train_data_set, chunk_size=chunk_size)
+        da_x_test, da_y_test = torch_dataset_to_dask_array(test_data_set, chunk_size=chunk_size)
+
+        client = Client(n_workers=4, threads_per_worker=1)  # use only one thread for scheduling, due to non-thread safety of some torch operations
+
+        da_calc = DaskInfluenceCalculator(if_model, numpy_converter=TorchNumpyConverter())
+        da_influences = da_calc.influences(da_x_test, da_y_test, da_x, da_y)
+        # da_influences is a dask.array.Array
+
+        # trigger computation and write chunks to disk in parallel
+        da_influences.to_zarr("path/or/url")
+        ```
 
     """
 
@@ -97,22 +135,28 @@ class DaskInfluenceCalculator:
         return self._n_parameters
 
     @staticmethod
-    def _validate_un_chunked(x: da.Array):
+    def _validate_dimensions_not_chunked(x: da.Array):
+        """
+        Check if all but the first dimension are not chunked
+        """
         if any([len(c) > 1 for c in x.chunks[1:]]):
-            raise DimensionChunksException(x.chunks)
+            raise InvalidDimensionChunksError(x.chunks)
 
     @staticmethod
     def _validate_aligned_chunking(x: da.Array, y: da.Array):
+        """
+        Check that the chunking in the first dimensions of the two input arrays are aligned
+        """
         if x.chunks[0] != y.chunks[0]:
-            raise UnalignedChunksException(x.chunks[0], y.chunks[0])
+            raise UnalignedChunksError(x.chunks[0], y.chunks[0])
 
     def influence_factors(self, x: da.Array, y: da.Array) -> da.Array:
         r"""
-        Compute the expression
+        Computes the expression
 
         \[ H^{-1}\nabla_{\theta} \ell(y, f_{\theta}(x)) \]
 
-        where the gradient are computed for the chunks of $(x, y)$.
+        where the gradients are computed for the chunks of $(x, y)$.
 
         Args:
             x: model input to use in the gradient computations
@@ -125,8 +169,8 @@ class DaskInfluenceCalculator:
         """
 
         self._validate_aligned_chunking(x, y)
-        self._validate_un_chunked(x)
-        self._validate_un_chunked(y)
+        self._validate_dimensions_not_chunked(x)
+        self._validate_dimensions_not_chunked(y)
 
         def func(x_numpy: NDArray, y_numpy: NDArray, model: InfluenceFunctionModel):
             factors = model.influence_factors(
@@ -190,8 +234,8 @@ class DaskInfluenceCalculator:
         """
 
         self._validate_aligned_chunking(x_test, y_test)
-        self._validate_un_chunked(x_test)
-        self._validate_un_chunked(y_test)
+        self._validate_dimensions_not_chunked(x_test)
+        self._validate_dimensions_not_chunked(y_test)
 
         if (x is None) != (y is None):
             if x is None:
@@ -204,8 +248,8 @@ class DaskInfluenceCalculator:
                 )
         elif x is not None:
             self._validate_aligned_chunking(x, y)
-            self._validate_un_chunked(x)
-            self._validate_un_chunked(y)
+            self._validate_dimensions_not_chunked(x)
+            self._validate_dimensions_not_chunked(y)
         else:
             x, y = x_test, y_test
 
@@ -243,7 +287,7 @@ class DaskInfluenceCalculator:
                 elif influence_type == InfluenceType.Perturbation:
                     block_shape = (test_chunk_size, chunk_size, *un_chunked_x_shapes)
                 else:
-                    raise UnSupportedInfluenceTypeException(influence_type)
+                    raise UnsupportedInfluenceTypeException(influence_type)
 
                 block_array = da.from_delayed(
                     delayed(func)(
@@ -305,9 +349,9 @@ class DaskInfluenceCalculator:
 
         """
         self._validate_aligned_chunking(x, y)
-        self._validate_un_chunked(x)
-        self._validate_un_chunked(y)
-        self._validate_un_chunked(z_test_factors)
+        self._validate_dimensions_not_chunked(x)
+        self._validate_dimensions_not_chunked(y)
+        self._validate_dimensions_not_chunked(z_test_factors)
 
         def func(
             z_test_numpy: NDArray,
@@ -341,7 +385,7 @@ class DaskInfluenceCalculator:
                 elif influence_type == InfluenceType.Up:
                     block_shape = (z_test_chunk_size, chunk_size)
                 else:
-                    raise UnSupportedInfluenceTypeException(influence_type)
+                    raise UnsupportedInfluenceTypeException(influence_type)
 
                 block_array = da.from_delayed(
                     delayed(func)(
@@ -381,16 +425,42 @@ class DaskInfluenceCalculator:
 
 class SequentialInfluenceCalculator:
     """
-    Simple wrapper class to process batches of data sequentially. Depends on a batch computation model
-    of type [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel].
+    This class serves as a simple wrapper for processing batches of data in a sequential manner.
+    It is particularly useful in scenarios where parallel or distributed processing is not required
+    or not feasible. The core functionality of this class is to apply a specified influence computation
+    model, of type [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel],
+    to batches of data one at a time.
 
     Args:
-    influence_function_model: instance of type
-        [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel], defines the
-        batch-wise computation model
-    block_aggregator: optional instance of type [BlockAggregator][pydvl.influence.influence_calculator.BlockAggregator],
-        used to collect and aggregate the tensors from the sequential process. If None, tensors are collected into
-        list structures
+        influence_function_model: An instance of type
+                [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel], that
+                specifies the computation logic for influence on data chunks.
+
+    Example:
+        ```python
+        from pydvl.influence import SequentialInfluenceCalculator
+        from pydvl.influence.torch.util import TorchCatAggregator, TorchNumpyConverter
+        from pydvl.influence.torch import CgInfluence
+
+        batch_size = 10
+        train_dataloader = DataLoader(..., batch_size=batch_size)
+        test_dataloader = DataLoader(..., batch_size=batch_size)
+
+        if_model = CgInfluence(model, loss, hessian_regularization=0.01)
+        if_model = if_model.fit(train_dataloader)
+
+        seq_calc = SequentialInfluenceCalculator(if_model)
+
+        # this does not trigger the computation
+        lazy_influences = seq_calc.influences(test_dataloader, train_dataloader)
+
+        # trigger computation and pull the result into main memory, result is the full tensor for all combinations of
+        # the two loaders
+        influences = lazy_influences.compute(block_aggregator=TorchCatAggregator())
+        # or
+        # trigger computation and write results chunk-wise to disk using zarr in a sequential manner
+        lazy_influences.to_zarr("local_path/or/url", TorchNumpyConverter())
+        ```
     """
 
     def __init__(
@@ -408,7 +478,7 @@ class SequentialInfluenceCalculator:
     def influence_factors(
         self,
         data_iterable: Iterable[Tuple[TensorType, TensorType]],
-    ) -> OneDimChunkedLazyArray:
+    ) -> OneDimChunkedLazyArrayProvider:
         r"""
         Compute the expression
 
@@ -418,15 +488,14 @@ class SequentialInfluenceCalculator:
         aggregated into a single tensor.
 
         Args:
-            data_iterable:
+            data_iterable: An iterable that returns tuples of tensors.
+                Each tuple consists of a pair of tensors (x, y), representing input data and corresponding targets.
 
         Returns:
-            Tensor representing the element-wise inverse Hessian matrix vector
-                products for the provided batch.
 
         """
         tensors_gen_factory = partial(self._influence_factors_gen, data_iterable)
-        return OneDimChunkedLazyArray(tensors_gen_factory)
+        return OneDimChunkedLazyArrayProvider(tensors_gen_factory)
 
     def _influences_gen(
         self,
@@ -448,7 +517,7 @@ class SequentialInfluenceCalculator:
         test_data_iterable: Iterable[Tuple[TensorType, TensorType]],
         train_data_iterable: Iterable[Tuple[TensorType, TensorType]],
         influence_type: InfluenceType = InfluenceType.Up,
-    ) -> TwoDimChunkedLazyArray:
+    ) -> TwoDimChunkedLazyArrayProvider:
         r"""
         Compute approximation of
 
@@ -464,9 +533,10 @@ class SequentialInfluenceCalculator:
         data iterables and aggregated into a single tensor in memory.
 
         Args:
-
-            test_data_iterable:
-            train_data_iterable:
+            test_data_iterable: An iterable that returns tuples of tensors.
+                Each tuple consists of a pair of tensors (x, y), representing input data and corresponding targets.
+            train_data_iterable: An iterable that returns tuples of tensors.
+                Each tuple consists of a pair of tensors (x, y), representing input data and corresponding targets.
             influence_type: enum value of [InfluenceType][pydvl.influence.base_influence_model.InfluenceType]
 
         Returns:
@@ -480,7 +550,7 @@ class SequentialInfluenceCalculator:
             influence_type,
         )
 
-        return TwoDimChunkedLazyArray(nested_tensor_gen_factory)
+        return TwoDimChunkedLazyArrayProvider(nested_tensor_gen_factory)
 
     def _influences_from_factors_gen(
         self,
@@ -504,7 +574,7 @@ class SequentialInfluenceCalculator:
         z_test_factors: Iterable[TensorType],
         train_data_iterable: Iterable[Tuple[TensorType, TensorType]],
         influence_type: InfluenceType = InfluenceType.Up,
-    ) -> TwoDimChunkedLazyArray:
+    ) -> TwoDimChunkedLazyArrayProvider:
         r"""
         Computation of
 
@@ -517,9 +587,10 @@ class SequentialInfluenceCalculator:
         for the perturbation type influence case. The gradient is meant to be per sample of the batch $(x, y)$.
 
         Args:
-            z_test_factors: pre-computed iterable of tensors, approximating
+            z_test_factors: Pre-computed iterable of tensors, approximating
                 $H^{-1}\nabla_{\theta} \ell(y_{\text{test}}, f_{\theta}(x_{\text{test}}))$
-            train_data_iterable:
+            train_data_iterable: An iterable that returns tuples of tensors.
+                Each tuple consists of a pair of tensors (x, y), representing input data and corresponding targets.
             influence_type: enum value of [InfluenceType][pydvl.influence.twice_differentiable.InfluenceType]
 
         Returns:
@@ -532,4 +603,4 @@ class SequentialInfluenceCalculator:
             train_data_iterable,
             influence_type,
         )
-        return TwoDimChunkedLazyArray(nested_tensor_gen)
+        return TwoDimChunkedLazyArrayProvider(nested_tensor_gen)

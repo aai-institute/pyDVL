@@ -9,11 +9,11 @@ from distributed import Client
 from torch.utils.data import DataLoader, TensorDataset
 
 from pydvl.influence import DaskInfluenceCalculator, InfluenceType
-from pydvl.influence.base_influence_model import UnSupportedInfluenceTypeException
+from pydvl.influence.base_influence_model import UnsupportedInfluenceTypeException
 from pydvl.influence.influence_calculator import (
-    DimensionChunksException,
+    InvalidDimensionChunksError,
     SequentialInfluenceCalculator,
-    UnalignedChunksException,
+    UnalignedChunksError,
 )
 from pydvl.influence.torch import ArnoldiInfluence, CgInfluence, DirectInfluence
 from pydvl.influence.torch.util import TorchCatAggregator, TorchNumpyConverter
@@ -182,7 +182,7 @@ def test_dask_influence_nn(model_and_data, test_case):
     )
     assert np.allclose(da_sym_values, torch_sym_values.numpy(), atol=1e-6, rtol=1e-3)
 
-    with pytest.raises(UnSupportedInfluenceTypeException):
+    with pytest.raises(UnsupportedInfluenceTypeException):
         dask_influence.influences(
             da_x_test,
             da_y_test,
@@ -207,7 +207,7 @@ def test_dask_influence_nn(model_and_data, test_case):
             )
             np.allclose(torch_factors.numpy(), da_factors_client.compute())
 
-    with pytest.raises(DimensionChunksException):
+    with pytest.raises(InvalidDimensionChunksError):
         da_x_test_wrong_chunks = da.from_array(
             x_test.numpy(), chunks=(4, *[1 for _ in x_test.shape[1:]])
         )
@@ -216,7 +216,7 @@ def test_dask_influence_nn(model_and_data, test_case):
         )
         dask_influence.influence_factors(da_x_test_wrong_chunks, da_y_test_wrong_chunks)
 
-    with pytest.raises(UnalignedChunksException):
+    with pytest.raises(UnalignedChunksError):
         da_x_test_unaligned_chunks = da.from_array(
             x_test.numpy(), chunks=(4, *[-1 for _ in x_test.shape[1:]])
         )

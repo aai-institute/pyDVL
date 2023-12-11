@@ -20,7 +20,7 @@ from dask import array as da
 from numpy.typing import NDArray
 from torch.utils.data import Dataset
 
-from ..array import BlockAggregator, NumpyConverter
+from ..array import NumpyConverter, TensorAggregator
 
 logger = logging.getLogger(__name__)
 
@@ -375,34 +375,53 @@ class TorchNumpyConverter(NumpyConverter[torch.Tensor]):
         return t
 
 
-class TorchCatAggregator(BlockAggregator):
+class TorchCatAggregator(TensorAggregator):
     """
-    Collect tensors from a generator into a single tensor
+    An aggregator that concatenates tensors using PyTorch's [torch.cat][torch.cat] function. This class
+    is designed to aggregate tensors from generators, either nested or single-level, into a
+    single tensor by concatenating them along a specified dimension.
     """
 
-    def aggregate_nested(
-        self, tensors: Generator[Generator[torch.Tensor, None, None], None, None]
+    def aggregate_from_nested_generators(
+        self,
+        nested_generators_of_tensors: Generator[
+            Generator[torch.Tensor, None, None], None, None
+        ],
     ) -> torch.Tensor:
         """
+        Aggregates tensors from a nested generator structure into a single tensor by concatenating.
+        Each inner generator is first concatenated along dimension 1 into a tensor, and then
+        these tensors are concatenated along dimension 0 together to form the final tensor.
 
         Args:
-            tensors: generator providing blocks
+            nested_generators_of_tensors: A generator of generators, where each inner generator
+                yields `torch.Tensor` objects.
 
         Returns:
-            A single tensor, which is build from the blocks
+            A single tensor formed by concatenating all tensors from the nested generators.
 
         """
         return torch.cat(
-            list(map(lambda tensor_gen: torch.cat(list(tensor_gen), dim=1), tensors))
+            list(
+                map(
+                    lambda tensor_gen: torch.cat(list(tensor_gen), dim=1),
+                    nested_generators_of_tensors,
+                )
+            )
         )
 
-    def aggregate(self, tensors: Generator[torch.Tensor, None, None]) -> torch.Tensor:
+    def aggregate_from_generator(
+        self, tensor_generator: Generator[torch.Tensor, None, None]
+    ) -> torch.Tensor:
         """
-        Collect tensors from a single level generator into a single tensor
+        Aggregates tensors from a single-level generator into a single tensor by concatenating them.
+        This method is a straightforward way to combine a sequence of tensors into one larger tensor.
+
         Args:
-            tensors: generator providing blocks
+            tensor_generator: A generator that yields `torch.Tensor` objects.
 
         Returns:
-
+            torch.Tensor: A single tensor formed by concatenating all tensors from the generator.
+                          The concatenation is performed along the default dimension (0).
         """
-        return torch.cat(list(tensors))
+        return torch.cat(list(tensor_generator))

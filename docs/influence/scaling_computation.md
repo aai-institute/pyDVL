@@ -31,7 +31,7 @@ seq_calc = SequentialInfluenceCalculator(if_model)
 lazy_influences = seq_calc.influences(test_dataloader, train_dataloader)
 
 # trigger computation and pull the result into main memory, result is the full tensor for all combinations of the two loaders
-influences = lazy_influences.compute(block_aggregator=TorchCatAggregator())
+influences = lazy_influences.compute(tensor_aggregator=TorchCatAggregator())
 # or
 # trigger computation and write results chunk-wise to disk using zarr in a sequential manner
 lazy_influences.to_zarr("local_path/or/url", TorchNumpyConverter())
@@ -53,7 +53,7 @@ official
 and the following [blog entry](https://blog.dask.org/2021/11/02/choosing-dask-chunk-sizes).
 
 !!! Warning
-    Make sure, you set `threads_per_worker=1`, when using the distributed scheduler for computing
+    Make sure to set `threads_per_worker=1`, when using the distributed scheduler for computing,
     if your implementation of [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel]
     is not thread-safe. If you do not use the distributed scheduler,
     choose the `processes` single machine scheduler

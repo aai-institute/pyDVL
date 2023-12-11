@@ -39,32 +39,106 @@ class NumpyConverter(Generic[TensorType], ABC):
         """Overwrite this method for converting a numpy array into a TensorType object"""
 
 
-class BlockAggregator(Generic[TensorType], ABC):
+class TensorAggregator(Generic[TensorType], ABC):
+    """
+    Abstract base class for aggregating tensors. Implementations of this class should define
+    methods for aggregating tensors.
+    """
+
     @abstractmethod
-    def aggregate_nested(
-        self, tensors: Generator[Generator[TensorType, None, None], None, None]
+    def aggregate_from_nested_generators(
+        self,
+        nested_generators_of_tensors: Generator[
+            Generator[TensorType, None, None], None, None
+        ],
     ):
-        """Overwrite this method to aggregate provided blocks into a single tensor"""
+        """
+        Aggregates tensors from a generator of generators.
+
+        Implement this method to specify how tensors, nested in multiple layers of generators,
+        should be combined. Useful for complex data structures where tensors
+        are not directly accessible in a flat list.
+
+        Args:
+            nested_generators_of_tensors: A generator of generators, each yielding TensorType objects."""
 
     @abstractmethod
-    def aggregate(self, tensors: Generator[TensorType, None, None]):
-        """Overwrite this method to aggregate provided list of tensors into a single tensor"""
-
-
-class ListAggregator(BlockAggregator):
-    def aggregate_nested(
-        self, tensors: Generator[Generator[TensorType, None, None], None, None]
+    def aggregate_from_generator(
+        self, tensor_generator: Generator[TensorType, None, None]
     ):
-        return [list(tensor_gen) for tensor_gen in tensors]
+        """
+        Aggregates tensors from a single generator.
 
-    def aggregate(self, tensors: Generator[TensorType, None, None]):
-        return [t for t in tensors]
+        Implement this method to define how a sequence of tensors, provided by a generator,
+        should be combined. Suitable for straightforward scenarios where
+        tensors are yielded one by one.
+        """
 
 
-class LazyArray(ABC):
+class ListAggregator(TensorAggregator):
+    """
+    An aggregator that collects tensors into list structures.
+    """
+
+    def aggregate_from_nested_generators(
+        self,
+        nested_generators_of_tensors: Generator[
+            Generator[TensorType, None, None], None, None
+        ],
+    ):
+        """
+         Aggregates tensors from a nested generator structure into a list of lists. Each inner generator
+         is converted into a list of tensors, resulting in a nested list structure.
+
+         Args:
+             nested_generators_of_tensors: A generator of generators, where each inner generator yields
+                 TensorType objects.
+
+        Returns:
+            A list of lists, where each inner list contains tensors returned from one of the inner generators.
+        """
+        return [list(tensor_gen) for tensor_gen in nested_generators_of_tensors]
+
+    def aggregate_from_generator(
+        self, tensor_generator: Generator[TensorType, None, None]
+    ):
+        """
+        Aggregates tensors from a single-level generator into a list. This method simply collects
+        each tensor emitted by the generator into a single list.
+
+        Args:
+            tensor_generator: A generator that yields TensorType objects.
+
+        Returns:
+            A list containing all the tensors provided by the tensor_generator.
+        """
+        return [t for t in tensor_generator]
+
+
+class LazyArrayProvider(ABC):
+    """
+    Abstract base class representing a provider of lazily evaluated, array-like data. This class
+    is tailored for situations where data is not immediately computed or loaded, but is instead
+    generated or processed on-demand. The 'array-like' aspect refers to the data structure or
+    format rather than the ability to perform typical array operations like indexing.
+    """
+
     @abstractmethod
-    def compute(self, block_aggregator: Optional[BlockAggregator] = None):
-        pass
+    def compute(self, tensor_aggregator: Optional[TensorAggregator] = None):
+        """
+        Triggers the computation or retrieval of the data, optionally aggregating the results using
+        a specified TensorAggregator. This method is responsible for initiating the actual data
+        processing or fetching tasks.
+
+        Args:
+            tensor_aggregator: An optional aggregator that specifies
+                how the results should be combined or processed.
+
+        Returns:
+            The result of the computation or data retrieval, processed as specified by the
+            tensor_aggregator, if provided. The exact return type and format depend on the
+            implementation and the aggregator used.
+        """
 
     @abstractmethod
     def to_zarr(
@@ -74,10 +148,25 @@ class LazyArray(ABC):
         return_stored: bool = False,
         overwrite: bool = False,
     ):
-        pass
+        """
+        Exports the computed or retrieved data to Zarr format, suitable for efficient storage
+        and access, especially in the context of large-scale datasets. This method allows saving
+        the data to a local file system or a cloud storage service.
+
+        Args:
+            path_or_url: The file path or URL where the Zarr-formatted data will be stored.
+            numpy_converter: A tool to convert data into numpy arrays, which are compatible with Zarr storage.
+            return_stored: If True, returns the stored Zarr data object. Defaults to False.
+            overwrite: If True, overwrites any existing data at the specified location.
 
 
-class OneDimChunkedLazyArray(LazyArray):
+        Returns:
+            Depending on the value of return_stored, this method may return a reference to the stored
+            Zarr data object or None.
+        """
+
+
+class OneDimChunkedLazyArrayProvider(LazyArrayProvider):
     """
     A class representing chunked, and lazily evaluated array, where the chunking is restricted to the first dimension
 
@@ -95,20 +184,22 @@ class OneDimChunkedLazyArray(LazyArray):
     ):
         self.generator_factory = generator_factory
 
-    def compute(self, block_aggregator: Optional[BlockAggregator] = None):
+    def compute(self, tensor_aggregator: Optional[TensorAggregator] = None):
         """
-        Computes and optionally aggregates the chunks of the array.
+        Computes and optionally aggregates the chunks of the array using the provided tensor_aggregator.
+        This method initiates the generation of chunks and then combines them according to the aggregator's logic.
 
         Args:
-            block_aggregator (Optional[BlockAggregator]): An optional aggregator for combining the chunks
-                of the array. If None, a default ListAggregator is used.
+            tensor_aggregator: An optional aggregator for combining the chunks of
+                the array. If None, a default ListAggregator is used to simply collect the chunks into a list.
 
         Returns:
-            The aggregated result of all chunks of the array.
+            The aggregated result of all chunks of the array, the format of which depends on the tensor_aggregator used.
+
         """
-        if block_aggregator is None:
-            block_aggregator = ListAggregator()
-        return block_aggregator.aggregate(self.generator_factory())
+        if tensor_aggregator is None:
+            tensor_aggregator = ListAggregator()
+        return tensor_aggregator.aggregate_from_generator(self.generator_factory())
 
     def to_zarr(
         self,
@@ -118,17 +209,19 @@ class OneDimChunkedLazyArray(LazyArray):
         overwrite: bool = False,
     ):
         """
-        Converts the array into a Zarr format and stores it at the specified location.
+        Converts the array into Zarr format, a storage format optimized for large arrays, and stores it at
+        the specified path or URL. This method is suitable for scenarios where the data needs to be saved
+        for later use or for large datasets requiring efficient storage.
 
         Args:
             path_or_url: The file path or URL where the Zarr array will be stored.
-            numpy_converter: A converter to transform blocks into NumPy arrays.
-            return_stored: If True, returns the stored Zarr array. Defaults to False.
-            overwrite: If True, overwrites the existing data at the path_or_url, otherwise raises an error.
-                Defaults to False.
+            numpy_converter: A converter for transforming blocks into NumPy arrays compatible with Zarr.
+            return_stored: If True, the method returns the stored Zarr array; otherwise, it returns None.
+            overwrite: If True, overwrites existing data at the given path_or_url. If False, an error
+                is raised in case of existing data.
 
         Returns:
-            The Zarr array if return_stored is True; otherwise, None.
+            [zarr.core.Array][zarr.core.Array] or None: The Zarr array if return_stored is True; otherwise, None.
         """
         row_idx = 0
         z = None
@@ -166,7 +259,7 @@ class OneDimChunkedLazyArray(LazyArray):
         )
 
 
-class TwoDimChunkedLazyArray(LazyArray):
+class TwoDimChunkedLazyArrayProvider(LazyArrayProvider):
     """
     A class representing chunked, and lazily evaluated array, where the chunking is restricted to the
     first two dimensions.
@@ -176,8 +269,7 @@ class TwoDimChunkedLazyArray(LazyArray):
     storage and retrieval, with chunking applied along the first two dimensions.
 
     Attributes:
-        generator_factory (Callable[[], Generator[Generator[NDArray, None, None], None, None]]):
-            A factory function that returns a generator of generators. Each inner generator yields
+        generator_factory: A factory function that returns a generator of generators. Each inner generator yields
             chunks.
     """
 
@@ -189,20 +281,24 @@ class TwoDimChunkedLazyArray(LazyArray):
     ):
         self.generator_factory = generator_factory
 
-    def compute(self, block_aggregator: Optional[BlockAggregator] = None):
+    def compute(self, tensor_aggregator: Optional[TensorAggregator] = None):
         """
-        Computes and optionally aggregates the chunks of the array.
+        Computes and optionally aggregates the chunks of the array using the provided tensor_aggregator.
+        This method initiates the generation of chunks and then combines them according to the aggregator's logic.
 
         Args:
-            block_aggregator: An optional aggregator for combining the chunks
-                of the array. If None, a default ListAggregator is used.
+            tensor_aggregator: An optional aggregator for combining the chunks of
+                the array. If None, a default ListAggregator is used to simply collect the chunks into a list of lists.
 
         Returns:
-            The aggregated result of all chunks of the two-dimensional array.
+            The aggregated result of all chunks of the array, the format of which depends on the tensor_aggregator used.
+
         """
-        if block_aggregator is None:
-            block_aggregator = ListAggregator()
-        return block_aggregator.aggregate_nested(self.generator_factory())
+        if tensor_aggregator is None:
+            tensor_aggregator = ListAggregator()
+        return tensor_aggregator.aggregate_from_nested_generators(
+            self.generator_factory()
+        )
 
     def to_zarr(
         self,
@@ -212,16 +308,19 @@ class TwoDimChunkedLazyArray(LazyArray):
         overwrite: bool = False,
     ):
         """
-        Converts the array into a Zarr format and stores it at the specified location.
+        Converts the array into Zarr format, a storage format optimized for large arrays, and stores it at
+        the specified path or URL. This method is suitable for scenarios where the data needs to be saved
+        for later use or for large datasets requiring efficient storage.
 
         Args:
             path_or_url: The file path or URL where the Zarr array will be stored.
-            numpy_converter: A converter to transform blocks into NumPy arrays.
-            return_stored: If True, returns the stored Zarr array. Defaults to False.
-            overwrite: If True, overwrites the existing data at path_or_url. Defaults to False.
+            numpy_converter: A converter for transforming blocks into NumPy arrays compatible with Zarr.
+            return_stored: If True, the method returns the stored Zarr array; otherwise, it returns None.
+            overwrite: If True, overwrites existing data at the given path_or_url. If False, an error
+                is raised in case of existing data.
 
         Returns:
-            The Zarr array if return_stored is True; otherwise, None.
+            [zarr.core.Array][zarr.core.Array] or None: The Zarr array if return_stored is True; otherwise, None.
         """
 
         row_idx = 0

@@ -19,7 +19,7 @@ class InfluenceType(str, Enum):
     Perturbation = "perturbation"
 
 
-class UnSupportedInfluenceTypeException(ValueError):
+class UnsupportedInfluenceTypeException(ValueError):
     def __init__(self, influence_type: str):
         super().__init__(
             f"Provided {influence_type=} is not supported. Choose one of InfluenceType.Up "

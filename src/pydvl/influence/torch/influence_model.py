@@ -12,7 +12,7 @@ from ...utils import log_duration, maybe_progress
 from ..base_influence_model import (
     InfluenceFunctionModel,
     InfluenceType,
-    UnSupportedInfluenceTypeException,
+    UnsupportedInfluenceTypeException,
 )
 from .functional import (
     LowRankProductRepresentation,
@@ -190,7 +190,7 @@ class TorchInfluenceFunctionModel(
                 factor, x, y, influence_type=influence_type
             )
         else:
-            raise UnSupportedInfluenceTypeException(influence_type)
+            raise UnsupportedInfluenceTypeException(influence_type)
         return values
 
     def _symmetric_values(
@@ -207,7 +207,7 @@ class TorchInfluenceFunctionModel(
                 fac, x, y, influence_type=influence_type
             )
         else:
-            raise UnSupportedInfluenceTypeException(influence_type)
+            raise UnsupportedInfluenceTypeException(influence_type)
         return values
 
     def influence_factors(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
@@ -283,7 +283,7 @@ class TorchInfluenceFunctionModel(
                 ),
             )
         else:
-            raise UnSupportedInfluenceTypeException(influence_type)
+            raise UnsupportedInfluenceTypeException(influence_type)
 
     @abstractmethod
     def _solve_hvp(self, rhs: torch.Tensor) -> torch.Tensor:
@@ -796,7 +796,7 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
                 factors, x, y, influence_type=influence_type
             )
         else:
-            raise UnSupportedInfluenceTypeException(influence_type)
+            raise UnsupportedInfluenceTypeException(influence_type)
         return values
 
     def _symmetric_values(
@@ -818,7 +818,7 @@ class ArnoldiInfluence(TorchInfluenceFunctionModel):
                 factors, x, y, influence_type=influence_type
             )
         else:
-            raise UnSupportedInfluenceTypeException(influence_type)
+            raise UnsupportedInfluenceTypeException(influence_type)
         return values
 
     @log_duration

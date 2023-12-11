@@ -1,5 +1,5 @@
 """
-This module provides methods for efficiently compute tensors related to first and second order derivatives
+This module provides methods for efficiently computing tensors related to first and second order derivatives
 of torch models, using functionality from [torch.func](https://pytorch.org/docs/stable/func.html).
 To indicate higher-order functions, i.e. functions which return functions, we use the naming convention
 `create_**_function`.
@@ -58,7 +58,7 @@ def hvp(
     reverse_only: bool = True,
 ) -> Dict[str, torch.Tensor]:
     r"""
-    Computes the Hessian-vector product (HVP) for a given function at given parameters, i.e.
+    Computes the Hessian-vector product (HVP) for a given function at the given parameters, i.e.
 
     \[\nabla_{\theta} \nabla_{\theta} f (\theta)\cdot v\]
 
@@ -120,9 +120,8 @@ def create_batch_hvp_function(
             to True.
 
     Returns:
-        Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor]: A function that takes three torch.Tensor
-        objects - input data (x), target data (y), and a vector (vec) - and returns the Hessian-vector product as a
-        torch.Tensor.
+        A function that takes three `torch.Tensor` objects - input data (`x`), target data (`y`), and a vector
+        (`vec`), and returns the Hessian-vector product of the loss evaluated on `x`, `y` times `vec`.
 
     ??? Example
         ```python
@@ -256,7 +255,7 @@ def create_hvp_function(
             If False, the function uses backpropagation on the full
             [empirical_loss_function][pydvl.influence.torch.functional.empirical_loss_function],
             which is more accurate than averaging the batch hessians, but probably has a way higher memory usage.
-        reverse_only: Whether to use only reverse-mode autodiff (True, default) or
+        reverse_only: Whether to use only reverse-mode autodiff or
             both forward- and reverse-mode autodiff (False). Ignored if precompute_grad is True.
         track_gradients: Whether to track gradients for the resulting tensor of the hessian vector
             products (False, default).
