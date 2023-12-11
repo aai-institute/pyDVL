@@ -119,7 +119,7 @@ documentation.
 
 For influence computation, follow these steps:
 
-1. Instantiate an [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel].
+1. Instantiate an `InfluenceFunctionModel`
 2. Fit the influence model to the training data.
 3. For small input data call influence method on the fitted instance. For larger data, wrap the model into a
    calculator and call methods on the calculator.
