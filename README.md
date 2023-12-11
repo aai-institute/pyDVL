@@ -39,17 +39,15 @@ value depend on a specific model of interest, while others are model-agnostic.
 pyDVL focuses on model-dependent methods.
 
 <div style="text-align: center;">
-<figure>
     <img
         width="90%"
         src="docs/value/img/mclc-best-removal-10k-natural.svg"
         alt="best sample removal"
     />
-    <figcaption style="text-align: center;">
+    <p style="text-align: center;">
         Comparison of different data valuation methods
         <br> on best sample removal.
-    </figcaption>
-</figure>
+    </p>
 </div>
 
 The **Influence Function** is an infinitesimal measure of the effect that single
@@ -58,17 +56,15 @@ In particular, in machine learning they are also used to compute the effect
 of training samples over individual test points.
 
 <div style="text-align: center;">
-<figure>
     <img
         width="80%"
         src="docs/assets/influence_functions_example.png"
         alt="best sample removal"
     />
-    <figcaption style="text-align: center;">
+    <p style="text-align: center;">
         Influences of input points with corrupted data.
         <br>Highlighted points have flipped labels.
-    </figcaption>
-</figure>
+    </p>
 </div>
 
 # Installation
