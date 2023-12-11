@@ -38,7 +38,7 @@ performance or outcome of some model trained on it. Some concepts of
 value depend on a specific model of interest, while others are model-agnostic.
 pyDVL focuses on model-dependent methods.
 
-<div>
+<div align="center" style="text-align:center;">
     <img
         width="70%"
         align="center"
@@ -57,7 +57,7 @@ training points have over the parameters of a model, or any function thereof.
 In particular, in machine learning they are also used to compute the effect
 of training samples over individual test points.
 
-<div>
+<div align="center" style="text-align:center;">
     <img
         width="70%"
         align="center"
