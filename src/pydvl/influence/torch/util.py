@@ -31,6 +31,8 @@ __all__ = [
     "align_structure",
     "align_with_model",
     "flatten_dimensions",
+    "TorchCatAggregator",
+    "TorchNumpyConverter",
 ]
 
 

@@ -387,5 +387,4 @@ class TwoDimChunkedLazyArrayProvider(LazyArrayProvider):
             shape=initial_shape,
             chunks=chunk_size,
             dtype=block.dtype,
-            overwrite=overwrite,
         )

@@ -119,8 +119,10 @@ documentation.
 
 For influence computation, follow these steps:
 
-1. Wrap your model and loss in a `TorchTwiceDifferentiable` object
-2. Compute influence factors by providing training data and inversion method
+1. Instantiate an [InfluenceFunctionModel][pydvl.influence.base_influence_model.InfluenceFunctionModel].
+2. Fit the influence model to the training data.
+3. For small input data call influence method on the fitted instance. For larger data, wrap the model into a
+   calculator and call methods on the calculator.
 
 Using the conjugate gradient algorithm, this would look like:
 ```python
@@ -128,37 +130,45 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from pydvl.influence import TorchTwiceDifferentiable, compute_influences, InversionMethod
+from pydvl.influence.torch import DirectInfluence
+from pydvl.influence.torch.util import TorchCatAggregator, TorchNumpyConverter
+from pydvl.influence import SequentialInfluenceCalculator
 
 nn_architecture = nn.Sequential(
-    nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
-    nn.Flatten(),
-    nn.Linear(27, 3),
+  nn.Conv2d(in_channels=5, out_channels=3, kernel_size=3),
+  nn.Flatten(),
+  nn.Linear(27, 3),
 )
 loss = nn.MSELoss()
-model = TorchTwiceDifferentiable(nn_architecture, loss)
+
 
 input_dim = (5, 5, 5)
 output_dim = 3
+train_x = torch.rand((10, *input_dim))
+train_y = torch.rand((10, output_dim))
+test_x = torch.rand((5, *input_dim))
+test_y = torch.rand((5, output_dim))
 
-train_data_loader = DataLoader(
-    TensorDataset(torch.rand((10, *input_dim)), torch.rand((10, output_dim))),
-    batch_size=2,
-)
-test_data_loader = DataLoader(
-    TensorDataset(torch.rand((5, *input_dim)), torch.rand((5, output_dim))),
-    batch_size=1,
-)
+train_data_loader = DataLoader(TensorDataset(train_x, train_y), batch_size=2)
+test_data_loader = DataLoader(TensorDataset(test_x, test_y), batch_size=1)
 
-influences = compute_influences(
-    model,
-    training_data=train_data_loader,
-    test_data=test_data_loader,
-    progress=True,
-    inversion_method=InversionMethod.Cg,
-    hessian_regularization=1e-1,
-    maxiter=200,
-)
+influence_function_model = DirectInfluence(nn_architecture, loss, hessian_regularization=0.01)
+influence_function_model = influence_function_model.fit(train_data_loader)
+
+# For small data, directly call methods on the influence function model
+in_memory_influences = influence_function_model.influences(test_x, test_y, train_x, train_y)
+
+# For larger data, wrap the influence function model into a calculator
+sequential_influence_calculator = SequentialInfluenceCalculator(influence_function_model)
+
+# Lazy object providing arrays batch-wise in a sequential manner
+lazy_influences = sequential_influence_calculator.influences(test_data_loader, train_data_loader)
+
+# Trigger computation and pull results to memory
+influences = lazy_influences.compute(tensor_aggregator=TorchCatAggregator())
+
+# Trigger computation and write results batch-wise to disk
+lazy_influences.to_zarr("influences_result", TorchNumpyConverter())
 ```
 
 
