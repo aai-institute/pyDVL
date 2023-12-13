@@ -1,13 +1,11 @@
-from collections.abc import Iterator
 from itertools import cycle, takewhile
-from typing import TYPE_CHECKING, Collection
+from typing import TYPE_CHECKING, Collection, Iterator
 
 from tqdm.auto import tqdm
 
-from pydvl.value.stopping import StoppingCriterion
-
 if TYPE_CHECKING:
     from pydvl.value.result import ValuationResult
+    from pydvl.value.stopping import StoppingCriterion
 
 __all__ = ["repeat_indices"]
 
@@ -15,7 +13,7 @@ __all__ = ["repeat_indices"]
 def repeat_indices(
     indices: Collection[int],
     result: "ValuationResult",
-    done: StoppingCriterion,
+    done: "StoppingCriterion",
     **kwargs
 ) -> Iterator[int]:
     """Helper function to cycle indefinitely over a collection of indices
