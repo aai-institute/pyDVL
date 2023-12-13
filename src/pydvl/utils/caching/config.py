@@ -34,7 +34,7 @@ class CachedFuncConfig:
     """
 
     ignore_args: Collection[str] = field(default_factory=list)
-    time_threshold: float = 0
+    time_threshold: float = 0.3
     allow_repeated_evaluations: bool = False
     rtol_stderr: float = 0.1
     min_repetitions: int = 3
