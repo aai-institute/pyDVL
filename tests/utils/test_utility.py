@@ -7,7 +7,7 @@ import pytest
 from sklearn.linear_model import LinearRegression
 
 from pydvl.utils import DataUtilityLearning, Scorer, Utility, powerset
-from pydvl.utils.caching import InMemoryCacheBackend
+from pydvl.utils.caching import CachedFuncConfig, InMemoryCacheBackend
 
 
 @pytest.mark.parametrize("show_warnings", [False, True])
@@ -65,6 +65,7 @@ def test_utility_with_cache(linear_dataset):
         data=linear_dataset,
         scorer=Scorer("r2"),
         cache_backend=InMemoryCacheBackend(),
+        cached_func_options=CachedFuncConfig(time_threshold=0.0),
     )
     subsets = list(powerset(u.data.indices))
 
