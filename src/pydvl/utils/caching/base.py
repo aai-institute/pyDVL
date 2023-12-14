@@ -226,7 +226,9 @@ class CachedFunc:
         argument_hash = self._hash_arguments(
             self.func, self.config.ignore_args, args, kwargs
         )
-        hashes = list(filter(bool, [self.config.hash_prefix, func_hash, argument_hash]))
+        hashes = [func_hash, argument_hash]
+        if self.config.hash_prefix is not None:
+            hashes.insert(0, self.config.hash_prefix)
         key = self.cache_backend.combine_hashes(*hashes)
         return key
 
